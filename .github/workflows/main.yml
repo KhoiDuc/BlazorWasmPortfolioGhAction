@@ -46,7 +46,7 @@ jobs:
 
       - name: Change base-tag in index.html
         shell: bash
-        run: sed -i.bak 's/<base href="\/" \/>/<base href="${{ env.BASE_HREF }}" \/>/g' ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html
+        run: sed -i.bak 's|<base href="/" />|<base href="${{ env.BASE_HREF }}" />|g' ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html
 
       - name: Copy index.html to 404.html
         run: cp ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html ${{ env.OUTPUT_FOLDER }}/wwwroot/404.html
