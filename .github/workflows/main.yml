@@ -18,7 +18,10 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
-
+        
+    - name: Restore NuGet packages
+      run: dotnet restore BlazorWasmPortfolioGhAction.csproj
+      
     # publishes Blazor project to the release-folder
     - name: Publish .NET Core Project
       run: dotnet publish BlazorWasmPortfolioGhAction.csproj --configuration Release --output release --nologo --no-restore
