@@ -1,0 +1,72 @@
+name: Deploy to GitHub Pages
+
+# Run workflow on every push to the master branch
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy-to-github-pages:
+    # use ubuntu-latest image to run steps on
+    runs-on: ubuntu-latest
+    steps:
+    # uses GitHub's checkout action to checkout code form the master branch
+    - uses: actions/checkout@v4
+    
+    # sets up .NET Core SDK 3.1
+	- name: Setup .NET 8 SDK
+	  uses: actions/setup-dotnet@v4.3.0
+	  with:
+		dotnet-version: 8.0.x
+		dotnet-quality: ga # Ensures only Generally Available (GA) stable versions are used
+		global-json-file: global.json # Uses global.json to pin .NET version
+		source-url: https://api.nuget.org/v3/index.json # Ensures secure package sources
+		owner: ${{ github.repository_owner }} # Restricts package usage to your repository owner
+		config-file: NuGet.config # Specifies a custom NuGet configuration file for security
+		cache: true # Enables caching of NuGet packages
+		cache-dependency-path: '**/packages.lock.json' # Ensures consistent dependency caching
+
+    # publishes Blazor project to the release-folder
+    - name: Publish Blazor Project
+	  run: dotnet publish BlazorWasmPortfolioGhAction.csproj --configuration Release --output release --nologo --no-restore
+    
+    # changes the base-tag in index.html from '/' to 'BlazorWasmPortfolioGhAction' to match GitHub Pages repository subdirectory
+	- name: Auto-update base-tag for GitHub Pages
+	  run: |
+		FILE="release/wwwroot/index.html"
+		REPO_NAME=${{ github.event.repository.name }}
+		if [ -f "$FILE" ]; then
+		  sed -i'' -e "s|<base href=\"/\" />|<base href=\"/$REPO_NAME/\" />|g" "$FILE"
+		  echo "Base tag updated to /$REPO_NAME/."
+		else
+		  echo "Warning: $FILE not found. Skipping base tag update."
+		fi
+    
+    # copy index.html to 404.html to serve the same file when a file is not found
+	- name: Copy index.html to 404.html
+	  run: |
+		FILE="release/wwwroot/index.html"
+		DEST="release/wwwroot/404.html"
+		if [ -f "$FILE" ]; then
+		  cp "$FILE" "$DEST"
+		  echo "Successfully copied index.html to 404.html"
+		else
+		  echo "Warning: $FILE not found. Skipping copy."
+		fi
+
+    # add .nojekyll file to tell GitHub pages to not treat this as a Jekyll project. (Allow files and folders starting with an underscore)
+	- name: Add .nojekyll file
+	  run: |
+		FILE="release/wwwroot/.nojekyll"
+		touch "$FILE"
+		echo "Created .nojekyll to disable Jekyll processing."
+      
+	- name: Deploy to GitHub Pages
+	  uses: JamesIves/github-pages-deploy-action@v4.7.2
+	  with:
+		token: ${{ secrets.GITHUB_TOKEN }}
+		branch: gh-pages
+		folder: release/wwwroot
+		clean: true  # Ensures old files are removed before deployment
+		single-commit: true  # Keeps commit history clean
+		commit-message: "Deploy Blazor app to GitHub Pages 🚀"
