@@ -7,42 +7,66 @@ on:
 
 jobs:
   deploy-to-github-pages:
-    # use ubuntu-latest image to run steps on
+    name: Build and Deploy Blazor WASM to GitHub Pages
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Grant write permissions to the GITHUB_TOKEN
-    steps:
-    # uses GitHub's checkout action to checkout code form the master branch
-    - uses: actions/checkout@v4
-    
-    # sets up .NET Core SDK 3.1
-    - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
-        
-    - name: Restore NuGet packages
-      run: dotnet restore BlazorWasmPortfolioGhAction.csproj
-      
-    # publishes Blazor project to the release-folder
-    - name: Publish .NET Core Project
-      run: dotnet publish BlazorWasmPortfolioGhAction.csproj --configuration Release --output release --nologo --no-restore
-    
-    # changes the base-tag in index.html from '/' to 'BlazorWasmPortfolioGhAction' to match GitHub Pages repository subdirectory
-    - name: Change base-tag in index.html from / to BlazorWasmPortfolioGhAction
-      run: sed -i 's/<base href="\/" \/>/<base href="\/BlazorWasmPortfolioGhAction\/" \/>/g' release/wwwroot/index.html
-    
-    # copy index.html to 404.html to serve the same file when a file is not found
-    - name: copy index.html to 404.html
-      run: cp release/wwwroot/index.html release/wwwroot/404.html
+      contents: write
+    env:
+      PROJECT_NAME: BlazorWasmPortfolioGhAction
+      DOTNET_VERSION: '8.0.x'
+      OUTPUT_FOLDER: release
+      BASE_HREF: '/BlazorWasmPortfolioGhAction/'
 
-    # add .nojekyll file to tell GitHub pages to not treat this as a Jekyll project. (Allow files and folders starting with an underscore)
-    - name: Add .nojekyll file
-      run: touch release/wwwroot/.nojekyll
-      
-    - name: Commit wwwroot to GitHub Pages
-      uses: JamesIves/github-pages-deploy-action@3.7.1
-      with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        BRANCH: gh-pages
-        FOLDER: release/wwwroot
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Restore NuGet packages
+        run: dotnet restore ${{ env.PROJECT_NAME }}.csproj
+
+      - name: Build .NET Core Project
+        run: dotnet build ${{ env.PROJECT_NAME }}.csproj --configuration Release --nologo
+
+      - name: Publish .NET Core Project
+        run: dotnet publish ${{ env.PROJECT_NAME }}.csproj --configuration Release --output ${{ env.OUTPUT_FOLDER }} --nologo --no-restore
+
+      - name: Change base-tag in index.html
+        shell: bash
+        run: sed -i.bak 's/<base href="\/" \/>/<base href="${{ env.BASE_HREF }}" \/>/g' ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html
+
+      - name: Copy index.html to 404.html
+        run: cp ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html ${{ env.OUTPUT_FOLDER }}/wwwroot/404.html
+
+      - name: Add .nojekyll file
+        run: touch ${{ env.OUTPUT_FOLDER }}/wwwroot/.nojekyll
+
+      - name: Validate wwwroot folder
+        run: ls -R ${{ env.OUTPUT_FOLDER }}/wwwroot
+
+      - name: Commit wwwroot to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: ${{ env.OUTPUT_FOLDER }}/wwwroot
+
+      - name: Upload release folder as artifact
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: release-folder
+          path: ${{ env.OUTPUT_FOLDER }}
