@@ -19,21 +19,26 @@ jobs:
       BASE_HREF: '/BlazorWasmPortfolioGhAction/'
 
     steps:
+      # Checkout the repository
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Clean the output directory
       - name: Clean output directory
         run: rm -rf ${{ env.OUTPUT_FOLDER }}
 
+      # Set up .NET Core SDK
       - name: Setup .NET Core SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      # Install WebAssembly Workload
       - name: Install WebAssembly Workload
         run: dotnet workload install wasm-tools
 
+      # Cache NuGet packages to speed up builds
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
@@ -42,6 +47,7 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-
 
+      # Cache build outputs to speed up subsequent builds
       - name: Cache build outputs
         uses: actions/cache@v4
         with:
@@ -49,32 +55,41 @@ jobs:
             ${{ env.PROJECT_NAME }}/bin
             ${{ env.PROJECT_NAME }}/obj
           key: build-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            build-${{ runner.os }}-
 
+      # Restore NuGet packages
       - name: Restore NuGet packages
         run: dotnet restore ${{ env.PROJECT_NAME }}.csproj
 
+      # Build the .NET Core project
       - name: Build .NET Core Project
         run: dotnet build ${{ env.PROJECT_NAME }}.csproj --configuration Release --nologo
 
+      # Publish the .NET Core project
       - name: Publish .NET Core Project
         run: dotnet publish ${{ env.PROJECT_NAME }}.csproj --configuration Release --output ${{ env.OUTPUT_FOLDER }} --nologo --no-restore
 
+      # Update the base href in index.html
       - name: Change base-tag in index.html
         shell: bash
-        run: sed -i.bak 's|<base href="/" />|<base href="${{ env.BASE_HREF }}" />|g' ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html
+        run: |
+          sed -i.bak 's|<base href="/" />|<base href="${{ env.BASE_HREF }}" />|g' ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html
+          rm ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html.bak
 
-      - name: Remove backup file
-        run: rm ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html.bak
-
+      # Copy index.html to 404.html for GitHub Pages routing
       - name: Copy index.html to 404.html
         run: cp ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html ${{ env.OUTPUT_FOLDER }}/wwwroot/404.html
 
+      # Add .nojekyll file to disable Jekyll processing
       - name: Add .nojekyll file
         run: touch ${{ env.OUTPUT_FOLDER }}/wwwroot/.nojekyll
 
+      # Validate the wwwroot folder structure
       - name: Validate wwwroot folder
         run: ls -R ${{ env.OUTPUT_FOLDER }}/wwwroot
 
+      # Deploy the wwwroot folder to GitHub Pages
       - name: Commit wwwroot to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
@@ -83,24 +98,18 @@ jobs:
           FOLDER: ${{ env.OUTPUT_FOLDER }}/wwwroot
           CLEAN: true
 
+      # Health check to ensure the deployed site is accessible
       - name: Health Check
         run: |
           npm install -g serve
-
-          # Create a simulated GitHub Pages directory structure
-          mkdir -p health-check${{ env.BASE_HREF }}
-          cp -r ${{ env.OUTPUT_FOLDER }}/wwwroot/* health-check${{ env.BASE_HREF }}
-
-          # Serve from the parent directory
-          npx serve health-check -l 3000 &
+          npx serve ${{ env.OUTPUT_FOLDER }}/wwwroot -l 3000 &
           sleep 5
-
-          # Verify accessibility at BASE_HREF
           curl --retry 5 --retry-delay 3 --fail http://localhost:3000${{ env.BASE_HREF }}
 
+      # Upload the release folder as an artifact if the job fails
       - name: Upload release folder as artifact
-        uses: actions/upload-artifact@v4
         if: failure()
+        uses: actions/upload-artifact@v4
         with:
           name: release-folder
           path: ${{ env.OUTPUT_FOLDER }}
