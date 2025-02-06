@@ -86,8 +86,16 @@ jobs:
       - name: Health Check
         run: |
           npm install -g serve
-          npx serve ${{ env.OUTPUT_FOLDER }}/wwwroot -l 3000 &
+
+          # Create a simulated GitHub Pages directory structure
+          mkdir -p health-check${{ env.BASE_HREF }}
+          cp -r ${{ env.OUTPUT_FOLDER }}/wwwroot/* health-check${{ env.BASE_HREF }}
+
+          # Serve from the parent directory
+          npx serve health-check -l 3000 &
           sleep 5
+
+          # Verify accessibility at BASE_HREF
           curl --retry 5 --retry-delay 3 --fail http://localhost:3000${{ env.BASE_HREF }}
 
       - name: Upload release folder as artifact
