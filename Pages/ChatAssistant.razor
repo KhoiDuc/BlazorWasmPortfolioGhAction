@@ -1,0 +1,447 @@
+﻿@page "/chat"
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using System.Net.Http.Json
+<SearchBar 
+    type="chat"
+    IsSearchDisabled="true" />
+<div class="container">
+    <section class="side-bar">
+@*        <AuthorizeView>
+            <Authorized>*@
+                <button @onclick="SaveConversationAndStartNew" class="newChatBtn" disabled="@loading">New chat</button>
+@*            </Authorized>
+            <NotAuthorized>
+                <button class="newChatBtn" disabled>New Chat (login first)</button>
+            </NotAuthorized>
+        </AuthorizeView>*@
+
+@*        <AuthorizeView>
+            <Authorized>*@
+                <div class="history">
+                    @foreach (var item in history)
+                    {
+                        var chatId = item.Key;
+                        if (!loadingConversations.Contains(chatId))
+                        {
+                            <p @onclick="() => LoadConversation(chatId)">
+                                <Editor Id="@chatId"
+                                Inline=true
+                                CloudChannel="5"
+                                Disable=false
+                                Conf="@editorConfHeaders"
+                                ApiKey="@TinyAPIKey"
+                                ClassName="counterEditor"
+                                @bind-Value="conversationNames[chatId]" />
+                            </p>
+                        }
+                        else
+                        {
+                            <p>Loading...</p>
+                        }
+                    }
+                </div>
+@*            </Authorized>
+            <NotAuthorized>
+                <div class="history">
+                    <p>Login to see conversation history</p>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>*@
+        <nav>
+            <p>Chat History (Currently Deleted on refresh)</p>
+        </nav>
+    </section>
+    <AuthorizeView>
+        <Authorized>
+            <section class="main">
+                <h1>GPTSam</h1>
+                <div class="conversation">
+                    @foreach (var message in currentConversation)
+                    {
+                        if (message.role == "user")
+                        {
+                            <div class="message-container user">
+                                <div class="text-bubble">@message.content</div>
+                                <div class="name">@context.User.Identity?.Name</div>
+                            </div>
+                        }
+                        else if (message.role == "assistant")
+                        {
+                            <div class="message-container assistant">
+                                <div class="text-bubble">@message.content</div>
+                                <div class="name">GPTSam</div>
+                            </div>
+                        }
+                        else if (message.role == "error")
+                        {
+                            <div class="message-container error">
+                                <div class="text-bubble">@message.content</div>
+                                <div class="name">GPTSam</div>
+                            </div>
+                        }
+                    }
+                </div>
+                @{
+                    var placeholderText = loading ? "" : "Type a message";
+                }
+                <div class="bottom-section">
+                    <div class="input-container">
+                        <input @bind="inputText" class="inputText" disabled="@loading" @onkeydown="@(args => HandleKeyPress(args))" placeholder="@placeholderText" />
+                        <div @onclick="GetMessage" id="submit" class="oi oi-chevron-right" disabled="@loading"></div>
+                    </div>
+                </div>
+                <p class="info">ChatGPT Mar 4 Version</p>
+            </section>
+        </Authorized>
+        <NotAuthorized>
+            <section class="main">
+                <h1>GPTSam</h1>
+                <div class="conversation">
+                    @foreach (var message in currentConversation)
+                    {
+                        if (message.role == "user")
+                        {
+                            <div class="message-container user">
+                                <div class="text-bubble">@message.content</div>
+                                <div class="name">Unknown User</div>
+                            </div>
+                        }
+                        else if (message.role == "assistant")
+                        {
+                            <div class="message-container assistant">
+                                <div class="text-bubble">@message.content</div>
+                                <div class="name">GPTSam</div>
+                            </div>
+                        }
+                        else if (message.role == "error")
+                        {
+                            <div class="message-container error">
+                                <div class="text-bubble">@message.content</div>
+                                <div class="name">GPTSam</div>
+                            </div>
+                        }
+                    }
+                </div>
+                @{
+                    var placeholderText = loading ? "" : "Type a message";
+                }
+                <div class="bottom-section">
+                    <div class="input-container">
+                        <input @bind="inputText" class="inputText" disabled="@loading" @onkeydown="@(args => HandleKeyPress(args))" placeholder="@placeholderText" />
+                        @if (loading)
+                        {
+                            <div class="loadElipsis"></div>
+                        }
+                        <div @onclick="GetMessage" id="submit" class="oi oi-chevron-right" disabled="@loading"></div>
+                    </div>
+                </div>
+            </section>
+@*            <section class="main">
+                <h1>GPTSam</h1>
+                <div class="conversation">
+                    @foreach (var message in exampleConversation)
+                    {
+                        if (message.role == "user")
+                        {
+                            <div class="message-container user">
+                                <div class="text-bubble">@message.content</div>
+                                <div class="name">Guest</div>
+                            </div>
+                        }
+                        else if (message.role == "assistant")
+                        {
+                            <div class="message-container assistant">
+                                <div class="text-bubble">@message.content</div>
+                                <div class="name">GPTSam</div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="bottom-section">
+                    <div class="input-container">
+                        <input class="inputText" disabled placeholder="Type a message (After loggin in!)" />
+                        <div id="submit" class="oi oi-chevron-right" disabled></div>
+                    </div>
+                </div>
+                <p class="info">ChatGPT Mar 4 Version</p>
+            </section>*@
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+
+    @* Should look into NeMo Guard rails *@
+    private string inputText = "";
+    private string currentConversationId;
+    private string TinyAPIKey = "7so5re0foy5ocvnv7m3m3rznoi0hiar7wrg9w0hk2bkgfshl";
+    private bool loading = false;
+    private HashSet<string> loadingConversations = new HashSet<string>();
+    private Dictionary<string, List<Message>> history = new Dictionary<string, List<Message>>();
+    private List<Message> currentConversation = new List<Message>();
+    private Dictionary<string, string> conversationNames = new Dictionary<string, string>();
+    private List<Message> preConversationText = new List<Message>();
+    private List<Message> summaryConversationText = new List<Message>();
+    private string systemMessageChat = "You are a helpful, polite chatbot assistant built by Sam Denton to assist our users of his interactive portfolio with issues.";
+    private string systemMessageSearch = "You are a search assistant that takes a query written in natural English and summarizing it in a quick search phrase, between 1 and 5 words.";
+    private string systemMessageSummary = "You are a summary assistant that takes a conversation in natural English and summarizes it into a conversation title, no more than 6 words.";
+    private string systemMessageExample = "You are not a real bot, you are an example";
+    private List<Message> exampleConversation = new List<Message>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            currentConversationId = $"Conversation {Guid.NewGuid()}";
+            currentConversation.Add(new Message { role = "system", content = systemMessageChat });
+            preConversationText.Add(new Message { role = "system", content = systemMessageSearch });
+            summaryConversationText.Add(new Message { role = "system", content = systemMessageSummary });
+            exampleConversation.Add(new Message { role = "system", content = systemMessageExample });
+            exampleConversation.Add(new Message { role = "user", content = "Hi GPTSam, I'm having some issues using your site, like the buttons on this page are disabled, why is that?" });
+            exampleConversation.Add(new Message { role = "assistant", content = "Hi there!  I'm sorry to hear that.  It sounds like you are not currently logged in with an authenticated user.  Please login or contact Sam to have your privilages escelated" });
+            exampleConversation.Add(new Message { role = "user", content = "Ok, so some parts of the website require authentication?" });
+            exampleConversation.Add(new Message { role = "assistant", content = "Yes, some parts of the site, and some functions like editing content and interacting with the chatbot currently require authentication, however, a guest tier is being added currently so authenticated but not privilaged users have some level of access, while unauthenticated users get minimal, read only access" });
+            StateHasChanged();
+        }
+    }
+
+    private async Task GetMessage()
+    {
+        if (loading)
+        {
+            return;
+        }
+        try
+        {
+            loading = true;
+            currentConversation.Add(new Message { role = "user", content = inputText });
+            var requestBody = new
+            {
+                model = "gpt-4o",
+                messages = currentConversation.ToArray(),
+                max_tokens = 1000
+            };
+
+            ClearInput();
+            StateHasChanged();
+
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://samdenton.tech/OpenAISummarise-proxy.php");
+            request.Content = JsonContent.Create(requestBody);
+            request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+            var response = await Http.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var data = await response.Content.ReadFromJsonAsync<OpenAIResponse>();
+            var outputText = data.choices[0].message.content;
+            currentConversation.Add(new Message { role = "assistant", content = outputText });
+
+            loading = false;
+            StateHasChanged();
+            //Console.WriteLine(outputText);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            currentConversation.Add(new Message { role = "error", content = "OpenAI API unavailable or out of credits" });
+            Console.WriteLine("OpenAI API unavailable or out of credits");
+        }
+    }
+
+    private async Task GetSearchString()
+    {
+        try
+        {
+            StringBuilder conversationStringBuilder = new StringBuilder();
+
+            foreach (var message in currentConversation.Skip(1))  // Skip the first message
+            {
+                conversationStringBuilder.AppendLine($"- {message.role}:- {message.content}");
+            }
+
+            string conversationString = conversationStringBuilder.ToString();
+            //Console.WriteLine(conversationString);
+            preConversationText.Add(new Message { role = "user", content = conversationString });
+            var requestBody = new
+            {
+                model = "gpt-3.5-turbo",
+                messages = preConversationText.ToArray(),
+                max_tokens = 100
+            };
+
+            ClearInput();
+
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://samdenton.tech/OpenAISummarise-proxy.php");
+            request.Content = JsonContent.Create(requestBody);
+            request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+            var response = await Http.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var data = await response.Content.ReadFromJsonAsync<OpenAIResponse>();
+            var outputText = data.choices[0].message.content;
+            currentConversation.Add(new Message { role = "assistant", content = outputText });
+
+            StateHasChanged();
+            //Console.WriteLine(outputText);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            currentConversation.Add(new Message { role = "error", content = "OpenAI API unavailable or out of credits" });
+            Console.WriteLine("OpenAI API unavailable or out of credits");
+        }
+    }
+
+    private async Task<string> SummariseConversation()
+    {
+        try
+        {
+            StringBuilder conversationStringBuilder = new StringBuilder();
+
+            foreach (var message in currentConversation.Skip(1))  // Skip the first message
+            {
+                conversationStringBuilder.AppendLine($"- {message.role}:- {message.content}");
+            }
+
+            string conversationString = conversationStringBuilder.ToString();
+            //Console.WriteLine(conversationString);
+            summaryConversationText.Add(new Message { role = "user", content = conversationString });
+            var requestBody = new
+            {
+                model = "gpt-3.5-turbo",
+                messages = summaryConversationText.ToArray(),
+                max_tokens = 100
+            };
+
+            ClearInput();
+
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://samdenton.tech/OpenAISummarise-proxy.php");
+            request.Content = JsonContent.Create(requestBody);
+            request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+            var response = await Http.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var data = await response.Content.ReadFromJsonAsync<OpenAIResponse>();
+            var outputText = data.choices[0].message.content;
+            //summaryConversationText.Add(new Message { role = "assistant", content = outputText });
+
+            //StateHasChanged();
+            //Console.WriteLine(outputText);
+            return outputText;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            currentConversation.Add(new Message { role = "error", content = "OpenAI API unavailable or out of credits" });
+            Console.WriteLine("OpenAI API unavailable or out of credits");
+            return "Error summarizing conversation";
+        }
+    }
+
+    private void ClearInput()
+    {
+        inputText = "";
+    }
+
+    private SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+
+    private async Task SaveConversation()
+    {
+        if (currentConversation.Count > 1)
+        {
+            if (!history.ContainsKey(currentConversationId))
+            {
+                history[currentConversationId] = new List<Message>(currentConversation);
+            }
+            if (!conversationNames.ContainsKey(currentConversationId))
+            {
+                string? shortName = await SummariseConversation();
+                conversationNames[currentConversationId] = shortName;
+            }
+            StateHasChanged();
+        }
+        loadingConversations.Remove(currentConversationId);
+    }
+
+    private async Task SaveConversationAndStartNew()
+    {
+        loadingConversations.Add(currentConversationId);
+        loading = true;
+        await SaveConversation();
+        currentConversation.Clear();
+        currentConversationId = $"Conversation {Guid.NewGuid()}";
+        currentConversation.Add(new Message { role = "system", content = systemMessageChat });
+        preConversationText.Add(new Message { role = "system", content = systemMessageSearch });
+        summaryConversationText.Add(new Message { role = "system", content = systemMessageSummary });
+        loading = false;
+    }
+
+    private async Task LoadConversation(string conversationID)
+    {
+        loadingConversations.Add(currentConversationId);
+        loading = true;
+        await SaveConversation();
+
+        if (history.ContainsKey(conversationID))
+        {
+            currentConversationId = conversationID;
+            currentConversation = new List<Message>(history[conversationID]);
+            StateHasChanged();
+        }
+        loading = false;
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await Task.Delay(10);
+            await GetMessage();
+        }
+    }
+
+    public class OpenAIResponse
+    {
+        public Choice[] choices { get; set; }
+    }
+
+    public class Choice
+    {
+        public Message message { get; set; }
+    }
+
+    public class Message
+    {
+        public string role { get; set; }
+        public string content { get; set; }
+    }
+
+    private Dictionary<string, object> editorConfHeaders = new Dictionary<string, object>  {
+    @* Would like to condence toolbar in to a few dropdowns, but converting JS syntax to C# is a pain *@
+        {"plugins", "autolink media link image table lists advlist code emoticons wordcount importcss autoresize quickbars codesample help"}, //imagetools spellchecker - Removed as imagetools now premium and spellchecker depricated
+        {"contextmenu", "copy paste | link image imagetools table lists undo redo | inserttable | cell row column deletetable | help"},
+        {"table_toolbar", "tableprops tabledelete | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol"},
+        {"quickbars_selection_toolbar", "undo redo | bold italic underline strikethrough | fontfamily fontsize | blocks | bullist numlist | alignleft aligncenter alignright alignjustify | outdent indent | forecolor backcolor | blockquote quicklink | charmap emoticons | print | insertfile image media template link anchor codesample | removeformat"},
+        {"toolbar", "false"},
+        {"menubar", "false"},
+        {"block_formats", "Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4; Heading 5=h5; Heading 6=h6;"},
+        {"quickbars_insert_toolbar", "quicktable image media codesample" },
+        {"width", "100%"},
+        {"min_width", "100%"},
+        {"height", "100%"}, @* Using autosize plugin, height property should be ignored. Min_height still respected *@
+        {"min_height", 100},
+        {"autoresize_bottom_margin", 30},
+        {"skin", "oxide-dark"},
+        {"content_css", "dark"},
+        {"autosave_ask_before_unload", "true"},
+        {"paste_data_images", "false"},
+        {"paste_as_text", "true"},
+        {"resize", "true"},
+        {"forced_root_block", ""}
+    @* Allows user to resize using bottom right corner.  Should still respect min height and width *@
+    };
+}

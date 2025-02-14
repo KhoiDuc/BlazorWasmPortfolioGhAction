@@ -1,0 +1,143 @@
+﻿@inject IState<ContentState> contentState
+@inject IDispatcher Dispatcher
+@using BlazorWasmPortfolioGhAction.Shared.Model;
+@using BlazorWasmPortfolioGhAction.Store.Actions;
+@using BlazorWasmPortfolioGhAction.Store.State;
+@using Fluxor;
+
+@if (contentState.Value.Contents != null)
+{
+	@if (type == "all" && lastPage != contentState.Value.Contents[indexParsed].page)
+	{
+		<h1 class="kudosTextInline">@contentState.Value.Contents[indexParsed].page</h1>
+		lastPage = contentState.Value.Contents[indexParsed].page;
+	}
+	@if (inline == true)
+	{
+		<tr>
+			@* Currently showing all details about the section, but once I split into multiple pages, this will likley be hidden *@
+			<td>
+				@if (type == "all" || type == "Search" || (!matchTypeSections && matchType))
+				{
+					<h3 class="kudosTextInline">
+						@(new MarkupString(@contentState.Value.Contents[indexParsed].section))
+						<small class="text-muted">
+							@(new MarkupString(@contentState.Value.Contents[indexParsed].subSection))
+						</small>
+					</h3>
+				}
+				else if (!matchTypeSectionsSubSections && matchTypeSections)
+				{
+					<h3 class="kudosTextInline">
+						@(new MarkupString(@contentState.Value.Contents[indexParsed].section))
+						<small class="text-muted">
+							@(new MarkupString(@contentState.Value.Contents[indexParsed].subSection))
+						</small>
+					</h3>
+				}
+				else
+				{
+					<h3 class="kudosTextInline">
+						<small class="text-muted">
+
+						</small>
+					</h3>
+				}
+				<div class="dotted-lines">
+					@(new MarkupString(@contentState.Value.Contents[indexParsed].content!))
+				</div>
+			</td>
+		</tr>
+	}
+	else
+	{
+		<tr>
+			@* Currently showing all details about the section, but once I split into multiple pages, this will likley be hidden *@
+			@if (type == "all" || type == "Search" || (!matchTypeSections && matchType))
+			{
+				<td class="kudosText col-1">
+					<h4>
+						@(new MarkupString(contentState.Value.Contents[indexParsed].section))
+						<br>
+						<small>
+							<div class="text-muted">
+								@(new MarkupString(@contentState.Value.Contents[indexParsed].subSection))
+							</div>
+						</small>
+					</h4>
+				</td>
+			}
+			else if (!matchTypeSectionsSubSections && matchTypeSections)
+			{
+				<td class="kudosText col-1">
+					<h4>
+						@if (contentState.Value.Contents[indexParsed].subSection != null)
+						{
+							<h3 class="kudosTextInline">
+								<small>
+									<div class="text-muted">
+										@(new MarkupString(@contentState.Value.Contents[indexParsed].subSection))
+									</div>
+								</small>
+							</h3>
+						}
+					</h4>
+				</td>
+			}
+			else if (matchTypeSectionsSubSections)
+			{
+
+			}
+
+			@* Render the de-serialized JSON string as HTML, including styling.  I need some sanitisation here but AntiXss from Microsoft is broken ATM... *@
+			<td>@(new MarkupString(@contentState.Value.Contents[indexParsed].content!))</td>
+		</tr>
+		<tr>
+			@if (!matchTypeSectionsSubSections)
+			{
+				<td>
+					@*Spacing*@
+				</td>
+			}
+			<td>
+				<button class="btn btn-outline-warning" disabled>Clear</button>
+				<button class="btn btn-outline-danger" disabled>Delete</button>
+				<button class="btn btn-outline-primary" disabled>Edit</button>
+				<button class="btn btn-outline-primary" disabled>Save</button>
+				<button class="btn btn-outline-primary" disabled>Cancel</button>
+			</td>
+		</tr>
+	}
+}
+else
+{
+	<p>content holder list empty in child</p>
+}
+
+@code {
+	//[Parameter] public ContentHolder[] contentState.Value.Contents { get; set; }
+	[Parameter] public bool? inline { get; set; }
+	[Parameter] public bool matchTypeSectionsSubSections { get; set; }
+	[Parameter] public bool matchTypeSections { get; set; }
+	[Parameter] public bool matchType { get; set; }
+	[Parameter] public string type { get; set; }
+	[Parameter] public string sections { get; set; }
+	[Parameter] public string subSections { get; set; }
+	[Parameter] public int count { get; set; }
+	[Parameter] public int localCount { get; set; }
+	[Parameter] public int indexParsed { get; set; }
+
+	private string? lastPage;
+
+	protected override async Task OnInitializedAsync()
+	{
+		contentState.StateChanged += HandleStateChanged;
+	}
+	private void HandleStateChanged(object sender, EventArgs e)
+	{
+		if (contentState.Value.FileCount == contentState.Value.LoadedFilesCount)
+		{
+			InvokeAsync(StateHasChanged);
+		}
+	}
+}

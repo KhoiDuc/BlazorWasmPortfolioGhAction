@@ -1,0 +1,424 @@
+﻿body {
+}
+/*
+    Alternative Kudos colours with more contrast:
+    #0E76BC light
+    #1c5380 Dark
+
+*/
+
+.mainContentContainer {
+    position: relative !important;
+}
+
+.mainTable {
+    height: calc(100vh - 156px) !important;
+    width: 100%;
+    /*overflow: auto !important;*/
+}
+
+.site-title {
+    position: relative;
+    display: inline-block;
+    text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.5), 2px 3px 5px rgba(0, 0, 0, 0.7);
+}
+
+/*    .site-title::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -5px;
+        height: 5px;
+        background-color: #0d385b;
+    }*/
+
+    .site-title span {
+        position: relative;
+        display: inline-block;
+    }
+
+    .title-span-1::after,
+    .title-span-2::after,
+    .title-span-3::after,
+    .title-span-4::after,
+    .title-span-5::after,
+    .title-span-6::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        bottom: -1px;
+        height: 4px;
+        background-color: #0d385b;
+    }
+
+    .title-span-1::after {
+        left: -6px;
+        right: 1px;
+    }
+
+    .title-span-2::after {
+        left: -10px;
+        right: -6px;
+    }
+
+    .title-span-3::after {
+        left: -6px;
+        right: 2px;
+    }
+
+    .title-span-4::after {
+        left: 10px;
+        right: -6px;
+    }
+
+    .title-span-5::after {
+        left: -6px;
+        right: -6px;
+    }
+
+    .title-span-6::after {
+        left: -6px;
+        right: -6px;
+    }
+
+
+.kudosText {
+    color: #1c5380;
+}
+    .kudosText .text-muted {
+        background-color: #212529;
+        padding: 2px;
+        border-radius: 5px;
+        color: #0d385b !important;
+    }
+
+.kudosTextInline {
+    /*color: black;*/
+    color: #1c5380;
+    padding-top: 40px;
+}
+    .kudosTextInline .text-muted {
+        border-radius: 5px;
+        color: #0d385b !important;
+    }
+
+.kudosTextTop {
+    /*color: black;*/
+    color: #1c5380;
+    margin-top: -10px;
+    margin-bottom: 15px;
+}
+    /*
+
+        background-color: #0a0b0b46;
+*/
+    .kudosTextTop .text-muted {
+        border-radius: 5px;
+        color: #0d385b !important;
+    }
+
+.kudosTextToggle {
+    display: flex;
+    margin-top: 5px;
+    align-items: center;
+    justify-content: flex-end;
+    color: #1c5380 !important;
+}
+
+    .kudosTextToggle label {
+        margin-right: 50px;
+        padding-top: 0px;
+    }
+
+    .kudosTextToggle .inputCheck {
+        margin-right: 0px;
+        padding-top: 0px;
+    }
+
+.home-container {
+    height: calc(100vh - 100px);
+    overflow: hidden;
+}
+
+.card-column {
+    margin-top: 1.25rem;
+    margin-bottom: 50rem;
+}
+
+.card-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-bottom: 2rem;
+    margin-top: 1rem;
+    height: 100%;
+    max-height: 400px;
+    min-width: 180px;
+    margin-right: 20px !important;
+    margin-left: 20px !important;
+    box-shadow: 3px 4px 6px rgba(0, 0, 0, 0.5), 2px 3px 5px rgba(0, 0, 0, 0.8);
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    background-color: #212529;
+    border: 1px solid #c1c4c7;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    color: #c1c4c7;
+    z-index: 1;
+    max-width: 100%;
+    padding: 1rem;
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1.25rem;
+}
+
+.card-title {
+    color: #f8f9fa;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    font-size: 1.25rem;
+}
+
+.card-text {
+    margin-bottom: 1.25rem;
+    color: #e0e0e0;
+    flex: 1;
+}
+
+.card-outline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    border: 1px solid #c1c4c7;
+    border-radius: 5px;
+    z-index: 0;
+}
+
+.card:hover {
+    transform: translate(-5px, -5px);
+    background-color: #363a3e;
+    cursor: pointer;
+}
+
+.card-link {
+    width: 75%;
+    color: #f8f9fa;
+    transition: all 0.3s ease;
+    background-color: #0d385b;
+    border-color: #f8f9fa;
+    margin-top: 2px;
+}
+
+    .card-link:hover {
+        color: #212529;
+        background-color: #f8f9fa;
+        text-decoration: none;
+    }
+
+@media (max-width: 450px) {
+    .card-column {
+        margin-bottom: 50rem;
+    }
+    .card {
+        padding: 0px;
+    }
+}
+
+@media (max-height: 650px) {
+    .homeImg {
+        display: none !important;
+    }
+
+    .card-text {
+        margin-bottom: 0rem;
+    }
+}
+
+@media (max-height: 789px) {
+    .card-column {
+        margin-top: 0rem;
+    }
+
+    .card {
+        padding: 0.5rem;
+    }
+
+    .card-body {
+        padding: 0.5rem;
+    }
+
+    .card-container {
+        height: 80%;
+    }
+}
+
+.carousel-container {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+.cards-wrapper {
+    display: flex;
+  /*  transition: transform 0.3s ease;*/
+}
+
+/* You might need to adjust the card width or margin based on your needs */
+.card-container {
+    flex: 0 0 auto;
+    margin-right: 1rem;
+}
+
+/* Pulse Effect */
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(13, 56, 91, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(13, 56, 91, 1), 0 0 30px rgba(13, 56, 91, 1);
+    }
+}
+
+@keyframes borealisBar {
+    0% {
+        left: 0%;
+        right: 100%;
+        width: 0%;
+    }
+
+    10% {
+        left: 0%;
+        right: 75%;
+        width: 25%;
+    }
+
+    80% {
+        right: 0%;
+        left: 80%;
+        width: 20%;
+    }
+
+    100% {
+        left: 100%;
+        right: 0%;
+        width: 0%;
+    }
+}
+
+.dotted-lines {
+    position: relative;
+}
+
+    .dotted-lines * {
+        z-index: -1;
+    }
+
+.inlineBTN {
+    position: absolute;
+    padding: .05rem .5rem;
+    font-size: .85rem;
+    right: 0px;
+    top: 0px;
+    z-index: 0;
+}
+
+.homeImg {
+    position: relative;
+    display: inline-block;
+    border-radius: 0px;
+}
+
+    .homeImg::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: linear-gradient(45deg, rgba(33,37,41,1) 0%, rgba(33,37,41,0) 30%), 
+                    linear-gradient(135deg, rgba(33,37,41,1) 0%, rgba(33,37,41,0) 30%), 
+                    linear-gradient(225deg, rgba(33,37,41,1) 0%, rgba(33,37,41,0) 30%), 
+                    linear-gradient(315deg, rgba(33,37,41,1) 0%, rgba(33,37,41,0) 30%);
+        pointer-events: none;
+    }
+
+    .homeImg::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: linear-gradient(0deg, rgba(33,37,41,1) 0%, rgba(33,37,41,0) 45%), 
+            linear-gradient(90deg, rgba(33,37,41,1) 0%, rgba(33,37,41,0) 45%), 
+            linear-gradient(180deg, rgba(33,37,41,1) 0%, rgba(33,37,41,0) 45%), 
+            linear-gradient(270deg, rgba(33,37,41,1) 0%, rgba(33,37,41,0) 45%);
+        pointer-events: none;
+    }
+
+@media (max-width: 450px) {
+    .home-image-container {
+        max-width: 80%;
+        margin: auto;
+    }
+}
+
+input {
+    border-color: #6c757d;
+}
+
+    input::-webkit-input-placeholder {
+        color: #6c757d;
+    }
+
+    input::-moz-placeholder {
+        color: #6c757d;
+    }
+
+    input:-ms-input-placeholder {
+        color: #6c757d;
+    }
+
+    input:-moz-placeholder {
+        color: #6c757d;
+    }
+
+/* width */
+/*::-webkit-scrollbar {
+    width: 5px;
+    border-radius: 0px;
+}*/
+
+/* Track */
+/*::-webkit-scrollbar-track {
+    background: #212529;
+    border-radius: 0px;
+}*/
+
+/* Handle */
+/*::-webkit-scrollbar-thumb {
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    background: #6c757d;
+    border-radius: 5px;
+}*/
+
+    /* Handle on hover */
+    /*::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }*/

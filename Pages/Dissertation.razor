@@ -1,0 +1,42 @@
+﻿@page "/Dissertation/{file}"
+
+<SearchBar 
+    type="chat"
+    IsSearchDisabled="true" />
+
+<div class="pdfViewer">
+    <h3 class="title">@title</h3>
+    <iframe class="viewerIframe" src="@filePath" type="application/pdf">
+        This browser does not support PDFs. Please download the PDF to view it:
+        <a href="@filePath">Download PDF</a>.
+    </iframe>
+</div>
+
+
+
+@code {
+    private string? filePath;
+    private string? title;
+    [Parameter]
+    public string? file { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (file == "Dissertation")
+        {
+            filePath = "Denton,Sam,S4908415,Project_Report.pdf";
+            title = "A comparison of neural network-based network IDS techniques for achieving interpretability";
+        }
+        else if (file == "Artifact")
+        {
+            filePath = "Denton,Sam,S4908415,Artefact.pdf";
+            title = "A comparison of neural network-based network IDS techniques for achieving interpretability";
+        }
+        else if (file == "CV")
+        {
+            filePath = "Samuel Denton - CV.pdf";
+            title = "Curriculum Vitae";
+        }
+        StateHasChanged();
+    }
+}

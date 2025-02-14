@@ -1,0 +1,35 @@
+﻿@inject IJSRuntime JSRuntime
+@using System.Text.Json
+@using Microsoft.JSInterop
+@using BlazorWasmPortfolioGhAction.Pages.CryptoManagerComponents
+
+<div class="crypto-card-container" @onclick="SelectCrypto">
+    <div class="crypto-card">
+        <p class="card-title"><strong>@Crypto.Name</strong> (@Crypto.Symbol) - @Crypto.CurrentPrice</p>
+        <div class="chart-container">
+            <canvas id="@($"chart_{Crypto.Id}")"></canvas>
+        </div>
+    </div>
+    <div class="card-outline"></div>
+</div>
+
+@code {
+    [Parameter]
+    public Crypto Crypto { get; set; }
+
+    [Parameter]
+    public EventCallback<Crypto> OnCryptoSelected { get; set; }
+
+    private Task SelectCrypto()
+    {
+        return OnCryptoSelected.InvokeAsync(Crypto);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("renderSmallChart", Crypto.Id, Crypto.PriceHistory);
+        }
+    }
+}
