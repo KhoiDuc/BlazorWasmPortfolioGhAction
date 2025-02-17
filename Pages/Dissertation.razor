@@ -1,26 +1,38 @@
 ﻿@page "/Dissertation/{file}"
+@using BlazorWasmPortfolioGhAction.Store.Services
+@inject IMobileDetectionService MobileDetectionService
 
-<SearchBar 
-    type="chat"
-    IsSearchDisabled="true" />
+<SearchBar type="chat"
+           IsSearchDisabled="true" />
 
-<div class="pdfViewer">
-    <h3 class="title">@title</h3>
-    <iframe class="viewerIframe" src="@filePath" type="application/pdf">
-        This browser does not support PDFs. Please download the PDF to view it:
-        <a href="@filePath">Download PDF</a>.
-    </iframe>
-</div>
-
-
+@if (isMobile)
+{
+    <div class="mobile-pdf-download">
+        <h3 class="title">@title</h3>
+        <p>Your device is not optimized for viewing PDFs. Please download the file to view it.</p>
+        <a href="@filePath" download class="download-button">Download PDF</a>
+    </div>
+}
+else
+{
+    <div class="pdfViewer">
+        <h3 class="title">@title</h3>
+        <iframe class="viewerIframe" src="@filePath" type="application/pdf" style="width: 100%; height: 80vh; border: none;">
+            This browser does not support PDFs. Please download the PDF to view it:
+            <a href="@filePath">Download PDF</a>.
+        </iframe>
+    </div>
+}
 
 @code {
     private string? filePath;
     private string? title;
+    private bool isMobile = false;
+
     [Parameter]
     public string? file { get; set; }
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         if (file == "Dissertation")
         {
@@ -37,6 +49,10 @@
             filePath = "Samuel Denton - CV.pdf";
             title = "Curriculum Vitae";
         }
+
+        // Check if the device is mobile using the user-agent string
+        isMobile = await MobileDetectionService.IsMobileDevice();
+
         StateHasChanged();
     }
 }

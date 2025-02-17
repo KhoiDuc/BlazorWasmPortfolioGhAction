@@ -3,12 +3,13 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Fluxor;
 using BlazorWasmPortfolioGhAction.Store.Actions;
 using BlazorWasmPortfolioGhAction;
+using BlazorWasmPortfolioGhAction.Store.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-
+builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
 builder.Services.AddMsalAuthentication(options => {
     builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
     options.ProviderOptions.DefaultAccessTokenScopes.Add("api://a90ff01b-640d-478f-8f16-05fe599a6574/Files.Read");
