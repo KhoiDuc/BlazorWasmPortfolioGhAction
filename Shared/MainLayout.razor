@@ -109,6 +109,7 @@
             @Body
         </article>
     </main>
+
     <AuthorizeView>
         <Authorized>
             <div class="userNameDisp">
@@ -125,7 +126,7 @@
 
 @code {
     private bool isChecked { get; set; }
-    private string versionNo = "V1.7.11";
+    private string versionNo = "V1.0.0";
 
     protected override void OnInitialized()
     {
@@ -139,7 +140,7 @@
             await JSRuntime.InvokeVoidAsync("initNavbar");
             await JSRuntime.InvokeVoidAsync("customRefresh.preventRefresh");
             await JSRuntime.InvokeVoidAsync("customRefresh.preventRefreshMobile");
-            CheckNavigationTypeAsync();
+            await CheckNavigationTypeAsync();
         }
     }
     @* Re-directs back to home on refreshes to allow proper re-initiation *@

@@ -5,26 +5,25 @@
     alert('This app might not work properly in your environment due to restrictions. Please contact your IT department.');
 }
 
-
-
 function initNavbar() {
     var navbar = document.querySelector('.sidebarController');
     var icon = document.querySelector('.icon');
     var content = document.querySelector('.content');
     var main = document.querySelector('.topBlock');
-    var mq = window.matchMedia('(max-width: 10000px)');
+    var mq = window.matchMedia('(max-width: 768px)'); // Adjust the breakpoint as needed
     var topRow = document.querySelector('.top-row');
     var smallNavBar = document.querySelector('.smallNavBar');
+
     // Set initial state based on screen size
-    //if (mq.matches) {
-    //    navbar.classList.add('navHider');
-    //    icon.classList.remove('rotateLeft');
-    //    icon.classList.add('rotateRight');
-    //} else {
-    //    navbar.classList.add('navShower');
-    //    icon.classList.remove('rotateRight');
-    //    icon.classList.add('rotateLeft');
-    //}
+    if (mq.matches) {
+        // If mobile, hide the smallNavBar
+        smallNavBar.classList.add("noSmallNavBar");
+        smallNavBar.classList.remove("showSmallNavBar");
+    } else {
+        // If not mobile, ensure the smallNavBar is visible
+        smallNavBar.classList.remove("noSmallNavBar");
+        smallNavBar.classList.add("showSmallNavBar");
+    }
 
     // Listen for clicks on the icon
     icon.addEventListener('click', function () {
@@ -37,9 +36,11 @@ function initNavbar() {
             content.classList.remove('contentHider');
             main.classList.remove('main-Nav-Open');
             main.classList.add('main-Nav-Closed');
-            topRow.classList.remove("top-row-menu-open")
-            smallNavBar.classList.add("showSmallNavBar");
-            smallNavBar.classList.remove("noSmallNavBar");
+            topRow.classList.remove("top-row-menu-open");
+            if (!mq.matches) {
+                smallNavBar.classList.add("showSmallNavBar");
+                smallNavBar.classList.remove("noSmallNavBar");
+            }
         } else {
             navbar.classList.remove('sidebarController-start');
             navbar.classList.remove('navHider');
@@ -50,11 +51,22 @@ function initNavbar() {
             content.classList.add('contentHider');
             main.classList.add('main-Nav-Open');
             main.classList.remove('main-Nav-Closed');
-            topRow.classList.add("top-row-menu-open")
+            topRow.classList.add("top-row-menu-open");
             smallNavBar.classList.remove("showSmallNavBar");
             smallNavBar.classList.add("noSmallNavBar");
         }
         triggerRecalculateSizes();
+    });
+
+    // Optional: Listen for window resize events to handle screen size changes dynamically
+    window.addEventListener('resize', function () {
+        if (mq.matches) {
+            smallNavBar.classList.add("noSmallNavBar");
+            smallNavBar.classList.remove("showSmallNavBar");
+        } else {
+            smallNavBar.classList.remove("noSmallNavBar");
+            smallNavBar.classList.add("showSmallNavBar");
+        }
     });
 
     // Listen for screen size changes
