@@ -450,7 +450,7 @@ img {
 }
 
 .container {
-    width: 65%;
+    width: 75%;
     max-width: 1100px;
     margin: 0 auto;
     padding: 20px;
@@ -467,7 +467,7 @@ section {
 }
 
 .profile-info {
-    flex: 1;
+    flex: 2;
 }
 
     .profile-info h1 {
@@ -536,7 +536,7 @@ section {
     }
 
 .carousel-container {
-    width: 20%;
+    flex:1;
     position: relative;
     margin: 0 auto;
     overflow: hidden;
@@ -940,3 +940,87 @@ footer {
     }
 }
 
+.document-link {
+    display: inline-flex; /* Use flexbox for alignment */
+    align-items: center; /* Center the icon and text vertically */
+    padding: 10px;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    border: 1px solid transparent; /* Add a transparent border to prevent layout shift */
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+    transform-origin: center; /* Ensure scaling happens from the center */
+    will-change: transform; /* Optimize for transform */
+}
+
+    .document-link::before {
+        content: '📄'; /* Your icon (can be replaced with an icon font) */
+        margin-right: 10px; /* Add spacing between the icon and text */
+        transition: transform 0.3s ease; /* Smoothly scale the icon */
+    }
+
+    .document-link:hover, .document-link:focus {
+        border: 1px solid black;
+        background-color: white;
+        color: var(--primary-color);
+        transform: scale(1.05);
+        outline: none;
+    }
+
+        .document-link:hover::before, .document-link:focus::before {
+            transform: scale(1.05); /* Scale the icon along with the link */
+        }
+
+@media (min-width: 768px) {
+    .document-link {
+        width: auto;
+        margin: 0;
+    }
+}
+
+/* General Styling */
+.details {
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    border: 1px solid #e0e0e0; /* Light border */
+}
+
+/* School Name */
+.school-name {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50; /* Dark blue for emphasis */
+    margin-bottom: 10px;
+}
+
+/* Program Name */
+.program {
+    font-size: 18px;
+    font-weight: 600;
+    color: #34495e; /* Slightly lighter blue */
+    margin-bottom: 10px;
+}
+
+/* School Link */
+.school-link a {
+    font-size: 16px;
+    color: #3498db; /* Bright blue for links */
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+    .school-link a:hover {
+        color: #2980b9; /* Darker blue on hover */
+        text-decoration: underline;
+    }
+
+/* Date */
+.date {
+    font-size: 14px;
+    color: #7f8c8d; /* Gray for less emphasis */
+    margin-top: 10px;
+    font-style: italic;
+}
