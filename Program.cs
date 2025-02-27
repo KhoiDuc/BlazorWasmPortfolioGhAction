@@ -18,6 +18,8 @@ builder.Services.AddMsalAuthentication(options => {
     options.ProviderOptions.DefaultAccessTokenScopes.Add("api://a90ff01b-640d-478f-8f16-05fe599a6574/Files.Read");
     options.ProviderOptions.LoginMode = "redirect";
 });
+builder.Services.AddSingleton<ITimeZoneQueryProviderService, TimeZoneQueryProviderService>();
+
 builder.Services.AddFluxor(o => o.ScanAssemblies(typeof(Program).Assembly));
 
 // build the host
