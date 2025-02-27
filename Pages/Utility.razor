@@ -1,0 +1,144 @@
+﻿@page "/Utility/{Component?}"
+@using BlazorWasmPortfolioGhAction.Components.Ascii
+@inject IJSRuntime JSRuntime
+
+<nav class="sitenav" aria-labelledby="main-menu">
+    <ul class="nav-menu" id="main-menu">
+        <li><a href="/" class="nav-link">Home</a></li>
+        <li><a href="Utility/urls" class="nav-link">Urls</a></li>
+        <li><a href="Utility/guid" class="nav-link">Guid</a></li>
+        <li><a href="Utility/sql" class="nav-link">SQL</a></li>
+        <li><a href="Utility/html" class="nav-link">HTML</a></li>
+        <li><a href="Utility/markdown" class="nav-link">Markdown</a></li>
+        <li><a href="Utility/timerstopwatch" class="nav-link">Timer / Stopwatch</a></li>
+        <li><a href="Utility/ascii" class="nav-link">Ascii</a></li>
+        <li><a href="Utility/colourconverter" class="nav-link">Colour Converter</a></li>
+        <li><a href="Utility/binary" class="nav-link">Binary</a></li>
+        <li><a href="Utility/stringconverter" class="nav-link">String</a></li>
+        <li><a href="Utility/epoch" class="nav-link">Epoch</a></li>
+        <li><a href="Utility/converter" class="nav-link">Converter</a></li>
+        <li><a href="Utility/jwt" class="nav-link">JWT</a></li>
+        <li><a href="Utility/luhn" class="nav-link">Luhn</a></li>
+        <li><a href="Utility/hcf" class="nav-link">Hidden Char Finder</a></li>
+        <li><a href="Utility/codeeditor" class="nav-link">Code Editor</a></li>
+        <li><a href="Utility/diffeditor" class="nav-link">Diff Editor</a></li>
+        <li><a href="Utility/unicode" class="nav-link">Unicode</a></li>
+        <li><a href="Utility/cryptography" class="nav-link">Cryptography</a></li>
+    </ul>
+</nav>
+
+<div class="component-container">
+    @switch (Component?.ToLower())
+    {
+        case "ascii":
+            <BlazorWasmPortfolioGhAction.Components.Ascii.Ascii />
+            break;
+        case "urls":
+            <BlazorWasmPortfolioGhAction.Components.Binary.Binary />
+            break;
+        case "guid":
+            <BlazorWasmPortfolioGhAction.Components.GuidGenerator.GuidGenerator />
+            break;
+        case "sql":
+            <SQLBuilder />
+            break;
+        case "html":
+            <BlazorWasmPortfolioGhAction.Components.HTMLEncodeDecode.HTMLEncodeDecode />
+            break;
+        case "markdown":
+            <BlazorWasmPortfolioGhAction.Components.MarkdownConverter.MarkdownConverter HTML="<html><body><h1>Hello</h1></body></html>" />
+            break;
+        case "timerstopwatch":
+            {
+                <BlazorWasmPortfolioGhAction.Components.TimerControl.TimerControl Input="5m 00s" />
+                <hr />
+                <BlazorWasmPortfolioGhAction.Components.Stopwatch.Stopwatch Input="0s 00" />
+
+                break;
+            }
+        case "colourconverter":
+            <BlazorWasmPortfolioGhAction.Components.HexToRGB.HexToRGB />
+            break;
+        case "binary":
+            <BlazorWasmPortfolioGhAction.Components.Binary.Binary />
+            break;
+        case "stringconverter":
+            <BlazorWasmPortfolioGhAction.Components.StringConverter.StringConverter />
+            break;
+        case "epoch":
+            <BlazorWasmPortfolioGhAction.Components.EpochConverter.EpochConverter />
+            break;
+        case "converter":
+            {
+                <BlazorWasmPortfolioGhAction.Components.HextoDec.HextoDec />
+                <br />
+                <BlazorWasmPortfolioGhAction.Components.MemoryConverter.MemoryConverter />
+                <br />
+                <BlazorWasmPortfolioGhAction.Components.TimeConverter.TimeConverter />
+                break;
+            }
+        case "jwt":
+            <BlazorWasmPortfolioGhAction.Components.JWTDebugger.JWTDebugger />
+            break;
+        case "luhn":
+            <BlazorWasmPortfolioGhAction.Components.LuhnChecker.LuhnChecker />
+            break;
+        case "hcf":
+            <BlazorWasmPortfolioGhAction.Components.HCF.HCF />
+            break;
+        case "codeeditor":
+            <BlazorWasmPortfolioGhAction.Components.MonacoEditor.MonacoEditor />
+            break;
+        case "diffeditor":
+            <BlazorMonaco.Editor.DiffEditor />
+            break;
+        case "unicode":
+            <BlazorWasmPortfolioGhAction.Components.UnicodePicker.UnicodePicker />
+            break;
+        case "cryptography":
+            <BlazorWasmPortfolioGhAction.Components.MD5Converter.MD5Converter />
+            break;
+        default:
+            <p>Please select a utility from the navigation menu.</p>
+            break;
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? Component { get; set; }
+}
+
+<style>
+    .sitenav {
+        width: 100%;
+    }
+
+    .nav-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+        .nav-menu li {
+            margin: 0 10px;
+        }
+
+    .nav-link {
+        text-decoration: none;
+        color: #0078d4;
+        padding: 8px 12px;
+        display: block;
+    }
+
+        .nav-link:hover {
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+
+    .component-container {
+        padding: 20px;
+    }
+</style>

@@ -1,0 +1,87 @@
+@using System.Text
+@using System.IdentityModel.Tokens.Jwt
+@inject IJSRuntime JSRuntime
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h2>JWT Debugger</h2>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col">
+            <label class="label-control" for="algorithm-select">Algorithm:</label>
+            <select id="algorithm-select" name="algorithm-select" class="form-control" >
+                <option name="algorithm" value="HS256" selected="">HS256</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="input-group">
+                <textarea id="Input" class="form-control" rows="5" @bind="Input" placeholder="JWT"></textarea>
+                <span class="input-group-btn">
+                    <button id="btnDecode" name="btnDecode" class="btn btn-success" @onclick="Decode"><i class="fas fa-arrows-alt-h"></i></button>
+                    <button id="btnClear" name="btnClear" class="btn btn-danger float-right" @onclick="Clear"><i class="far fa-trash-alt"></i>@*Clear*@</button>
+                </span>
+            </div>
+        </div>
+        <div class="col">
+            <p>HEADER:ALGORITHM & TOKEN TYPE</p>
+            <textarea id="Header" class="form-control" rows="5" @bind="Header" placeholder="DECODED"></textarea>
+            <p>PAYLOAD:DATA</p>
+            <textarea id="Payload" class="form-control" rows="5" @bind="Payload" placeholder="DECODED"></textarea>
+            <p>VERIFY SIGNATURE</p>
+            <textarea id="VerifySignature" class="form-control" rows="5" @bind="Signature" placeholder="DECODED"></textarea>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col">
+            <p>Inspired from <a href="https://jwt.io" target="_blank">JWT.io</a>.</p>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    [Parameter]
+    public string? Input { get; set; }
+
+    [Parameter]
+    public string? Output { get; set; }
+    
+    [Parameter]
+    public string Header { get; set; }
+    
+    [Parameter]
+    public string Payload { get; set; }
+    
+    [Parameter]
+    public string Signature { get; set; }
+    
+    // protected override void OnInitialized() {}
+    
+    void Decode()
+    {
+        if (string.IsNullOrEmpty(Input)) return;
+
+        var handler = new JwtSecurityTokenHandler();
+        var jwtSecurityToken = handler.ReadJwtToken(Input);
+        Header = jwtSecurityToken.Header.SerializeToJson();
+        Payload = jwtSecurityToken.Payload.SerializeToJson();
+        Signature = jwtSecurityToken.RawSignature;
+    }
+    
+    private void Clear()
+    {
+        Input = string.Empty;
+    }
+    
+    async Task Copy()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Output);
+    }
+}
