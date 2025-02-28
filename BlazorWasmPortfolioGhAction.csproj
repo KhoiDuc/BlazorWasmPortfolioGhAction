@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
@@ -22,6 +22,7 @@
 	  <Content Remove="wwwroot\images\photo1.jpg" />
 	  <Content Remove="wwwroot\images\photo2.jpg" />
 	  <Content Remove="wwwroot\images\photo3.jpg" />
+	  <Content Remove="wwwroot\js\track-visitors.js" />
 	  <Content Remove="wwwroot\transcript.pdf" />
 	</ItemGroup>
 
@@ -41,13 +42,14 @@
 	  <None Include="wwwroot\images\photo1.jpg" />
 	  <None Include="wwwroot\images\photo2.jpg" />
 	  <None Include="wwwroot\images\photo3.jpg" />
+	  <None Include="wwwroot\js\track-visitors.js" />
 	  <None Include="wwwroot\Transcript.pdf" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="14.0.0" />
 		<PackageReference Include="BlazorComponentBus" Version="2.2.0" />
-		<PackageReference Include="Fluxor.Blazor.Web" Version="5.7.0" />
+		<PackageReference Include="Fluxor.Blazor.Web" Version="6.6.0" />
 		<PackageReference Include="lodash" Version="4.17.21" />
 		<PackageReference Include="MathNet.Numerics" Version="5.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
@@ -62,6 +64,12 @@
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.6.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.8" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.8" PrivateAssets="all" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Update="Pages\Portfolio.razor">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	  </Content>
 	</ItemGroup>
 
 </Project>

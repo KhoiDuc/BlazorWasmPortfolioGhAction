@@ -93,21 +93,38 @@ function initNavbarMobile() {
     var icon = document.querySelector('.icon');
     var content = document.querySelector('.content');
     var main = document.querySelector('.topBlock');
+    var topRow = document.querySelector('.top-row-menu-open'); // Ensure this element exists
+    var smallNavBar = document.querySelector('.smallNavBar'); // Ensure this element exists
+
     links.forEach(function (link) {
-        // Listen for clicks on the link
         link.addEventListener('click', function () {
-            if (navbar.classList.contains('navShower') && window.innerWidth < 690) {
+            if (navbar && navbar.classList.contains('navShower') && window.innerWidth < 690) {
                 navbar.classList.remove('navShower');
                 navbar.classList.remove('sidebarController-max');
                 navbar.classList.add('navHider');
-                icon.classList.remove('rotateLeft');
-                icon.classList.add('rotateRight');
-                content.classList.remove('contentHider');
-                main.classList.remove('main-Nav-Open');
-                main.classList.add('main-Nav-Closed');
-                topRow.classList.remove("top-row-menu-open")
-                smallNavBar.classList.remove("showSmallNavBar");
-                smallNavBar.classList.add("noSmallNavBar");
+
+                if (icon) {
+                    icon.classList.remove('rotateLeft');
+                    icon.classList.add('rotateRight');
+                }
+
+                if (content) {
+                    content.classList.remove('contentHider');
+                }
+
+                if (main) {
+                    main.classList.remove('main-Nav-Open');
+                    main.classList.add('main-Nav-Closed');
+                }
+
+                if (topRow) {
+                    topRow.classList.remove("top-row-menu-open");
+                }
+
+                if (smallNavBar) {
+                    smallNavBar.classList.remove("showSmallNavBar");
+                    smallNavBar.classList.add("noSmallNavBar");
+                }
             }
         });
     });
