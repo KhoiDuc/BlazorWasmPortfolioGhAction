@@ -57,7 +57,7 @@ jobs:
         run: dotnet build ${{ env.PROJECT_NAME }}.csproj --configuration Release --nologo
 
       - name: Publish .NET Core Project
-        run: dotnet publish ${{ env.PROJECT_NAME }}.csproj --configuration Release --output ${{ env.OUTPUT_FOLDER }} --nologo --no-restore
+        run: dotnet publish ${{ env.PROJECT_NAME }}.csproj --configuration Release --output ${{ env.OUTPUT_FOLDER }} --nologo --no-restore -p:BaseHref=${{ env.BASE_HREF }}
 
       - name: Change base-tag in index.html
         shell: bash
