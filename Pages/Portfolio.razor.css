@@ -1,0 +1,613 @@
+﻿* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.resume-body {
+    font-weight: 300;
+    line-height: 1.7;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 0.875rem;
+}
+
+header {
+    background-color: var(--header-background);
+    padding: 0.938rem 0;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 0px;
+}
+
+img {
+    vertical-align: middle;
+}
+
+.container {
+    width: 75%;
+    max-width: 68.75rem;
+    margin: 0 auto;
+    padding: 1.25rem;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+section {
+    margin-bottom: 4.375rem;
+}
+
+.profile-info {
+    flex: 2;
+}
+
+    .profile-info h1 {
+        font-size: 1.9rem;
+        font-weight: 700;
+        margin-bottom: 0.625rem;
+        font-family: 'Merriweather', serif;
+        color: var(--primary-color);
+    }
+
+    .profile-info .chinese-name {
+        font-weight: 400;
+        font-size: 1.4rem;
+        color: var(--secondary-color);
+    }
+
+    .profile-info .subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 0.875rem;
+        color: var(--text-color);
+    }
+
+    .profile-info p {
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+    }
+
+    .profile-info .icon {
+        margin-right: 0.313rem
+    }
+
+    .profile-info a:not(.button) {
+        color: var(--link-color);
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
+        .profile-info a:not(.button):hover {
+            color: var(--link-hover-color);
+        }
+
+.links {
+    margin-top: 0.75rem;
+}
+
+    .links a {
+        margin-right: 0.625rem;
+        margin-bottom: 0.438rem;
+    }
+
+.button {
+    display: inline-block;
+    padding: 6px 0.625rem;
+    background-color: var(--primary-color);
+    color: #fff;
+    border-radius: 0.313rem;
+    text-decoration: none;
+    margin-top: 0.875rem;
+    font-size: 0.85rem;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+    .button:hover {
+        background-color: var(--link-hover-color);
+        color: #fff;
+    }
+
+.carousel-container {
+    flex: 1;
+    position: relative;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    border-radius: 0.313rem
+}
+
+.carousel-image {
+    display: none;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+    .carousel-image.active {
+        display: block;
+    }
+
+.prev,
+.next {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--text-color);
+    border: none;
+    user-select: none;
+    border-radius: 50%;
+    transition: background 0.3s;
+}
+
+.prev {
+    left: 8px;
+}
+
+.next {
+    right: 8px;
+}
+
+    .prev:hover,
+    .next:hover {
+        background-color: var(--link-hover-color);
+        color: #fff;
+    }
+
+.intro {
+    background-color: #eef3f6;
+    color: var(--text-color);
+    padding: 1.563rem 0;
+    margin-bottom: 2.5rem;
+    border-radius: 0.313rem
+}
+
+    .intro p {
+        font-size: 0.9rem;
+    }
+
+    .intro a {
+        color: var(--link-color);
+    }
+
+        .intro a:hover {
+            color: var(--link-hover-color);
+        }
+
+main h2 {
+    font-size: 1.4rem;
+    margin-top: 4.375rem;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.625rem;
+    color: var(--primary-color);
+}
+
+    main h2:first-of-type {
+        margin-top: 2.5rem;
+    }
+
+.details h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.details p {
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.date {
+    font-size: 0.75rem;
+    font-style: italic;
+    color: #777;
+    display: block;
+}
+
+.education-item .education-header {
+    background-color: #fff;
+    border-left: 4px solid var(--primary-color);
+    border-radius: 0.313rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.25rem;
+}
+    .education-item .education-header .details {
+        flex: 2;
+    }
+    .education-item .education-header .education-info {
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+        display: flex;
+        padding: 1.25rem;
+    }
+
+.courses {
+    margin-top: 0.625rem;
+}
+
+    .courses p {
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+.experience-item,
+.project-item,
+.activity-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 35px;
+    gap: 1.25rem;
+    background-color: #fff;
+    padding: 1.25rem;
+    border-left: 4px solid var(--primary-color);
+    border-radius: 0.313rem
+}
+
+    .experience-item .date,
+    .project-item .date,
+    .activity-item .date {
+        font-size: 0.75rem;
+        margin-top: 0.313rem
+    }
+
+.details {
+    flex: 1;
+}
+
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.awards-list,
+.skills-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+    .awards-list li,
+    .skills-list li {
+        position: relative;
+        padding-right: 7.5rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .awards-list .date {
+        position: absolute;
+        right: 0;
+        top: 0;
+        font-size: 0.9rem;
+        color: #777;
+    }
+
+ul {
+    list-style-type: disc;
+    margin-top: 0.625rem;
+    padding-left: 1.25rem;
+}
+
+    ul li {
+        margin-bottom: 0.625rem;
+        font-size: 0.9rem;
+        color: var(--text-color);
+    }
+
+footer {
+    background-color: var(--footer-background);
+    text-align: center;
+    padding: 1.25rem 0;
+    border-top: 1px solid #ddd;
+    margin-top: 3.75rem;
+    font-size: 0.75rem;
+    color: #777;
+}
+
+    footer a {
+        color: var(--link-color);
+        text-decoration: none;
+    }
+
+        footer a:hover {
+            color: var(--link-hover-color);
+        }
+
+    footer p {
+        margin-bottom: 0.875rem;
+    }
+
+@media (max-width: 1080px) {
+    .container {
+        width: 90%;
+        padding: 0.625rem;
+    }
+
+    header {
+        padding: 0.625rem 0;
+        margin-bottom: 1.563rem;
+    }
+
+    .profile-info p {
+        font-size: 0.85rem;
+    }
+
+    .profile-info h1 {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+
+    .header-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .carousel-container {
+        width: 30%;
+        height: auto;
+        margin-top: 15px;
+        position: relative;
+    }
+
+    .carousel-image {
+        height: auto;
+    }
+
+    .prev,
+    .next {
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    main h2 {
+        font-size: 1.2rem;
+    }
+
+    .details h3 {
+        font-size: 1rem;
+    }
+
+    .details p {
+        font-size: 0.9rem;
+    }
+
+    .education-item,
+    .experience-item,
+    .project-item,
+    .activity-item {
+        flex-direction: column;
+        gap: 0.625rem;
+    }
+
+    body {
+        font-size: 0.75rem;
+        line-height: 1.6;
+    }
+}
+
+
+/* Add this meta tag in your HTML */
+@media (max-width: 768px) {
+    .container {
+        width: 100%;
+        padding: 15px;
+    }
+
+    .header-container {
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .profile-info {
+        text-align: center;
+    }
+
+    .carousel-container {
+        width: 80%;
+        margin: 20px auto;
+    }
+
+    .carousel-image {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .profile-info h1 {
+        font-size: 1.5rem;
+    }
+
+    .profile-info .subtitle {
+        font-size: 0.9rem;
+    }
+
+    .profile-info p {
+        font-size: 0.8rem;
+    }
+
+    .links {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+        .links a {
+            margin: 5px 0.625rem;
+        }
+
+    .button {
+        padding: 5px 8px;
+        font-size: 0.8rem;
+    }
+
+    main h2 {
+        font-size: 1.2rem;
+        margin-top: 2.5rem;
+    }
+
+    .experience-item,
+    .project-item,
+    .activity-item {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .details {
+        width: 100%;
+    }
+
+    .content {
+        width: 100%;
+    }
+
+    footer {
+        padding: 15px;
+    }
+
+    .awards-list li,
+    .skills-list li {
+        padding-right: 90px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0.625rem;
+    }
+
+    .profile-info h1 {
+        font-size: 1.3rem;
+    }
+
+    .carousel-container {
+        width: 90%;
+    }
+
+    .prev,
+    .next {
+        font-size: 0.875rem;
+        padding: 4px;
+    }
+
+    .profile-info p {
+        font-size: 0.75rem;
+    }
+
+    .button {
+        padding: 4px 6px;
+        font-size: 0.75rem;
+    }
+
+    main h2 {
+        font-size: 1.1rem;
+    }
+
+    .details h3 {
+        font-size: 1rem;
+    }
+
+    .date {
+        font-size: 0.7rem;
+    }
+
+    .awards-list li,
+    .skills-list li {
+        padding-right: 4.375rem;
+    }
+}
+
+.document-link {
+    display: inline-flex; /* Use flexbox for alignment */
+    align-items: center; /* Center the icon and text vertically */
+    padding: 0.625rem;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 0.313rem
+    font-weight: bold;
+    border: 1px solid transparent; /* Add a transparent border to prevent layout shift */
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+    transform-origin: center; /* Ensure scaling happens from the center */
+    will-change: transform; /* Optimize for transform */
+}
+
+    .document-link::before {
+        content: '📄'; /* Your icon (can be replaced with an icon font) */
+        margin-right: 0.625rem; /* Add spacing between the icon and text */
+        transition: transform 0.3s ease; /* Smoothly scale the icon */
+    }
+
+    .document-link:hover, .document-link:focus {
+        border: 1px solid black;
+        background-color: white;
+        color: var(--primary-color);
+        transform: scale(1.05);
+        outline: none;
+    }
+
+        .document-link:hover::before, .document-link:focus::before {
+            transform: scale(1.05); /* Scale the icon along with the link */
+        }
+
+@media (min-width: 768px) {
+    .document-link {
+        width: auto;
+        margin: 0;
+    }
+}
+
+/* General Styling */
+.details {
+    padding: 1.25rem;
+    /*border-radius: 0.625rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);*/ /* Subtle shadow for depth */
+    /*border: 1px solid #e0e0e0;*/ /* Light border */
+}
+
+/* School Name */
+.school-name {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50; /* Dark blue for emphasis */
+    margin-bottom: 0.625rem;
+}
+
+/* Program Name */
+.program {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #34495e; /* Slightly lighter blue */
+    margin-bottom: 0.625rem;
+}
+
+/* School Link */
+.school-link a {
+    font-size: 1rem;
+    color: #3498db; /* Bright blue for links */
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+    .school-link a:hover {
+        color: #2980b9; /* Darker blue on hover */
+        text-decoration: underline;
+    }
+
+/* Date */
+.date {
+    font-size: 0.875rem;
+    color: #7f8c8d; /* Gray for less emphasis */
+    margin-top: 0.625rem;
+    font-style: italic;
+}

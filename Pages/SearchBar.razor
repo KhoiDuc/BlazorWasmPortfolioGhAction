@@ -1,0 +1,54 @@
+﻿@inject NavigationManager Navigation;
+@inject IJSRuntime JSRuntime;
+
+<div class="ps-1 pt-2 sticky-top searchBar" @onclick="NavigateToMainComponent">
+    <div class="input-group mb-3 text-dark" style="pointer-events: auto;">
+        <input id="searchBox" class="form-control bg-light text-dark" placeholder="Search Wiki" @bind="searchTerm" @bind:event="oninput" @onkeyup="SearchTermChangedInComponent" /*disabled="@IsSearchDisabled"*/>
+    </div>
+</div>
+
+@code {
+    public string? searchTerm { get; set; }
+    [Parameter] public string? type { get; set; } = "No Type";
+    [Parameter] public EventCallback<string> SearchTermChanged { get; set; }
+    [Parameter] public bool IsSearchDisabled { get; set; } = false;
+
+    private void NavigateToMainComponent()
+    {
+        Console.WriteLine("Navigating to main component");
+        if (IsSearchDisabled)
+        {
+            Navigation.NavigateTo($"/");
+        }
+    }
+
+    private void SearchTermChangedInComponent()
+    {
+        Console.WriteLine("Search term changed");
+        if (string.Equals(searchTerm, "CV", StringComparison.OrdinalIgnoreCase))
+        {
+            Navigation.NavigateTo($"/Dissertation/CV");
+        }
+        else if (string.Equals(searchTerm, "Transcript", StringComparison.OrdinalIgnoreCase))
+        {
+            Navigation.NavigateTo($"/Dissertation/Transcript");
+        }
+        else if (string.Equals(searchTerm, "Degree", StringComparison.OrdinalIgnoreCase))
+        {
+            Navigation.NavigateTo($"/Dissertation/Degree");
+        }
+        else if (string.Equals(searchTerm, "ChatBot", StringComparison.OrdinalIgnoreCase))
+        {
+            Navigation.NavigateTo($"/chat");
+        }
+        else if (searchTerm.Contains("Assistant", StringComparison.OrdinalIgnoreCase))
+        {
+            Navigation.NavigateTo($"/navBot");
+        }
+        else
+        {
+            SearchTermChanged.InvokeAsync(searchTerm);
+        }
+    }
+
+}

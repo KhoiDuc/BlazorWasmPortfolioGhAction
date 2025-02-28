@@ -1,0 +1,174 @@
+﻿@inherits LayoutComponentBase
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<div class="page">
+    <div class="sidebar sidebarController sidebarController-start">
+        <div class="sidebarContainer" style="height: calc(100vh - 56px); margin-top: 56px;">
+            <NavMenu />
+        </div>
+    </div>
+    <div class="smallNavBar showSmallNavBar">
+        <nav class="d-flex flex-column text-dark" id="navSmall">
+            <div class="nav-items-container">
+                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/">
+                        <h2 class="oi oi-home text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">Home</span>
+                    </NavLink>
+                </div>
+                <div class="item-fader dropdown-divider divider"></div>
+                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/MyResume">
+                        <h2 class="oi oi-briefcase text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">My Resume</span>
+                    </NavLink>
+                </div>
+                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/Dissertation/Transcript">
+                        <h2 class="oi oi-document text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">My Transcript</span>
+                    </NavLink>
+                </div>
+                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/Dissertation/Degree">
+                        <h2 class="oi oi-book text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">My Degree</span>
+                    </NavLink>
+                </div>
+                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/Dissertation/CV">
+                        <h2 class="oi oi-person text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">My CV</span>
+                    </NavLink>
+                </div>
+                <div class="item-fader dropdown-divider divider"></div>
+                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/Utility">
+                        <h2 class="oi oi-puzzle-piece text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">Utility!</span>
+                    </NavLink>
+                </div>
+                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/SvgDiagramEditor">
+                        <h2 class="oi oi-puzzle-piece text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">SVG Diagram Editor!</span>
+                    </NavLink>
+                </div>
+@*                 <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/EvolutionTF">
+                        <h2 class="oi oi-puzzle-piece text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">Evolution Simulator!</span>
+                    </NavLink>
+                </div> *@
+                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/cryptoManager">
+                        <h2 class="oi oi-dollar text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">Crypto Manager!</span>
+                    </NavLink>
+                </div>
+@*                 <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/chat">
+                        <h2 class="oi oi-chat text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">My Chat Bot!</span>
+                    </NavLink>
+                </div> *@
+                @* <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/navBot">
+                        <h2 class="oi oi-chat text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">Navigation Assistant</span>
+                    </NavLink>
+                </div>
+                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/generalCalc">
+                        <h2 class="oi oi-calculator text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">General Converter!</span>
+                    </NavLink>
+                </div> *@
+                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/overnightMinTemp">
+                        <h2 class="oi oi-calculator text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">Min Temp Calculator!</span>
+                    </NavLink>
+                </div>
+@*                 <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/bindingEnergyCalculator">
+                        <h2 class="oi oi-calculator text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">Binding Energy!</span>
+                    </NavLink>
+                </div> *@
+                <div class="item-fader dropdown-divider divider"></div>
+                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+                    <NavLink class="p-1 nav-link" href="/all">
+                        <h2 class="oi oi-info text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">My Wiki</span>
+                    </NavLink>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <main class="bg-light text-dark topBlock main-Nav-Closed" style="position: relative">
+        <div class="topLeftBlock">
+            <div class="form-group form-check form-switch" id="navToggle">
+                <label for="sliderToggle" class="form-check-label menu-toggle">
+                    <input type="checkbox" class="form-check-input" id="sliderToggle" value="isChecked"/>
+                    <span class="oi oi-menu form-check-icon icon rotateRight"></span>
+                </label>
+            </div>
+            <div id="topLeftText" class="lastLink" @onclick="GoHome">
+                    @*<img src="@icon" alt="Icon" height="30" width="30" class="mx-2 img-fluid homeImg" />*@
+                    KHOI <small class="topLeftTextMuted @(isChecked == false ? "internalWiki" : "")">Portfolio</small>
+        </div>
+        </div>
+
+        <div class="top-row px-4 auth bg-light text-dark">
+            <div class="logindisp">
+                <div class="logindispSmall @(isChecked == false ? "" : "justify-content-end")">
+                    <LoginDisplay />
+                </div>
+            </div>
+        </div>
+
+        <article class="content px-2 bg-light content-menu-closed @(IsHome ? "content-home" : "")">
+            @Body
+        </article>
+    </main>
+
+    <AuthorizeView>
+        <Authorized>
+            <div class="userNameDisp">
+                @context.User.Identity?.Name @versionNo
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="userNameDisp">
+                 @versionNo
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    private bool isChecked { get; set; }
+    private string versionNo = "V1.0.0";
+    private bool IsHome => NavigationManager.Uri.EndsWith("/");
+
+    protected override void OnInitialized()
+    {
+        //Console.WriteLine("MainLayout.razor initialised");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("initNavbar");
+            await JSRuntime.InvokeVoidAsync("customRefresh.preventRefresh");
+            await JSRuntime.InvokeVoidAsync("customRefresh.preventRefreshMobile");
+            await CheckNavigationTypeAsync();
+        }
+    }
+    @* Re-directs back to home on refreshes to allow proper re-initiation *@
+    @* Not sure this is needed now I have proper state management implemented *@
+    private async Task CheckNavigationTypeAsync()
+    {
+        @*
+        var navType = await JSRuntime.InvokeAsync<string>("customRefresh.getNavigationType");
+        if (navType == "reload" || navType == "back_forward")
+        {
+            GoHome();
+        }
+        *@
+    }
+
+    private void GoHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}
