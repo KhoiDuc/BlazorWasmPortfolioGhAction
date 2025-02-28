@@ -4,7 +4,6 @@
 
 <nav class="sitenav" aria-labelledby="main-menu">
     <ul class="nav-menu" id="main-menu">
-        <li><a href="/" class="nav-link">Home</a></li>
         <li><a href="Utility/urls" class="nav-link">Urls</a></li>
         <li><a href="Utility/guid" class="nav-link">Guid</a></li>
         <li><a href="Utility/sql" class="nav-link">SQL</a></li>
@@ -38,8 +37,12 @@
             <BlazorWasmPortfolioGhAction.Components.Ascii.Ascii />
             break;
         case "urls":
-            <BlazorWasmPortfolioGhAction.Components.Binary.Binary />
-            break;
+            {
+                <BlazorWasmPortfolioGhAction.Components.UrlSplitter.UrlSplitter />
+                <br />
+                <BlazorWasmPortfolioGhAction.Components.UrlEncode.UrlEncode />
+                break;
+            }
         case "guid":
             <BlazorWasmPortfolioGhAction.Components.GuidGenerator.GuidGenerator />
             break;

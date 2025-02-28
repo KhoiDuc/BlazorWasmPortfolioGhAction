@@ -3,7 +3,6 @@ using BlazorWasmPortfolioGhAction.Store.Actions;
 using BlazorWasmPortfolioGhAction.Store.State;
 using Fluxor;
 using Newtonsoft.Json;
-using BlazorWasmPortfolioGhAction.Shared.Model;
 using System.Net;
 using System.Text;
 
