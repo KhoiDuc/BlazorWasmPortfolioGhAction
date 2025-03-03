@@ -1,4 +1,7 @@
-﻿namespace BlazorWasmPortfolioGhAction.Pages.ConverterComponents
+﻿using System;
+using System.Collections.Generic;
+
+namespace BlazorWasmPortfolioGhAction.Pages.ConverterComponents
 {
     public class OpenCalculatorInstance
     {

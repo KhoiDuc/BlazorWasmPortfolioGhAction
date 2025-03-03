@@ -1,4 +1,7 @@
-﻿namespace BlazorWasmPortfolioGhAction.Store.Services
+﻿using System;
+using System.Collections.Generic;
+
+namespace BlazorWasmPortfolioGhAction.Store.Services
 {
     public interface ITimeZoneQueryProviderService
     {

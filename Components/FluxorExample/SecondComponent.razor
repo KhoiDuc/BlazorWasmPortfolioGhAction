@@ -1,0 +1,27 @@
+﻿@using BlazorWasmPortfolioGhAction.Contexts
+@inject TemperatureStore temperatureStore
+@implements IDisposable
+
+<h3>Second Component</h3>
+
+<h4>@temperatureStore.Temperature</h4>
+
+@code {
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        temperatureStore.OnTemperatureUpdated += TemperatureUpdated;
+
+    }
+
+
+    private void TemperatureUpdated(object sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        temperatureStore.OnTemperatureUpdated -= TemperatureUpdated;
+    }
+}

@@ -347,7 +347,7 @@
 
             await WaitForFirebase();
 
-            trackerModule = await JS.InvokeAsync<IJSObjectReference>("import", "/js/track-visitors.js");
+            trackerModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/track-visitors.js");
             await trackerModule.InvokeVoidAsync("trackVisitor");
 
             mainContentModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Portfolio.razor.js");

@@ -1,4 +1,6 @@
-﻿namespace BlazorWasmPortfolioGhAction.Pages.ConverterComponents
+﻿using System;
+
+namespace BlazorWasmPortfolioGhAction.Pages.ConverterComponents
 {
     public class CalculatorInfo
     {
