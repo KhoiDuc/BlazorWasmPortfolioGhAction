@@ -26,10 +26,10 @@ builder.Services.AddFluxor(o => o.ScanAssemblies(typeof(Program).Assembly));
 var host = builder.Build();
 
 // resolve the dispatcher
-var dispatcher = host.Services.GetRequiredService<IDispatcher>();
+//var dispatcher = host.Services.GetRequiredService<IDispatcher>();
 
 // dispatch the LoadContentsFromRepoAction
-dispatcher.Dispatch(new LoadContentsFromRepoAction());
+//dispatcher.Dispatch(new LoadContentsFromRepoAction());
 
 // Run the app
 await host.RunAsync();
