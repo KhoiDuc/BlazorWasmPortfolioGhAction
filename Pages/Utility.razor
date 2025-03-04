@@ -36,6 +36,7 @@
             <li>
                 <span class="nav-category">Time & Calculation Tools</span>
                 <ul>
+                    <li><a href="Utility/bigbangcounter" class="nav-link">Big Bang Counter</a></li>
                     <li><a href="Utility/mathcalculator" class="nav-link">Math Calculator</a></li>
                     <li><a href="Utility/overnightMinTemp" class="nav-link">Min Temp Calculator</a></li>
                     <li><a href="Utility/CIDRCalculator" class="nav-link">CIDR Calculator</a></li>
@@ -75,6 +76,9 @@
     <div class="component-container">
         @switch (Component?.ToLower())
         {
+            case "bigbangcounter":
+                <BigBangCounter />
+                break;
             case "mathcalculator":
                 <MathCaculator />
                 break;
@@ -165,6 +169,9 @@
             case "fluxortest":
                 <BlazorWasmPortfolioGhAction.Components.FluxorExample.FirstComponent />
                 <BlazorWasmPortfolioGhAction.Components.FluxorExample.SecondComponent />
+                break;
+            case "googlemap":
+                <BlazorWasmPortfolioGhAction.Components.MapComponent />
                 break;
             default:
                 <p>Please select a utility from the navigation menu.</p>

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Fluxor;
-using BlazorWasmPortfolioGhAction.Store.Actions;
 using BlazorWasmPortfolioGhAction;
 using BlazorWasmPortfolioGhAction.Store.Services;
 using BlazorComponentBus;
@@ -9,15 +8,10 @@ using BlazorWasmPortfolioGhAction.Contexts;
 using BlazorWasmPortfolioGhAction.Data;
 using Microsoft.EntityFrameworkCore;
 using BlazorWasmPortfolioGhAction.Pages;
-using SQLitePCL;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using System.Net.Http;
-using Microsoft.Extensions.Configuration;
-using System;
 using BlazorWasmPortfolioGhAction.Shared.Model;
 using ManuHub.Blazor.Wasm.BrowserStorage;
+using GoogleMapsComponents;
 
 public static class Program
 {
@@ -63,6 +57,7 @@ public static class Program
                 .EnableSensitiveDataLogging());
 
         builder.Services.AddWasmBrowserStorage();
+        builder.Services.AddBlazorGoogleMaps("YOUR_GOOGLE_MAPS_API_KEY");
 
         // build the host
         var host = builder.Build();

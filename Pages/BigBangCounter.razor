@@ -1,0 +1,92 @@
+﻿@implements IDisposable
+
+<div class="container">
+    <div class="counter-card">
+        <h3 class="counter-label">Seconds since Big Bang:</h3>
+        <div class="counter-display">@Seconds</div>
+    </div>
+</div>
+
+<style>
+    .container {
+        margin: 0 auto;
+        padding: 2rem;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .counter-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 2rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    }
+
+    .counter-label {
+        color: #e94584;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .counter-display {
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: #00ff88;
+        text-align: center;
+        margin: 2rem 0;
+        text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+    }
+
+    @@media (max-width: 768px) {
+        .counter-display {
+            font-size: 2.5rem;
+        }
+
+        .counter-label {
+            font-size: 1.2rem;
+        }
+    }
+</style>
+
+@code {
+    private ulong secondsSinceBigBang = 0;
+    private System.Timers.Timer? timer;
+
+    protected override void OnInitialized()
+    {
+        ulong secondsInYear = 31_556_926;
+        ulong yearsSinceBigBang = 13_787_000_000;
+        ulong secondsBigBang = yearsSinceBigBang * secondsInYear;
+
+        DateTime _1970 = new(1970, 1, 1, 0, 0, 0);
+        TimeSpan timeSince1970 = DateTime.Now - _1970;
+        ulong secondsSince1970 = (ulong)timeSince1970.TotalSeconds;
+
+        secondsSinceBigBang = secondsSince1970 + secondsBigBang;
+
+        timer = new System.Timers.Timer(1000);
+        timer.Elapsed += OnTimerElapsed;
+        timer.AutoReset = true;
+        timer.Enabled = true;
+    }
+
+    private void OnTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            secondsSinceBigBang++;
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        timer?.Stop();
+        timer?.Dispose();
+    }
+
+    private string Seconds => secondsSinceBigBang.ToString("N0");
+}
