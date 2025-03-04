@@ -1,4 +1,5 @@
-﻿using BlazorWasmPortfolioGhAction.Data;
+﻿// sqlite.razor.cs
+using BlazorWasmPortfolioGhAction.Data;
 using BlazorWasmPortfolioGhAction.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Data.Sqlite;
@@ -11,22 +12,19 @@ namespace BlazorWasmPortfolioGhAction.Pages
     public partial class Sqlite
     {
         public const string SqliteDbFilename = "DemoData.db";
-
         private string _version = "unknown";
-
+        private string _alertMessage = "";
+        private string _alertType = "success";
+        private bool _showAlert = false;
         private readonly List<Car> _cars = new();
 
-        [Inject]
-        private IJSRuntime _js { get; set; }
-
-        [Inject]
-        private IDbContextFactory<ClientSideDbContext> _dbContextFactory { get; set; }
+        [Inject] private IJSRuntime _js { get; set; }
+        [Inject] private IDbContextFactory<ClientSideDbContext> _dbContextFactory { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser")))
             {
-                // create SQLite database file in browser
                 var module = await _js.InvokeAsync<IJSObjectReference>("import", "./sqlite/dbstorage.js");
                 await module.InvokeVoidAsync("synchronizeFileWithIndexedDb", SqliteDbFilename);
             }
@@ -34,7 +32,6 @@ namespace BlazorWasmPortfolioGhAction.Pages
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             await db.Database.EnsureCreatedAsync();
 
-            // create seed data
             if (!db.Cars.Any())
             {
                 var cars = new[]
@@ -44,12 +41,9 @@ namespace BlazorWasmPortfolioGhAction.Pages
                     new Car { Brand = "Range Rover", Price = 135000 },
                     new Car { Brand = "Ford", Price = 8995 }
                 };
-
                 await db.Cars.AddRangeAsync(cars);
             }
-
             await Update(db);
-
             await base.OnInitializedAsync();
         }
 
@@ -63,27 +57,57 @@ namespace BlazorWasmPortfolioGhAction.Pages
 
         private async Task Create(Car upCar)
         {
-            var db = await _dbContextFactory.CreateDbContextAsync();
-            await db.Cars.AddAsync(upCar);
-            await Update(db);
+            try
+            {
+                var db = await _dbContextFactory.CreateDbContextAsync();
+                await db.Cars.AddAsync(upCar);
+                await Update(db);
+                ShowAlert("Car added successfully!", "success");
+            }
+            catch
+            {
+                ShowAlert("Error adding car!", "danger");
+            }
         }
 
         private async Task Update(Car upCar)
         {
-            var db = await _dbContextFactory.CreateDbContextAsync();
-            var car = await db.Cars.FindAsync(upCar.Id);
-            car.Brand = upCar.Brand;
-            car.Price = upCar.Price;
-            db.Cars.Update(car);
-            await Update(db);
+            try
+            {
+                var db = await _dbContextFactory.CreateDbContextAsync();
+                var car = await db.Cars.FindAsync(upCar.Id);
+                if (car != null)
+                {
+                    car.Brand = upCar.Brand;
+                    car.Price = upCar.Price;
+                    db.Cars.Update(car);
+                    await Update(db);
+                    ShowAlert("Car updated successfully!", "success");
+                }
+            }
+            catch
+            {
+                ShowAlert("Error updating car!", "danger");
+            }
         }
 
         private async Task Delete(int id)
         {
-            var db = await _dbContextFactory.CreateDbContextAsync();
-            var car = await db.Cars.FindAsync(id);
-            db.Cars.Remove(car);
-            await Update(db);
+            try
+            {
+                var db = await _dbContextFactory.CreateDbContextAsync();
+                var car = await db.Cars.FindAsync(id);
+                if (car != null)
+                {
+                    db.Cars.Remove(car);
+                    await Update(db);
+                    ShowAlert("Car deleted successfully!", "warning");
+                }
+            }
+            catch
+            {
+                ShowAlert("Error deleting car!", "danger");
+            }
         }
 
         private async Task Update(ClientSideDbContext db)
@@ -92,6 +116,13 @@ namespace BlazorWasmPortfolioGhAction.Pages
             _cars.Clear();
             _cars.AddRange(db.Cars);
             StateHasChanged();
+        }
+
+        private void ShowAlert(string message, string type)
+        {
+            _alertMessage = message;
+            _alertType = type;
+            _showAlert = true;
         }
     }
 }

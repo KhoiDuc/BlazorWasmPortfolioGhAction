@@ -1,0 +1,31 @@
+﻿﻿<div>
+    <b>Instructions: </b>
+    <i>@InstructionParam</i>
+    <br />
+    <br />
+
+    <p>Input X</p>
+    <input type="text" @bind-value="@textFieldValue" />
+    <div class="button-inline-block" @onclick="CalculateRun">Calculate</div>
+
+    <h3>@resultText</h3>
+</div>
+
+@code {
+    [Parameter]
+    public string InstructionParam { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> MyCallback { get; set; } = default;
+
+    private string textFieldValue = string.Empty;
+    private string resultText = string.Empty;
+
+    private async void CalculateRun()
+    {
+        int x = int.Parse(textFieldValue);
+        int kv = x * x;
+        resultText = $"Result: {x} * {x} = {kv}";
+        await MyCallback.InvokeAsync(resultText);
+    }
+}

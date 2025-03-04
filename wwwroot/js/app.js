@@ -26,5 +26,15 @@
 function getUserAgent() {
     return navigator.userAgent;
 }
+
 window.getUserAgent = getUserAgent;
-AOS.init();
+window.clipboardCopy = {
+    copyText: function (text) {
+        navigator.clipboard.writeText(text).then(function () {
+            console.log(text);
+        })
+            .catch(function (error) {
+                alert(error);
+            });
+    }
+};

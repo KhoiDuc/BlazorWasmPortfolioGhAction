@@ -874,7 +874,7 @@
         searchTerm = searchPhrase;
         if (searchTerm!.Length > 1)
         {
-            @* Not a good solution, I need to add entries to contentState.Value.Contents that can be searched through, but dont get rendered. *@
+            @* Not a good solution, I need to add entries to contentState.Value.Contents that can be searched through, but don't get rendered. *@
             if (string.Equals(searchTerm, "CV", StringComparison.OrdinalIgnoreCase))
             {
                 Navigation.NavigateTo($"/Dissertation/CV");
@@ -966,14 +966,11 @@
         // Check each word in the content
         foreach (var word in contentWords)
         {
-            // Check full word matches
-            if (searchWords.Any(searchWord =>
-                string.Equals(word, searchWord, StringComparison.OrdinalIgnoreCase)))
+            if (searchWords.Any(searchWord => string.Equals(word, searchWord, StringComparison.OrdinalIgnoreCase)))
             {
                 score += 2;
-            }// Check partial matches
-            else if (searchWords.Any(searchWord =>
-                word.Contains(searchWord, StringComparison.OrdinalIgnoreCase)))
+            }
+            else if (searchWords.Any(searchWord => word.Contains(searchWord, StringComparison.OrdinalIgnoreCase)))
             {
                 score += 1;
             }
@@ -982,14 +979,11 @@
         // Check each word in the title
         foreach (var word in titleWords)
         {
-            // Check full word matches
-            if (searchWords.Any(searchWord =>
-                string.Equals(word, searchWord, StringComparison.OrdinalIgnoreCase)))
+            if (searchWords.Any(searchWord => string.Equals(word, searchWord, StringComparison.OrdinalIgnoreCase)))
             {
                 score += 3;
-            }// Check partial matches
-            else if (searchWords.Any(searchWord =>
-                word.Contains(searchWord, StringComparison.OrdinalIgnoreCase)))
+            }
+            else if (searchWords.Any(searchWord => word.Contains(searchWord, StringComparison.OrdinalIgnoreCase)))
             {
                 score += 2;
             }

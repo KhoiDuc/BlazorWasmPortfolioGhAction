@@ -1,64 +1,75 @@
-﻿@page "/SQlite"
-@using BlazorWasmPortfolioGhAction.Models
-<h1>Blazor + EF Core + SQLite + WebAssembly</h1>
+﻿@using BlazorWasmPortfolioGhAction.Models
 
-<div>
-    <text>@_version</text>
+<h1 class="text-center text-primary">Blazor + EF Core + SQLite + WebAssembly</h1>
+
+@if (!string.IsNullOrEmpty(_alertMessage))
+{
+    <div class="alert alert-@_alertType" role="alert">
+        @_alertMessage
+    </div>
+}
+
+<div class="text-center my-3">
+    <strong>SQLite Version: </strong> <span class="badge bg-info">@_version</span>
     <p />
-    <button class="btn btn-primary" @onclick="@(async () => await SQLiteVersion())">SQLite Version</button>
+    <button class="btn btn-primary" @onclick="@(async () => await SQLiteVersion())">Check SQLite Version</button>
 </div>
 <hr />
-<p />
 
-<div>
-    <label for="brand">Brand:</label>
-    <input type="text" id="brand" @bind="_newBrand" />
-    <p />
-    <label for="price">Price:</label>
-    <input type="number" id="price" @bind="_newPrice" />
-    <p />
-    <button class="btn btn-primary" @onclick="@(async () => await Create(new Car { Brand = _newBrand, Price = _newPrice }))">Create</button>
+<div class="card p-3">
+    <h4>Add New Car</h4>
+    <div class="mb-3">
+        <label for="brand" class="form-label">Brand:</label>
+        <input type="text" id="brand" class="form-control" @bind="_newBrand" />
+    </div>
+    <div class="mb-3">
+        <label for="price" class="form-label">Price:</label>
+        <input type="number" id="price" class="form-control" @bind="_newPrice" />
+    </div>
+    <button class="btn btn-success" @onclick="@(async () => await Create(new Car { Brand = _newBrand, Price = _newPrice }))">Add Car</button>
 </div>
 <hr />
-<p />
 
 <div>
+    <h4>Car List</h4>
     <table class="table table-bordered table-striped">
-        <thead>
+        <thead class="table-dark">
             <tr>
-                <td>Id</td>
-                <td>Brand</td>
-                <td>Price</td>
-                <td>Update</td>
-                <td>Delete</td>
+                <th>Id</th>
+                <th>Brand</th>
+                <th>Price</th>
+                <th>Update</th>
+                <th>Delete</th>
             </tr>
         </thead>
-        @foreach (var car in _cars)
-        {
-            <tr>
-                <td>@car.Id</td>
-                <td>
-                    <input type="text" @bind="car.Brand" class="form-text" />
-                </td>
-                <td>
-                    <input type="number" @bind="car.Price" class="form-text" />
-                </td>
-                <td>
-                    <button onclick="@(async () => await Update(new Car { Id = car.Id, Brand = car.Brand, Price = car.Price }))" class="btn btn-default btn-sm">
-                        <span>
-                            <img src="sqlite/check.png" width="32" height="32" />
-                        </span>
-                    </button>
-                </td>
-                <td>
-                    <button onclick="@(async () => await Delete(car.Id))" class="btn btn-default btn-sm">
-                        <span>
-                            <img src="sqlite/rubbish-bin.png" width="32" height="32" />
-                        </span>
-                    </button>
-                </td>
-            </tr>
-        }
+        <tbody>
+            @foreach (var car in _cars)
+            {
+                <tr>
+                    <td>@car.Id</td>
+                    <td>
+                        <input type="text" @bind="car.Brand" class="form-control" />
+                    </td>
+                    <td>
+                        <input type="number" @bind="car.Price" class="form-control" />
+                    </td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" @onclick="@(async () => await Update(new Car { Id = car.Id, Brand = car.Brand, Price = car.Price }))">
+                            <span>
+                                <img src="sqlite/check.png" width="24" height="24" />
+                            </span>
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" @onclick="@(async () => await Delete(car.Id))">
+                            <span>
+                                <img src="sqlite/rubbish-bin.png" width="24" height="24" />
+                            </span>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
     </table>
 </div>
 

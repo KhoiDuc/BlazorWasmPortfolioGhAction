@@ -16,6 +16,8 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 using Microsoft.Extensions.Configuration;
 using System;
+using BlazorWasmPortfolioGhAction.Shared.Model;
+using ManuHub.Blazor.Wasm.BrowserStorage;
 
 public static class Program
 {
@@ -53,11 +55,14 @@ public static class Program
 
         builder.Services.AddFluxor(o => o.ScanAssemblies(typeof(Program).Assembly));
         builder.Services.AddScoped<TemperatureStore>();
+        builder.Services.AddSingleton<ApiKeyModel>();
 
         builder.Services.AddDbContextFactory<ClientSideDbContext>(options =>
               options
                 .UseSqlite($"Filename={Sqlite.SqliteDbFilename}")
                 .EnableSensitiveDataLogging());
+
+        builder.Services.AddWasmBrowserStorage();
 
         // build the host
         var host = builder.Build();
