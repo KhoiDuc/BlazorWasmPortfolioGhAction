@@ -42,11 +42,17 @@ public static class Program
         builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
         builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
         builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
-        builder.Services.AddMsalAuthentication(options =>
+        //builder.Services.AddMsalAuthentication(options =>
+        //{
+        //    builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
+        //    options.ProviderOptions.DefaultAccessTokenScopes.Add("api://a90ff01b-640d-478f-8f16-05fe599a6574/Files.Read");
+        //    options.ProviderOptions.LoginMode = "redirect";
+        //});
+        builder.Services.AddOidcAuthentication(options =>
         {
-            builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
-            options.ProviderOptions.DefaultAccessTokenScopes.Add("api://a90ff01b-640d-478f-8f16-05fe599a6574/Files.Read");
-            options.ProviderOptions.LoginMode = "redirect";
+            options.ProviderOptions.Authority = "dev-a8pumil7eppq2o84.us.auth0.com"; // Replace with your Auth0 domain
+            options.ProviderOptions.ClientId = "LuUc4a2iPHABVoGO9WyAkMZ7CJOQOpgf"; // Replace with your Auth0 Client ID
+            options.ProviderOptions.ResponseType = "code"; // Use Authorization Code Flow
         });
         builder.Services.AddSingleton<ITimeZoneQueryProviderService, TimeZoneQueryProviderService>();
 
