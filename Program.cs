@@ -12,6 +12,7 @@ using System.Diagnostics.CodeAnalysis;
 using BlazorWasmPortfolioGhAction.Shared.Model;
 using ManuHub.Blazor.Wasm.BrowserStorage;
 using GoogleMapsComponents;
+using Fluxor.Blazor.Web.ReduxDevTools;
 
 public static class Program
 {
@@ -36,6 +37,8 @@ public static class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
         builder.Services.AddScoped<ComponentBus>();
+        builder.Services.AddScoped<RandomFactsService>();
+        builder.Services.AddScoped<QRCodeService>();
         builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
         builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
         builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
@@ -47,7 +50,13 @@ public static class Program
         });
         builder.Services.AddSingleton<ITimeZoneQueryProviderService, TimeZoneQueryProviderService>();
 
-        builder.Services.AddFluxor(o => o.ScanAssemblies(typeof(Program).Assembly));
+        builder.Services.AddFluxor(opt => {
+            opt.ScanAssemblies(typeof(Program).Assembly);
+            opt.UseRouting();
+            #if DEBUG
+               opt.UseReduxDevTools();
+            #endif
+        });
         builder.Services.AddScoped<TemperatureStore>();
         builder.Services.AddSingleton<ApiKeyModel>();
 
@@ -58,6 +67,7 @@ public static class Program
 
         builder.Services.AddWasmBrowserStorage();
         builder.Services.AddBlazorGoogleMaps("YOUR_GOOGLE_MAPS_API_KEY");
+        builder.Services.AddLocalization();
 
         // build the host
         var host = builder.Build();

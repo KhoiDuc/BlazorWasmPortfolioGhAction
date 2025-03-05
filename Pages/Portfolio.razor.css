@@ -219,9 +219,11 @@ main h2 {
     align-items: flex-start;
     gap: 1.25rem;
 }
+
     .education-item .education-header .details {
         flex: 2;
     }
+
     .education-item .education-header .education-info {
         flex: 1;
         align-items: center;
@@ -534,8 +536,7 @@ footer {
     background-color: var(--primary-color);
     color: white;
     text-decoration: none;
-    border-radius: 0.313rem
-    font-weight: bold;
+    border-radius: 0.313rem font-weight: bold;
     border: 1px solid transparent; /* Add a transparent border to prevent layout shift */
     transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
     transform-origin: center; /* Ensure scaling happens from the center */
@@ -610,4 +611,176 @@ footer {
     color: #7f8c8d; /* Gray for less emphasis */
     margin-top: 0.625rem;
     font-style: italic;
+}
+
+.skills-list {
+    /* max-width: 800px; */
+    margin: 20px auto;
+    padding: 0;
+    list-style: none;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+    .skills-list li {
+        margin-bottom: 25px;
+        padding: 15px 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease;
+    }
+
+        .skills-list li:hover {
+            transform: translateX(5px);
+        }
+
+    .skills-list strong {
+        display: block;
+        color: var(--primary-color);
+        font-size: 16px;
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+        border-left: 4px solid var(--primary-color);
+        padding-left: 10px;
+    }
+
+    .skills-list p {
+        margin: 8px 0;
+        color: #444;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    /* Styling for inline items */
+    .skills-list li:not(:first-child) {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+    }
+
+        .skills-list li:not(:first-child) strong {
+            flex: 0 0 160px;
+            border-left: none;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+
+        .skills-list li:not(:first-child) > :not(strong) {
+            flex: 1;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Badge-like styling for technologies */
+        .skills-list p,
+        .skills-list li:not(:first-child) > :not(strong) {
+            display: inline-block;
+            margin: 4px;
+            padding: 4px 8px;
+            background-color: #f0f4f9;
+            border-radius: 4px;
+            border: 1px solid #dde3ed;
+            text-align: center;
+        }
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .skills-list li:not(:first-child) {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+        .skills-list li:not(:first-child) strong {
+            flex: none;
+            width: 100%;
+        }
+}
+
+/* School Projects Section */
+.school-project h2 {
+    color: var(--primary-color);
+    font-size: 22px;
+    margin: 30px 0 20px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e0e0e0;
+    font-family: 'Arial', sans-serif;
+}
+
+.papers-item {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease;
+    border-left: 4px solid transparent;
+}
+
+    .papers-item:hover {
+        transform: translateY(-3px);
+        border-left-color: var(--primary-color);
+    }
+
+.details h3 {
+    color: #333;
+    font-size: 17px;
+    margin: 0 0 8px;
+    font-weight: 600;
+}
+
+.details p {
+    margin: 6px 0;
+    color: #555;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+    .details p:last-of-type {
+        margin-bottom: 12px;
+    }
+
+.details a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    word-break: break-all;
+}
+
+    .details a:hover {
+        text-decoration: underline;
+    }
+
+.content ul {
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.content li {
+}
+
+.details p:not(:last-child) {
+    display: inline-block;
+    margin: 4px 4px 4px 0;
+    padding: 4px 10px;
+    background: #f0f4f9;
+    border-radius: 15px;
+    font-size: 13px;
+    color: var(--primary-color);
+    border: 1px solid #d0d7e3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .papers-item {
+        padding: 15px;
+    }
+
+    .details h3 {
+        font-size: 16px;
+    }
+
+    .details p {
+        font-size: 13px;
+    }
 }

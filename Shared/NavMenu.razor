@@ -53,11 +53,11 @@
                     &nbsp<span class="oi oi-puzzle-piece"></span><h2 class="text-truncate titleText" aria-hidden="true" style="width:100%;"> Utility!</h2>
                 </NavLink>
             </div>
-            <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+@*             <div class="p-1 item-fader nav-item px-2 font-weight-bold">
                 <NavLink class="p-1 nav-link lastLink" href="SvgDiagramEditor" @onclick="(() => { Array.Fill(showSubSections!, false); StateHasChanged(); })">
                     &nbsp<span class="oi oi-puzzle-piece"></span><h2 class="text-truncate titleText" aria-hidden="true" style="width:100%;"> SVG Diagram Editor!</h2>
                 </NavLink>
-            </div>
+            </div> *@
 @*             <div class="p-1 item-fader nav-item px-2 font-weight-bold">
                 <NavLink class="p-1 nav-link lastLink" href="EvolutionTF" @onclick="(() => { Array.Fill(showSubSections!, false); StateHasChanged(); })">
                     &nbsp<span class="oi oi-puzzle-piece"></span><h2 class="text-truncate titleText" aria-hidden="true" style="width:100%;"> Genetic Evolution!</h2>
@@ -93,12 +93,12 @@
                     &nbsp<span class="oi oi-calculator"></span><h2 class="text-truncate titleText" aria-hidden="true" style="width:100%;"> Binding Energy!</h2>
                 </NavLink>
             </div> *@
-            <div class="item-fader dropdown-divider divider"></div>
+@*             <div class="item-fader dropdown-divider divider"></div>
             <div class="p-1 item-fader px-2 font-weight-bold">
                 <NavLink class="p-1 nav-link text-muted" href="all">
                     <h2 class="text-truncate titleTextMenu hackerAnimation" data-value="Wiki" data-id="3" aria-hidden="true">Wiki</h2>
                 </NavLink>
-            </div>
+            </div> *@
             @if (contentState.Value.Contents != null)
             {
                 @* loop through each item in ContentState.Value.Contents, ordering the list, then grouping by page *@
@@ -169,11 +169,11 @@
                     </div>
                 </Authorized>
                 <NotAuthorized>
-                    <div class="p-1 item-fader nav-item px-2 font-weight-bold">
+@*                     <div class="p-1 item-fader nav-item px-2 font-weight-bold">
                         <NavLink class="p-1 nav-link lastLink" @onclick="(() => { Array.Fill(showSubSections!, false); StateHasChanged(); })">
                             &nbsp<span class="oi oi-plus"></span><h2 class="text-truncate typeText" aria-hidden="true"> Login to contribute</h2>
                         </NavLink>
-                    </div>
+                    </div> *@
                 </NotAuthorized>
             </AuthorizeView>
             <div class="item-fader dropdown-divider divider "></div>
@@ -243,55 +243,6 @@
         Array.Fill(showSubSections, false);
         StateHasChanged();
     }
-    @* Retrieve content from GitHub as a JSON string *@
-    //public async Task GetContentFromGitHubRepo<T>()
-    //{
-    //    using (var client = new HttpClient())
-    //    {
-    //        // Send the GET request to the PHP proxy
-    //        var response = await client.GetAsync("https://samdenton.tech/GithubGetAll-proxy.php");
-
-    //        try
-    //        {
-    //            var content = await response.Content.ReadAsStringAsync();
-    //            var bom = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
-    //            if (content.StartsWith(bom))
-    //            {
-    //                content = content.Remove(0, bom.Length);
-    //            }
-    //            var gitContents = JsonConvert.DeserializeObject<List<ContentParser>>(content);
-
-    //            List<ContentHolder> localContentHolderList = new List<ContentHolder>();
-
-    //            foreach (var gitContent in gitContents)
-    //            {
-    //                if (gitContent.type == "file" && gitContent.name.EndsWith(".json"))
-    //                {
-    //                    // Send the GET request to the GitHub API to get the content of the individual file
-    //                    var fileResponse = await client.GetAsync($"https://samdenton.tech/GithubGetFile-proxy.php?url={WebUtility.UrlEncode(gitContent.url)}");
-    //                    // Remove potential Byte Order Mark (BOM)
-    //                    var fileContent = await fileResponse.Content.ReadAsStringAsync();
-    //                    if (fileContent.StartsWith(bom))
-    //                    {
-    //                        fileContent = fileContent.Remove(0, bom.Length);
-    //                    }
-    //                    var fileGitContent = JsonConvert.DeserializeObject<ContentParser>(fileContent);
-
-    //                    var contentBytes = Convert.FromBase64String(fileGitContent.content);
-    //                    var jsonContent = Encoding.UTF8.GetString(contentBytes);
-    //                    var array = JsonConvert.DeserializeObject<List<ContentHolder>>(jsonContent);
-
-    //                    localContentHolderList.AddRange(array);
-    //                }
-    //            }
-    //            ContentState.Value.Contents = localContentHolderList!.ToArray();
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            Console.WriteLine("Error: " + ex.Message + " If this message does not help, its possible the file size is getting too large");
-    //        }
-    //    }
-    //}
 
     private void nav(string page, string section, string subSection)
     {

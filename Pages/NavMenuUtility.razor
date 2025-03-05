@@ -1,0 +1,33 @@
+﻿<nav class="sitenav" aria-labelledby="main-menu">
+    <ul class="nav-menu" id="main-menu">
+        @foreach (var category in NavigationItems)
+        {
+            <li>
+                <span class="nav-category">@category.CategoryName</span>
+                <ul>
+                    @foreach (var item in category.Items)
+                    {
+                        <li><a href="@item.Link" class="nav-link">@item.Text</a></li>
+                    }
+                </ul>
+            </li>
+        }
+    </ul>
+</nav>
+
+@code {
+    [Parameter]
+    public List<NavCategory> NavigationItems { get; set; } = new();
+
+    public class NavCategory
+    {
+        public string CategoryName { get; set; }
+        public List<NavItem> Items { get; set; } = new();
+    }
+
+    public class NavItem
+    {
+        public string Text { get; set; }
+        public string Link { get; set; }
+    }
+}
