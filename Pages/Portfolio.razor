@@ -338,18 +338,18 @@
 
 @code {
     private IJSObjectReference? mainContentModule;
-    private IJSObjectReference? trackerModule;
+    // private IJSObjectReference? trackerModule;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await LoadScript("https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js");
-            await LoadScript("https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js");
+            // await LoadScript("https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js");
+            // await LoadScript("https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js");
 
-            await WaitForFirebase();
+            // await WaitForFirebase();
 
-            trackerModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/track-visitors.js");
-            await trackerModule.InvokeVoidAsync("trackVisitor");
+            // trackerModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/track-visitors.js");
+            // await trackerModule.InvokeVoidAsync("trackVisitor");
 
             mainContentModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Portfolio.razor.js");
             await mainContentModule.InvokeVoidAsync("changeSlide", 0);

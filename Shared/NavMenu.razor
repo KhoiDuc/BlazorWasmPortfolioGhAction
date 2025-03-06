@@ -185,9 +185,8 @@
         <div class="oi down-arrow"></div>
     </div>
 </div>
-@code {
-    //private ContentHolder[]? ContentState.Value.Contents;
 
+@code {
     private bool[]? showSubSections;
     private ElementReference navMenu;
     private bool firstRender = true;
@@ -196,13 +195,11 @@
     protected override async Task OnInitializedAsync()
     {
         contentState.StateChanged += HandleStateChanged;
-        //Dispatcher.Dispatch(new LoadContentsFromRepoAction());
+        showSubSections = new bool[0];
 
-        //await JSRuntime.InvokeVoidAsync("scrollNavMenu");
         if (this.firstRender)
         {
             this.firstRender = false;
-            //await JSRuntime.InvokeVoidAsync("initScrollingMenu", "#nav-container", "#scroll-container", "#nav");
         }
     }
 
@@ -211,8 +208,8 @@
         if (contentState.Value.FileCount == contentState.Value.LoadedFilesCount)
         {
             uniqueSectionsCount = contentState.Value.Contents.GroupBy(x => x.section).Count();
-            Array.Resize(ref showSubSections, uniqueSectionsCount);
-            //Array.Fill(showSubSections, false);
+            showSubSections = new bool[uniqueSectionsCount];
+            Array.Fill(showSubSections, false);
             InvokeAsync(StateHasChanged);
         }
     }
@@ -230,16 +227,17 @@
     {
         await JSRuntime.InvokeVoidAsync("fadeOut");
     }
-    @* Method to re-initialise data structures and menu list when a new item is added to ContentState.Value.Contents *@
+
     private async Task RefreshMe()
     {
         await Task.Delay(1000);
-        //await GetContentFromGitHubRepo<ContentHolder>();
+
         if (contentState.Value.Contents != null)
         {
             uniqueSectionsCount = contentState.Value.Contents.GroupBy(x => x.section).Count();
         }
-        Array.Resize(ref showSubSections, uniqueSectionsCount);
+
+        showSubSections = new bool[uniqueSectionsCount];
         Array.Fill(showSubSections, false);
         StateHasChanged();
     }
@@ -248,6 +246,7 @@
     {
         navigationManager.NavigateTo($"/{page}/{section}/{subSection}");
     }
+
     public void Dispose()
     {
         contentState.StateChanged -= HandleStateChanged;
