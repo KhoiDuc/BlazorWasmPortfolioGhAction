@@ -63,6 +63,9 @@ jobs:
         shell: bash
         run: sed -i.bak 's|<base href="/" />|<base href="${{ env.BASE_HREF }}" />|g' ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html
 
+      - name: Verify base href
+        run: cat ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html
+
       - name: Remove backup file
         run: rm ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html.bak
 
@@ -97,6 +100,14 @@ jobs:
 
           # Verify accessibility at BASE_HREF
           curl --retry 5 --retry-delay 3 --fail http://localhost:3000${{ env.BASE_HREF }}
+
+          # Verify service-worker.js is accessible
+          curl --retry 5 --retry-delay 3 --fail http://localhost:3000${{ env.BASE_HREF }}service-worker.js
+
+      - name: Verify Deployment
+        run: |
+          git clone https://github.com/khoiduc/BlazorWasmPortfolioGhAction.git --branch gh-pages gh-pages
+          ls -R gh-pages
 
       - name: Upload release folder as artifact
         uses: actions/upload-artifact@v4

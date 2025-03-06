@@ -535,7 +535,7 @@
     private string? subSectionName;
     private string? newSectionName;
     private int sectionBeingEdited;
-    private string TinyAPIKey = "7so5re0foy5ocvnv7m3m3rznoi0hiar7wrg9w0hk2bkgfshl";
+    private string TinyAPIKey = "";
     @* Declare/Initialize variables for API communication *@
     private string? commitText = "Test From Wiki";
 
@@ -648,8 +648,6 @@
         if (firstRender)
         {
             mainContentModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Pages/MainContent.razor.js");
-
-            await mainContentModule.InvokeVoidAsync("initializeScrollProgress");
             await mainContentModule.InvokeVoidAsync("initializeStarfield");
         }
     }
@@ -758,14 +756,6 @@
             else if (string.Equals(searchTerm, "Degree", StringComparison.OrdinalIgnoreCase))
             {
                 Navigation.NavigateTo($"/Dissertation/Degree");
-            }
-            else if (string.Equals(searchTerm, "ChatBot", StringComparison.OrdinalIgnoreCase))
-            {
-                Navigation.NavigateTo($"/chat");
-            }
-            else if (searchTerm.Contains("Assistant", StringComparison.OrdinalIgnoreCase))
-            {
-                Navigation.NavigateTo($"/navBot");
             }
             else
             {
