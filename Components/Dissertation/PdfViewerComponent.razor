@@ -1,0 +1,14 @@
+﻿@using BlazorWasmPortfolioGhAction.Store.State
+@inherits FluxorComponent
+@inject IState<DissertationState> State
+
+<iframe class="viewerIframe"
+        src="@State.Value.FilePath"
+        type="application/pdf"
+        style="width: 100%; height: 80vh; border: none;">
+    This browser does not support PDFs. Please download the PDF to view it:
+    <a href="@State.Value.FilePath">Download PDF</a>.
+</iframe>
+
+@code {
+}

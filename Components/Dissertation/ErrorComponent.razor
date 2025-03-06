@@ -1,0 +1,19 @@
+﻿<div class="error-message">
+    <p>@Message</p>
+    <button class="btn btn-primary" @onclick="() => GoHome()">
+        Return Home
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public string Message { get; set; } = "An error occurred";
+    
+    [Inject]
+    public NavigationManager NavigationManager { get; set; }
+
+    private void GoHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}

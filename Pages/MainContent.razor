@@ -15,499 +15,50 @@
 @inject HttpClient Http;
 @inject NavigationManager Navigation;
 @inject IJSRuntime JSRuntime;
-@* Using Authorize View to only load content when user is authenticated. The editor is disabled when not authenticated *@
 
-<PageTitle>Wiki</PageTitle>
-@* Using bootstrap container for layout on main content.  Using some grid layout elements *@
 <div class="container-fluid mx-0 ps-0 mainContentContainer">
-    @* Moved the searchBar marup and logic to a component so it's on all pages *@
-    <SearchBar type="@type"
-               SearchTermChanged="SearchTermChanged"
-               IsSearchDisabled="false" />
     <div class="row mx-0 ps-0 gx-3">
         <div class="col">
-            @* Toggle between the 2 editor types.  This can be moved to one of the other conditionals doing the same. *@
-            @if (type != null)
-            {
-                <div class="ms-1 form-group form-check form-switch kudosTextToggle">
-                    <label class="form-check-label" for="sliderToggle">Light Editor</label>
-                    <input type="checkbox" class="form-check-input inputCheck" id="sliderToggle" @bind="inline" @onclick="(() => ClearIsEditingArray())" />
-                </div>
-            }
-            @* Wtf is this block... really need to tidy this up.  Most of if can move to the main foreach loop conditionals *@
-            @if (type != "all" && type != null && sections != "all" && subSections != "all" && type != "Search" && type != "add")
-            {
-                <h1 class="kudosTextTop">@sections <small class="text-muted">@subSections </small></h1>
-            }
-            else if (type != "all" && sections != "all" && subSections == "all" && type != "Search" && type != "add")
-            {
-                <h1 class="kudosTextTop">@type <small class="text-muted">@sections </small></h1>
-            }
-            else if (type != "all" && sections == "all" && type != "Search" && type != "add")
-            {
-                <h1 class="kudosTextTop">@type <small class="text-muted"></small></h1>
-            }
-            else if (type == "all")
-            {
-                <h1 class="kudosTextTop"></h1>
-            }
-            else if (type == "add")
-            {
-                <h1 class="kudosTextTop">Add New Section <small class="text-muted"></small></h1>
-            }
-            else if (type == "Search")
-            {
-                <h1 class="kudosTextTop">Search Results <small class="text-muted"></small></h1>
-            }
-            @* Show a loading message before API call is complete *@
-            @* Should also add failure case if the API call returns 404 *@
-            @*add back 'isContentLoaded == false || ' to conditional*@
-            @if (contentState.Value.Contents == null || type == null)
-            {
-                <div class="introductionBody">
-                    <!-- Begin: Home -->
-                    <div class="start_light"></div>
-                    <div id="header">
-                        <div class="container">
-                            <nav class="nav">
-                                <h2 class="title-content">PORTFOLIO</h2>
-                            </nav>
-                            <div class="header-content">
-                                <div class="header-text">
-                                    <h1>Khoi Nguyen Minh Duc</h1>
-                                    <p>.NET Developer</p>
-                                    <div class="grid-container justify-content-center">
-                                        <div class="email-button">
-                                            <a href="mailto:khoi.duc.dev@gmail.com" class="email-link">
-                                                <h5>Contact Me</h5>
-                                                <img src="envelope-blue.svg" alt="email" class="email-icon">
-                                            </a>
-                                        </div>
-                                        <div class="google-drive-button">
-                                            <a href="MyResume" class="google-drive-link">
-                                                <h5>My Resume</h5>
-                                                <img src="googledrive-blue.svg" alt="Resume site" class="google-drive-icon">
-                                            </a>
-                                        </div>
-                                        <div class="download-file-button">
-                                            <a href="Dissertation/CV" class="download-file-button-link">
-                                                <h5>My CV</h5>
-                                                <img src="downloadfile-blue.svg" alt="Download file" class="download-file-icon">
-                                            </a>
-                                        </div>
+            <div class="introductionBody">
+                <!-- Begin: Home -->
+                <div class="start_light"></div>
+                <div id="header">
+                    <div class="container">
+                        <nav class="nav">
+                            <h2 class="title-content">PORTFOLIO</h2>
+                        </nav>
+                        <div class="header-content">
+                            <div class="header-text">
+                                <h1>Khoi Nguyen Minh Duc</h1>
+                                <p>.NET Developer</p>
+                                <div class="grid-container justify-content-center">
+                                    <div class="email-button">
+                                        <a href="mailto:khoi.duc.dev@gmail.com" class="email-link">
+                                            <h5>Contact Me</h5>
+                                            <img src="envelope-blue.svg" alt="email" class="email-icon">
+                                        </a>
+                                    </div>
+                                    <div class="google-drive-button">
+                                        <a href="MyResume" class="google-drive-link">
+                                            <h5>My Resume</h5>
+                                            <img src="googledrive-blue.svg" alt="Resume site" class="google-drive-icon">
+                                        </a>
+                                    </div>
+                                    <div class="download-file-button">
+                                        <a href="Dissertation/CV" class="download-file-button-link">
+                                            <h5>My CV</h5>
+                                            <img src="downloadfile-blue.svg" alt="Download file" class="download-file-icon">
+                                        </a>
                                     </div>
                                 </div>
-                                <div class="header-image">
-                                    <img src="avt-men.png" alt="Profile Image">
-                                </div>
+                            </div>
+                            <div class="header-image">
+                                <img src="avt-men.png" alt="Profile Image">
                             </div>
                         </div>
                     </div>
                 </div>
-            }
-            else
-            {
-                <AuthorizeView>
-                    <Authorized>
-                        @{
-                            var count = 0;
-                            var username = @context.User.Identity!.Name;
-                        }
-                        <div class="mainTable">
-                            <table class="table rounded table-dark @(inline == true ? "border-bottom" : "table-borderless table-striped")">
-                                @* @(inline == true ? "" : "") *@
-                                <tbody>
-                                    @if (type == "Search")
-                                    {
-                                        foreach (var item in searchResults
-                                        .OrderByDescending(x => x.Score)
-                                        .Select((searchResult, index) => new { searchResult, index }))
-                                        {
-                                            var localCount = count;
-                                            int indexParsed = item.searchResult.Content.id;
-                                            <WikiBlock inline="@inline"
-                                                       matchTypeSectionsSubSections="false"
-                                                       matchTypeSections="false"
-                                                       matchType="false"
-                                                       type="@type"
-                                                       sections="@sections"
-                                                       subSections="@subSections"
-                                                       TinyAPIKey="@TinyAPIKey"
-                                                       count="@count"
-                                                       indexParsed="@indexParsed"
-                                                       username="@username" />
-                                            @* localCount=localCount *@
-                                            <p>Search Score: @item.searchResult.Score</p>
-                                            @* Increment global count *@
-                                            count++;
-                                        }
-                                    }
-                                    else if (type == "add" && contentState.Value.IsEditing[0] == true && contentState.Value.Contents != null)
-                                    {
-                                        <WikiBlock inline="@inline"
-                                                   matchTypeSectionsSubSections="false"
-                                                   matchTypeSections="false"
-                                                   matchType="false"
-                                                   type="@type"
-                                                   sections="@sections"
-                                                   subSections="@subSections"
-                                                   TinyAPIKey="@TinyAPIKey"
-                                                   count="0"
-                                                   indexParsed=0
-                                                   username="@username" />
-                                    }
-                                    else
-                                    {
-                                        @* Pragmatically populate the table using my custom object array *@
-                                        @foreach (var item in contentState.Value.Contents
-                                       .OrderBy(x => x.page)
-                                       .ThenBy(x => x.section)
-                                       .ThenBy(x => x.subSection)
-                                       .Select((ContentHolder, index) => new { ContentHolder, index }))
-                                        {
-                                            bool contentNotNull = contentState.Value.Contents[item.index].page != null
-                                            && contentState.Value.Contents[item.index].section != null
-                                            && contentState.Value.Contents[item.index].subSection != null
-                                            && contentState.Value.Contents[item.index].content != null;
-
-                                            bool matchTypeSectionsSubSections = type == contentState.Value.Contents[item.index].page
-                                            && sections == contentState.Value.Contents[item.index].section
-                                            && subSections == contentState.Value.Contents[item.index].subSection;
-
-                                            bool matchTypeSections = type == contentState.Value.Contents[item.index].page
-                                            && sections == contentState.Value.Contents[item.index].section
-                                            && subSections == "all";
-
-                                            bool matchType = type == contentState.Value.Contents[item.index].page
-                                            && sections == "all";
-
-                                            int indexParsed = contentState.Value.Contents[item.index].id;
-
-                                            @if (item.ContentHolder != null)
-                                            {
-
-                                                @if (matchTypeSectionsSubSections && contentNotNull)
-                                                {
-                                                    var localCount = count;
-
-                                                    <WikiBlock inline="@inline"
-                                                               matchTypeSectionsSubSections="@matchTypeSectionsSubSections"
-                                                               matchTypeSections="@matchTypeSections"
-                                                               matchType="@matchType"
-                                                               type="@type"
-                                                               sections="@sections"
-                                                               subSections="@subSections"
-                                                               TinyAPIKey="@TinyAPIKey"
-                                                               count="@count"
-                                                               indexParsed="@indexParsed"
-                                                               username="@username" />
-
-                                                    @* Increment global count *@
-                                                    count++;
-                                                }
-                                                else if (matchTypeSections && contentNotNull)
-                                                {
-                                                    var localCount = count;
-
-                                                    <WikiBlock inline="@inline"
-                                                               matchTypeSectionsSubSections="@matchTypeSectionsSubSections"
-                                                               matchTypeSections="@matchTypeSections"
-                                                               matchType="@matchType"
-                                                               type="@type"
-                                                               sections="@sections"
-                                                               subSections="@subSections"
-                                                               TinyAPIKey="@TinyAPIKey"
-                                                               count="@count"
-                                                               indexParsed="@indexParsed"
-                                                               username="@username" />
-
-                                                    @* Increment global count *@
-                                                    count++;
-                                                }
-                                                else if (matchType || type == null && contentNotNull)
-                                                {
-                                                    var localCount = count;
-
-                                                    <WikiBlock inline="@inline"
-                                                               matchTypeSectionsSubSections="@matchTypeSectionsSubSections"
-                                                               matchTypeSections="@matchTypeSections"
-                                                               matchType="@matchType"
-                                                               type="@type"
-                                                               sections="@sections"
-                                                               subSections="@subSections"
-                                                               TinyAPIKey="@TinyAPIKey"
-                                                               count="@count"
-                                                               indexParsed="@indexParsed"
-                                                               username="@username" />
-
-                                                    @* Increment global count *@
-                                                    count++;
-                                                }
-                                                else if (type == "all" && contentNotNull)
-                                                {
-                                                    var localCount = count;
-
-                                                    <WikiBlock inline="@inline"
-                                                               matchTypeSectionsSubSections="@matchTypeSectionsSubSections"
-                                                               matchTypeSections="@matchTypeSections"
-                                                               matchType="@matchType"
-                                                               type="@type"
-                                                               sections="@sections"
-                                                               subSections="@subSections"
-                                                               TinyAPIKey="@TinyAPIKey"
-                                                               count="@count"
-                                                               indexParsed="@indexParsed"
-                                                               username="@username" />
-
-                                                    @* Increment global count *@
-                                                    count++;
-                                                }
-                                                else
-                                                {
-                                                    if (contentState.Value.Contents[item.index].page == null)
-                                                    {
-                                                        @JSRuntime.InvokeVoidAsync("alert", "Warning, missing title for subSection: " + contentState.Value.Contents[item.index].subSection)
-                                                    }
-                                                    else if (contentState.Value.Contents[item.index].section == null)
-                                                    {
-                                                        @JSRuntime.InvokeVoidAsync("alert", "Warning, missing section name for subSection: " + contentState.Value.Contents[item.index].subSection)
-                                                    }
-                                                    else if (contentState.Value.Contents[item.index].subSection == null)
-                                                    {
-                                                        @JSRuntime.InvokeVoidAsync("alert", "Warning, missing subSection name for something in section: " + contentState.Value.Contents[item.index].section)
-                                                    }
-                                                    else if (contentState.Value.Contents[item.index].content == null)
-                                                    {
-                                                        @JSRuntime.InvokeVoidAsync("alert", "Warning, missing content for subSection: " + contentState.Value.Contents[item.index].subSection)
-                                                    }
-                                                }
-                                            }
-                                            else
-                                            {
-                                                Console.WriteLine("Suppressing error?");
-                                            }
-                                        }
-                                    }
-                                    @if (type == "add")
-                                    {
-                                        @if (contentState.Value.Contents == null)
-                                        {
-                                            <p><em> </em></p>
-                                        }
-                                        else
-                                        {
-                                            contentState.Value.IsEditing[0] = false;
-                                            <div class="bg-light text-primary container-fluid">
-                                                <div class="row">
-                                                    <div class="col-6">
-                                                        @* Dropdown for section type *@
-                                                        <div class="form-group">
-                                                            <label class="form-label bg-light text-dark" for="typeDropdown">Select Type:</label>
-                                                            <select class="form-control form-control-dark bg-light text-primary border-primary" id="typeDropdown" @bind="typeDropdown">
-                                                                <option value="Default" disabled selected>Select a type</option>
-                                                                @foreach (var group in contentState.Value.Contents!.GroupBy(ch => ch.page))
-                                                                {
-                                                                    <option value="@group.First().page">@group.Key</option>
-                                                                }
-                                                                <option value="Add">Add New</option>
-                                                            </select>
-                                                            @if (typeDropdown == "Add")
-                                                            {
-                                                                <input type="text" class="form-control form-control-dark bg-light text-primary border-primary mt-2" placeholder="Enter new type name" @bind="newTypeDropdown" />
-                                                            }
-                                                        </div>
-                                                        @* Text field for section name *@
-                                                        <div class="form-group">
-                                                            <label class="form-label bg-light text-dark" for="sectionDropdown">Select Section:</label>
-                                                            <select class="form-control form-control-dark bg-light text-primary border-primary" id="sectionDropdown" @bind="sectionName">
-                                                                <option value="Default" disabled selected>Select a type, then section</option>
-                                                                @foreach (var group in contentState.Value.Contents!.Where(ch => ch.page == typeDropdown).GroupBy(ch => ch.section))
-                                                                {
-                                                                    <option value="@group.First().section">@group.Key</option>
-                                                                }
-                                                                <option value="Add">Add New</option>
-                                                            </select>
-                                                            @if (sectionName == "Add")
-                                                            {
-                                                                <input type="text" class="form-control form-control-dark bg-light text-primary border-primary mt-2" placeholder="Enter new section name" @bind="newSectionName" />
-                                                            }
-                                                        </div>
-                                                        @* Text field for subSection name *@
-                                                        <div class="form-group bg-light text-primary">
-                                                            <label class="form-label bg-light text-dark mt-1" for="sectionContent">Select subSection:</label>
-                                                            <input type="text" class="form-control form-control-dark bg-light text-primary border-primary" id="sectionContent" placeholder="Name of the new subSection" @bind="subSectionName">
-                                                        </div>
-                                                        @* Add section button *@
-                                                        <button class="btn btn-outline-primary mt-2" @onclick="(() => AddNewSection(username!))">Add New subSection</button>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        @* Spacing *@
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        }
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </Authorized>
-                    <NotAuthorized>
-                        @{
-                            var count = 0;
-                        }
-                        <div class="mainTable">
-                            <table class="table rounded table-dark @(inline == true ? "border-bottom" : "table-borderless table-striped")">
-                                @* @(inline == true ? "" : "") *@
-                                <tbody>
-                                    @* Pragmatically populate the table using my custom object array *@
-                                    @if (type == "Search")
-                                    {
-                                        foreach (var item in searchResults
-                                        .OrderByDescending(x => x.Score)
-                                        .Select((searchResult, index) => new { searchResult, index }))
-                                        {
-                                            var localCount = count;
-                                            int indexParsed = item.searchResult.Content.id;
-                                            <WikiBlockNoAuth inline="@inline"
-                                                             matchTypeSectionsSubSections="false"
-                                                             matchTypeSections="false"
-                                                             matchType="false"
-                                                             type="@type"
-                                                             sections="@sections"
-                                                             subSections="@subSections"
-                                                             count="@count"
-                                                             indexParsed="@indexParsed" />
-                                            @* localCount=localCount *@
-                                            <p>Search Score: @item.searchResult.Score</p>
-                                            @* Increment global count *@
-                                            count++;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        @foreach (var item in contentState.Value.Contents
-                                       .OrderBy(x => x.page)
-                                       .ThenBy(x => x.section)
-                                       .ThenBy(x => x.subSection)
-                                       .Select((ContentHolder, index) => new { ContentHolder, index }))
-                                        {
-                                            bool contentNotNull = contentState.Value.Contents[item.index].page != null
-                                            && contentState.Value.Contents[item.index].section != null
-                                            && contentState.Value.Contents[item.index].subSection != null
-                                            && contentState.Value.Contents[item.index].content != null;
-
-                                            bool matchTypeSectionsSubSections = type == contentState.Value.Contents[item.index].page
-                                            && sections == contentState.Value.Contents[item.index].section
-                                            && subSections == contentState.Value.Contents[item.index].subSection;
-
-                                            bool matchTypeSections = type == contentState.Value.Contents[item.index].page
-                                            && sections == contentState.Value.Contents[item.index].section
-                                            && subSections == "all";
-
-                                            bool matchType = type == contentState.Value.Contents[item.index].page
-                                            && sections == "all";
-
-                                            int indexParsed = contentState.Value.Contents[item.index].id;
-
-                                            @if (item.ContentHolder != null)
-                                            {
-
-                                                @if (matchTypeSectionsSubSections && contentNotNull)
-                                                {
-                                                    var localCount = count;
-                                                    <WikiBlockNoAuth inline="@inline"
-                                                                     matchTypeSectionsSubSections="@matchTypeSectionsSubSections"
-                                                                     matchTypeSections="@matchTypeSections"
-                                                                     matchType="@matchType"
-                                                                     type="@type"
-                                                                     sections="@sections"
-                                                                     subSections="@subSections"
-                                                                     count="@count"
-                                                                     localCount=localCount
-                                                                     indexParsed="indexParsed" />
-                                                    @* Increment global count *@
-                                                    count++;
-                                                }
-                                                else if (matchTypeSections && contentNotNull)
-                                                {
-                                                    var localCount = count;
-                                                    <WikiBlockNoAuth inline="@inline"
-                                                                     matchTypeSectionsSubSections="@matchTypeSectionsSubSections"
-                                                                     matchTypeSections="@matchTypeSections"
-                                                                     matchType="@matchType"
-                                                                     type="@type"
-                                                                     sections="@sections"
-                                                                     subSections="@subSections"
-                                                                     count="@count"
-                                                                     localCount=localCount
-                                                                     indexParsed="indexParsed" />
-                                                    @* Increment global count *@
-                                                    count++;
-                                                }
-                                                else if ((matchType || type == null) && contentNotNull)
-                                                {
-                                                    var localCount = count;
-                                                    <WikiBlockNoAuth inline="@inline"
-                                                                     matchTypeSectionsSubSections="@matchTypeSectionsSubSections"
-                                                                     matchTypeSections="@matchTypeSections"
-                                                                     matchType="@matchType"
-                                                                     type="@type"
-                                                                     sections="@sections"
-                                                                     subSections="@subSections"
-                                                                     count="@count"
-                                                                     localCount=localCount
-                                                                     indexParsed="indexParsed" />
-                                                    @* Increment global count *@
-                                                    count++;
-                                                }
-                                                else if (type == "all" && contentNotNull)
-                                                {
-                                                    var localCount = count;
-                                                    <WikiBlockNoAuth inline="@inline"
-                                                                     matchTypeSectionsSubSections="@matchTypeSectionsSubSections"
-                                                                     matchTypeSections="@matchTypeSections"
-                                                                     matchType="@matchType"
-                                                                     type="@type"
-                                                                     sections="@sections"
-                                                                     subSections="@subSections"
-                                                                     count="@count"
-                                                                     localCount=localCount
-                                                                     indexParsed="indexParsed" />
-                                                    @* Increment global count *@
-                                                    count++;
-                                                }
-                                                else
-                                                {
-                                                    if (contentState.Value.Contents[item.index].page == null)
-                                                    {
-                                                        @JSRuntime.InvokeVoidAsync("alert", "Warning, missing title for subSection: " + contentState.Value.Contents[item.index].subSection)
-                                                    }
-                                                    else if (contentState.Value.Contents[item.index].section == null)
-                                                    {
-                                                        @JSRuntime.InvokeVoidAsync("alert", "Warning, missing section name for subSection: " + contentState.Value.Contents[item.index].subSection)
-                                                    }
-                                                    else if (contentState.Value.Contents[item.index].subSection == null)
-                                                    {
-                                                        @JSRuntime.InvokeVoidAsync("alert", "Warning, missing subSection name for something in section: " + contentState.Value.Contents[item.index].section)
-                                                    }
-                                                    else if (contentState.Value.Contents[item.index].content == null)
-                                                    {
-                                                        @JSRuntime.InvokeVoidAsync("alert", "Warning, missing content for subSection: " + contentState.Value.Contents[item.index].subSection)
-                                                    }
-                                                }
-                                            }
-                                            else
-                                            {
-                                                Console.WriteLine("Suppressing error?");
-                                            }
-                                        }
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </NotAuthorized>
-                </AuthorizeView>
-            }
+            </div>
         </div>
     </div>
 </div>
@@ -541,67 +92,11 @@
 
     private ElementReference cardsWrapper; // This holds reference to our cards container
     private int currentIndex = 0; // Keeps track of current slide
-    private int totalCards => cards.Count;
     private string myStyle = ""; // Style string that we'll bind to
     private double cardWidth = 0;
     private int visibleCards = 0;
     private string transitionStyle = "transition: transform 0.3s ease;";
     private CancellationTokenSource cts = new CancellationTokenSource();
-    private List<Card> DisplayCards => cards.Concat(cards.Take(visibleCards)).ToList();
-    private List<Card> cards = new List<Card>
-    {
-        new Card
-        {
-            Title = "AI Assistant!",
-            Text = "Search the site faster with AI",
-            Link = "/navBot",
-            ButtonText = "Try It Out!"
-        },
-        new Card
-        {
-            Title = "My Novel Genetic Algorithm",
-            Text = "A Genetic Algorithm I developed myself.",
-            Link = "/SvgDiagramEditor",
-            ButtonText = "Try It Out!"
-        },
-        new Card
-        {
-            Title = "ChatBot!",
-            Text = "Try out GPT-4 for free!",
-            Link = "/chat",
-            ButtonText = "Try It Out!"
-        },
-        new Card
-        {
-            Title = "Wiki!",
-            Text = "View or edit articles about me!",
-            Link = "/all",
-            ButtonText = "Try It Out!"
-        },
-        new Card
-        {
-            Title = "My Dissertation",
-            Text = "Read my dissertation on AI Interpretability!",
-            Link = "/Dissertation/Transcript",
-            ButtonText = "Read Here!"
-        },
-        new Card
-        {
-            Title = "C.V.",
-            Text = "Read my CV to see my qualifications!",
-            Link = "/Dissertation/CV",
-            ButtonText = "Read Here!"
-        },
-        new Card
-        {
-            Title = "Old Evolution Sim",
-            Text = "My first attempt at implementing a basic Genetic Algorithm",
-            Link = "/EvolutionTF",
-            ButtonText = "Try It Out!"
-        },
-    };
-
-    private IJSObjectReference? mainContentModule;
 
     [Inject] public AuthenticationStateProvider? AuthenticationStateProvider { get; set; }
 
@@ -639,7 +134,7 @@
                 await Task.Delay(150);
                 cts = new CancellationTokenSource();
             }
-            SlideCards();
+
             StateHasChanged();
         }
     }
@@ -647,32 +142,10 @@
     {
         if (firstRender)
         {
-            mainContentModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Pages/MainContent.razor.js");
-            await mainContentModule.InvokeVoidAsync("initializeStarfield");
+            await JSRuntime.InvokeVoidAsync("initializeStarfield");
+            await JSRuntime.InvokeVoidAsync("initializeScrollProgress");
         }
     }
-    private void SlideCards()
-    {
-        currentIndex++;
-
-        // Check if the next slide would be the start (after the duplicate cards are fully in view)
-        if (currentIndex + visibleCards == totalCards + visibleCards)
-        {
-            cts.Cancel();  // Reset the delay
-        }
-
-        // Now handle the jump back to the start
-        if (currentIndex + visibleCards > totalCards + visibleCards)
-        {
-            currentIndex = 0;
-            myStyle = $"transform: translateX(0px);";
-            StateHasChanged();
-            return;
-        }
-
-        myStyle = $"transform: translateX({currentIndex * -cardWidth}px); {transitionStyle}";
-    }
-
 
     private async void ContentStateChanged(object? sender, EventArgs e)
     {
