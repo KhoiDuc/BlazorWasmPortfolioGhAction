@@ -1,0 +1,195 @@
+﻿@page "/Utility/{Component?}"
+@using BlazorWasmPortfolioGhAction.Components.Ascii
+@inject IJSRuntime JSRuntime
+<div class="main-container">
+    <NavMenuUtility NavigationItems="NavigationItems" />
+
+    <div class="component-container">
+        @if (Component != null)
+        {
+            @DynamicComponent
+        }
+        else
+        {
+            <p>Please select a utility from the navigation menu.</p>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Component { get; set; }
+
+    private RenderFragment DynamicComponent => Component switch
+    {
+        "mathcalculator" => RenderComponent<MathCaculator>(),
+        "browserstorage" => RenderComponent<BrowserStorageWasm>(),
+        "webglrender" => RenderComponent<WebGLRender>(),
+        "overnightmintemp" => RenderComponent<OvernightMinTemp>(),
+        "cidrcalculator" => RenderComponent<CIDRCalculator>(),
+        "geminispellchecker" => RenderComponent<GeminiSpellChecker>(),
+        "currenttime" => RenderComponent<CurrentTime>(),
+        "ascii" => RenderComponent<BlazorWasmPortfolioGhAction.Components.Ascii.Ascii>(),
+        "urls" => RenderUrlComponents(),
+        "guid" => RenderComponent<BlazorWasmPortfolioGhAction.Components.GuidGenerator.GuidGenerator>(),
+        "sqlite" => RenderComponent<Sqlite>(),
+        "html" => RenderComponent<BlazorWasmPortfolioGhAction.Components.HTMLEncodeDecode.HTMLEncodeDecode>(),
+        "markdown" => RenderComponent<BlazorWasmPortfolioGhAction.Components.MarkdownConverter.MarkdownConverter>(),
+        "timerstopwatch" => RenderTimerStopwatchComponents(),
+        "colourconverter" => RenderComponent<BlazorWasmPortfolioGhAction.Components.HexToRGB.HexToRGB>(),
+        "binary" => RenderComponent<BlazorWasmPortfolioGhAction.Components.Binary.Binary>(),
+        "stringconverter" => RenderComponent<BlazorWasmPortfolioGhAction.Components.StringConverter.StringConverter>(),
+        "epoch" => RenderComponent<BlazorWasmPortfolioGhAction.Components.EpochConverter.EpochConverter>(),
+        "converter" => RenderConverterComponents(),
+        "jwt" => RenderComponent<BlazorWasmPortfolioGhAction.Components.JWTDebugger.JWTDebugger>(),
+        "luhn" => RenderComponent<BlazorWasmPortfolioGhAction.Components.LuhnChecker.LuhnChecker>(),
+        "hcf" => RenderComponent<BlazorWasmPortfolioGhAction.Components.HCF.HCF>(),
+        "unicode" => RenderComponent<BlazorWasmPortfolioGhAction.Components.UnicodePicker.UnicodePicker>(),
+        "cryptography" => RenderComponent<BlazorWasmPortfolioGhAction.Components.MD5Converter.MD5Converter>(),
+        "fluxortest" => RenderFluxorTestComponents(),
+        "qrgenerator" => RenderComponent<QRGenerator>(),
+        "randomfact" => RenderComponent<RandomFacts>(),
+        "jokequotes" => RenderComponent<JokeQuotes>(),
+        "svgdiagrameditor" => RenderComponent<SvgDiagramEditor>(),
+        _ => RenderDefaultComponent()
+    };
+
+    private RenderFragment RenderComponent<TComponent>() where TComponent : IComponent
+    {
+        return builder =>
+        {
+            builder.OpenComponent<TComponent>(0);
+            builder.CloseComponent();
+        };
+    }
+
+    private RenderFragment RenderUrlComponents() => builder =>
+    {
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.UrlSplitter.UrlSplitter>(0);
+        builder.CloseComponent();
+        builder.AddMarkupContent(1, "<br />");
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.UrlEncode.UrlEncode>(2);
+        builder.CloseComponent();
+    };
+
+    private RenderFragment RenderTimerStopwatchComponents() => builder =>
+    {
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.TimerControl.TimerControl>(0);
+        builder.AddAttribute(1, "Input", "5m 00s");
+        builder.CloseComponent();
+        builder.AddMarkupContent(2, "<hr />");
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.Stopwatch.Stopwatch>(3);
+        builder.AddAttribute(4, "Input", "0s 00");
+        builder.CloseComponent();
+    };
+
+    private RenderFragment RenderConverterComponents() => builder =>
+    {
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.HextoDec.HextoDec>(0);
+        builder.CloseComponent();
+        builder.AddMarkupContent(1, "<br />");
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.MemoryConverter.MemoryConverter>(2);
+        builder.CloseComponent();
+        builder.AddMarkupContent(3, "<br />");
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.TimeConverter.TimeConverter>(4);
+        builder.CloseComponent();
+    };
+
+    private RenderFragment RenderFluxorTestComponents() => builder =>
+    {
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.FluxorExample.FirstComponent>(0);
+        builder.CloseComponent();
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.FluxorExample.SecondComponent>(1);
+        builder.CloseComponent();
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.FluxorExample.FetchData>(2);
+        builder.CloseComponent();
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.FluxorExample.Counter>(3);
+        builder.CloseComponent();
+    };
+
+    private RenderFragment RenderDefaultComponent() => builder =>
+    {
+        builder.AddMarkupContent(0, "<p>Please select a utility from the navigation menu.</p>");
+    };
+
+    private List<NavMenuUtility.NavCategory> NavigationItems = new()
+{
+    new NavMenuUtility.NavCategory
+    {
+        CategoryName = "General Tools",
+        Items = new List<NavMenuUtility.NavItem>
+        {
+            new NavMenuUtility.NavItem { Text = "Urls", Link = "Utility/urls" },
+            new NavMenuUtility.NavItem { Text = "Guid", Link = "Utility/guid" },
+            new NavMenuUtility.NavItem { Text = "HTML", Link = "Utility/html" },
+            new NavMenuUtility.NavItem { Text = "Markdown", Link = "Utility/markdown" },
+            new NavMenuUtility.NavItem { Text = "Converter", Link = "Utility/converter" },
+            new NavMenuUtility.NavItem { Text = "String Converter", Link = "Utility/stringconverter" },
+            new NavMenuUtility.NavItem { Text = "Spell Checker (Gemini)", Link = "Utility/geminispellchecker" },
+            new NavMenuUtility.NavItem { Text = "Random Fact", Link = "Utility/randomfact" },
+            new NavMenuUtility.NavItem { Text = "Joke quotes", Link = "Utility/jokequotes" },
+        }
+    },
+    new NavMenuUtility.NavCategory
+    {
+        CategoryName = "SQL Tools",
+        Items = new List<NavMenuUtility.NavItem>
+        {
+            new NavMenuUtility.NavItem { Text = "SQLite Integration", Link = "Utility/sqlite" }
+        }
+    },
+    new NavMenuUtility.NavCategory
+    {
+        CategoryName = "Cryptography Tools",
+        Items = new List<NavMenuUtility.NavItem>
+        {
+            new NavMenuUtility.NavItem { Text = "JWT", Link = "Utility/jwt" },
+            new NavMenuUtility.NavItem { Text = "Luhn", Link = "Utility/luhn" },
+            new NavMenuUtility.NavItem { Text = "Cryptography", Link = "Utility/cryptography" }
+        }
+    },
+    new NavMenuUtility.NavCategory
+    {
+        CategoryName = "Time & Calculation Tools",
+        Items = new List<NavMenuUtility.NavItem>
+        {
+            new NavMenuUtility.NavItem { Text = "Math Calculator", Link = "Utility/mathcalculator" },
+            new NavMenuUtility.NavItem { Text = "Min Temp Calculator", Link = "Utility/overnightmintemp" },
+            new NavMenuUtility.NavItem { Text = "CIDR Calculator", Link = "Utility/cidrcalculator" },
+            new NavMenuUtility.NavItem { Text = "Timer / Stopwatch", Link = "Utility/timerstopwatch" },
+            new NavMenuUtility.NavItem { Text = "Epoch", Link = "Utility/epoch" },
+            new NavMenuUtility.NavItem { Text = "Current Time", Link = "Utility/currenttime" }
+        }
+    },
+    new NavMenuUtility.NavCategory
+    {
+        CategoryName = "Encoding & Format Tools",
+        Items = new List<NavMenuUtility.NavItem>
+        {
+            new NavMenuUtility.NavItem { Text = "Ascii", Link = "Utility/ascii" },
+            new NavMenuUtility.NavItem { Text = "Colour Converter", Link = "Utility/colourconverter" },
+            new NavMenuUtility.NavItem { Text = "Binary", Link = "Utility/binary" },
+            new NavMenuUtility.NavItem { Text = "Unicode", Link = "Utility/unicode" },
+            new NavMenuUtility.NavItem { Text = "Hidden Char Finder", Link = "Utility/hcf" }
+        }
+    },
+    new NavMenuUtility.NavCategory
+    {
+        CategoryName = "Testing Library Tools",
+        Items = new List<NavMenuUtility.NavItem>
+        {
+            new NavMenuUtility.NavItem { Text = "Fluxor Test", Link = "Utility/fluxortest" },
+            new NavMenuUtility.NavItem { Text = "WebGL Canvas", Link = "Utility/webglrender" },
+            new NavMenuUtility.NavItem { Text = "Browser Storage Wasm", Link = "Utility/browserstorage" },
+            new NavMenuUtility.NavItem { Text = "QR Generator", Link = "Utility/qrgenerator" },
+            new NavMenuUtility.NavItem { Text = "Svg Diagram Editor", Link = "Utility/svgdiagrameditor" }
+        }
+    },
+    new NavMenuUtility.NavCategory
+    {
+        CategoryName = "Payment Tools",
+        Items = new List<NavMenuUtility.NavItem>()
+        // Add payment tools here if needed
+    }
+};
+}

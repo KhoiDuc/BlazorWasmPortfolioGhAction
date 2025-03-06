@@ -1,0 +1,160 @@
+﻿@page "/Dissertation/{file}"
+@using BlazorWasmPortfolioGhAction.Store.Services
+@inject IMobileDetectionService MobileDetectionService
+@inject HttpClient HttpClient
+
+<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+<script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<SearchBar type="chat" IsSearchDisabled="true" />
+
+@if (isMobile)
+{
+    <div class="cv-section container-fluid">
+        <div class="row" style="justify-content: center; padding: 20px;">
+            <h3 class="title">@title</h3>
+            <p>Your device is not optimized for viewing PDFs. View the images below or download the PDF.</p>
+
+            <div class="carousel carousel-dark slide" id="mobileCarousel" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    @for (int i = 0; i < images.Count; i++)
+                    {
+                        <button type="button"
+                                data-bs-target="#mobileCarousel"
+                                data-bs-slide-to="@i"
+                                class="@(i == 0 ? "active" : "")"
+                                aria-current="@(i == 0 ? "true" : "false")"
+                                aria-label="@($"Slide {i + 1}")"></button>
+                    }
+                </div>
+                <div class="carousel-inner">
+                    @for (int i = 0; i < images.Count; i++)
+                    {
+                        int index = i;
+                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                            <img src="@images[i]" class="cv-image" alt="@($"Page {i + 1} of {title}")"
+                             @onclick="() => ShowFullImage(index)" />
+                        </div>
+                    }
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#mobileCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#mobileCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+
+                <!-- Full-Screen Overlay -->
+                @if (isFullImageOpen)
+                {
+                    <div class="full-image-overlay" @onclick="CloseFullImage">
+                        <img src="@selectedImage" class="full-image" alt="Full view" />
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="row" style="justify-content: center; position: relative;"><a role="button" tabindex="0" href="@filePath" target="_blank" class="outline-button btn btn-primary text-dark" style="max-width: 250px;"><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M505.7 661a8 8 0 0 0 12.6 0l112-141.7c4.1-5.2.4-12.9-6.3-12.9h-74.1V168c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v338.3H400c-6.7 0-10.4 7.7-6.3 12.9l112 141.8zM878 626h-60c-4.4 0-8 3.6-8 8v154H214V634c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v198c0 17.7 14.3 32 32 32h684c17.7 0 32-14.3 32-32V634c0-4.4-3.6-8-8-8z"></path></svg>&nbsp;Download CV</a></div>
+    </div>
+}
+else
+{
+    <div class="pdfViewer">
+        <h3 class="title">@title</h3>
+        @if (string.IsNullOrEmpty(filePath) || !fileExists)
+        {
+            <div class="error-message">
+                <p>The requested PDF file could not be found.</p>
+                <p>Please contact support or try again later.</p>
+            </div>
+        }
+        else
+        {
+            <iframe class="viewerIframe"
+                    src="@filePath"
+                    type="application/pdf"
+                    style="width: 100%; height: 80vh; border: none;"
+                    @onload="HandleIframeLoad">
+                This browser does not support PDFs. Please download the PDF to view it:
+                <a href="@filePath">Download PDF</a>.
+            </iframe>
+        }
+    </div>
+}
+
+@code {
+    private string? filePath;
+    private string? title;
+    private bool isMobile = false;
+    private bool fileExists = false;
+    private bool isFileValid = false;
+    private List<string> images = new List<string>();
+    private string? selectedImage;
+    private bool isFullImageOpen = false;
+
+    [Parameter]
+    public string? file { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (file == "Transcript")
+        {
+            filePath = "Transcript.pdf";
+            title = "My transcript";
+            images = new List<string> { "transcript1.png"};
+        }
+        else if (file == "Degree")
+        {
+            filePath = "Degree.pdf";
+            title = "My bachelor's degree";
+            images = new List<string> { "degree1.png", "degree2.png", "degree3.png" };
+        }
+        else if (file == "CV")
+        {
+            filePath = "khoicv.pdf";
+            title = "My curriculum vitae";
+            images = new List<string> { "khoicv_Page1.png", "khoicv_Page2.png", "khoicv_Page3.png", "khoicv_Page4.png" };
+        }
+
+        isMobile = await MobileDetectionService.IsMobileDevice();
+        if (!isMobile && !string.IsNullOrEmpty(filePath))
+        {
+            fileExists = await FileExists(filePath);
+        }
+        StateHasChanged();
+    }
+
+    private async Task<bool> FileExists(string path)
+    {
+        try
+        {
+            var response = await HttpClient.GetAsync(path);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void HandleIframeLoad()
+    {
+        isFileValid = true;
+        StateHasChanged();
+    }
+
+    private void ShowFullImage(int index)
+    {
+        selectedImage = images[index];
+        isFullImageOpen = true;
+        StateHasChanged();
+    }
+
+    private void CloseFullImage()
+    {
+        isFullImageOpen = false;
+        selectedImage = null;
+        StateHasChanged();
+    }
+}

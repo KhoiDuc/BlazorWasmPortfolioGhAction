@@ -1,0 +1,73 @@
+﻿@using BlazorWasmPortfolioGhAction.Components
+<PageTitle>Calculator</PageTitle>
+
+<h1>Calculator</h1>
+
+<p>
+    Welcome to calculator application!
+    <br />
+    Here you can calculate everything.
+</p>
+
+<div>
+    <div class="button-inline-block" @onclick="ChooseSquaringNumber">Squaring a number</div>
+    <div class="button-inline-block" @onclick="ChoosePerimeterRectangle">Perimeter of a rectangle</div>
+</div>
+
+<br />
+
+<WrapperBlock>
+    <div>
+        @if (string.IsNullOrEmpty(currentOperation)) {
+            <h3>Choose the operation</h3>
+        } else {
+            <h3>Operation: @currentOperation</h3>
+        }
+    </div>
+
+    <div>
+        @if ("Squaring a number" == currentOperation) {
+            <SquaringNumber InstructionParam="@InstructionA" MyCallback="CallbackFunction"></SquaringNumber>
+        }
+
+        @if ("Perimeter of a rectangle" == currentOperation) {
+            <PerimeterRectangle InstructionParam="@InstructionB" MyCallback="CallbackFunction"></PerimeterRectangle>
+        }
+    </div>
+</WrapperBlock>
+
+@if (arrayForRendering.Length > 0) {
+    <br />
+    <WrapperBlock>
+        <div>
+            @foreach (string element in arrayForRendering) {
+                <div>@element</div>
+            }
+        </div>
+    </WrapperBlock>
+}
+
+@code {
+    private string currentOperation = string.Empty;
+
+    private void ChooseSquaringNumber() {
+        Console.WriteLine("Choose: Squaring a number");
+        currentOperation = "Squaring a number";
+    }
+
+    private void ChoosePerimeterRectangle() {
+        Console.WriteLine("Choose: Perimeter of a rectangle");
+        currentOperation = "Perimeter of a rectangle";
+    }
+
+    const string InstructionA = "Input X value. You will get result X * X.";
+    const string InstructionB = "Input A and B sides of rectangle. You will get result 2 * (A + B).";
+
+    private List<string> historyOperations = new List<string>();
+    private string[] arrayForRendering = {};
+
+    private void CallbackFunction(string content) {
+        historyOperations.Add(content);
+        arrayForRendering = historyOperations.ToArray();
+    }
+}

@@ -1,0 +1,455 @@
+﻿@using System.Numerics
+@using Blazor.Extensions
+@using Blazor.Extensions.Canvas
+@using Blazor.Extensions.Canvas.WebGL
+
+<PageTitle>WebGL canvas</PageTitle>
+
+<div tabindex="0" oncontextmenu="return false;" @onmousemove="OnMouseMove" @onmouseup="OnMouseUp" @onmousedown="OnMouseDown" @onmousewheel="OnMouseWheel">
+    <BECanvas Width="800" Height="600" @ref="_canvasReference" />
+</div>
+
+<p>
+    dragging: @_isDragging.ToString()
+    right_dragging: @_isRightDragging.ToString()
+    zoom: @_camera.Zoom
+</p>
+
+@code {
+    private const float DefaultScaleBy = 0.1f;
+
+    private BECanvasComponent _canvasReference;
+    private WebGLContext _gl;
+
+    private ProgramInfo _programInfo;
+    private Camera _camera = new Camera();
+    private Buffers _buffers = new Buffers();
+
+    // TODO: replace with dynamic loading from DiCoM
+    private readonly float[] _positions = new float[] {
+        // Front face
+        -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f,
+
+        // Back face
+        -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
+
+        // Top face
+        -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f,
+
+        // Bottom face
+        -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f,
+
+        // Right face
+        1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f,
+
+        // Left face
+        -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f
+    };
+    private readonly ushort[] _indices = new ushort[] {
+        0,
+        1,
+        2,
+        0,
+        2,
+        3, // front
+        4,
+        5,
+        6,
+        4,
+        6,
+        7, // back
+        8,
+        9,
+        10,
+        8,
+        10,
+        11, // top
+        12,
+        13,
+        14,
+        12,
+        14,
+        15, // bottom
+        16,
+        17,
+        18,
+        16,
+        18,
+        19, // right
+        20,
+        21,
+        22,
+        20,
+        22,
+        23, // left
+    };
+    private readonly float[] _colors = new float[]
+    {
+            1.0f, 1.0f, 1.0f, 1.0f, // Front face (white)
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+
+            1.0f, 0.0f, 0.0f, 1.0f, // Back face (red)
+            1.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 1.0f,
+
+            0.0f, 1.0f, 0.0f, 1.0f, // Top face (green)
+            0.0f, 1.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,
+
+            0.0f, 0.0f, 1.0f, 1.0f, // Bottom face (blue)
+            0.0f, 0.0f, 1.0f, 1.0f,
+            0.0f, 0.0f, 1.0f, 1.0f,
+            0.0f, 0.0f, 1.0f, 1.0f,
+
+            1.0f, 1.0f, 0.0f, 1.0f, // Right face (yellow)
+            1.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 0.0f, 1.0f,
+
+            1.0f, 0.0f, 1.0f, 1.0f, // Left face (purple)
+            1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 1.0f,
+    };
+    
+
+    private float[] _viewProjectionMatrix;
+
+    private bool _isDragging = false;
+    private bool _isRightDragging = false;
+    
+    private float _startMouseX, _startMouseY;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _gl = await _canvasReference.CreateWebGLAsync();
+            _programInfo = new ProgramInfo();
+
+            await _gl.ClearColorAsync(0.8f, 0.8f, 0.8f, 1.0f);
+
+
+            await InitializeShadersAsync();
+            await InitializeBuffersAsync();
+
+            await DrawSceneAsync();
+        }
+    }
+
+    private async Task InitializeShadersAsync()
+    {
+        var vertexShader = await CreateShaderAsync(ShaderType.VERTEX_SHADER, @"attribute vec4 aVertexPosition;
+    attribute vec4 aVertexColor;
+
+    uniform mat4 uModelViewMatrix;
+    uniform mat4 uProjectionMatrix;
+
+    varying lowp vec4 vColor;
+
+    void main(void) {
+      gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+      vColor = aVertexColor;
+    }");
+
+        var fragmentShader = await CreateShaderAsync(ShaderType.FRAGMENT_SHADER, @"varying lowp vec4 vColor;
+
+    void main(void) {
+      gl_FragColor = vColor;
+    }");
+
+        _programInfo.Program = await CreateProgramAsync(vertexShader, fragmentShader);
+
+        _programInfo.AttribLocations.VertexPosition = await _gl.GetAttribLocationAsync(_programInfo.Program, "aVertexPosition");
+        _programInfo.AttribLocations.VertexColor = await _gl.GetAttribLocationAsync(_programInfo.Program, "aVertexColor");
+
+        _programInfo.UniformLocations.ModelViewMatrix = await _gl.GetUniformLocationAsync(_programInfo.Program, "uModelViewMatrix");
+        _programInfo.UniformLocations.ProjectionMatrix = await _gl.GetUniformLocationAsync(_programInfo.Program, "uProjectionMatrix");
+    }
+
+    private async Task InitializeBuffersAsync()
+    {
+        _buffers.Position = await _gl.CreateBufferAsync();
+        await _gl.BindBufferAsync(BufferType.ARRAY_BUFFER, _buffers.Position);
+        await _gl.BufferDataAsync(BufferType.ARRAY_BUFFER, _positions, BufferUsageHint.STATIC_DRAW);
+
+        _buffers.Indices = await _gl.CreateBufferAsync();
+        await _gl.BindBufferAsync(BufferType.ELEMENT_ARRAY_BUFFER, _buffers.Indices);
+        await _gl.BufferDataAsync(BufferType.ELEMENT_ARRAY_BUFFER, _indices, BufferUsageHint.STATIC_DRAW);
+
+        _buffers.Color = await _gl.CreateBufferAsync();
+        await _gl.BindBufferAsync(BufferType.ARRAY_BUFFER, _buffers.Color);
+        await _gl.BufferDataAsync(BufferType.ARRAY_BUFFER, _colors, BufferUsageHint.STATIC_DRAW);
+    }
+
+    public async Task DrawSceneAsync(float cubeRotation = 0.5f)
+    {
+        await _gl.BeginBatchAsync(); // begin the explicit batch
+
+        await _gl.ClearColorAsync(0f, 0f, 0f, 1f); // Clear to black
+        await _gl.ClearDepthAsync(1f);            // Clear everything
+        await _gl.EnableAsync(EnableCap.DEPTH_TEST);
+        await _gl.DepthFuncAsync(CompareFunction.LEQUAL);
+        await _gl.ClearAsync(BufferBits.COLOR_BUFFER_BIT | BufferBits.DEPTH_BUFFER_BIT);
+
+        // // Perspective matrix
+        // float fieldOfView = (float)(45 * Math.PI / 180);
+        // float aspect = _gl.DrawingBufferWidth / (float)_gl.DrawingBufferHeight;
+        float zNear = 0.1f;
+        float zFar = 100.0f;
+        // Matrix4x4 projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fieldOfView, aspect, zNear, zFar);
+
+        // // ModelView matrix
+        // Matrix4x4 modelViewMatrix = Matrix4x4.Identity;
+        // modelViewMatrix = Matrix4x4.CreateTranslation(0f, 0f, -6f) * modelViewMatrix;
+        // modelViewMatrix = Matrix4x4.CreateFromAxisAngle(Vector3.UnitZ, cubeRotation) * modelViewMatrix;
+        // modelViewMatrix = Matrix4x4.CreateFromAxisAngle(Vector3.UnitY, cubeRotation * 0.7f) * modelViewMatrix;
+        // modelViewMatrix = Matrix4x4.CreateFromAxisAngle(Vector3.UnitX, cubeRotation * 0.3f) * modelViewMatrix;
+
+        Matrix4x4 projectionMatrix = Matrix4x4.CreateOrthographic(10 / _camera.Zoom, 10 / _camera.Zoom, zNear, zFar);
+        Matrix4x4 modelViewMatrix = Matrix4x4.CreateRotationZ(_camera.Rotation) *
+                                    Matrix4x4.CreateTranslation(_camera.X, _camera.Y, -10);
+
+        // Set position and color attributes
+        await SetPositionAttributeAsync();
+        await SetColorAttributeAsync();
+
+        // Bind indices buffer
+        await _gl.BindBufferAsync(BufferType.ELEMENT_ARRAY_BUFFER, _buffers.Indices);
+
+        // Use program
+        await _gl.UseProgramAsync(_programInfo.Program);
+
+        // Set uniforms
+        float[] fProjMatrix = new float[]
+        {
+            projectionMatrix.M11, projectionMatrix.M12, projectionMatrix.M13, projectionMatrix.M14,
+            projectionMatrix.M21, projectionMatrix.M22, projectionMatrix.M23, projectionMatrix.M24,
+            projectionMatrix.M31, projectionMatrix.M32, projectionMatrix.M33, projectionMatrix.M34,
+            projectionMatrix.M41, projectionMatrix.M42, projectionMatrix.M43, projectionMatrix.M44
+        };
+
+        float[] fmodelViewMatrix = new float[]
+        {
+            modelViewMatrix.M11, modelViewMatrix.M12, modelViewMatrix.M13, modelViewMatrix.M14,
+            modelViewMatrix.M21, modelViewMatrix.M22, modelViewMatrix.M23, modelViewMatrix.M24,
+            modelViewMatrix.M31, modelViewMatrix.M32, modelViewMatrix.M33, modelViewMatrix.M34,
+            modelViewMatrix.M41, modelViewMatrix.M42, modelViewMatrix.M43, modelViewMatrix.M44
+        };
+
+        await _gl.UniformMatrixAsync(_programInfo.UniformLocations.ProjectionMatrix, false, fProjMatrix);
+        await _gl.UniformMatrixAsync(_programInfo.UniformLocations.ModelViewMatrix, false, fmodelViewMatrix);
+
+        // Draw elements
+        await _gl.DrawElementsAsync(Primitive.TRIANGLES, 36, DataType.UNSIGNED_SHORT, 0);
+
+        await _gl.EndBatchAsync(); // execute all currently batched calls
+    }
+
+    private async Task SetPositionAttributeAsync()
+    {
+        int numComponents = 3;
+        bool normalize = false;
+        int stride = 0;
+        int offset = 0;
+
+        await _gl.BindBufferAsync(BufferType.ARRAY_BUFFER, _buffers.Position);
+        await _gl.VertexAttribPointerAsync((uint)_programInfo.AttribLocations.VertexPosition, numComponents, DataType.FLOAT, normalize, stride, offset);
+        await _gl.EnableVertexAttribArrayAsync((uint)_programInfo.AttribLocations.VertexPosition);
+    }
+
+    private async Task SetColorAttributeAsync()
+    {
+        int numComponents = 4;
+        bool normalize = false;
+        int stride = 0;
+        int offset = 0;
+
+        await _gl.BindBufferAsync(BufferType.ARRAY_BUFFER, _buffers.Color);
+        await _gl.VertexAttribPointerAsync((uint)_programInfo.AttribLocations.VertexColor, numComponents, DataType.FLOAT, normalize, stride, offset);
+        await _gl.EnableVertexAttribArrayAsync((uint)_programInfo.AttribLocations.VertexColor);
+    }         
+
+    private async Task<WebGLShader> CreateShaderAsync(ShaderType type, string source)
+    {
+        var shader = await _gl.CreateShaderAsync(type);
+        await _gl.ShaderSourceAsync(shader, source);
+        await _gl.CompileShaderAsync(shader);
+
+        var success = await _gl.GetShaderParameterAsync<bool>(shader, ShaderParameter.COMPILE_STATUS);
+        if (!success)
+        {
+            var info = await _gl.GetShaderInfoLogAsync(shader);
+            throw new Exception($"Shader compilation failed: {info}");
+        }
+
+        return shader;
+    }
+
+    private async Task<WebGLProgram> CreateProgramAsync(WebGLShader vertexShader, WebGLShader fragmentShader)
+    {
+        var program = await _gl.CreateProgramAsync();
+        await _gl.AttachShaderAsync(program, vertexShader);
+        await _gl.AttachShaderAsync(program, fragmentShader);
+        await _gl.LinkProgramAsync(program);
+
+        var success = await _gl.GetProgramParameterAsync<bool>(program, ProgramParameter.LINK_STATUS);
+        if (!success)
+        {
+            var info = await _gl.GetProgramInfoLogAsync(program);
+            throw new Exception($"Program linking failed: {info}");
+        }
+
+        return program;
+    }
+
+    private static float[] CreateProjectionMatrix(float width, float height)
+    {
+        return new float[] {
+            2.0f / width, 0, 0,
+            0, -2.0f / height, 0,
+            -1, 1, 1
+    };
+    }
+
+    private float[] CreateCameraMatrix()
+    {
+        float cos = (float) Math.Cos(_camera.Rotation);
+        float sin = (float)Math.Sin(_camera.Rotation);
+        float scale = 1.0f / _camera.Zoom;
+
+        return new float[]
+        {
+            cos * scale, -sin * scale, 0,
+            sin * scale, cos * scale, 0,
+            -_camera.X, -_camera.Y, _camera.Z
+        };
+    }
+
+    private static float[] MultiplyMatrices(float[] a, float[] b)
+    {
+        return new float[] {
+            a[0] * b[0] + a[3] * b[1] + a[6] * b[2],
+            a[1] * b[0] + a[4] * b[1] + a[7] * b[2],
+            a[2] * b[0] + a[5] * b[1] + a[8] * b[2],
+            a[0] * b[3] + a[3] * b[4] + a[6] * b[5],
+            a[1] * b[3] + a[4] * b[4] + a[7] * b[5],
+            a[2] * b[3] + a[5] * b[4] + a[8] * b[5],
+            a[0] * b[6] + a[3] * b[7] + a[6] * b[8],
+            a[1] * b[6] + a[4] * b[7] + a[7] * b[8],
+            a[2] * b[6] + a[5] * b[7] + a[8] * b[8]
+    };
+    }
+
+    private async Task OnMouseMove(MouseEventArgs e)
+    {
+        if (_isDragging || _isRightDragging)
+        {
+            float deltaX = (float) e.ClientX - _startMouseX;
+            float deltaY = (float) e.ClientY - _startMouseY;
+
+            if (_isDragging)
+            {
+                // Pan
+                _camera.X -= deltaX * 0.01f / _camera.Zoom;
+                _camera.Y += deltaY * 0.01f / _camera.Zoom;
+            }
+            else if (_isRightDragging)
+            {
+                // Rotate
+                _camera.Rotation += deltaX * 0.01f;
+            }
+
+            _startMouseX = (float) e.ClientX;
+            _startMouseY = (float) e.ClientY;
+
+            await DrawSceneAsync();
+        }
+    }
+
+    private void OnMouseDown(MouseEventArgs e)
+    {
+        _isDragging = e.Buttons == 1; // Left button for Pan
+        _isRightDragging = e.Buttons == 2; // Right button for Rotate
+        _startMouseX = (float)e.ClientX;
+        _startMouseY = (float)e.ClientY;
+    }
+
+    private async Task OnMouseWheel(WheelEventArgs e)
+    {
+        if (e.DeltaY > 0)
+        {
+            _camera.Zoom = ((_camera.Zoom + DefaultScaleBy) >= 7) ? _camera.Zoom = 7f : await IncreaseScale();
+        }
+
+        if (e.DeltaY < 0)
+        {
+            _camera.Zoom = ((_camera.Zoom - DefaultScaleBy) <= 0) ? _camera.Zoom = DefaultScaleBy : await DecreaseScale();
+        }
+
+        await DrawSceneAsync();
+    }
+
+    async Task<float> IncreaseScale()
+    {
+        return await Task.Run(() =>
+        {
+            //increase the scale first then calculate the max and min positions
+            _camera.Zoom += DefaultScaleBy;
+            // double scaleFrac = (_camera.Zoom / ScaleToMaximum);
+            // double scaleDiff = (DefaultMoveBy + (DefaultMoveBy * scaleFrac));
+            // double scaleChange = DefaultMoveBy + scaleDiff;
+            // _DefaultMaxPosition += scaleChange;
+            // _DefaultMinPosition -= scaleChange;
+
+            return _camera.Zoom;
+        });
+    }
+
+    async Task<float> DecreaseScale()
+    {
+        return await Task.Run(() =>
+        {
+            _camera.Zoom -= DefaultScaleBy;
+
+            // double scaleFrac = (_camera.Zoom / ScaleToMaximum);
+            // double scaleDiff = (DefaultMoveBy + (DefaultMoveBy * scaleFrac));
+            // double scaleChange = DefaultMoveBy + scaleDiff;
+            // _DefaultMaxPosition -= scaleChange;
+            // _DefaultMinPosition += scaleChange;//DefaultMoveBy;
+
+            // //fix descaling, move the image back into view when descaling (zoomin out)
+            // if (_camera.Zoom <= 1)
+            // {
+            //     _PositionLeft = 0;
+            //     _PositionTop = 0;
+            // }
+            // else
+            // {
+            //     //left can not be more than max position
+            //     _PositionLeft = (_DefaultMaxPosition < _PositionLeft) ? _DefaultMaxPosition : _PositionLeft;
+
+            //     //top can not be more than max position
+            //     _PositionTop = (_DefaultMaxPosition < _PositionTop) ? _DefaultMaxPosition : _PositionTop;
+
+            //     //left can not be less than min position
+            //     _PositionLeft = (_DefaultMinPosition > _PositionLeft) ? _DefaultMinPosition : _PositionLeft;
+
+            //     //top can not be less than min position
+            //     _PositionTop = (_DefaultMinPosition > _PositionTop) ? _DefaultMinPosition : _PositionTop;
+            // }
+            return _camera.Zoom;
+        });
+    }
+
+    private void OnMouseUp(MouseEventArgs obj)
+    {
+        _isDragging = false;
+        _isRightDragging = false;
+    }
+
+}

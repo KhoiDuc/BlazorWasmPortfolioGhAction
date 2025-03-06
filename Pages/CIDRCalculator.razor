@@ -1,0 +1,121 @@
+﻿<style>
+    .card {
+        height: inherit;
+        padding: 20px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+
+    .result-box {
+        font-family: 'Cascadia Code', 'Consolas', 'Courier New', Courier, monospace;
+        border: 1px solid #CECECE;
+        background-color: #F2F2F2;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+    }
+
+    .w100 {
+        width: 100%;
+    }
+
+    .mt-10px {
+        margin-top: 10px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 10px;
+    }
+
+    .input-field {
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0;
+    }
+
+    .submit-btn {
+        background-color: #0078d4;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+        .submit-btn:hover {
+            background-color: #005a9e;
+        }
+
+    footer {
+        margin: 30px 12px;
+    }
+</style>
+
+<div class="grid">
+    <div class="card">
+        <h3>IP Range to CIDR</h3>
+        <form @onsubmit="GetCIDR">
+            <div>
+                <input class="input-field"
+                       placeholder="10.0.0.0 or 2001:0db8:abcd:0012:0000:0000:0000:0000"
+                       @bind="IPRange2CIDRModel.StartIP"
+                       @bind:event="oninput" />
+
+                <input class="input-field"
+                       placeholder="10.0.0.255 or 2001:0db8:abcd:0012:ffff:ffff:ffff:ffff"
+                       @bind="IPRange2CIDRModel.EndIP"
+                       @bind:event="oninput" />
+
+                <button class="submit-btn" type="submit">Get CIDR</button>
+            </div>
+        </form>
+
+        @if (CIDRs.Any())
+        {
+            <div id="cidr-result" class="result-box">
+                @foreach (var cidr in CIDRs)
+                {
+                    @cidr
+                    <br />
+                }
+            </div>
+        }
+    </div>
+
+    <div class="card">
+        <h3>CIDR to IP Range</h3>
+        <form @onsubmit="GetIPRange">
+            <div>
+                <input class="input-field"
+                       placeholder="10.0.0.0/24 or 2001:db8:abcd:0012::/64"
+                       @bind="CIDR2IPRangeModel.CIDR"
+                       @bind:event="oninput" />
+
+                <button class="submit-btn" type="submit">Get IP Range</button>
+            </div>
+        </form>
+
+        @if (!string.IsNullOrWhiteSpace(IPRangeStart) && !string.IsNullOrWhiteSpace(IPRangeEnd))
+        {
+            <div class="mt-10px">
+                <label>Start IP:</label>
+                <div id="iprange-result" class="result-box">
+                    @IPRangeStart
+                </div>
+
+                <label>End IP:</label>
+                <div id="iprange-result" class="result-box">
+                    @IPRangeEnd
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<footer>
+    Powered by Blazor WASM on .NET @Environment.Version
+</footer>

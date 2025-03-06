@@ -1,0 +1,35 @@
+﻿﻿<div>
+    <b>Instructions: </b>
+    <i>@InstructionParam</i>
+    <br />
+    <br />
+
+    <p>Input A and B</p>
+    <input type="text" @bind-value="@textA" />
+    <input type="text" @bind-value="@textB" />
+    <div class="button-inline-block" @onclick="CalculateRun">Calculate</div>
+
+    <h3>@resultText</h3>
+</div>
+
+@code {
+    [Parameter]
+    public string InstructionParam { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> MyCallback { get; set; } = default;
+
+    private string textA = string.Empty;
+    private string textB = string.Empty;
+
+    private string resultText = string.Empty;
+
+    private async void CalculateRun()
+    {
+        int a = int.Parse(textA);
+        int b = int.Parse(textB);
+        int perimeter = 2 * (a + b);
+        resultText = $"Result: 2 * ({a} + {b}) = {perimeter}";
+        await MyCallback.InvokeAsync(resultText);
+    }
+}

@@ -1,0 +1,65 @@
+﻿@inject RandomFactsService RandomFactsService
+@using System;
+@using BlazorWasmPortfolioGhAction.Store.Services
+
+<div class="container">
+    <div class="fact-container">
+        @if (isLoading)
+        {
+            <div class="loader"></div>
+        }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="error-message">@errorMessage</div>
+        }
+        else if (randomFact != null)
+        {
+            <div class="fact-card animate-fade-in">
+                <p class="fact-text">@randomFact.text</p>
+                @if (!string.IsNullOrEmpty(randomFact.source))
+                {
+                    <div class="fact-source">Source: @randomFact.source</div>
+                }
+            </div>
+        }
+        
+        <button 
+            class="btn btn-primary" 
+            @onclick="ShowRandomFact" 
+            disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span>Loading...</span>
+            }
+            else
+            {
+                <span>Show Me a Random Fact</span>
+            }
+        </button>
+    </div>
+</div>
+
+@code {
+    private RandomFact randomFact;
+    private bool isLoading = false;
+    private string errorMessage;
+
+    private async Task ShowRandomFact()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            randomFact = await RandomFactsService.GetRandomFact();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Failed to load fact. Please try again later.";
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

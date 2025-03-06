@@ -1,0 +1,83 @@
+﻿@using BlazorWasmPortfolioGhAction.Store.Services
+@inject QRCodeService _qrService
+@inject IJSRuntime JS
+
+
+<div class="container mt-4">
+    <div class="card-body shadow m-auto rounded-3 p-3" id="card">
+        <h3 class="text-center text-uppercase">QR Code Generator</h3>
+        @if (!string.IsNullOrEmpty(validationError))
+        {
+            <div class="alert alert-danger mt-3">@validationError</div>
+        }
+
+        @if (isLoading)
+        {
+            <div class="loading-overlay">
+                <div class="spinner-border text-primary"></div>
+            </div>
+        }
+        <div class="row mt-3">
+            <div class="col-md-6 mt-4 text-center">
+                <img src="@QRImage" class="m-auto" width="250" height="250" />
+            </div>
+            <div class="col-md-6 mt-4 text-start">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="select-box" class="form-label">Select QR Type</label>
+                        <select class="form-control" id="select-box" value="@Request.QRType" @onchange="OnSelectChange">
+                            @foreach (var qr in Enum.GetValues<EnumQrType>())
+                            {
+                                <option value="@qr">@qr</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="qr-value" class="form-label">QR Value</label>
+                        <input type="text" @onchange="OnInputChange" value="@Request.QRValue" class="form-control" id="qr-value" placeholder="Enter QR code content...">
+                    </div>
+                    <div class="mb-3">
+                        <label for="white-color" class="form-label">QR Color</label>
+                        <div class="row">
+                            <div class="col-3">
+                                <input type="color" style="height: 100%;" @onchange="OnWhiteColorHexChange" value="@Request.WhiteColorHex" class="form-control" id="white-color">
+                            </div>
+                            <div class="col-9">
+                                <input type="text" @onchange="OnWhiteColorHexChange" value="@Request.WhiteColorHex" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dark-color" class="form-label">Background Color</label>
+                        <div class="row">
+                            <div class="col-3">
+                                <input type="color" style="height: 100%;" @onchange="OnDarkColorHexChange" value="@Request.DarkColorHex" class="form-control" id="dark-color">
+                            </div>
+                            <div class="col-9">
+                                <input type="text" @onchange="OnDarkColorHexChange" value="@Request.DarkColorHex" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="logo" class="form-label">Logo</label>
+                        <InputFile accept="image/jpeg" OnChange="OnLogoChange"
+                                   multiple class="form-control" id="logo" />
+                    </div>
+                    @if (!string.IsNullOrEmpty(LogoPreview))
+                    {
+                        <div class="logo-preview mt-3">
+                            <img src="@LogoPreview"
+                                 style="max-width: 100px; max-height: 100px;"
+                                 class="img-thumbnail" />
+                            <button @onclick="RemoveLogo"
+                                    class="btn btn-sm btn-danger ms-2">
+                                Remove
+                            </button>
+                        </div>
+                    }
+                    <button type="button" @onclick="DownloadImage" class="btn btn-primary">Download</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

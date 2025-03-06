@@ -1,0 +1,389 @@
+﻿@using System.Text.Json
+@inject HttpClient Http
+
+<div class="container">
+    <h2 class="title">Jokes</h2>
+
+    <div class="control-panel">
+        <h3>Select Categories to Exclude</h3>
+        <div class="flags-grid">
+            @foreach (var flag in BlacklistFlags)
+            {
+                <label class="flag-item">
+                    <input type="checkbox"
+                           checked="@SelectedFlags[flag]"
+                           @onchange="@((e) => OnFlagChanged(flag, (bool)e.Value))" />
+                    @flag
+                </label>
+            }
+        </div>
+
+        <div class="api-url">
+            <strong>API Endpoint:</strong>
+            <a href="@DisplayUrl" target="_blank" class="url-link">
+                @DisplayUrl
+            </a>
+        </div>
+    </div>
+
+    <div class="joke-panel">
+        <div class="joke-content">
+            @if (IsLoading)
+            {
+                <div class="loader-container">
+                    <div class="loader"></div>
+                </div>
+            }
+            else if (!string.IsNullOrEmpty(JokeText))
+            {
+                <blockquote>@JokeText</blockquote>
+            }
+        </div>
+
+        <div class="button-group">
+            <button class="nav-button" @onclick="GetPreviousJoke"
+                    disabled="@(currentJokeIndex <= 0)">
+                ← Previous
+            </button>
+            <button class="nav-button primary" @onclick="GetJoke">
+                New Joke
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .title {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 2rem;
+    }
+
+    .control-panel {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .flags-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.5rem;
+        margin: 1rem 0;
+    }
+
+    .flag-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+        .flag-item:hover {
+            background: #e9ecef;
+        }
+
+    .api-url {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .url-link {
+        color: #1a73e8;
+        text-decoration: none;
+        word-break: break-all;
+    }
+
+    .joke-panel {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .joke-content {
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 2rem 0;
+    }
+
+    blockquote {
+        font-size: 1.2rem;
+        line-height: 1.6;
+        color: #2c3e50;
+        border-left: 4px solid #1a73e8;
+        padding-left: 1rem;
+        margin: 0;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .nav-button {
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        background: #e9ecef;
+        color: #2c3e50;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .nav-button.primary {
+            background: #1a73e8;
+            color: white;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+    .loader {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #1a73e8;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .loader-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 120px;
+    }
+
+    @@media (max-width: 768px) {
+        .container {
+            padding: 0 0.5rem;
+        }
+
+        .flags-grid {
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        }
+    }
+</style>
+
+@code {
+    private bool IsLoading;
+    private string DisplayUrl = string.Empty;
+    private string? JokeText;
+    private int currentJokeIndex = -1;
+
+    private readonly List<string> jokesList = [];
+    private readonly string BaseRequestUrl = "https://sv443.net/jokeapi/v2/joke/Any";
+    private readonly string[] BlacklistFlags = ["nsfw", "religious", "political", "racist", "sexist", "explicit"];
+    private readonly Dictionary<string, bool> SelectedFlags = [];
+
+    protected override void OnInitialized()
+    {
+        foreach (var flag in BlacklistFlags)
+        {
+            SelectedFlags[flag] = false;
+        }
+
+        DisplayUrl = BaseRequestUrl;
+    }
+
+    private async Task GetJoke()
+    {
+        IsLoading = true;
+        JokeText = string.Empty;
+        //Log.Information("Requesting new Joke.");
+
+        try
+        {
+            string _requestUrl = BuildRequestUrl();
+            //Log.Information("RequestUrl: {requestUrl}", _requestUrl);
+
+            //Log.Information("Updating DisplayUrl.");
+            DisplayUrl = _requestUrl;
+            using HttpClient client = new();
+            using HttpResponseMessage response = await client.GetAsync(_requestUrl);
+            if (response.IsSuccessStatusCode)
+            {
+                var _content = await response.Content.ReadAsStringAsync();
+                //Log.Information("API Response: \r\n{content}", _content);
+                //Log.Information("Parsing JSON Document.");
+                var _jsonDocument = JsonDocument.Parse(_content);
+                var _rootElement = _jsonDocument.RootElement;
+
+                // Check Error Property for which JSON Object the Response is.
+                if (_rootElement.TryGetProperty("error", out JsonElement errorElement) && errorElement.GetBoolean())
+                {
+                    // JokeApiError JSON
+                    //Log.Warning("JokeApiError JSON Object Detected!");
+                    //Log.Information("Deserializing JokeApiError JSON response.");
+                    var _error = JsonSerializer.Deserialize<JokeApiError>(_content);
+                    if (_error != null)
+                    {
+                        // Log Error JSON Details
+                        _error.LogJokeApiErrorDetails();
+
+                        // Update Joke Text
+                        //Log.Information("Updating Joke Text with Error Message.");
+                        JokeText = $"Error: {_error.Message}";
+                    }
+                    else
+                    {
+                        //Log.Error("Failed to deserialize JokeApiError JSON.\r\ncontent.ToString() {content}", _content.ToString());
+                    }
+                }
+                else
+                {
+                    // Joke JSON
+                    //Log.Information("Joke JSON Object Detected!");
+                    //Log.Information("Deserializing Joke JSON response.");
+                    var _joke = JsonSerializer.Deserialize<Joke>(_content);
+                    if (_joke != null)
+                    {
+                        // Log Joke JSON Details
+                        _joke.LogJokeDetails();
+
+                        // Update Joke Text
+                        //Log.Information("Updating Joke Text.");
+                        if (_joke.Setup != null || _joke.Delivery != null)
+                        {
+                            JokeText = $"{_joke.Setup} \r\n {_joke.Delivery}";
+
+                            // Store the joke in the list and update the current index
+                            jokesList.Add(JokeText);
+                            currentJokeIndex = jokesList.Count - 1;
+                        }
+                        else
+                        {
+                            //Log.Warning("Value for Joke.Setup {setup} \tValue for Joke.Delivery {delivery}", _joke.Setup, _joke.Delivery);
+                            JokeText = "Please Try Again.";
+                        }
+                    }
+                    else
+                    {
+                        //Log.Error("Failed to deserialize Joke JSON.\r\ncontent.ToString() {content}", _content.ToString());
+                    }
+                }
+            }
+            else
+            {
+                JokeText = $"Unsuccessful StatusCode.\r\nStatusCode: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            //Log.Error(ex, "Error getting Joke.");
+        }
+
+        IsLoading = false;
+    }
+
+    private void GetPreviousJoke()
+    {
+        try
+        {
+            if (currentJokeIndex > 0)
+            {
+                currentJokeIndex--;
+                JokeText = jokesList[currentJokeIndex];
+                //Log.Information("Previous Joke: {previousJoke}", JokeText);
+                //Log.Information("JokeList Index {value}", currentJokeIndex);
+            }
+            else if (currentJokeIndex == 0)
+            {
+                JokeText = jokesList[currentJokeIndex];
+                //Log.Information("Last Previous from JokeList: {previousJoke}", JokeText);
+                //Log.Information("JokeList Index {value}", currentJokeIndex);
+            }
+            else
+            {
+                //Log.Information("No previous joke available.");
+            }
+        }
+        catch (Exception ex)
+        {
+            //Log.Error(ex, "Error getting Previous Joke.");
+        }
+    }
+
+    private string BuildRequestUrl()
+    {
+        try
+        {
+            //Log.Information("Building API Request URL...");
+
+            // Generate the list of selected flags
+            var _selectedFlagsList = SelectedFlags.Where(f => f.Value).Select(f => f.Key).ToList();
+
+            // Log the selected flags & add them to the URL otherwise return the base URL
+            if (_selectedFlagsList.Count > 0)
+            {
+                //Log.Information("Flags selected from the UI: {selectedFlags}", string.Join(", ", _selectedFlagsList));
+                //Log.Information("Adding BlacklistFLags to Url");
+                var blackListUrl = $"?blacklistFlags={string.Join(",", _selectedFlagsList)}";
+                return $"{BaseRequestUrl}{blackListUrl}";
+            }
+            else
+            {
+                //Log.Information("No BlacklistFlags selected. Using base request Url.");
+                return BaseRequestUrl;
+            }
+        }
+        catch (Exception _ex)
+        {
+            //Log.Error(_ex, "An error occurred in BuildRequestUri");
+            return string.Empty;
+        }
+    }
+
+    private void OnFlagChanged(string flag, bool isChecked)
+    {
+        try
+        {
+            // Update the SelectedFlags dictionary
+            SelectedFlags[flag] = isChecked;
+
+            // Generate the list of selected flags
+            var _selectedFlagsList = SelectedFlags.Where(f => f.Value).Select(f => f.Key).ToList();
+
+            // Update the DisplayUrl
+            DisplayUrl = _selectedFlagsList.Count > 0
+                ? $"{BaseRequestUrl}?blacklistFlags={string.Join(",", _selectedFlagsList)}"
+                : BaseRequestUrl;
+
+            // Log the updated blacklist flags
+            //Log.Information("Blacklist Flags Updated: {selectedFlags}", string.Join(", ", _selectedFlagsList));
+        }
+        catch (Exception ex)
+        {
+            //Log.Error(ex, "An error occurred in OnFlagChanged.");
+        }
+    }
+}

@@ -1,0 +1,348 @@
+﻿@using ManuHub.Blazor.Wasm.BrowserStorage
+@inject ICookieStore CookieStore
+@inject ISessionStore SessionStore
+@inject ILocalStore LocalStore
+
+<div class="storage-container">
+    <!-- Cookie Storage Section -->
+    <div class="storage-card cookie-theme">
+        <h3>Cookie Storage</h3>
+        <div class="input-group">
+            <input type="text" @bind="cookieKey" placeholder="Key" />
+            <input type="text" @bind="cookieValue" placeholder="Value" />
+            <input type="number" @bind="cookieExpiration" placeholder="Expiration (hours)" />
+        </div>
+        <div class="button-group">
+            <button class="btn-set" @onclick="SetCookie">Set Cookie</button>
+            <button class="btn-get" @onclick="GetCookie">Get Cookie</button>
+            <button class="btn-delete" @onclick="DeleteCookie">Delete Cookie</button>
+        </div>
+        <div class="status">
+            @cookieStatus
+            @if (!string.IsNullOrEmpty(cookieError))
+            {
+                <div class="error">@cookieError</div>
+            }
+        </div>
+    </div>
+
+    <!-- Session Storage Section -->
+    <div class="storage-card session-theme">
+        <h3>Session Storage</h3>
+        <div class="input-group">
+            <input type="text" @bind="sessionKey" placeholder="Key" />
+            <input type="text" @bind="sessionValue" placeholder="Value" />
+        </div>
+        <div class="button-group">
+            <button class="btn-set" @onclick="SetSession">Set Session</button>
+            <button class="btn-get" @onclick="GetSession">Get Session</button>
+            <button class="btn-delete" @onclick="DeleteSession">Delete Session</button>
+        </div>
+        <div class="status">
+            @sessionStatus
+            @if (!string.IsNullOrEmpty(sessionError))
+            {
+                <div class="error">@sessionError</div>
+            }
+        </div>
+    </div>
+
+    <!-- Local Storage Section -->
+    <div class="storage-card local-theme">
+        <h3>Local Storage</h3>
+        <div class="input-group">
+            <input type="text" @bind="localKey" placeholder="Key" />
+            <input type="text" @bind="localValue" placeholder="Value" />
+        </div>
+        <div class="button-group">
+            <button class="btn-set" @onclick="SetLocal">Set Local</button>
+            <button class="btn-get" @onclick="GetLocal">Get Local</button>
+            <button class="btn-delete" @onclick="DeleteLocal">Delete Local</button>
+        </div>
+        <div class="status">
+            @localStatus
+            @if (!string.IsNullOrEmpty(localError))
+            {
+                <div class="error">@localError</div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    // Cookie variables
+    private string cookieKey = "";
+    private string cookieValue = "";
+    private int cookieExpiration = 24;
+    private string cookieStatus = "";
+    private string cookieError = "";
+
+    // Session variables
+    private string sessionKey = "";
+    private string sessionValue = "";
+    private string sessionStatus = "";
+    private string sessionError = "";
+
+    // Local storage variables
+    private string localKey = "";
+    private string localValue = "";
+    private string localStatus = "";
+    private string localError = "";
+
+    // Cookie Methods
+    private async Task SetCookie()
+    {
+        try
+        {
+            await CookieStore.SetAsync(cookieKey, cookieValue, cookieExpiration);
+            cookieStatus = $"Cookie '{cookieKey}' set successfully!";
+            cookieError = "";
+        }
+        catch (Exception ex)
+        {
+            cookieError = $"Error setting cookie: {ex.Message}";
+            cookieStatus = "";
+        }
+    }
+
+    private async Task GetCookie()
+    {
+        try
+        {
+            var value = await CookieStore.GetAsync<string>(cookieKey);
+            cookieStatus = value != null
+                ? $"Cookie '{cookieKey}': {value}"
+                : $"Cookie '{cookieKey}' not found";
+            cookieError = "";
+        }
+        catch (Exception ex)
+        {
+            cookieError = $"Error getting cookie: {ex.Message}";
+            cookieStatus = "";
+        }
+    }
+
+    private async Task DeleteCookie()
+    {
+        try
+        {
+            await CookieStore.DeleteAsync(cookieKey);
+            cookieStatus = $"Cookie '{cookieKey}' deleted successfully!";
+            cookieError = "";
+        }
+        catch (Exception ex)
+        {
+            cookieError = $"Error deleting cookie: {ex.Message}";
+            cookieStatus = "";
+        }
+    }
+
+    // Session Methods
+    private async Task SetSession()
+    {
+        try
+        {
+            await SessionStore.SetAsync(sessionKey, sessionValue);
+            sessionStatus = $"Session data '{sessionKey}' set successfully!";
+            sessionError = "";
+        }
+        catch (Exception ex)
+        {
+            sessionError = $"Error setting session data: {ex.Message}";
+            sessionStatus = "";
+        }
+    }
+
+    private async Task GetSession()
+    {
+        try
+        {
+            var value = await SessionStore.GetAsync<string>(sessionKey);
+            sessionStatus = value != null
+                ? $"Session data '{sessionKey}': {value}"
+                : $"Session data '{sessionKey}' not found";
+            sessionError = "";
+        }
+        catch (Exception ex)
+        {
+            sessionError = $"Error getting session data: {ex.Message}";
+            sessionStatus = "";
+        }
+    }
+
+    private async Task DeleteSession()
+    {
+        try
+        {
+            await SessionStore.DeleteAsync(sessionKey);
+            sessionStatus = $"Session data '{sessionKey}' deleted successfully!";
+            sessionError = "";
+        }
+        catch (Exception ex)
+        {
+            sessionError = $"Error deleting session data: {ex.Message}";
+            sessionStatus = "";
+        }
+    }
+
+    // Local Storage Methods
+    private async Task SetLocal()
+    {
+        try
+        {
+            await LocalStore.SetAsync(localKey, localValue);
+            localStatus = $"Local storage data '{localKey}' set successfully!";
+            localError = "";
+        }
+        catch (Exception ex)
+        {
+            localError = $"Error setting local storage data: {ex.Message}";
+            localStatus = "";
+        }
+    }
+
+    private async Task GetLocal()
+    {
+        try
+        {
+            var value = await LocalStore.GetAsync<string>(localKey);
+            localStatus = value != null
+                ? $"Local storage data '{localKey}': {value}"
+                : $"Local storage data '{localKey}' not found";
+            localError = "";
+        }
+        catch (Exception ex)
+        {
+            localError = $"Error getting local storage data: {ex.Message}";
+            localStatus = "";
+        }
+    }
+
+    private async Task DeleteLocal()
+    {
+        try
+        {
+            await LocalStore.DeleteAsync(localKey);
+            localStatus = $"Local storage data '{localKey}' deleted successfully!";
+            localError = "";
+        }
+        catch (Exception ex)
+        {
+            localError = $"Error deleting local storage data: {ex.Message}";
+            localStatus = "";
+        }
+    }
+}
+
+<style>
+    .storage-container {
+        display: grid;
+        gap: 2rem;
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    @@media (min-width: 768px) {
+        .storage-container {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    .storage-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .cookie-theme {
+        border-top: 4px solid #4299e1;
+    }
+
+    .session-theme {
+        border-top: 4px solid #48bb78;
+    }
+
+    .local-theme {
+        border-top: 4px solid #9f7aea;
+    }
+
+    h3 {
+        margin: 0 0 1.5rem 0;
+        color: #2d3748;
+        font-size: 1.25rem;
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    input {
+        padding: 0.5rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    button {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn-set {
+        background-color: #48bb78;
+        color: white;
+    }
+
+    .btn-get {
+        background-color: #4299e1;
+        color: white;
+    }
+
+    .btn-delete {
+        background-color: #f56565;
+        color: white;
+    }
+
+    button:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .status {
+        font-size: 0.875rem;
+        color: #4a5568;
+        min-height: 40px;
+    }
+
+    .error {
+        color: #f56565;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    @@media (max-width: 767px) {
+        .storage-container {
+            grid-template-columns: 1fr;
+        }
+
+        .storage-card {
+            margin-bottom: 1.5rem;
+        }
+    }
+</style>
