@@ -1,5 +1,8 @@
 // Version updated at 2024-09-03T21:53:44
-self.importScripts('./service-worker-assets.js');
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const basePath = isLocal ? '' : '/BlazorWasmPortfolioGhAction';
+
+self.importScripts(`${basePath}/service-worker-assets.js`);
 self.addEventListener('install', event => event.waitUntil(onInstall(event)));
 self.addEventListener('activate', event => event.waitUntil(onActivate(event)));
 self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
@@ -19,22 +22,21 @@ const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
 // Include all file types for offline use
 const offlineAssetsInclude = [/.*$/];
 
-
 const cacheFirstAssets = [
     // _content folder
-    '_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/*',
-    '_content/Microsoft.Authentication.WebAssembly.Msal/*',
-    '_content/TinyMCE.Blazor/*',
+    `${basePath}/_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/*`,
+    `${basePath}/_content/Microsoft.Authentication.WebAssembly.Msal/*`,
+    `${basePath}/_content/TinyMCE.Blazor/*`,
 
     // lib folder
-    'lib/tinymce/*',
+    `${basePath}/lib/tinymce/*`,
 
     // css folders
-    'css/bootstrap/*',
-    'css/open-iconic/*',
+    `${basePath}/css/bootstrap/*`,
+    `${basePath}/css/open-iconic/*`,
 
     // _framework files
-    '_framework/*',
+    `${basePath}/_framework/*`,
 ];
 
 async function onInstall(event) {
@@ -84,143 +86,3 @@ async function onFetch(event) {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
