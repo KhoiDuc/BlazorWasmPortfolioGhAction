@@ -20,7 +20,6 @@
     <div class="row mx-0 ps-0 gx-3">
         <div class="col">
             <div class="introductionBody">
-                <!-- Begin: Home -->
                 <div class="start_light"></div>
                 <div id="header">
                     <div class="container">
@@ -32,11 +31,29 @@
                                 <h1>Khoi Nguyen Minh Duc</h1>
                                 <p>.NET Developer</p>
                                 <div class="grid-container justify-content-center">
-                                    <div class="email-button">
-                                        <a href="mailto:khoi.duc.dev@gmail.com" class="email-link">
+                                    <div class="email-button contact-container">
+                                        <button id="contactButton" class="contact-button email-link">
                                             <h5>Contact Me</h5>
                                             <img src="envelope-blue.svg" alt="email" class="email-icon">
-                                        </a>
+                                        </button>
+                                        <div id="contactOptions" class="contact-options">
+                                            <a href="mailto:khoi.duc.dev@gmail.com" class="email-link">
+                                                <h6>Default Email</h6>
+                                                <i class="fas fa-envelope email-icon"></i>
+                                            </a>
+                                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=khoi.duc.dev@gmail.com" class="email-link">
+                                                <h6>Gmail</h6>
+                                                <i class="fab fa-google email-icon"></i>
+                                            </a>
+                                            <a href="https://outlook.live.com/mail/0/deeplink/compose?to=khoi.duc.dev@gmail.com" class="email-link">
+                                                <h6>Outlook</h6>
+                                                <i class="fab fa-microsoft email-icon"></i>
+                                            </a>
+                                            <a href="javascript:void(0)" class="email-link" onclick="copyEmail()">
+                                                <h6>Copy Email</h6>
+                                                <i class="fas fa-copy email-icon"></i>
+                                            </a>
+                                        </div>
                                     </div>
                                     <div class="google-drive-button">
                                         <a href="MyResume" class="google-drive-link">
@@ -62,9 +79,28 @@
         </div>
     </div>
 </div>
+<script>
+    const contactButton = document.getElementById('contactButton');
+    const contactOptions = document.getElementById('contactOptions');
+
+    contactButton.addEventListener('click', () => {
+        contactOptions.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!contactButton.contains(event.target) && !contactOptions.contains(event.target)) {
+            contactOptions.classList.remove('show');
+        }
+    });
+    function copyEmail() {
+        const email = "khoi.duc.dev@gmail.com";
+        navigator.clipboard.writeText(email).then(() => {
+            alert("Copy email to clipboard: " + email);
+        });
+    }
+</script>
 
 @code {
-    @* Declare custom object array will change this for a dictionary *@
     public List<SearchResult> searchResults = new List<SearchResult>();
     public string? searchTerm { get; set; }
     private string Logo = "Logo.png";
@@ -76,10 +112,7 @@
     public string? sections { get; set; }
     [Parameter]
     public string? subSections { get; set; }
-    @* Declare Global Vars *@
     private bool? inline { get; set; } = true;
-    //private List<ContentHolder> initialContent;
-    //private bool[]? IsEditing;
     private string? typeDropdown;
     private string? newTypeDropdown;
     private string? sectionName;
@@ -87,9 +120,6 @@
     private string? newSectionName;
     private int sectionBeingEdited;
     private string TinyAPIKey = "";
-    @* Declare/Initialize variables for API communication *@
-    private string? commitText = "Test From Wiki";
-
     private ElementReference cardsWrapper; // This holds reference to our cards container
     private int currentIndex = 0; // Keeps track of current slide
     private string myStyle = ""; // Style string that we'll bind to
@@ -100,18 +130,12 @@
 
     [Inject] public AuthenticationStateProvider? AuthenticationStateProvider { get; set; }
 
-    @* Initialize page.  Using Async initialization as I want to load content from API before rendering *@
     protected override async Task OnInitializedAsync()
     {
         Console.WriteLine("MainContent.razor initialized");
         try
         {
-            @* Call method to make GET request *@
-            //await Task.WhenAll(GetAllContentFromGitHubRepo<ContentHolder>(false));
             contentState.StateChanged += ContentStateChanged;
-            @* Initialize control variables after populating contentState.Value.Contents *@
-
-            @* Add event handler to navigation change event to reset IsEditing array *@
             Navigation.LocationChanged += LocationChanged!;
             base.OnInitialized();
         }
@@ -126,11 +150,10 @@
         {
             try
             {
-                await Task.Delay(5000, cts.Token);  // Use the token here
+                await Task.Delay(5000, cts.Token);
             }
             catch (TaskCanceledException)
             {
-                // Reset the CancellationTokenSource for future delays
                 await Task.Delay(150);
                 cts = new CancellationTokenSource();
             }
@@ -210,152 +233,9 @@
         Dispatcher.Dispatch(new ResetIsEditingAction());
 
     }
-    @* Detects when text changes in the search component, and triggers search methods *@
-    private void SearchTermChanged(string searchPhrase)
-    {
-        Console.WriteLine("Search Term Changed In Component!");
-        searchTerm = searchPhrase;
-        if (searchTerm!.Length > 1)
-        {
-            @* Not a good solution, I need to add entries to contentState.Value.Contents that can be searched through, but don't get rendered. *@
-            if (string.Equals(searchTerm, "CV", StringComparison.OrdinalIgnoreCase))
-            {
-                Navigation.NavigateTo($"/Dissertation/CV");
-            }
-            else if (string.Equals(searchTerm, "Transcript", StringComparison.OrdinalIgnoreCase))
-            {
-                Navigation.NavigateTo($"/Dissertation/Transcript");
-            }
-            else if (string.Equals(searchTerm, "Degree", StringComparison.OrdinalIgnoreCase))
-            {
-                Navigation.NavigateTo($"/Dissertation/Degree");
-            }
-            else
-            {
-                searchResults = PerformSearch(searchTerm, contentState.Value.Contents);
-            }
-        }
-        if (type != "Search")
-        {
-            if (searchTerm!.Length > 1)
-            {
-                Navigation.NavigateTo($"/Search");
-            }
-        }
-        else
-        {
-            if (String.IsNullOrWhiteSpace(searchTerm))
-            {
-                Navigation.NavigateTo($"/all");
-            }
-        }
-
-    }
-    @* Build a list of search results including scores *@
-    private List<SearchResult> PerformSearch(string searchTerm, List<ContentHolder> contentList)
-    {
-        var results = new List<SearchResult>();
-
-        for (int i = 0; i < contentList.Count; i++)
-        {
-            var content = contentList[i];
-            int score = CalculateMatchScore(searchTerm, content);
-            if (score > 0)
-            {
-                results.Add(new SearchResult { Score = score, Content = content });
-            }
-        }
-        return results.OrderByDescending(r => r.Score).ToList();
-    }
-
-    @* Calculate score for each item in contentState.Value.Contents.  Might need to play with the given scores for each match type *@
-    public int CalculateMatchScore(string searchTerm, ContentHolder content)
-    {
-        int score = 0;
-        // Normalize search term
-        searchTerm = Regex.Replace(searchTerm.Trim(), @"\p{P}", "").ToLower();
-
-        // Split the search term into words
-        var searchWords = searchTerm.Split(' ').Where(word => !string.IsNullOrEmpty(word));
-
-        // Strip HTML tags from content and normalize
-        var strippedContent = Regex.Replace(content.content, "<.*?>", String.Empty);
-        strippedContent = Regex.Replace(strippedContent, @"\p{P}", "").ToLower();
-
-        // Split the content into words
-        var contentWords = strippedContent.Split(' ').Where(word => !string.IsNullOrEmpty(word));
-
-        // Normalize title words
-        var title = $"{content.page} {content.section} {content.subSection}";
-        title = Regex.Replace(title, "<.*?>", String.Empty);
-        title = Regex.Replace(title, @"\p{P}", "").ToLower();
-
-        var titleWords = title.Split(' ').Where(word => !string.IsNullOrEmpty(word));
-
-        // Check if the entire search term appears in the content or title
-        if (strippedContent.Contains(searchTerm) || title.Contains(searchTerm))
-        {
-            score += 4;
-        }
-
-        // Check each word in the content
-        foreach (var word in contentWords)
-        {
-            if (searchWords.Any(searchWord => string.Equals(word, searchWord, StringComparison.OrdinalIgnoreCase)))
-            {
-                score += 2;
-            }
-            else if (searchWords.Any(searchWord => word.Contains(searchWord, StringComparison.OrdinalIgnoreCase)))
-            {
-                score += 1;
-            }
-        }
-
-        // Check each word in the title
-        foreach (var word in titleWords)
-        {
-            if (searchWords.Any(searchWord => string.Equals(word, searchWord, StringComparison.OrdinalIgnoreCase)))
-            {
-                score += 3;
-            }
-            else if (searchWords.Any(searchWord => word.Contains(searchWord, StringComparison.OrdinalIgnoreCase)))
-            {
-                score += 2;
-            }
-        }
-
-        return score;
-    }
 
     private void RefreshMe()
     {
         StateHasChanged();
-    }
-
-    @* Add a new object to my array from user input *@
-    private async Task AddNewSection(string username)
-    {
-        @* Using data binding to tie user selection to these vars *@
-        string? subName = subSectionName;
-        string? newType = newTypeDropdown;
-        string? newName = newSectionName;
-        string finalType;
-        string finalName;
-        if (typeDropdown == "Add")
-        {
-            finalType = newTypeDropdown!;
-        }
-        else
-        {
-            finalType = typeDropdown!;
-        }
-        if (sectionName == "Add")
-        {
-            finalName = newSectionName!;
-        }
-        else
-        {
-            finalName = sectionName!;
-        }
     }
 }

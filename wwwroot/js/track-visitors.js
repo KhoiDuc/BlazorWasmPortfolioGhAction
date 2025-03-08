@@ -1,6 +1,6 @@
 console.log(window.location.hostname);
-if (window.location.hostname !== '127.0.0.1' &&
-    window.location.hostname !== 'localhost' &&
+if (//window.location.hostname !== '127.0.0.1' &&
+    //window.location.hostname !== 'localhost' &&
     window.location.hostname !== 'khoiduc.github.io') {
     console.log("skip record");
 } else {

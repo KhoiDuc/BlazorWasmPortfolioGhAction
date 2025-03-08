@@ -79,7 +79,7 @@ namespace BlazorWasmPortfolioGhAction.Store.Effects
         {
             "Transcript" => ("Transcript.pdf", "My transcript", new() { "transcript1.png" }),
             "Degree" => ("Degree.pdf", "My bachelor's degree", new() { "degree1.png", "degree2.png", "degree3.png" }),
-            "CV" => ("khoicv.pdf", "My curriculum vitae", new() { "khoicv_Page1.png", "khoicv_Page2.png", "khoicv_Page3.png", "khoicv_Page4.png" }),
+            "CV" => ("khoicv.pdf", "My curriculum vitae", new() { "khoicv_Page1.png", "khoicv_Page2.png", "khoicv_Page3.png" }),
             _ => (string.Empty, string.Empty, new())
         };
     }

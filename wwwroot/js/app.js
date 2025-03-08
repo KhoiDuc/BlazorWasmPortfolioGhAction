@@ -75,7 +75,7 @@ function initializeScrollProgress() {
         console.log(`ScrollTop: ${scrollTop}, Height: ${height}, Progress: ${scrollHeight}%`);
 
         scroll.style.display = scrollTop > 0 ? 'flex' : 'none';
-        scroll.style.background = `conic-gradient(#1A2980 ${scrollHeight}%, #26D0CE ${scrollHeight}%)`;
+        scroll.style.background = `conic-gradient(#3498db ${scrollHeight}%, #d9534f ${scrollHeight}%)`;
     }
 
     // Add click event listener to scroll button
