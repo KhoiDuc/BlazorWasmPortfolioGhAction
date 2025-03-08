@@ -1,22 +1,51 @@
 ﻿@page "/MyResume"
+@page "/resume"
+@page "/{lang}/resume"
 @inject IJSRuntime JS
+@inject NavigationManager NavigationManager
 @implements IAsyncDisposable
-<div class="resume-body">
+
+<div class="language-toggle">
+    <button @onclick="ToggleLanguage" class="btn-lang">
+        @(currentLanguage == "en" ? "🇻🇳 Tiếng Việt" : "🇺🇸 English")
+    </button>
+</div>
+<div class="resume-body @(currentLanguage == "vn" ? "usingvietnamfont" : "")">
     <header>
         <div class="container header-container">
             <div class="profile-info">
-                <h1>Khoi Duc <span class="chinese-name">(Nguyen Minh Duc Khoi)</span></h1>
-                <p class="subtitle"><b>🤖 Junior Developer</b></p>
-                <p><span class="icon">📞</span> Tel: <a href="tel:+84938751116">(+84) 0938751116</a> &amp; <a href="tel:+84384223897">(+84) 0384223897</a></p>
-                <p><span class="icon">✉️</span> Email: <a href="mailto:khoi.duc.dev@gmail.com">khoi.duc.dev@gmail.com</a> &amp; <a href="mailto:khoimessi99@gmail.com">khoimessi99@gmail.com</a></p>
-                <p><span class="icon">💬</span> Facebook: <a href="https://www.facebook.com/messi.khoi.9" target="_blank">https://www.facebook.com/messi.khoi.9</a></p>
-                <p><span class="icon">🔗</span> LinkedIn: <a href="https://www.linkedin.com/in/%C4%91%E1%BB%A9c-kh%C3%B4i-354b77269/" target="_blank">https://www.linkedin.com/in/%C4%91%E1%BB%A9c-kh%C3%B4i-354b77269/</a></p>
-                <p><span class="icon">📬</span> Telegram: <a href="https://t.me/warman99" target="_blank">https://t.me/warman99</a></p>
+                <h1>@(currentLanguage == "en" ? "Khoi Duc" : "Khoi Duc") <span class="chinese-name">(Nguyen Minh Duc Khoi)</span></h1>
+                <p class="subtitle"><b>🤖 @(currentLanguage == "en" ? "Junior Developer" : "Lập trình viên")</b></p>
+                <p>
+                    <span class="icon">📞</span>
+                    @(currentLanguage == "en" ? "Tel:" : "Điện thoại:")
+                    <a href="tel:+84938751116">(+84) 0938751116</a> &amp; <a href="tel:+84384223897">(+84) 0384223897</a>
+                </p>
+                <p>
+                    <span class="icon">✉️</span>
+                    @(currentLanguage == "en" ? "Email:" : "Thư điện tử:")
+                    <a href="mailto:khoi.duc.dev@gmail.com">khoi.duc.dev@gmail.com</a> &amp; <a href="mailto:khoimessi99@gmail.com">khoimessi99@gmail.com</a>
+                </p>
+                <p>
+                    <span class="icon">💬</span>
+                    @(currentLanguage == "en" ? "Facebook:" : "Facebook:")
+                    <a href="https://www.facebook.com/messi.khoi.9" target="_blank">https://www.facebook.com/messi.khoi.9</a>
+                </p>
+                <p>
+                    <span class="icon">🔗</span>
+                    @(currentLanguage == "en" ? "LinkedIn:" : "LinkedIn:")
+                    <a href="https://www.linkedin.com/in/%C4%91%E1%BB%A9c-kh%C3%B4i-354b77269/" target="_blank">https://www.linkedin.com/in/%C4%91%E1%BB%A9c-kh%C3%B4i-354b77269/</a>
+                </p>
+                <p>
+                    <span class="icon">📬</span>
+                    @(currentLanguage == "en" ? "Telegram:" : "Telegram:")
+                    <a href="https://t.me/warman99" target="_blank">https://t.me/warman99</a>
+                </p>
                 <div class="links">
                     <a href="https://github.com/KhoiDuc" target="_blank" class="button">🐱 GitHub</a>
-                    <a href="files/resume.pdf" target="_blank" class="button">📄 PDF Resume</a>
-                    <a href="https://drive.google.com/file/d/17NgDYao2f84W4U346hyuSWZkDIkg612e/view?usp=sharing" target="_blank" class="button">🎓 Certificate</a>
-                    <a href="files/transcript.pdf" target="_blank" class="button">📝 Detailed Transcript</a>
+                    <a href="files/resume.pdf" target="_blank" class="button">📄 @(currentLanguage == "en" ? "PDF Resume" : "CV PDF")</a>
+                    <a href="https://drive.google.com/file/d/17NgDYao2f84W4U346hyuSWZkDIkg612e/view?usp=sharing" target="_blank" class="button">🎓 @(currentLanguage == "en" ? "Certificate" : "Chứng chỉ")</a>
+                    <a href="files/transcript.pdf" target="_blank" class="button">📝 @(currentLanguage == "en" ? "Detailed Transcript" : "Bảng điểm chi tiết")</a>
                 </div>
             </div>
             <div class="carousel-container">
@@ -31,226 +60,310 @@
 
     <section class="intro">
         <div class="container">
-            <p>
-                I am Nguyen Minh Duc Khoi, a passionate and dedicated software developer specializing in .NET technologies, with a strong focus on building scalable, maintainable solutions and solving real-world problems through code.
-                A highly skilled Backend Developer with 3 years of experience in C# and JavaScript, proficient in building high-performance, scalable ASP.NET Core applications and optimizing database queries (MySQL, PostgreSQL, Elasticsearch, SQL Server).  Possessing strong analytical skills and practical knowledge of architecture design patterns, this developer has experience designing and developing WCAG 2.1 compliant web/API applications using .NET MVC and .NET Core, with domain expertise in Data Security, E-Commerce & Retail, and Human Resource Management.  Passionate about writing clean, maintainable code, this developer seeks to contribute their skills and expertise to a dynamic team.
-            </p>
+            @if (currentLanguage == "en")
+            {
+                <p>
+                    I am Nguyen Minh Duc Khoi, a passionate and dedicated software developer specializing in .NET technologies, with a strong focus on building scalable, maintainable solutions and solving real-world problems through code.
+                    A highly skilled Backend Developer with 3 years of experience in C# and JavaScript, proficient in building high-performance, scalable ASP.NET Core applications and optimizing database queries (MySQL, PostgreSQL, Elasticsearch, SQL Server). Possessing strong analytical skills and practical knowledge of architecture design patterns, this developer has experience designing and developing WCAG 2.1 compliant web/API applications using .NET MVC and .NET Core, with domain expertise in Data Security, E-Commerce & Retail, and Human Resource Management. Passionate about writing clean, maintainable code, this developer seeks to contribute their skills and expertise to a dynamic team.
+                </p>
+            }
+            else
+            {
+                <p>
+                    Tôi là Nguyễn Minh Đức Khôi, một lập trình viên phần mềm đam mê và tận tâm, chuyên về các công nghệ .NET, với trọng tâm xây dựng các giải pháp có khả năng mở rộng, dễ bảo trì và giải quyết các vấn đề thực tế thông qua mã lệnh.
+                    Là một Lập trình viên Backend có kinh nghiệm 3 năm với C# và JavaScript, thành thạo trong việc xây dựng các ứng dụng ASP.NET Core hiệu suất cao, có khả năng mở rộng và tối ưu hóa truy vấn cơ sở dữ liệu (MySQL, PostgreSQL, Elasticsearch, SQL Server). Với kỹ năng phân tích mạnh mẽ và kiến thức thực tiễn về các mẫu thiết kế kiến trúc, tôi có kinh nghiệm thiết kế và phát triển các ứng dụng web/API tuân thủ WCAG 2.1 sử dụng .NET MVC và .NET Core, với chuyên môn trong các lĩnh vực Bảo mật Dữ liệu, Thương mại Điện tử & Bán lẻ, và Quản lý Nhân sự. Đam mê viết mã sạch và dễ bảo trì, tôi mong muốn đóng góp kỹ năng và chuyên môn của mình vào một đội ngũ năng động.
+                </p>
+            }
         </div>
     </section>
 
     <main>
         <div class="container">
             <section>
-                <h2>🎓 Education</h2>
+                <h2>🎓 @(currentLanguage == "en" ? "Education" : "Học vấn")</h2>
                 <div class="education-item">
                     <div class="education-header">
                         <div class="details">
-                            <h3 class="school-name">HUFLIT University (GRADUATED)</h3>
-                            <p class="program">Software Engineering</p>
+                            <h3 class="school-name">@(currentLanguage == "en" ? "HUFLIT University (GRADUATED)" : "Đại học HUFLIT (ĐÃ TỐT NGHIỆP)")</h3>
+                            <p class="program">@(currentLanguage == "en" ? "Software Engineering" : "Kỹ thuật Phần mềm")</p>
                             <p class="school-link">
-                                <a href="https://huflit.edu.vn/" target="_blank">Ho Chi Minh City University of Foreign Languages - Information Technology</a>
+                                <a href="https://huflit.edu.vn/" target="_blank">
+                                    @(currentLanguage == "en" ? "Ho Chi Minh City University of Foreign Languages - Information Technology" : "Trường Đại học Ngoại ngữ - Tin học TP. Hồ Chí Minh")
+                                </a>
                             </p>
                             <p class="date">2017 - 2021</p>
                         </div>
                         <div class="education-info">
-                            <p><strong>GPA:</strong> 3.33/4.0 (8.32/10)</p>
+                            <p><strong>@(currentLanguage == "en" ? "GPA:" : "Điểm trung bình:")</strong> 3.33/4.0 (8.32/10)</p>
                         </div>
                     </div>
                     <div class="courses">
                         <p>
-                            <b>Scan documents (University and TOEIC Degree)</b>:
-                            <a target="_blank" href="https://drive.google.com/file/d/17NgDYao2f84W4U346hyuSWZkDIkg612e/view?usp=sharing" class="button">📄 View Document</a>
+                            <b>@(currentLanguage == "en" ? "Scan documents (University and TOEIC Degree)" : "Tài liệu quét (Bằng Đại học và TOEIC)")</b>:
+                            <a target="_blank" href="https://drive.google.com/file/d/17NgDYao2f84W4U346hyuSWZkDIkg612e/view?usp=sharing" class="button">
+                                📄 @(currentLanguage == "en" ? "View Document" : "Xem Tài liệu")
+                            </a>
                         </p>
                     </div>
                 </div>
             </section>
 
             <section>
-                <h2>🔬 Work Project</h2>
+                <h2>🔬 @(currentLanguage == "en" ? "Work Project" : "Dự án làm việc")</h2>
+
+                <!-- Aspire LifeStyles: Site Manager Plus Plus -->
                 <div class="experience-item">
                     <div class="details">
                         <h3>Aspire LifeStyles: Site Manager Plus Plus</h3>
-                        <p><strong>Company:</strong> S3Corp</p>
-                        <p><strong>Responsibilities:</strong> Full Stack Developer</p>
-                        <p><strong>Technologies:</strong>.Net 8 core MVC, Jquery, EF, SQL server, Redis, Azure CDN, Kontent.AI, Application Insights log, WCAG 2.2</p>
-                        <p class="date">2023 - Now</p>
+                        <p><strong>@(currentLanguage == "en" ? "Company:" : "Công ty:")</strong> S3Corp</p>
+                        <p><strong>@(currentLanguage == "en" ? "Responsibilities:" : "Trách nhiệm:")</strong> @(currentLanguage == "en" ? "Full Stack Developer" : "Lập trình viên Full Stack")</p>
+                        <p><strong>@(currentLanguage == "en" ? "Technologies:" : "Công nghệ:")</strong> .Net 8 core MVC, Jquery, EF, SQL server, Redis, Azure CDN, Kontent.AI, Application Insights log, WCAG 2.2</p>
+                        <p class="date">2023 - @(currentLanguage == "en" ? "Now" : "Hiện tại")</p>
                     </div>
                     <div class="content">
                         <ul>
-                            <li>Site Manager Plus Plus (SM++) is the upgraded and migrated version of Site Manager, now running on .NET 8.</li>
-                            <li>SM++ provides an even more efficient platform for rapid website setup and effective management.</li>
-                            <li>Its modular page architecture allows clients to choose and customize templates effortlessly.</li>
-                            <li>SM++ retains the core functionality and security features of Site Manager while offering enhanced performance and flexibility.</li>
-                            <li>Furthermore, SM++ now supports Single Sign-On (SSO) integration with various third-party identity providers, including major financial institutions like Citi and Wells Fargo.</li>
-                            <li>This enables users to seamlessly authenticate using their existing credentials for a more secure and streamlined experience.</li>
+                            @if (currentLanguage == "en")
+                            {
+                                <li>Site Manager Plus Plus (SM++) is the upgraded and migrated version of Site Manager, now running on .NET 8.</li>
+                                <li>SM++ provides an even more efficient platform for rapid website setup and effective management.</li>
+                                <li>Its modular page architecture allows clients to choose and customize templates effortlessly.</li>
+                                <li>SM++ retains the core functionality and security features of Site Manager while offering enhanced performance and flexibility.</li>
+                                <li>Furthermore, SM++ now supports Single Sign-On (SSO) integration with various third-party identity providers, including major financial institutions like Citi and Wells Fargo.</li>
+                                <li>This enables users to seamlessly authenticate using their existing credentials for a more secure and streamlined experience.</li>
+                            }
+                            else
+                            {
+                                <li>Site Manager Plus Plus (SM++) là phiên bản nâng cấp và di chuyển của Site Manager, hiện chạy trên .NET 8.</li>
+                                <li>SM++ cung cấp một nền tảng hiệu quả hơn để thiết lập và quản lý trang web nhanh chóng.</li>
+                                <li>Kiến trúc trang mô-đun của nó cho phép khách hàng dễ dàng lựa chọn và tùy chỉnh các mẫu.</li>
+                                <li>SM++ giữ lại các tính năng cốt lõi và bảo mật của Site Manager đồng thời cung cấp hiệu suất và tính linh hoạt được cải thiện.</li>
+                                <li>Hơn nữa, SM++ hiện hỗ trợ tích hợp Đăng nhập một lần (SSO) với các nhà cung cấp danh tính bên thứ ba, bao gồm các tổ chức tài chính lớn như Citi và Wells Fargo.</li>
+                                <li>Điều này cho phép người dùng xác thực liền mạch bằng thông tin đăng nhập hiện có để có trải nghiệm an toàn và hiệu quả hơn.</li>
+                            }
                         </ul>
                     </div>
                 </div>
+
+                <!-- Aspire LifeStyles: Site Manager -->
                 <div class="experience-item">
                     <div class="details">
                         <h3>Aspire LifeStyles: Site Manager</h3>
-                        <p><strong>Company:</strong> S3Corp</p>
-                        <p><strong>Responsibilities:</strong> Full Stack Developer</p>
-                        <p><strong>Technologies:</strong>.Net 4 MVC, Jquery, EF, SQL server, Redis, Azure CDN, KONTENT.AI, Application Insights log, WCAG 2.1/2.2 </p>
+                        <p><strong>@(currentLanguage == "en" ? "Company:" : "Công ty:")</strong> S3Corp</p>
+                        <p><strong>@(currentLanguage == "en" ? "Responsibilities:" : "Trách nhiệm:")</strong> @(currentLanguage == "en" ? "Full Stack Developer" : "Lập trình viên Full Stack")</p>
+                        <p><strong>@(currentLanguage == "en" ? "Technologies:" : "Công nghệ:")</strong> .Net 4 MVC, Jquery, EF, SQL server, Redis, Azure CDN, KONTENT.AI, Application Insights log, WCAG 2.1/2.2</p>
                         <p class="date">2022 - 2024</p>
                     </div>
                     <div class="content">
                         <ul>
-                            <li>Site Manager is a platform that helps create and deploy websites quickly.</li>
-                            <li>It enables end-users to easily search, explore, and book various services such as dining, hotels, flights, nightlife, spas, limousine services, and more.</li>
-                            <li>It provides a user-friendly interface and connects users with service providers from different locations worldwide.</li>
-                            <li>Currently under development, the platform is being built to comply with WCAG 2.1 accessibility standards.</li>
-                            <li>It incorporates robust security measures, including PCI DSS compliance to protect sensitive payment information and Veracode scanning to ensure secure code practices and mitigate potential vulnerabilities.</li>
+                            @if (currentLanguage == "en")
+                            {
+                                <li>Site Manager is a platform that helps create and deploy websites quickly.</li>
+                                <li>It enables end-users to easily search, explore, and book various services such as dining, hotels, flights, nightlife, spas, limousine services, and more.</li>
+                                <li>It provides a user-friendly interface and connects users with service providers from different locations worldwide.</li>
+                                <li>Currently under development, the platform is being built to comply with WCAG 2.1 accessibility standards.</li>
+                                <li>It incorporates robust security measures, including PCI DSS compliance to protect sensitive payment information and Veracode scanning to ensure secure code practices and mitigate potential vulnerabilities.</li>
+                            }
+                            else
+                            {
+                                <li>Site Manager là một nền tảng giúp tạo và triển khai trang web một cách nhanh chóng.</li>
+                                <li>Nó cho phép người dùng cuối dễ dàng tìm kiếm, khám phá và đặt các dịch vụ khác nhau như ăn uống, khách sạn, chuyến bay, giải trí về đêm, spa, dịch vụ xe limousine và hơn thế nữa.</li>
+                                <li>Nó cung cấp một giao diện thân thiện với người dùng và kết nối người dùng với các nhà cung cấp dịch vụ từ các địa điểm khác nhau trên toàn thế giới.</li>
+                                <li>Hiện đang trong quá trình phát triển, nền tảng này đang được xây dựng để tuân thủ các tiêu chuẩn truy cập WCAG 2.1.</li>
+                                <li>Nó tích hợp các biện pháp bảo mật mạnh mẽ, bao gồm tuân thủ PCI DSS để bảo vệ thông tin thanh toán nhạy cảm và quét Veracode để đảm bảo thực hành mã an toàn và giảm thiểu các lỗ hổng tiềm ẩn.</li>
+                            }
                         </ul>
                     </div>
                 </div>
+
+                <!-- Aspire LifeStyles: Payment Portal -->
                 <div class="experience-item">
                     <div class="details">
                         <h3>Aspire LifeStyles: Payment Portal</h3>
-                        <p><strong>Company:</strong> S3Corp</p>
-                        <p><strong>Responsibilities:</strong> Full Stack Developer</p>
-                        <p><strong>Technologies:</strong>.Net  MVC 4 ,EF, SQL server,  JavaScript, Webhook</p>
-                        <p class="date">2022 - Now</p>
+                        <p><strong>@(currentLanguage == "en" ? "Company:" : "Công ty:")</strong> S3Corp</p>
+                        <p><strong>@(currentLanguage == "en" ? "Responsibilities:" : "Trách nhiệm:")</strong> @(currentLanguage == "en" ? "Full Stack Developer" : "Lập trình viên Full Stack")</p>
+                        <p><strong>@(currentLanguage == "en" ? "Technologies:" : "Công nghệ:")</strong> .Net MVC 4, EF, SQL server, JavaScript, Webhook</p>
+                        <p class="date">2022 - @(currentLanguage == "en" ? "Now" : "Hiện tại")</p>
                     </div>
                     <div class="content">
                         <ul>
-                            <li>This website manages international transactions.</li>
-                            <li>It supports users through its integration with the Adyen payment system.</li>
-                            <li>Currently upgrading from .NET MVC to .NET 8 to leverage the latest feature.</li>
+                            @if (currentLanguage == "en")
+                            {
+                                <li>This website manages international transactions.</li>
+                                <li>It supports users through its integration with the Adyen payment system.</li>
+                                <li>Currently upgrading from .NET MVC to .NET 8 to leverage the latest feature.</li>
+                            }
+                            else
+                            {
+                                <li>Trang web này quản lý các giao dịch quốc tế.</li>
+                                <li>Nó hỗ trợ người dùng thông qua tích hợp với hệ thống thanh toán Adyen.</li>
+                                <li>Hiện đang nâng cấp từ .NET MVC lên .NET 8 để tận dụng các tính năng mới nhất.</li>
+                            }
                         </ul>
                     </div>
                 </div>
+
+                <!-- Simply Blast -->
                 <div class="experience-item">
                     <div class="details">
                         <h3>Simply Blast</h3>
-                        <p><strong>Company:</strong> S3Corp</p>
-                        <p><strong>Responsibilities:</strong> Full Stack Developer</p>
-                        <p><strong>Technologies:</strong>.Net 6 , Blazor, EF core, SQL server </p>
+                        <p><strong>@(currentLanguage == "en" ? "Company:" : "Công ty:")</strong> S3Corp</p>
+                        <p><strong>@(currentLanguage == "en" ? "Responsibilities:" : "Trách nhiệm:")</strong> @(currentLanguage == "en" ? "Full Stack Developer" : "Lập trình viên Full Stack")</p>
+                        <p><strong>@(currentLanguage == "en" ? "Technologies:" : "Công nghệ:")</strong> .Net 6, Blazor, EF core, SQL server</p>
                         <p class="date">06/2022 - 09/2022</p>
                     </div>
                     <div class="content">
                         <ul>
-                            <li>A web application for clients to create and manage advertising campaigns through WhatsApp messages.</li>
+                            @if (currentLanguage == "en")
+                            {
+                                <li>A web application for clients to create and manage advertising campaigns through WhatsApp messages.</li>
+                            }
+                            else
+                            {
+                                <li>Một ứng dụng web cho phép khách hàng tạo và quản lý các chiến dịch quảng cáo qua tin nhắn WhatsApp.</li>
+                            }
                         </ul>
                     </div>
                 </div>
             </section>
 
+            <!-- Personal Projects Section -->
             <section>
-                <h2>💻 Personal Projects</h2>
-                <p>No personal projects to display at this time.</p>
+                <h2>💻 @(currentLanguage == "en" ? "Personal Projects" : "Dự án cá nhân")</h2>
+                <p>@(currentLanguage == "en" ? "No personal projects to display at this time." : "Hiện tại không có dự án cá nhân nào để hiển thị.")</p>
             </section>
 
+            <!-- Awards Section -->
             <section>
-                <h2>🏆 Awards</h2>
-                <p>No awards to display at this time.</p>
+                <h2>🏆 @(currentLanguage == "en" ? "Awards" : "Giải thưởng")</h2>
+                <p>@(currentLanguage == "en" ? "No awards to display at this time." : "Hiện tại không có giải thưởng nào để hiển thị.")</p>
             </section>
 
+            <!-- School Project Section -->
             <section class="school-project">
-                <h2>
-                    📚 School Project
-                </h2>
+                <h2>📚 @(currentLanguage == "en" ? "School Project" : "Dự án học tập")</h2>
+
+                <!-- Food Ordering System -->
                 <div class="papers-item">
                     <div class="details">
-                        <h3>Food Ordering System (Full-Stack Development).</h3>
+                        <h3>@(currentLanguage == "en" ? "Food Ordering System (Full-Stack Development)." : "Hệ thống đặt đồ ăn (Phát triển Full-Stack).")</h3>
                         <p>
-                            Backend: .NET 5 | Frontend: Flutter
+                            @(currentLanguage == "en" ? "Backend: .NET 5 | Frontend: Flutter" : "Backend: .NET 5 | Frontend: Flutter")
                         </p>
-                        <p>Link: <a href="https://github.com/khoinmdIT99/FoodOrder_NET5_FLUTTER" target="_blank">https://github.com/khoinmdIT99/FoodOrder_NET5_FLUTTER</a></p>
+                        <p>@(currentLanguage == "en" ? "Link:" : "Liên kết:") <a href="https://github.com/khoinmdIT99/FoodOrder_NET5_FLUTTER" target="_blank">https://github.com/khoinmdIT99/FoodOrder_NET5_FLUTTER</a></p>
                     </div>
                     <div class="content">
                         <ul>
-                            <li>Authors: Khoi Duc.</li>
+                            <li>@(currentLanguage == "en" ? "Authors: Khoi Duc." : "Tác giả: Khoi Duc.")</li>
                         </ul>
                     </div>
                 </div>
+
+                <!-- Building Material E-Commerce Platform -->
                 <div class="papers-item">
                     <div class="details">
-                        <h3>Building Material E-Commerce Platform (Full-Stack Development).</h3>
+                        <h3>@(currentLanguage == "en" ? "Building Material E-Commerce Platform (Full-Stack Development)." : "Nền tảng Thương mại Điện tử Vật liệu Xây dựng (Phát triển Full-Stack).")</h3>
                         <p>
-                            Backend: .NET 5 | Frontend: Angular
+                            @(currentLanguage == "en" ? "Backend: .NET 5 | Frontend: Angular" : "Backend: .NET 5 | Frontend: Angular")
                         </p>
-                        <p>Link: <a href="https://github.com/khoinmdIT99/BuildingMaterialShop_NET5_ANUGLAR" target="_blank">https://github.com/khoinmdIT99/BuildingMaterialShop_NET5_ANUGLAR</a></p>
+                        <p>@(currentLanguage == "en" ? "Link:" : "Liên kết:") <a href="https://github.com/khoinmdIT99/BuildingMaterialShop_NET5_ANUGLAR" target="_blank">https://github.com/khoinmdIT99/BuildingMaterialShop_NET5_ANUGLAR</a></p>
                     </div>
                     <div class="content">
                         <ul>
-                            <li>Authors: Khoi Duc.</li>
+                            <li>@(currentLanguage == "en" ? "Authors: Khoi Duc." : "Tác giả: Khoi Duc.")</li>
                         </ul>
                     </div>
                 </div>
+
+                <!-- Payroll Enterprise Management System -->
                 <div class="papers-item">
                     <div class="details">
-                        <h3>Payroll Enterprise Management System.</h3>
+                        <h3>@(currentLanguage == "en" ? "Payroll Enterprise Management System." : "Hệ thống Quản lý Lương Doanh nghiệp.")</h3>
                         <p>
-                            Backend: .NET Core MVC
+                            @(currentLanguage == "en" ? "Backend: .NET Core MVC" : "Backend: .NET Core MVC")
                         </p>
-                        <p>Link: <a href="https://github.com/khoinmdIT99/Payroll-Manager/" target="_blank">https://github.com/khoinmdIT99/Payroll-Manager/</a></p>
+                        <p>@(currentLanguage == "en" ? "Link:" : "Liên kết:") <a href="https://github.com/khoinmdIT99/Payroll-Manager/" target="_blank">https://github.com/khoinmdIT99/Payroll-Manager/</a></p>
                     </div>
                     <div class="content">
                         <ul>
-                            <li>Authors: Khoi Duc.</li>
+                            <li>@(currentLanguage == "en" ? "Authors: Khoi Duc." : "Tác giả: Khoi Duc.")</li>
                         </ul>
                     </div>
                 </div>
+
+                <!-- E-Commerce Platform -->
                 <div class="papers-item">
                     <div class="details">
-                        <h3>E-Commerce Platform (Full-Stack Development).</h3>
+                        <h3>@(currentLanguage == "en" ? "E-Commerce Platform (Full-Stack Development)." : "Nền tảng Thương mại Điện tử (Phát triển Full-Stack).")</h3>
                         <p>
-                            Backend: .NET Core MVC
+                            @(currentLanguage == "en" ? "Backend: .NET Core MVC" : "Backend: .NET Core MVC")
                         </p>
-                        <p>Link: <a href="https://github.com/khoinmdIT99/DoAnTMDT" target="_blank">https://github.com/khoinmdIT99/DoAnTMDT</a></p>
+                        <p>@(currentLanguage == "en" ? "Link:" : "Liên kết:") <a href="https://github.com/khoinmdIT99/DoAnTMDT" target="_blank">https://github.com/khoinmdIT99/DoAnTMDT</a></p>
                     </div>
                     <div class="content">
                         <ul>
-                            <li>Authors: Khoi Duc.</li>
+                            <li>@(currentLanguage == "en" ? "Authors: Khoi Duc." : "Tác giả: Khoi Duc.")</li>
                         </ul>
                     </div>
                 </div>
+
+                <!-- Simple E-Commerce Platform -->
                 <div class="papers-item">
                     <div class="details">
-                        <h3>Simple E-Commerce Platform (Full-Stack Development).</h3>
+                        <h3>@(currentLanguage == "en" ? "Simple E-Commerce Platform (Full-Stack Development)." : "Nền tảng Thương mại Điện tử Đơn giản (Phát triển Full-Stack).")</h3>
                         <p>
-                            Backend: .NET Core MVC
+                            @(currentLanguage == "en" ? "Backend: .NET Core MVC" : "Backend: .NET Core MVC")
                         </p>
-                        <p>Link: <a href="https://github.com/khoinmdIT99/DoAn" target="_blank">https://github.com/khoinmdIT99/DoAn</a></p>
+                        <p>@(currentLanguage == "en" ? "Link:" : "Liên kết:") <a href="https://github.com/khoinmdIT99/DoAn" target="_blank">https://github.com/khoinmdIT99/DoAn</a></p>
                     </div>
                     <div class="content">
                         <ul>
-                            <li>Authors: Khoi Duc.</li>
+                            <li>@(currentLanguage == "en" ? "Authors: Khoi Duc." : "Tác giả: Khoi Duc.")</li>
                         </ul>
                     </div>
                 </div>
             </section>
 
+            <!-- Skills Section -->
             <section>
-                <h2>🛠️ Skills</h2>
+                <h2>🛠️ @(currentLanguage == "en" ? "Skills" : "Kỹ năng")</h2>
                 <ul class="skills-list">
                     <li>
-                        <strong>Programming languages:</strong>
+                        <strong>@(currentLanguage == "en" ? "Programming languages:" : "Ngôn ngữ lập trình:")</strong>
                         <p>NET (.NET Core, .NET MVC, WPF, Web API, WINFORM)</p>
-                        <p>Mobile (Java, Flutter)</p>
-                        <p>Frontend (Html, CSS, jQuery, Vanilla Js)</p>
-                        <p>JavaScript frameworks (React, Angular)</p>
+                        <p>@(currentLanguage == "en" ? "Mobile (Java, Flutter)" : "Di động (Java, Flutter)")</p>
+                        <p>@(currentLanguage == "en" ? "Frontend (Html, CSS, jQuery, Vanilla Js)" : "Frontend (Html, CSS, jQuery, Vanilla Js)")</p>
+                        <p>@(currentLanguage == "en" ? "JavaScript frameworks (React, Angular)" : "Framework JavaScript (React, Angular)")</p>
                     </li>
                     <li>
-                        <strong>Database:</strong> <p>SqlServer, MySQL, MongoDB, PostGreSql</p>
+                        <strong>@(currentLanguage == "en" ? "Database:" : "Cơ sở dữ liệu:")</strong>
+                        <p>SqlServer, MySQL, MongoDB, PostGreSql</p>
                     </li>
                     <li>
-                        <strong>Frameworks:</strong> <p>.NET core (6,8,9), .NET frameworks(4.8)</p>
+                        <strong>@(currentLanguage == "en" ? "Frameworks:" : "Framework:")</strong>
+                        <p>.NET core (6,8,9), .NET frameworks(4.8)</p>
                     </li>
                     <li>
-                        <strong>IDE:</strong> <p>Visual Studio, Visual Studio Code, Android Studio, PyCharm</p>
+                        <strong>@(currentLanguage == "en" ? "IDE:" : "Môi trường phát triển:")</strong>
+                        <p>Visual Studio, Visual Studio Code, Android Studio, PyCharm</p>
                     </li>
                     <li>
-                        <strong>Tools & Utilities:</strong> <p>ReSharper, Redis, Docker</p>
+                        <strong>@(currentLanguage == "en" ? "Tools & Utilities:" : "Công cụ & Tiện ích:")</strong>
+                        <p>ReSharper, Redis, Docker</p>
                     </li>
-                    <li><strong>Technical skills:</strong> <p>ERP Software, Application Software, Database design, Monolithic, Microservices</p></li>
-                    <li><strong>Payments:</strong> <p>Adyen, PayPal, Momo</p></li>
+                    <li>
+                        <strong>@(currentLanguage == "en" ? "Technical skills:" : "Kỹ năng kỹ thuật:")</strong>
+                        <p>ERP Software, Application Software, Database design, Monolithic, Microservices</p>
+                    </li>
+                    <li>
+                        <strong>@(currentLanguage == "en" ? "Payments:" : "Thanh toán:")</strong>
+                        <p>Adyen, PayPal, Momo</p>
+                    </li>
                 </ul>
             </section>
 
+            <!-- TOEIC Scores Section -->
             <section>
-                <h2>🏆 TOEIC Scores (Company test)</h2>
+                <h2>🏆 @(currentLanguage == "en" ? "TOEIC Scores (Company test)" : "Điểm TOEIC (Điểm kiểm tra của công ty)")</h2>
                 <ul class="awards-list">
                     <li>TOEIC: 600 <span class="date">2024</span></li>
                     <li>TOEIC: 686 <span class="date">2023</span></li>
@@ -258,35 +371,35 @@
                 </ul>
             </section>
 
+            <!-- Relevant Courses & Certifications Section -->
             <section class="courses-section">
-                <h2>📚 Relevant Courses & Certifications</h2>
+                <h2>📚 @(currentLanguage == "en" ? "Relevant Courses & Certifications" : "Khóa học & Chứng chỉ liên quan")</h2>
                 <ul class="course-list">
                     <li class="course-item">
                         <span class="course-code">[TEDU-42]</span>
-                        <span class="course-title">Làm chủ Docker để chinh phục DevOps - Master Docker to Conquer DevOps</span>
+                        <span class="course-title">@(currentLanguage == "en" ? "Master Docker to Conquer DevOps" : "Làm chủ Docker để chinh phục DevOps")</span>
                     </li>
                     <li class="course-item">
                         <span class="course-code">[TEDU-47]</span>
-                        <span class="course-title">Làm chủ đám mây Azure - Mastering Microsoft Azure Cloud</span>
+                        <span class="course-title">@(currentLanguage == "en" ? "Mastering Microsoft Azure Cloud" : "Làm chủ đám mây Azure")</span>
                     </li>
                     <li class="course-item">
                         <span class="course-code">[TEDU-35]</span>
-                        <span class="course-title">Xây dựng ứng dụng web với ASP.NET Core Web API + Identity Server + Angular - Building Web Applications with ASP.NET Core Web API + Identity Server + Angular</span>
+                        <span class="course-title">@(currentLanguage == "en" ? "Building Web Applications with ASP.NET Core Web API + Identity Server + Angular" : "Xây dựng ứng dụng web với ASP.NET Core Web API + Identity Server + Angular")</span>
                     </li>
                     <li class="course-item">
                         <span class="course-code">[TEDU-43]</span>
-                        <span class="course-title">Phát triển ứng dụng trắc nghiệm sử dụng API DDD, MongoDB và Blazor - Developing Quiz Application with DDD API, MongoDB and Blazor</span>
+                        <span class="course-title">@(currentLanguage == "en" ? "Developing Quiz Application with DDD API, MongoDB and Blazor" : "Phát triển ứng dụng trắc nghiệm sử dụng API DDD, MongoDB và Blazor")</span>
                     </li>
                     <li class="course-item">
                         <span class="course-code">[TEDU-49]</span>
-                        <span class="course-title">Xây dựng hệ thống với kiến trúc Micro-service - Building Systems with Micro-service Architecture</span>
+                        <span class="course-title">@(currentLanguage == "en" ? "Building Systems with Micro-service Architecture" : "Xây dựng hệ thống với kiến trúc Micro-service")</span>
                     </li>
                 </ul>
                 <div class="additional-courses">
                     <p>
-                        🎓 <strong>Additional Learning:</strong>
-                        <span class="text-vi">Ngoài ra còn tham gia các khóa học khác trên Udemy và YouTube</span>
-                        <span class="text-en">(Additionally participated in other courses on Udemy and YouTube)</span>
+                        🎓 <strong>@(currentLanguage == "en" ? "Additional Learning:" : "Học tập bổ sung:")</strong>
+                        <span class="text-vi">@(currentLanguage == "en" ? "Additionally participated in other courses on Udemy and YouTube" : "Tham gia thêm các khóa học khác trên Udemy và YouTube")</span>
                         ▶️
                     </p>
                 </div>
@@ -303,14 +416,48 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 Khoi Duc. All rights reserved. All original content can be found in the <a href="https://github.com/KhoiDuc/BlazorWasmPortfolioGhAction" target="_blank">website repository</a>.</p>
-            <p>And there are interesting tools written by me: <a href="Utility">Click the link 🎮</a>.</p>
+            <p>
+                &copy; 2025 Khoi Duc. @(currentLanguage == "en" ? "All rights reserved." : "Mọi quyền được bảo lưu.")
+                @(currentLanguage == "en" ? "All original content can be found in the" : "Tất cả nội dung gốc có thể được tìm thấy tại")
+                <a href="https://github.com/KhoiDuc/BlazorWasmPortfolioGhAction" target="_blank">@(currentLanguage == "en" ? "website repository" : "kho lưu trữ trang web")</a>.
+            </p>
+            <p>
+                @(currentLanguage == "en" ? "And there are interesting tools written by me:" : "Và có những công cụ thú vị được viết bởi tôi:")
+                <a href="Utility">@(currentLanguage == "en" ? "Click the link 🎮" : "Nhấp vào liên kết 🎮")</a>.
+            </p>
         </div>
     </footer>
 </div>
 
 @code {
     private IJSObjectReference? carouselInstance;
+    private string currentLanguage = "en";
+    
+    [Parameter]
+    public string? Lang { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrEmpty(Lang))
+        {
+            NavigationManager.NavigateTo("/en/resume");
+        }
+        else if (Lang != "en" && Lang != "vn")
+        {
+            NavigationManager.NavigateTo("/en/resume");
+        }
+        else
+        {
+            currentLanguage = Lang;
+        }
+    }
+
+    private void ToggleLanguage()
+    {
+        var newLang = currentLanguage == "en" ? "vn" : "en";
+        NavigationManager.NavigateTo($"/{newLang}/resume");
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
