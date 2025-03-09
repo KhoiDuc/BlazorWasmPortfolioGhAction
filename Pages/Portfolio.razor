@@ -440,11 +440,11 @@
     {
         if (string.IsNullOrEmpty(Lang))
         {
-            NavigationManager.NavigateTo("/en/resume");
+            NavigationManager.NavigateTo("en/resume");
         }
         else if (Lang != "en" && Lang != "vn")
         {
-            NavigationManager.NavigateTo("/en/resume");
+            NavigationManager.NavigateTo("en/resume");
         }
         else
         {
@@ -455,7 +455,7 @@
     private void ToggleLanguage()
     {
         var newLang = currentLanguage == "en" ? "vn" : "en";
-        NavigationManager.NavigateTo($"/{newLang}/resume");
+        NavigationManager.NavigateTo($"{newLang}/resume");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
