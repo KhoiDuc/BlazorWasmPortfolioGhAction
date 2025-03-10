@@ -1,0 +1,69 @@
+﻿@using BlazorWasmPortfolioGhAction.Store.Services
+<div class="modal @(showModal ? "show d-block" : "")" tabindex="-1" style="background-color: rgba(0,0,0,0.5)">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@UserDetail?.Login</h5>
+                <button type="button" class="btn-close" @onclick="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (UserDetail != null)
+                {
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <div class="avatar-lg mb-3">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" 
+                                             style="width: 80px; height: 80px">
+                                            @UserDetail.Login[0].ToString().ToUpper()
+                                        </div>
+                                    </div>
+                                    <h5>@UserDetail.Name</h5>
+                                    <p class="text-muted">@UserDetail.Bio</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">Followers</h6>
+                                            <p class="h4">@UserDetail.FollowersCount</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">Following</h6>
+                                            <p class="h4">@UserDetail.FollowingCount</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <UserRepositories Login="UserDetail.Login" />
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public GitHubUserDetail UserDetail { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private bool showModal = true;
+
+    private async Task Close()
+    {
+        showModal = false;
+        await OnClose.InvokeAsync();
+    }
+}

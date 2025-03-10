@@ -1,0 +1,86 @@
+﻿@using BlazorWasmPortfolioGhAction.Store.Services
+@inject IGitHubGraphQLQueryService GitHubService
+
+<div class="mb-4">
+    <h5>Repositories</h5>
+
+    @if (repositoriesLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border spinner-border-sm"></div>
+        </div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var repo in repositories)
+            {
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">@repo.Name</h6>
+                            <p class="mb-1 text-muted small">@repo.Description</p>
+                        </div>
+                        <div>
+                            <span class="badge bg-warning me-2">
+                                <i class="bi bi-star"></i> @repo.Stars
+                            </span>
+                            <span class="badge bg-info">
+                                <i class="bi bi-diagram-2"></i> @repo.Forks
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (hasMoreRepos)
+        {
+            <button class="btn btn-outline-primary w-100 mt-3"
+                    @onclick="LoadMoreRepos">
+                Load More
+            </button>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Login { get; set; }
+
+    private List<GitHubRepository> repositories = new();
+    private bool repositoriesLoading;
+    private bool hasMoreRepos;
+    private string endCursor;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadRepositories();
+    }
+
+    private async Task LoadRepositories()
+    {
+        repositoriesLoading = true;
+        var result = await GitHubService.GetUserRepositoriesAsync(Login, "YOUR_ACCESS_TOKEN");
+        if (result.IsSuccess)
+        {
+            repositories = result.Value.Repositories;
+            hasMoreRepos = result.Value.HasNextPage;
+            endCursor = result.Value.EndCursor;
+        }
+        repositoriesLoading = false;
+    }
+
+    private async Task LoadMoreRepos()
+    {
+        repositoriesLoading = true;
+        var result = await GitHubService.GetUserRepositoriesAsync(Login, "YOUR_ACCESS_TOKEN", 20, endCursor);
+        if (result.IsSuccess)
+        {
+            repositories.AddRange(result.Value.Repositories);
+            hasMoreRepos = result.Value.HasNextPage;
+            endCursor = result.Value.EndCursor;
+        }
+        repositoriesLoading = false;
+    }
+}

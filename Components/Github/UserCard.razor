@@ -1,0 +1,28 @@
+﻿@using BlazorWasmPortfolioGhAction.Store.Services
+<div class="card h-100 shadow-sm hover-effect" @onclick="() => OnUserSelected?.Invoke(User)">
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+            <div class="avatar me-3">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                     style="width: 50px; height: 50px">
+                    @User.Login[0].ToString().ToUpper()
+                </div>
+            </div>
+            <div>
+                <h5 class="card-title mb-0">@User.Login</h5>
+                @if (!string.IsNullOrEmpty(User.Name))
+                {
+                    <p class="text-muted mb-0">@User.Name</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public GitHubUser User { get; set; }
+
+    [Parameter]
+    public Action<GitHubUser> OnUserSelected { get; set; }
+}

@@ -1,0 +1,29 @@
+﻿@using BlazorWasmPortfolioGhAction.Store.Services
+@inject IGitHubGraphQLQueryService GitHubService
+
+<div class="alert alert-info mb-4">
+    @if (rateLimit != null)
+    {
+        <div class="d-flex justify-content-between align-items-center">
+            <span>
+                API Calls Remaining: <strong>@rateLimit.Remaining</strong>
+            </span>
+            <small>
+                Resets: @rateLimit.ResetAt.ToLocalTime().ToString("hh:mm tt")
+            </small>
+        </div>
+    }
+</div>
+
+@code {
+    private GitHubRateLimit rateLimit;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await GitHubService.GetRateLimitAsync("YOUR_TOKEN");
+        if (result.IsSuccess)
+        {
+            rateLimit = result.Value;
+        }
+    }
+}

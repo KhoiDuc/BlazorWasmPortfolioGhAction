@@ -1,0 +1,89 @@
+﻿@using BlazorWasmPortfolioGhAction.Store.Services
+@inject IGitHubGraphQLQueryService GitHubService
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="input-group mb-4">
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               placeholder="Search GitHub users..."
+                               @bind="searchText"
+                               @onkeyup.enter="SearchUsers" />
+                        <button class="btn btn-primary btn-lg" 
+                                @onclick="SearchUsers">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+
+                    <RateLimitDisplay />
+
+                    @if (isLoading)
+                    {
+                        <div class="text-center my-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    }
+
+                    @if (users?.Any() == true)
+                    {
+                        <div class="row row-cols-1 row-cols-md-2 g-4">
+                            @foreach (var user in users)
+                            {
+                                <div class="col">
+                                    <UserCard User="user" />
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (showUserDetails)
+{
+    <UserDetailsModal UserDetail="selectedUser" 
+                      OnClose="() => showUserDetails = false" />
+}
+
+@code {
+    private string searchText = "";
+    private List<GitHubUser> users = new();
+    private GitHubUserDetail selectedUser;
+    private bool isLoading;
+    private bool showUserDetails;
+
+    private async Task SearchUsers()
+    {
+        try
+        {
+            isLoading = true;
+            var result = await GitHubService.SearchUsersAsync(searchText, "YOUR_TOKEN");
+            users = result.IsSuccess ? result.Value : new();
+        }
+        catch
+        {
+            // Handle error
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ShowUserDetails(GitHubUser user)
+    {
+        var result = await GitHubService.GetUserAsync(user.Login, "YOUR_TOKEN");
+        if (result.IsSuccess)
+        {
+            selectedUser = result.Value;
+            showUserDetails = true;
+        }
+    }
+}

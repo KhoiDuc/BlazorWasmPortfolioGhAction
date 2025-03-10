@@ -13,6 +13,7 @@ using BlazorWasmPortfolioGhAction.Shared.Model;
 using ManuHub.Blazor.Wasm.BrowserStorage;
 using GoogleMapsComponents;
 using Fluxor.Blazor.Web.ReduxDevTools;
+using BlazorWasmPortfolioGhAction.Extensions;
 
 public static class Program
 {
@@ -40,6 +41,9 @@ public static class Program
         builder.Services.AddScoped<RandomFactsService>();
         builder.Services.AddScoped<QRCodeService>();
         builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+        builder.Services.AddGraphQLClient();
+
+        builder.Services.AddSingleton<StateContainer>();
         builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
         builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
         //builder.Services.AddMsalAuthentication(options =>
@@ -65,7 +69,8 @@ public static class Program
         });
         builder.Services.AddScoped<TemperatureStore>();
         builder.Services.AddSingleton<ApiKeyModel>();
-
+        builder.Services.AddScoped<ISearchUsersService, SearchUsersService>();
+        builder.Services.AddGitHubGraphQLQueryService();
         builder.Services.AddDbContextFactory<ClientSideDbContext>(options =>
               options
                 .UseSqlite($"Filename={Sqlite.SqliteDbFilename}")

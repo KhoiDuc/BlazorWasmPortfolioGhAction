@@ -1,0 +1,78 @@
+﻿@page "/search/users"
+@using BlazorWasmPortfolioGhAction.Store.Services
+
+@inject ISearchUsersService SearchUsersService
+
+<div class="container">
+    <div class="input-group">
+        <input @bind="AccessToken" placeholder="Access token" class="input-field" />
+    </div>
+    <div class="input-group">
+        <input @bind="SearchText" placeholder="Search text" class="input-field" @onkeydown="OnKeyDownAsync" />
+        <button @onclick="StartSearchAsync" class="search-button" disabled="@string.IsNullOrEmpty(SearchText)">Search</button>
+    </div>
+    <ul class="user-list">
+        @foreach (var user in _users)
+        {
+            <li class="user-item">
+                <div>@user.Login</div>
+                <div class="bold">@user.Name</div>
+            </li>
+        }
+    </ul>
+    <div class="pagination">
+        <button @onclick="() => UpdateUsersPage(_currentPage - 1)" class="pagination-button">Previous</button>
+        <span>Page @_currentPage of @_totalPageCount</span>
+        <button @onclick="() => UpdateUsersPage(_currentPage + 1)" class="pagination-button">Next</button>
+    </div>
+</div>
+
+<style>
+    .container {
+        max-width: 400px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .input-group {
+        display: flex;
+        margin-bottom: 10px;
+    }
+    .input-field {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .search-button {
+        padding: 8px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    .user-list {
+        list-style: none;
+        padding: 0;
+    }
+    .user-item {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+    .bold {
+        font-weight: bold;
+    }
+    .pagination {
+        margin-top: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .pagination-button {
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        cursor: pointer;
+    }
+</style>

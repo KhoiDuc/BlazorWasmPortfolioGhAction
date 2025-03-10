@@ -1,4 +1,4 @@
-﻿@page "/{type?}/{sections?}/{subSections?}"
+﻿@page "/"
 @using System.Net;
 @using System.Net.Http;
 @using System.Net.Http.Headers;
@@ -101,66 +101,6 @@
 </script>
 
 @code {
-    public List<SearchResult> searchResults = new List<SearchResult>();
-    public string? searchTerm { get; set; }
-    private string Logo = "Logo.png";
-    public string loadingMSG = "Loading...";
-    @* Declare var for current user selection *@
-    [Parameter]
-    public string? type { get; set; }
-    [Parameter]
-    public string? sections { get; set; }
-    [Parameter]
-    public string? subSections { get; set; }
-    private bool? inline { get; set; } = true;
-    private string? typeDropdown;
-    private string? newTypeDropdown;
-    private string? sectionName;
-    private string? subSectionName;
-    private string? newSectionName;
-    private int sectionBeingEdited;
-    private string TinyAPIKey = "";
-    private ElementReference cardsWrapper; // This holds reference to our cards container
-    private int currentIndex = 0; // Keeps track of current slide
-    private string myStyle = ""; // Style string that we'll bind to
-    private double cardWidth = 0;
-    private int visibleCards = 0;
-    private string transitionStyle = "transition: transform 0.3s ease;";
-    private CancellationTokenSource cts = new CancellationTokenSource();
-
-    [Inject] public AuthenticationStateProvider? AuthenticationStateProvider { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        Console.WriteLine("MainContent.razor initialized");
-        try
-        {
-            contentState.StateChanged += ContentStateChanged;
-            Navigation.LocationChanged += LocationChanged!;
-            base.OnInitialized();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error: " + ex.Message);
-            loadingMSG += "Error Loading Content: " + ex.Message;
-            StateHasChanged();
-        }
-
-        while (true)
-        {
-            try
-            {
-                await Task.Delay(5000, cts.Token);
-            }
-            catch (TaskCanceledException)
-            {
-                await Task.Delay(150);
-                cts = new CancellationTokenSource();
-            }
-
-            StateHasChanged();
-        }
-    }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -168,74 +108,5 @@
             await JSRuntime.InvokeVoidAsync("initializeStarfield");
             await JSRuntime.InvokeVoidAsync("initializeScrollProgress");
         }
-    }
-
-    private async void ContentStateChanged(object? sender, EventArgs e)
-    {
-        if (contentState.Value.FileCount == contentState.Value.LoadedFilesCount)
-        {
-            await InvokeAsync(StateHasChanged); // Update the UI
-            await Task.Delay(500);
-            cardWidth = await JSRuntime.InvokeAsync<double>("carouselHelper.getCardWidth");
-            visibleCards = await JSRuntime.InvokeAsync<int>("carouselHelper.getVisibleCards");
-            await JSRuntime.InvokeVoidAsync("carouselHelper.addResizeListener", DotNetObjectReference.Create(this));
-            await JSRuntime.InvokeVoidAsync("registerComponentInstance", DotNetObjectReference.Create(this));
-
-        }
-    }
-
-    [JSInvokable("RecalculateSizes")]
-    public async Task RecalculateSizes()
-    {
-        currentIndex = 0;
-        myStyle = $"transform: translateX(0px);";
-        StateHasChanged();
-        await Task.Delay(500);
-        cardWidth = await JSRuntime.InvokeAsync<double>("carouselHelper.getCardWidth");
-        visibleCards = await JSRuntime.InvokeAsync<int>("carouselHelper.getVisibleCards");
-    }
-
-    public void Dispose()
-    {
-        JSRuntime.InvokeVoidAsync("carouselHelper.unregisterComponentInstance");
-        contentState.StateChanged -= ContentStateChanged;
-    }
-
-
-    public class Card
-    {
-        public string? Title { get; set; }
-        public string? Text { get; set; }
-        public string? Link { get; set; }
-        public string? ButtonText { get; set; }
-    }
-
-    protected override async void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
-        {
-            //Code to execute once
-            //await GetAuthenticationState();
-        }
-        base.OnAfterRender(firstRender);
-    }
-
-    @* Checks current authentication state *@
-
-    private void LocationChanged(object sender, LocationChangedEventArgs e)
-    {
-        ClearIsEditingArray();
-    }
-
-    @* Method called in a few places, but should close all open editors, and save any content thats being edited currently *@
-    private void ClearIsEditingArray()
-    {
-        Dispatcher.Dispatch(new ResetIsEditingAction());
-
-    }
-
-    private void RefreshMe()
-    {
-        StateHasChanged();
     }
 }

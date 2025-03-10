@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
@@ -9,6 +9,13 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<EmccExtraLDFlags>-s WARN_ON_UNDEFINED_SYMBOLS=0</EmccExtraLDFlags>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Layout\**" />
+	  <Content Remove="Layout\**" />
+	  <EmbeddedResource Remove="Layout\**" />
+	  <None Remove="Layout\**" />
+	</ItemGroup>
 
 	<ItemGroup>
 	  <None Include="wwwroot\files\certificate.pdf" />
@@ -36,6 +43,9 @@
 		<PackageReference Include="BrowserStorage.Wasm" Version="1.0.2" />
 		<PackageReference Include="Fluxor.Blazor.Web" Version="6.6.0" />
 		<PackageReference Include="Fluxor.Blazor.Web.ReduxDevTools" Version="6.6.0" />
+		<PackageReference Include="Bogus" Version="34.0.2" />
+		<PackageReference Include="GraphQL.Client" Version="6.0.1" />
+		<PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" Version="6.0.1" />
 		<PackageReference Include="lodash" Version="4.17.21" />
 		<PackageReference Include="MathNet.Numerics" Version="5.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.13" />
@@ -65,6 +75,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Layout\" />
+	  <Folder Include="Utils\" />
 	</ItemGroup>
 </Project>
