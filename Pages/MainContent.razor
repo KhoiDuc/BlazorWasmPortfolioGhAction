@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @using System.Net;
 @using System.Net.Http;
 @using System.Net.Http.Headers;
@@ -31,12 +31,12 @@
                                 <h1>Khoi Nguyen Minh Duc</h1>
                                 <p>.NET Developer</p>
                                 <div class="grid-container justify-content-center">
-                                    <div class="email-button contact-container">
-                                        <button id="contactButton" class="contact-button email-link">
+                                     <div class="email-button contact-container">
+                                        <button id="contactButton" class="contact-button email-link" @onclick="ToggleContactOptions">
                                             <h5>Contact Me</h5>
-                                            <img src="envelope-blue.svg" alt="email" class="email-icon">
+                                            <img src="images/envelope-blue.svg" alt="email" class="email-icon">
                                         </button>
-                                        <div id="contactOptions" class="contact-options">
+                                        <div id="contactOptions" class="contact-options @(showContactOptions ? "show" : "")">
                                             <a href="mailto:khoi.duc.dev@gmail.com" class="email-link">
                                                 <h6>Default Email</h6>
                                                 <i class="fas fa-envelope email-icon"></i>
@@ -49,28 +49,28 @@
                                                 <h6>Outlook</h6>
                                                 <i class="fab fa-microsoft email-icon"></i>
                                             </a>
-                                            <a href="javascript:void(0)" class="email-link" onclick="copyEmail()">
+                                            <button class="email-link btn btn-link p-0 text-start border-0 text-decoration-none" @onclick="CopyEmail">
                                                 <h6>Copy Email</h6>
                                                 <i class="fas fa-copy email-icon"></i>
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                     <div class="google-drive-button">
                                         <a href="MyResume" class="google-drive-link">
                                             <h5>My Resume</h5>
-                                            <img src="googledrive-blue.svg" alt="Resume site" class="google-drive-icon">
+                                            <img src="images/googledrive-blue.svg" alt="Resume site" class="google-drive-icon">
                                         </a>
                                     </div>
                                     <div class="download-file-button">
                                         <a href="Dissertation/CV" class="download-file-button-link">
                                             <h5>My CV</h5>
-                                            <img src="downloadfile-blue.svg" alt="Download file" class="download-file-icon">
+                                            <img src="images/downloadfile-blue.svg" alt="Download file" class="download-file-icon">
                                         </a>
                                     </div>
                                 </div>
                             </div>
                             <div class="header-image">
-                                <img src="avt-men.png" alt="Profile Image">
+                                <img src="images/avt-men.png" alt="Profile Image">
                             </div>
                         </div>
                     </div>
@@ -79,28 +79,22 @@
         </div>
     </div>
 </div>
-<script>
-    const contactButton = document.getElementById('contactButton');
-    const contactOptions = document.getElementById('contactOptions');
-
-    contactButton.addEventListener('click', () => {
-        contactOptions.classList.toggle('show');
-    });
-
-    document.addEventListener('click', (event) => {
-        if (!contactButton.contains(event.target) && !contactOptions.contains(event.target)) {
-            contactOptions.classList.remove('show');
-        }
-    });
-    function copyEmail() {
-        const email = "khoi.duc.dev@gmail.com";
-        navigator.clipboard.writeText(email).then(() => {
-            alert("Copy email to clipboard: " + email);
-        });
-    }
-</script>
 
 @code {
+    private bool showContactOptions = false;
+
+    private void ToggleContactOptions()
+    {
+        showContactOptions = !showContactOptions;
+    }
+
+    private async Task CopyEmail()
+    {
+        const string email = "khoi.duc.dev@gmail.com";
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", email);
+        await JSRuntime.InvokeVoidAsync("alert", "Copied email to clipboard: " + email);
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)

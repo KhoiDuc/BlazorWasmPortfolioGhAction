@@ -1,4 +1,5 @@
-﻿@inject NavigationManager navigationManager
+@implements IDisposable
+@inject NavigationManager navigationManager
 @inject IState<ContentState> contentState
 @inject IDispatcher Dispatcher
 @using System.Net
@@ -189,18 +190,12 @@
 @code {
     private bool[]? showSubSections;
     private ElementReference navMenu;
-    private bool firstRender = true;
     private int uniqueSectionsCount;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         contentState.StateChanged += HandleStateChanged;
-        showSubSections = new bool[0];
-
-        if (this.firstRender)
-        {
-            this.firstRender = false;
-        }
+        showSubSections = Array.Empty<bool>();
     }
 
     private void HandleStateChanged(object sender, EventArgs e)
@@ -216,7 +211,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (contentState.Value.Contents != null)
+        if (firstRender && contentState.Value.Contents != null)
         {
             await JSRuntime.InvokeVoidAsync("initNavbarMobile");
             await JSRuntime.InvokeVoidAsync("initScrollingMenu", "#nav-container", "#nav");

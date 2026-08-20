@@ -46,17 +46,9 @@ public static class Program
         builder.Services.AddSingleton<StateContainer>();
         builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
         builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
-        //builder.Services.AddMsalAuthentication(options =>
-        //{
-        //    builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
-        //    options.ProviderOptions.DefaultAccessTokenScopes.Add("api://a90ff01b-640d-478f-8f16-05fe599a6574/Files.Read");
-        //    options.ProviderOptions.LoginMode = "redirect";
-        //});
         builder.Services.AddOidcAuthentication(options =>
         {
-            options.ProviderOptions.Authority = "dev-a8pumil7eppq2o84.us.auth0.com"; // Replace with your Auth0 domain
-            options.ProviderOptions.ClientId = "LuUc4a2iPHABVoGO9WyAkMZ7CJOQOpgf"; // Replace with your Auth0 Client ID
-            options.ProviderOptions.ResponseType = "code"; // Use Authorization Code Flow
+            builder.Configuration.Bind("Auth0", options.ProviderOptions);
         });
         builder.Services.AddSingleton<ITimeZoneQueryProviderService, TimeZoneQueryProviderService>();
 
@@ -77,17 +69,12 @@ public static class Program
                 .EnableSensitiveDataLogging());
 
         builder.Services.AddWasmBrowserStorage();
-        builder.Services.AddBlazorGoogleMaps("YOUR_GOOGLE_MAPS_API_KEY");
+        var googleMapsKey = builder.Configuration["GoogleMaps:ApiKey"] ?? "YOUR_GOOGLE_MAPS_API_KEY";
+        builder.Services.AddBlazorGoogleMaps(googleMapsKey);
         builder.Services.AddLocalization();
 
         // build the host
         var host = builder.Build();
-
-        // resolve the dispatcher
-        //var dispatcher = host.Services.GetRequiredService<IDispatcher>();
-
-        // dispatch the LoadContentsFromRepoAction
-        //dispatcher.Dispatch(new LoadContentsFromRepoAction());
 
         // Run the app
         await host.RunAsync();

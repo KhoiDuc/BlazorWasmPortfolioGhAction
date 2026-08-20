@@ -1,5 +1,5 @@
-﻿using BlazorWasmPortfolioGhAction.Shared.Model;
-using Newtonsoft.Json;
+using BlazorWasmPortfolioGhAction.Shared.Model;
+using System.Net.Http.Json;
 
 namespace BlazorWasmPortfolioGhAction.Store.Services
 {
@@ -14,18 +14,13 @@ namespace BlazorWasmPortfolioGhAction.Store.Services
 
         public async Task<RandomFact?> GetRandomFact()
         {
-            // Fetch random fact from the API
-            var response = await _httpClient.GetAsync("https://uselessfacts.jsph.pl/api/v2/facts/random");
-
-            // Read the response content
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                throw new Exception("Failed to fetch random fact");
+                return await _httpClient.GetFromJsonAsync<RandomFact>("https://uselessfacts.jsph.pl/api/v2/facts/random");
             }
-            else
+            catch (Exception)
             {
-                var content = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<RandomFact>(content);
+                return null;
             }
         }
     }
