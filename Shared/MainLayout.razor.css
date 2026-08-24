@@ -1,439 +1,262 @@
 /* =============================================================================
    MAIN LAYOUT — MainLayout.razor.css
-   Controls the shell: top-bar, sidebar, content area, and nav animations.
+   Shell Layout: Glassmorphism Sidebar, Sticky Top Header, Fluid Content Area
    ============================================================================= */
 
-/* --------------------------------------------------------------------------- */
-/* 1. PAGE SHELL                                                               */
-/* --------------------------------------------------------------------------- */
-.page {
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--color-bg-app);
+    color: var(--color-text);
     position: relative;
+}
+
+/* --------------------------------------------------------------------------- */
+/* 1. SIDEBAR                                                                  */
+/* --------------------------------------------------------------------------- */
+.app-sidebar {
+    width: var(--sidebar-width);
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    background: var(--color-bg-surface);
+    border-right: 1px solid var(--color-border);
+    transition: transform var(--transition-base);
+    overflow: hidden;
+}
+
+/* --------------------------------------------------------------------------- */
+/* 2. MAIN WRAPPER & HEADER                                                    */
+/* --------------------------------------------------------------------------- */
+.app-main-wrapper {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    color: #c1c4c7;
-    overflow: hidden;
-    height: 100vh;
+    background-color: var(--color-bg-app);
+    transition: margin-left var(--transition-base);
+    max-width: calc(100vw - var(--sidebar-width));
 }
 
-main {
-    flex: 1;
-    background: var(--color-bg-app);
-    z-index: 98;
-}
-
-/* --------------------------------------------------------------------------- */
-/* 2. SIDEBAR                                                                  */
-/* --------------------------------------------------------------------------- */
-.sidebar {
-    background: var(--color-bg-app);
-    max-height: 100vh;
-    width: 250px;
-    z-index: 11;
-    padding-right: 0;
-}
-
-.smallNavBar {
-    margin-right: 20px;
-    padding-top: 20px;
-    text-align: center;
-    background: var(--color-bg-app);
-    position: fixed;
-    top: 56px;
-    left: 0;
-    height: 100vh;
-    width: 50px;
-    overflow: visible;
-    z-index: 10;
-}
-
-    .smallNavBar:hover {
-        z-index: 101;
-    }
-
-.showSmallNavBar { display: block; }
-.noSmallNavBar   { display: none; }
-
-/* --------------------------------------------------------------------------- */
-/* 3. MAIN CONTENT MARGIN WHEN NAV IS OPEN/CLOSED                             */
-/* --------------------------------------------------------------------------- */
-.main-Nav-Open   { margin-left: 0; }
-.main-Nav-Closed { margin-left: 50px; }
-
-@media (max-width: 790px) {
-    .main-Nav-Closed { margin-left: 10px; }
-}
-
-/* --------------------------------------------------------------------------- */
-/* 4. CONTENT AREA                                                             */
-/* --------------------------------------------------------------------------- */
-.content {
-    opacity: 1;
-    position: relative;
-    z-index: 102;
-    margin: 0 10px 0 0;
-    overflow: scroll;
-    background-color: #fff;
-    border-radius: 20px;
-    height: calc(100vh - 70px);
-    box-shadow: var(--shadow-content);
-    transition: all var(--transition-base);
-}
-
-    .content:hover {
-        box-shadow: var(--shadow-content-hover);
-    }
-
-.content-home {
-    background-color: var(--color-bg-dark);
-}
-
-/* --------------------------------------------------------------------------- */
-/* 5. TOP ROW (HEADER BAR)                                                    */
-/* --------------------------------------------------------------------------- */
-.top-row {
-    background: var(--color-bg-app);
-    justify-content: center;
-    height: 3.5rem;
-    display: flex;
-    align-items: center;
-    z-index: 1;
-    position: static;
-}
-
-    .top-row ::deep a,
-    .top-row ::deep .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-        text-decoration: none;
-    }
-
-        .top-row ::deep a:hover,
-        .top-row ::deep .btn-link:hover {
-            text-decoration: underline;
-        }
-
-        .top-row ::deep a:first-child {
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-/* --------------------------------------------------------------------------- */
-/* 6. TOP-BAR TEXT & TOGGLE                                                   */
-/* --------------------------------------------------------------------------- */
-#topLeftText {
-    font-weight: 500;
-    font-size: 2rem;
-    position: fixed;
-    top: 2px;
-    left: 45px;
-    margin-left: 10px;
-    color: var(--color-primary);
-    z-index: 97;
-}
-
-    #topLeftText:hover {
-        color: #8b939a;
-        cursor: pointer;
-    }
-
-.topLeftTextMuted { color: var(--color-brand-navy-rich); }
-
-#topCenterText {
-    font-weight: 500;
-    font-size: 2rem;
-    margin-left: 10px;
-    color: var(--color-primary);
-    z-index: 97;
-}
-
-#navToggle {
-    position: fixed;
+.app-header {
+    height: var(--header-height);
+    position: sticky;
     top: 0;
-    left: 0;
-    z-index: 97;
-}
-
-.topBlock {
-    background-color: var(--color-bg-sidebar);
-    width: 100vh;
-}
-
-.topLeftBlock {
-    padding-top: 0;
-    margin-left: -30px;
-}
-
-.menu-toggle {
-    margin-top: 21px;
-    margin-left: -23px;
-}
-
-/* --------------------------------------------------------------------------- */
-/* 7. ICON CONTROLS                                                            */
-/* --------------------------------------------------------------------------- */
-.oi-document, .oi-person, .oi-chat, .oi-info, .oi-home {
-    padding-top: 4px;
-}
-
-.oi-info {
-    padding-left: 3px;
-    padding-top: 3px;
-}
-
-/* --------------------------------------------------------------------------- */
-/* 8. NAV ITEM (SMALL SIDEBAR ICON STYLE)                                     */
-/* --------------------------------------------------------------------------- */
-.titleText {
-    font-size: 1.25rem;
-    color: var(--color-primary);
-}
-
-.nav-item {
-    position: relative;
-    border-radius: 0;
-    padding: 0.2rem;
-    margin: 0 auto 0.5rem auto;
+    z-index: 90;
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 35px;
-    height: 35px;
-    border: 2px none #6c757d;
-    overflow: hidden;
-    text-decoration: none;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    background: var(--color-bg-glass-heavy);
+    backdrop-filter: var(--blur-glass);
+    -webkit-backdrop-filter: var(--blur-glass);
+    border-bottom: 1px solid var(--color-border);
 }
 
-    .nav-item:first-of-type { padding-top: 1rem; }
-    .nav-item:last-of-type  { padding-bottom: 1rem; }
-
-    .nav-item ::deep a {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-    }
-
-        .nav-item ::deep a.active .titleText {
-            color: #1c1e21;
-        }
-
-    .nav-item:hover {
-        justify-content: flex-start;
-        border-radius: 0;
-        box-shadow: none;
-        transform: translate(0, 0);
-        transition: all var(--transition-slow) ease-out;
-        background-color: var(--color-primary);
-        color: #1c1e21;
-        width: 250px;
-        margin-left: 7px;
-        font-size: var(--font-size-sm);
-    }
-
-        .nav-item:hover .nav-link-title {
-            display: block;
-            opacity: 1;
-            padding-left: 1rem;
-            font-weight: var(--font-weight-semibold);
-        }
-
-        .nav-item:hover .titleText {
-            color: #1c1e21;
-            font-size: var(--font-size-sm);
-        }
-
-        .nav-item:hover:not(:has(a.active)) {
-            border-left: 5px solid #1c1e21;
-        }
-
-.nav-link-title {
-    white-space: nowrap;
-    font-size: var(--font-size-sm);
-    display: none;
-    opacity: 0;
-    transition: opacity var(--transition-slow);
-    color: #1c1e21;
-}
-
-/* --------------------------------------------------------------------------- */
-/* 9. LOGIN DISPLAY                                                            */
-/* --------------------------------------------------------------------------- */
-.logindisp,
-.logindispSmall {
-    justify-content: center;
+.header-left {
     display: flex;
     align-items: center;
+    gap: 1rem;
 }
 
-.userNameDisp {
-    z-index: 999;
-    height: 20px;
-    position: fixed;
-    left: 65px;
-    bottom: 20px;
-}
-
-/* --------------------------------------------------------------------------- */
-/* 10. SIDEBAR SHOW/HIDE ANIMATIONS                                            */
-/* --------------------------------------------------------------------------- */
-.sidebarController-start { display: none; }
-
-.rotateRight {
-    transition: transform var(--transition-base);
-    transform: rotate(0deg);
-}
-
-.rotateLeft {
-    transition: transform var(--transition-base);
-    transform: rotate(-180deg);
-}
-
-.navHider { animation: hideNavbar 0.3s ease-in-out forwards; }
-.navShower { animation: showNavbar 0.3s ease-in-out forwards; }
-
-@keyframes hideNavbar {
-    0%   { transform: translate(0, 0); visibility: visible; width: 250px; }
-    99%  { visibility: visible; }
-    100% { transform: translate(-250px, 0); visibility: hidden; width: 0; }
-}
-
-@keyframes showNavbar {
-    0%   { transform: translate(-250px, 0); width: 0; }
-    100% { transform: translate(0, 0); visibility: visible; width: 250px; }
-}
-
-/* --------------------------------------------------------------------------- */
-/* 11. FORM CHECKBOX TOGGLE                                                    */
-/* --------------------------------------------------------------------------- */
-input[type="checkbox"] {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.form-check-label {
-    position: relative;
-    display: inline-block;
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     cursor: pointer;
+    user-select: none;
 }
 
-.form-check-icon {
-    position: absolute;
-    font-size: 1.5rem;
-    top: 0;
-    left: 0;
-    margin-top: -5px;
-    margin-left: -5px;
+.header-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    border: 1px solid var(--color-border-accent);
 }
 
-.icon:hover { color: #8b939a; }
+.brand-text {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.brand-name {
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    background: var(--gradient-text);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.brand-badge {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--color-accent);
+    background: var(--color-bg-glass-active);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-accent-glow);
+    letter-spacing: 0.05em;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.header-icon-link {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--color-border);
+    font-size: 1.1rem;
+    transition: all var(--transition-fast);
+}
+
+.header-icon-link:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-glass-hover);
+    border-color: var(--color-border-hover);
+    transform: translateY(-1px);
+}
 
 /* --------------------------------------------------------------------------- */
-/* 12. RESPONSIVE BREAKPOINTS                                                  */
+/* 3. TOGGLE BUTTON (MOBILE/HAMBURGER)                                         */
 /* --------------------------------------------------------------------------- */
+.sidebar-toggle-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4.5px;
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
 
-/* Mobile: < 560px */
-@media (max-width: 560px) {
-    .top-row-menu-open {
-        background-image: none;
-        background-color: var(--color-bg-app);
+.sidebar-toggle-btn:hover {
+    background: var(--color-bg-glass-hover);
+    border-color: var(--color-border-hover);
+}
+
+.toggle-bar {
+    width: 100%;
+    height: 2px;
+    background-color: var(--color-text);
+    border-radius: var(--radius-full);
+    transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+/* --------------------------------------------------------------------------- */
+/* 4. CONTENT & FOOTER                                                         */
+/* --------------------------------------------------------------------------- */
+.app-content {
+    flex: 1;
+    padding: 1.5rem 2rem;
+    position: relative;
+    background-color: var(--color-bg-app);
+}
+
+.app-content-home {
+    padding: 0;
+}
+
+.app-footer {
+    padding: 1.25rem 2rem;
+    border-top: 1px solid var(--color-border-subtle);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Mobile backdrop overlay */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 95;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+/* --------------------------------------------------------------------------- */
+/* 5. RESPONSIVE BREAKPOINTS                                                  */
+/* --------------------------------------------------------------------------- */
+@media (max-width: 992px) {
+    .app-sidebar {
+        transform: translateX(-100%);
+        box-shadow: var(--shadow-xl);
     }
 
-    #topLeftText {
-        display: none;
+    .app-main-wrapper {
         margin-left: 0;
+        max-width: 100vw;
     }
 
-    .sidebarController-max {
-        width: 100vw;
+    .sidebar-toggle-btn {
+        display: flex;
     }
 
-    .contentHider {
+    .sidebar-open .app-sidebar {
+        transform: translateX(0);
+    }
+
+    .sidebar-open .sidebar-overlay {
+        display: block;
+        opacity: 1;
+    }
+
+    .sidebar-open .toggle-bar:nth-child(1) {
+        transform: translateY(6.5px) rotate(45deg);
+    }
+
+    .sidebar-open .toggle-bar:nth-child(2) {
+        opacity: 0;
+    }
+
+    .sidebar-open .toggle-bar:nth-child(3) {
+        transform: translateY(-6.5px) rotate(-45deg);
+    }
+
+    .app-content {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .app-header {
+        padding: 0 1rem;
+    }
+
+    .brand-badge {
         display: none;
     }
-}
 
-/* Tablet: 560px – 790px */
-@media (max-width: 790px) {
-    .page { flex-direction: row; }
-
-    .top-row:not(.auth) { display: none; }
-
-    .top-row {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-    }
-
-    .sidebar {
-        position: sticky;
-        top: 0;
-    }
-
-    .logindispSmall {
-        margin-left: 0;
-        width: 100%;
-        justify-content: center;
-    }
-
-    .internalWiki { display: none; }
-
-    .topBlock {
-        width: calc(100vw - 550px);
-        height: 100%;
-    }
-
-    .top-row.auth { justify-content: center; margin-left: 0; }
-    .top-row ::deep a, .top-row ::deep .btn-link { margin-left: 0; }
-
-    #topCenterText { display: none; }
-}
-
-/* Desktop: >= 790px */
-@media (min-width: 790px) {
-    .page { flex-direction: row; }
-
-    .topBlock {
-        width: calc(100vw - 550px);
-        height: 100%;
-    }
-
-    .sidebar {
-        position: sticky;
-        top: 0;
-    }
-
-    .top-row {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-    }
-
-        .top-row.auth ::deep a:first-child {
-            flex: 1;
-            text-align: right;
-            width: 0;
-        }
-
-    .top-row,
-    article {
-        padding-left: 2rem;
-        padding-right: 1.5rem;
-    }
-}
-
-/* Large: >= 1000px */
-@media (max-width: 1000px) {
-    .top-row.auth { justify-content: center; }
-
-    .logindisp {
-        flex-direction: row-reverse;
-        justify-content: center;
-        width: 100%;
-    }
-
-    .logindispSmall {
-        justify-content: center;
-        width: 100%;
+    .app-footer {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
     }
 }

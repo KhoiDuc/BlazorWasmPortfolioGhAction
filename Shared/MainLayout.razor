@@ -2,130 +2,89 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 
-<div class="page">
-    <div class="sidebar sidebarController sidebarController-start">
-        <div class="sidebarContainer" style="height: calc(100vh - 56px); margin-top: 56px;">
-            <NavMenu />
-        </div>
-    </div>
-    <div class="smallNavBar showSmallNavBar">
-        <nav class="d-flex flex-column text-dark" id="navSmall">
-            <div class="nav-items-container">
-                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
-                    <NavLink class="p-1 nav-link" href="">
-                        <h2 class="fas fa-home text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">Home</span>
-                    </NavLink>
-                </div>
-                <div class="item-fader dropdown-divider divider"></div>
-                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
-                    <NavLink class="p-1 nav-link" href="MyResume">
-                        <h2 class="fas fa-file-alt text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">My Resume</span>
-                    </NavLink>
-                </div>
-                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
-                    <NavLink class="p-1 nav-link" href="Dissertation/Transcript">
-                        <h2 class="fas fa-file-contract text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">My Transcript</span>
-                    </NavLink>
-                </div>
-                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
-                    <NavLink class="p-1 nav-link" href="Dissertation/Degree">
-                        <h2 class="fas fa-file text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">My Degree</span>
-                    </NavLink>
-                </div>
-                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
-                    <NavLink class="p-1 nav-link" href="Dissertation/CV">
-                        <h2 class="fas fa-file-signature text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">My CV</span>
-                    </NavLink>
-                </div>
-                <div class="item-fader dropdown-divider divider"></div>
-                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
-                    <NavLink class="p-1 nav-link" href="Utility">
-                        <h2 class="fas fa-key text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">Utility!</span>
-                    </NavLink>
-                </div>
-                <div class="p-1 item-fader nav-item px-2 font-weight-bold">
-                    <NavLink class="p-1 nav-link" href="cryptoManager">
-                        <h2 class="fas fa-brands fa-btc text-truncate titleText" aria-hidden="true"></h2><span class="nav-link-title">Crypto Manager!</span>
-                    </NavLink>
-                </div>
-            </div>
-        </nav>
-    </div>
+<div class="app-layout @(isSidebarOpen ? "sidebar-open" : "")">
+    <!-- Mobile Backdrop Overlay -->
+    <div class="sidebar-overlay" @onclick="ToggleSidebar"></div>
 
-    <main class="bg-light text-dark topBlock main-Nav-Closed" style="position: relative">
-        <div class="topLeftBlock">
-            <div class="form-group form-check form-switch" id="navToggle">
-                <label for="sliderToggle" class="form-check-label menu-toggle">
-                    <input type="checkbox" class="form-check-input" id="sliderToggle" value="isChecked" />
-                    <span class="oi oi-menu form-check-icon icon rotateRight"></span>
-                </label>
-            </div>
-@*             <div id="topLeftText" class="lastLink" @onclick="GoHome">
-                KHOI <small class="topLeftTextMuted @(isChecked == false ? "internalWiki" : "")">Portfolio</small>
-            </div> *@
-        </div>
+    <!-- Main Sidebar -->
+    <aside class="app-sidebar">
+        <NavMenu OnNavigate="CloseSidebarOnMobile" />
+    </aside>
 
-        <div class="top-row px-4 auth bg-light text-dark">
-            <div class="logindisp">
-                <div class="logindispSmall @(isChecked == false ? "" : "justify-content-end")">
-                    <img src="images/icon.jpg" alt="Icon" height="30" width="30" class="mx-2 img-fluid homeImg" />
-                    <div id="topCenterText" class="lastLink" @onclick="GoHome">
-                        KHOI <small class="topLeftTextMuted">Portfolio</small>
+    <!-- Main Content Container -->
+    <div class="app-main-wrapper">
+        <!-- Top Navbar Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <button type="button" class="sidebar-toggle-btn" aria-label="Toggle navigation" @onclick="ToggleSidebar">
+                    <span class="toggle-bar"></span>
+                    <span class="toggle-bar"></span>
+                    <span class="toggle-bar"></span>
+                </button>
+
+                <div class="header-brand" @onclick="GoHome">
+                    <img src="images/icon.jpg" alt="Logo" class="header-logo" />
+                    <div class="brand-text">
+                        <span class="brand-name">KHOI DUC</span>
+                        <span class="brand-badge">PORTFOLIO</span>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <article class="content px-2 bg-light content-menu-closed @(IsHome ? "content-home" : "")">
+            <div class="header-right">
+                <a href="https://github.com/KhoiDuc" target="_blank" rel="noopener noreferrer" class="header-icon-link" title="GitHub Profile">
+                    <i class="fa-brands fa-github"></i>
+                </a>
+                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="header-icon-link" title="LinkedIn Profile">
+                    <i class="fa-brands fa-linkedin"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- Dynamic Body Content -->
+        <main class="app-content @(IsHome ? "app-content-home" : "")">
             @Body
-        </article>
-    </main>
+        </main>
 
-    <AuthorizeView>
-        <Authorized>
-            <div class="userNameDisp">
-                @context.User.Identity?.Name @versionNo
-            </div>
-        </Authorized>
-        <NotAuthorized>
-            <div class="userNameDisp">
-                @versionNo
-            </div>
-        </NotAuthorized>
-    </AuthorizeView>
+        <!-- Footer -->
+        <footer class="app-footer">
+            <AuthorizeView>
+                <Authorized>
+                    <span>@context.User.Identity?.Name &bull; @versionNo</span>
+                </Authorized>
+                <NotAuthorized>
+                    <span>@versionNo</span>
+                </NotAuthorized>
+            </AuthorizeView>
+        </footer>
+    </div>
 </div>
 
 @code {
-    private bool isChecked { get; set; }
+    private bool isSidebarOpen = false;
     private string versionNo = "© 2025 Khoi Duc. All rights reserved.";
-    private bool IsHome => NavigationManager.Uri.EndsWith("/");
-
-    protected override void OnInitialized()
-    {
-        //Console.WriteLine("MainLayout.razor initialized");
-    }
+    private bool IsHome => NavigationManager.Uri.EndsWith("/") || NavigationManager.Uri.EndsWith("/Portfolio");
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("initNavbar");
             await JSRuntime.InvokeVoidAsync("customRefresh.preventRefresh");
             await JSRuntime.InvokeVoidAsync("customRefresh.preventRefreshMobile");
-            await CheckNavigationTypeAsync();
         }
     }
-    @* Re-directs back to home on refreshes to allow proper re-initiation *@
-    @* Not sure this is needed now I have proper state management implemented *@
-    private async Task CheckNavigationTypeAsync()
+
+    private void ToggleSidebar()
     {
-        @*
-        var navType = await JSRuntime.InvokeAsync<string>("customRefresh.getNavigationType");
-        if (navType == "reload" || navType == "back_forward")
+        isSidebarOpen = !isSidebarOpen;
+    }
+
+    private void CloseSidebarOnMobile()
+    {
+        if (isSidebarOpen)
         {
-            GoHome();
+            isSidebarOpen = false;
         }
-        *@
     }
 
     private void GoHome()
