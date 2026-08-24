@@ -941,7 +941,7 @@
 /* /Pages/CryptoManager.razor.rz.scp.css */
 /* =============================================================================
    CRYPTO MANAGER — CryptoManager.razor.css
-   Matches home page structure: .container, .section-heading, grid layouts.
+   Clean Alejandro-style design. Controls bar + grid layout.
    ============================================================================= */
 
 [b-ttulv2dtn2] section {
@@ -975,89 +975,122 @@
 .crypto-page[b-ttulv2dtn2] { padding-top: 72px; }
 
 /* -----------------------------------------------------------------------------
-   LAYOUT — grid 2-col: ticker list | detail cards
+   CONTROLS BAR
+   ----------------------------------------------------------------------------- */
+.crypto-controls[b-ttulv2dtn2] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1.25rem;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-surface);
+}
+
+.control-group[b-ttulv2dtn2] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.control-group label[b-ttulv2dtn2] {
+    color: var(--color-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.control-group input[b-ttulv2dtn2],
+.control-group select[b-ttulv2dtn2] {
+    padding: 0.5rem 0.75rem;
+    min-width: 100px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-app);
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    transition: border-color var(--transition);
+}
+
+.control-group input:focus[b-ttulv2dtn2],
+.control-group select:focus[b-ttulv2dtn2] {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.crypto-update-btn[b-ttulv2dtn2] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.25rem;
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-accent);
+    color: var(--color-bg-app);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity var(--transition);
+}
+
+.crypto-update-btn:hover[b-ttulv2dtn2] { opacity: 0.85; }
+
+/* -----------------------------------------------------------------------------
+   LAYOUT — grid ticker list + detail
    ----------------------------------------------------------------------------- */
 .crypto-layout[b-ttulv2dtn2] {
     display: grid;
-    grid-template-columns: 1fr 3fr;
+    grid-template-columns: 1fr 2fr;
     gap: 1.5rem;
     align-items: flex-start;
+}
+
+.crypto-card-list[b-ttulv2dtn2],
+.crypto-detail-view[b-ttulv2dtn2] {
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-surface);
+    max-height: 75vh;
+    overflow-y: auto;
 }
 
 .crypto-card-list[b-ttulv2dtn2] {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    padding: 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background-color: var(--color-bg-surface);
-    max-height: 80vh;
-    overflow-y: auto;
 }
 
-.detail-view[b-ttulv2dtn2] {
+.crypto-detail-view[b-ttulv2dtn2] {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
     justify-content: center;
-    padding: 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background-color: var(--color-bg-surface);
-    max-height: 80vh;
-    overflow-y: auto;
 }
 
-/* -----------------------------------------------------------------------------
-   SETTINGS BAR
-   ----------------------------------------------------------------------------- */
-.settings[b-ttulv2dtn2] {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    align-items: flex-end;
-    margin-top: 2rem;
-    padding: 1.25rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background-color: var(--color-bg-surface);
-}
-
-.setting[b-ttulv2dtn2] {
+.crypto-empty[b-ttulv2dtn2] {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 4rem 2rem;
+    text-align: center;
+    color: var(--color-text-muted);
 }
 
-    .setting label[b-ttulv2dtn2] {
-        font-size: 0.8rem;
-        color: var(--color-text-secondary);
-        font-weight: 600;
-    }
-
-    .setting input[b-ttulv2dtn2],
-    .setting select[b-ttulv2dtn2] {
-        padding: 0.4rem 0.6rem;
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-sm);
-        background-color: var(--color-bg-app);
-        color: var(--color-text-primary);
-        font-size: 0.9rem;
-    }
-
-.settings button[b-ttulv2dtn2] {
-    padding: 0.5rem 1.25rem;
-    border: 1px solid var(--color-accent);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-accent);
-    color: var(--color-bg-app);
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity var(--transition);
+.crypto-empty i[b-ttulv2dtn2] {
+    font-size: 2.5rem;
+    color: var(--color-text-subtle);
 }
 
-    .settings button:hover[b-ttulv2dtn2] { opacity: 0.85; }
+.crypto-empty p[b-ttulv2dtn2] {
+    font-size: 0.95rem;
+    color: var(--color-text-secondary);
+}
 
 /* -----------------------------------------------------------------------------
    RESPONSIVE
@@ -1073,7 +1106,7 @@
     }
 
     .crypto-card-list[b-ttulv2dtn2],
-    .detail-view[b-ttulv2dtn2] {
+    .crypto-detail-view[b-ttulv2dtn2] {
         max-height: none;
     }
 }
@@ -2775,73 +2808,6 @@ canvas[b-bs4o2dlrpc] {
         padding: 15px;
     }
 }
-/* /Pages/NavMenuUtility.razor.rz.scp.css */
-.sitenav[b-oeqw3r774e] {
-    background-color: var(--color-bg-surface);
-    padding: 12px;
-    border-radius: var(--radius-sm);
-    width: 250px;
-    box-shadow: var(--shadow-md);
-}
-
-.nav-menu[b-oeqw3r774e] {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.nav-category[b-oeqw3r774e] {
-    font-size: 16px;
-    font-weight: bold;
-    color: var(--color-text);
-    padding: 10px 14px;
-    text-transform: uppercase;
-    display: block;
-    background-color: var(--color-bg-surface-elevated);
-    border-radius: var(--radius-xs);
-}
-
-.nav-menu > li[b-oeqw3r774e] {
-    position: relative;
-}
-
-.nav-menu ul[b-oeqw3r774e] {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: none;
-    position: static;
-    background-color: transparent;
-}
-
-.nav-menu li:hover > ul[b-oeqw3r774e] {
-    display: block;
-}
-
-.nav-menu ul li[b-oeqw3r774e] {
-    border-bottom: 1px solid var(--color-border);
-}
-
-/* Links */
-.nav-link[b-oeqw3r774e] {
-    display: block;
-    text-decoration: none;
-    color: var(--color-primary);
-    font-size: 14px;
-    padding: 10px 14px;
-    border-radius: var(--radius-xs);
-    transition: background-color var(--transition-base), color var(--transition-base);
-}
-
-    .nav-link:hover[b-oeqw3r774e],
-    .nav-link:focus[b-oeqw3r774e] {
-        background-color: var(--color-primary);
-        color: white;
-        outline: none;
-    }
 /* /Pages/OvernightMinTemp.razor.rz.scp.css */
 .calculator-container[b-2h15zs2qqi] {
     display: flex;
@@ -3747,7 +3713,7 @@ input[type="range"][b-2h15zs2qqi] {
 /* /Pages/Utility.razor.rz.scp.css */
 /* =============================================================================
    UTILITY / TOOLS — Utility.razor.css
-   Matches home page structure: .container, .section-heading, grid layouts.
+   Clean Alejandro-style design. Grid sidebar + content.
    ============================================================================= */
 
 [b-vlpqqjoo1n] section {
@@ -3780,50 +3746,138 @@ input[type="range"][b-2h15zs2qqi] {
 
 .utility-page[b-vlpqqjoo1n] { padding-top: 72px; }
 
+/* -----------------------------------------------------------------------------
+   LAYOUT — grid sidebar + content
+   ----------------------------------------------------------------------------- */
 .utility-layout[b-vlpqqjoo1n] {
     display: grid;
-    grid-template-columns: 260px 1fr;
-    gap: 2.5rem;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
     align-items: flex-start;
 }
 
-.component-container[b-vlpqqjoo1n] {
-    width: 100%;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.utility-empty[b-vlpqqjoo1n] {
-    padding: 4rem 2rem;
-    text-align: center;
-    color: var(--color-text-secondary);
-    font-size: 1.05rem;
+/* -----------------------------------------------------------------------------
+   SIDEBAR NAV
+   ----------------------------------------------------------------------------- */
+.utility-sidebar[b-vlpqqjoo1n] {
+    position: sticky;
+    top: 90px;
+    max-height: calc(100vh - 110px);
+    overflow-y: auto;
+    padding: 1.25rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     background-color: var(--color-bg-surface);
 }
 
+.utility-nav[b-vlpqqjoo1n] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.nav-group[b-vlpqqjoo1n] {
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0;
+}
+
+.nav-group:last-child[b-vlpqqjoo1n] { border-bottom: none; }
+
+.nav-group-title[b-vlpqqjoo1n] {
+    padding: 0.75rem 0;
+    color: var(--color-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: color var(--transition);
+}
+
+.nav-group-title[b-vlpqqjoo1n]::-webkit-details-marker { display: none; }
+
+.nav-group-title[b-vlpqqjoo1n]::after {
+    content: "\F282";
+    font-family: "bootstrap-icons";
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    transition: transform var(--transition);
+}
+
+.nav-group[open] .nav-group-title[b-vlpqqjoo1n]::after {
+    transform: rotate(90deg);
+}
+
+.nav-group[open] .nav-group-title[b-vlpqqjoo1n] {
+    color: var(--color-accent);
+}
+
+.nav-group-items[b-vlpqqjoo1n] {
+    list-style: none;
+    margin: 0 0 0.75rem 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-item[b-vlpqqjoo1n] {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    border-radius: var(--radius-sm);
+    transition: color var(--transition), background-color var(--transition);
+}
+
+.nav-item:hover[b-vlpqqjoo1n] {
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-glass-hover);
+}
+
+.nav-item.active[b-vlpqqjoo1n] {
+    color: var(--color-accent);
+    background-color: var(--color-bg-glass-active);
+    font-weight: 600;
+}
+
 /* -----------------------------------------------------------------------------
-   LEGACY FLOATING BUTTONS (WebGL etc.)
+   CONTENT AREA
    ----------------------------------------------------------------------------- */
-.floating-button[b-vlpqqjoo1n] {
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    z-index: 10;
+.utility-content[b-vlpqqjoo1n] {
+    min-width: 0;
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-surface);
+    min-height: 400px;
 }
 
-.start-button[b-vlpqqjoo1n] {
-    background-color: var(--color-success, #22c55e);
-    right: 300px;
+.utility-empty[b-vlpqqjoo1n] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 4rem 2rem;
+    text-align: center;
+    color: var(--color-text-muted);
 }
 
-.update-button[b-vlpqqjoo1n] { right: 20px; }
-.toggleLeader-button[b-vlpqqjoo1n] { top: 150px; right: 20px; }
-.toggleRays-button[b-vlpqqjoo1n] { top: 150px; right: 20px; }
-.toggleNN-button[b-vlpqqjoo1n] { top: 220px; right: 20px; }
-.logGenomes-button[b-vlpqqjoo1n] { top: 220px; right: 250px; }
+.utility-empty i[b-vlpqqjoo1n] {
+    font-size: 3rem;
+    color: var(--color-text-subtle);
+}
+
+.utility-empty p[b-vlpqqjoo1n] {
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+}
 
 /* -----------------------------------------------------------------------------
    RESPONSIVE
@@ -3835,7 +3889,12 @@ input[type="range"][b-2h15zs2qqi] {
 
     .utility-layout[b-vlpqqjoo1n] {
         grid-template-columns: 1fr;
-        gap: 1.5rem;
+        gap: 1rem;
+    }
+
+    .utility-sidebar[b-vlpqqjoo1n] {
+        position: static;
+        max-height: none;
     }
 }
 /* /Pages/WikiBlock.razor.rz.scp.css */
@@ -4076,6 +4135,30 @@ input[type="range"][b-2h15zs2qqi] {
     transition: transform var(--transition);
 }
 .navbar-links a:hover[b-i080xik3gy]::after, .navbar-links a.active[b-i080xik3gy]::after { transform: scaleX(1); }
+
+.navbar-right[b-i080xik3gy] { display: flex; align-items: center; gap: 1rem; }
+
+.theme-toggle[b-i080xik3gy] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: color var(--transition), border-color var(--transition), background-color var(--transition);
+}
+
+.theme-toggle:hover[b-i080xik3gy] {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+    background-color: var(--color-bg-glass-hover);
+}
 
 .menu-toggle[b-i080xik3gy] { display: none; width: 40px; height: 40px; padding: 0; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background: transparent; border: 0; cursor: pointer; z-index: 1001; }
 .menu-toggle span[b-i080xik3gy] { width: 22px; height: 2px; background-color: var(--color-text-primary); border-radius: var(--radius-xs); transition: transform var(--transition), opacity var(--transition); }

@@ -10,10 +10,56 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 /* --------------------------------------------------------------------------- */
-/* 1. DESIGN TOKENS — Midnight Theme                                           */
+/* 1. DESIGN TOKENS — Light theme (default) + Dark theme override               */
 /* --------------------------------------------------------------------------- */
 :root {
     /* Backgrounds */
+    --color-bg-app: #f8fafc;
+    --color-bg-surface: #ffffff;
+    --color-bg-surface-elevated: #f1f5f9;
+    --color-bg-glass: rgba(255, 255, 255, 0.75);
+    --color-bg-glass-heavy: rgba(255, 255, 255, 0.92);
+    --color-bg-glass-card: rgba(0, 0, 0, 0.02);
+    --color-bg-glass-hover: rgba(0, 0, 0, 0.04);
+    --color-bg-glass-active: rgba(99, 102, 241, 0.08);
+
+    /* Borders & Dividers */
+    --color-border: rgba(0, 0, 0, 0.1);
+    --color-border-subtle: rgba(0, 0, 0, 0.05);
+    --color-border-hover: rgba(0, 0, 0, 0.18);
+    --color-border-accent: rgba(99, 102, 241, 0.35);
+
+    /* Text */
+    --color-text: #1e293b;
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #64748b;
+    --color-text-muted: #94a3b8;
+    --color-text-subtle: #cbd5e1;
+
+    /* Shadows & Glow */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    --shadow-glow-primary: 0 0 20px rgba(99, 102, 241, 0.2);
+    --shadow-glow-accent: 0 0 20px rgba(99, 102, 241, 0.15);
+    --shadow-content: 0 10px 30px rgba(0, 0, 0, 0.1);
+
+    /* Gradients */
+    --gradient-brand: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #22d3ee 100%);
+    --gradient-brand-subtle: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.06) 50%, rgba(34, 211, 238, 0.08) 100%);
+    --gradient-text: linear-gradient(135deg, #0f172a 30%, #64748b 100%);
+    --gradient-accent: linear-gradient(135deg, #6366f1 0%, #22d3ee 100%);
+
+    /* Scrollbar */
+    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
+
+    /* Pattern dot opacity */
+    --pattern-opacity: 0.12;
+}
+
+[data-theme="dark"] {
     --color-bg-app: #0a0a0f;
     --color-bg-surface: #12121a;
     --color-bg-surface-elevated: #1a1a24;
@@ -23,61 +69,61 @@
     --color-bg-glass-hover: rgba(255, 255, 255, 0.06);
     --color-bg-glass-active: rgba(99, 102, 241, 0.15);
 
-    /* Borders & Dividers */
     --color-border: rgba(255, 255, 255, 0.08);
     --color-border-subtle: rgba(255, 255, 255, 0.04);
     --color-border-hover: rgba(255, 255, 255, 0.16);
     --color-border-accent: rgba(99, 102, 241, 0.4);
 
-    /* Brand & Accent */
-    --color-primary: #6366f1;
-    --color-primary-light: #818cf8;
-    --color-primary-dark: #4f46e5;
-    --color-primary-glow: rgba(99, 102, 241, 0.25);
-    --color-accent: #22d3ee;
-    --color-accent-light: #67e8f9;
-    --color-accent-glow: rgba(34, 211, 238, 0.2);
-    --color-purple: #a855f7;
-
-    /* Semantic */
-    --color-success: #34d399;
-    --color-warning: #fbbf24;
-    --color-danger: #f87171;
-    --color-info: #38bdf8;
-
-    /* Brand colors */
-    --color-brand-discord: #5865F2;
-    --color-brand-slack: #36C5F0;
-    --color-brand-teams: #0078D4;
-    --color-brand-github: #24292e;
-
-    /* Text */
     --color-text: #f1f5f9;
     --color-text-primary: #f8fafc;
     --color-text-secondary: #94a3b8;
     --color-text-muted: #64748b;
     --color-text-subtle: #475569;
 
-    /* Gradients */
-    --gradient-brand: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #22d3ee 100%);
-    --gradient-brand-subtle: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.1) 50%, rgba(34, 211, 238, 0.15) 100%);
-    --gradient-text: linear-gradient(135deg, #f8fafc 30%, #94a3b8 100%);
-    --gradient-accent: linear-gradient(135deg, #6366f1 0%, #22d3ee 100%);
-
-    /* Shadows & Glow */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -4px rgba(0, 0, 0, 0.6);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.7);
     --shadow-glow-primary: 0 0 20px rgba(99, 102, 241, 0.35);
-    --shadow-glow-accent: 0 0 20px rgba(34, 211, 238, 0.3);
+    --shadow-glow-accent: 0 0 20px rgba(99, 102, 241, 0.25);
     --shadow-content: 0 10px 30px rgba(0, 0, 0, 0.7);
 
-    /* Layout Dimensions */
+    --gradient-brand: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #22d3ee 100%);
+    --gradient-brand-subtle: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.1) 50%, rgba(34, 211, 238, 0.15) 100%);
+    --gradient-text: linear-gradient(135deg, #f8fafc 30%, #94a3b8 100%);
+    --gradient-accent: linear-gradient(135deg, #6366f1 0%, #22d3ee 100%);
+
+    --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.25);
+
+    --pattern-opacity: 0.22;
+}
+
+/* Shared tokens (same for both themes) */
+:root {
+    --color-primary: #6366f1;
+    --color-primary-light: #818cf8;
+    --color-primary-dark: #4f46e5;
+    --color-primary-glow: rgba(99, 102, 241, 0.25);
+    --color-accent: #6366f1;
+    --color-accent-light: #818cf8;
+    --color-accent-hover: #818cf8;
+    --color-accent-glow: rgba(99, 102, 241, 0.2);
+    --color-purple: #a855f7;
+
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-danger: #ef4444;
+    --color-info: #0ea5e9;
+
+    --color-brand-discord: #5865F2;
+    --color-brand-slack: #36C5F0;
+    --color-brand-teams: #0078D4;
+    --color-brand-github: #24292e;
+
     --sidebar-width: 260px;
     --header-height: 60px;
 
-    /* Radii */
     --radius-xs: 4px;
     --radius-sm: 8px;
     --radius-md: 12px;
@@ -86,7 +132,6 @@
     --radius-2xl: 24px;
     --radius-full: 9999px;
 
-    /* Typography */
     --font-family-base: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-family-mono: 'JetBrains Mono', Consolas, Monaco, monospace;
     --font-size-xs: 0.75rem;
@@ -98,25 +143,14 @@
     --font-size-3xl: 1.875rem;
     --font-size-4xl: 2.25rem;
 
-    /* Transitions */
     --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-spring: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-    /* Blur Filters */
     --blur-glass: blur(16px);
     --blur-glass-heavy: blur(24px);
 
-    /* Alejandro token aliases (mapped to existing palette) */
-    --color-background: var(--color-bg-app);
-    --color-surface: var(--color-bg-surface);
-    --color-surface-light: var(--color-bg-surface-elevated);
-    --color-text-primary: var(--color-text-primary);
-    --color-text-secondary: var(--color-text-secondary);
-    --color-accent: var(--color-primary);
-    --color-accent-hover: var(--color-primary-light);
-    --color-border: var(--color-border);
     --max-width: 1200px;
     --transition: var(--transition-fast);
 }
@@ -568,12 +602,12 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--scrollbar-thumb);
     border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: var(--scrollbar-thumb-hover);
 }
 
 /* --------------------------------------------------------------------------- */
