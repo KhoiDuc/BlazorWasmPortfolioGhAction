@@ -1,0 +1,340 @@
+﻿(() => {
+    const sectionSelector =
+        "#about, #experience, #projects, #technologies, #education, #contact";
+
+    const app = document.getElementById("app");
+
+    let initialized = false;
+
+    function initRevealAnimations(sections) {
+        const reducedMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+        ).matches;
+
+        sections.forEach(section => {
+            section.classList.add("motion-reveal");
+        });
+
+        if (reducedMotion || !("IntersectionObserver" in window)) {
+            sections.forEach(section => {
+                section.classList.add("is-visible");
+            });
+
+            return;
+        }
+
+        const visibleThreshold = window.innerHeight * 0.9;
+
+        sections.forEach(section => {
+            const rect = section.getBoundingClientRect();
+
+            if (rect.top < visibleThreshold && rect.bottom > 0) {
+                section.classList.add("is-visible");
+            }
+        });
+
+        document.documentElement.classList.add("motion-ready");
+
+        const observer = new IntersectionObserver(
+            entries => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) {
+                        return;
+                    }
+
+                    entry.target.classList.add("is-visible");
+
+                    observer.unobserve(entry.target);
+                });
+            },
+            {
+                threshold: 0.12,
+                rootMargin: "0px 0px -8% 0px"
+            }
+        );
+
+        sections.forEach(section => {
+            if (!section.classList.contains("is-visible")) {
+                observer.observe(section);
+            }
+        });
+    }
+
+    function initStaggerAnimations() {
+        const reducedMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+        ).matches;
+
+        if (reducedMotion || !("IntersectionObserver" in window)) {
+            return;
+        }
+
+        const groups = [
+            {
+                sectionSelector: "#experience",
+                itemSelector: ".experience-item",
+                delayStep: 90
+            },
+            {
+                sectionSelector: "#projects",
+                itemSelector: ".project-card",
+                delayStep: 90
+            }
+        ];
+
+        groups.forEach(group => {
+            const section = document.querySelector(group.sectionSelector);
+
+            if (!section) {
+                return;
+            }
+
+            const items = [
+                ...section.querySelectorAll(group.itemSelector)
+            ];
+
+            items.forEach((item, index) => {
+                item.classList.add("motion-stagger");
+
+                item.style.setProperty(
+                    "--stagger-delay",
+                    `${index * group.delayStep}ms`
+                );
+            });
+
+            const observer = new IntersectionObserver(
+                entries => {
+                    const entry = entries[0];
+
+                    if (!entry.isIntersecting) {
+                        return;
+                    }
+
+                    items.forEach(item => {
+                        item.classList.add("is-stagger-visible");
+                    });
+
+                    observer.disconnect();
+                },
+                {
+                    threshold: 0.12,
+                    rootMargin: "0px 0px -8% 0px"
+                }
+            );
+
+            observer.observe(section);
+        });
+    }
+
+    function initActiveNavigation() {
+        const navLinks = [
+            ...document.querySelectorAll(
+                '#main-navigation a[href^="#"]'
+            )
+        ];
+
+        const navigationItems = navLinks
+            .map(link => {
+                const targetSelector = link.getAttribute("href");
+
+                return {
+                    link,
+                    section: document.querySelector(targetSelector)
+                };
+            })
+            .filter(item => item.section);
+
+        if (navigationItems.length === 0) {
+            return;
+        }
+
+        let ticking = false;
+
+        function updateActiveSection() {
+            ticking = false;
+
+            const marker = window.innerHeight * 0.35;
+
+            let activeItem = null;
+
+            navigationItems.forEach(item => {
+                const rect = item.section.getBoundingClientRect();
+
+                if (rect.top <= marker && rect.bottom > 72) {
+                    activeItem = item;
+                }
+            });
+
+            const isAtBottom =
+                window.scrollY + window.innerHeight >=
+                document.documentElement.scrollHeight - 4;
+
+            if (isAtBottom) {
+                activeItem = navigationItems[navigationItems.length - 1];
+            }
+
+            navigationItems.forEach(item => {
+                const isActive = item === activeItem;
+
+                item.link.classList.toggle("active", isActive);
+
+                if (isActive) {
+                    item.link.setAttribute(
+                        "aria-current",
+                        "location"
+                    );
+                }
+                else {
+                    item.link.removeAttribute("aria-current");
+                }
+            });
+        }
+
+        function requestUpdate() {
+            if (ticking) {
+                return;
+            }
+
+            ticking = true;
+
+            requestAnimationFrame(updateActiveSection);
+        }
+
+        window.addEventListener(
+            "scroll",
+            requestUpdate,
+            { passive: true }
+        );
+
+        window.addEventListener(
+            "resize",
+            requestUpdate
+        );
+
+        updateActiveSection();
+    }
+
+    function initHeroParallax() {
+        const hero = document.querySelector(".hero");
+
+        if (!hero) {
+            return;
+        }
+
+        const reducedMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+        );
+
+        const mobileViewport = window.matchMedia(
+            "(max-width: 768px)"
+        );
+
+        let ticking = false;
+
+        function updateParallax() {
+            ticking = false;
+
+            if (
+                reducedMotion.matches ||
+                mobileViewport.matches
+            ) {
+                hero.style.setProperty(
+                    "--pattern-parallax",
+                    "0px"
+                );
+
+                return;
+            }
+
+            const rect = hero.getBoundingClientRect();
+
+            if (rect.bottom <= 0) {
+                return;
+            }
+
+            const progress = Math.min(
+                Math.max(
+                    -rect.top / Math.max(rect.height, 1),
+                    0
+                ),
+                1
+            );
+
+            const offset = progress * 28;
+
+            hero.style.setProperty(
+                "--pattern-parallax",
+                `${offset.toFixed(2)}px`
+            );
+        }
+
+        function requestUpdate() {
+            if (ticking) {
+                return;
+            }
+
+            ticking = true;
+
+            requestAnimationFrame(updateParallax);
+        }
+
+        window.addEventListener(
+            "scroll",
+            requestUpdate,
+            { passive: true }
+        );
+
+        window.addEventListener(
+            "resize",
+            requestUpdate
+        );
+
+        reducedMotion.addEventListener(
+            "change",
+            requestUpdate
+        );
+
+        mobileViewport.addEventListener(
+            "change",
+            requestUpdate
+        );
+
+        updateParallax();
+    }
+
+    function initializePortfolioMotion() {
+        if (initialized) {
+            return true;
+        }
+
+        const sections = [
+            ...document.querySelectorAll(sectionSelector)
+        ];
+
+        if (sections.length !== 6) {
+            return false;
+        }
+
+        initRevealAnimations(sections);
+        initStaggerAnimations();
+        initActiveNavigation();
+        initHeroParallax();
+
+        initialized = true;
+
+        return true;
+    }
+
+    if (!initializePortfolioMotion()) {
+        const renderObserver = new MutationObserver(() => {
+            if (initializePortfolioMotion()) {
+                renderObserver.disconnect();
+            }
+        });
+
+        renderObserver.observe(app, {
+            childList: true,
+            subtree: true
+        });
+    }
+})();

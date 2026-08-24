@@ -1,95 +1,402 @@
 @page "/"
-@using System.Net;
-@using System.Net.Http;
-@using System.Net.Http.Headers;
-@using Microsoft.AspNetCore.Components.Authorization
-@using Newtonsoft.Json;
-@using System.Timers;
-@using System.Text.RegularExpressions;
-@using BlazorWasmPortfolioGhAction.Shared.Model;
-@using BlazorWasmPortfolioGhAction.Store.Actions;
-@using BlazorWasmPortfolioGhAction.Store.State;
 @using BlazorWasmPortfolioGhAction.Components.EmailComposer
 @using Fluxor
-@inject IState<ContentState> contentState
-@inject IDispatcher Dispatcher
-@inject HttpClient Http;
-@inject NavigationManager Navigation;
 @inject IJSRuntime JSRuntime;
 
-<div class="container-fluid mx-0 ps-0 mainContentContainer">
-    <div class="row mx-0 ps-0 gx-3">
-        <div class="col">
-            <div class="introductionBody">
-                <div class="start_light"></div>
-                <div id="header">
-                    <div class="container">
-                        <nav class="nav">
-                            <h2 class="title-content">PORTFOLIO</h2>
-                        </nav>
-                        <div class="header-content">
-                            <div class="header-text">
-                                <h1>Khoi Nguyen Minh Duc</h1>
-                                <p>.NET Developer</p>
-                                <div class="grid-container justify-content-center">
-                                     <div class="email-button contact-container">
-                                        <button id="contactButton" class="contact-button email-link" @onclick="ToggleContactOptions">
-                                            <h5>Contact Me</h5>
-                                            <img src="images/envelope-blue.svg" alt="email" class="email-icon">
-                                        </button>
-                                        <div id="contactOptions" class="contact-options @(showContactOptions ? "show" : "")">
-                                            <a href="mailto:khoi.duc.dev@gmail.com" class="email-link">
-                                                <h6>Default Email</h6>
-                                                <i class="fas fa-envelope email-icon"></i>
-                                            </a>
-                                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=khoi.duc.dev@gmail.com" class="email-link">
-                                                <h6>Gmail</h6>
-                                                <i class="fab fa-google email-icon"></i>
-                                            </a>
-                                            <a href="https://outlook.live.com/mail/0/deeplink/compose?to=khoi.duc.dev@gmail.com" class="email-link">
-                                                <h6>Outlook</h6>
-                                                <i class="fab fa-microsoft email-icon"></i>
-                                            </a>
-                                            <button class="email-link btn btn-link p-0 text-start border-0 text-decoration-none" @onclick="CopyEmail">
-                                                <h6>Copy Email</h6>
-                                                <i class="fas fa-copy email-icon"></i>
-                                            </button>
-                                            <button class="email-link btn btn-link p-0 text-start border-0 text-decoration-none" @onclick="OpenEmailComposer">
-                                                <h6>Compose Email</h6>
-                                                <i class="fas fa-pen-to-square email-icon"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="google-drive-button">
-                                        <a href="MyResume" class="google-drive-link">
-                                            <h5>My Resume</h5>
-                                            <img src="images/googledrive-blue.svg" alt="Resume site" class="google-drive-icon">
-                                        </a>
-                                    </div>
-                                    <div class="download-file-button">
-                                        <a href="Dissertation/CV" class="download-file-button-link">
-                                            <h5>My CV</h5>
-                                            <img src="images/downloadfile-blue.svg" alt="Download file" class="download-file-icon">
-                                        </a>
-                                    </div>
-                                    <div class="download-file-button">
-                                        <a href="files/resume.pdf" target="_blank" rel="noopener" download class="download-file-button-link">
-                                            <h5>PDF Resume</h5>
-                                            <img src="images/downloadfile-blue.svg" alt="Download PDF" class="download-file-icon">
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="header-image">
-                                <img src="images/avt-men.png" alt="Profile Image">
-                            </div>
-                        </div>
+<section id="home" class="hero">
+    <div class="hero-container">
+        <div class="hero-layout">
+            <div class="hero-content">
+                <div class="hero-status">
+                    <span class="status-indicator" aria-hidden="true"></span>
+                    <span>Open to remote opportunities</span>
+                </div>
+                <p class="hero-greeting">Hello, I'm</p>
+                <h1>Khoi Nguyen Minh Duc</h1>
+                <h2>.NET Developer</h2>
+                <p class="hero-specialization">Full Stack .NET Developer · Backend-Focused</p>
+                <p class="hero-description">
+                    Software developer with 3 years of experience building scalable ASP.NET Core applications
+                    and optimizing database queries (MySQL, PostgreSQL, Elasticsearch, SQL Server).
+                    Experienced in backend development, full-stack web apps, and DevOps tooling.
+                </p>
+                <div class="hero-actions">
+                    <button class="button button-primary" @onclick="ScrollToContact">Contact Me</button>
+                    <a href="/#projects" class="button button-secondary">View Projects</a>
+                </div>
+                <div class="hero-socials">
+                    <a href="https://github.com/KhoiDuc" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                        <i class="bi bi-github" aria-hidden="true"></i> GitHub
+                    </a>
+                    <a href="https://www.linkedin.com/in/đức-khôi-354b77269/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                        <i class="bi bi-linkedin" aria-hidden="true"></i> LinkedIn
+                    </a>
+                    <a href="resume" aria-label="Resume">
+                        <i class="bi bi-file-text" aria-hidden="true"></i> Resume
+                    </a>
+                    <a href="files/resume.pdf" download>
+                        <i class="bi bi-download" aria-hidden="true"></i> CV
+                    </a>
+                </div>
+            </div>
+            <aside class="hero-stack" aria-label="Core technology stack">
+                <div class="stack-header">
+                    <span class="stack-title">CORE STACK</span>
+                    <span class="stack-dot" aria-hidden="true"></span>
+                </div>
+                <div class="stack-content">
+                    <div class="stack-row"><span class="stack-category">Language</span><strong>C#</strong></div>
+                    <div class="stack-row"><span class="stack-category">Platform</span><strong>.NET 8/9</strong></div>
+                    <div class="stack-row"><span class="stack-category">Web</span><strong>ASP.NET Core</strong></div>
+                    <div class="stack-row"><span class="stack-category">Data</span><strong>SQL Server</strong></div>
+                </div>
+                <div class="stack-footer">
+                    <i class="bi bi-code-slash" aria-hidden="true"></i>
+                    <span>This portfolio is built with Blazor WebAssembly</span>
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+
+<section id="about" class="about">
+    <div class="container">
+        <div class="section-heading">
+            <p class="section-label">ABOUT ME</p>
+            <h2>Building enterprise software across backend, data and web.</h2>
+        </div>
+        <div class="about-content">
+            <p>
+                I'm a .NET Developer with 3 years of professional experience building and maintaining
+                enterprise applications using C#, .NET, ASP.NET Core and SQL Server.
+            </p>
+            <p>
+                My work focuses on e-commerce, payment integration, and content management systems
+                where I contribute across backend services, database architecture, business logic,
+                reporting, integrations and web applications.
+            </p>
+            <p>
+                My experience spans .NET Core 6/8/9, Blazor WebAssembly, EF Core, Redis, Azure CDN,
+                WCAG 2.1/2.2 compliance, PCI DSS, and modern full-stack development.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section id="experience" class="experience">
+    <div class="container">
+        <div class="section-heading">
+            <p class="section-label">EXPERIENCE</p>
+            <h2>Work projects.</h2>
+        </div>
+        <div class="experience-list">
+            <div class="experience-item">
+                <div class="experience-meta">2023 — Now</div>
+                <div class="experience-content">
+                    <h3>Site Manager Plus Plus (SM++)</h3>
+                    <p class="experience-company">S3Corp · Full Stack Developer</p>
+                    <p class="experience-description">
+                        Upgraded version of Site Manager running on .NET 8. Platform for rapid website setup
+                        and management with modular page architecture. Supports SSO integration with
+                        third-party identity providers including Citi and Wells Fargo.
+                    </p>
+                    <div class="technology-list">
+                        <span>.NET 8 MVC</span><span>jQuery</span><span>EF</span><span>SQL Server</span>
+                        <span>Redis</span><span>Azure CDN</span><span>Kontent.AI</span><span>WCAG 2.2</span>
+                    </div>
+                </div>
+            </div>
+            <div class="experience-item">
+                <div class="experience-meta">2022 — 2024</div>
+                <div class="experience-content">
+                    <h3>Site Manager</h3>
+                    <p class="experience-company">S3Corp · Full Stack Developer</p>
+                    <p class="experience-description">
+                        Platform for creating and deploying websites quickly. Enables users to search,
+                        explore, and book services (dining, hotels, flights, spas, limousines). Built to
+                        comply with WCAG 2.1, PCI DSS, and Veracode security scanning.
+                    </p>
+                    <div class="technology-list">
+                        <span>.NET 4 MVC</span><span>jQuery</span><span>EF</span><span>SQL Server</span>
+                        <span>Redis</span><span>Azure CDN</span><span>Kontent.AI</span><span>WCAG 2.1</span>
+                    </div>
+                </div>
+            </div>
+            <div class="experience-item">
+                <div class="experience-meta">2022 — Now</div>
+                <div class="experience-content">
+                    <h3>Payment Portal</h3>
+                    <p class="experience-company">S3Corp · Full Stack Developer</p>
+                    <p class="experience-description">
+                        Manages international transactions through Adyen payment system integration.
+                        Currently upgrading from .NET MVC to .NET 8.
+                    </p>
+                    <div class="technology-list">
+                        <span>.NET MVC 4</span><span>EF</span><span>SQL Server</span><span>JavaScript</span><span>Webhook</span>
+                    </div>
+                </div>
+            </div>
+            <div class="experience-item">
+                <div class="experience-meta">06/2022 — 09/2022</div>
+                <div class="experience-content">
+                    <h3>Simply Blast</h3>
+                    <p class="experience-company">S3Corp · Full Stack Developer</p>
+                    <p class="experience-description">
+                        Web application for clients to create and manage advertising campaigns through
+                        WhatsApp messages.
+                    </p>
+                    <div class="technology-list">
+                        <span>.NET 6</span><span>Blazor</span><span>EF Core</span><span>SQL Server</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
+
+<section id="projects" class="projects">
+    <div class="container">
+        <div class="section-heading">
+            <p class="section-label">PROJECTS</p>
+            <h2>Personal & school projects.</h2>
+        </div>
+        <div class="projects-grid">
+            <article class="project-card">
+                <div class="project-header">
+                    <span class="project-type">Personal</span>
+                    <span class="project-number">01</span>
+                </div>
+                <div class="project-content">
+                    <h3>BlazorWasmPortfolioGhAction</h3>
+                    <p>Personal portfolio site built with Blazor WebAssembly, featuring DevOps utilities (Slack/Discord/Teams/GitHub), email composer, and 40+ tools.</p>
+                </div>
+                <div class="project-links">
+                    <a href="https://github.com/KhoiDuc/BlazorWasmPortfolioGhAction" target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-github" aria-hidden="true"></i> Repository
+                    </a>
+                </div>
+                <div class="technology-list">
+                    <span>Blazor WASM</span><span>.NET 9</span><span>Fluxor</span><span>GitHub Actions</span>
+                </div>
+            </article>
+            <article class="project-card">
+                <div class="project-header">
+                    <span class="project-type">School</span>
+                    <span class="project-number">02</span>
+                </div>
+                <div class="project-content">
+                    <h3>Food Ordering System</h3>
+                    <p>Full-stack food ordering with .NET 5 backend and Flutter frontend.</p>
+                </div>
+                <div class="project-links">
+                    <a href="https://github.com/khoinmdIT99/FoodOrder_NET5_FLUTTER" target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-github" aria-hidden="true"></i> Repository
+                    </a>
+                    <a href="/project/food-ordering">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i> Details
+                    </a>
+                </div>
+                <div class="technology-list">
+                    <span>.NET 5</span><span>Flutter</span>
+                </div>
+            </article>
+            <article class="project-card">
+                <div class="project-header">
+                    <span class="project-type">School</span>
+                    <span class="project-number">03</span>
+                </div>
+                <div class="project-content">
+                    <h3>Building Material E-Commerce</h3>
+                    <p>Full-stack e-commerce platform for building materials with .NET 5 backend and Angular frontend.</p>
+                </div>
+                <div class="project-links">
+                    <a href="https://github.com/khoinmdIT99/BuildingMaterialShop_NET5_ANUGLAR" target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-github" aria-hidden="true"></i> Repository
+                    </a>
+                    <a href="/project/building-material">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i> Details
+                    </a>
+                </div>
+                <div class="technology-list">
+                    <span>.NET 5</span><span>Angular</span>
+                </div>
+            </article>
+            <article class="project-card">
+                <div class="project-header">
+                    <span class="project-type">School</span>
+                    <span class="project-number">04</span>
+                </div>
+                <div class="project-content">
+                    <h3>Payroll Management System</h3>
+                    <p>Enterprise payroll management system built with .NET Core MVC.</p>
+                </div>
+                <div class="project-links">
+                    <a href="https://github.com/khoinmdIT99/Payroll-Manager/" target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-github" aria-hidden="true"></i> Repository
+                    </a>
+                </div>
+                <div class="technology-list">
+                    <span>.NET Core MVC</span>
+                </div>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section id="technologies" class="tech-stack">
+    <div class="container">
+        <div class="section-heading">
+            <p class="section-label">TECHNOLOGIES</p>
+            <h2>Tools I work with.</h2>
+        </div>
+        <div class="technology-grid">
+            <div class="technology-group">
+                <p class="technology-category">Languages</p>
+                <div class="technology-items">
+                    <span>C#</span><span>JavaScript</span><span>Java</span><span>Dart</span>
+                </div>
+            </div>
+            <div class="technology-group">
+                <p class="technology-category">Frameworks</p>
+                <div class="technology-items">
+                    <span>.NET Core 6/8/9</span><span>.NET MVC</span><span>ASP.NET Web API</span><span>Blazor</span><span>WPF</span><span>WinForms</span>
+                </div>
+            </div>
+            <div class="technology-group">
+                <p class="technology-category">Frontend</p>
+                <div class="technology-items">
+                    <span>HTML5</span><span>CSS3</span><span>jQuery</span><span>React</span><span>Angular</span>
+                </div>
+            </div>
+            <div class="technology-group">
+                <p class="technology-category">Databases</p>
+                <div class="technology-items">
+                    <span>SQL Server</span><span>MySQL</span><span>PostgreSQL</span><span>MongoDB</span><span>Elasticsearch</span>
+                </div>
+            </div>
+            <div class="technology-group">
+                <p class="technology-category">Tools & DevOps</p>
+                <div class="technology-items">
+                    <span>Visual Studio</span><span>VS Code</span><span>ReSharper</span><span>Redis</span><span>Docker</span><span>Azure</span><span>GitHub Actions</span>
+                </div>
+            </div>
+            <div class="technology-group">
+                <p class="technology-category">Practices</p>
+                <div class="technology-items">
+                    <span>Microservices</span><span>WCAG 2.1/2.2</span><span>PCI DSS</span><span>Database Design</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="education" class="education">
+    <div class="container">
+        <div class="section-heading">
+            <p class="section-label">EDUCATION</p>
+            <h2>Academic background.</h2>
+        </div>
+        <div class="education-grid">
+            <div class="education-column">
+                <p class="column-title">EDUCATION</p>
+                <div class="education-item">
+                    <div class="education-header">
+                        <div>
+                            <h3>HUFLIT University</h3>
+                            <p class="institution">Software Engineering</p>
+                        </div>
+                        <time>2017 — 2021</time>
+                    </div>
+                    <p class="education-description">
+                        Ho Chi Minh City University of Foreign Languages - Information Technology.
+                        GPA: 3.33/4.0 (8.32/10).
+                    </p>
+                </div>
+            </div>
+            <div class="education-column">
+                <p class="column-title">CERTIFICATIONS</p>
+                <div class="education-item">
+                    <div class="education-header">
+                        <div>
+                            <h3>TOEIC</h3>
+                        </div>
+                        <span class="status">2024</span>
+                    </div>
+                    <p class="education-description">TOEIC Score: 600</p>
+                </div>
+                <div class="education-item">
+                    <div class="education-header">
+                        <div>
+                            <h3>TOEIC</h3>
+                        </div>
+                        <span class="status">2023</span>
+                    </div>
+                    <p class="education-description">TOEIC Score: 686</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="contact" class="contact">
+    <div class="container">
+        <div class="contact-layout">
+            <div class="contact-heading">
+                <p class="section-label">CONTACT</p>
+                <h2>Let's build something together.</h2>
+                <p class="contact-description">
+                    I'm open to discussing software engineering opportunities, .NET development roles
+                    and projects involving backend or full-stack application development.
+                </p>
+                <button class="resume-button" @onclick="OpenEmailComposer">
+                    Compose Email <i class="bi bi-pencil" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="contact-links">
+                <a href="mailto:khoi.duc.dev@gmail.com" class="contact-link" aria-label="Email">
+                    <div class="contact-link-content">
+                        <i class="bi bi-envelope contact-icon" aria-hidden="true"></i>
+                        <div>
+                            <span class="contact-label">Email</span>
+                            <span class="contact-value">khoi.duc.dev@gmail.com</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-box-arrow-up-right contact-arrow" aria-hidden="true"></i>
+                </a>
+                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=khoi.duc.dev@gmail.com" class="contact-link" target="_blank" rel="noopener noreferrer" aria-label="Gmail">
+                    <div class="contact-link-content">
+                        <i class="bi bi-google contact-icon" aria-hidden="true"></i>
+                        <div>
+                            <span class="contact-label">Gmail</span>
+                            <span class="contact-value">Compose via Gmail</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-box-arrow-up-right contact-arrow" aria-hidden="true"></i>
+                </a>
+                <a href="https://t.me/warman99" class="contact-link" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                    <div class="contact-link-content">
+                        <i class="bi bi-telegram contact-icon" aria-hidden="true"></i>
+                        <div>
+                            <span class="contact-label">Telegram</span>
+                            <span class="contact-value">@@warman99</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-box-arrow-up-right contact-arrow" aria-hidden="true"></i>
+                </a>
+                <a href="https://github.com/KhoiDuc" class="contact-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                    <div class="contact-link-content">
+                        <i class="bi bi-github contact-icon" aria-hidden="true"></i>
+                        <div>
+                            <span class="contact-label">GitHub</span>
+                            <span class="contact-value">Explore my repositories</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-box-arrow-up-right contact-arrow" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
 
 @if (showEmailModal)
 {
@@ -107,30 +414,14 @@
 }
 
 @code {
-    private bool showContactOptions = false;
     private bool showEmailModal = false;
 
-    private void ToggleContactOptions()
-    {
-        showContactOptions = !showContactOptions;
-    }
+    private void OpenEmailComposer() => showEmailModal = true;
+    private void CloseEmailModal() => showEmailModal = false;
 
-    private void OpenEmailComposer()
+    private async Task ScrollToContact()
     {
-        showContactOptions = false;
-        showEmailModal = true;
-    }
-
-    private void CloseEmailModal()
-    {
-        showEmailModal = false;
-    }
-
-    private async Task CopyEmail()
-    {
-        const string email = "khoi.duc.dev@gmail.com";
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", email);
-        await JSRuntime.InvokeVoidAsync("alert", "Copied email to clipboard: " + email);
+        await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('contact').scrollIntoView({ behavior: 'smooth' })");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -159,12 +450,14 @@
     }
 
     .email-modal-content {
-        background: #fff;
-        border-radius: 8px;
+        background: var(--color-bg-surface);
+        color: var(--color-text);
+        border-radius: var(--radius-md);
         max-width: 95vw;
         width: 1000px;
         max-height: 92vh;
         overflow-y: auto;
+        border: 1px solid var(--color-border);
     }
 
     .email-modal-header {
@@ -172,16 +465,16 @@
         justify-content: space-between;
         align-items: center;
         padding: 15px 20px;
-        border-bottom: 1px solid #e1e4e8;
+        border-bottom: 1px solid var(--color-border);
         position: sticky;
         top: 0;
-        background: #fff;
+        background: var(--color-bg-surface);
         z-index: 1;
     }
 
     .email-modal-header h4 {
         margin: 0;
-        color: #24292e;
+        color: var(--color-text-primary);
     }
 
     .email-modal-close {
@@ -189,7 +482,7 @@
         border: none;
         font-size: 1.8em;
         line-height: 1;
-        color: #586069;
+        color: var(--color-text-secondary);
         cursor: pointer;
         padding: 0;
         width: 32px;
@@ -198,8 +491,8 @@
     }
 
     .email-modal-close:hover {
-        background: #f1f2f3;
-        color: #24292e;
+        background: var(--color-bg-glass-hover);
+        color: var(--color-text-primary);
     }
 
     .email-modal-body {
@@ -215,9 +508,6 @@
         }
         .email-modal-overlay {
             padding: 0;
-        }
-        .email-modal-header, .email-modal-body {
-            padding: 10px 15px;
         }
     }
 </style>

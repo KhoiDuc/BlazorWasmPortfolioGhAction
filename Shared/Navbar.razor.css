@@ -1,0 +1,89 @@
+/* Navbar styling from Alejandro design */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 72px;
+    background: rgba(13, 17, 23, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border);
+    z-index: 1000;
+}
+
+.navbar-container {
+    width: min(90%, var(--max-width));
+    height: 100%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-brand {
+    position: relative;
+    z-index: 1001;
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-text-primary);
+    font-family: "Cascadia Code", "Consolas", monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    transition: color var(--transition), transform var(--transition);
+}
+
+.brand-symbol { color: var(--color-accent); transition: color var(--transition); }
+.brand-initials { color: var(--color-text-primary); transition: color var(--transition); }
+
+.navbar-brand:hover { transform: translateY(-1px); }
+.navbar-brand:hover .brand-initials { color: var(--color-accent); }
+.navbar-brand:hover .brand-symbol { color: var(--color-accent-hover); }
+
+.navbar-links { display: flex; align-items: center; gap: 2rem; }
+.navbar-links a { position: relative; color: var(--color-text-secondary); font-size: 0.9rem; font-weight: 500; transition: color var(--transition); }
+.navbar-links a:hover { color: var(--color-text-primary); }
+.navbar-links a.active { color: var(--color-accent); }
+.navbar-links a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.55rem;
+    height: 2px;
+    background-color: var(--color-accent);
+    border-radius: 999px;
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform var(--transition);
+}
+.navbar-links a:hover::after, .navbar-links a.active::after { transform: scaleX(1); }
+
+.menu-toggle { display: none; width: 40px; height: 40px; padding: 0; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background: transparent; border: 0; cursor: pointer; z-index: 1001; }
+.menu-toggle span { width: 22px; height: 2px; background-color: var(--color-text-primary); border-radius: 2px; transition: transform var(--transition), opacity var(--transition); }
+@media (max-width: 768px) {
+    .menu-toggle { display: flex; }
+    .navbar-links {
+        position: fixed;
+        top: 72px;
+        left: 0;
+        width: 100%;
+        height: calc(100vh - 72px);
+        padding: 3rem 5%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+        background-color: var(--color-background);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
+    }
+    .navbar-links.open { opacity: 1; visibility: visible; transform: translateY(0); }
+    .navbar-links a { width: 100%; padding: 1.25rem 0; border-bottom: 1px solid var(--color-border); color: var(--color-text-primary); font-size: 1.15rem; }
+    .navbar-links a::after { display: none; }
+    .navbar-links a.active { color: var(--color-accent); }
+    .menu-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .menu-toggle.open span:nth-child(2) { opacity: 0; }
+    .menu-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+}

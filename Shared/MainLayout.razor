@@ -1,94 +1,9 @@
 @inherits LayoutComponentBase
-@inject IJSRuntime JSRuntime
-@inject NavigationManager NavigationManager
 
-<div class="app-layout @(isSidebarOpen ? "sidebar-open" : "")">
-    <!-- Mobile Backdrop Overlay -->
-    <div class="sidebar-overlay" @onclick="ToggleSidebar"></div>
+<Navbar />
 
-    <!-- Main Sidebar -->
-    <aside class="app-sidebar">
-        <NavMenu OnNavigate="CloseSidebarOnMobile" />
-    </aside>
+<main>
+    @Body
+</main>
 
-    <!-- Main Content Container -->
-    <div class="app-main-wrapper">
-        <!-- Top Navbar Header -->
-        <header class="app-header">
-            <div class="header-left">
-                <button type="button" class="sidebar-toggle-btn" aria-label="Toggle navigation" @onclick="ToggleSidebar">
-                    <span class="toggle-bar"></span>
-                    <span class="toggle-bar"></span>
-                    <span class="toggle-bar"></span>
-                </button>
-
-                <div class="header-brand" @onclick="GoHome">
-                    <img src="images/icon.jpg" alt="Logo" class="header-logo" />
-                    <div class="brand-text">
-                        <span class="brand-name">KHOI DUC</span>
-                        <span class="brand-badge">PORTFOLIO</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="header-right">
-                <a href="https://github.com/KhoiDuc" target="_blank" rel="noopener noreferrer" class="header-icon-link" title="GitHub Profile">
-                    <i class="fa-brands fa-github"></i>
-                </a>
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="header-icon-link" title="LinkedIn Profile">
-                    <i class="fa-brands fa-linkedin"></i>
-                </a>
-            </div>
-        </header>
-
-        <!-- Dynamic Body Content -->
-        <main class="app-content @(IsHome ? "app-content-home" : "")">
-            @Body
-        </main>
-
-        <!-- Footer -->
-        <footer class="app-footer">
-            <AuthorizeView>
-                <Authorized>
-                    <span>@context.User.Identity?.Name &bull; @versionNo</span>
-                </Authorized>
-                <NotAuthorized>
-                    <span>@versionNo</span>
-                </NotAuthorized>
-            </AuthorizeView>
-        </footer>
-    </div>
-</div>
-
-@code {
-    private bool isSidebarOpen = false;
-    private string versionNo = "© 2025 Khoi Duc. All rights reserved.";
-    private bool IsHome => NavigationManager.Uri.EndsWith("/") || NavigationManager.Uri.EndsWith("/Portfolio");
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await JSRuntime.InvokeVoidAsync("customRefresh.preventRefresh");
-            await JSRuntime.InvokeVoidAsync("customRefresh.preventRefreshMobile");
-        }
-    }
-
-    private void ToggleSidebar()
-    {
-        isSidebarOpen = !isSidebarOpen;
-    }
-
-    private void CloseSidebarOnMobile()
-    {
-        if (isSidebarOpen)
-        {
-            isSidebarOpen = false;
-        }
-    }
-
-    private void GoHome()
-    {
-        NavigationManager.NavigateTo("/");
-    }
-}
+<Footer />

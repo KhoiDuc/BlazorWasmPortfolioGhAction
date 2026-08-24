@@ -1,0 +1,35 @@
+<header class="navbar">
+    <div class="navbar-container">
+        <a href="/" class="navbar-brand" @onclick="CloseMenu" aria-label="Go to homepage">
+            <span class="brand-symbol">&lt;/</span>
+            <span class="brand-initials">khoi</span>
+            <span class="brand-symbol">&gt;</span>
+        </a>
+        <button type="button" class="menu-toggle @(_isMenuOpen ? "open" : "")"
+                @onclick="ToggleMenu"
+                aria-label="@(_isMenuOpen ? "Close navigation menu" : "Open navigation menu")"
+                aria-expanded="@(_isMenuOpen.ToString().ToLowerInvariant())"
+                aria-controls="main-navigation">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </button>
+        <nav id="main-navigation" class="navbar-links @(_isMenuOpen ? "open" : "")">
+            <a href="/#about" @onclick="CloseMenu">About</a>
+            <a href="/#experience" @onclick="CloseMenu">Experience</a>
+            <a href="/#projects" @onclick="CloseMenu">Projects</a>
+            <a href="/#technologies" @onclick="CloseMenu">Technologies</a>
+            <a href="/#education" @onclick="CloseMenu">Education</a>
+            <a href="/#contact" @onclick="CloseMenu">Contact</a>
+            <NavLink href="resume" @onclick="CloseMenu">Resume</NavLink>
+            <NavLink href="Utility" @onclick="CloseMenu">Tools</NavLink>
+            <NavLink href="cryptoManager" @onclick="CloseMenu">Crypto</NavLink>
+        </nav>
+    </div>
+</header>
+
+@code {
+    private bool _isMenuOpen;
+    private void ToggleMenu() => _isMenuOpen = !_isMenuOpen;
+    private void CloseMenu() => _isMenuOpen = false;
+}
