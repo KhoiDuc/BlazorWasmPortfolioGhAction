@@ -136,9 +136,8 @@
     private int particleCount = 2; // Default to 2 particles
     private List<ParticlePair> particlePairs = new List<ParticlePair>();
     private double totalBindingEnergy;
-    private string totalBindingEnergyFormatted;
+    private string totalBindingEnergyFormatted = string.Empty;
     private int significantFigures = 3; // Default to 5 significant figures
-    private bool firstRender = true;
     private bool isDescriptionModalVisible = false;
     private bool isChallengesModalVisible = false;
 
@@ -147,7 +146,6 @@
         if (firstRender)
         {
             UpdateParticlePairs();
-            this.firstRender = false;
             CalculateBindingEnergy();
             StateHasChanged(); // Ensures UI updates after the first render
         }

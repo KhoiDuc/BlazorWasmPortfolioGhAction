@@ -55,7 +55,7 @@
 @code {
     private string searchText = "";
     private List<GitHubUser> users = new();
-    private GitHubUserDetail selectedUser;
+    private GitHubUserDetail? selectedUser;
     private bool isLoading;
     private bool showUserDetails;
 
@@ -65,7 +65,7 @@
         {
             isLoading = true;
             var result = await GitHubService.SearchUsersAsync(searchText, "YOUR_TOKEN");
-            users = result.IsSuccess ? result.Value : new();
+            users = result.IsSuccess && result.Value != null ? result.Value : new();
         }
         catch
         {
@@ -79,8 +79,8 @@
 
     private async Task ShowUserDetails(GitHubUser user)
     {
-        var result = await GitHubService.GetUserAsync(user.Login, "YOUR_TOKEN");
-        if (result.IsSuccess)
+        var result = await GitHubService.GetUserAsync(user.Login ?? string.Empty, "YOUR_TOKEN");
+        if (result.IsSuccess && result.Value != null)
         {
             selectedUser = result.Value;
             showUserDetails = true;

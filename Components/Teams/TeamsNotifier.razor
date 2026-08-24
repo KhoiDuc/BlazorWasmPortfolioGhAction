@@ -1,0 +1,93 @@
+@using BlazorWasmPortfolioGhAction.Services
+@inject IDevOpsService DevOpsService
+
+<div class="devops-container">
+    <h3>Teams Notifier</h3>
+    
+    <div class="form-group">
+        <label>Title:</label>
+        <input type="text" @bind="title" class="form-control" placeholder="Enter message title" />
+    </div>
+
+    <div class="form-group">
+        <label>Message:</label>
+        <textarea @bind="message" class="form-control" rows="5" placeholder="Enter message content"></textarea>
+    </div>
+
+    <div class="form-actions">
+        <button @onclick="SendMessage" class="btn btn-primary">Send to Teams</button>
+        @if (!string.IsNullOrEmpty(status))
+        {
+            <p class="@statusClass">@status</p>
+        }
+    </div>
+
+    @if (showPreview && !string.IsNullOrEmpty(message))
+    {
+        <div class="preview-card teams-theme">
+            <h4>@title</h4>
+            <p>@message</p>
+            <small>Portfolio Bot</small>
+        </div>
+    }
+</div>
+
+@code {
+    private string title = string.Empty;
+    private string message = string.Empty;
+    private string status = string.Empty;
+    private string statusClass = string.Empty;
+    private bool showPreview = false;
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(message))
+        {
+            status = "Please fill in all fields";
+            statusClass = "text-danger";
+            return;
+        }
+
+        var result = await DevOpsService.SendTeamsMessageAsync(title, message);
+        if (result)
+        {
+            status = "Message sent successfully!";
+            statusClass = "text-success";
+            title = string.Empty;
+            message = string.Empty;
+        }
+        else
+        {
+            status = "Failed to send message. Check webhook URL in appsettings.";
+            statusClass = "text-danger";
+        }
+    }
+}
+
+<style>
+    .devops-container {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 10px 0;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .preview-card.teams-theme {
+        background: #0078D4;
+        color: white;
+        padding: 15px;
+        border-radius: 4px;
+        margin-top: 20px;
+        border-left: 4px solid #106ebe;
+    }
+</style>

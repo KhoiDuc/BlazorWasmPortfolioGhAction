@@ -5,9 +5,9 @@ namespace BlazorWasmPortfolioGhAction.Contexts
     public class TemperatureStore
     {
 
-        public event EventHandler OnTemperatureUpdated;
+        public event EventHandler? OnTemperatureUpdated;
 
-        public string Temperature { get; set; }
+        public string Temperature { get; set; } = string.Empty;
 
         public TemperatureStore()
         {

@@ -1,4 +1,4 @@
-﻿@using System.Text.Json
+@using System.Text.Json
 @inject HttpClient Http
 
 <div class="container">
@@ -327,9 +327,9 @@
                 //Log.Information("No previous joke available.");
             }
         }
-        catch (Exception ex)
+        catch
         {
-            //Log.Error(ex, "Error getting Previous Joke.");
+            //Log.Error("Error getting Previous Joke.");
         }
     }
 
@@ -356,9 +356,9 @@
                 return BaseRequestUrl;
             }
         }
-        catch (Exception _ex)
+        catch
         {
-            //Log.Error(_ex, "An error occurred in BuildRequestUri");
+            //Log.Error("An error occurred in BuildRequestUri");
             return string.Empty;
         }
     }
@@ -381,9 +381,9 @@
             // Log the updated blacklist flags
             //Log.Information("Blacklist Flags Updated: {selectedFlags}", string.Join(", ", _selectedFlagsList));
         }
-        catch (Exception ex)
+        catch
         {
-            //Log.Error(ex, "An error occurred in OnFlagChanged.");
+            //Log.Error("An error occurred in OnFlagChanged.");
         }
     }
 }

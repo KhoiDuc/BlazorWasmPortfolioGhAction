@@ -257,31 +257,31 @@ namespace BlazorWasmPortfolioGhAction.Store.Services
     // Supporting response classes
     public class SearchResponse
     {
-        public SearchData Search { get; set; }
+        public SearchData Search { get; set; } = null!;
 
         public class SearchData
         {
-            public List<Edge> Edges { get; set; }
+            public List<Edge> Edges { get; set; } = new();
         }
 
         public class Edge
         {
-            public GitHubUser Node { get; set; }
+            public GitHubUser Node { get; set; } = null!;
         }
     }
 
     public class UserResponse
     {
-        public UserData User { get; set; }
+        public UserData User { get; set; } = null!;
 
         public class UserData
         {
-            public string Login { get; set; }
-            public string Name { get; set; }
-            public string Bio { get; set; }
-            public string Email { get; set; }
-            public FollowerData Followers { get; set; }
-            public FollowerData Following { get; set; }
+            public string Login { get; set; } = string.Empty;
+            public string Name { get; set; } = string.Empty;
+            public string Bio { get; set; } = string.Empty;
+            public string Email { get; set; } = string.Empty;
+            public FollowerData Followers { get; set; } = null!;
+            public FollowerData Following { get; set; } = null!;
             public DateTime CreatedAt { get; set; }
         }
 
@@ -293,35 +293,35 @@ namespace BlazorWasmPortfolioGhAction.Store.Services
 
     public class RepositoryResponse
     {
-        public UserData User { get; set; }
+        public UserData User { get; set; } = null!;
 
         public class UserData
         {
-            public RepositoryConnection Repositories { get; set; }
+            public RepositoryConnection Repositories { get; set; } = null!;
         }
 
         public class RepositoryConnection
         {
-            public List<Edge> Edges { get; set; }
-            public PageInfo PageInfo { get; set; }
+            public List<Edge> Edges { get; set; } = new();
+            public PageInfo PageInfo { get; set; } = null!;
         }
 
         public class Edge
         {
-            public GitHubRepository Node { get; set; }
-            public string Cursor { get; set; }
+            public GitHubRepository Node { get; set; } = null!;
+            public string Cursor { get; set; } = string.Empty;
         }
 
         public class PageInfo
         {
-            public string EndCursor { get; set; }
+            public string EndCursor { get; set; } = string.Empty;
             public bool HasNextPage { get; set; }
         }
     }
 
     public class RateLimitResponse
     {
-        public GitHubRateLimit RateLimit { get; set; }
+        public GitHubRateLimit RateLimit { get; set; } = null!;
     }
     public class StateContainer
     {

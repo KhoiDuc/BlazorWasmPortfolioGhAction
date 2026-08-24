@@ -16,7 +16,7 @@
                                     <div class="avatar-lg mb-3">
                                         <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" 
                                              style="width: 80px; height: 80px">
-                                            @UserDetail.Login[0].ToString().ToUpper()
+                                             @Initial
                                         </div>
                                     </div>
                                     <h5>@UserDetail.Name</h5>
@@ -54,12 +54,14 @@
 
 @code {
     [Parameter]
-    public GitHubUserDetail UserDetail { get; set; }
+    public GitHubUserDetail? UserDetail { get; set; }
 
     [Parameter]
     public EventCallback OnClose { get; set; }
 
     private bool showModal = true;
+
+    private string Initial => UserDetail?.Login?.Length > 0 ? UserDetail.Login[0].ToString().ToUpper() : "?";
 
     private async Task Close()
     {

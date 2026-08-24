@@ -1,4 +1,4 @@
-﻿// sqlite.razor.cs
+// sqlite.razor.cs
 using BlazorWasmPortfolioGhAction.Data;
 using BlazorWasmPortfolioGhAction.Models;
 using Microsoft.AspNetCore.Components;
@@ -15,7 +15,6 @@ namespace BlazorWasmPortfolioGhAction.Pages
         private string _version = "unknown";
         private string _alertMessage = "";
         private string _alertType = "success";
-        private bool _showAlert = false;
         private readonly List<Car> _cars = new();
 
         [Inject] private IJSRuntime _js { get; set; }
@@ -122,7 +121,6 @@ namespace BlazorWasmPortfolioGhAction.Pages
         {
             _alertMessage = message;
             _alertType = type;
-            _showAlert = true;
         }
     }
 }

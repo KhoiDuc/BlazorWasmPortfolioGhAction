@@ -14,6 +14,7 @@ using ManuHub.Blazor.Wasm.BrowserStorage;
 using GoogleMapsComponents;
 using Fluxor.Blazor.Web.ReduxDevTools;
 using BlazorWasmPortfolioGhAction.Extensions;
+using BlazorWasmPortfolioGhAction.Services;
 
 public static class Program
 {
@@ -45,6 +46,7 @@ public static class Program
 
         builder.Services.AddSingleton<StateContainer>();
         builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+        builder.Services.AddScoped<IDevOpsService, DevOpsService>();
         builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
         builder.Services.AddOidcAuthentication(options =>
         {

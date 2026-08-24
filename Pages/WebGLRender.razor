@@ -1,4 +1,4 @@
-﻿@using System.Numerics
+@using System.Numerics
 @using Blazor.Extensions
 @using Blazor.Extensions.Canvas
 @using Blazor.Extensions.Canvas.WebGL
@@ -18,10 +18,10 @@
 @code {
     private const float DefaultScaleBy = 0.1f;
 
-    private BECanvasComponent _canvasReference;
-    private WebGLContext _gl;
+    private BECanvasComponent? _canvasReference;
+    private WebGLContext? _gl;
 
-    private ProgramInfo _programInfo;
+    private ProgramInfo? _programInfo;
     private Camera _camera = new Camera();
     private Buffers _buffers = new Buffers();
 
@@ -115,9 +115,6 @@
             1.0f, 0.0f, 1.0f, 1.0f,
             1.0f, 0.0f, 1.0f, 1.0f,
     };
-    
-
-    private float[] _viewProjectionMatrix;
 
     private bool _isDragging = false;
     private bool _isRightDragging = false;

@@ -1,0 +1,219 @@
+@using BlazorWasmPortfolioGhAction.Services
+@inject IDevOpsService DevOpsService
+@inject IJSRuntime JSRuntime
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h2><i class="fab fa-discord"></i> Discord Notifier</h2>
+            <p class="text-muted small">Send rich messages to Discord webhooks.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Message))
+    {
+        <div class="alert alert-@(IsSuccess ? "success" : "info") alert-dismissible fade show" role="alert">
+            @(IsSuccess ? "✓ Message sent!" : "Message preview generated")
+            <button type="button" class="btn-close" @onclick="(() => Message = null)"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @ErrorMessage
+            <button type="button" class="btn-close" @onclick="(() => ErrorMessage = null)"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Message Type</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="msgtype" id="msgtype-simple" value="simple" @onchange="OnMessageTypeChanged" checked />
+                            <label class="btn btn-outline-primary" for="msgtype-simple">Simple</label>
+
+                            <input type="radio" class="btn-check" name="msgtype" id="msgtype-embed" value="embed" @onchange="OnMessageTypeChanged" />
+                            <label class="btn btn-outline-primary" for="msgtype-embed">Embed</label>
+                        </div>
+                    </div>
+
+                    @if (MessageType == "simple")
+                    {
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message <span class="text-danger">*</span></label>
+                            <textarea id="message" class="form-control" rows="5" @bind="SimpleMessage" placeholder="Your message here..."></textarea>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" id="title" class="form-control" @bind="EmbedTitle" placeholder="Embed title" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                            <textarea id="description" class="form-control" rows="5" @bind="EmbedDescription" placeholder="Embed description"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="color" class="form-label">Color</label>
+                            <div class="input-group">
+                                <input type="color" id="color" class="form-control form-control-color" style="max-width: 80px;" @bind="EmbedColor" />
+                                <input type="text" class="form-control" @bind="EmbedColor" placeholder="#5865F2" />
+                            </div>
+                            <div class="form-text">Hex color code (default: Discord blurple #5865F2)</div>
+                        </div>
+                    }
+
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" @onclick="SendMessage">
+                            <i class="fab fa-discord"></i> Send to Discord
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" @onclick="ClearForm">
+                            <i class="fas fa-eraser"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Preview</h5>
+                </div>
+                <div class="card-body">
+                    @if (MessageType == "simple")
+                    {
+                        <div class="bg-dark text-light p-3 rounded mb-3" style="border-left: 4px solid #5865F2;">
+                            @SimpleMessage
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="bg-dark text-light p-3 rounded" style="border-left: 4px solid @EmbedColor;">
+                            <h6 class="mb-2">@EmbedTitle</h6>
+                            <small>@EmbedDescription</small>
+                        </div>
+                    }
+
+                    <hr class="my-3" />
+
+                    <h6><i class="fas fa-cog"></i> Setup</h6>
+                    <ol class="small">
+                        <li>Open Discord server settings</li>
+                        <li>Integrations → Webhooks → New Webhook</li>
+                        <li>Name it, select channel, copy URL</li>
+                        <li>Paste URL in appsettings.json:
+                            <pre class="bg-light p-2 rounded mt-2"><code>"DevOps": {
+  "DiscordWebhookUrl": "https://..."
+}</code></pre>
+                        </li>
+                    </ol>
+
+                    <hr class="my-3" />
+
+                    <div class="small text-muted">
+                        <strong>Config status:</strong><br />
+                        @if (IsConfigured)
+                        {
+                            <span class="text-success"><i class="fas fa-check-circle"></i> Discord webhook configured</span>
+                        }
+                        else
+                        {
+                            <span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Missing Discord webhook URL</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string MessageType = "simple";
+    private string SimpleMessage = string.Empty;
+    private string EmbedTitle = string.Empty;
+    private string EmbedDescription = string.Empty;
+    private string EmbedColor = "#5865F2";
+    private string? Message;
+    private string? ErrorMessage;
+    private bool IsSuccess;
+
+    [Inject]
+    private IConfiguration Configuration { get; set; } = null!;
+
+    private bool IsConfigured => !string.IsNullOrWhiteSpace(Configuration["DevOps:DiscordWebhookUrl"]);
+
+    private void OnMessageTypeChanged(ChangeEventArgs e)
+    {
+        MessageType = e.Value?.ToString() ?? "simple";
+    }
+
+    private async Task SendMessage()
+    {
+        Message = null;
+        ErrorMessage = null;
+        IsSuccess = false;
+
+        if (MessageType == "simple")
+        {
+            if (string.IsNullOrWhiteSpace(SimpleMessage))
+            {
+                ErrorMessage = "Message cannot be empty.";
+                return;
+            }
+
+            var result = await DevOpsService.SendDiscordMessageAsync(SimpleMessage);
+            if (result)
+            {
+                Message = "Message sent successfully!";
+                IsSuccess = true;
+                SimpleMessage = string.Empty;
+            }
+            else
+            {
+                ErrorMessage = IsConfigured
+                    ? "Failed to send message. Check webhook URL."
+                    : "Discord webhook not configured.";
+            }
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(EmbedTitle) || string.IsNullOrWhiteSpace(EmbedDescription))
+            {
+                ErrorMessage = "Title and description are required.";
+                return;
+            }
+
+            var colorValue = EmbedColor.StartsWith("#") ? EmbedColor[1..] : EmbedColor;
+            var result = await DevOpsService.SendDiscordMessageAsync(EmbedDescription, EmbedTitle, EmbedDescription);
+            if (result)
+            {
+                Message = "Embed sent successfully!";
+                IsSuccess = true;
+                EmbedTitle = EmbedDescription = string.Empty;
+            }
+            else
+            {
+                ErrorMessage = IsConfigured
+                    ? "Failed to send embed. Check webhook URL."
+                    : "Discord webhook not configured.";
+            }
+        }
+    }
+
+    private void ClearForm()
+    {
+        SimpleMessage = EmbedTitle = EmbedDescription = string.Empty;
+        EmbedColor = "#5865F2";
+        MessageType = "simple";
+        Message = ErrorMessage = null;
+        IsSuccess = false;
+    }
+}

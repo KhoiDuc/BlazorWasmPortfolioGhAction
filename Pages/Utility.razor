@@ -1,5 +1,7 @@
 @page "/Utility/{Component?}"
 @using BlazorWasmPortfolioGhAction.Components.Ascii
+@using BlazorWasmPortfolioGhAction.Components.Teams
+@using BlazorWasmPortfolioGhAction.Components.Github
 @inject IJSRuntime JSRuntime
 <div class="main-container">
     <NavMenuUtility NavigationItems="NavigationItems" />
@@ -51,6 +53,14 @@
         "randomfact" => RenderComponent<RandomFacts>(),
         "jokequotes" => RenderComponent<JokeQuotes>(),
         "svgdiagrameditor" => RenderComponent<SvgDiagramEditor>(),
+        "emailcomposer" => RenderComponent<BlazorWasmPortfolioGhAction.Components.EmailComposer.EmailComposer>(),
+        "discord" => RenderComponent<BlazorWasmPortfolioGhAction.Components.Discord.DiscordNotifier>(),
+        "slack" => RenderComponent<BlazorWasmPortfolioGhAction.Components.Slack.SlackNotifier>(),
+        "teams" => RenderComponent<TeamsNotifier>(),
+        "githubsearch" => RenderComponent<GitHubSearcher>(),
+        "githubinspector" => RenderComponent<GitHubInspector>(),
+        "githubtrending" => RenderComponent<GitHubTrending>(),
+        "gist" => RenderComponent<GistCreator>(),
         _ => RenderDefaultComponent()
     };
 
@@ -182,7 +192,8 @@
             new NavMenuUtility.NavItem { Text = "WebGL Canvas", Link = "Utility/webglrender" },
             new NavMenuUtility.NavItem { Text = "Browser Storage Wasm", Link = "Utility/browserstorage" },
             new NavMenuUtility.NavItem { Text = "QR Generator", Link = "Utility/qrgenerator" },
-            new NavMenuUtility.NavItem { Text = "Svg Diagram Editor", Link = "Utility/svgdiagrameditor" }
+            new NavMenuUtility.NavItem { Text = "Svg Diagram Editor", Link = "Utility/svgdiagrameditor" },
+            new NavMenuUtility.NavItem { Text = "Email Composer", Link = "Utility/emailcomposer" }
         }
     },
     new NavMenuUtility.NavCategory
@@ -190,6 +201,20 @@
         CategoryName = "Payment Tools",
         Items = new List<NavMenuUtility.NavItem>()
         // Add payment tools here if needed
+    },
+    new NavMenuUtility.NavCategory
+    {
+        CategoryName = "DevOps Tools",
+        Items = new List<NavMenuUtility.NavItem>
+        {
+            new NavMenuUtility.NavItem { Text = "Discord Notifier", Link = "Utility/discord" },
+            new NavMenuUtility.NavItem { Text = "Slack Notifier", Link = "Utility/slack" },
+            new NavMenuUtility.NavItem { Text = "Teams Notifier", Link = "Utility/teams" },
+            new NavMenuUtility.NavItem { Text = "GitHub Search", Link = "Utility/githubsearch" },
+            new NavMenuUtility.NavItem { Text = "GitHub Inspector", Link = "Utility/githubinspector" },
+            new NavMenuUtility.NavItem { Text = "GitHub Trending", Link = "Utility/githubtrending" },
+            new NavMenuUtility.NavItem { Text = "Gist Creator", Link = "Utility/gist" }
+        }
     }
 };
 }

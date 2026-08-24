@@ -2,6 +2,6 @@
 {
     public class ApiKeyModel
     {
-        public string ApiKey { get; set; }
+        public string ApiKey { get; set; } = string.Empty;
     }
 }

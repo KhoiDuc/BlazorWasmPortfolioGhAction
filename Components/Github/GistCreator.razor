@@ -1,0 +1,192 @@
+@using BlazorWasmPortfolioGhAction.Services
+@inject IDevOpsService DevOpsService
+
+<div class="gist-creator-container">
+    <h3>Create GitHub Gist</h3>
+    
+    <div class="form-group">
+        <label>Description:</label>
+        <input type="text" @bind="gistDescription" class="form-control" placeholder="Brief description of your gist" />
+    </div>
+
+    <div class="form-group">
+        <label>File Name:</label>
+        <input type="text" @bind="fileName" class="form-control" placeholder="e.g. example.cs, script.js" />
+    </div>
+
+    <div class="form-group">
+        <label>File Content:</label>
+        <textarea @bind="fileContent" class="form-control" rows="10" placeholder="Paste your code here..."></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>
+            <input type="checkbox" @bind="isPublic" />
+            Public Gist
+        </label>
+    </div>
+
+    <div class="form-actions">
+        <button @onclick="CreateGist" class="btn btn-primary" disabled="@isLoading">
+            @if (isLoading) { <span>Creating...</span> } else { <span>Create Gist</span> }
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    @if (!string.IsNullOrEmpty(createdGistUrl))
+    {
+        <div class="alert alert-success">
+            <p>Gist created successfully!</p>
+            <a href="@createdGistUrl" target="_blank" class="btn btn-sm btn-info">View Gist</a>
+        </div>
+    }
+</div>
+
+@code {
+    private string gistDescription = string.Empty;
+    private string fileName = string.Empty;
+    private string fileContent = string.Empty;
+    private bool isPublic = true;
+    private bool isLoading = false;
+    private string errorMessage = string.Empty;
+    private string createdGistUrl = string.Empty;
+
+    private async Task CreateGist()
+    {
+        errorMessage = string.Empty;
+        createdGistUrl = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            errorMessage = "File name is required.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(fileContent))
+        {
+            errorMessage = "File content is required.";
+            return;
+        }
+
+        isLoading = true;
+
+        try
+        {
+            var files = new Dictionary<string, string> { { fileName, fileContent } };
+            var gist = await DevOpsService.CreateGistAsync(
+                gistDescription,
+                files,
+                isPublic
+            );
+
+            createdGistUrl = gist?.HtmlUrl ?? string.Empty;
+            gistDescription = string.Empty;
+            fileName = string.Empty;
+            fileContent = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating gist: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
+
+<style>
+    .gist-creator-container {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 10px 0;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+
+    .form-group input[type="text"],
+    .form-group textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: monospace;
+    }
+
+    .form-group input[type="checkbox"] {
+        margin-right: 8px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.95em;
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .btn-primary {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: #218838;
+    }
+
+    .btn-info {
+        background: #17a2b8;
+        color: white;
+    }
+
+    .btn-info:hover {
+        background: #138496;
+    }
+
+    .alert {
+        padding: 12px;
+        border-radius: 4px;
+        margin-top: 15px;
+    }
+
+    .alert-danger {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .alert-success a {
+        margin-top: 10px;
+        display: inline-block;
+    }
+</style>

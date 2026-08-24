@@ -1,4 +1,4 @@
-﻿using BlazorWasmPortfolioGhAction.Shared.Model;
+using BlazorWasmPortfolioGhAction.Shared.Model;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -92,12 +92,10 @@ namespace BlazorWasmPortfolioGhAction.Pages
                 validationError = "File size exceeds 5MB limit!";
                 return;
             }
-            var buffer = new byte[LoadedFile.Size];
-            await LoadedFile.OpenReadStream().ReadAsync(buffer);
+            var buffer = await GetBytesFromFile(LoadedFile);
             LogoPreview = $"data:{LoadedFile.ContentType};base64,{Convert.ToBase64String(buffer)}";
 
-            var fileInByte = await GetBytesFromFile(LoadedFile);
-            var logo = new SvgQRCode.SvgLogo(fileInByte);
+            var logo = new SvgQRCode.SvgLogo(buffer);
             Request.Logo = logo;
             GenerateQR();
         }

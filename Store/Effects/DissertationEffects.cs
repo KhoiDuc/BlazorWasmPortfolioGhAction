@@ -77,9 +77,9 @@ namespace BlazorWasmPortfolioGhAction.Store.Effects
 
         private static (string path, string title, List<string> images) GetFileData(string file) => file switch
         {
-            "Transcript" => ("Transcript.pdf", "My transcript", new() { "transcript1.png" }),
-            "Degree" => ("Degree.pdf", "My bachelor's degree", new() { "degree1.png", "degree2.png", "degree3.png" }),
-            "CV" => ("khoicv.doc.pdf", "My curriculum vitae", new() { "khoicv_Page1.png", "khoicv_Page2.png", "khoicv_Page3.png" }),
+            "Transcript" => ("files/transcript.pdf", "My transcript", new() { "images/transcript1.png" }),
+            "Degree" => ("files/certificate.pdf", "My bachelor's degree", new() { "images/degree1.png", "images/degree2.png", "images/degree3.png" }),
+            "CV" => ("files/khoicv.doc.pdf", "My curriculum vitae", new() { "images/khoicv_Page1.png", "images/khoicv_Page2.png", "images/khoicv_Page3.png" }),
             _ => (string.Empty, string.Empty, new())
         };
     }

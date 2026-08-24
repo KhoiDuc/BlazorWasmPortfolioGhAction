@@ -28,9 +28,6 @@ const cacheFirstAssets = [
     `${basePath}/_content/Microsoft.Authentication.WebAssembly.Msal/*`,
     `${basePath}/_content/TinyMCE.Blazor/*`,
 
-    // lib folder
-    `${basePath}/lib/tinymce/*`,
-
     // css folders
     `${basePath}/css/bootstrap/*`,
     `${basePath}/css/open-iconic/*`,

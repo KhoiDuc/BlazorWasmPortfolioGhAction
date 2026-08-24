@@ -53,9 +53,9 @@ namespace BlazorWasmPortfolioGhAction.Store.Actions
 	}
 	public class UpdateGitHubContentAction
 	{
-		public UpdateGitHubContentAction(List<ContentHolder> ContentHolders, string commitMessage, string page, string section, Dictionary<string, string> shaDictionary)
+		public UpdateGitHubContentAction(List<ContentHolder> contentHolders, string commitMessage, string page, string section, Dictionary<string, string> shaDictionary)
 		{
-			ContentHolders = ContentHolders;
+			ContentHolders = contentHolders;
 			CommitMessage = commitMessage;
 			Page = page;
 			Section = section;

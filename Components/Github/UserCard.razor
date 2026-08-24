@@ -5,7 +5,7 @@
             <div class="avatar me-3">
                 <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
                      style="width: 50px; height: 50px">
-                    @User.Login[0].ToString().ToUpper()
+                    @Initial
                 </div>
             </div>
             <div>
@@ -21,8 +21,10 @@
 
 @code {
     [Parameter]
-    public GitHubUser User { get; set; }
+    public GitHubUser User { get; set; } = null!;
 
     [Parameter]
-    public Action<GitHubUser> OnUserSelected { get; set; }
+    public Action<GitHubUser>? OnUserSelected { get; set; }
+
+    private string Initial => User?.Login?.Length > 0 ? User.Login[0].ToString().ToUpper() : "?";
 }

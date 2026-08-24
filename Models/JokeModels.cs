@@ -57,6 +57,11 @@ namespace BlazorWasmPortfolioGhAction.Shared.Model
 
         [JsonPropertyName("lang")]
         public string? Lang { get; set; }
+
+        public void LogJokeDetails()
+        {
+            // Placeholder for joke logging if needed
+        }
     }
 
     public class JokeApiError
@@ -82,5 +87,10 @@ namespace BlazorWasmPortfolioGhAction.Shared.Model
 
         [JsonPropertyName("timeStamp")]
         public long TimeStamp { get; set; }
+
+        public void LogJokeApiErrorDetails()
+        {
+            // Placeholder for error logging if needed
+        }
     }
 }

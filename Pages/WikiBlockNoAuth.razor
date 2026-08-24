@@ -20,18 +20,18 @@
                 @if (type == "all" || type == "Search" || (!matchTypeSections && matchType))
                 {
                     <h3 class="kudosTextInline">
-                        @(new MarkupString(@contentState.Value.Contents[indexParsed].section))
+                        @(new MarkupString(@contentState.Value.Contents[indexParsed].section ?? string.Empty))
                         <small class="text-muted">
-                            @(new MarkupString(@contentState.Value.Contents[indexParsed].subSection))
+                            @(new MarkupString(@contentState.Value.Contents[indexParsed].subSection ?? string.Empty))
                         </small>
                     </h3>
                 }
                 else if (!matchTypeSectionsSubSections && matchTypeSections)
                 {
                     <h3 class="kudosTextInline">
-                        @(new MarkupString(@contentState.Value.Contents[indexParsed].section))
+                        @(new MarkupString(@contentState.Value.Contents[indexParsed].section ?? string.Empty))
                         <small class="text-muted">
-                            @(new MarkupString(@contentState.Value.Contents[indexParsed].subSection))
+                            @(new MarkupString(@contentState.Value.Contents[indexParsed].subSection ?? string.Empty))
                         </small>
                     </h3>
                 }
@@ -57,11 +57,11 @@
             {
                 <td class="kudosText col-1">
                     <h4>
-                        @(new MarkupString(contentState.Value.Contents[indexParsed].section))
+                        @(new MarkupString(contentState.Value.Contents[indexParsed].section ?? string.Empty))
                         <br>
                         <small>
                             <div class="text-muted">
-                                @(new MarkupString(@contentState.Value.Contents[indexParsed].subSection))
+                                @(new MarkupString(@contentState.Value.Contents[indexParsed].subSection ?? string.Empty))
                             </div>
                         </small>
                     </h4>
@@ -76,7 +76,7 @@
                             <h3 class="kudosTextInline">
                                 <small>
                                     <div class="text-muted">
-                                        @(new MarkupString(@contentState.Value.Contents[indexParsed].subSection))
+                                        @(new MarkupString(@contentState.Value.Contents[indexParsed].subSection ?? string.Empty))
                                     </div>
                                 </small>
                             </h3>
@@ -120,9 +120,9 @@ else
     [Parameter] public bool matchTypeSectionsSubSections { get; set; }
     [Parameter] public bool matchTypeSections { get; set; }
     [Parameter] public bool matchType { get; set; }
-    [Parameter] public string type { get; set; }
-    [Parameter] public string sections { get; set; }
-    [Parameter] public string subSections { get; set; }
+    [Parameter] public string type { get; set; } = string.Empty;
+    [Parameter] public string sections { get; set; } = string.Empty;
+    [Parameter] public string subSections { get; set; } = string.Empty;
     [Parameter] public int count { get; set; }
     [Parameter] public int localCount { get; set; }
     [Parameter] public int indexParsed { get; set; }
@@ -133,7 +133,7 @@ else
     {
         contentState.StateChanged += HandleStateChanged;
     }
-    private void HandleStateChanged(object sender, EventArgs e)
+    private void HandleStateChanged(object? sender, EventArgs e)
     {
         if (contentState.Value.FileCount == contentState.Value.LoadedFilesCount)
         {

@@ -812,6 +812,46 @@ input::placeholder { color: var(--color-text-muted); }
 
     .card-column { margin-bottom: 50rem; }
     .card        { padding: 0; }
+
+    /* CTA buttons stack vertically on mobile */
+    .grid-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .email-button,
+    .google-drive-button,
+    .download-file-button {
+        width: 100%;
+    }
+
+    .email-link,
+    .google-drive-link,
+    .download-file-button-link {
+        justify-content: center;
+        padding: 0.6rem 0.8rem;
+    }
+
+    .contact-options {
+        position: static;
+        width: 100%;
+        margin-top: 8px;
+    }
+}
+
+/* Tablet: 561px - 768px */
+@media (min-width: 561px) and (max-width: 768px) {
+    .grid-container {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .email-button,
+    .google-drive-button,
+    .download-file-button {
+        flex: 1 1 45%;
+    }
 }
 
 /* Small height screens */

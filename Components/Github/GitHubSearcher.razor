@@ -1,0 +1,165 @@
+@using BlazorWasmPortfolioGhAction.Services
+@inject IDevOpsService DevOpsService
+
+<div class="devops-container">
+    <h3>GitHub Repo Search</h3>
+    
+    <div class="form-group">
+        <label>Search Query:</label>
+        <input type="text" @bind="searchQuery" class="form-control" placeholder="e.g. blazor, dotnet, react" />
+    </div>
+
+    <div class="form-group">
+        <label>Language (optional):</label>
+        <input type="text" @bind="language" class="form-control" placeholder="e.g. csharp, javascript, python" />
+    </div>
+
+    <div class="form-group">
+        <label>Sort By:</label>
+        <select @bind="sortBy" class="form-control">
+            <option value="0">Stars</option>
+            <option value="1">Forks</option>
+            <option value="2">Updated</option>
+        </select>
+    </div>
+
+    <div class="form-actions">
+        <button @onclick="Search" class="btn btn-primary" disabled="@isLoading">
+            @if (isLoading) { <span>Searching...</span> } else { <span>Search</span> }
+        </button>
+    </div>
+
+    @if (results != null && results.Count > 0)
+    {
+        <div class="results-container">
+            <p class="results-count">Found @results.Count repositories</p>
+            @foreach (var repo in results.Take(10))
+            {
+                <div class="repo-card">
+                    <h4>
+                        <a href="@repo.HtmlUrl" target="_blank">@repo.Name</a>
+                        @if (!string.IsNullOrEmpty(repo.Language))
+                        {
+                            <span class="language-badge">@repo.Language</span>
+                        }
+                    </h4>
+                    <p class="repo-description">@repo.Description</p>
+                    <div class="repo-stats">
+                        <span>⭐ @repo.Stars</span>
+                        <span>🔀 @repo.Forks</span>
+                        <span class="updated">Updated: @repo.UpdatedAt.ToString("MMM d, yyyy")</span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else if (searchPerformed && results?.Count == 0)
+    {
+        <p class="text-warning">No repositories found. Try different search terms.</p>
+    }
+</div>
+
+@code {
+    private string searchQuery = string.Empty;
+    private string language = string.Empty;
+    private int sortBy = 0;
+    private List<GitHubRepo>? results = null;
+    private bool isLoading = false;
+    private bool searchPerformed = false;
+
+    private async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            return;
+        }
+
+        isLoading = true;
+        searchPerformed = true;
+        
+        var result = await DevOpsService.SearchGitHubReposAsync(
+            searchQuery,
+            string.IsNullOrWhiteSpace(language) ? null : language,
+            sortBy
+        );
+        
+        results = result?.Items ?? new List<GitHubRepo>();
+        isLoading = false;
+    }
+}
+
+<style>
+    .devops-container {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 10px 0;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .results-container {
+        margin-top: 20px;
+    }
+
+    .results-count {
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    .repo-card {
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        border-left: 4px solid #24292e;
+    }
+
+    .repo-card h4 {
+        margin: 0 0 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .repo-card a {
+        color: #0366d6;
+        text-decoration: none;
+    }
+
+    .repo-card a:hover {
+        text-decoration: underline;
+    }
+
+    .language-badge {
+        background: #e1e4e8;
+        color: #24292e;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.85em;
+    }
+
+    .repo-description {
+        color: #666;
+        font-size: 0.95em;
+        margin: 0 0 10px 0;
+    }
+
+    .repo-stats {
+        display: flex;
+        gap: 20px;
+        font-size: 0.9em;
+        color: #586069;
+    }
+
+    .updated {
+        margin-left: auto;
+    }
+</style>

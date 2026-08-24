@@ -1,0 +1,320 @@
+@page "/project/{ProjectId}"
+@inject NavigationManager NavigationManager
+
+<div class="project-detail-container">
+    @if (Project == null)
+    {
+        <div class="project-not-found">
+            <h2>Project not found</h2>
+            <p>The project "@ProjectId" doesn't exist.</p>
+            <a href="/MyResume" class="btn btn-primary">Back to Resume</a>
+        </div>
+    }
+    else
+    {
+        <div class="project-header">
+            <button class="btn btn-secondary btn-sm back-btn" @onclick="GoBack">← Back</button>
+            <h1>@Project.Title</h1>
+            <p class="project-subtitle">@Project.Role</p>
+            <div class="project-meta">
+                <span class="meta-item">📅 @Project.Period</span>
+                @if (!string.IsNullOrEmpty(Project.Company))
+                {
+                    <span class="meta-item">🏢 @Project.Company</span>
+                }
+                @if (!string.IsNullOrEmpty(Project.RepoUrl))
+                {
+                    <a href="@Project.RepoUrl" target="_blank" rel="noopener" class="meta-item repo-link">🔗 Repository</a>
+                }
+            </div>
+        </div>
+
+        <div class="project-body">
+            <section class="project-section">
+                <h3>Overview</h3>
+                <p>@Project.Description</p>
+            </section>
+
+            <section class="project-section">
+                <h3>Key Features</h3>
+                <ul>
+                    @foreach (var feature in Project.Features)
+                    {
+                        <li>@feature</li>
+                    }
+                </ul>
+            </section>
+
+            <section class="project-section">
+                <h3>Tech Stack</h3>
+                <div class="tech-stack">
+                    @foreach (var tech in Project.Technologies)
+                    {
+                        <span class="tech-badge">@tech</span>
+                    }
+                </div>
+            </section>
+
+            @if (Project.Highlights?.Count > 0)
+            {
+                <section class="project-section">
+                    <h3>Highlights</h3>
+                    <ul>
+                        @foreach (var highlight in Project.Highlights)
+                        {
+                            <li>@highlight</li>
+                        }
+                    </ul>
+                </section>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? ProjectId { get; set; }
+
+    private ProjectInfo? Project => ProjectId != null && Projects.TryGetValue(ProjectId, out var p) ? p : null;
+
+    private void GoBack() => NavigationManager.NavigateTo("/MyResume");
+
+    private static readonly Dictionary<string, ProjectInfo> Projects = new()
+    {
+        ["smpp"] = new()
+        {
+            Title = "Aspire LifeStyles: Site Manager Plus Plus",
+            Role = "Full Stack Developer",
+            Company = "S3Corp",
+            Period = "2023 - Now",
+            RepoUrl = "",
+            Description = "Site Manager Plus Plus (SM++) is the upgraded and migrated version of Site Manager, now running on .NET 8. SM++ provides an even more efficient platform for rapid website setup and effective management.",
+            Features = new()
+            {
+                "Modular page architecture allowing clients to choose and customize templates effortlessly",
+                "Enhanced performance and flexibility over the original Site Manager",
+                "Single Sign-On (SSO) integration with third-party identity providers",
+                "Supports major financial institutions like Citi and Wells Fargo",
+                "Seamless authentication using existing credentials"
+            },
+            Technologies = new() { ".NET 8 Core MVC", "jQuery", "EF", "SQL Server", "Redis", "Azure CDN", "Kontent.AI", "Application Insights", "WCAG 2.2" },
+            Highlights = new()
+            {
+                "Retains core functionality and security features of Site Manager",
+                "Seamless SSO integration for secure streamlined experience"
+            }
+        },
+        ["sm"] = new()
+        {
+            Title = "Aspire LifeStyles: Site Manager",
+            Role = "Full Stack Developer",
+            Company = "S3Corp",
+            Period = "2022 - 2024",
+            RepoUrl = "",
+            Description = "Site Manager is a platform that helps create and deploy websites quickly. It enables end-users to easily search, explore, and book various services such as dining, hotels, flights, nightlife, spas, limousine services, and more.",
+            Features = new()
+            {
+                "User-friendly interface connecting users with service providers worldwide",
+                "Search, explore, and book dining, hotels, flights, nightlife, spas, limousine services",
+                "WCAG 2.1 accessibility compliance",
+                "PCI DSS compliance to protect sensitive payment information",
+                "Veracode scanning for secure code practices"
+            },
+            Technologies = new() { ".NET 4 MVC", "jQuery", "EF", "SQL Server", "Redis", "Azure CDN", "Kontent.AI", "Application Insights", "WCAG 2.1/2.2" }
+        },
+        ["payment-portal"] = new()
+        {
+            Title = "Aspire LifeStyles: Payment Portal",
+            Role = "Full Stack Developer",
+            Company = "S3Corp",
+            Period = "2022 - Now",
+            RepoUrl = "",
+            Description = "This website manages international transactions through integration with the Adyen payment system. Currently upgrading from .NET MVC to .NET 8.",
+            Features = new()
+            {
+                "International transaction management",
+                "Adyen payment system integration",
+                "Upgrading from .NET MVC to .NET 8 to leverage latest features"
+            },
+            Technologies = new() { ".NET MVC 4", "EF", "SQL Server", "JavaScript", "Webhook", "Adyen" }
+        },
+        ["simply-blast"] = new()
+        {
+            Title = "Simply Blast",
+            Role = "Full Stack Developer",
+            Company = "S3Corp",
+            Period = "06/2022 - 09/2022",
+            RepoUrl = "",
+            Description = "A web application for clients to create and manage advertising campaigns through WhatsApp messages.",
+            Features = new()
+            {
+                "Create and manage advertising campaigns",
+                "WhatsApp message integration"
+            },
+            Technologies = new() { ".NET 6", "Blazor", "EF Core", "SQL Server" }
+        },
+        ["food-ordering"] = new()
+        {
+            Title = "Food Ordering System",
+            Role = "Full-Stack Development",
+            Company = "",
+            Period = "School Project",
+            RepoUrl = "https://github.com/khoinmdIT99/FoodOrder_NET5_FLUTTER",
+            Description = "A full-stack food ordering system with .NET 5 backend and Flutter frontend.",
+            Features = new() { "Food ordering workflow", "Backend: .NET 5", "Frontend: Flutter" },
+            Technologies = new() { ".NET 5", "Flutter" }
+        },
+        ["building-material"] = new()
+        {
+            Title = "Building Material E-Commerce Platform",
+            Role = "Full-Stack Development",
+            Company = "",
+            Period = "School Project",
+            RepoUrl = "https://github.com/khoinmdIT99/BuildingMaterialShop_NET5_ANUGLAR",
+            Description = "A full-stack e-commerce platform for building materials with .NET 5 backend and Angular frontend.",
+            Features = new() { "E-commerce workflow", "Backend: .NET 5", "Frontend: Angular" },
+            Technologies = new() { ".NET 5", "Angular" }
+        },
+        ["payroll-manager"] = new()
+        {
+            Title = "Payroll Enterprise Management System",
+            Role = "Developer",
+            Company = "",
+            Period = "School Project",
+            RepoUrl = "https://github.com/khoinmdIT99/Payroll-Manager/",
+            Description = "An enterprise payroll management system built on .NET Core MVC.",
+            Features = new() { "Payroll management", "Enterprise scale" },
+            Technologies = new() { ".NET Core MVC" }
+        },
+        ["ecommerce-tmdt"] = new()
+        {
+            Title = "E-Commerce Platform",
+            Role = "Full-Stack Development",
+            Company = "",
+            Period = "School Project",
+            RepoUrl = "https://github.com/khoinmdIT99/DoAnTMDT",
+            Description = "A full-stack e-commerce platform built with .NET Core MVC.",
+            Features = new() { "Full-stack e-commerce", "Backend: .NET Core MVC" },
+            Technologies = new() { ".NET Core MVC" }
+        },
+        ["ecommerce-simple"] = new()
+        {
+            Title = "Simple E-Commerce Platform",
+            Role = "Full-Stack Development",
+            Company = "",
+            Period = "School Project",
+            RepoUrl = "https://github.com/khoinmdIT99/DoAn",
+            Description = "A simple full-stack e-commerce platform built with .NET Core MVC.",
+            Features = new() { "Simplified e-commerce", "Backend: .NET Core MVC" },
+            Technologies = new() { ".NET Core MVC" }
+        }
+    };
+
+    public class ProjectInfo
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public string Company { get; set; } = string.Empty;
+        public string Period { get; set; } = string.Empty;
+        public string RepoUrl { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public List<string> Features { get; set; } = new();
+        public List<string> Technologies { get; set; } = new();
+        public List<string>? Highlights { get; set; }
+    }
+}
+
+<style>
+    .project-detail-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+
+    .project-header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e1e4e8;
+    }
+
+    .back-btn {
+        margin-bottom: 15px;
+    }
+
+    .project-header h1 {
+        margin: 0 0 5px 0;
+        color: #24292e;
+    }
+
+    .project-subtitle {
+        color: #586069;
+        font-size: 1.1em;
+        margin: 0;
+    }
+
+    .project-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 15px;
+        font-size: 0.95em;
+        color: #586069;
+    }
+
+    .meta-item {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .repo-link {
+        color: #0366d6;
+        text-decoration: none;
+    }
+
+    .repo-link:hover {
+        text-decoration: underline;
+    }
+
+    .project-body {
+        line-height: 1.7;
+    }
+
+    .project-section {
+        margin-bottom: 30px;
+    }
+
+    .project-section h3 {
+        color: #24292e;
+        border-bottom: 1px solid #e1e4e8;
+        padding-bottom: 8px;
+        margin-bottom: 15px;
+    }
+
+    .project-section ul {
+        padding-left: 20px;
+    }
+
+    .project-section li {
+        margin-bottom: 8px;
+    }
+
+    .tech-stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .tech-badge {
+        background: #f1f8ff;
+        color: #0366d6;
+        padding: 6px 12px;
+        border-radius: 16px;
+        font-size: 0.9em;
+        border: 1px solid #c8e1ff;
+    }
+
+    .project-not-found {
+        text-align: center;
+        padding: 60px 20px;
+    }
+</style>

@@ -1,0 +1,332 @@
+@inject IJSRuntime JSRuntime
+@inject IConfiguration Configuration
+@using System.Text.RegularExpressions
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>Email Composer</h2>
+            <p class="text-muted small">Compose and send email. UI preview only — wire up EmailJS/SMTP later.</p>
+        </div>
+    </div>
+
+    @if (Sent)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>Preview:</strong> Email payload generated. Check console for JSON.
+            <button type="button" class="btn-close" @onclick="DismissAlert"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @ErrorMessage
+            <button type="button" class="btn-close" @onclick="(() => ErrorMessage = null)"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="to" class="form-label">To <span class="text-danger">*</span></label>
+                        <input type="email" id="to" class="form-control @ToError" @bind="To" placeholder="recipient@example.com" />
+                        @if (ShowToError)
+                        {
+                            <div class="invalid-feedback d-block">Enter a valid email address.</div>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cc" class="form-label">CC</label>
+                        <input type="text" id="cc" class="form-control" @bind="Cc" placeholder="cc1@example.com, cc2@example.com" />
+                        <div class="form-text">Comma-separated email addresses.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="bcc" class="form-label">BCC</label>
+                        <input type="text" id="bcc" class="form-control" @bind="Bcc" placeholder="bcc@example.com" />
+                        <div class="form-text">Comma-separated email addresses.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Subject <span class="text-danger">*</span></label>
+                        <input type="text" id="subject" class="form-control @SubjectError" @bind="Subject" placeholder="Email subject" />
+                        @if (ShowSubjectError)
+                        {
+                            <div class="invalid-feedback d-block">Subject is required.</div>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Body <span class="text-danger">*</span></label>
+                        <div class="d-flex gap-2 mb-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="(() => IsHtml = true)">Rich Text</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="(() => IsHtml = false)">Plain Text</button>
+                        </div>
+                        @if (IsHtml)
+                        {
+                            <div class="tinymce-editor">
+                                <Editor Id="email-body-editor"
+                                        Inline="false"
+                                        CloudChannel="5"
+                                        Disable="false"
+                                        Conf="@EditorConf"
+                                        ApiKey="@TinyApiKey"
+                                        ClassName="emailEditor"
+                                        @bind-Value="Body" />
+                            </div>
+                        }
+                        else
+                        {
+                            <textarea class="form-control" rows="10" @bind="Body" placeholder="Write your email..."></textarea>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Attachments</label>
+                        <InputFile OnChange="OnAttachmentChange" multiple class="form-control" />
+                        @if (Attachments.Any())
+                        {
+                            <ul class="list-group list-group-flush mt-2">
+                                @foreach (var att in Attachments)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-paperclip"></i> @att.Name <small class="text-muted">(@FormatSize(att.Size))</small></span>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="(() => RemoveAttachment(att))">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </li>
+                                }
+                            </ul>
+                            <div class="form-text">Attachments are preview-only. EmailJS free tier does not support attachments.</div>
+                        }
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" @onclick="SendPreview">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" @onclick="ClearForm">
+                            <i class="fas fa-eraser"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Setup Guide</h5>
+                </div>
+                <div class="card-body">
+                    <ol class="small">
+                        <li class="mb-2">
+                            <strong>Create EmailJS account</strong><br />
+                            Go to <a href="https://www.emailjs.com" target="_blank">emailjs.com</a> → Sign up (free, 200 emails/month).
+                        </li>
+                        <li class="mb-2">
+                            <strong>Add Email Service</strong><br />
+                            Dashboard → Email Services → Add New Service → Choose <strong>Gmail</strong> → Authorize → Copy <code>Service ID</code>.
+                        </li>
+                        <li class="mb-2">
+                            <strong>Create Template</strong><br />
+                            Dashboard → Email Templates → Create New Template. Map variables:
+                            <ul>
+                                <li><code>{{to_email}}</code> → recipient</li>
+                                <li><code>{{subject}}</code> → subject</li>
+                                <li><code>{{message}}</code> → body</li>
+                                <li><code>{{cc_email}}</code> → CC</li>
+                                <li><code>{{bcc_email}}</code> → BCC</li>
+                            </ul>
+                            Copy <code>Template ID</code>.
+                        </li>
+                        <li class="mb-2">
+                            <strong>Get Public Key</strong><br />
+                            Dashboard → Account → API Keys → Copy <code>Public Key</code>.
+                        </li>
+                        <li class="mb-2">
+                            <strong>Fill config</strong><br />
+                            Open <code>wwwroot/appsettings.json</code> → Fill <code>EmailJs</code> section:
+                            <pre class="bg-light p-2 rounded"><code>"EmailJs": {
+  "ServiceId": "service_xxx",
+  "TemplateId": "template_xxx",
+  "PublicKey": "xxx"
+}</code></pre>
+                        </li>
+                        <li>
+                            <strong>Done!</strong><br />
+                            Rebuild app. Send button will call EmailJS API directly from browser.
+                        </li>
+                    </ol>
+                    <hr />
+                    <div class="small text-muted">
+                        <strong>Why EmailJS?</strong><br />
+                        Blazor WASM cannot use SmtpClient (no raw TCP sockets in browser). EmailJS uses HTTP REST API — designed for client-side apps.
+                    </div>
+                    <hr />
+                    <div class="small text-muted">
+                        <strong>Current config status:</strong><br />
+                        @if (IsConfigured)
+                        {
+                            <span class="text-success"><i class="fas fa-check-circle"></i> EmailJs configured</span>
+                        }
+                        else
+                        {
+                            <span class="text-warning"><i class="fas fa-exclamation-triangle"></i> EmailJs not configured — fill appsettings.json</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string To = string.Empty;
+    private string Cc = string.Empty;
+    private string Bcc = string.Empty;
+    private string Subject = string.Empty;
+    private string Body = string.Empty;
+    private bool IsHtml = true;
+    private bool Sent = false;
+    private string? ErrorMessage;
+    private bool ShowToError;
+    private bool ShowSubjectError;
+    private string ToError => ShowToError ? "is-invalid" : string.Empty;
+    private string SubjectError => ShowSubjectError ? "is-invalid" : string.Empty;
+
+    private List<AttachmentPreview> Attachments = new();
+    private record AttachmentPreview(string Name, long Size, string ContentType);
+
+    private string TinyApiKey => Configuration["EmailJs:ApiKey"] ?? string.Empty;
+    private bool IsConfigured =>
+        !string.IsNullOrWhiteSpace(Configuration["EmailJs:ServiceId"]) &&
+        !string.IsNullOrWhiteSpace(Configuration["EmailJs:TemplateId"]) &&
+        !string.IsNullOrWhiteSpace(Configuration["EmailJs:PublicKey"]);
+
+    private const int MaxAttachmentSize = 10 * 1024 * 1024;
+    private const int MaxAttachments = 5;
+
+    private readonly Dictionary<string, object> EditorConf = new()
+    {
+        { "menubar", "edit insert format tools help" },
+        { "toolbar", "undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist | forecolor backcolor | link | removeformat" },
+        { "plugins", "autolink link lists advlist autoresize wordcount" },
+        { "toolbar_mode", "floating" },
+        { "toolbar_location", "top" },
+        { "width", "100%" },
+        { "min_height", 250 },
+        { "autoresize_bottom_margin", 30 },
+        { "skin", "oxide-dark" },
+        { "content_css", "dark" },
+        { "browser_spellcheck", "true" },
+        { "paste_as_text", "true" },
+        { "resize", "true" }
+    };
+
+    private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
+
+    private async Task OnAttachmentChange(InputFileChangeEventArgs e)
+    {
+        var files = e.GetMultipleFiles(MaxAttachments);
+        foreach (var file in files)
+        {
+            if (file.Size > MaxAttachmentSize)
+            {
+                ErrorMessage = $"File '{file.Name}' exceeds 10MB limit.";
+                continue;
+            }
+            Attachments.Add(new AttachmentPreview(file.Name, file.Size, file.ContentType));
+        }
+    }
+
+    private void RemoveAttachment(AttachmentPreview att) => Attachments.RemoveAll(a => a == att);
+
+    private async Task SendPreview()
+    {
+        ShowToError = false;
+        ShowSubjectError = false;
+        ErrorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(To) || !EmailRegex.IsMatch(To.Trim()))
+        {
+            ShowToError = true;
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(Cc))
+        {
+            var ccEmails = Cc.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (ccEmails.Any(e => !EmailRegex.IsMatch(e)))
+            {
+                ErrorMessage = "One or more CC email addresses are invalid.";
+                return;
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(Bcc))
+        {
+            var bccEmails = Bcc.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (bccEmails.Any(e => !EmailRegex.IsMatch(e)))
+            {
+                ErrorMessage = "One or more BCC email addresses are invalid.";
+                return;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(Subject))
+        {
+            ShowSubjectError = true;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Body))
+        {
+            ErrorMessage = "Email body is required.";
+            return;
+        }
+
+        var payload = new
+        {
+            service_id = Configuration["EmailJs:ServiceId"] ?? "NOT_CONFIGURED",
+            template_id = Configuration["EmailJs:TemplateId"] ?? "NOT_CONFIGURED",
+            user_id = Configuration["EmailJs:PublicKey"] ?? "NOT_CONFIGURED",
+            template_params = new
+            {
+                to_email = To.Trim(),
+                cc_email = Cc,
+                bcc_email = Bcc,
+                subject = Subject,
+                message = Body,
+                from_name = "Portfolio Contact"
+            }
+        };
+
+        var json = System.Text.Json.JsonSerializer.Serialize(payload, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        await JSRuntime.InvokeVoidAsync("console.log", "Email payload (preview):", json);
+
+        Sent = true;
+    }
+
+    private void ClearForm()
+    {
+        To = Cc = Bcc = Subject = Body = string.Empty;
+        Attachments.Clear();
+        Sent = false;
+        ErrorMessage = null;
+        ShowToError = ShowSubjectError = false;
+    }
+
+    private void DismissAlert() => Sent = false;
+
+    private static string FormatSize(long bytes) => bytes switch
+    {
+        < 1024 => $"{bytes} B",
+        < 1024 * 1024 => $"{bytes / 1024.0:F1} KB",
+        _ => $"{bytes / (1024.0 * 1024):F1} MB"
+    };
+}

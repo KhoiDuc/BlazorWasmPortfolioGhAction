@@ -46,12 +46,12 @@
 
 @code {
     [Parameter]
-    public string Login { get; set; }
+    public string Login { get; set; } = string.Empty;
 
     private List<GitHubRepository> repositories = new();
     private bool repositoriesLoading;
     private bool hasMoreRepos;
-    private string endCursor;
+    private string endCursor = string.Empty;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -62,7 +62,7 @@
     {
         repositoriesLoading = true;
         var result = await GitHubService.GetUserRepositoriesAsync(Login, "YOUR_ACCESS_TOKEN");
-        if (result.IsSuccess)
+        if (result.IsSuccess && result.Value != null)
         {
             repositories = result.Value.Repositories;
             hasMoreRepos = result.Value.HasNextPage;
@@ -75,7 +75,7 @@
     {
         repositoriesLoading = true;
         var result = await GitHubService.GetUserRepositoriesAsync(Login, "YOUR_ACCESS_TOKEN", 20, endCursor);
-        if (result.IsSuccess)
+        if (result.IsSuccess && result.Value != null)
         {
             repositories.AddRange(result.Value.Repositories);
             hasMoreRepos = result.Value.HasNextPage;

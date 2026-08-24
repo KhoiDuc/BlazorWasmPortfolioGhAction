@@ -8,9 +8,9 @@ namespace BlazorWasmPortfolioGhAction.Store.State
         public string ErrorMessage { get; init; } = string.Empty;
         public string CurrentFile { get; init; } = string.Empty;
         public bool IsMobile { get; init; }
-        public string FilePath { get; init; }
-        public string Title { get; init; }
-        public List<string> Images { get; init; }
+        public string FilePath { get; init; } = string.Empty;
+        public string Title { get; init; } = string.Empty;
+        public List<string> Images { get; init; } = new();
         public bool FileExists { get; init; }
         public int CurrentImageIndex { get; init; }
         public bool IsFullScreen { get; init; }
