@@ -10,41 +10,55 @@
     <div class="container">
         <div class="section-heading">
             <p class="section-label">CRYPTO</p>
-            <h2>Crypto tickers (WIP).</h2>
+            <h2>Crypto ticker dashboard.</h2>
         </div>
 
-        <div class="crypto-layout">
-            <div class="crypto-card-list">
-                @foreach (var crypto in cryptos)
-                {
-                    <CryptoCard Crypto="crypto" OnCryptoSelected="LoadCryptoDetails" />
-                }
-            </div>
-
-            <div class="detail-view">
-                @foreach (var selectedCrypto in selectedCryptos)
-                {
-                    <CryptoDetails Crypto="selectedCrypto" OnClose="CloseCryptoDetail" />
-                }
-            </div>
-        </div>
-
-        <div class="settings">
-            <div class="setting">
-                <label for="tickerCount">Tickers:</label>
+        <div class="crypto-controls">
+            <div class="control-group">
+                <label for="tickerCount">Tickers</label>
                 <input id="tickerCount" type="number" @bind="settings.NumberOfTickers" min="1" max="100" />
             </div>
-
-            <div class="setting">
-                <label for="quoteUnit">Quote Unit:</label>
+            <div class="control-group">
+                <label for="quoteUnit">Quote</label>
                 <select id="quoteUnit" @bind="settings.QuoteUnit">
                     <option value="USDT">USDT</option>
                     <option value="BTC">BTC</option>
                     <option value="ETH">ETH</option>
                 </select>
             </div>
+            <button class="crypto-update-btn" @onclick="UpdateSettings">
+                <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Update
+            </button>
+        </div>
 
-            <button @onclick="UpdateSettings">Update</button>
+        <div class="crypto-layout">
+            <div class="crypto-card-list">
+                @if (cryptos.Count == 0)
+                {
+                    <div class="crypto-empty">
+                        <i class="bi bi-graph-up" aria-hidden="true"></i>
+                        <p>Loading tickers...</p>
+                    </div>
+                }
+                @foreach (var crypto in cryptos)
+                {
+                    <CryptoCard Crypto="crypto" OnCryptoSelected="LoadCryptoDetails" />
+                }
+            </div>
+
+            <div class="crypto-detail-view">
+                @if (selectedCryptos.Count == 0)
+                {
+                    <div class="crypto-empty">
+                        <i class="bi bi-currency-exchange" aria-hidden="true"></i>
+                        <p>Select a ticker to view details.</p>
+                    </div>
+                }
+                @foreach (var selectedCrypto in selectedCryptos)
+                {
+                    <CryptoDetails Crypto="selectedCrypto" OnClose="CloseCryptoDetail" />
+                }
+            </div>
         </div>
     </div>
 </section>
@@ -85,7 +99,6 @@
         }
         else
         {
-            // Check if we need to replace a lower volume ticker
             if (cryptos.Count >= settings.NumberOfTickers)
             {
                 var minVolumeCrypto = cryptos.OrderBy(c => c.VolumeInQuoteCurrency).First();
@@ -107,7 +120,7 @@
 
     public void AddCrypto(Crypto crypto)
     {
-        if (crypto.Symbol.EndsWith(settings.QuoteUnit)) 
+        if (crypto.Symbol.EndsWith(settings.QuoteUnit))
         {
             cryptos.Add(crypto);
         }
@@ -115,11 +128,7 @@
 
     private async Task UpdateSettings()
     {
-        // if (settings.QuoteUnit != cryptos[0].Symbol.Substring(cryptos[0].Symbol.Length - cryptos[0].Name.Length))
-        // {
-            cryptos.Clear();
-        // }
-
+        cryptos.Clear();
         await JSRuntime.InvokeVoidAsync("fetchCryptoList", objRef, settings);
         StateHasChanged();
     }

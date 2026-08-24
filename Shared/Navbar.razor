@@ -5,26 +5,48 @@
             <span class="brand-initials">khoi</span>
             <span class="brand-symbol">&gt;</span>
         </a>
-        <button type="button" class="menu-toggle @(_isMenuOpen ? "open" : "")"
-                @onclick="ToggleMenu"
-                aria-label="@(_isMenuOpen ? "Close navigation menu" : "Open navigation menu")"
-                aria-expanded="@(_isMenuOpen.ToString().ToLowerInvariant())"
-                aria-controls="main-navigation">
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-        </button>
-        <nav id="main-navigation" class="navbar-links @(_isMenuOpen ? "open" : "")">
-            <NavLink href="" Match="NavLinkMatch.All" @onclick="CloseMenu">Home</NavLink>
-            <NavLink href="resume" @onclick="CloseMenu">Resume</NavLink>
-            <NavLink href="Utility" @onclick="CloseMenu">Tools</NavLink>
-            <NavLink href="cryptoManager" @onclick="CloseMenu">Crypto</NavLink>
-        </nav>
+        <div class="navbar-right">
+            <button type="button" class="theme-toggle" @onclick="ToggleTheme"
+                    aria-label="@(_isDark ? "Switch to light mode" : "Switch to dark mode")"
+                    title="@(_isDark ? "Light mode" : "Dark mode")">
+                <i class="bi @(_isDark ? "bi-sun-fill" : "bi-moon-stars-fill")" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="menu-toggle @(_isMenuOpen ? "open" : "")"
+                    @onclick="ToggleMenu"
+                    aria-label="@(_isMenuOpen ? "Close navigation menu" : "Open navigation menu")"
+                    aria-expanded="@(_isMenuOpen.ToString().ToLowerInvariant())"
+                    aria-controls="main-navigation">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+            <nav id="main-navigation" class="navbar-links @(_isMenuOpen ? "open" : "")">
+                <NavLink href="" Match="NavLinkMatch.All" @onclick="CloseMenu">Home</NavLink>
+                <NavLink href="resume" @onclick="CloseMenu">Resume</NavLink>
+                <NavLink href="Utility" @onclick="CloseMenu">Tools</NavLink>
+                <NavLink href="cryptoManager" @onclick="CloseMenu">Crypto</NavLink>
+            </nav>
+        </div>
     </div>
 </header>
 
 @code {
     private bool _isMenuOpen;
+    private bool _isDark;
+
+    [Inject] IJSRuntime JS { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isDark = await JS.InvokeAsync<string>("themeManager.get") == "dark";
+    }
+
+    private async Task ToggleTheme()
+    {
+        await JS.InvokeVoidAsync("themeManager.toggle");
+        _isDark = !_isDark;
+    }
+
     private void ToggleMenu() => _isMenuOpen = !_isMenuOpen;
     private void CloseMenu() => _isMenuOpen = false;
 }
