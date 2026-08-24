@@ -2,134 +2,129 @@
 @inject IDevOpsService DevOpsService
 @inject IJSRuntime JSRuntime
 
-<div class="container-fluid">
-    <div class="row mb-3">
-        <div class="col">
-            <h2><i class="fab fa-discord"></i> Discord Notifier</h2>
-            <p class="text-muted small">Send rich messages to Discord webhooks.</p>
-        </div>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3><i class="bi bi-discord" aria-hidden="true"></i> Discord Notifier</h3>
+        <p>Send rich messages to Discord webhooks.</p>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(Message))
     {
-        <div class="alert alert-@(IsSuccess ? "success" : "info") alert-dismissible fade show" role="alert">
-            @(IsSuccess ? "✓ Message sent!" : "Message preview generated")
-            <button type="button" class="btn-close" @onclick="(() => Message = null)"></button>
+        <div class="tool-alert tool-alert-success">
+            <i class="bi bi-check-circle" aria-hidden="true"></i>
+            @Message
+            <button type="button" class="discord-dismiss" @onclick="(() => Message = null)" aria-label="Dismiss">&times;</button>
         </div>
     }
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="tool-alert tool-alert-danger">
+            <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
             @ErrorMessage
-            <button type="button" class="btn-close" @onclick="(() => ErrorMessage = null)"></button>
+            <button type="button" class="discord-dismiss" @onclick="(() => ErrorMessage = null)" aria-label="Dismiss">&times;</button>
         </div>
     }
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">Message Type</label>
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="msgtype" id="msgtype-simple" value="simple" @onchange="OnMessageTypeChanged" checked />
-                            <label class="btn btn-outline-primary" for="msgtype-simple">Simple</label>
+    <div class="discord-layout">
+        <div class="tool-card discord-form-card">
+            <div class="tool-form">
+                <div class="tool-field">
+                    <span class="tool-label">Message Type</span>
+                    <div class="tool-radio-group">
+                        <label class="tool-radio">
+                            <input type="radio" name="msgtype" value="simple" @onchange="OnMessageTypeChanged" checked />
+                            Simple
+                        </label>
+                        <label class="tool-radio">
+                            <input type="radio" name="msgtype" value="embed" @onchange="OnMessageTypeChanged" />
+                            Embed
+                        </label>
+                    </div>
+                </div>
 
-                            <input type="radio" class="btn-check" name="msgtype" id="msgtype-embed" value="embed" @onchange="OnMessageTypeChanged" />
-                            <label class="btn btn-outline-primary" for="msgtype-embed">Embed</label>
-                        </div>
+                @if (MessageType == "simple")
+                {
+                    <div class="tool-field">
+                        <label class="tool-label" for="message">Message <span class="discord-req">*</span></label>
+                        <textarea id="message" class="tool-textarea" rows="5" @bind="SimpleMessage" placeholder="Your message here..."></textarea>
+                    </div>
+                }
+                else
+                {
+                    <div class="tool-field">
+                        <label class="tool-label" for="title">Title <span class="discord-req">*</span></label>
+                        <input type="text" id="title" class="tool-input" @bind="EmbedTitle" placeholder="Embed title" />
                     </div>
 
-                    @if (MessageType == "simple")
-                    {
-                        <div class="mb-3">
-                            <label for="message" class="form-label">Message <span class="text-danger">*</span></label>
-                            <textarea id="message" class="form-control" rows="5" @bind="SimpleMessage" placeholder="Your message here..."></textarea>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
-                            <input type="text" id="title" class="form-control" @bind="EmbedTitle" placeholder="Embed title" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
-                            <textarea id="description" class="form-control" rows="5" @bind="EmbedDescription" placeholder="Embed description"></textarea>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="color" class="form-label">Color</label>
-                            <div class="input-group">
-                                <input type="color" id="color" class="form-control form-control-color" style="max-width: 80px;" @bind="EmbedColor" />
-                                <input type="text" class="form-control" @bind="EmbedColor" placeholder="#5865F2" />
-                            </div>
-                            <div class="form-text">Hex color code (default: Discord blurple #5865F2)</div>
-                        </div>
-                    }
-
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-primary" @onclick="SendMessage">
-                            <i class="fab fa-discord"></i> Send to Discord
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" @onclick="ClearForm">
-                            <i class="fas fa-eraser"></i> Clear
-                        </button>
+                    <div class="tool-field">
+                        <label class="tool-label" for="description">Description <span class="discord-req">*</span></label>
+                        <textarea id="description" class="tool-textarea" rows="5" @bind="EmbedDescription" placeholder="Embed description"></textarea>
                     </div>
+
+                    <div class="tool-field">
+                        <label class="tool-label" for="color">Color</label>
+                        <div class="discord-color-row">
+                            <input type="color" id="color" class="tool-input discord-color-swatch" @bind="EmbedColor" />
+                            <input type="text" class="tool-input" @bind="EmbedColor" placeholder="#5865F2" />
+                        </div>
+                        <span class="tool-hint">Hex color code (default: Discord blurple #5865F2)</span>
+                    </div>
+                }
+
+                <div class="tool-actions">
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="SendMessage">
+                        <i class="bi bi-discord" aria-hidden="true"></i> Send to Discord
+                    </button>
+                    <button type="button" class="tool-btn" @onclick="ClearForm">
+                        <i class="bi bi-eraser" aria-hidden="true"></i> Clear
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Preview</h5>
+        <div class="tool-card discord-sidebar">
+            <div class="tool-result-label">Preview</div>
+
+            @if (MessageType == "simple")
+            {
+                <div class="discord-preview discord-preview-simple">
+                    @SimpleMessage
                 </div>
-                <div class="card-body">
-                    @if (MessageType == "simple")
-                    {
-                        <div class="bg-dark text-light p-3 rounded mb-3" style="border-left: 4px solid #5865F2;">
-                            @SimpleMessage
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="bg-dark text-light p-3 rounded" style="border-left: 4px solid @EmbedColor;">
-                            <h6 class="mb-2">@EmbedTitle</h6>
-                            <small>@EmbedDescription</small>
-                        </div>
-                    }
+            }
+            else
+            {
+                <div class="discord-preview discord-preview-embed" style="--embed-color: @EmbedColor;">
+                    <h6 class="discord-preview-title">@EmbedTitle</h6>
+                    <small class="discord-preview-desc">@EmbedDescription</small>
+                </div>
+            }
 
-                    <hr class="my-3" />
+            <hr class="tool-divider" />
 
-                    <h6><i class="fas fa-cog"></i> Setup</h6>
-                    <ol class="small">
-                        <li>Open Discord server settings</li>
-                        <li>Integrations → Webhooks → New Webhook</li>
-                        <li>Name it, select channel, copy URL</li>
-                        <li>Paste URL in appsettings.json:
-                            <pre class="bg-light p-2 rounded mt-2"><code>"DevOps": {
+            <div class="tool-result-label">Setup</div>
+            <ol class="discord-steps">
+                <li>Open Discord server settings</li>
+                <li>Integrations → Webhooks → New Webhook</li>
+                <li>Name it, select channel, copy URL</li>
+                <li>Paste URL in appsettings.json:</li>
+            </ol>
+            <pre class="tool-code">"DevOps": {
   "DiscordWebhookUrl": "https://..."
-}</code></pre>
-                        </li>
-                    </ol>
+}</pre>
 
-                    <hr class="my-3" />
+            <hr class="tool-divider" />
 
-                    <div class="small text-muted">
-                        <strong>Config status:</strong><br />
-                        @if (IsConfigured)
-                        {
-                            <span class="text-success"><i class="fas fa-check-circle"></i> Discord webhook configured</span>
-                        }
-                        else
-                        {
-                            <span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Missing Discord webhook URL</span>
-                        }
-                    </div>
-                </div>
+            <div class="tool-hint">
+                <strong>Config status:</strong><br />
+                @if (IsConfigured)
+                {
+                    <span class="discord-status-ok"><i class="bi bi-check-circle" aria-hidden="true"></i> Discord webhook configured</span>
+                }
+                else
+                {
+                    <span class="discord-status-warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Missing Discord webhook URL</span>
+                }
             </div>
         </div>
     </div>

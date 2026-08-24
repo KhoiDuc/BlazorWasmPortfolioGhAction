@@ -1,8 +1,11 @@
 ﻿@using BlazorWasmPortfolioGhAction.Contexts
 @inject TemperatureStore temperatureStore
 
-<h3>First Component</h3>
-
-<h4>@temperatureStore.Temperature</h4>
-
-<button type="button" @onclick=@(() => temperatureStore.UpdateTemperature())>Update temperature </button>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>First Component</h3>
+        <p>Temperature store demo.</p>
+    </div>
+    <p class="tool-result-label">Temperature: <span class="tool-inline-code">@temperatureStore.Temperature</span></p>
+    <button class="tool-btn tool-btn-primary" type="button" @onclick=@(() => temperatureStore.UpdateTemperature())>Update temperature</button>
+</div>

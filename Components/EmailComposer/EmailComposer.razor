@@ -2,184 +2,180 @@
 @inject IConfiguration Configuration
 @using System.Text.RegularExpressions
 
-<div class="container-fluid">
-    <div class="row mb-3">
-        <div class="col">
-            <h2>Email Composer</h2>
-            <p class="text-muted small">Compose and send email. UI preview only — wire up EmailJS/SMTP later.</p>
-        </div>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>Email Composer</h3>
+        <p>Compose and send email. UI preview only — wire up EmailJS/SMTP later.</p>
     </div>
 
     @if (Sent)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="tool-alert tool-alert-success">
+            <i class="bi bi-check-circle" aria-hidden="true"></i>
             <strong>Preview:</strong> Email payload generated. Check console for JSON.
-            <button type="button" class="btn-close" @onclick="DismissAlert"></button>
+            <button type="button" class="email-dismiss" @onclick="DismissAlert" aria-label="Dismiss">&times;</button>
         </div>
     }
 
     @if (!string.IsNullOrEmpty(ErrorMessage))
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="tool-alert tool-alert-danger">
+            <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
             @ErrorMessage
-            <button type="button" class="btn-close" @onclick="(() => ErrorMessage = null)"></button>
+            <button type="button" class="email-dismiss" @onclick="(() => ErrorMessage = null)" aria-label="Dismiss">&times;</button>
         </div>
     }
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="to" class="form-label">To <span class="text-danger">*</span></label>
-                        <input type="email" id="to" class="form-control @ToError" @bind="To" placeholder="recipient@example.com" />
-                        @if (ShowToError)
-                        {
-                            <div class="invalid-feedback d-block">Enter a valid email address.</div>
-                        }
-                    </div>
+    <div class="email-layout">
+        <div class="tool-card email-form-card">
+            <div class="tool-form">
+                <div class="tool-field">
+                    <label class="tool-label" for="to">To <span class="email-req">*</span></label>
+                    <input type="email" id="to" class="tool-input" @bind="To" placeholder="recipient@example.com" />
+                    @if (ShowToError)
+                    {
+                        <span class="email-error">Enter a valid email address.</span>
+                    }
+                </div>
 
-                    <div class="mb-3">
-                        <label for="cc" class="form-label">CC</label>
-                        <input type="text" id="cc" class="form-control" @bind="Cc" placeholder="cc1@example.com, cc2@example.com" />
-                        <div class="form-text">Comma-separated email addresses.</div>
-                    </div>
+                <div class="tool-field">
+                    <label class="tool-label" for="cc">CC</label>
+                    <input type="text" id="cc" class="tool-input" @bind="Cc" placeholder="cc1@example.com, cc2@example.com" />
+                    <span class="tool-hint">Comma-separated email addresses.</span>
+                </div>
 
-                    <div class="mb-3">
-                        <label for="bcc" class="form-label">BCC</label>
-                        <input type="text" id="bcc" class="form-control" @bind="Bcc" placeholder="bcc@example.com" />
-                        <div class="form-text">Comma-separated email addresses.</div>
-                    </div>
+                <div class="tool-field">
+                    <label class="tool-label" for="bcc">BCC</label>
+                    <input type="text" id="bcc" class="tool-input" @bind="Bcc" placeholder="bcc@example.com" />
+                    <span class="tool-hint">Comma-separated email addresses.</span>
+                </div>
 
-                    <div class="mb-3">
-                        <label for="subject" class="form-label">Subject <span class="text-danger">*</span></label>
-                        <input type="text" id="subject" class="form-control @SubjectError" @bind="Subject" placeholder="Email subject" />
-                        @if (ShowSubjectError)
-                        {
-                            <div class="invalid-feedback d-block">Subject is required.</div>
-                        }
-                    </div>
+                <div class="tool-field">
+                    <label class="tool-label" for="subject">Subject <span class="email-req">*</span></label>
+                    <input type="text" id="subject" class="tool-input" @bind="Subject" placeholder="Email subject" />
+                    @if (ShowSubjectError)
+                    {
+                        <span class="email-error">Subject is required.</span>
+                    }
+                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Body <span class="text-danger">*</span></label>
-                        <div class="d-flex gap-2 mb-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="(() => IsHtml = true)">Rich Text</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="(() => IsHtml = false)">Plain Text</button>
+                <div class="tool-field">
+                    <span class="tool-label">Body <span class="email-req">*</span></span>
+                    <div class="tool-actions email-body-toggle">
+                        <button type="button" class="tool-btn email-toggle-btn @(IsHtml ? "email-toggle-active" : "")" @onclick="(() => IsHtml = true)">Rich Text</button>
+                        <button type="button" class="tool-btn email-toggle-btn @(!IsHtml ? "email-toggle-active" : "")" @onclick="(() => IsHtml = false)">Plain Text</button>
+                    </div>
+                    @if (IsHtml)
+                    {
+                        <div class="email-tinymce">
+                            <Editor Id="email-body-editor"
+                                    Inline="false"
+                                    CloudChannel="5"
+                                    Disable="false"
+                                    Conf="@EditorConf"
+                                    ApiKey="@TinyApiKey"
+                                    ClassName="emailEditor"
+                                    @bind-Value="Body" />
                         </div>
-                        @if (IsHtml)
-                        {
-                            <div class="tinymce-editor">
-                                <Editor Id="email-body-editor"
-                                        Inline="false"
-                                        CloudChannel="5"
-                                        Disable="false"
-                                        Conf="@EditorConf"
-                                        ApiKey="@TinyApiKey"
-                                        ClassName="emailEditor"
-                                        @bind-Value="Body" />
-                            </div>
-                        }
-                        else
-                        {
-                            <textarea class="form-control" rows="10" @bind="Body" placeholder="Write your email..."></textarea>
-                        }
-                    </div>
+                    }
+                    else
+                    {
+                        <textarea class="tool-textarea" rows="10" @bind="Body" placeholder="Write your email..."></textarea>
+                    }
+                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Attachments</label>
-                        <InputFile OnChange="OnAttachmentChange" multiple class="form-control" />
-                        @if (Attachments.Any())
-                        {
-                            <ul class="list-group list-group-flush mt-2">
-                                @foreach (var att in Attachments)
-                                {
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span><i class="fas fa-paperclip"></i> @att.Name <small class="text-muted">(@FormatSize(att.Size))</small></span>
-                                        <button class="btn btn-sm btn-outline-danger" @onclick="(() => RemoveAttachment(att))">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </li>
-                                }
-                            </ul>
-                            <div class="form-text">Attachments are preview-only. EmailJS free tier does not support attachments.</div>
-                        }
-                    </div>
+                <div class="tool-field">
+                    <span class="tool-label">Attachments</span>
+                    <InputFile OnChange="OnAttachmentChange" multiple class="tool-input" />
+                    @if (Attachments.Any())
+                    {
+                        <ul class="email-attachments">
+                            @foreach (var att in Attachments)
+                            {
+                                <li class="email-attachment-item">
+                                    <span class="email-attachment-name"><i class="bi bi-paperclip" aria-hidden="true"></i> @att.Name <small class="email-attachment-size">(@FormatSize(att.Size))</small></span>
+                                    <button class="tool-btn tool-btn-danger email-attachment-remove" @onclick="(() => RemoveAttachment(att))" aria-label="Remove @att.Name">
+                                        <i class="bi bi-x" aria-hidden="true"></i>
+                                    </button>
+                                </li>
+                            }
+                        </ul>
+                        <span class="tool-hint">Attachments are preview-only. EmailJS free tier does not support attachments.</span>
+                    }
+                </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-primary" @onclick="SendPreview">
-                            <i class="fas fa-paper-plane"></i> Send
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" @onclick="ClearForm">
-                            <i class="fas fa-eraser"></i> Clear
-                        </button>
-                    </div>
+                <div class="tool-actions">
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="SendPreview">
+                        <i class="bi bi-send" aria-hidden="true"></i> Send
+                    </button>
+                    <button type="button" class="tool-btn" @onclick="ClearForm">
+                        <i class="bi bi-eraser" aria-hidden="true"></i> Clear
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Setup Guide</h5>
-                </div>
-                <div class="card-body">
-                    <ol class="small">
-                        <li class="mb-2">
-                            <strong>Create EmailJS account</strong><br />
-                            Go to <a href="https://www.emailjs.com" target="_blank">emailjs.com</a> → Sign up (free, 200 emails/month).
-                        </li>
-                        <li class="mb-2">
-                            <strong>Add Email Service</strong><br />
-                            Dashboard → Email Services → Add New Service → Choose <strong>Gmail</strong> → Authorize → Copy <code>Service ID</code>.
-                        </li>
-                        <li class="mb-2">
-                            <strong>Create Template</strong><br />
-                            Dashboard → Email Templates → Create New Template. Map variables:
-                            <ul>
-                                <li><code>{{to_email}}</code> → recipient</li>
-                                <li><code>{{subject}}</code> → subject</li>
-                                <li><code>{{message}}</code> → body</li>
-                                <li><code>{{cc_email}}</code> → CC</li>
-                                <li><code>{{bcc_email}}</code> → BCC</li>
-                            </ul>
-                            Copy <code>Template ID</code>.
-                        </li>
-                        <li class="mb-2">
-                            <strong>Get Public Key</strong><br />
-                            Dashboard → Account → API Keys → Copy <code>Public Key</code>.
-                        </li>
-                        <li class="mb-2">
-                            <strong>Fill config</strong><br />
-                            Open <code>wwwroot/appsettings.json</code> → Fill <code>EmailJs</code> section:
-                            <pre class="bg-light p-2 rounded"><code>"EmailJs": {
+        <div class="tool-card email-sidebar">
+            <div class="tool-result-label">Setup Guide</div>
+            <ol class="email-steps">
+                <li>
+                    <strong>Create EmailJS account</strong><br />
+                    Go to <a href="https://www.emailjs.com" target="_blank">emailjs.com</a> → Sign up (free, 200 emails/month).
+                </li>
+                <li>
+                    <strong>Add Email Service</strong><br />
+                    Dashboard → Email Services → Add New Service → Choose <strong>Gmail</strong> → Authorize → Copy <code class="tool-inline-code">Service ID</code>.
+                </li>
+                <li>
+                    <strong>Create Template</strong><br />
+                    Dashboard → Email Templates → Create New Template. Map variables:
+                    <ul class="email-sub-list">
+                        <li><code class="tool-inline-code">{{to_email}}</code> → recipient</li>
+                        <li><code class="tool-inline-code">{{subject}}</code> → subject</li>
+                        <li><code class="tool-inline-code">{{message}}</code> → body</li>
+                        <li><code class="tool-inline-code">{{cc_email}}</code> → CC</li>
+                        <li><code class="tool-inline-code">{{bcc_email}}</code> → BCC</li>
+                    </ul>
+                    Copy <code class="tool-inline-code">Template ID</code>.
+                </li>
+                <li>
+                    <strong>Get Public Key</strong><br />
+                    Dashboard → Account → API Keys → Copy <code class="tool-inline-code">Public Key</code>.
+                </li>
+                <li>
+                    <strong>Fill config</strong><br />
+                    Open <code class="tool-inline-code">wwwroot/appsettings.json</code> → Fill <code class="tool-inline-code">EmailJs</code> section:
+                    <pre class="tool-code">"EmailJs": {
   "ServiceId": "service_xxx",
   "TemplateId": "template_xxx",
   "PublicKey": "xxx"
-}</code></pre>
-                        </li>
-                        <li>
-                            <strong>Done!</strong><br />
-                            Rebuild app. Send button will call EmailJS API directly from browser.
-                        </li>
-                    </ol>
-                    <hr />
-                    <div class="small text-muted">
-                        <strong>Why EmailJS?</strong><br />
-                        Blazor WASM cannot use SmtpClient (no raw TCP sockets in browser). EmailJS uses HTTP REST API — designed for client-side apps.
-                    </div>
-                    <hr />
-                    <div class="small text-muted">
-                        <strong>Current config status:</strong><br />
-                        @if (IsConfigured)
-                        {
-                            <span class="text-success"><i class="fas fa-check-circle"></i> EmailJs configured</span>
-                        }
-                        else
-                        {
-                            <span class="text-warning"><i class="fas fa-exclamation-triangle"></i> EmailJs not configured — fill appsettings.json</span>
-                        }
-                    </div>
-                </div>
+}</pre>
+                </li>
+                <li>
+                    <strong>Done!</strong><br />
+                    Rebuild app. Send button will call EmailJS API directly from browser.
+                </li>
+            </ol>
+
+            <hr class="tool-divider" />
+
+            <div class="tool-hint">
+                <strong>Why EmailJS?</strong><br />
+                Blazor WASM cannot use SmtpClient (no raw TCP sockets in browser). EmailJS uses HTTP REST API — designed for client-side apps.
+            </div>
+
+            <hr class="tool-divider" />
+
+            <div class="tool-hint">
+                <strong>Current config status:</strong><br />
+                @if (IsConfigured)
+                {
+                    <span class="email-status-ok"><i class="bi bi-check-circle" aria-hidden="true"></i> EmailJs configured</span>
+                }
+                else
+                {
+                    <span class="email-status-warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> EmailJs not configured — fill appsettings.json</span>
+                }
             </div>
         </div>
     </div>

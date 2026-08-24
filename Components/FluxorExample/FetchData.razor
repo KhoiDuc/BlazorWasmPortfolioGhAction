@@ -3,49 +3,42 @@
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 @inject IState<FetchDataState> _fetchDataState
 
-<h1>Weather forecast</h1>
-
-<p>This component demonstrates fetching data from the server.</p>
-
-@if (_fetchDataState.Value.IsLoading)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    if(_fetchDataState.Value.Forecasts == null)
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>Weather Forecast</h3>
+        <p>Demonstrates fetching data from server via Fluxor.</p>
+    </div>
+    @if (_fetchDataState.Value.IsLoading)
     {
-        <p><em>@_fetchDataState.Value.Error</em></p>
+        <p class="tool-hint"><em>Loading...</em></p>
+    }
+    else if (_fetchDataState.Value.Forecasts == null)
+    {
+        <div class="tool-alert tool-alert-danger">@_fetchDataState.Value.Error</div>
     }
     else
     {
-      <table class="table">
-          <thead>
-              <tr>
-                  <th>Date</th>
-                  <th>Temp. (C)</th>
-                  <th>Temp. (F)</th>
-                  <th>Summary</th>
-              </tr>
-          </thead>
-          <tbody>
-              @foreach (var forecast in _fetchDataState.Value.Forecasts)
-              {
-                  <tr>
-                      <td>@forecast.Date.ToShortDateString()</td>
-                      <td>@forecast.TemperatureC</td>
-                      <td>@forecast.TemperatureF</td>
-                      <td>@forecast.Summary</td>
-                  </tr>
-              }
-          </tbody>
-      </table>
+        <table class="tool-table">
+            <thead>
+                <tr><th>Date</th><th>Temp. (C)</th><th>Temp. (F)</th><th>Summary</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var forecast in _fetchDataState.Value.Forecasts)
+                {
+                    <tr>
+                        <td>@forecast.Date.ToShortDateString()</td>
+                        <td>@forecast.TemperatureC</td>
+                        <td>@forecast.TemperatureF</td>
+                        <td>@forecast.Summary</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     }
-}
+</div>
 
 @code {
-    [Inject]
-    public IDispatcher? Dispatcher { get; set; }
+    [Inject] public IDispatcher? Dispatcher { get; set; }
 
     protected override void OnInitialized()
     {

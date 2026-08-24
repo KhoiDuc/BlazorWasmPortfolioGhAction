@@ -4,15 +4,15 @@
 @inject IState<CounterState> _counterState
 @inject IDispatcher _dispatcher
 
-<h1>Counter</h1>
-
-<p role="status">Current count: @_counterState.Value.Count</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>Fluxor Counter</h3>
+        <p>Counter using Fluxor state management.</p>
+    </div>
+    <p class="tool-result-label">Current count: @_counterState.Value.Count</p>
+    <button class="tool-btn tool-btn-primary" @onclick="IncrementCount">Click me</button>
+</div>
 
 @code {
-    private void IncrementCount()
-    {
-        _dispatcher.Dispatch(new IncrementCounterAction());
-    }
+    private void IncrementCount() { _dispatcher.Dispatch(new IncrementCounterAction()); }
 }

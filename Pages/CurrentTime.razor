@@ -1,44 +1,55 @@
-﻿﻿@using static System.TimeZoneInfo
+﻿@using static System.TimeZoneInfo
 @using System.Text.RegularExpressions;
 @using BlazorWasmPortfolioGhAction.Store.Services
 @inject ITimeZoneQueryProviderService TimeZoneQueryProvider
 
-<h1><b>Current Time</b></h1>
-
-<p style="width: 80%">According to your computer, the current Universal Time Coordinated (UTC) is @utcNow.ToLongTimeString() on @utcNow.ToLongDateString(). This is also called Universal Time and Universal Coordinated Time, and is equivalent to Greenwich Mean Time (GMT). The current <span title="the number of seconds since midnight January 1, 1970 UTC">Unix timestamp</span> is <code>@DateTimeOffset.UtcNow.ToUnixTimeSeconds()</code>.</p>
-
-<p style="width: 80%">Also according to your computer, the current local time is @currentTime.ToLongTimeString() (@timeZoneName).</p>
-
-<div style="border: 0.5px solid black; padding: 10px; display: inline-block; margin-bottom: 10px">
-    <p style="font-size: 2.50em; font-weight: bold; margin: 0px">
-        @currentTime.ToShortTimeString()
-        (<span title="@cleanedTimeZoneDisplayName(timeZoneInfo)">@timeZoneName@getUtcOffsetString(currentTime)</span>)
-    </p>
-    <p style="font-size: 1.50em; margin: 0px">@currentTime.ToLongDateString()</p>
-    @if (doesDstMessageExist)
-    {
-        <p style="font-size: 1.00em; margin: 0px">@dstMessage</p>
-    }
-</div>
-
-<br />
-
-@foreach (var tzt in timeZoneTime)
-{
-    <div style="border: 0.5px solid black; padding: 10px; display: inline-block; margin-bottom: 10px">
-        <p style="font-size: 2.50em; font-weight: bold; margin: 0px">
-            @tzt.CurrentTime.ToShortTimeString()
-            (<span title="@cleanedTimeZoneDisplayName(tzt.TimeZone)">@tzt.TimeZoneName@getUtcOffsetString(tzt.TimeZone, utcNow)</span>)
-        </p>
-        <p style="font-size: 1.50em; margin: 0px">@tzt.CurrentTime.ToLongDateString()</p>
-        @if (tzt.DoesDstMessageExist)
-        {
-            <p style="font-size: 1.00em; margin: 0px">@tzt.DstMessage</p>
-        }
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>Current Time</h3>
+        <p>UTC, local time, and world timezone clocks.</p>
     </div>
 
-    <br />
-}
+    <div class="currenttime-info">
+        <p class="tool-hint">
+            According to your computer, the current UTC is @utcNow.ToLongTimeString() on @utcNow.ToLongDateString().
+            Also called Universal Time, equivalent to GMT.
+            The current <span title="seconds since midnight January 1, 1970 UTC">Unix timestamp</span> is
+            <code class="tool-inline-code">@DateTimeOffset.UtcNow.ToUnixTimeSeconds()</code>.
+        </p>
+        <p class="tool-hint">
+            Local time: @currentTime.ToLongTimeString() (@timeZoneName).
+        </p>
+    </div>
+
+    <div class="currenttime-grid">
+        <div class="currenttime-clock currenttime-clock-local">
+            <p class="currenttime-time">
+                @currentTime.ToShortTimeString()
+                <span class="currenttime-zone" title="@cleanedTimeZoneDisplayName(timeZoneInfo)">@timeZoneName@getUtcOffsetString(currentTime)</span>
+            </p>
+            <p class="currenttime-date">@currentTime.ToLongDateString()</p>
+            @if (doesDstMessageExist)
+            {
+                <p class="currenttime-dst">@dstMessage</p>
+            }
+        </div>
+
+        @foreach (var tzt in timeZoneTime)
+        {
+            <div class="currenttime-clock">
+                <p class="currenttime-time">
+                    @tzt.CurrentTime.ToShortTimeString()
+                    <span class="currenttime-zone" title="@cleanedTimeZoneDisplayName(tzt.TimeZone)">@tzt.TimeZoneName@getUtcOffsetString(tzt.TimeZone, utcNow)</span>
+                </p>
+                <p class="currenttime-date">@tzt.CurrentTime.ToLongDateString()</p>
+                @if (tzt.DoesDstMessageExist)
+                {
+                    <p class="currenttime-dst">@tzt.DstMessage</p>
+                }
+            </div>
+        }
+    </div>
+</div>
 
 @code {
     private DateTime utcNow = DateTime.UtcNow;
@@ -58,78 +69,48 @@
         public DateTime CurrentTimeUtc { get; set; }
         public DateTime CurrentTime
         {
-            get
-            {
-                return TimeZoneInfo.ConvertTimeBySystemTimeZoneId(CurrentTimeUtc, TimeZone.Id);
-            }
+            get { return TimeZoneInfo.ConvertTimeBySystemTimeZoneId(CurrentTimeUtc, TimeZone.Id); }
         }
         public string TimeZoneName
         {
-            get
-            {
-                return IsDaylightSavingTime() ? TimeZone.DaylightName : TimeZone.StandardName;
-            }
+            get { return IsDaylightSavingTime() ? TimeZone.DaylightName : TimeZone.StandardName; }
         }
         public bool DoesDstMessageExist { get; set; }
         public string DstMessage { get; set; }
 
-        public TimeZoneTime(
-            TimeZoneInfo timeZone,
-            DateTime currentTimeUtc,
-            bool doesDstMessageExist,
-            string dstMessage)
+        public TimeZoneTime(TimeZoneInfo timeZone, DateTime currentTimeUtc, bool doesDstMessageExist, string dstMessage)
         {
             TimeZone = timeZone ?? throw new ArgumentNullException(nameof(timeZone));
             CurrentTimeUtc = currentTimeUtc;
-
-            if (currentTimeUtc.Kind != DateTimeKind.Utc)
-            {
-                throw new Exception("UTC time required to calculate time for time zone");
-            }
-
+            if (currentTimeUtc.Kind != DateTimeKind.Utc) { throw new Exception("UTC time required"); }
             DoesDstMessageExist = doesDstMessageExist;
             DstMessage = dstMessage ?? throw new ArgumentNullException(nameof(dstMessage));
         }
 
-        public bool IsDaylightSavingTime()
-        {
-            return TimeZone.IsDaylightSavingTime(CurrentTimeUtc);
-        }
+        public bool IsDaylightSavingTime() { return TimeZone.IsDaylightSavingTime(CurrentTimeUtc); }
     }
 
     protected override void OnInitialized()
     {
         var utcNow = DateTime.UtcNow;
         var localTimeZone = TimeZoneInfo.Local;
-
         foreach (var tzs in TimeZoneQueryProvider.GetTimeZones())
         {
             if (tzs is not null && localTimeZone.Id != tzs)
             {
                 var zone = TimeZoneInfo.FindSystemTimeZoneById(tzs);
-
                 if (zone is not null)
                 {
-                    timeZoneTime.Add(new TimeZoneTime(
-                    timeZone: zone,
-                    currentTimeUtc: utcNow,
-                    doesDstMessageExist: false,
-                    dstMessage: ""
-                ));
+                    timeZoneTime.Add(new TimeZoneTime(zone, utcNow, false, ""));
                 }
             }
         }
-
         base.OnInitialized();
     }
 
     protected override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            return updateCurrentTimeAsync();
-        }
-
+        if (firstRender) return updateCurrentTimeAsync();
         return base.OnAfterRenderAsync(firstRender);
     }
 
@@ -138,40 +119,35 @@
         while (await timer.WaitForNextTickAsync())
         {
             List<Task> tasks = new();
-
             currentTime = DateTime.Now;
             timeZoneName = DateTime.Now.IsDaylightSavingTime() ? TimeZoneInfo.Local.DaylightName : TimeZoneInfo.Local.StandardName;
             utcNow = currentTime.ToUniversalTime();
 
-            tasks.Add(Task.Run(action: () =>
+            tasks.Add(Task.Run(() =>
             {
-                var nextTransitionTime = getNextTransitionTime(TimeZoneInfo.Local, currentTime);
-
-                if (nextTransitionTime is not null)
+                var next = getNextTransitionTime(TimeZoneInfo.Local, currentTime);
+                if (next is not null)
                 {
-                    dstMessage = $"DST will {(currentTime.IsDaylightSavingTime() ? "end" : "start")} on {nextTransitionTime:D} at {nextTransitionTime:t}.";
+                    dstMessage = $"DST will {(currentTime.IsDaylightSavingTime() ? "end" : "start")} on {next:D} at {next:t}.";
                     doesDstMessageExist = true;
                 }
             }));
 
             foreach (var tzt in timeZoneTime)
             {
-                tasks.Add(Task.Run(action: () =>
+                tasks.Add(Task.Run(() =>
                 {
                     tzt.CurrentTimeUtc = utcNow;
-
-                    var tztTransitionTime = getNextTransitionTime(tzt.TimeZone, tzt.CurrentTime);
-
-                    if (tztTransitionTime is not null)
+                    var next = getNextTransitionTime(tzt.TimeZone, tzt.CurrentTime);
+                    if (next is not null)
                     {
-                        tzt.DstMessage = $"DST will {(tzt.IsDaylightSavingTime() ? "end" : "start")} on {tztTransitionTime:D} at {tztTransitionTime:t}.";
+                        tzt.DstMessage = $"DST will {(tzt.IsDaylightSavingTime() ? "end" : "start")} on {next:D} at {next:t}.";
                         tzt.DoesDstMessageExist = true;
                     }
                 }));
             }
 
             await Task.WhenAll(tasks);
-
             StateHasChanged();
         }
     }
@@ -180,7 +156,6 @@
     {
         var currentAdjustmentRule = timeZone.GetAdjustmentRules()?
             .FirstOrDefault(r => r.DateStart < localDateTime && r.DateEnd > localDateTime);
-
         if (currentAdjustmentRule is not null)
         {
             DateTime[] dstTransitionTimes =
@@ -189,13 +164,9 @@
                 getDateTimeForTransitionTime(currentAdjustmentRule.DaylightTransitionEnd, localDateTime.Year),
                 getDateTimeForTransitionTime(currentAdjustmentRule.DaylightTransitionStart, localDateTime.Year + 1),
                 getDateTimeForTransitionTime(currentAdjustmentRule.DaylightTransitionEnd, localDateTime.Year + 1)
-    };
-
-            var nextTransitionTime = dstTransitionTimes.OrderBy(tt => tt.Date).FirstOrDefault(tt => tt.Date > localDateTime);
-
-            return nextTransitionTime;
+            };
+            return dstTransitionTimes.OrderBy(tt => tt.Date).FirstOrDefault(tt => tt.Date > localDateTime);
         }
-
         return null;
     }
 
@@ -203,80 +174,41 @@
     {
         if (transitionTime.IsFixedDateRule)
         {
-            return new DateTime(year: year,
-                month: transitionTime.Month,
-                day: transitionTime.Day,
-                hour: transitionTime.TimeOfDay.Hour,
-                minute: transitionTime.TimeOfDay.Minute,
-                second: transitionTime.TimeOfDay.Second);
+            return new DateTime(year, transitionTime.Month, transitionTime.Day,
+                transitionTime.TimeOfDay.Hour, transitionTime.TimeOfDay.Minute, transitionTime.TimeOfDay.Second);
         }
-
-        var firstDayOfTransitionMonth = new DateTime(year: year,
-            month: transitionTime.Month,
-            day: 1,
-            hour: transitionTime.TimeOfDay.Hour,
-            minute: transitionTime.TimeOfDay.Minute,
-            second: transitionTime.TimeOfDay.Second);
-
-        if (transitionTime.DayOfWeek == firstDayOfTransitionMonth.DayOfWeek &&
-            transitionTime.Week == 1)
-        {
+        var firstDayOfTransitionMonth = new DateTime(year, transitionTime.Month, 1,
+            transitionTime.TimeOfDay.Hour, transitionTime.TimeOfDay.Minute, transitionTime.TimeOfDay.Second);
+        if (transitionTime.DayOfWeek == firstDayOfTransitionMonth.DayOfWeek && transitionTime.Week == 1)
             return firstDayOfTransitionMonth;
-        }
-
-        var firstInstanceOfWeekDayInMonth = firstDayOfTransitionMonth.AddDays(value:
+        var firstInstance = firstDayOfTransitionMonth.AddDays(
             transitionTime.DayOfWeek > firstDayOfTransitionMonth.DayOfWeek ?
             transitionTime.DayOfWeek - firstDayOfTransitionMonth.DayOfWeek :
             7 - (int)firstDayOfTransitionMonth.DayOfWeek + (int)transitionTime.DayOfWeek);
-
-        if (transitionTime.Week == 1)
-        {
-            return firstInstanceOfWeekDayInMonth;
-        }
-
-        var transitionDay = firstInstanceOfWeekDayInMonth.AddDays(7 * (transitionTime.Week - 1));
-
-        while (transitionDay.Month != transitionTime.Month)
-        {
-            transitionDay = transitionDay.AddDays(-7);
-        }
-
+        if (transitionTime.Week == 1) return firstInstance;
+        var transitionDay = firstInstance.AddDays(7 * (transitionTime.Week - 1));
+        while (transitionDay.Month != transitionTime.Month) transitionDay = transitionDay.AddDays(-7);
         return transitionDay;
     }
 
     string getUtcOffsetString(DateTime time)
     {
-        if (string.IsNullOrWhiteSpace(time.ToString("zzz")))
-        {
-            return "";
-        }
-        else
-        {
-            return $", UTC{time.ToString("zzz")}";
-        }
+        if (string.IsNullOrWhiteSpace(time.ToString("zzz"))) return "";
+        return $", UTC{time.ToString("zzz")}";
     }
 
     string getUtcOffsetString(TimeZoneInfo timeZone, DateTime utcTime)
     {
-        if (utcTime.Kind != DateTimeKind.Utc)
-        {
-            throw new Exception("UTC time required to get UTF offset for time zone");
-        }
-
+        if (utcTime.Kind != DateTimeKind.Utc) throw new Exception("UTC time required");
         var offset = timeZone.GetUtcOffset(utcTime);
-
         var format = (offset < TimeSpan.Zero ? @"\-" : @"\+") + @"hh\:mm";
-
         return $", UTC{offset.ToString(format)}";
     }
 
     string cleanedTimeZoneDisplayName(TimeZoneInfo timeZoneInfo)
     {
-        return Regex.Replace(input: timeZoneInfo.DisplayName,
-            pattern: """\(UTC[\+-]\d+:\d+\)""",
-            replacement: "",
-            options: RegexOptions.IgnoreCase |
-                RegexOptions.Compiled |
-                RegexOptions.CultureInvariant).Trim();
+        return Regex.Replace(timeZoneInfo.DisplayName,
+            """\(UTC[\+-]\d+:\d+\)""", "",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant).Trim();
     }
 }

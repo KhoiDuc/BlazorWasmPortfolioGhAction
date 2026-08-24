@@ -2,26 +2,22 @@
 @inject TemperatureStore temperatureStore
 @implements IDisposable
 
-<h3>Second Component</h3>
-
-<h4>@temperatureStore.Temperature</h4>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>Second Component</h3>
+        <p>Event-driven temperature display.</p>
+    </div>
+    <p class="tool-result-label">Temperature: <span class="tool-inline-code">@temperatureStore.Temperature</span></p>
+</div>
 
 @code {
     protected override void OnInitialized()
     {
         base.OnInitialized();
         temperatureStore.OnTemperatureUpdated += TemperatureUpdated;
-
     }
 
+    private void TemperatureUpdated(object? sender, EventArgs e) { InvokeAsync(StateHasChanged); }
 
-    private void TemperatureUpdated(object? sender, EventArgs e)
-    {
-        InvokeAsync(StateHasChanged);
-    }
-
-    public void Dispose()
-    {
-        temperatureStore.OnTemperatureUpdated -= TemperatureUpdated;
-    }
+    public void Dispose() { temperatureStore.OnTemperatureUpdated -= TemperatureUpdated; }
 }

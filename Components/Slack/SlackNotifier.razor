@@ -2,118 +2,107 @@
 @inject IDevOpsService DevOpsService
 @inject IJSRuntime JSRuntime
 
-<div class="container-fluid">
-    <div class="row mb-3">
-        <div class="col">
-            <h2><i class="fab fa-slack"></i> Slack Notifier</h2>
-            <p class="text-muted small">Send messages to Slack channels via webhook.</p>
-        </div>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3><i class="bi bi-slack" aria-hidden="true"></i> Slack Notifier</h3>
+        <p>Send messages to Slack channels via webhook.</p>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(SuccessMessage))
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="tool-alert tool-alert-success">
+            <i class="bi bi-check-circle" aria-hidden="true"></i>
             @SuccessMessage
-            <button type="button" class="btn-close" @onclick="(() => SuccessMessage = null)"></button>
+            <button type="button" class="slack-dismiss" @onclick="(() => SuccessMessage = null)" aria-label="Dismiss">&times;</button>
         </div>
     }
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="tool-alert tool-alert-danger">
+            <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
             @ErrorMessage
-            <button type="button" class="btn-close" @onclick="(() => ErrorMessage = null)"></button>
+            <button type="button" class="slack-dismiss" @onclick="(() => ErrorMessage = null)" aria-label="Dismiss">&times;</button>
         </div>
     }
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="channel" class="form-label">Channel <span class="text-danger">*</span></label>
-                        <input type="text" id="channel" class="form-control" @bind="Channel" placeholder="#general or @@username" />
-                        <div class="form-text">Channel name (with #) or username (with @@)</div>
-                    </div>
+    <div class="slack-layout">
+        <div class="tool-card slack-form-card">
+            <div class="tool-form">
+                <div class="tool-field">
+                    <label class="tool-label" for="channel">Channel <span class="slack-req">*</span></label>
+                    <input type="text" id="channel" class="tool-input" @bind="Channel" placeholder="#general or @@username" />
+                    <span class="tool-hint">Channel name (with #) or username (with @@)</span>
+                </div>
 
-                    <div class="mb-3">
-                        <label for="message" class="form-label">Message <span class="text-danger">*</span></label>
-                        <textarea id="message" class="form-control" rows="6" @bind="MessageText" placeholder="Your Slack message..."></textarea>
-                    </div>
+                <div class="tool-field">
+                    <label class="tool-label" for="message">Message <span class="slack-req">*</span></label>
+                    <textarea id="message" class="tool-textarea" rows="6" @bind="MessageText" placeholder="Your Slack message..."></textarea>
+                </div>
 
-                    <div class="mb-3">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="markdown" @bind="UseMarkdown" />
-                            <label class="form-check-label" for="markdown">
-                                Enable Markdown formatting
-                            </label>
-                        </div>
-                    </div>
+                <div class="tool-field">
+                    <label class="tool-checkbox">
+                        <input type="checkbox" @bind="UseMarkdown" />
+                        Enable Markdown formatting
+                    </label>
+                </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-primary" @onclick="SendMessage">
-                            <i class="fab fa-slack"></i> Send to Slack
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" @onclick="ClearForm">
-                            <i class="fas fa-eraser"></i> Clear
-                        </button>
-                    </div>
+                <div class="tool-actions">
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="SendMessage">
+                        <i class="bi bi-slack" aria-hidden="true"></i> Send to Slack
+                    </button>
+                    <button type="button" class="tool-btn" @onclick="ClearForm">
+                        <i class="bi bi-eraser" aria-hidden="true"></i> Clear
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Preview</h5>
-                </div>
-                <div class="card-body">
-                    <div class="bg-light p-3 rounded mb-3 border-start border-4" style="border-color: #36C5F0;">
-                        <strong>To:</strong> @(string.IsNullOrWhiteSpace(Channel) ? "Not set" : Channel)<br />
-                        <strong>Message:</strong><br />
-                        <small>@MessageText</small>
-                    </div>
-
-                    <hr class="my-3" />
-
-                    <h6><i class="fas fa-cog"></i> Setup</h6>
-                    <ol class="small">
-                        <li>Open Slack workspace settings</li>
-                        <li>App Directory → Search "Incoming Webhooks"</li>
-                        <li>Add to Workspace → Select channel → Copy Webhook URL</li>
-                        <li>Paste in appsettings.json:
-                            <pre class="bg-light p-2 rounded mt-2"><code>"DevOps": {
-  "SlackWebhookUrl": "https://hooks..."
-}</code></pre>
-                        </li>
-                    </ol>
-
-                    <hr class="my-3" />
-
-                    <div class="small text-muted">
-                        <strong>Config status:</strong><br />
-                        @if (IsConfigured)
-                        {
-                            <span class="text-success"><i class="fas fa-check-circle"></i> Slack webhook configured</span>
-                        }
-                        else
-                        {
-                            <span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Missing Slack webhook URL</span>
-                        }
-                    </div>
-
-                    <hr class="my-3" />
-
-                    <h6>Markdown examples</h6>
-                    <ul class="small">
-                        <li><code>*bold*</code></li>
-                        <li><code>_italic_</code></li>
-                        <li><code>`code`</code></li>
-                        <li><code>```code block```</code></li>
-                        <li><code>&lt;https://link.com|Link text&gt;</code></li>
-                    </ul>
-                </div>
+        <div class="tool-card slack-sidebar">
+            <div class="tool-result-label">Preview</div>
+            <div class="slack-preview">
+                <div class="slack-preview-row"><strong>To:</strong> @(string.IsNullOrWhiteSpace(Channel) ? "Not set" : Channel)</div>
+                <div class="slack-preview-row"><strong>Message:</strong></div>
+                <small class="slack-preview-msg">@MessageText</small>
             </div>
+
+            <hr class="tool-divider" />
+
+            <div class="tool-result-label">Setup</div>
+            <ol class="slack-steps">
+                <li>Open Slack workspace settings</li>
+                <li>App Directory → Search "Incoming Webhooks"</li>
+                <li>Add to Workspace → Select channel → Copy Webhook URL</li>
+                <li>Paste in appsettings.json:</li>
+            </ol>
+            <pre class="tool-code">"DevOps": {
+  "SlackWebhookUrl": "https://hooks..."
+}</pre>
+
+            <hr class="tool-divider" />
+
+            <div class="tool-hint">
+                <strong>Config status:</strong><br />
+                @if (IsConfigured)
+                {
+                    <span class="slack-status-ok"><i class="bi bi-check-circle" aria-hidden="true"></i> Slack webhook configured</span>
+                }
+                else
+                {
+                    <span class="slack-status-warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Missing Slack webhook URL</span>
+                }
+            </div>
+
+            <hr class="tool-divider" />
+
+            <div class="tool-result-label">Markdown examples</div>
+            <ul class="slack-md-list">
+                <li><code class="tool-inline-code">*bold*</code></li>
+                <li><code class="tool-inline-code">_italic_</code></li>
+                <li><code class="tool-inline-code">`code`</code></li>
+                <li><code class="tool-inline-code">```code block```</code></li>
+                <li><code class="tool-inline-code">&lt;https://link.com|Link text&gt;</code></li>
+            </ul>
         </div>
     </div>
 </div>
