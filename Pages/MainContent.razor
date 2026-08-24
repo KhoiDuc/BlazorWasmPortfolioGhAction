@@ -1,7 +1,9 @@
 @page "/"
 @using BlazorWasmPortfolioGhAction.Components.EmailComposer
 @using Fluxor
+@using Microsoft.AspNetCore.Components.Web
 @inject IJSRuntime JSRuntime;
+@inject NavigationManager NavigationManager;
 
 <section id="home" class="hero">
     <div class="hero-container">
@@ -421,8 +423,12 @@
 
     private async Task ScrollToContact()
     {
-        await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('contact').scrollIntoView({ behavior: 'smooth' })");
+        await JSRuntime.InvokeVoidAsync("scrollToSection", "contact");
     }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Section { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -430,6 +436,13 @@
         {
             await JSRuntime.InvokeVoidAsync("initializeStarfield");
             await JSRuntime.InvokeVoidAsync("initializeScrollProgress");
+
+            var currentUri = new Uri(NavigationManager.Uri);
+            var hash = currentUri.Fragment.TrimStart('#');
+            if (!string.IsNullOrEmpty(hash))
+            {
+                await JSRuntime.InvokeVoidAsync("scrollToSection", hash);
+            }
         }
     }
 }

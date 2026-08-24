@@ -147,7 +147,14 @@ window.carouselFunctions = {
                 if (currentSlide < 0) currentSlide = slides.length - 1;
 
                 slides[currentSlide].classList.add('active');
-            }
-        };
+    }
+};
+
+window.scrollToSection = function (sectionId) {
+    const el = document.getElementById(sectionId);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+};
     }
 };

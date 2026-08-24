@@ -311,7 +311,11 @@
             ...document.querySelectorAll(sectionSelector)
         ];
 
-        if (sections.length !== 6) {
+        if (sections.length === 0) {
+            return false;
+        }
+
+        if (sections.length === 0) {
             return false;
         }
 

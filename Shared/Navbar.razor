@@ -15,12 +15,12 @@
             <span aria-hidden="true"></span>
         </button>
         <nav id="main-navigation" class="navbar-links @(_isMenuOpen ? "open" : "")">
-            <a href="/#about" @onclick="CloseMenu">About</a>
-            <a href="/#experience" @onclick="CloseMenu">Experience</a>
-            <a href="/#projects" @onclick="CloseMenu">Projects</a>
-            <a href="/#technologies" @onclick="CloseMenu">Technologies</a>
-            <a href="/#education" @onclick="CloseMenu">Education</a>
-            <a href="/#contact" @onclick="CloseMenu">Contact</a>
+            <a href="#about" @onclick='async () => await NavigateToSection("about")'>About</a>
+            <a href="#experience" @onclick='async () => await NavigateToSection("experience")'>Experience</a>
+            <a href="#projects" @onclick='async () => await NavigateToSection("projects")'>Projects</a>
+            <a href="#technologies" @onclick='async () => await NavigateToSection("technologies")'>Technologies</a>
+            <a href="#education" @onclick='async () => await NavigateToSection("education")'>Education</a>
+            <a href="#contact" @onclick='async () => await NavigateToSection("contact")'>Contact</a>
             <NavLink href="resume" @onclick="CloseMenu">Resume</NavLink>
             <NavLink href="Utility" @onclick="CloseMenu">Tools</NavLink>
             <NavLink href="cryptoManager" @onclick="CloseMenu">Crypto</NavLink>
@@ -32,4 +32,23 @@
     private bool _isMenuOpen;
     private void ToggleMenu() => _isMenuOpen = !_isMenuOpen;
     private void CloseMenu() => _isMenuOpen = false;
+
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IJSRuntime JS { get; set; } = default!;
+
+    private async Task NavigateToSection(string sectionId)
+    {
+        _isMenuOpen = false;
+        var currentUri = new Uri(NavigationManager.Uri);
+        var isHome = currentUri.AbsolutePath == "/" || currentUri.AbsolutePath == "";
+
+        if (isHome)
+        {
+            await JS.InvokeVoidAsync("scrollToSection", sectionId);
+        }
+        else
+        {
+            NavigationManager.NavigateTo($"/#{sectionId}");
+        }
+    }
 }
