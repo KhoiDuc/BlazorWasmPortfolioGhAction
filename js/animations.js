@@ -1,6 +1,6 @@
 ﻿(() => {
     const sectionSelector =
-        "#about, #experience, #projects, #technologies, #education, #contact";
+        "section";
 
     const app = document.getElementById("app");
 
@@ -12,6 +12,7 @@
         ).matches;
 
         sections.forEach(section => {
+            if (section.id === "home") return;
             section.classList.add("motion-reveal");
         });
 
@@ -71,27 +72,39 @@
 
         const groups = [
             {
-                sectionSelector: "#experience",
                 itemSelector: ".experience-item",
                 delayStep: 90
             },
             {
-                sectionSelector: "#projects",
                 itemSelector: ".project-card",
                 delayStep: 90
+            },
+            {
+                itemSelector: ".technology-group",
+                delayStep: 60
+            },
+            {
+                itemSelector: ".education-item",
+                delayStep: 80
+            },
+            {
+                itemSelector: ".nav-group",
+                delayStep: 50
+            },
+            {
+                itemSelector: ".crypto-card-list > *",
+                delayStep: 60
             }
         ];
 
         groups.forEach(group => {
-            const section = document.querySelector(group.sectionSelector);
+            const items = [
+                ...document.querySelectorAll(group.itemSelector)
+            ];
 
-            if (!section) {
+            if (items.length === 0) {
                 return;
             }
-
-            const items = [
-                ...section.querySelectorAll(group.itemSelector)
-            ];
 
             items.forEach((item, index) => {
                 item.classList.add("motion-stagger");
@@ -101,6 +114,10 @@
                     `${index * group.delayStep}ms`
                 );
             });
+
+            const triggerSection = items[0].closest("section") || items[0].parentElement;
+
+            if (!triggerSection) return;
 
             const observer = new IntersectionObserver(
                 entries => {
@@ -122,7 +139,7 @@
                 }
             );
 
-            observer.observe(section);
+            observer.observe(triggerSection);
         });
     }
 
@@ -315,10 +332,6 @@
             return false;
         }
 
-        if (sections.length === 0) {
-            return false;
-        }
-
         initRevealAnimations(sections);
         initStaggerAnimations();
         initActiveNavigation();
@@ -327,6 +340,21 @@
         initialized = true;
 
         return true;
+    }
+
+    function reinitializePortfolioMotion() {
+        initialized = false;
+
+        document.querySelectorAll(".motion-reveal").forEach(el => {
+            el.classList.remove("motion-reveal", "is-visible");
+        });
+
+        document.querySelectorAll(".motion-stagger").forEach(el => {
+            el.classList.remove("motion-stagger", "is-stagger-visible");
+            el.style.removeProperty("--stagger-delay");
+        });
+
+        initializePortfolioMotion();
     }
 
     if (!initializePortfolioMotion()) {
@@ -341,4 +369,13 @@
             subtree: true
         });
     }
+
+    let lastUrl = location.href;
+    new MutationObserver(() => {
+        const url = location.href;
+        if (url !== lastUrl) {
+            lastUrl = url;
+            reinitializePortfolioMotion();
+        }
+    }).observe(document, { subtree: true, childList: true });
 })();
