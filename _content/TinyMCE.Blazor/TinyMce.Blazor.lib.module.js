@@ -1,4 +1,14 @@
-﻿console.log('loading js tinymce-blazor');
+console.log('loading js tinymce-blazor');
+
+const hasDisabledSupport = (editor) => typeof editor.options?.set === 'function' && editor.options.isRegistered('disabled');
+
+const setEditorMode = (editor, mode) => {
+  if (editor.mode && typeof editor.mode.set === 'function') {
+    editor.mode.set(mode);
+  } else {
+    editor.setMode(mode);
+  }
+};
 
 const CreateScriptLoader = () => {
   let unique = 0;
@@ -109,12 +119,15 @@ window.tinymceBlazorWrapper = {
     const tiny = getTiny().get(id);
     tiny?.insertContent(content, args);
   },
-  updateMode: (id, disable) => {
+  updateMode: (id, mode) => {
+    setEditorMode(getTiny().get(id), mode);
+  },
+  updateDisabled: (id, disable) => {
     const tiny = getTiny().get(id);
-    if (tiny.mode && typeof tiny.mode.set === 'function') {
-      tiny.mode.set(disable ? 'readonly' : 'design');
+    if (hasDisabledSupport(tiny)) {
+      tiny.options.set('disabled', disable);
     } else {
-      tiny.setMode(disable ? 'readonly' : 'design');
+      setEditorMode(tiny, disable ? 'readonly' : 'design');
     }
   },
   updateValue: (id, streamId, value, index, chunks) => {
@@ -142,10 +155,15 @@ window.tinymceBlazorWrapper = {
       tinyConf.license_key = blazorConf.licenseKey;
     }
     tinyConf.inline = blazorConf.inline;
-    tinyConf.readonly = blazorConf.disabled;
+    tinyConf.readonly = blazorConf.readonly;
+    tinyConf.disabled = blazorConf.disabled;
     tinyConf.target = el;
     tinyConf._setup = tinyConf.setup;
     tinyConf.setup = (editor) => {
+      if (!hasDisabledSupport(editor) && tinyConf.disabled && editor.mode && typeof editor.mode.set === 'function') {
+        editor.mode.set('readonly');
+      }
+
       tinyEventHandler.bindEvent(editor, 'init', (e) => dotNetRef.invokeMethodAsync('GetValue').then(value => { editor.setContent(value); }));
       tinyEventHandler.bindEvent(editor, 'change', (e) => { dotNetRef.invokeMethodAsync('OnChange'); });
       tinyEventHandler.bindEvent(editor, 'input', (e) => { dotNetRef.invokeMethodAsync('OnInput'); });
