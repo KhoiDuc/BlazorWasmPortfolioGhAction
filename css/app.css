@@ -785,3 +785,350 @@ a:hover {
     font-size: 1.1rem;
     color: var(--color-text-primary);
 }
+
+/* --------------------------------------------------------------------------- */
+/* 10. SHARED TOOL COMPONENT STYLES                                            */
+/* --------------------------------------------------------------------------- */
+
+.tool-card {
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-surface);
+    margin-bottom: 1.25rem;
+}
+
+.tool-header {
+    margin-bottom: 1.25rem;
+}
+
+.tool-header h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.25rem;
+    color: var(--color-text-primary);
+}
+
+.tool-header p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+}
+
+.tool-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.tool-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.tool-label {
+    color: var(--color-text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.tool-input,
+.tool-textarea,
+.tool-select {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-app);
+    color: var(--color-text-primary);
+    font-family: var(--font-family-base);
+    font-size: 0.9rem;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.tool-textarea {
+    min-height: 120px;
+    resize: vertical;
+    font-family: var(--font-family-mono);
+    line-height: 1.6;
+}
+
+.tool-input:focus,
+.tool-textarea:focus,
+.tool-select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-primary-glow);
+}
+
+.tool-input::placeholder,
+.tool-textarea::placeholder {
+    color: var(--color-text-muted);
+}
+
+.tool-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='currentColor' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2rem;
+}
+
+.tool-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--transition), border-color var(--transition), color var(--transition), opacity var(--transition);
+}
+
+.tool-btn:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.tool-btn-primary {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+}
+
+.tool-btn-primary:hover {
+    opacity: 0.88;
+    color: #fff;
+    border-color: var(--color-accent-hover);
+}
+
+.tool-btn-danger {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.tool-btn-danger:hover {
+    background-color: var(--color-danger);
+    color: #fff;
+}
+
+.tool-btn-success {
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+.tool-btn-success:hover {
+    background-color: var(--color-success);
+    color: #fff;
+}
+
+.tool-result {
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-surface-elevated);
+    color: var(--color-text-primary);
+    font-family: var(--font-family-mono);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    word-break: break-all;
+    overflow-x: auto;
+}
+
+.tool-result-label {
+    color: var(--color-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+}
+
+.tool-alert {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.tool-alert-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    border: 1px solid var(--color-success);
+    color: var(--color-success);
+}
+
+.tool-alert-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--color-danger);
+    color: var(--color-danger);
+}
+
+.tool-alert-info {
+    background-color: rgba(14, 165, 233, 0.1);
+    border: 1px solid var(--color-info);
+    color: var(--color-info);
+}
+
+.tool-alert-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    border: 1px solid var(--color-warning);
+    color: var(--color-warning);
+}
+
+.tool-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.tool-table th,
+.tool-table td {
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.tool-table th {
+    color: var(--color-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.tool-table td {
+    color: var(--color-text-primary);
+}
+
+.tool-table tbody tr:hover {
+    background-color: var(--color-bg-glass-hover);
+}
+
+.tool-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.tool-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+}
+
+.tool-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-accent);
+    cursor: pointer;
+}
+
+.tool-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tool-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    font-size: 0.82rem;
+    transition: all var(--transition);
+}
+
+.tool-radio:has(input:checked) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background-color: var(--color-bg-glass-active);
+}
+
+.tool-radio input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.tool-divider {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 1.25rem 0;
+}
+
+.tool-code {
+    display: block;
+    padding: 0.75rem 1rem;
+    background-color: var(--color-bg-surface-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+    font-family: var(--font-family-mono);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.tool-inline-code {
+    padding: 0.15rem 0.4rem;
+    background-color: var(--color-bg-surface-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xs);
+    font-family: var(--font-family-mono);
+    font-size: 0.85em;
+    color: var(--color-text-primary);
+}
+
+.tool-hint {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    line-height: 1.6;
+}
+
+.tool-hint a {
+    color: var(--color-primary-light);
+}
+
+.tool-link-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.tool-link-list a {
+    color: var(--color-primary-light);
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+.tool-link-list a:hover {
+    color: var(--color-accent);
+}

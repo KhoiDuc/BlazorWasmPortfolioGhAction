@@ -145,90 +145,78 @@
 
     function initActiveNavigation() {
         const navLinks = [
-            ...document.querySelectorAll(
-                '#main-navigation a[href^="#"]'
-            )
-        ];
+            ...document.querySelectorAll('#main-navigation a')
+        ].filter(a => a.getAttribute('href'));
 
-        const navigationItems = navLinks
-            .map(link => {
-                const targetSelector = link.getAttribute("href");
+        if (navLinks.length === 0) return;
 
-                return {
-                    link,
-                    section: document.querySelector(targetSelector)
-                };
-            })
-            .filter(item => item.section);
+        const sections = [];
+        navLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            let section = null;
+            if (href.startsWith('#')) {
+                section = document.querySelector(href);
+            } else if (href === '' || href === '/') {
+                section = document.querySelector('#home') || document.querySelector('section');
+            } else {
+                const id = href.replace(/[^a-zA-Z0-9-]/g, '');
+                section = document.getElementById(id) || document.querySelector(`[data-nav="${href}"]`);
+            }
+            if (section) sections.push({ link, section });
+        });
 
-        if (navigationItems.length === 0) {
-            return;
-        }
+        if (sections.length === 0) return;
 
         let ticking = false;
 
         function updateActiveSection() {
             ticking = false;
-
             const marker = window.innerHeight * 0.35;
-
             let activeItem = null;
 
-            navigationItems.forEach(item => {
+            sections.forEach(item => {
                 const rect = item.section.getBoundingClientRect();
-
-                if (rect.top <= marker && rect.bottom > 72) {
-                    activeItem = item;
-                }
+                if (rect.top <= marker && rect.bottom > 72) activeItem = item;
             });
 
-            const isAtBottom =
-                window.scrollY + window.innerHeight >=
-                document.documentElement.scrollHeight - 4;
+            const isAtBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4;
+            if (isAtBottom) activeItem = sections[sections.length - 1];
 
-            if (isAtBottom) {
-                activeItem = navigationItems[navigationItems.length - 1];
-            }
-
-            navigationItems.forEach(item => {
+            sections.forEach(item => {
                 const isActive = item === activeItem;
-
-                item.link.classList.toggle("active", isActive);
-
-                if (isActive) {
-                    item.link.setAttribute(
-                        "aria-current",
-                        "location"
-                    );
-                }
-                else {
-                    item.link.removeAttribute("aria-current");
-                }
+                item.link.classList.toggle('active', isActive);
+                if (isActive) item.link.setAttribute('aria-current', 'location');
+                else item.link.removeAttribute('aria-current');
             });
         }
 
         function requestUpdate() {
-            if (ticking) {
-                return;
-            }
-
+            if (ticking) return;
             ticking = true;
-
             requestAnimationFrame(updateActiveSection);
         }
 
-        window.addEventListener(
-            "scroll",
-            requestUpdate,
-            { passive: true }
-        );
-
-        window.addEventListener(
-            "resize",
-            requestUpdate
-        );
-
+        window.addEventListener('scroll', requestUpdate, { passive: true });
+        window.addEventListener('resize', requestUpdate);
         updateActiveSection();
+    }
+
+    function initScrollBackdrop() {
+        let ticking = false;
+
+        function updateScroll() {
+            ticking = false;
+            document.body.classList.toggle('is-scrolled', window.scrollY > 12);
+        }
+
+        function requestUpdate() {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(updateScroll);
+        }
+
+        window.addEventListener('scroll', requestUpdate, { passive: true });
+        updateScroll();
     }
 
     function initHeroParallax() {
@@ -336,6 +324,7 @@
         initStaggerAnimations();
         initActiveNavigation();
         initHeroParallax();
+        initScrollBackdrop();
 
         initialized = true;
 
