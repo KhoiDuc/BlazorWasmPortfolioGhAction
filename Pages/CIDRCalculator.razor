@@ -1,16 +1,18 @@
 ﻿<style>
-    .card {
+    .cidr-card {
         height: inherit;
         padding: 20px;
-        border: 1px solid #e0e0e0;
+        border: 1px solid var(--color-border);
         border-radius: 4px;
         margin-bottom: 20px;
+        background: var(--color-bg-surface);
     }
 
     .result-box {
         font-family: 'Cascadia Code', 'Consolas', 'Courier New', Courier, monospace;
-        border: 1px solid #CECECE;
-        background-color: #F2F2F2;
+        border: 1px solid var(--color-border);
+        background-color: var(--color-bg-surface-elevated);
+        color: var(--color-text-primary);
         padding: 10px;
         margin: 10px 0;
         border-radius: 5px;
@@ -35,10 +37,14 @@
         width: 100%;
         padding: 8px;
         margin: 5px 0;
+        background: var(--color-bg-surface-elevated);
+        color: var(--color-text-primary);
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
     }
 
     .submit-btn {
-        background-color: #0078d4;
+        background-color: var(--color-primary);
         color: white;
         padding: 8px 16px;
         border: none;
@@ -47,16 +53,17 @@
     }
 
         .submit-btn:hover {
-            background-color: #005a9e;
+            background-color: var(--color-primary-dark);
         }
 
-    footer {
+    .cidr-footer {
         margin: 30px 12px;
+        color: var(--color-text-secondary);
     }
 </style>
 
 <div class="grid">
-    <div class="card">
+    <div class="cidr-card">
         <h3>IP Range to CIDR</h3>
         <form @onsubmit="GetCIDR">
             <div>
@@ -86,7 +93,7 @@
         }
     </div>
 
-    <div class="card">
+    <div class="cidr-card">
         <h3>CIDR to IP Range</h3>
         <form @onsubmit="GetIPRange">
             <div>
@@ -116,6 +123,6 @@
     </div>
 </div>
 
-<footer>
+<footer class="cidr-footer">
     Powered by Blazor WASM on .NET @Environment.Version
 </footer>

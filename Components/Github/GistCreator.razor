@@ -27,21 +27,21 @@
     </div>
 
     <div class="form-actions">
-        <button @onclick="CreateGist" class="btn btn-primary" disabled="@isLoading">
+        <button @onclick="CreateGist" class="gist-btn gist-btn-primary" disabled="@isLoading">
             @if (isLoading) { <span>Creating...</span> } else { <span>Create Gist</span> }
         </button>
     </div>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="alert alert-danger">@errorMessage</div>
+        <div class="gist-alert gist-alert-danger">@errorMessage</div>
     }
 
     @if (!string.IsNullOrEmpty(createdGistUrl))
     {
-        <div class="alert alert-success">
+        <div class="gist-alert gist-alert-success">
             <p>Gist created successfully!</p>
-            <a href="@createdGistUrl" target="_blank" class="btn btn-sm btn-info">View Gist</a>
+            <a href="@createdGistUrl" target="_blank" class="gist-btn gist-btn-info">View Gist</a>
         </div>
     }
 </div>
@@ -102,7 +102,8 @@
 <style>
     .gist-creator-container {
         padding: 20px;
-        background: #f8f9fa;
+        background: var(--color-bg-surface);
+        border: 1px solid var(--color-border);
         border-radius: 8px;
         margin: 10px 0;
     }
@@ -115,15 +116,18 @@
         display: block;
         margin-bottom: 5px;
         font-weight: 500;
+        color: var(--color-text-primary);
     }
 
     .form-group input[type="text"],
     .form-group textarea {
         width: 100%;
         padding: 8px;
-        border: 1px solid #ddd;
+        border: 1px solid var(--color-border);
         border-radius: 4px;
         font-family: monospace;
+        background: var(--color-bg-surface-elevated);
+        color: var(--color-text-primary);
     }
 
     .form-group input[type="checkbox"] {
@@ -136,7 +140,7 @@
         margin-top: 20px;
     }
 
-    .btn {
+    .gist-btn {
         padding: 8px 16px;
         border: none;
         border-radius: 4px;
@@ -144,48 +148,48 @@
         font-size: 0.95em;
     }
 
-    .btn:disabled {
+    .gist-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
     }
 
-    .btn-primary {
+    .gist-btn-primary {
         background: #28a745;
         color: white;
     }
 
-    .btn-primary:hover:not(:disabled) {
+    .gist-btn-primary:hover:not(:disabled) {
         background: #218838;
     }
 
-    .btn-info {
+    .gist-btn-info {
         background: #17a2b8;
         color: white;
     }
 
-    .btn-info:hover {
+    .gist-btn-info:hover {
         background: #138496;
     }
 
-    .alert {
+    .gist-alert {
         padding: 12px;
         border-radius: 4px;
         margin-top: 15px;
     }
 
-    .alert-danger {
+    .gist-alert-danger {
         background: #f8d7da;
         color: #721c24;
         border: 1px solid #f5c6cb;
     }
 
-    .alert-success {
+    .gist-alert-success {
         background: #d4edda;
         color: #155724;
         border: 1px solid #c3e6cb;
     }
 
-    .alert-success a {
+    .gist-alert-success a {
         margin-top: 10px;
         display: inline-block;
     }

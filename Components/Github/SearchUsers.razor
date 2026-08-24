@@ -3,7 +3,7 @@
 
 @inject ISearchUsersService SearchUsersService
 
-<div class="container">
+<div class="search-users-container">
     <div class="input-group">
         <input @bind="AccessToken" placeholder="Access token" class="input-field" />
     </div>
@@ -28,12 +28,13 @@
 </div>
 
 <style>
-    .container {
+    .search-users-container {
         max-width: 400px;
         margin: auto;
         padding: 20px;
-        border: 1px solid #ddd;
+        border: 1px solid var(--color-border);
         border-radius: 5px;
+        background: var(--color-bg-surface);
     }
     .input-group {
         display: flex;
@@ -42,16 +43,22 @@
     .input-field {
         flex: 1;
         padding: 8px;
-        border: 1px solid #ccc;
+        border: 1px solid var(--color-border);
         border-radius: 4px;
+        background: var(--color-bg-surface-elevated);
+        color: var(--color-text-primary);
     }
     .search-button {
         padding: 8px;
-        background-color: #007bff;
+        background-color: var(--color-primary);
         color: white;
         border: none;
         cursor: pointer;
         border-radius: 4px;
+    }
+    .search-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
     .user-list {
         list-style: none;
@@ -59,7 +66,8 @@
     }
     .user-item {
         padding: 10px;
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid var(--color-border);
+        color: var(--color-text-primary);
     }
     .bold {
         font-weight: bold;
@@ -69,10 +77,14 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        color: var(--color-text-secondary);
     }
     .pagination-button {
         padding: 5px 10px;
-        border: 1px solid #ccc;
+        border: 1px solid var(--color-border);
         cursor: pointer;
+        background: var(--color-bg-surface-elevated);
+        color: var(--color-text-primary);
+        border-radius: 4px;
     }
 </style>
