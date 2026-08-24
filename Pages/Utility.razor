@@ -3,22 +3,28 @@
 @using BlazorWasmPortfolioGhAction.Components.Teams
 @using BlazorWasmPortfolioGhAction.Components.Github
 @inject IJSRuntime JSRuntime
-<div class="page-container">
-<div class="main-container">
-    <NavMenuUtility NavigationItems="NavigationItems" />
 
-    <div class="component-container">
-        @if (Component != null)
-        {
-            @DynamicComponent
-        }
-        else
-        {
-            <p>Please select a utility from the navigation menu.</p>
-        }
+<section class="utility-page">
+    <div class="container">
+        <div class="section-heading">
+            <p class="section-label">TOOLS</p>
+            <h2>Developer utilities.</h2>
+        </div>
+        <div class="utility-layout">
+            <NavMenuUtility NavigationItems="NavigationItems" />
+            <div class="component-container">
+                @if (Component != null)
+                {
+                    @DynamicComponent
+                }
+                else
+                {
+                    <p class="utility-empty">Select a utility from the navigation menu.</p>
+                }
+            </div>
+        </div>
     </div>
-</div>
-</div>
+</section>
 
 @code {
     [Parameter]

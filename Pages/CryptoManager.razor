@@ -5,53 +5,49 @@
 @using Microsoft.JSInterop
 @using BlazorWasmPortfolioGhAction.Pages.CryptoManagerComponents
 @using BlazorWasmPortfolioGhAction.Pages
-<h1>Work in progress</h1>
-<div class="page-container">
-<div class="crypto-container">
 
-    <div class="crypto-card-list">
-        @foreach (var crypto in cryptos)
-        {
-            <CryptoCard Crypto="crypto" OnCryptoSelected="LoadCryptoDetails" />
-        }
-    </div>
-
-    <div class="detail-view">
-        @foreach (var selectedCrypto in selectedCryptos)
-        {
-            <CryptoDetails Crypto="selectedCrypto" OnClose="CloseCryptoDetail" />
-        }
-    </div>
-
-    <div class="settings">
-        <div class="setting">
-            <label for="tickerCount">Tickers:</label>
-            <input id="tickerCount" type="number" @bind="settings.NumberOfTickers" min="1" max="100" />
+<section class="crypto-page">
+    <div class="container">
+        <div class="section-heading">
+            <p class="section-label">CRYPTO</p>
+            <h2>Crypto tickers (WIP).</h2>
         </div>
 
-        <div class="setting">
-            <label for="quoteUnit">Quote Unit:</label>
-            <select id="quoteUnit" @bind="settings.QuoteUnit">
-                <option value="USDT">USDT</option>
-                <option value="BTC">BTC</option>
-                <option value="ETH">ETH</option>
-            </select>
+        <div class="crypto-layout">
+            <div class="crypto-card-list">
+                @foreach (var crypto in cryptos)
+                {
+                    <CryptoCard Crypto="crypto" OnCryptoSelected="LoadCryptoDetails" />
+                }
+            </div>
+
+            <div class="detail-view">
+                @foreach (var selectedCrypto in selectedCryptos)
+                {
+                    <CryptoDetails Crypto="selectedCrypto" OnClose="CloseCryptoDetail" />
+                }
+            </div>
         </div>
 
-@*         <div class="setting">
-            <label for="orderBy">Order By:</label>
-            <select id="orderBy" @bind="settings.OrderBy">
-                <option value="Volume">Volume</option>
-                <option value="Price">Price</option>
-                <option value="Change">Change</option>
-            </select>
-        </div> *@
+        <div class="settings">
+            <div class="setting">
+                <label for="tickerCount">Tickers:</label>
+                <input id="tickerCount" type="number" @bind="settings.NumberOfTickers" min="1" max="100" />
+            </div>
 
-        <button @onclick="UpdateSettings">Update</button>
+            <div class="setting">
+                <label for="quoteUnit">Quote Unit:</label>
+                <select id="quoteUnit" @bind="settings.QuoteUnit">
+                    <option value="USDT">USDT</option>
+                    <option value="BTC">BTC</option>
+                    <option value="ETH">ETH</option>
+                </select>
+            </div>
+
+            <button @onclick="UpdateSettings">Update</button>
+        </div>
     </div>
-
-</div>
-</div>
+</section>
 
 @code {
     private List<Crypto> cryptos = new List<Crypto>();
