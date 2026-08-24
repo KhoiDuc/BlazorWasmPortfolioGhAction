@@ -1,84 +1,50 @@
 @using System.Linq;
 
-<div class="container">
-    <div class="row">
-        <div class="col">
-            <div class="input-group">
-                <input id="luhnCheck" name="luhnCheck" class="form-control" @bind="check" placeholder="378282246310005" />
-                <span class="input-group-btn">
-                    <button id="btnLuhnCheckClear" name="btnLuhnCheckClear" class="btn btn-danger float-right" @onclick="ClearSingle"><i class="far fa-trash-alt"></i></button>
-                </span>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>Luhn Checker</h3>
+        <p>Validate credit card numbers using the Luhn algorithm.</p>
+    </div>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="luhnCheck">Card number</label>
+            <div class="conv-row">
+                <input id="luhnCheck" class="tool-input" @bind="check" placeholder="378282246310005" />
+                <button class="tool-btn tool-btn-danger" @onclick="ClearSingle" title="Clear">
+                    <i class="bi bi-trash" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            <button id="btnLuhnCheck" name="btnLuhnCheck" class="btn btn-success float-right" @onclick="CheckSingle">Check</button>
+        <div class="tool-actions">
+            <button class="tool-btn tool-btn-success" @onclick="CheckSingle">
+                <i class="bi bi-check2-circle" aria-hidden="true"></i> Check
+            </button>
         </div>
+        @if (!string.IsNullOrEmpty(check))
+        {
+            <div class="luhn-result @(valid ? "tool-alert tool-alert-success" : "tool-alert tool-alert-danger")">
+                <i class="bi @(valid ? "bi-check-circle-fill" : "bi-x-circle-fill")" aria-hidden="true"></i>
+                @(valid ? "Valid" : "Invalid")
+            </div>
+        }
     </div>
-    <div class="row">
-        <div class="col">
-            <label class="label-control">Valid?</label>
-            <label class="label-control" id="luhnCheckLabel">@valid.ToString()</label>
-        </div>
-    </div>
-    @*<div class="row">
-        <textarea id="luhnChecks" class="form-control" @bind="checks"></textarea>
-    </div>
-    <div class="row">
-        <button id="btnLuhnChecks" name="btnLuhnChecks" class="btn btn-success float-right"
-                @onclick="CheckMultiple">
-            Check
-        </button>
-        <button id="btnLuhnChecksClear" name="btnLuhnChecksClear" class="btn btn-danger float-right"
-                @onclick="ClearMultiple">
-            <i class="far fa-trash-alt"></i>
-        </button>
-    </div>*@
 </div>
 
 @code {
-
-    [Parameter]
-    public string check  { get; set; }
-    
-    [Parameter]
-    public bool valid  { get; set; }
-    //string checks;
+    [Parameter] public string check { get; set; } = "";
+    [Parameter] public bool valid { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        // check = "378282246310005"; //string.Empty;
         valid = false;
-        // valid = LuhnCheck(check);
-        //checks = "b"; //string.Empty;
     }
 
-    private void CheckSingle()
-    {
-        valid = LuhnCheck(check);
-    }
+    private void CheckSingle() { valid = LuhnCheck(check); }
+    private void ClearSingle() { check = string.Empty; }
 
-    private void ClearSingle()
-    {
-        check = string.Empty;
-    }
-
-    @*private void CheckMultiple()
-    {
-        var valid = LuhnCheck(check);
-    }
-
-    private void ClearMultiple()
-    {
-        checks = string.Empty;
-    }*@
-
-    // https://stackoverflow.com/a/40491537
     private static bool LuhnCheck(string digits)
     {
         if (string.IsNullOrEmpty(digits)) return false;
-        
         return digits.All(char.IsDigit) && digits.Reverse()
             .Select(c => c - 48)
             .Select((thisNum, i) => i % 2 == 0

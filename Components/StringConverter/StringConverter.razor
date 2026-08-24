@@ -1,110 +1,77 @@
 @using System.Text
 @using System.Globalization
-
 @inject IJSRuntime JSRuntime
 
-<div class="container">
-    <div class="row">
-        <div class="col">
-            <h2>String Converter</h2>
-        </div>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>String Converter</h3>
+        <p>Transform text between different cases.</p>
     </div>
-    
-    <div class="row">
-        <div class="col">
-            <h4>Selected - @choice.Name</h4>
-            <EditForm Model="choice">
-                <InputRadioGroup @bind-Value="choice.Name">
-                    @foreach (var option in Options)
-                    {
-                        <InputRadio Value="option" /> @option <br />
-                    }
-                </InputRadioGroup>
-            </EditForm>
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="col">
-            <div class="input-group">
-                <textarea id="stringconverter" class="form-control" rows="5">@Input</textarea>
-                <span class="input-group-btn">
-                    <button id="btnStringConverter" name="btnStringConverter" class="btn btn-success float-right" @onclick="Convert">Convert</button>
-                    <button id="btnClearStringConverter" name="btnClearStringConverter" class="btn btn-danger float-right" @onclick="Clear"><i class="far fa-trash-alt"></i>@*Clear*@</button>
-                </span>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label">Conversion mode</label>
+            <div class="tool-radio-group">
+                @foreach (var option in Options)
+                {
+                    <label class="tool-radio">
+                        <input type="radio" name="caseMode" value="@option" checked="@(choice.Name == option)" @onchange="@(() => choice.Name = option)" />
+                        @option
+                    </label>
+                }
             </div>
-            
         </div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-            <div class="input-group">
-                <textarea id="outputStringConverter" class="form-control" rows="5" @bind="Output"></textarea>
-                <span class="input-group-btn">
-                    <button id="btnCopyStringConverter" name="btnCopyStringConverter" class="btn btn-info float-right" @onclick="Copy"><i class="far fa-copy"></i></button>
-                </span>
+        <div class="tool-field">
+            <label class="tool-label" for="stringconverter">Input</label>
+            <textarea id="stringconverter" class="tool-textarea" rows="4" @bind="Input"></textarea>
+            <div class="tool-actions" style="margin-top: 0.6rem;">
+                <button class="tool-btn tool-btn-primary" @onclick="Convert">Convert</button>
+                <button class="tool-btn tool-btn-danger" @onclick="Clear">
+                    <i class="bi bi-trash" aria-hidden="true"></i> Clear
+                </button>
+            </div>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label">Output</label>
+            <div class="conv-row">
+                <textarea class="tool-textarea" rows="4" @bind="Output" readonly></textarea>
+            </div>
+            <div class="tool-actions" style="margin-top: 0.6rem;">
+                <button class="tool-btn" @onclick="Copy">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i> Copy
+                </button>
             </div>
         </div>
     </div>
-    
 </div>
 
 @code {
-    string Input = "the quick brown fox jumps over the lazy dog"; //string.Empty;
+    string Input = "the quick brown fox jumps over the lazy dog";
     string Output = string.Empty;
 
-    Choice choice = new Choice()
-    {
-        Name = "Sentence case"
-    };
+    Choice choice = new Choice() { Name = "Sentence case" };
     List<string> Options = new List<string> { "Sentence case", "lower case", "UPPER CASE", "Capitalized Case", "aLtErNaTiNg cAsE", "Title Case", "InVeRsE CaSe", "Remove Whitespace" };
-    
+
     private void Convert()
     {
         TextInfo ti = CultureInfo.CurrentCulture.TextInfo;
-        
         switch (choice.Name)
         {
-            case "Sentence case":
-                Output = Input.FirstCharToUpper();
-                break;
-            case "lower case":
-                Output = Input.ToLower();
-                break;
-            case "UPPER CASE":
-                Output = Input.ToUpper();
-                break;
-            case "Capitalized Case":
-                Output = ti.ToTitleCase(Input);
-                break;
-            case "aLtErNaTiNg cAsE":
-                break;
-            case "Title Case":
-                Output = ti.ToTitleCase(Input);
-                break;
-            case "InVeRsE CaSe":
-                Output = Input.Invert();
-                break;
-            case "Remove Whitespace":
-                Output = String.Concat(Input.Where(c => !Char.IsWhiteSpace(c)));
-                break;
+            case "Sentence case": Output = Input.FirstCharToUpper(); break;
+            case "lower case": Output = Input.ToLower(); break;
+            case "UPPER CASE": Output = Input.ToUpper(); break;
+            case "Capitalized Case": Output = ti.ToTitleCase(Input); break;
+            case "Title Case": Output = ti.ToTitleCase(Input); break;
+            case "InVeRsE CaSe": Output = Input.Invert(); break;
+            case "Remove Whitespace": Output = String.Concat(Input.Where(c => !Char.IsWhiteSpace(c))); break;
         }
     }
-    
-    private void Clear()
-    {
-        Input = string.Empty;
-    }
+
+    private void Clear() { Input = string.Empty; }
 
     async Task Copy()
     {
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Output);
     }
-    
-    public class Choice
-    {
-        public string Name { get; set; }
-    }
-    
+
+    public class Choice { public string Name { get; set; } = ""; }
 }

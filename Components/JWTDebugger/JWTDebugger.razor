@@ -2,84 +2,70 @@
 @using System.IdentityModel.Tokens.Jwt
 @inject IJSRuntime JSRuntime
 
-<div class="container">
-    <div class="row">
-        <div class="col">
-            <h2>JWT Debugger</h2>
-        </div>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>JWT Debugger</h3>
+        <p>Decode JWT tokens to inspect header, payload, and signature.</p>
     </div>
-    
-    <div class="row">
-        <div class="col">
-            <label class="label-control" for="algorithm-select">Algorithm:</label>
-            <select id="algorithm-select" name="algorithm-select" class="form-control" >
-                <option name="algorithm" value="HS256" selected="">HS256</option>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="algorithm-select">Algorithm</label>
+            <select id="algorithm-select" class="tool-select">
+                <option value="HS256" selected>HS256</option>
             </select>
         </div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-            <div class="input-group">
-                <textarea id="Input" class="form-control" rows="5" @bind="Input" placeholder="JWT"></textarea>
-                <span class="input-group-btn">
-                    <button id="btnDecode" name="btnDecode" class="btn btn-success" @onclick="Decode"><i class="fas fa-arrows-alt-h"></i></button>
-                    <button id="btnClear" name="btnClear" class="btn btn-danger float-right" @onclick="Clear"><i class="far fa-trash-alt"></i>@*Clear*@</button>
-                </span>
+        <div class="jwt-layout">
+            <div class="tool-field">
+                <label class="tool-label" for="Input">Encoded JWT</label>
+                <textarea id="Input" class="tool-textarea" rows="8" @bind="Input" placeholder="eyJhbGciOiJIUzI1NiIs..."></textarea>
+                <div class="tool-actions">
+                    <button class="tool-btn tool-btn-success" @onclick="Decode">
+                        <i class="bi bi-arrow-down" aria-hidden="true"></i> Decode
+                    </button>
+                    <button class="tool-btn tool-btn-danger" @onclick="Clear">
+                        <i class="bi bi-trash" aria-hidden="true"></i> Clear
+                    </button>
+                </div>
+            </div>
+            <div class="jwt-decoded">
+                <div class="tool-field">
+                    <span class="tool-result-label">Header</span>
+                    <textarea id="Header" class="tool-textarea" rows="3" @bind="Header" placeholder="Decoded header" readonly></textarea>
+                </div>
+                <div class="tool-field">
+                    <span class="tool-result-label">Payload</span>
+                    <textarea id="Payload" class="tool-textarea" rows="4" @bind="Payload" placeholder="Decoded payload" readonly></textarea>
+                </div>
+                <div class="tool-field">
+                    <span class="tool-result-label">Verify signature</span>
+                    <textarea id="VerifySignature" class="tool-textarea" rows="2" @bind="Signature" placeholder="Signature" readonly></textarea>
+                </div>
             </div>
         </div>
-        <div class="col">
-            <p>HEADER:ALGORITHM & TOKEN TYPE</p>
-            <textarea id="Header" class="form-control" rows="5" @bind="Header" placeholder="DECODED"></textarea>
-            <p>PAYLOAD:DATA</p>
-            <textarea id="Payload" class="form-control" rows="5" @bind="Payload" placeholder="DECODED"></textarea>
-            <p>VERIFY SIGNATURE</p>
-            <textarea id="VerifySignature" class="form-control" rows="5" @bind="Signature" placeholder="DECODED"></textarea>
-        </div>
     </div>
-    
-    <div class="row">
-        <div class="col">
-            <p>Inspired from <a href="https://jwt.io" target="_blank">JWT.io</a>.</p>
-        </div>
-    </div>
-
+    <hr class="tool-divider" />
+    <p class="tool-hint">Inspired by <a href="https://jwt.io" target="_blank">JWT.io</a></p>
 </div>
 
 @code {
-    [Parameter]
-    public string? Input { get; set; }
+    [Parameter] public string? Input { get; set; }
+    [Parameter] public string? Output { get; set; }
+    [Parameter] public string Header { get; set; } = "";
+    [Parameter] public string Payload { get; set; } = "";
+    [Parameter] public string Signature { get; set; } = "";
 
-    [Parameter]
-    public string? Output { get; set; }
-    
-    [Parameter]
-    public string Header { get; set; }
-    
-    [Parameter]
-    public string Payload { get; set; }
-    
-    [Parameter]
-    public string Signature { get; set; }
-    
-    // protected override void OnInitialized() {}
-    
     void Decode()
     {
         if (string.IsNullOrEmpty(Input)) return;
-
         var handler = new JwtSecurityTokenHandler();
         var jwtSecurityToken = handler.ReadJwtToken(Input);
         Header = jwtSecurityToken.Header.SerializeToJson();
         Payload = jwtSecurityToken.Payload.SerializeToJson();
         Signature = jwtSecurityToken.RawSignature;
     }
-    
-    private void Clear()
-    {
-        Input = string.Empty;
-    }
-    
+
+    private void Clear() { Input = string.Empty; }
+
     async Task Copy()
     {
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Output);

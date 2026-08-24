@@ -1,105 +1,66 @@
 @using System.Text
 @inject IJSRuntime JSRuntime
 
-<div class="container">
-    
-    <div class="row">
-        <div class="col">
-            <h2>Memory Converter</h2>
-        </div>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>Memory Converter</h3>
+        <p>Convert bytes to human-readable sizes (KB, MB, GB...).</p>
     </div>
-    
-    <div class="row">
-        <div class="col">
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Bytes:</span>
-                </div>
-                <input type="number" id="input" class="form-control" @bind="Input" placeholder="1030" />
-                <span class="input-group-btn">
-                    <button id="btnClear" name="btnBinaryClear" class="btn btn-danger float-right" @onclick="Clear"><i class="far fa-trash-alt"></i>@*Clear*@</button>
-                </span>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="input">Bytes</label>
+            <div class="conv-row">
+                <input type="number" id="input" class="tool-input" @bind="Input" placeholder="1030" />
+                <button class="tool-btn tool-btn-danger" @onclick="Clear" title="Clear">
+                    <i class="bi bi-trash" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+        <div class="tool-actions">
+            <button class="tool-btn tool-btn-success" @onclick="Convert">
+                <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Convert
+            </button>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label">Result</label>
+            <div class="conv-row">
+                <input id="output" class="tool-input" @bind="Output" placeholder="KB / MB / GB / TB" readonly />
+                <button class="tool-btn" @onclick="Copy" title="Copy">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
     </div>
-
-    <div class="row">
-        <div class="col">
-            <button id="btnConvert" name="btnConvert" class="btn btn-success float-right" @onclick="Convert">Convert</button>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-            <div class="input-group">
-                <input id="output" class="form-control" @bind="Output" placeholder="KB / MB / GB / TB / PB / EB / ZB / YB" readonly="readonly" />
-                <span class="input-group-btn">
-                    <button id="btnCopy" name="btnCopy" class="btn btn-info float-right" @onclick="Copy"><i class="far fa-copy"></i></button>
-                </span>
-            </div>
-
-        </div>
-    </div>
-
 </div>
 
 @code {
-    [Parameter]
-    public long Input { get; set; }
-    
-    [Parameter]
-    public string? Output { get; set; }
+    [Parameter] public long Input { get; set; }
+    [Parameter] public string? Output { get; set; }
 
     protected override void OnInitialized()
     {
         Input = 1030;
         Output = string.Empty;
     }
-    
-    void Convert()
-    {
-        var data = SizeSuffix(Input);
-        Output = data;
-    }
-    
-    private void Clear()
-    {
-        Input = 0;
-    }
-    
+
+    void Convert() { Output = SizeSuffix(Input); }
+    void Clear() { Input = 0; }
+
     async Task Copy()
     {
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Output);
     }
-    
-    #region Convert
-    // https://stackoverflow.com/a/14488941/2895831
+
     static readonly string[] SizeSuffixes = { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
-    
+
     static string SizeSuffix(Int64 value, int decimalPlaces = 1)
     {
         if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
-        if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); } 
+        if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); }
         if (value == 0) { return string.Format("{0:n" + decimalPlaces + "} bytes", 0); }
-
-        // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
         int mag = (int)Math.Log(value, 1024);
-
-        // 1L << (mag * 10) == 2 ^ (10 * mag) 
-        // [i.e. the number of bytes in the unit corresponding to mag]
         decimal adjustedSize = (decimal)value / (1L << (mag * 10));
-
-        // make adjustment when the value is large enough that
-        // it would round up to 1000 or more
-        if (Math.Round(adjustedSize, decimalPlaces) >= 1000)
-        {
-            mag += 1;
-            adjustedSize /= 1024;
-        }
-
-        return string.Format("{0:n" + decimalPlaces + "} {1}", 
-            adjustedSize, 
-            SizeSuffixes[mag]);
+        if (Math.Round(adjustedSize, decimalPlaces) >= 1000) { mag += 1; adjustedSize /= 1024; }
+        return string.Format("{0:n" + decimalPlaces + "} {1}", adjustedSize, SizeSuffixes[mag]);
     }
-    #endregion Convert
 }

@@ -1,53 +1,35 @@
-<div class="container">
-    <div class="row">
-        <div class="col">
-            
-            <label class="label-control">Character:</label>
-            <div class="input-group">
-                <input id="ascii" name="ascii" class="form-control" @bind="AsciiValue" placeholder="'">
-                <span class="input-group-btn">
-                    <button id="btnAscii" name="btnAscii" type="button" class="btn btn-info float-right" @onclick="GetAsciiValues">Get ASCII Values</button>
-                </span>
-            </div>
-            
-        </div>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>ASCII Converter</h3>
+        <p>Get ASCII values (dec, hex, oct) for a character.</p>
     </div>
-    
-    <br />
-    
-    <div class="row">
-        <div class="col">
-            
-            <table id="asciiItems">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="ascii">Character</label>
+            <div class="conv-row">
+                <input id="ascii" class="tool-input" @bind="AsciiValue" placeholder="'" style="max-width: 120px;" />
+                <button class="tool-btn tool-btn-primary" @onclick="GetAsciiValues">Get ASCII Values</button>
+            </div>
+        </div>
+        @if (!string.IsNullOrEmpty(Char))
+        {
+            <table class="tool-table">
                 <thead>
-                <tr>
-                    <th>Char</th>
-                    <th>Dec</th>
-                    <th>Hex</th>
-                    <th>Oct</th>
-                </tr>
+                    <tr><th>Char</th><th>Dec</th><th>Hex</th><th>Oct</th></tr>
                 </thead>
-                <tfoot></tfoot>
                 <tbody>
-                <tr>
-                    <td>@Char</td>
-                    <td>@Dec</td>
-                    <td>@Hex</td>
-                    <td>@Oct</td>
-                </tr>
+                    <tr>
+                        <td>@Char</td>
+                        <td>@Dec</td>
+                        <td>@Hex</td>
+                        <td>@Oct</td>
+                    </tr>
                 </tbody>
             </table>
-            
-        </div>
+        }
     </div>
-    
-    <hr />
-    
-    <div class="row">
-        <div class="col">
-            <p>Inspired from <a href="http://asciivalue.com/" target="_blank">ASCIIvalue</a></p>
-        </div>
-    </div>
+    <hr class="tool-divider" />
+    <p class="tool-hint">Inspired by <a href="http://asciivalue.com/" target="_blank">ASCIIvalue</a></p>
 </div>
 
 @code {
@@ -62,7 +44,6 @@
         Char = AsciiValue;
         Dec = "N/A";
         Hex = String.Concat(AsciiValue.Select(x => ((int)x).ToString("x2")));
-        Oct = "N/A"; //Convert.ToInt32(AsciiValue, 8).ToString();
+        Oct = "N/A";
     }
-
 }

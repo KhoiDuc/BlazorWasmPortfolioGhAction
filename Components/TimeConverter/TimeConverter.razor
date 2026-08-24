@@ -1,76 +1,53 @@
 @using System.Text
 @inject IJSRuntime JSRuntime
 
-<div class="container">
-    
-    <div class="row">
-        <div class="col">
-            <h2>⏱️ Time Converter</h2>
-        </div>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>Time Converter</h3>
+        <p>Convert seconds to hh:mm:ss:fff format.</p>
     </div>
-    
-    <div class="row">
-        <div class="col">
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Seconds:</span>
-                </div>
-                <input type="number" id="input" class="form-control" @bind="Input" placeholder="60" />
-                <span class="input-group-btn">
-                    <button id="btnClear" name="btnBinaryClear" class="btn btn-danger float-right" @onclick="Clear"><i class="far fa-trash-alt"></i>@*Clear*@</button>
-                </span>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="input">Seconds</label>
+            <div class="conv-row">
+                <input type="number" id="input" class="tool-input" @bind="Input" placeholder="60" />
+                <button class="tool-btn tool-btn-danger" @onclick="Clear" title="Clear">
+                    <i class="bi bi-trash" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+        <div class="tool-actions">
+            <button class="tool-btn tool-btn-success" @onclick="Convert">
+                <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Convert
+            </button>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label">Result (hh:mm:ss:fff)</label>
+            <div class="conv-row">
+                <input id="output" class="tool-input" @bind="Output" placeholder="hh:mm:ss:fff" readonly />
+                <button class="tool-btn" @onclick="Copy" title="Copy">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
     </div>
-
-    <div class="row">
-        <div class="col">
-            <button id="btnConvert" name="btnConvert" class="btn btn-success float-right" @onclick="Convert">Convert</button>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">hh:mm:ss:fff</span>
-                </div>
-                <input id="output" class="form-control" @bind="Output" placeholder="hh:mm:ss:fff" readonly="readonly" />
-                <span class="input-group-btn">
-                    <button id="btnCopy" name="btnCopy" class="btn btn-info float-right" @onclick="Copy"><i class="far fa-copy"></i></button>
-                </span>
-            </div>
-
-        </div>
-    </div>
-
 </div>
 
 @code {
     long Input = 60;
     string Output = string.Empty;
-    
-    void Convert()
-    {
-        var data = ConvertTime(Input);
-        Output = data;
-    }
-    
-    private void Clear()
-    {
-        Input = 0;
-    }
-    
+
+    void Convert() { Output = ConvertTime(Input); }
+    void Clear() { Input = 0; }
+
     async Task Copy()
     {
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Output);
     }
-    
-    #region Convert
+
     static string ConvertTime(long seconds)
     {
         TimeSpan time = TimeSpan.FromSeconds(seconds);
         return time.ToString(@"hh\:mm\:ss\:fff");
     }
-    #endregion Convert
 }

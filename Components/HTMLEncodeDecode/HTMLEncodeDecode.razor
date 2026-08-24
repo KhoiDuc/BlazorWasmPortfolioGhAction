@@ -1,54 +1,49 @@
 @using System.IO;
 @using System.Net;
-
 @inject IJSRuntime JSRuntime
 
-<div class="container">
-
-    <div class="row">
-        <div class="col">
-            <h2>HTML Encode / Decode</h2>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>HTML Encode / Decode</h3>
+        <p>Encode or decode HTML entities.</p>
+    </div>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="decoded">Decoded HTML</label>
+            <textarea id="decoded" class="tool-textarea" rows="4" @bind="Decoded" placeholder="&lt;html&gt;..."></textarea>
         </div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-            <textarea id="decoded" class="form-control" rows="5" @bind="Decoded"></textarea>
-        </div> 
-    </div>
-    <div class="row">
-        <div class="col">
-            <button id="btnEncode" name="btnEncode" class="btn btn-success float-right" @onclick="Encode">Encode</button>
-       </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            <div class="input-group">
-                <textarea id="encoded" class="form-control" rows="5" @bind="Encoded"></textarea>
-                <span class="input-group-btn">
-                    <button id="btnCopySQLBuilder" name="btnCopySQLBuilder" class="btn btn-info" @onclick="Copy"><i class="far fa-copy"></i></button>
-                </span>
+        <div class="tool-actions">
+            <button class="tool-btn tool-btn-success" @onclick="Encode">
+                <i class="bi bi-arrow-down" aria-hidden="true"></i> Encode
+            </button>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="encoded">Encoded HTML</label>
+            <div class="conv-row">
+                <textarea id="encoded" class="tool-textarea" rows="4" @bind="Encoded"></textarea>
+            </div>
+            <div class="tool-actions" style="margin-top: 0.6rem;">
+                <button class="tool-btn" @onclick="Copy">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i> Copy
+                </button>
+                <button class="tool-btn tool-btn-success" @onclick="Decode">
+                    <i class="bi bi-arrow-up" aria-hidden="true"></i> Decode
+                </button>
             </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            <button id="btnDecode" name="btnDecode" class="btn btn-success float-right" @onclick="Decode">Decode</button>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            <div>@((MarkupString)Encoded)</div>
-        </div>
+        @if (!string.IsNullOrEmpty(Encoded))
+        {
+            <div>
+                <span class="tool-result-label">Preview</span>
+                <div class="tool-result">@((MarkupString)Encoded)</div>
+            </div>
+        }
     </div>
 </div>
 
 @code {
-    [Parameter]
-    public string Decoded { get; set; }
-    
-    [Parameter]
-    public string Encoded { get; set; }
+    [Parameter] public string Decoded { get; set; } = "";
+    [Parameter] public string Encoded { get; set; } = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -67,7 +62,7 @@
     {
         Decoded = WebUtility.HtmlEncode(Encoded);
     }
-    
+
     async Task Copy()
     {
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Encoded);

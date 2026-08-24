@@ -1,43 +1,28 @@
-<div class="container">
-    
-    <div class="row">
-        <div class="col">
-            <h2>HEX to DEC</h2>
-        </div>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>HEX to DEC</h3>
+        <p>Convert between hexadecimal and decimal.</p>
     </div>
-    
-    <div class="row">
-        <div class="col">
-
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Hex:</span>
-                </div>
-                <input id="hex" name="hex" class="form-control" @bind="hex">
-                <span class="input-group-btn">
-                    <button id="ConvertToDecimal" name="ConvertToDecimal" @onclick="ConvertToDecimal" class="btn btn-success float-right">Convert To Decimal</button>
-                </span>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="hex">Hexadecimal</label>
+            <div class="hextodec-row">
+                <input id="hex" class="tool-input" @bind="hex" placeholder="1A" />
+                <button class="tool-btn tool-btn-primary" @onclick="ConvertToDecimal">
+                    <i class="bi bi-arrow-down-square" aria-hidden="true"></i> To Decimal
+                </button>
             </div>
-
         </div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Dec:</span>
-                </div>
-                <input id="dec" name="dec" class="form-control" @bind="dec">
-                <div class="input-group-append">
-                    <button id="ConvertToHex" name="ConvertToHex" @onclick="ConvertToHex" class="btn btn-success float-right">Convert To Hex</button>
-                </div>
+        <div class="tool-field">
+            <label class="tool-label" for="dec">Decimal</label>
+            <div class="hextodec-row">
+                <input id="dec" class="tool-input" @bind="dec" placeholder="26" />
+                <button class="tool-btn tool-btn-primary" @onclick="ConvertToHex">
+                    <i class="bi bi-arrow-up-square" aria-hidden="true"></i> To Hex
+                </button>
             </div>
-
         </div>
     </div>
-
 </div>
 
 @code {

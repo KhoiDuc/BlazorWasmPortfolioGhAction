@@ -1,72 +1,60 @@
 @using Humanizer
-@using ReverseMarkdown.Converters
 
-<div class="container">
-    <div class="row">
-        <div class="col">
-            
-            <label class="label-control">Timestamps in seconds:</label>
-            <div class="input-group">
-                <input type="number" id="timestamp" name="timestamp" class="form-control" @bind="Timestamp">
-                <span class="input-group-btn">
-                    <button class="btn btn-info" type="button" id="btnRefresh" name="btnRefresh" @onclick="Refresh"><i class="fas fa-sync"></i></button>
-                    <button class="btn btn-success" type="button" id="btnConvert" name="btnConvert" @onclick="TimestampToHuman">Convert</button>
-                </span>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>Epoch Converter</h3>
+        <p>Convert Unix timestamp to human-readable date.</p>
+    </div>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="timestamp">Timestamp (seconds)</label>
+            <div class="epoch-row">
+                <input type="number" id="timestamp" class="tool-input" @bind="Timestamp" />
+                <button class="tool-btn" @onclick="Refresh" title="Current timestamp">
+                    <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                </button>
+                <button class="tool-btn tool-btn-primary" @onclick="TimestampToHuman">Convert</button>
             </div>
-            
         </div>
+        @if (!string.IsNullOrEmpty(GMT))
+        {
+            <div class="epoch-results">
+                <div class="epoch-result-item">
+                    <span class="tool-result-label">GMT</span>
+                    <div class="tool-result">@GMT</div>
+                </div>
+                <div class="epoch-result-item">
+                    <span class="tool-result-label">Your timezone</span>
+                    <div class="tool-result">@YourTimeZone</div>
+                </div>
+                <div class="epoch-result-item">
+                    <span class="tool-result-label">Relative</span>
+                    <div class="tool-result">@Relative</div>
+                </div>
+            </div>
+        }
     </div>
-    
-    <br />
-    
-    <div class="row">
-        <div class="col">
-            
-            <p><strong>GMT</strong>: @GMT</p>
-            <p><strong>Your time zone</strong>: @YourTimeZone</p>
-            <p><strong>Relative</strong>: @Relative</p>
-            
-        </div>
-    </div>
-    
-    <hr />
-    
-    <div class="row">
-        <div class="col">
-            <p>Todo: Datetime to EPOCH.</p>
-        </div>
-    </div>
-    
-    <hr />
-    
-    <div class="row">
-        <div class="col">
-            <p>Inspired from <a href="https://www.epochconverter.com" target="_blank">Epoch & Unix Timestamp Conversion Tools</a>.</p>
-            <p>"Relative" Powered by <a href="https://github.com/Humanizr/Humanizer" target="_blank">Humanizer</a>.</p>
-        </div>
-    </div>
+    <hr class="tool-divider" />
+    <p class="tool-hint">
+        Inspired by <a href="https://www.epochconverter.com" target="_blank">Epoch Converter</a>.
+        Relative by <a href="https://github.com/Humanizr/Humanizer" target="_blank">Humanizer</a>.
+    </p>
 </div>
 
 @code {
     long Timestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
-    string GMT;
-    string YourTimeZone;
-    string Relative;
+    string GMT = "";
+    string YourTimeZone = "";
+    string Relative = "";
 
-    void Refresh()
-    {
-        Timestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
-    }
-    
+    void Refresh() { Timestamp = DateTimeOffset.Now.ToUnixTimeSeconds(); }
+
     void TimestampToHuman()
     {
-        // var EPOCH = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(Timestamp);
-        // DateTimeOffset dateTimeOffset2 = DateTimeOffset.FromUnixTimeMilliseconds(Timestamp);
         DateTime dateTime = dateTimeOffset.DateTime;
         GMT = dateTime.ToString("dddd, dd MMMM yyyy HH:mm:ss");
         YourTimeZone = dateTime.ToLocalTime().ToString("dddd, dd MMMM yyyy HH:mm:ss");
         Relative = dateTime.Humanize();
     }
-
 }
