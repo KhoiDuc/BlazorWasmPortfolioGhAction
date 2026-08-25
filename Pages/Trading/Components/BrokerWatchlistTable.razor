@@ -1,0 +1,105 @@
+<div class="ts-panel ts-table-wrap">
+    <div class="broker-table-head">
+        <h3 class="ts-panel-title" style="margin:0">Danh mục khuyến nghị</h3>
+        @if (PriceBusy)
+        {
+            <span class="ts-muted" style="font-size:0.8rem">Đang lấy giá…</span>
+        }
+    </div>
+    @if (Portfolio.Positions.Count == 0)
+    {
+        <p class="ts-empty" style="padding:1.5rem">Chưa có mã. Ghi khuyến nghị broker phía trên — bảng sẽ hiện sau lần đầu.</p>
+    }
+    else
+    {
+        <table class="ts-table broker-table">
+            <thead>
+                <tr>
+                    <th>Ngành</th>
+                    <th>Mã CP</th>
+                    <th>Giá mua</th>
+                    <th>Giá TB</th>
+                    <th>Hiện tại</th>
+                    <th>%Lãi/Lỗ</th>
+                    <th>Cắt lỗ</th>
+                    <th>Mục tiêu</th>
+                    <th>Trạng thái</th>
+                    <th>Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Portfolio.Positions.OrderBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase))
+                {
+                    var current = Quote(p.Symbol);
+                    var pnl = p.PnlPct(current);
+                    <tr class="@(p.Symbol.Equals(SelectedSymbol, StringComparison.OrdinalIgnoreCase) ? "selected" : "")"
+                        @onclick="() => OnSelect.InvokeAsync(p.Symbol)">
+                        <td>@DisplaySector(p.Sector)</td>
+                        <td><strong>@p.Symbol</strong></td>
+                        <td>
+                            <div class="broker-lots">
+                                @foreach (var (lot, i) in p.Buys.OrderBy(b => b.BoughtAt).Select((b, i) => (b, i)))
+                                {
+                                    <span class="broker-lot-chip" title="@LotTitle(lot)">L@(i + 1) @lot.Price.ToString("N2")</span>
+                                }
+                            </div>
+                        </td>
+                        <td>@(p.AvgBuy?.ToString("N2") ?? "—")</td>
+                        <td>@(current?.ToString("N2") ?? "—")</td>
+                        <td class="@(pnl is > 0 ? "ts-positive" : pnl is < 0 ? "ts-negative" : "")">
+                            @(pnl is null ? "—" : $"{pnl.Value:N2}%")
+                        </td>
+                        <td class="broker-stop">@(p.StopLoss?.ToString("N2") ?? "—")</td>
+                        <td class="broker-target">@(p.TargetPrice?.ToString("N2") ?? "—")</td>
+                        <td>
+                            @if (p.Status == BrokerPositionStatus.ChuaQuyet)
+                            {
+                                <span class="ts-muted">—</span>
+                            }
+                            else
+                            {
+                                <span class="ts-signal broker-status-@p.Status">@BrokerStatusLabels.Vi(p.Status)</span>
+                            }
+                        </td>
+                        <td class="broker-note-cell">@DisplayLatestNote(p)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <p class="ts-muted" style="font-size:0.78rem;margin:0.75rem 0 0">%Lãi/Lỗ = (giá hiện tại − giá TB) / giá TB. Mỗi lần broker khuyên mua thêm → thêm dòng L2, L3… → giá TB đổi.</p>
+    }
+</div>
+
+@code {
+    [Parameter] public BrokerPortfolio Portfolio { get; set; } = new();
+    [Parameter] public Dictionary<string, decimal> Quotes { get; set; } = new();
+    [Parameter] public string? SelectedSymbol { get; set; }
+    [Parameter] public bool PriceBusy { get; set; }
+    [Parameter] public EventCallback<string> OnSelect { get; set; }
+
+    private decimal? Quote(string symbol) =>
+        Quotes.TryGetValue(symbol, out var v) ? v : null;
+
+    private static string DisplaySector(string sector) =>
+        string.IsNullOrWhiteSpace(sector) ? "—" : sector;
+
+    private static string LotTitle(BrokerLot lot)
+    {
+        var parts = new List<string> { lot.BoughtAt.ToString("d"), $"@{lot.Price:N2}" };
+        if (lot.StopLoss is > 0) parts.Add($"SL {lot.StopLoss:N2}");
+        if (lot.TargetPrice is > 0) parts.Add($"TP {lot.TargetPrice:N2}");
+        if (!string.IsNullOrWhiteSpace(lot.Note)) parts.Add(lot.Note);
+        return string.Join(" · ", parts);
+    }
+
+    private static string DisplayLatestNote(BrokerPosition p)
+    {
+        var lotNote = p.Buys.OrderByDescending(b => b.BoughtAt).FirstOrDefault(b => !string.IsNullOrWhiteSpace(b.Note))?.Note;
+        var timeline = p.LatestNote?.Text;
+        var text = lotNote ?? timeline;
+        return string.IsNullOrWhiteSpace(text) ? "—" : Truncate(text, 48);
+    }
+
+    private static string Truncate(string text, int max) =>
+        text.Length <= max ? text : text[..max] + "…";
+}

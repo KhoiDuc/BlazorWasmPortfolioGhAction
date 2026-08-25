@@ -1,0 +1,264 @@
+@page "/trading/broker"
+@layout TradingLayout
+@inject IBrokerDeskStore Store
+@inject IVnMarketClient Market
+@inject VnSectorService Sectors
+@inject BrokerOptions GeminiOptions
+
+<div class="ts-page">
+    <div class="ts-panel">
+        <div class="ts-header">
+            <div>
+                <h2>Broker Desk</h2>
+                <p>Ghi từng lần broker khuyến nghị — bảng danh mục tự hình thành. VD: VNM @@ 60 (không cắt lỗ) → lần 2 @@ 58 → giá TB &amp; %L/L cập nhật theo giá hiện tại.</p>
+            </div>
+            <div class="broker-header-actions">
+                <button class="ts-btn ts-btn-outline" @onclick="RefreshPrices" disabled="@_priceBusy">Làm mới giá</button>
+                <button class="ts-btn ts-btn-outline" @onclick="ExportCsv">Export CSV</button>
+                <label class="ts-btn ts-btn-outline broker-file-btn">
+                    Import JSON
+                    <InputFile OnChange="ImportJson" accept=".json" />
+                </label>
+                <button class="ts-btn ts-btn-primary" @onclick="SaveJson">Lưu file JSON</button>
+            </div>
+        </div>
+        @if (_dirty)
+        {
+            <div class="ts-alert ts-alert-info">Có thay đổi chưa tải file. Bấm <strong>Lưu file JSON</strong> rồi thay <code>wwwroot/trading/broker/portfolio.json</code>.</div>
+        }
+        @if (!string.IsNullOrEmpty(_message))
+        {
+            <div class="ts-alert @(_messageError ? "ts-alert-error" : "ts-alert-info") mt-2">@_message</div>
+        }
+    </div>
+
+    <div class="ts-panel">
+        <h3 class="ts-panel-title">Ghi khuyến nghị broker</h3>
+        <p class="ts-muted" style="font-size:0.82rem;margin:-0.25rem 0 0.75rem">Chỉ cần mã + giá mua. Cắt lỗ / mục tiêu để trống nếu broker không nói. Trạng thái chọn sau ở chi tiết mã.</p>
+        <div class="broker-form-grid">
+            <div class="ts-field">
+                <label class="ts-label">Mã CP</label>
+                <input class="ts-input" @bind="_newSymbol" placeholder="VNM" maxlength="10" />
+            </div>
+            <div class="ts-field">
+                <label class="ts-label">Giá mua</label>
+                <input class="ts-input" type="number" step="any" @bind="_newPrice" placeholder="60" />
+            </div>
+            <div class="ts-field">
+                <label class="ts-label">KL (tùy chọn)</label>
+                <input class="ts-input" type="number" step="any" @bind="_newQty" />
+            </div>
+            <div class="ts-field">
+                <label class="ts-label">Mục tiêu</label>
+                <input class="ts-input" type="number" step="any" @bind="_newTarget" placeholder="Để trống nếu chưa có" />
+            </div>
+            <div class="ts-field">
+                <label class="ts-label">Cắt lỗ</label>
+                <input class="ts-input" type="number" step="any" @bind="_newStop" placeholder="Để trống nếu chưa có" />
+            </div>
+        </div>
+        <div class="ts-field">
+            <label class="ts-label">Note broker</label>
+            <textarea class="ts-input ts-textarea" rows="2" @bind="_newNote" placeholder="Lời broker hôm nay — lần 2, 3, 4 ghi note mới."></textarea>
+        </div>
+        <button class="ts-btn ts-btn-primary" @onclick="AddRecommendation" disabled="@_busy">Thêm</button>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="ts-panel"><div class="ts-spinner"></div></div>
+    }
+    else
+    {
+        <BrokerWatchlistTable Portfolio="_portfolio"
+                              Quotes="_quotes"
+                              SelectedSymbol="@_selected"
+                              PriceBusy="_priceBusy"
+                              OnSelect="SelectSymbol" />
+    }
+
+    @if (Selected is not null)
+    {
+        <BrokerPositionEditor Position="Selected"
+                              OnChanged="MarkDirty"
+                              OnDeleted="DeleteSelected" />
+
+        <div class="ts-chart-wrap">
+            <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={Selected.Symbol}")" width="100%" height="380" frameborder="0" title="Vietstock chart"></iframe>
+        </div>
+        <PriceAlertWidget Symbol="@Selected.Symbol" AssetType="stock" />
+    }
+</div>
+
+@code {
+    private BrokerPortfolio _portfolio = new();
+    private Dictionary<string, decimal> _quotes = new(StringComparer.OrdinalIgnoreCase);
+    private string? _selected;
+    private bool _loading = true;
+    private bool _busy;
+    private bool _priceBusy;
+    private bool _dirty;
+    private bool _messageError;
+    private string? _message;
+
+    private string _newSymbol = "";
+    private decimal? _newPrice;
+    private decimal? _newQty;
+    private decimal? _newStop;
+    private decimal? _newTarget;
+    private string _newNote = "";
+
+    private BrokerPosition? Selected =>
+        string.IsNullOrEmpty(_selected)
+            ? null
+            : _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(_selected, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        _portfolio = await Store.LoadAsync();
+        foreach (var p in _portfolio.Positions.Where(x => string.IsNullOrWhiteSpace(x.Sector)))
+            p.Sector = await Sectors.FindSectorAsync(p.Symbol);
+        _loading = false;
+        if (_portfolio.Positions.Count > 0)
+            await RefreshPrices();
+    }
+
+    private void SelectSymbol(string symbol) => _selected = symbol;
+
+    private void MarkDirty()
+    {
+        _dirty = true;
+        _portfolio.UpdatedAt = DateTime.Now;
+    }
+
+    private async Task AddRecommendation()
+    {
+        var symbol = _newSymbol.Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(symbol) || _newPrice is not > 0)
+        {
+            Flash("Nhập mã CP và giá mua > 0.", error: true);
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            var existing = _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
+            if (existing is null)
+            {
+                existing = new BrokerPosition
+                {
+                    Symbol = symbol,
+                    Sector = await Sectors.FindSectorAsync(symbol)
+                };
+                _portfolio.Positions.Add(existing);
+            }
+
+            var lot = new BrokerLot
+            {
+                BoughtAt = DateTime.Today,
+                Price = _newPrice.Value,
+                Quantity = _newQty is > 0 ? _newQty : null,
+                StopLoss = _newStop is > 0 ? _newStop : null,
+                TargetPrice = _newTarget is > 0 ? _newTarget : null,
+                Note = string.IsNullOrWhiteSpace(_newNote) ? null : _newNote.Trim()
+            };
+            existing.Buys.Add(lot);
+
+            if (_newStop is > 0) existing.StopLoss = _newStop;
+            if (_newTarget is > 0) existing.TargetPrice = _newTarget;
+
+            if (!string.IsNullOrWhiteSpace(_newNote))
+            {
+                existing.Notes.Add(new BrokerNote
+                {
+                    At = DateTime.Now,
+                    Kind = BrokerNoteKind.Broker,
+                    Text = $"Mua @ {_newPrice.Value:N2}: {_newNote.Trim()}"
+                });
+            }
+
+            _selected = existing.Symbol;
+            var lotNo = existing.Buys.Count;
+            _newSymbol = "";
+            _newPrice = _newQty = _newStop = _newTarget = null;
+            _newNote = "";
+            MarkDirty();
+
+            var avg = existing.AvgBuy;
+            Flash(lotNo > 1
+                ? $"Đã ghi lần {lotNo} — {existing.Symbol} @ {lot.Price:N2}. Giá TB: {avg:N2}."
+                : $"Đã thêm {existing.Symbol} @ {lot.Price:N2} vào danh mục.");
+            await RefreshPrices();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void DeleteSelected()
+    {
+        if (Selected is null) return;
+        _portfolio.Positions.Remove(Selected);
+        _selected = null;
+        MarkDirty();
+    }
+
+    private async Task SaveJson()
+    {
+        await Store.DownloadJsonAsync(_portfolio);
+        _dirty = false;
+        Flash("Đã tải portfolio.json — thay file wwwroot/trading/broker/portfolio.json rồi commit.");
+    }
+
+    private async Task ExportCsv() => await Store.DownloadCsvAsync(_portfolio);
+
+    private async Task ImportJson(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            await using var stream = e.File.OpenReadStream(maxAllowedSize: 2_000_000);
+            using var reader = new StreamReader(stream);
+            var json = await reader.ReadToEndAsync();
+            _portfolio = Store.ParseJson(json);
+            _selected = null;
+            _dirty = false;
+            Flash($"Đã nạp {_portfolio.Positions.Count} mã từ JSON.");
+            await RefreshPrices();
+        }
+        catch (Exception ex)
+        {
+            Flash($"Import lỗi: {ex.Message}", error: true);
+        }
+    }
+
+    private async Task RefreshPrices()
+    {
+        var symbols = _portfolio.Positions.Select(p => p.Symbol).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
+        if (symbols.Count == 0) return;
+
+        _priceBusy = true;
+        try
+        {
+            var rows = await Market.GetLatestManyAsync(symbols);
+            _quotes = rows
+                .GroupBy(s => s.Symbol, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First().Close, StringComparer.OrdinalIgnoreCase);
+        }
+        catch (Exception ex)
+        {
+            Flash($"Không lấy được giá: {ex.Message}", error: true);
+        }
+        finally
+        {
+            _priceBusy = false;
+        }
+    }
+
+    private void Flash(string text, bool error = false)
+    {
+        _message = text;
+        _messageError = error;
+    }
+}

@@ -68,6 +68,14 @@ public static class TradingServiceExtensions
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.PositionService>();
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.ChecklistService>();
 
+        var brokerOptions = new BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerOptions();
+        configuration.GetSection("Gemini").Bind(brokerOptions);
+        services.AddSingleton(brokerOptions);
+        services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.Broker.IBrokerDeskStore,
+            BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerDeskStore>();
+        services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.Broker.IBrokerGeminiClient,
+            BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerGeminiClient>();
+
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.ITradingAuthService,
             BlazorWasmPortfolioGhAction.Services.Trading.TradingAuthService>();
 

@@ -1,0 +1,192 @@
+@inject IBrokerGeminiClient Gemini
+
+<div class="ts-panel">
+    <div class="ts-header" style="margin-bottom:1rem">
+        <div>
+            <h3 class="ts-panel-title" style="margin:0">Chi tiết @Position.Symbol</h3>
+            <p class="ts-muted" style="font-size:0.82rem;margin:0.2rem 0 0">Sửa lần mua cũ, chọn trạng thái, thêm note / AI giải thích.</p>
+        </div>
+        <button class="ts-btn ts-btn-outline" @onclick="Delete">Xóa mã</button>
+    </div>
+
+    <div class="broker-form-grid">
+        <div class="ts-field">
+            <label class="ts-label">Ngành</label>
+            <input class="ts-input" @bind="Position.Sector" @bind:event="oninput" @bind:after="Changed" />
+        </div>
+        <div class="ts-field">
+            <label class="ts-label">Trạng thái</label>
+            <select class="ts-select" @bind="Position.Status" @bind:after="Changed">
+                @foreach (var s in Enum.GetValues<BrokerPositionStatus>())
+                {
+                    <option value="@s">@BrokerStatusLabels.Vi(s)</option>
+                }
+            </select>
+        </div>
+        <div class="ts-field">
+            <label class="ts-label">Cắt lỗ (mã)</label>
+            <input class="ts-input" type="number" step="any" @bind="Position.StopLoss" @bind:after="Changed" placeholder="—" />
+        </div>
+        <div class="ts-field">
+            <label class="ts-label">Mục tiêu (mã)</label>
+            <input class="ts-input" type="number" step="any" @bind="Position.TargetPrice" @bind:after="Changed" placeholder="—" />
+        </div>
+    </div>
+
+    <h4 class="broker-subhead">Lần mua</h4>
+    <div class="ts-table-wrap">
+        <table class="ts-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Ngày</th>
+                    <th>Giá</th>
+                    <th>KL</th>
+                    <th>Cắt lỗ</th>
+                    <th>Mục tiêu</th>
+                    <th>Note</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ var i = 0; }
+                @foreach (var lot in Position.Buys.OrderBy(b => b.BoughtAt).ToList())
+                {
+                    i++;
+                    <tr>
+                        <td>L@i</td>
+                        <td><input class="ts-input" type="date" @bind="lot.BoughtAt" @bind:format="yyyy-MM-dd" @bind:after="Changed" /></td>
+                        <td><input class="ts-input" type="number" step="any" @bind="lot.Price" @bind:after="Changed" /></td>
+                        <td><input class="ts-input" type="number" step="any" @bind="lot.Quantity" @bind:after="Changed" /></td>
+                        <td><input class="ts-input" type="number" step="any" @bind="lot.StopLoss" @bind:after="Changed" placeholder="—" /></td>
+                        <td><input class="ts-input" type="number" step="any" @bind="lot.TargetPrice" @bind:after="Changed" placeholder="—" /></td>
+                        <td><input class="ts-input" @bind="lot.Note" @bind:after="Changed" placeholder="—" /></td>
+                        <td><button class="ts-btn ts-btn-outline" type="button" @onclick="() => RemoveLot(lot)">Xóa</button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <h4 class="broker-subhead">Note broker (timeline)</h4>
+    @foreach (var note in Position.Notes.OrderByDescending(n => n.At).ToList())
+    {
+        <div class="broker-note-card">
+            <div class="broker-note-meta">
+                <input class="ts-input" type="datetime-local" @bind="note.At" @bind:format="yyyy-MM-ddTHH:mm" @bind:after="Changed" />
+                <button class="ts-btn ts-btn-outline" type="button" @onclick="() => RemoveNote(note)">Xóa</button>
+            </div>
+            <textarea class="ts-input ts-textarea" rows="3" @bind="note.Text" @bind:event="oninput" @bind:after="Changed"></textarea>
+            <button class="ts-btn ts-btn-outline" type="button" disabled="@_explainBusy" @onclick="() => Explain(note)">
+                AI giải thích
+            </button>
+            @if (!string.IsNullOrWhiteSpace(note.AiExplain))
+            {
+                <pre class="broker-ai-out">@note.AiExplain</pre>
+            }
+        </div>
+    }
+
+    <div class="ts-field">
+        <label class="ts-label">Thêm note</label>
+        <textarea class="ts-input ts-textarea" rows="2" @bind="_noteText" placeholder="Note broker ngày hôm sau…"></textarea>
+    </div>
+    <button class="ts-btn ts-btn-primary" type="button" @onclick="AddNote">Thêm note</button>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="ts-alert ts-alert-error mt-2">@_error</div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public BrokerPosition Position { get; set; } = new();
+    [Parameter] public EventCallback OnChanged { get; set; }
+    [Parameter] public EventCallback OnDeleted { get; set; }
+
+    private string _noteText = "";
+    private bool _explainBusy;
+    private string? _error;
+
+    private Task Changed() => OnChanged.InvokeAsync();
+
+    private async Task RemoveLot(BrokerLot lot)
+    {
+        Position.Buys.Remove(lot);
+        await Changed();
+    }
+
+    private async Task AddNote()
+    {
+        if (string.IsNullOrWhiteSpace(_noteText))
+        {
+            _error = "Note trống.";
+            return;
+        }
+        Position.Notes.Add(new BrokerNote
+        {
+            At = DateTime.Now,
+            Kind = BrokerNoteKind.Broker,
+            Text = _noteText.Trim()
+        });
+        _noteText = "";
+        _error = null;
+        await Changed();
+    }
+
+    private async Task RemoveNote(BrokerNote note)
+    {
+        Position.Notes.Remove(note);
+        await Changed();
+    }
+
+    private async Task Delete() => await OnDeleted.InvokeAsync();
+
+    private async Task Explain(BrokerNote note)
+    {
+        if (string.IsNullOrWhiteSpace(note.Text))
+        {
+            _error = "Note trống.";
+            return;
+        }
+
+        _explainBusy = true;
+        _error = null;
+        try
+        {
+            var prior = string.Join("\n---\n",
+                Position.Notes
+                    .Where(n => n.Id != note.Id && !string.IsNullOrWhiteSpace(n.Text))
+                    .OrderBy(n => n.At)
+                    .Select(n => $"{n.At:g}: {n.Text}"));
+
+            var prompt = BrokerPromptLibrary.ExplainNote(
+                Position.Symbol,
+                Position.Sector,
+                Position.Status == BrokerPositionStatus.ChuaQuyet ? "Chưa quyết" : BrokerStatusLabels.Vi(Position.Status),
+                Position.AvgBuy?.ToString("N2"),
+                Position.StopLoss?.ToString("N2") ?? "—",
+                Position.TargetPrice?.ToString("N2") ?? "—",
+                note.Text,
+                string.IsNullOrWhiteSpace(prior) ? "(chưa có note cũ)" : prior);
+
+            var reply = await Gemini.ExplainAsync(prompt);
+            if (string.IsNullOrWhiteSpace(reply))
+            {
+                _error = "AI không trả lời. Kiểm tra Gemini:ApiKey trong appsettings.";
+                return;
+            }
+
+            note.AiExplain = reply;
+            await Changed();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _explainBusy = false;
+        }
+    }
+}
