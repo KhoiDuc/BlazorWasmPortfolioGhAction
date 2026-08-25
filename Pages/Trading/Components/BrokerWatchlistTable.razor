@@ -1,12 +1,18 @@
 <div class="ts-panel ts-table-wrap">
     <div class="broker-table-head">
-        <h3 class="ts-panel-title" style="margin:0">Danh mục khuyến nghị</h3>
+        <h3 class="ts-panel-title" style="margin:0">
+            Danh mục khuyến nghị
+            @if ((Portfolio.Positions?.Count ?? 0) > 0)
+            {
+                <span class="ts-muted" style="font-size:0.85rem;font-weight:normal">(@Portfolio.Positions!.Count mã)</span>
+            }
+        </h3>
         @if (PriceBusy)
         {
             <span class="ts-muted" style="font-size:0.8rem">Đang lấy giá…</span>
         }
     </div>
-    @if (Portfolio.Positions.Count == 0)
+    @if ((Portfolio.Positions?.Count ?? 0) == 0)
     {
         <p class="ts-empty" style="padding:1.5rem">Chưa có mã. Ghi khuyến nghị broker phía trên — bảng sẽ hiện sau lần đầu.</p>
     }

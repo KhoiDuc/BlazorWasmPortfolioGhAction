@@ -10,6 +10,7 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
 public interface IBrokerDeskStore
 {
     Task<BrokerPortfolio> LoadAsync(CancellationToken ct = default);
+    Task SaveDraftAsync(BrokerPortfolio portfolio, CancellationToken ct = default);
     Task DownloadJsonAsync(BrokerPortfolio portfolio);
     Task DownloadCsvAsync(BrokerPortfolio portfolio);
     BrokerPortfolio ParseJson(string json);
@@ -18,6 +19,7 @@ public interface IBrokerDeskStore
 public sealed class BrokerDeskStore : IBrokerDeskStore
 {
     public const string PortfolioPath = "trading/broker/portfolio.json";
+    private const string DraftKey = "broker.desk.draft";
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -40,12 +42,28 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
     {
         try
         {
-            using var resp = await _http.GetAsync(PortfolioPath, ct);
+            var draft = await _js.InvokeAsync<string?>("tradingAuth.getItem", DraftKey);
+            if (!string.IsNullOrWhiteSpace(draft))
+            {
+                var fromDraft = NormalizePortfolio(ParseJson(draft));
+                if (fromDraft.Positions.Count > 0)
+                    return fromDraft;
+            }
+        }
+        catch
+        {
+            // Ignore localStorage errors and fall back to static JSON.
+        }
+
+        try
+        {
+            var url = $"{PortfolioPath}?v={DateTime.UtcNow.Ticks}";
+            using var resp = await _http.GetAsync(url, ct);
             if (!resp.IsSuccessStatusCode)
                 return new BrokerPortfolio();
 
             var json = await resp.Content.ReadAsStringAsync(ct);
-            return ParseJson(json);
+            return NormalizePortfolio(ParseJson(json));
         }
         catch
         {
@@ -53,12 +71,45 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
         }
     }
 
+    public async Task SaveDraftAsync(BrokerPortfolio portfolio, CancellationToken ct = default)
+    {
+        portfolio.UpdatedAt = DateTime.Now;
+        var json = JsonSerializer.Serialize(NormalizePortfolio(portfolio), JsonOpts);
+        await _js.InvokeVoidAsync("tradingAuth.setItem", DraftKey, json);
+    }
+
     public BrokerPortfolio ParseJson(string json)
     {
         if (string.IsNullOrWhiteSpace(json))
             return new BrokerPortfolio();
 
-        return JsonSerializer.Deserialize<BrokerPortfolio>(json, JsonOpts) ?? new BrokerPortfolio();
+        try
+        {
+            return NormalizePortfolio(JsonSerializer.Deserialize<BrokerPortfolio>(json, JsonOpts) ?? new BrokerPortfolio());
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException($"JSON không hợp lệ: {ex.Message}", ex);
+        }
+    }
+
+    private static BrokerPortfolio NormalizePortfolio(BrokerPortfolio portfolio)
+    {
+        portfolio.Positions ??= [];
+        portfolio.Positions = portfolio.Positions
+            .Where(p => !string.IsNullOrWhiteSpace(p.Symbol))
+            .Select(NormalizePosition)
+            .ToList();
+        return portfolio;
+    }
+
+    private static BrokerPosition NormalizePosition(BrokerPosition position)
+    {
+        position.Symbol = position.Symbol.Trim().ToUpperInvariant();
+        position.Buys ??= [];
+        position.Notes ??= [];
+        position.Buys = position.Buys.Where(b => b.Price > 0).ToList();
+        return position;
     }
 
     public Task DownloadJsonAsync(BrokerPortfolio portfolio)

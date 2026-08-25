@@ -15,10 +15,14 @@
             <div class="broker-header-actions">
                 <button class="ts-btn ts-btn-outline" @onclick="RefreshPrices" disabled="@_priceBusy">Làm mới giá</button>
                 <button class="ts-btn ts-btn-outline" @onclick="ExportCsv">Export CSV</button>
-                <label class="ts-btn ts-btn-outline broker-file-btn">
+                <label class="ts-btn ts-btn-outline broker-file-btn" for="broker-import-json">
                     Import JSON
-                    <InputFile OnChange="ImportJson" accept=".json" />
                 </label>
+                <InputFile @key="_importInputKey"
+                           id="broker-import-json"
+                           class="broker-file-input"
+                           OnChange="ImportJson"
+                           accept=".json,application/json" />
                 <button class="ts-btn ts-btn-primary" @onclick="SaveJson">Lưu file JSON</button>
             </div>
         </div>
@@ -139,7 +143,8 @@
     }
     else
     {
-        <BrokerWatchlistTable Portfolio="_portfolio"
+        <BrokerWatchlistTable @key="_portfolioRevision"
+                              Portfolio="_portfolio"
                               Quotes="_quotes"
                               SelectedSymbol="@_selected"
                               PriceBusy="_priceBusy"
@@ -169,6 +174,8 @@
     private bool _dirty;
     private bool _messageError;
     private string? _message;
+    private int _portfolioRevision;
+    private int _importInputKey;
 
     private string _newSymbol = "";
     private decimal? _newPrice;
@@ -192,7 +199,10 @@
             p.Sector = await Sectors.FindSectorAsync(p.Symbol);
         _loading = false;
         if (_portfolio.Positions.Count > 0)
+        {
+            _portfolioRevision++;
             await RefreshPrices();
+        }
     }
 
     private void SelectSymbol(string symbol) => _selected = symbol;
@@ -201,6 +211,20 @@
     {
         _dirty = true;
         _portfolio.UpdatedAt = DateTime.Now;
+        _portfolioRevision++;
+        _ = PersistDraftAsync();
+    }
+
+    private async Task PersistDraftAsync()
+    {
+        try
+        {
+            await Store.SaveDraftAsync(_portfolio);
+        }
+        catch
+        {
+            // Ignore localStorage failures (private mode, quota, etc.).
+        }
     }
 
     private void OnSymbolInput()
@@ -353,15 +377,42 @@
 
     private async Task ImportJson(InputFileChangeEventArgs e)
     {
+        var file = e.File;
+        if (file is null)
+        {
+            Flash("Không chọn được file.", error: true);
+            return;
+        }
+
         try
         {
-            await using var stream = e.File.OpenReadStream(maxAllowedSize: 2_000_000);
+            await using var stream = file.OpenReadStream(maxAllowedSize: 2_000_000);
             using var reader = new StreamReader(stream);
             var json = await reader.ReadToEndAsync();
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                Flash("File JSON trống.", error: true);
+                return;
+            }
+
             _portfolio = Store.ParseJson(json);
+            _portfolioRevision++;
+            _importInputKey++;
             _selected = null;
-            _dirty = false;
-            Flash($"Đã nạp {_portfolio.Positions.Count} mã từ JSON.");
+            _dirty = true;
+
+            foreach (var p in _portfolio.Positions.Where(x => string.IsNullOrWhiteSpace(x.Sector)))
+                p.Sector = await Sectors.FindSectorAsync(p.Symbol);
+
+            await Store.SaveDraftAsync(_portfolio);
+
+            if (_portfolio.Positions.Count == 0)
+            {
+                Flash("Import xong nhưng không có mã hợp lệ. Kiểm tra trường positions[].symbol và buys[].price.", error: true);
+                return;
+            }
+
+            Flash($"Đã nạp {_portfolio.Positions.Count} mã từ JSON (đã lưu tạm trên trình duyệt).");
             await RefreshPrices();
         }
         catch (Exception ex)
