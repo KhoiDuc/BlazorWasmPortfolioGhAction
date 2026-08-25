@@ -54,25 +54,40 @@ public interface ITradingApiClient
     Task<JsonElement?> GetProxyJsonAsync(string path, CancellationToken ct = default);
     Task ToggleScriptScanAsync(bool enabled, CancellationToken ct = default);
     Task<HttpClient> CreateAuthorizedClientAsync();
+    /// <summary>HTTP client for macro news CRUD — OSINT VPS when UseOwnerEndpoints.</summary>
+    Task<HttpClient> CreateNewsClientAsync();
     string ProxyUrl(string path);
 }
 
 public class TradingApiClient : ITradingApiClient
 {
     private readonly HttpClient _http;
+    private readonly HttpClient _osintHttp;
+    private readonly TradingApiOptions _options;
+    private readonly TradingEndpointResolver _endpoints;
     private readonly ITradingAuthService _auth;
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
 
-    public TradingApiClient(HttpClient http, ITradingAuthService auth)
+    public TradingApiClient(
+        HttpClient http,
+        HttpClient osintHttp,
+        TradingApiOptions options,
+        TradingEndpointResolver endpoints,
+        ITradingAuthService auth)
     {
         _http = http;
+        _osintHttp = osintHttp;
+        _options = options;
+        _endpoints = endpoints;
         _auth = auth;
     }
 
-    public string BaseUrl => _http.BaseAddress?.ToString().TrimEnd('/') ?? "";
+    public string BaseUrl => _endpoints.FlyBase;
 
-    public string ProxyUrl(string path) =>
-        string.IsNullOrEmpty(path) ? BaseUrl : $"{BaseUrl}/{path.TrimStart('/')}";
+    public string ProxyUrl(string path) => _endpoints.ResolveProxyUrl(path);
+
+    public Task<HttpClient> CreateNewsClientAsync() =>
+        Task.FromResult(_options.UseOwnerEndpoints ? _osintHttp : _http);
 
     public async Task<HttpClient> CreateAuthorizedClientAsync()
     {
@@ -87,12 +102,28 @@ public class TradingApiClient : ITradingApiClient
         return await _http.SendAsync(request, ct);
     }
 
-    private async Task<T?> GetAsync<T>(string path, CancellationToken ct)
+    private async Task<T?> GetAsync<T>(string path, CancellationToken ct) =>
+        _endpoints.IsOsintPath(path)
+            ? await GetOsintAsync<T>(path, ct)
+            : await GetWithClientAsync<T>(_http, path, ct);
+
+    private async Task<T?> GetOsintAsync<T>(string path, CancellationToken ct)
+    {
+        var result = await GetWithClientAsync<T>(_http, path, ct);
+        if (result != null || !_options.OsintFallbackDirect)
+            return result;
+
+        return await GetWithClientAsync<T>(_osintHttp, path, ct);
+    }
+
+    private async Task<T?> GetWithClientAsync<T>(HttpClient client, string path, CancellationToken ct)
     {
         try
         {
             var req = new HttpRequestMessage(HttpMethod.Get, path.TrimStart('/'));
-            var resp = await SendAuthorizedAsync(req, ct);
+            var resp = client == _http
+                ? await SendAuthorizedAsync(req, ct)
+                : await client.SendAsync(req, ct);
             if (!resp.IsSuccessStatusCode) return default;
             return await resp.Content.ReadFromJsonAsync<T>(JsonOpts, ct);
         }
@@ -180,6 +211,7 @@ public class TradingApiClient : ITradingApiClient
 
     public async Task<string?> GenerateStrategyPromptAsync(CancellationToken ct = default)
     {
+        // generate-prompt lives on Fly Go API (not OSINT VPS)
         var resp = await _http.GetAsync("api/news-groups/generate-prompt", ct);
         return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStringAsync(ct) : null;
     }
@@ -197,7 +229,7 @@ public class TradingApiClient : ITradingApiClient
     }
 
     public Task TriggerThesisUpdateAsync(CancellationToken ct = default) =>
-        PostAsync("api/osint/theses/trigger", new { }, ct);
+        PostOsintAsync("api/osint/theses/trigger", new { }, ct);
 
     public Task<TelegramNewsItem[]?> GetTelegramNewsAsync(CancellationToken ct = default) =>
         GetAsync<TelegramNewsItem[]>("api/news/telegram", ct);
@@ -216,19 +248,11 @@ public class TradingApiClient : ITradingApiClient
         return data?.Reply;
     }
 
-    public async Task<JsonElement?> GetCalendarAsync(CancellationToken ct = default)
-    {
-        var resp = await _http.GetAsync("ff_calendar_thisweek.json", ct);
-        if (!resp.IsSuccessStatusCode) return null;
-        return await resp.Content.ReadFromJsonAsync<JsonElement>(JsonOpts, ct);
-    }
+    public async Task<JsonElement?> GetCalendarAsync(CancellationToken ct = default) =>
+        await GetAbsoluteJsonAsync(_endpoints.ResolveFetchUrl("ff_calendar_thisweek.json"), ct);
 
-    public async Task<JsonElement?> GetFxRatesAsync(CancellationToken ct = default)
-    {
-        var resp = await _http.GetAsync("api/rates", ct);
-        if (!resp.IsSuccessStatusCode) return null;
-        return await resp.Content.ReadFromJsonAsync<JsonElement>(JsonOpts, ct);
-    }
+    public async Task<JsonElement?> GetFxRatesAsync(CancellationToken ct = default) =>
+        await GetAbsoluteJsonAsync(_endpoints.ResolveFetchUrl("api/rates"), ct);
 
     public Task<OsintSignal[]?> GetOsintSignalsAsync(CancellationToken ct = default) =>
         GetAsync<OsintSignal[]>("api/osint/signals", ct);
@@ -237,16 +261,16 @@ public class TradingApiClient : ITradingApiClient
         PostAsync($"community/posts/{postId}/like", new { }, ct);
 
     public Task UpdateNewsItemAsync(int id, object body, CancellationToken ct = default) =>
-        SendAsync(HttpMethod.Put, $"api/news-items/{id}", body, ct);
+        SendOsintAsync(HttpMethod.Put, $"api/news-items/{id}", body, ct);
 
     public Task DeleteNewsItemAsync(int id, CancellationToken ct = default) =>
-        DeleteAsync($"api/news-items/{id}", ct);
+        DeleteOsintAsync($"api/news-items/{id}", ct);
 
     public Task UpdateNewsGroupAsync(int id, object body, CancellationToken ct = default) =>
-        SendAsync(HttpMethod.Put, $"api/news-groups/{id}", body, ct);
+        SendOsintAsync(HttpMethod.Put, $"api/news-groups/{id}", body, ct);
 
     public Task DeleteNewsGroupAsync(int id, CancellationToken ct = default) =>
-        DeleteAsync($"api/news-groups/{id}", ct);
+        DeleteOsintAsync($"api/news-groups/{id}", ct);
 
     public Task<JsonElement?> GetDnseDealsAsync(string? accountId = null, CancellationToken ct = default)
     {
@@ -273,10 +297,28 @@ public class TradingApiClient : ITradingApiClient
 
     private async Task<JsonElement?> GetJsonAsync(string path, CancellationToken ct)
     {
+        var url = _endpoints.ResolveFetchUrl(path);
+        if (Uri.IsWellFormedUriString(url, UriKind.Absolute) && !url.StartsWith(BaseUrl, StringComparison.OrdinalIgnoreCase))
+            return await GetAbsoluteJsonAsync(url, ct);
+
         try
         {
             var req = new HttpRequestMessage(HttpMethod.Get, path.TrimStart('/'));
             var resp = await SendAuthorizedAsync(req, ct);
+            if (!resp.IsSuccessStatusCode) return null;
+            return await resp.Content.ReadFromJsonAsync<JsonElement>(JsonOpts, ct);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<JsonElement?> GetAbsoluteJsonAsync(string absoluteUrl, CancellationToken ct)
+    {
+        try
+        {
+            var resp = await _http.GetAsync(absoluteUrl, ct);
             if (!resp.IsSuccessStatusCode) return null;
             return await resp.Content.ReadFromJsonAsync<JsonElement>(JsonOpts, ct);
         }
@@ -304,27 +346,39 @@ public class TradingApiClient : ITradingApiClient
         }
     }
 
-    private async Task PostAsync(string path, object body, CancellationToken ct)
+    private Task PostAsync(string path, object body, CancellationToken ct) =>
+        SendWithClientAsync(_http, HttpMethod.Post, path, body, ct);
+
+    private Task PostOsintAsync(string path, object body, CancellationToken ct) =>
+        SendOsintAsync(HttpMethod.Post, path, body, ct);
+
+    private Task DeleteAsync(string path, CancellationToken ct) =>
+        SendWithClientAsync(_http, HttpMethod.Delete, path, null, ct);
+
+    private Task DeleteOsintAsync(string path, CancellationToken ct) =>
+        SendOsintAsync(HttpMethod.Delete, path, null, ct);
+
+    private Task SendAsync(HttpMethod method, string path, object? body, CancellationToken ct) =>
+        SendWithClientAsync(_http, method, path, body, ct);
+
+    private Task SendOsintAsync(HttpMethod method, string path, object? body, CancellationToken ct)
     {
-        var req = new HttpRequestMessage(HttpMethod.Post, path.TrimStart('/'))
-        {
-            Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json")
-        };
-        await SendAuthorizedAsync(req, ct);
+        if (!_options.UseOwnerEndpoints)
+            return SendWithClientAsync(_http, method, path, body, ct);
+
+        return SendWithClientAsync(_osintHttp, method, path, body, ct);
     }
 
-    private async Task DeleteAsync(string path, CancellationToken ct)
-    {
-        var req = new HttpRequestMessage(HttpMethod.Delete, path.TrimStart('/'));
-        await SendAuthorizedAsync(req, ct);
-    }
-
-    private Task SendAsync(HttpMethod method, string path, object? body, CancellationToken ct)
+    private async Task SendWithClientAsync(HttpClient client, HttpMethod method, string path, object? body, CancellationToken ct)
     {
         var req = new HttpRequestMessage(method, path.TrimStart('/'));
         if (body != null)
             req.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
-        return SendAuthorizedAsync(req, ct);
+
+        if (client == _http)
+            await SendAuthorizedAsync(req, ct);
+        else
+            await client.SendAsync(req, ct);
     }
 
     private static string Query(string key, string? value) =>

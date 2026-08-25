@@ -16,7 +16,7 @@
         </div>
         @if (_channels.Length > 0)
         {
-            <div style="display:flex;gap:4px;padding:8px 12px;overflow-x:auto;border-bottom:1px solid #e2e8f0">
+            <div class="ts-tabs" style="padding:8px 12px;margin:0;border-bottom:1px solid var(--color-border)">
                 <button class="ts-tab @(_channel == "" ? "active" : "")" style="padding:4px 10px;font-size:0.75rem" @onclick='() => _channel = ""'>All</button>
                 @foreach (var ch in _channels)
                 {
@@ -30,8 +30,8 @@
             {
                 @foreach (var item in FilteredItems)
                 {
-                    <div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #e2e8f0">
-                        <strong style="font-size:0.78rem;color:#3b82f6">@item.Channel</strong>
+                    <div class="ts-divider" style="margin-bottom:1rem;padding-bottom:1rem">
+                        <strong class="ts-channel-label">@item.Channel</strong>
                         <p style="font-size:0.85rem;margin:0.4rem 0">@item.Text</p>
                         <button class="ts-btn ts-btn-outline" style="padding:2px 8px;font-size:0.72rem" @onclick="() => Speak(item.Text)">
                             <i class="bi bi-volume-up"></i> Read

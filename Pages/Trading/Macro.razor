@@ -185,7 +185,7 @@
     private async Task SaveGroup()
     {
         var userId = await Auth.GetUserIdAsync();
-        var client = await Api.CreateAuthorizedClientAsync();
+        var client = await Api.CreateNewsClientAsync();
         await client.PostAsJsonAsync($"api/news-groups?user_id={userId}", new { name = _newGroupName, description = _newGroupDesc });
         _showGroupForm = false;
         await LoadAsync();
@@ -193,7 +193,7 @@
 
     private async Task SaveNews()
     {
-        var client = await Api.CreateAuthorizedClientAsync();
+        var client = await Api.CreateNewsClientAsync();
         await client.PostAsJsonAsync($"api/news-items?group_id={_newsGroupId}", new { title = _newNewsTitle, content = _newNewsContent, status = "active" });
         _showNewsForm = false;
         await LoadAsync();

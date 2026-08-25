@@ -46,7 +46,7 @@
         await InvokeAsync(StateHasChanged);
         try
         {
-            var world = await Api.GetProxyJsonAsync("yahoo/v8/finance/chart/GC=F");
+            var world = await Api.GetProxyJsonAsync("yahoo-finance/v8/finance/chart/GC=F");
             if (world.HasValue && world.Value.TryGetProperty("chart", out var chart)
                 && chart.TryGetProperty("result", out var results) && results.GetArrayLength() > 0)
             {
