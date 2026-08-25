@@ -1,11 +1,7 @@
 @using System.Text
 @inject IJSRuntime JSRuntime
 
-<div class="tool-card">
-    <div class="tool-header">
-        <h3>Memory Converter</h3>
-        <p>Convert bytes to human-readable sizes (KB, MB, GB...).</p>
-    </div>
+<ToolShell Title="Memory Converter" Icon="bi-hdd" Description="Convert bytes to human-readable sizes (KB, MB, GB...).">
     <div class="tool-form">
         <div class="tool-field">
             <label class="tool-label" for="input">Bytes</label>
@@ -31,7 +27,7 @@
             </div>
         </div>
     </div>
-</div>
+</ToolShell>
 
 @code {
     [Parameter] public long Input { get; set; }

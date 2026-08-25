@@ -2,11 +2,7 @@
 @using BlazorWasmPortfolioGhAction.Services
 @inject IDevOpsService DevOpsService
 
-<div class="tool-card">
-    <div class="tool-header">
-        <h3><i class="bi bi-graph-up-arrow" aria-hidden="true"></i> GitHub Trending Repos</h3>
-        <p>Discover recently popular repositories on GitHub.</p>
-    </div>
+<ToolShell Title="GitHub Trending Repos" Icon="bi-graph-up-arrow" Description="Discover recently popular repositories on GitHub.">
 
     <div class="tool-form">
         <div class="tool-field">
@@ -65,7 +61,7 @@
     {
         <div class="tool-alert tool-alert-info">No trending repositories found.</div>
     }
-</div>
+</ToolShell>
 
 @code {
     private string language = string.Empty;

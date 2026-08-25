@@ -1,11 +1,7 @@
 @using BlazorWasmPortfolioGhAction.Services
 @inject IDevOpsService DevOpsService
 
-<div class="tool-card">
-    <div class="tool-header">
-        <h3><i class="bi bi-file-earmark-code" aria-hidden="true"></i> Create GitHub Gist</h3>
-        <p>Create a public or secret gist via the GitHub API (requires token in appsettings).</p>
-    </div>
+<ToolShell Title="Create GitHub Gist" Icon="bi-file-earmark-code" Description="Create a public or secret gist via the GitHub API (requires token in appsettings).">
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -45,7 +41,7 @@
             </button>
         </div>
     </div>
-</div>
+</ToolShell>
 
 @code {
     private string gistDescription = string.Empty;

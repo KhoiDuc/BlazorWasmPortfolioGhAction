@@ -56,15 +56,6 @@
                     }
                     else
                     {
-                        <header class="utility-tool-header">
-                            <div>
-                                <p class="utility-tool-label">ACTIVE TOOL</p>
-                                <h3>@CurrentToolTitle</h3>
-                            </div>
-                            <a href="/Utility" class="tool-btn tool-btn-secondary">
-                                <i class="bi bi-grid" aria-hidden="true"></i> All tools
-                            </a>
-                        </header>
                         <div class="utility-tool-body">
                             @DynamicComponent
                         </div>
@@ -80,16 +71,6 @@
     public string? Component { get; set; }
 
     private string _filter = "";
-
-    private string CurrentToolTitle
-    {
-        get
-        {
-            var key = Component?.ToLowerInvariant();
-            var match = AllItems.FirstOrDefault(i => i.Key == key);
-            return match.Key is not null ? match.Title : Component ?? "Tool";
-        }
-    }
 
     private IEnumerable<NavCategory> FilteredCategories
     {
@@ -189,42 +170,54 @@
 
     private RenderFragment RenderUrlComponents() => builder =>
     {
-        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.UrlSplitter.UrlSplitter>(0);
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "utility-tool-stack");
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.UrlSplitter.UrlSplitter>(2);
         builder.CloseComponent();
-        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.UrlEncode.UrlEncode>(1);
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.UrlEncode.UrlEncode>(3);
         builder.CloseComponent();
+        builder.CloseElement();
     };
 
     private RenderFragment RenderTimerStopwatchComponents() => builder =>
     {
-        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.TimerControl.TimerControl>(0);
-        builder.AddAttribute(1, "Input", "5m 00s");
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "utility-tool-stack");
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.TimerControl.TimerControl>(2);
+        builder.AddAttribute(3, "Input", "5m 00s");
         builder.CloseComponent();
-        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.Stopwatch.Stopwatch>(2);
-        builder.AddAttribute(3, "Input", "0s 00");
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.Stopwatch.Stopwatch>(4);
+        builder.AddAttribute(5, "Input", "0s 00");
         builder.CloseComponent();
+        builder.CloseElement();
     };
 
     private RenderFragment RenderConverterComponents() => builder =>
     {
-        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.HextoDec.HextoDec>(0);
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "utility-tool-stack");
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.HextoDec.HextoDec>(2);
         builder.CloseComponent();
-        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.MemoryConverter.MemoryConverter>(1);
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.MemoryConverter.MemoryConverter>(3);
         builder.CloseComponent();
-        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.TimeConverter.TimeConverter>(2);
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.TimeConverter.TimeConverter>(4);
         builder.CloseComponent();
+        builder.CloseElement();
     };
 
     private RenderFragment RenderFluxorTestComponents() => builder =>
     {
-        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.FluxorExample.FirstComponent>(0);
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "utility-tool-stack");
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.FluxorExample.FirstComponent>(2);
         builder.CloseComponent();
-        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.FluxorExample.SecondComponent>(1);
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.FluxorExample.SecondComponent>(3);
         builder.CloseComponent();
-        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.FluxorExample.FetchData>(2);
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.FluxorExample.FetchData>(4);
         builder.CloseComponent();
-        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.FluxorExample.Counter>(3);
+        builder.OpenComponent<BlazorWasmPortfolioGhAction.Components.FluxorExample.Counter>(5);
         builder.CloseComponent();
+        builder.CloseElement();
     };
 
     private RenderFragment RenderDefaultComponent() => builder =>

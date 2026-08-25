@@ -2,11 +2,7 @@
 @using BlazorWasmPortfolioGhAction.Services
 @inject IDevOpsService DevOpsService
 
-<div class="tool-card">
-    <div class="tool-header">
-        <h3><i class="bi bi-search" aria-hidden="true"></i> GitHub Repo Search</h3>
-        <p>Search public repositories via the GitHub REST API.</p>
-    </div>
+<ToolShell Title="GitHub Repo Search" Icon="bi-search" Description="Search public repositories via the GitHub REST API.">
 
     <div class="tool-form">
         <div class="tool-field">
@@ -60,7 +56,7 @@
     {
         <div class="tool-alert tool-alert-info">No repositories found. Try different search terms.</div>
     }
-</div>
+</ToolShell>
 
 @code {
     private string searchQuery = string.Empty;

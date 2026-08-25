@@ -2,18 +2,18 @@
 @using Blazor.Extensions
 @using Blazor.Extensions.Canvas
 @using Blazor.Extensions.Canvas.WebGL
+@using BlazorWasmPortfolioGhAction.Components.ToolShell
 
 <PageTitle>WebGL canvas</PageTitle>
 
-<div tabindex="0" oncontextmenu="return false;" @onmousemove="OnMouseMove" @onmouseup="OnMouseUp" @onmousedown="OnMouseDown" @onmousewheel="OnMouseWheel">
-    <BECanvas Width="800" Height="600" @ref="_canvasReference" />
-</div>
-
-<p>
-    dragging: @_isDragging.ToString()
-    right_dragging: @_isRightDragging.ToString()
-    zoom: @_camera.Zoom
-</p>
+<ToolShell Title="WebGL Canvas" Icon="bi-gpu-card" Description="Interactive WebGL scene with mouse drag and zoom.">
+    <div class="tool-map-frame webgl-canvas-wrap" tabindex="0" oncontextmenu="return false;" @onmousemove="OnMouseMove" @onmouseup="OnMouseUp" @onmousedown="OnMouseDown" @onmousewheel="OnMouseWheel">
+        <BECanvas Width="800" Height="600" @ref="_canvasReference" />
+    </div>
+    <div class="tool-hint">
+        Drag: @_isDragging · Right drag: @_isRightDragging · Zoom: @_camera.Zoom.ToString("F2")
+    </div>
+</ToolShell>
 
 @code {
     private const float DefaultScaleBy = 0.1f;

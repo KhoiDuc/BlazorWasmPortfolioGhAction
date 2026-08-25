@@ -1,0 +1,54 @@
+@inject NavigationManager Navigation
+
+<section class="login-failed-page" aria-labelledby="login-failed-title">
+    <div class="login-failed-card tool-card">
+        <div class="login-failed-icon" aria-hidden="true">
+            <i class="bi bi-shield-exclamation"></i>
+        </div>
+
+        <p class="login-failed-eyebrow">AUTHENTICATION</p>
+        <h1 id="login-failed-title">Sign in failed</h1>
+        <p class="login-failed-lead">We couldn’t complete Microsoft sign-in for this portfolio session.</p>
+
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="tool-alert tool-alert-danger login-failed-error">
+                <strong>Error details</strong>
+                <p>@ErrorMessage</p>
+            </div>
+        }
+
+        <div class="login-failed-steps">
+            <h2>Quick checklist</h2>
+            <ol>
+                <li>Set <code>AzureAd:ClientId</code> in <code>wwwroot/appsettings.json</code>.</li>
+                <li>In Azure Portal, register a SPA redirect URI for this origin:</li>
+            </ol>
+            <div class="tool-code login-failed-uri">@RedirectUri</div>
+            <ol start="3">
+                <li>Supported account types: work/school + personal Microsoft accounts.</li>
+                <li>Restart the app after changing configuration.</li>
+            </ol>
+        </div>
+
+        <div class="login-failed-actions tool-actions">
+            <a href="authentication/login" class="tool-btn tool-btn-primary">
+                <i class="bi bi-microsoft" aria-hidden="true"></i> Try again
+            </a>
+            <a href="/" class="tool-btn tool-btn-secondary">Back to home</a>
+            <a href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="tool-btn tool-btn-secondary">
+                Azure app registrations
+            </a>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter] public string? ErrorMessage { get; set; }
+
+    private string RedirectUri =>
+        $"{Navigation.BaseUri.TrimEnd('/')}/authentication/login-callback";
+}

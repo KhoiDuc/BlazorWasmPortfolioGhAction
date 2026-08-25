@@ -1,8 +1,15 @@
 ﻿@page "/SvgDiagramEditor"
 @using BlazorWasmPortfolioGhAction.Pages.DiagramPanelComponents
 @using BlazorWasmPortfolioGhAction.Pages.SvgDiagramComponents
+@using BlazorWasmPortfolioGhAction.Components.ToolShell
 
-<div class="diagram-editor-wrapper">
-    <DiagramPanel />
-    <SvgDiagram DiagramSvgId="svg-diagram"></SvgDiagram>
-</div>
+<ToolShell Title="SVG Diagram Editor" Icon="bi-diagram-2" Description="Create and edit SVG diagrams with parameters and shape panels.">
+    <div class="diagram-editor-layout">
+        <aside class="diagram-editor-sidebar">
+            <DiagramPanel />
+        </aside>
+        <div class="diagram-editor-canvas">
+            <SvgDiagram DiagramSvgId="svg-diagram"></SvgDiagram>
+        </div>
+    </div>
+</ToolShell>

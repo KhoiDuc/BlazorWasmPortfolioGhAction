@@ -16,6 +16,14 @@ function destroyChart(chartId) {
     }
 }
 
+window.destroyChartById = function (chartId) {
+    destroyChart(chartId);
+};
+
+window.chartExists = function (chartId) {
+    return chartInstances.has(chartId);
+};
+
 window.destroyAllCryptoCharts = function () {
     chartInstances.forEach((chart) => chart.destroy());
     chartInstances.clear();
@@ -66,6 +74,14 @@ window.renderSmallChart = function (cryptoId, priceHistory) {
     }));
 };
 
+
+window.updateChartData = function (chartId, priceHistory) {
+    const chart = chartInstances.get(chartId);
+    if (!chart) return;
+    chart.data.datasets[0].data = priceHistory;
+    chart.data.labels = Array(priceHistory.length).fill('');
+    chart.update('none');
+};
 
 window.renderDetailChart = function (cryptoId, priceHistory) {
     const chartId = 'detailChart_' + cryptoId;

@@ -1,15 +1,22 @@
-﻿﻿<div>
-    <b>Instructions: </b>
-    <i>@InstructionParam</i>
-    <br />
-    <br />
-
-    <p>Input A and B</p>
-    <input type="text" @bind-value="@textA" />
-    <input type="text" @bind-value="@textB" />
-    <div class="button-inline-block" @onclick="CalculateRun">Calculate</div>
-
-    <h3>@resultText</h3>
+﻿<div class="tool-form">
+    <p class="tool-hint"><strong>Instructions:</strong> @InstructionParam</p>
+    <div class="tool-grid-2">
+        <div class="tool-field">
+            <label class="tool-label" for="rect-a">Side A</label>
+            <input id="rect-a" type="number" class="tool-input" @bind="textA" />
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="rect-b">Side B</label>
+            <input id="rect-b" type="number" class="tool-input" @bind="textB" />
+        </div>
+    </div>
+    <div class="tool-actions">
+        <button type="button" class="tool-btn tool-btn-primary" @onclick="CalculateRun">Calculate</button>
+    </div>
+    @if (!string.IsNullOrEmpty(resultText))
+    {
+        <div class="tool-result">@resultText</div>
+    }
 </div>
 
 @code {
@@ -17,19 +24,17 @@
     public string InstructionParam { get; set; } = string.Empty;
 
     [Parameter]
-    public EventCallback<string> MyCallback { get; set; } = default;
+    public EventCallback<string> MyCallback { get; set; }
 
     private string textA = string.Empty;
     private string textB = string.Empty;
-
     private string resultText = string.Empty;
 
-    private async void CalculateRun()
+    private async Task CalculateRun()
     {
-        int a = int.Parse(textA);
-        int b = int.Parse(textB);
-        int perimeter = 2 * (a + b);
-        resultText = $"Result: 2 * ({a} + {b}) = {perimeter}";
+        if (!int.TryParse(textA, out var a) || !int.TryParse(textB, out var b)) return;
+        var perimeter = 2 * (a + b);
+        resultText = $"Result: 2 × ({a} + {b}) = {perimeter}";
         await MyCallback.InvokeAsync(resultText);
     }
 }

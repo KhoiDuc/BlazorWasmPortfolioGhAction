@@ -2,40 +2,36 @@
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
 
-<div class="tool-card">
-    <div class="tool-header">
-        <h3><i class="bi bi-thermometer-half" aria-hidden="true"></i> Overnight Minimum Temperature</h3>
-        <p>Estimate overnight minimum temperature from midday conditions.</p>
-    </div>
+<ToolShell Title="Overnight Minimum Temperature" Icon="bi-thermometer-half" Description="Estimate overnight minimum temperature from midday conditions.">
 <div class="calculator-container">
     <div class="input-section">
         <div class="input-group">
             <label for="tempInput">Temp (°C) at 12:00 (T<sub>12</sub>)</label>
-            <input type="number" @bind="Temperature" @bind:event="oninput" id="tempInput" class="input-field" min="-50" max="50" step="0.01" />
+            <input type="number" @bind="Temperature" @bind:event="oninput" id="tempInput" class="tool-input" min="-50" max="50" step="0.01" />
             <input type="range" @bind="Temperature" @bind:event="oninput" min="-20" max="50" step="0.01" class="slider" />
         </div>
 
         <div class="input-group">
             <label for="dewPointInput">Dew Point Temp (°C) at 12:00 (T<sub>d12</sub>)</label>
-            <input type="number" @bind="DewPointTemperature" @bind:event="oninput" id="dewPointInput" class="input-field" min="-50" max="50" step="0.01" />
+            <input type="number" @bind="DewPointTemperature" @bind:event="oninput" id="dewPointInput" class="tool-input" min="-50" max="50" step="0.01" />
             <input type="range" @bind="DewPointTemperature" @bind:event="oninput" min="-20" max="50" step="0.01" class="slider" />
         </div>
 
         <div class="input-group">
             <label for="windSpeedInput">Wind Speed (knots):</label>
-            <input type="number" @bind="WindSpeed" @bind:event="oninput" id="windSpeedInput" class="input-field" min="0" max="100" step="0.01" />
+            <input type="number" @bind="WindSpeed" @bind:event="oninput" id="windSpeedInput" class="tool-input" min="0" max="100" step="0.01" />
             <input type="range" @bind="WindSpeed" @bind:event="oninput" min="0" max="80" step="0.01" class="slider" />
         </div>
 
         <div class="input-group">
             <label for="cloudCoverInput">Cloud Cover (oktas):</label>
-            <input type="number" @bind="CloudCover" @bind:event="oninput" id="cloudCoverInput" class="input-field" min="0" max="8" step="0.01" />
+            <input type="number" @bind="CloudCover" @bind:event="oninput" id="cloudCoverInput" class="tool-input" min="0" max="8" step="0.01" />
             <input type="range" @bind="CloudCover" @bind:event="oninput" min="0" max="8" step="0.01" class="slider" />
         </div>
 
         <div class="input-group">
             <label for="sigFigsInput">Significant Figures:</label>
-            <select @bind="SignificantFigures" id="sigFigsInput" class="input-field">
+            <select @bind="SignificantFigures" id="sigFigsInput" class="tool-input">
                 @for (int i = 1; i <= 5; i++)
                 {
                     <option value="@i">@i</option>
@@ -45,7 +41,7 @@
 
         <div class="input-group">
             <label for="unitSelect">Result Unit:</label>
-            <select @bind="ResultUnit" id="unitSelect" class="input-field">
+            <select @bind="ResultUnit" id="unitSelect" class="tool-input">
                 <option value="C">Celsius (°C)</option>
                 <option value="K">Kelvin (K)</option>
                 <option value="F">Fahrenheit (°F)</option>
@@ -102,7 +98,7 @@
     <button type="button" class="tool-btn tool-btn-secondary" @onclick="ShowInterviewModal">Interview questions</button>
     <button type="button" class="tool-btn tool-btn-secondary" @onclick="ShowChallengesModal">Challenges</button>
 </div>
-</div>
+</ToolShell>
 
 @if (isDescriptionModalVisible)
 {

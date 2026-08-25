@@ -1,64 +1,51 @@
-﻿<div class="grid">
-    <div class="cidr-card">
-        <h3>IP Range to CIDR</h3>
-        <form @onsubmit="GetCIDR">
-            <div>
-                <input class="input-field"
-                       placeholder="10.0.0.0 or 2001:0db8:abcd:0012:0000:0000:0000:0000"
-                       @bind="IPRange2CIDRModel.StartIP"
-                       @bind:event="oninput" />
+﻿@using BlazorWasmPortfolioGhAction.Components.ToolShell
 
-                <input class="input-field"
-                       placeholder="10.0.0.255 or 2001:0db8:abcd:0012:ffff:ffff:ffff:ffff"
-                       @bind="IPRange2CIDRModel.EndIP"
-                       @bind:event="oninput" />
-
-                <button class="submit-btn" type="submit">Get CIDR</button>
-            </div>
-        </form>
-
-        @if (CIDRs.Any())
-        {
-            <div id="cidr-result" class="result-box">
-                @foreach (var cidr in CIDRs)
-                {
-                    @cidr
-                    <br />
-                }
-            </div>
-        }
-    </div>
-
-    <div class="cidr-card">
-        <h3>CIDR to IP Range</h3>
-        <form @onsubmit="GetIPRange">
-            <div>
-                <input class="input-field"
-                       placeholder="10.0.0.0/24 or 2001:db8:abcd:0012::/64"
-                       @bind="CIDR2IPRangeModel.CIDR"
-                       @bind:event="oninput" />
-
-                <button class="submit-btn" type="submit">Get IP Range</button>
-            </div>
-        </form>
-
-        @if (!string.IsNullOrWhiteSpace(IPRangeStart) && !string.IsNullOrWhiteSpace(IPRangeEnd))
-        {
-            <div class="mt-10px">
-                <label>Start IP:</label>
-                <div id="iprange-result" class="result-box">
-                    @IPRangeStart
+<ToolShell Title="CIDR Calculator" Icon="bi-diagram-3" Description="Convert between IP ranges and CIDR notation (IPv4/IPv6).">
+    <div class="tool-grid-2">
+        <div class="tool-card tool-card-nested">
+            <h4>IP range → CIDR</h4>
+            <form class="tool-form" @onsubmit="GetCIDR" @onsubmit:preventDefault="true">
+                <div class="tool-field">
+                    <label class="tool-label">Start IP</label>
+                    <input class="tool-input" placeholder="10.0.0.0" @bind="IPRange2CIDRModel.StartIP" @bind:event="oninput" />
                 </div>
-
-                <label>End IP:</label>
-                <div id="iprange-result" class="result-box">
-                    @IPRangeEnd
+                <div class="tool-field">
+                    <label class="tool-label">End IP</label>
+                    <input class="tool-input" placeholder="10.0.0.255" @bind="IPRange2CIDRModel.EndIP" @bind:event="oninput" />
                 </div>
-            </div>
-        }
-    </div>
-</div>
+                <div class="tool-actions">
+                    <button type="submit" class="tool-btn tool-btn-primary">Get CIDR</button>
+                </div>
+            </form>
+            @if (CIDRs.Any())
+            {
+                <div class="tool-result">
+                    @foreach (var cidr in CIDRs)
+                    {
+                        <div>@cidr</div>
+                    }
+                </div>
+            }
+        </div>
 
-<footer class="cidr-footer">
-    Powered by Blazor WASM on .NET @Environment.Version
-</footer>
+        <div class="tool-card tool-card-nested">
+            <h4>CIDR → IP range</h4>
+            <form class="tool-form" @onsubmit="GetIPRange" @onsubmit:preventDefault="true">
+                <div class="tool-field">
+                    <label class="tool-label">CIDR</label>
+                    <input class="tool-input" placeholder="10.0.0.0/24" @bind="CIDR2IPRangeModel.CIDR" @bind:event="oninput" />
+                </div>
+                <div class="tool-actions">
+                    <button type="submit" class="tool-btn tool-btn-primary">Get IP range</button>
+                </div>
+            </form>
+            @if (!string.IsNullOrWhiteSpace(IPRangeStart) && !string.IsNullOrWhiteSpace(IPRangeEnd))
+            {
+                <div class="tool-result">
+                    <div><span class="tool-result-label">Start</span> @IPRangeStart</div>
+                    <div><span class="tool-result-label">End</span> @IPRangeEnd</div>
+                </div>
+            }
+        </div>
+    </div>
+</ToolShell>

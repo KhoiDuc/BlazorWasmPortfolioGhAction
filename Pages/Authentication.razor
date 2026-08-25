@@ -1,5 +1,6 @@
 ﻿@page "/authentication/{action}"
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using BlazorWasmPortfolioGhAction.Components.Auth
 
 <div class="auth-page">
     <RemoteAuthenticatorView Action="@Action">
@@ -28,17 +29,7 @@
             </div>
         </CompletingLogOut>
         <LogInFailed>
-            <div class="auth-card tool-card">
-                <div class="tool-alert tool-alert-danger">
-                    <p><strong>Sign in failed.</strong> @context</p>
-                </div>
-                <p class="auth-hint">
-                    Check that <code>AzureAd:ClientId</code> is set in <code>wwwroot/appsettings.json</code>
-                    and that your Azure app registration includes redirect URI
-                    <code>authentication/login-callback</code> for this site origin.
-                </p>
-                <a href="/" class="tool-btn tool-btn-primary">Back to home</a>
-            </div>
+            <LoginFailedView ErrorMessage="@context" />
         </LogInFailed>
         <LogOutFailed>
             <div class="auth-card tool-card">

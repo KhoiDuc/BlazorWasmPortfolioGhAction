@@ -1,35 +1,60 @@
-﻿@inject IJSRuntime JSRuntime
-@using BlazorWasmPortfolioGhAction.Pages.CryptoManagerComponents
-
-<button type="button"
-        class="crypto-card @(IsSelected ? "crypto-card-selected" : "")"
-        @onclick="SelectCrypto"
-        aria-pressed="@IsSelected">
-    <div class="crypto-card-head">
-        <strong>@Crypto.Name</strong>
-        <span class="crypto-card-symbol">@Crypto.Symbol</span>
-    </div>
-    <p class="crypto-card-price">@Crypto.CurrentPrice</p>
-    <div class="crypto-card-chart">
-        <canvas id="@($"chart_{Crypto.Id}")" aria-hidden="true"></canvas>
-    </div>
-</button>
-
-@code {
-    [Parameter, EditorRequired]
-    public Crypto Crypto { get; set; } = null!;
-
-    [Parameter]
-    public bool IsSelected { get; set; }
-
-    [Parameter]
-    public EventCallback<Crypto> OnCryptoSelected { get; set; }
-
-    private Task SelectCrypto() => OnCryptoSelected.InvokeAsync(Crypto);
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-            await JSRuntime.InvokeVoidAsync("renderSmallChart", Crypto.Id, Crypto.PriceHistory);
-    }
-}
+﻿@inject IJSRuntime JSRuntime
+@using BlazorWasmPortfolioGhAction.Pages.CryptoManagerComponents
+@implements IDisposable
+
+<button type="button"
+        class="crypto-ticker-row @(IsSelected ? "is-selected" : "")"
+        @onclick="SelectCrypto"
+        aria-pressed="@IsSelected">
+    <div class="crypto-ticker-meta">
+        <strong>@Crypto.Name</strong>
+        <span>@Crypto.Symbol</span>
+    </div>
+    <div class="crypto-ticker-right">
+        <span class="crypto-ticker-price">@FormatPrice(Crypto.CurrentPrice)</span>
+        <span class="crypto-ticker-change @(Crypto.Change24h >= 0 ? "up" : "down")">@Crypto.Change24h.ToString("F2")%</span>
+    </div>
+    <div class="crypto-ticker-spark">
+        <canvas id="@ChartCanvasId" aria-hidden="true"></canvas>
+    </div>
+</button>
+
+@code {
+    [Parameter, EditorRequired]
+    public Crypto Crypto { get; set; } = null!;
+
+    [Parameter]
+    public bool IsSelected { get; set; }
+
+    [Parameter]
+    public EventCallback<Crypto> OnCryptoSelected { get; set; }
+
+    private string ChartCanvasId => $"chart_{Crypto.Id}";
+    private string ChartInstanceId => ChartCanvasId;
+    private int _lastHistoryLength;
+
+    private Task SelectCrypto() => OnCryptoSelected.InvokeAsync(Crypto);
+
+    private static string FormatPrice(decimal price) =>
+        price >= 1 ? price.ToString("N2") : price.ToString("N6");
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var historyLength = Crypto.PriceHistory?.Count ?? 0;
+        if (firstRender || historyLength != _lastHistoryLength)
+        {
+            _lastHistoryLength = historyLength;
+            var chart = await JSRuntime.InvokeAsync<bool>("chartExists", ChartInstanceId);
+            if (chart)
+                await JSRuntime.InvokeVoidAsync("updateChartData", ChartInstanceId, Crypto.PriceHistory);
+            else
+                await JSRuntime.InvokeVoidAsync("renderSmallChart", Crypto.Id, Crypto.PriceHistory);
+        }
+    }
+
+    public void Dispose()
+    {
+        _ = JSRuntime.InvokeVoidAsync("destroyChartById", ChartInstanceId);
+    }
+}
+

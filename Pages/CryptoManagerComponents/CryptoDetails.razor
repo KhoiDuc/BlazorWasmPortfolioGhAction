@@ -1,63 +1,100 @@
-﻿@inject IJSRuntime JSRuntime
-@using BlazorWasmPortfolioGhAction.Pages.CryptoManagerComponents
-
-<article class="tool-card crypto-detail-card">
-    <div class="tool-modal-header crypto-detail-header">
-        <div>
-            <h3 class="tool-modal-title">@Crypto.Name</h3>
-            <p class="crypto-detail-symbol">@Crypto.Symbol</p>
-        </div>
-        <button type="button" class="tool-modal-close" aria-label="Close detail" @onclick="CloseDetail">&times;</button>
-    </div>
-
-    <div class="tool-modal-body">
-        <p class="crypto-detail-price">@Crypto.CurrentPrice</p>
-
-        <div class="crypto-stats-grid">
-            <div class="tool-stat-card">
-                <span class="tool-stat-label">24h volume (quote)</span>
-                <strong class="tool-stat-value">@Crypto.VolumeInQuoteCurrency</strong>
-            </div>
-            <div class="tool-stat-card">
-                <span class="tool-stat-label">24h volume (base)</span>
-                <strong class="tool-stat-value">@Crypto.VolumeInBaseCurrency</strong>
-            </div>
-            <div class="tool-stat-card">
-                <span class="tool-stat-label">24h high</span>
-                <strong class="tool-stat-value">@Crypto.High24h</strong>
-            </div>
-            <div class="tool-stat-card">
-                <span class="tool-stat-label">24h low</span>
-                <strong class="tool-stat-value">@Crypto.Low24h</strong>
-            </div>
-            <div class="tool-stat-card">
-                <span class="tool-stat-label">24h change</span>
-                <strong class="tool-stat-value @(Crypto.Change24h >= 0 ? "crypto-up" : "crypto-down")">@Crypto.Change24h%</strong>
-            </div>
-            <div class="tool-stat-card">
-                <span class="tool-stat-label">Last update</span>
-                <strong class="tool-stat-value crypto-stat-time">@Crypto.LastUpdate.ToString("HH:mm:ss")</strong>
-            </div>
-        </div>
-
-        <div class="crypto-detail-chart">
-            <canvas id="@($"detailChart_{Crypto.Id}")" aria-label="@($"{Crypto.Symbol} price chart")"></canvas>
-        </div>
-    </div>
-</article>
-
-@code {
-    [Parameter, EditorRequired]
-    public Crypto Crypto { get; set; } = null!;
-
-    [Parameter]
-    public EventCallback<Crypto> OnClose { get; set; }
-
-    private Task CloseDetail() => OnClose.InvokeAsync(Crypto);
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-            await JSRuntime.InvokeVoidAsync("renderDetailChart", Crypto.Id, Crypto.PriceHistory);
-    }
-}
+﻿@inject IJSRuntime JSRuntime
+@using BlazorWasmPortfolioGhAction.Pages.CryptoManagerComponents
+@implements IDisposable
+
+<article class="crypto-detail-dashboard tool-card">
+    <header class="crypto-detail-top">
+        <div>
+            <p class="crypto-detail-eyebrow">TICKER DETAIL</p>
+            <p class="crypto-detail-pair">@Crypto.Symbol</p>
+            <h2>@Crypto.Name</h2>
+            <div class="crypto-detail-price-row">
+                <span class="crypto-detail-price">@FormatPrice(Crypto.CurrentPrice)</span>
+                <span class="crypto-detail-badge @(Crypto.Change24h >= 0 ? "up" : "down")">
+                    <i class="bi @(Crypto.Change24h >= 0 ? "bi-arrow-up-right" : "bi-arrow-down-right")" aria-hidden="true"></i>
+                    @Crypto.Change24h.ToString("F2")% (24h)
+                </span>
+            </div>
+            <p class="crypto-detail-updated">Last update: @Crypto.LastUpdate.ToString("yyyy-MM-dd HH:mm:ss") UTC</p>
+        </div>
+        <button type="button" class="tool-btn tool-btn-secondary" @onclick="CloseDetail" aria-label="Close detail">
+            <i class="bi bi-x-lg" aria-hidden="true"></i> Close
+        </button>
+    </header>
+
+    <div class="crypto-detail-chart-panel tool-card-nested">
+        <div class="crypto-detail-chart-header">
+            <h3>Price history (24h)</h3>
+            <span class="crypto-detail-chart-meta">1h candles</span>
+        </div>
+        <div class="crypto-detail-chart-canvas">
+            <canvas id="@ChartCanvasId" aria-label="@($"{Crypto.Symbol} price chart")"></canvas>
+        </div>
+    </div>
+
+    <div class="crypto-detail-stats">
+        <div class="tool-stat-card">
+            <span class="tool-stat-label">24h high</span>
+            <strong class="tool-stat-value">@FormatPrice(Crypto.High24h)</strong>
+        </div>
+        <div class="tool-stat-card">
+            <span class="tool-stat-label">24h low</span>
+            <strong class="tool-stat-value">@FormatPrice(Crypto.Low24h)</strong>
+        </div>
+        <div class="tool-stat-card">
+            <span class="tool-stat-label">Volume (quote)</span>
+            <strong class="tool-stat-value">@Crypto.VolumeInQuoteCurrency.ToString("N2")</strong>
+        </div>
+        <div class="tool-stat-card">
+            <span class="tool-stat-label">Volume (base)</span>
+            <strong class="tool-stat-value">@Crypto.VolumeInBaseCurrency.ToString("N2")</strong>
+        </div>
+    </div>
+</article>
+
+@code {
+    [Parameter, EditorRequired]
+    public Crypto Crypto { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<Crypto> OnClose { get; set; }
+
+    private string ChartCanvasId => $"detailChart_{Crypto.Id}";
+    private string ChartInstanceId => ChartCanvasId;
+    private string? _renderedCryptoId;
+    private int _lastHistoryLength;
+
+    private Task CloseDetail() => OnClose.InvokeAsync(Crypto);
+
+    private static string FormatPrice(decimal price) =>
+        price >= 1 ? price.ToString("N2") : price.ToString("N6");
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Crypto is null)
+            return;
+
+        var historyChanged = Crypto.PriceHistory?.Count != _lastHistoryLength;
+        var cryptoChanged = _renderedCryptoId != Crypto.Id;
+
+        if (cryptoChanged)
+        {
+            _renderedCryptoId = Crypto.Id;
+            _lastHistoryLength = Crypto.PriceHistory?.Count ?? 0;
+            await JSRuntime.InvokeVoidAsync("renderDetailChart", Crypto.Id, Crypto.PriceHistory);
+            return;
+        }
+
+        if (historyChanged)
+        {
+            _lastHistoryLength = Crypto.PriceHistory?.Count ?? 0;
+            await JSRuntime.InvokeVoidAsync("updateChartData", ChartInstanceId, Crypto.PriceHistory);
+        }
+    }
+
+    public void Dispose()
+    {
+        _ = JSRuntime.InvokeVoidAsync("destroyChartById", ChartInstanceId);
+    }
+}
+

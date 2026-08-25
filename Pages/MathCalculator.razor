@@ -1,70 +1,57 @@
+@using BlazorWasmPortfolioGhAction.Components.ToolShell
 @using BlazorWasmPortfolioGhAction.Components
-<PageTitle>Calculator</PageTitle>
 
-<h1>Calculator</h1>
+<ToolShell Title="Math Calculator" Icon="bi-calculator" Description="Simple arithmetic demos with operation history.">
+    <div class="tool-radio-group">
+        <button type="button" class="tool-btn @(currentOperation == "Squaring a number" ? "tool-btn-primary" : "tool-btn-secondary")" @onclick="ChooseSquaringNumber">Squaring a number</button>
+        <button type="button" class="tool-btn @(currentOperation == "Perimeter of a rectangle" ? "tool-btn-primary" : "tool-btn-secondary")" @onclick="ChoosePerimeterRectangle">Perimeter of a rectangle</button>
+    </div>
 
-<p>
-    Welcome to calculator application!
-    <br />
-    Here you can calculate everything.
-</p>
-
-<div>
-    <div class="button-inline-block" @onclick="ChooseSquaringNumber">Squaring a number</div>
-    <div class="button-inline-block" @onclick="ChoosePerimeterRectangle">Perimeter of a rectangle</div>
-</div>
-
-<br />
-
-<WrapperBlock>
-    <div>
-        @if (string.IsNullOrEmpty(currentOperation)) {
-            <h3>Choose the operation</h3>
-        } else {
-            <h3>Operation: @currentOperation</h3>
+    <div class="tool-card tool-card-nested">
+        @if (string.IsNullOrEmpty(currentOperation))
+        {
+            <p class="tool-hint">Choose an operation above.</p>
+        }
+        else
+        {
+            <h4>@currentOperation</h4>
+            @if (currentOperation == "Squaring a number")
+            {
+                <SquaringNumber InstructionParam="@InstructionA" MyCallback="CallbackFunction" />
+            }
+            @if (currentOperation == "Perimeter of a rectangle")
+            {
+                <PerimeterRectangle InstructionParam="@InstructionB" MyCallback="CallbackFunction" />
+            }
         }
     </div>
 
-    <div>
-        @if ("Squaring a number" == currentOperation) {
-            <SquaringNumber InstructionParam="@InstructionA" MyCallback="CallbackFunction"></SquaringNumber>
-        }
-
-        @if ("Perimeter of a rectangle" == currentOperation) {
-            <PerimeterRectangle InstructionParam="@InstructionB" MyCallback="CallbackFunction"></PerimeterRectangle>
-        }
-    </div>
-</WrapperBlock>
-
-@if (arrayForRendering.Length > 0) {
-    <br />
-    <WrapperBlock>
-        <div>
-            @foreach (string element in arrayForRendering) {
+    @if (arrayForRendering.Length > 0)
+    {
+        <div class="tool-result">
+            <div class="tool-result-label">History</div>
+            @foreach (var element in arrayForRendering)
+            {
                 <div>@element</div>
             }
         </div>
-    </WrapperBlock>
-}
+    }
+</ToolShell>
 
 @code {
     private string currentOperation = string.Empty;
 
-    private void ChooseSquaringNumber() {
-        currentOperation = "Squaring a number";
-    }
+    private void ChooseSquaringNumber() => currentOperation = "Squaring a number";
+    private void ChoosePerimeterRectangle() => currentOperation = "Perimeter of a rectangle";
 
-    private void ChoosePerimeterRectangle() {
-        currentOperation = "Perimeter of a rectangle";
-    }
+    const string InstructionA = "Input X value. You will get result X × X.";
+    const string InstructionB = "Input A and B sides of rectangle. You will get result 2 × (A + B).";
 
-    const string InstructionA = "Input X value. You will get result X * X.";
-    const string InstructionB = "Input A and B sides of rectangle. You will get result 2 * (A + B).";
+    private List<string> historyOperations = new();
+    private string[] arrayForRendering = Array.Empty<string>();
 
-    private List<string> historyOperations = new List<string>();
-    private string[] arrayForRendering = {};
-
-    private void CallbackFunction(string content) {
+    private void CallbackFunction(string content)
+    {
         historyOperations.Add(content);
         arrayForRendering = historyOperations.ToArray();
     }

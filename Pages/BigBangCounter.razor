@@ -1,14 +1,15 @@
-﻿@implements IDisposable
+﻿@using BlazorWasmPortfolioGhAction.Components.ToolShell
+@implements IDisposable
 
-<div class="bigbang-container">
-    <div class="counter-card">
-        <h3 class="counter-label">Seconds since Big Bang:</h3>
-        <div class="counter-display">@Seconds</div>
+<ToolShell Title="Big Bang Counter" Icon="bi-stars" Description="Live counter of seconds elapsed since the Big Bang.">
+    <div class="tool-result bigbang-display">
+        <div class="tool-result-label">Seconds since Big Bang</div>
+        <strong class="bigbang-value">@Seconds</strong>
     </div>
-</div>
+</ToolShell>
 
 @code {
-    private ulong secondsSinceBigBang = 0;
+    private ulong secondsSinceBigBang;
     private System.Timers.Timer? timer;
 
     protected override void OnInitialized()
@@ -16,12 +17,8 @@
         ulong secondsInYear = 31_556_926;
         ulong yearsSinceBigBang = 13_787_000_000;
         ulong secondsBigBang = yearsSinceBigBang * secondsInYear;
-
-        DateTime _1970 = new(1970, 1, 1, 0, 0, 0);
-        TimeSpan timeSince1970 = DateTime.Now - _1970;
-        ulong secondsSince1970 = (ulong)timeSince1970.TotalSeconds;
-
-        secondsSinceBigBang = secondsSince1970 + secondsBigBang;
+        var timeSince1970 = DateTime.Now - new DateTime(1970, 1, 1);
+        secondsSinceBigBang = (ulong)timeSince1970.TotalSeconds + secondsBigBang;
 
         timer = new System.Timers.Timer(1000);
         timer.Elapsed += OnTimerElapsed;
@@ -29,14 +26,8 @@
         timer.Enabled = true;
     }
 
-    private void OnTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
-    {
-        InvokeAsync(() =>
-        {
-            secondsSinceBigBang++;
-            StateHasChanged();
-        });
-    }
+    private void OnTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e) =>
+        InvokeAsync(() => { secondsSinceBigBang++; StateHasChanged(); });
 
     public void Dispose()
     {

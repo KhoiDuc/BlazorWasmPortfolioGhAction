@@ -2,13 +2,9 @@
 @inject TemperatureStore temperatureStore
 @implements IDisposable
 
-<div class="tool-card">
-    <div class="tool-header">
-        <h3>Second Component</h3>
-        <p>Event-driven temperature display.</p>
-    </div>
+<ToolShell Title="Second Component" Icon="bi-thermometer-half" Description="Event-driven temperature display.">
     <p class="tool-result-label">Temperature: <span class="tool-inline-code">@temperatureStore.Temperature</span></p>
-</div>
+</ToolShell>
 
 @code {
     protected override void OnInitialized()

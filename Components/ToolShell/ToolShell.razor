@@ -1,0 +1,26 @@
+<div class="tool-card tool-shell">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <div class="tool-header">
+            <h3>
+                @if (!string.IsNullOrEmpty(Icon))
+                {
+                    <i class="bi @Icon" aria-hidden="true"></i>
+                }
+                @Title
+            </h3>
+            @if (!string.IsNullOrEmpty(Description))
+            {
+                <p>@Description</p>
+            }
+        </div>
+    }
+    @ChildContent
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

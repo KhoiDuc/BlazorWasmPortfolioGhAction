@@ -1,95 +1,103 @@
 ﻿@using ManuHub.Blazor.Wasm.BrowserStorage
+@using BlazorWasmPortfolioGhAction.Components.ToolShell
 @inject ICookieStore CookieStore
 @inject ISessionStore SessionStore
 @inject ILocalStore LocalStore
 
-<div class="storage-container">
-    <!-- Cookie Storage Section -->
-    <div class="storage-card cookie-theme">
-        <h3>Cookie Storage</h3>
-        <div class="input-group">
-            <input type="text" @bind="cookieKey" placeholder="Key" />
-            <input type="text" @bind="cookieValue" placeholder="Value" />
-            <input type="number" @bind="cookieExpiration" placeholder="Expiration (hours)" />
-        </div>
-        <div class="button-group">
-            <button class="btn-set" @onclick="SetCookie">Set Cookie</button>
-            <button class="btn-get" @onclick="GetCookie">Get Cookie</button>
-            <button class="btn-delete" @onclick="DeleteCookie">Delete Cookie</button>
-        </div>
-        <div class="status">
-            @cookieStatus
-            @if (!string.IsNullOrEmpty(cookieError))
-            {
-                <div class="error">@cookieError</div>
-            }
-        </div>
-    </div>
+<ToolShell Title="Browser Storage" Icon="bi-hdd-stack" Description="Test cookie, session, and local storage from Blazor WASM.">
+    <div class="tool-grid-3">
+        <section class="tool-card tool-card-nested">
+            <h4><i class="bi bi-cookie" aria-hidden="true"></i> Cookies</h4>
+            <div class="tool-form">
+                <div class="tool-field">
+                    <label class="tool-label">Key</label>
+                    <input type="text" class="tool-input" @bind="cookieKey" placeholder="key" />
+                </div>
+                <div class="tool-field">
+                    <label class="tool-label">Value</label>
+                    <input type="text" class="tool-input" @bind="cookieValue" placeholder="value" />
+                </div>
+                <div class="tool-field">
+                    <label class="tool-label">Expiration (hours)</label>
+                    <input type="number" class="tool-input" @bind="cookieExpiration" min="1" />
+                </div>
+                <div class="tool-actions">
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="SetCookie">Set</button>
+                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="GetCookie">Get</button>
+                    <button type="button" class="tool-btn tool-btn-danger" @onclick="DeleteCookie">Delete</button>
+                </div>
+                @if (!string.IsNullOrEmpty(cookieStatus))
+                {
+                    <div class="tool-alert @(string.IsNullOrEmpty(cookieError) ? "tool-alert-info" : "tool-alert-danger")">@cookieStatus @cookieError</div>
+                }
+            </div>
+        </section>
 
-    <!-- Session Storage Section -->
-    <div class="storage-card session-theme">
-        <h3>Session Storage</h3>
-        <div class="input-group">
-            <input type="text" @bind="sessionKey" placeholder="Key" />
-            <input type="text" @bind="sessionValue" placeholder="Value" />
-        </div>
-        <div class="button-group">
-            <button class="btn-set" @onclick="SetSession">Set Session</button>
-            <button class="btn-get" @onclick="GetSession">Get Session</button>
-            <button class="btn-delete" @onclick="DeleteSession">Delete Session</button>
-        </div>
-        <div class="status">
-            @sessionStatus
-            @if (!string.IsNullOrEmpty(sessionError))
-            {
-                <div class="error">@sessionError</div>
-            }
-        </div>
-    </div>
+        <section class="tool-card tool-card-nested">
+            <h4><i class="bi bi-clock-history" aria-hidden="true"></i> Session storage</h4>
+            <div class="tool-form">
+                <div class="tool-field">
+                    <label class="tool-label">Key</label>
+                    <input type="text" class="tool-input" @bind="sessionKey" />
+                </div>
+                <div class="tool-field">
+                    <label class="tool-label">Value</label>
+                    <input type="text" class="tool-input" @bind="sessionValue" />
+                </div>
+                <div class="tool-actions">
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="SetSession">Set</button>
+                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="GetSession">Get</button>
+                    <button type="button" class="tool-btn tool-btn-danger" @onclick="DeleteSession">Delete</button>
+                </div>
+                @if (!string.IsNullOrEmpty(sessionStatus))
+                {
+                    <div class="tool-alert @(string.IsNullOrEmpty(sessionError) ? "tool-alert-info" : "tool-alert-danger")">@sessionStatus @sessionError</div>
+                }
+            </div>
+        </section>
 
-    <!-- Local Storage Section -->
-    <div class="storage-card local-theme">
-        <h3>Local Storage</h3>
-        <div class="input-group">
-            <input type="text" @bind="localKey" placeholder="Key" />
-            <input type="text" @bind="localValue" placeholder="Value" />
-        </div>
-        <div class="button-group">
-            <button class="btn-set" @onclick="SetLocal">Set Local</button>
-            <button class="btn-get" @onclick="GetLocal">Get Local</button>
-            <button class="btn-delete" @onclick="DeleteLocal">Delete Local</button>
-        </div>
-        <div class="status">
-            @localStatus
-            @if (!string.IsNullOrEmpty(localError))
-            {
-                <div class="error">@localError</div>
-            }
-        </div>
+        <section class="tool-card tool-card-nested">
+            <h4><i class="bi bi-database" aria-hidden="true"></i> Local storage</h4>
+            <div class="tool-form">
+                <div class="tool-field">
+                    <label class="tool-label">Key</label>
+                    <input type="text" class="tool-input" @bind="localKey" />
+                </div>
+                <div class="tool-field">
+                    <label class="tool-label">Value</label>
+                    <input type="text" class="tool-input" @bind="localValue" />
+                </div>
+                <div class="tool-actions">
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="SetLocal">Set</button>
+                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="GetLocal">Get</button>
+                    <button type="button" class="tool-btn tool-btn-danger" @onclick="DeleteLocal">Delete</button>
+                </div>
+                @if (!string.IsNullOrEmpty(localStatus))
+                {
+                    <div class="tool-alert @(string.IsNullOrEmpty(localError) ? "tool-alert-info" : "tool-alert-danger")">@localStatus @localError</div>
+                }
+            </div>
+        </section>
     </div>
-</div>
+</ToolShell>
 
 @code {
-    // Cookie variables
     private string cookieKey = "";
     private string cookieValue = "";
     private int cookieExpiration = 24;
     private string cookieStatus = "";
     private string cookieError = "";
 
-    // Session variables
     private string sessionKey = "";
     private string sessionValue = "";
     private string sessionStatus = "";
     private string sessionError = "";
 
-    // Local storage variables
     private string localKey = "";
     private string localValue = "";
     private string localStatus = "";
     private string localError = "";
 
-    // Cookie Methods
     private async Task SetCookie()
     {
         try
@@ -110,9 +118,7 @@
         try
         {
             var value = await CookieStore.GetAsync<string>(cookieKey);
-            cookieStatus = value != null
-                ? $"Cookie '{cookieKey}': {value}"
-                : $"Cookie '{cookieKey}' not found";
+            cookieStatus = value != null ? $"Cookie '{cookieKey}': {value}" : $"Cookie '{cookieKey}' not found";
             cookieError = "";
         }
         catch (Exception ex)
@@ -137,7 +143,6 @@
         }
     }
 
-    // Session Methods
     private async Task SetSession()
     {
         try
@@ -158,9 +163,7 @@
         try
         {
             var value = await SessionStore.GetAsync<string>(sessionKey);
-            sessionStatus = value != null
-                ? $"Session data '{sessionKey}': {value}"
-                : $"Session data '{sessionKey}' not found";
+            sessionStatus = value != null ? $"Session data '{sessionKey}': {value}" : $"Session data '{sessionKey}' not found";
             sessionError = "";
         }
         catch (Exception ex)
@@ -185,7 +188,6 @@
         }
     }
 
-    // Local Storage Methods
     private async Task SetLocal()
     {
         try
@@ -206,9 +208,7 @@
         try
         {
             var value = await LocalStore.GetAsync<string>(localKey);
-            localStatus = value != null
-                ? $"Local storage data '{localKey}': {value}"
-                : $"Local storage data '{localKey}' not found";
+            localStatus = value != null ? $"Local storage data '{localKey}': {value}" : $"Local storage data '{localKey}' not found";
             localError = "";
         }
         catch (Exception ex)

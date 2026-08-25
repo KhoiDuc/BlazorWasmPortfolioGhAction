@@ -2,11 +2,7 @@
 @using BlazorWasmPortfolioGhAction.Services
 @inject IClipboardService Clipboard
 
-<div class="tool-card">
-    <div class="tool-header">
-        <h3>Base64 Encode/Decode</h3>
-        <p>Encode or decode Base64 strings.</p>
-    </div>
+<ToolShell Title="Base64 Encode/Decode" Icon="bi-file-binary" Description="Encode or decode Base64 strings.">
     <div class="tool-form">
         <div class="tool-field">
             <label class="tool-label" for="binary">Base64 input</label>
@@ -38,7 +34,7 @@
         Inspired by <a href="https://www.base64encode.org" target="_blank">base64encode</a> /
         <a href="https://www.base64decode.org" target="_blank">base64decode</a>
     </p>
-</div>
+</ToolShell>
 
 @code {
     [Parameter] public string? Input { get; set; }

@@ -2,11 +2,7 @@
 @using BlazorWasmPortfolioGhAction.Services
 @inject IClipboardService Clipboard
 
-<div class="tool-card">
-    <div class="tool-header">
-        <h3>Binary ↔ Text</h3>
-        <p>Convert between binary strings and ASCII text.</p>
-    </div>
+<ToolShell Title="Binary ↔ Text" Icon="bi-0-circle" Description="Convert between binary strings and ASCII text.">
     <div class="tool-form">
         <div class="tool-field">
             <label class="tool-label" for="binary">Binary input</label>
@@ -24,7 +20,7 @@
             <button type="button" class="tool-btn tool-btn-secondary" @onclick="Copy"><i class="bi bi-clipboard" aria-hidden="true"></i> Copy</button>
         </div>
     </div>
-</div>
+</ToolShell>
 
 @code {
     string Input = "01101111 01101110 01100101 00100000 01101100 01101001 01101110 01100101";

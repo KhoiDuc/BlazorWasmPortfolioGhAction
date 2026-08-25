@@ -1,8 +1,5 @@
 ﻿@page "/cryptoManager"
-@inject HttpClient Http
 @inject IJSRuntime JSRuntime
-@using System.Text.Json
-@using Microsoft.JSInterop
 @using BlazorWasmPortfolioGhAction.Pages.CryptoManagerComponents
 @using BlazorWasmPortfolioGhAction.Services
 @inject IScriptLoaderService ScriptLoader
@@ -12,63 +9,63 @@
         <div class="container">
             <div class="section-heading">
                 <p class="section-label">CRYPTO</p>
-                <h2>Live ticker dashboard.</h2>
-                <p class="crypto-lead">Stream Binance tickers, compare volume, and inspect price history with Chart.js.</p>
+                <h2>Live ticker dashboard</h2>
+                <p class="crypto-lead">Stream Binance tickers, compare volume, and inspect price history.</p>
             </div>
 
-            <div class="tool-card crypto-controls-card">
-                <div class="tool-form crypto-controls-form">
-                    <div class="tool-field">
-                        <label class="tool-label" for="tickerCount">Tickers</label>
-                        <input id="tickerCount" type="number" class="tool-input tool-input-sm" @bind="settings.NumberOfTickers" min="1" max="100" />
-                    </div>
-                    <div class="tool-field">
-                        <label class="tool-label" for="quoteUnit">Quote unit</label>
-                        <select id="quoteUnit" class="tool-input tool-input-sm" @bind="settings.QuoteUnit">
-                            <option value="USDT">USDT</option>
-                            <option value="BTC">BTC</option>
-                            <option value="ETH">ETH</option>
-                        </select>
-                    </div>
-                    <div class="tool-actions crypto-controls-actions">
-                        <button type="button" class="tool-btn tool-btn-primary" @onclick="UpdateSettings">
-                            <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Refresh stream
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="crypto-layout">
-                <aside class="crypto-card-list" aria-label="Ticker list">
-                    @if (cryptos.Count == 0)
-                    {
-                        <div class="crypto-empty">
-                            <div class="tool-spinner" role="status" aria-label="Loading"></div>
-                            <p>Connecting to ticker stream...</p>
+            <div class="crypto-dashboard">
+                <aside class="crypto-sidebar">
+                    <div class="tool-card crypto-controls-card">
+                        <div class="tool-form crypto-controls-form">
+                            <div class="tool-field">
+                                <label class="tool-label" for="tickerCount">Tickers</label>
+                                <input id="tickerCount" type="number" class="tool-input tool-input-sm" @bind="settings.NumberOfTickers" min="1" max="100" />
+                            </div>
+                            <div class="tool-field">
+                                <label class="tool-label" for="quoteUnit">Quote</label>
+                                <select id="quoteUnit" class="tool-select tool-input-sm" @bind="settings.QuoteUnit">
+                                    <option value="USDT">USDT</option>
+                                    <option value="BTC">BTC</option>
+                                    <option value="ETH">ETH</option>
+                                </select>
+                            </div>
+                            <button type="button" class="tool-btn tool-btn-primary w-100" @onclick="UpdateSettings">
+                                <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Refresh
+                            </button>
                         </div>
-                    }
-                    @foreach (var crypto in cryptos)
-                    {
-                        <CryptoCard Crypto="crypto"
-                                    IsSelected="selectedCryptos.Contains(crypto)"
-                                    OnCryptoSelected="LoadCryptoDetails" />
-                    }
+                    </div>
+
+                    <div class="crypto-ticker-list" aria-label="Ticker list">
+                        @if (cryptos.Count == 0)
+                        {
+                            <div class="crypto-empty-inline">
+                                <div class="tool-spinner" role="status"></div>
+                                <span>Connecting...</span>
+                            </div>
+                        }
+                        @foreach (var crypto in cryptos)
+                        {
+                            <CryptoCard Crypto="crypto"
+                                        IsSelected="@(SelectedCrypto?.Id == crypto.Id)"
+                                        OnCryptoSelected="SelectCrypto" />
+                        }
+                    </div>
                 </aside>
 
-                <div class="crypto-detail-view" aria-label="Ticker details">
-                    @if (selectedCryptos.Count == 0)
+                <main class="crypto-main-panel">
+                    @if (SelectedCrypto is null)
                     {
-                        <div class="crypto-empty tool-card">
-                            <i class="bi bi-currency-exchange" aria-hidden="true"></i>
+                        <div class="crypto-empty-dashboard tool-card">
+                            <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
                             <h3>Select a ticker</h3>
-                            <p>Click a card on the left to open detailed charts and 24h stats.</p>
+                            <p>Choose a coin from the list to view live price, 24h stats, and chart history.</p>
                         </div>
                     }
-                    @foreach (var selectedCrypto in selectedCryptos)
+                    else
                     {
-                        <CryptoDetails Crypto="selectedCrypto" OnClose="CloseCryptoDetail" />
+                        <CryptoDetails Crypto="SelectedCrypto" OnClose="ClearSelection" />
                     }
-                </div>
+                </main>
             </div>
         </div>
     </section>
@@ -78,9 +75,8 @@
 
 @code {
     private List<Crypto> cryptos = new();
-    private List<Crypto> selectedCryptos = new();
+    private Crypto? SelectedCrypto;
     private Settings settings = new();
-
     private DotNetObjectReference<CryptoManager>? objRef;
 
     protected override async Task OnInitializedAsync()
@@ -94,24 +90,28 @@
     [JSInvokable]
     public void UpdateCryptoData(Crypto crypto)
     {
-        var existingCrypto = cryptos.FirstOrDefault(c => c.Id == crypto.Id);
-        if (existingCrypto != null)
+        var existing = cryptos.FirstOrDefault(c => c.Id == crypto.Id);
+        if (existing != null)
         {
-            existingCrypto.CurrentPrice = crypto.CurrentPrice;
-            existingCrypto.PriceHistory = crypto.PriceHistory;
-            existingCrypto.VolumeInBaseCurrency = crypto.VolumeInBaseCurrency;
-            existingCrypto.VolumeInQuoteCurrency = crypto.VolumeInQuoteCurrency;
-            existingCrypto.High24h = crypto.High24h;
-            existingCrypto.Low24h = crypto.Low24h;
-            existingCrypto.Change24h = crypto.Change24h;
-            existingCrypto.LastUpdate = crypto.LastUpdate;
+            existing.CurrentPrice = crypto.CurrentPrice;
+            existing.PriceHistory = crypto.PriceHistory;
+            existing.VolumeInBaseCurrency = crypto.VolumeInBaseCurrency;
+            existing.VolumeInQuoteCurrency = crypto.VolumeInQuoteCurrency;
+            existing.High24h = crypto.High24h;
+            existing.Low24h = crypto.Low24h;
+            existing.Change24h = crypto.Change24h;
+            existing.LastUpdate = crypto.LastUpdate;
+
+            if (SelectedCrypto?.Id == crypto.Id)
+                SelectedCrypto = existing;
         }
         else if (cryptos.Count >= settings.NumberOfTickers)
         {
-            var minVolumeCrypto = cryptos.OrderBy(c => c.VolumeInQuoteCurrency).First();
-            if (crypto.VolumeInQuoteCurrency > minVolumeCrypto.VolumeInQuoteCurrency)
+            var minVolume = cryptos.OrderBy(c => c.VolumeInQuoteCurrency).First();
+            if (crypto.VolumeInQuoteCurrency > minVolume.VolumeInQuoteCurrency)
             {
-                cryptos.Remove(minVolumeCrypto);
+                if (SelectedCrypto?.Id == minVolume.Id) SelectedCrypto = null;
+                cryptos.Remove(minVolume);
                 AddCrypto(crypto);
             }
         }
@@ -133,20 +133,12 @@
     private async Task UpdateSettings()
     {
         cryptos.Clear();
-        selectedCryptos.Clear();
+        SelectedCrypto = null;
         await JSRuntime.InvokeVoidAsync("fetchCryptoList", objRef, settings);
-        StateHasChanged();
     }
 
-    private void LoadCryptoDetails(Crypto crypto)
-    {
-        if (selectedCryptos.Contains(crypto))
-            selectedCryptos.Remove(crypto);
-        else
-            selectedCryptos.Add(crypto);
-    }
-
-    private void CloseCryptoDetail(Crypto crypto) => selectedCryptos.Remove(crypto);
+    private void SelectCrypto(Crypto crypto) => SelectedCrypto = crypto;
+    private void ClearSelection() => SelectedCrypto = null;
 
     public async ValueTask DisposeAsync()
     {

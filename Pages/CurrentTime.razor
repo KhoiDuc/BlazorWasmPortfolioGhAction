@@ -3,11 +3,7 @@
 @using BlazorWasmPortfolioGhAction.Store.Services
 @inject ITimeZoneQueryProviderService TimeZoneQueryProvider
 
-<div class="tool-card">
-    <div class="tool-header">
-        <h3>Current Time</h3>
-        <p>UTC, local time, and world timezone clocks.</p>
-    </div>
+<ToolShell Title="Current Time" Icon="bi-clock" Description="UTC, local time, and world timezone clocks.">
 
     <div class="currenttime-info">
         <p class="tool-hint">
@@ -49,7 +45,7 @@
             </div>
         }
     </div>
-</div>
+</ToolShell>
 
 @code {
     private DateTime utcNow = DateTime.UtcNow;

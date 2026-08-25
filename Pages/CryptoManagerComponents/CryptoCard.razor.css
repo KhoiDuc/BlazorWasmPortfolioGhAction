@@ -1,53 +1,68 @@
-﻿.crypto-card {
-    display: block;
+﻿.crypto-ticker-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 0.35rem 0.75rem;
     width: 100%;
-    padding: 0.85rem 1rem;
+    padding: 0.75rem 0.85rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     background: var(--color-bg-surface);
     color: var(--color-text-primary);
     text-align: left;
     cursor: pointer;
-    transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+    transition: border-color var(--transition), background-color var(--transition);
 }
 
-.crypto-card:hover {
+.crypto-ticker-row:hover,
+.crypto-ticker-row.is-selected {
     border-color: var(--color-accent);
-    box-shadow: var(--shadow-sm);
-}
-
-.crypto-card-selected {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
     background: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg-surface));
 }
 
-.crypto-card-head {
+.crypto-ticker-meta {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 0.1rem;
 }
 
-.crypto-card-symbol {
+.crypto-ticker-meta strong {
+    font-size: 0.92rem;
+}
+
+.crypto-ticker-meta span {
     font-size: 0.75rem;
     color: var(--color-text-muted);
     font-family: var(--font-family-mono);
 }
 
-.crypto-card-price {
-    margin: 0.35rem 0 0.5rem;
-    font-size: 1rem;
-    font-weight: 700;
+.crypto-ticker-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+}
+
+.crypto-ticker-price {
     font-family: var(--font-family-mono);
+    font-weight: 700;
+    font-size: 0.88rem;
 }
 
-.crypto-card-chart {
-    height: 72px;
-    position: relative;
+.crypto-ticker-change {
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
-.crypto-card-chart canvas {
+.crypto-ticker-change.up { color: var(--color-success); }
+.crypto-ticker-change.down { color: var(--color-danger); }
+
+.crypto-ticker-spark {
+    grid-column: 1 / -1;
+    height: 56px;
+}
+
+.crypto-ticker-spark canvas {
     width: 100% !important;
     height: 100% !important;
 }

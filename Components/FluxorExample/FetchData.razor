@@ -3,11 +3,7 @@
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 @inject IState<FetchDataState> _fetchDataState
 
-<div class="tool-card">
-    <div class="tool-header">
-        <h3>Weather Forecast</h3>
-        <p>Demonstrates fetching data from server via Fluxor.</p>
-    </div>
+<ToolShell Title="Weather Forecast" Icon="bi-cloud-sun" Description="Demonstrates fetching data from server via Fluxor.">
     @if (_fetchDataState.Value.IsLoading)
     {
         <p class="tool-hint"><em>Loading...</em></p>
@@ -35,7 +31,7 @@
             </tbody>
         </table>
     }
-</div>
+</ToolShell>
 
 @code {
     [Inject] public IDispatcher? Dispatcher { get; set; }

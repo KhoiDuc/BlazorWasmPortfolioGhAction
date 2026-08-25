@@ -1,0 +1,18 @@
+@page "/login-failed"
+@using BlazorWasmPortfolioGhAction.Components.Auth
+@inject NavigationManager Navigation
+
+<LoginFailedView ErrorMessage="@ErrorMessage" />
+
+@code {
+    private string? ErrorMessage { get; set; }
+
+    protected override void OnInitialized()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("error", out var values))
+        {
+            ErrorMessage = values.FirstOrDefault();
+        }
+    }
+}

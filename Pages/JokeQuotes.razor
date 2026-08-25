@@ -1,56 +1,42 @@
 @using System.Text.Json
+@using BlazorWasmPortfolioGhAction.Components.ToolShell
 @inject HttpClient Http
 
-<div class="joke-page-container">
-    <h2 class="joke-title">Jokes</h2>
-
-    <div class="control-panel">
-        <h3>Select Categories to Exclude</h3>
-        <div class="flags-grid">
+<ToolShell Title="Joke Quotes" Icon="bi-emoji-laughing" Description="Random jokes from JokeAPI with category blacklist filters.">
+    <div class="tool-form">
+        <h4>Exclude categories</h4>
+        <div class="tool-checkbox-group">
             @foreach (var flag in BlacklistFlags)
             {
-                <label class="flag-item">
-                    <input type="checkbox"
-                           checked="@SelectedFlags[flag]"
-                           @onchange="@((e) => OnFlagChanged(flag, (bool)e.Value))" />
+                <label class="tool-checkbox">
+                    <input type="checkbox" checked="@SelectedFlags[flag]" @onchange="@((e) => OnFlagChanged(flag, (bool)e.Value!))" />
                     @flag
                 </label>
             }
         </div>
-
-        <div class="api-url">
-            <strong>API Endpoint:</strong>
-            <a href="@DisplayUrl" target="_blank" class="url-link">
-                @DisplayUrl
-            </a>
-        </div>
+        <p class="tool-hint">API: <a href="@DisplayUrl" target="_blank" rel="noopener">@DisplayUrl</a></p>
     </div>
 
-    <div class="joke-panel">
-        <div class="joke-content">
-            @if (IsLoading)
-            {
-                <div class="loader-container">
-                    <div class="loader"></div>
-                </div>
-            }
-            else if (!string.IsNullOrEmpty(JokeText))
-            {
-                <blockquote class="joke-quote">@JokeText</blockquote>
-            }
-        </div>
+    <div class="tool-card tool-card-nested joke-panel">
+        @if (IsLoading)
+        {
+            <div class="tool-spinner" role="status" aria-label="Loading joke"></div>
+        }
+        else if (!string.IsNullOrEmpty(JokeText))
+        {
+            <blockquote class="joke-quote">@JokeText</blockquote>
+        }
+        else
+        {
+            <p class="tool-hint">Press “New joke” to fetch one.</p>
+        }
 
-        <div class="button-group">
-            <button class="nav-button" @onclick="GetPreviousJoke"
-                    disabled="@(currentJokeIndex <= 0)">
-                ← Previous
-            </button>
-            <button class="nav-button primary" @onclick="GetJoke">
-                New Joke
-            </button>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="GetPreviousJoke" disabled="@(currentJokeIndex <= 0)">← Previous</button>
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="GetJoke">New joke</button>
         </div>
     </div>
-</div>
+</ToolShell>
 
 @code {
     private bool IsLoading;

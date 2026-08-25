@@ -1,4 +1,4 @@
-﻿/* CryptoManager — rebuilt */
+﻿/* Crypto dashboard — rebuilt */
 
 .crypto-page section { padding: 3rem 0 5rem; }
 
@@ -8,64 +8,76 @@
     color: var(--color-text-secondary);
 }
 
-.crypto-controls-card { margin-bottom: 1.25rem; }
-
-.crypto-controls-form {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 1rem;
-}
-
-.crypto-controls-form .tool-field { min-width: 120px; }
-
-.crypto-controls-actions {
-    margin: 0;
-    padding-bottom: 0.1rem;
-}
-
-.crypto-layout {
+.crypto-dashboard {
     display: grid;
-    grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
     gap: 1.25rem;
     align-items: start;
 }
 
-.crypto-card-list,
-.crypto-detail-view {
+.crypto-sidebar {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    min-height: 420px;
-}
-
-.crypto-card-list {
-    max-height: calc(100vh - 220px);
-    overflow-y: auto;
-    padding-right: 0.25rem;
-}
-
-.crypto-detail-view {
     min-width: 0;
 }
 
-.crypto-empty {
+.crypto-controls-card { margin: 0; }
+
+.crypto-controls-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.crypto-ticker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+    padding-right: 0.15rem;
+}
+
+.crypto-main-panel {
+    min-width: 0;
+    min-height: 520px;
+}
+
+.crypto-empty-inline,
+.crypto-empty-dashboard {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    padding: 3rem 1.5rem;
+    padding: 2.5rem 1.5rem;
     text-align: center;
     color: var(--color-text-secondary);
-    min-height: 320px;
 }
 
-.crypto-empty i { font-size: 2.25rem; color: var(--color-text-subtle); }
-.crypto-empty h3 { margin: 0; color: var(--color-text-primary); }
-.crypto-empty p { margin: 0; max-width: 320px; }
+.crypto-empty-inline {
+    flex-direction: row;
+    padding: 1.25rem;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+}
 
-@media (max-width: 900px) {
-    .crypto-layout { grid-template-columns: 1fr; }
-    .crypto-card-list { max-height: none; }
+.crypto-empty-dashboard {
+    min-height: 520px;
+}
+
+.crypto-empty-dashboard i {
+    font-size: 2.5rem;
+    color: var(--color-text-subtle);
+}
+
+.crypto-empty-dashboard h3 {
+    margin: 0;
+    color: var(--color-text-primary);
+}
+
+@media (max-width: 960px) {
+    .crypto-dashboard { grid-template-columns: 1fr; }
+    .crypto-ticker-list { max-height: 360px; }
 }

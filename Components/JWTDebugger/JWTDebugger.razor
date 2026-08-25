@@ -3,11 +3,7 @@
 @using BlazorWasmPortfolioGhAction.Services
 @inject IClipboardService Clipboard
 
-<div class="tool-card">
-    <div class="tool-header">
-        <h3>JWT Debugger</h3>
-        <p>Decode JWT tokens to inspect header, payload, and signature.</p>
-    </div>
+<ToolShell Title="JWT Debugger" Icon="bi-shield-lock" Description="Decode JWT tokens to inspect header, payload, and signature.">
     <div class="tool-form">
         <div class="tool-field">
             <label class="tool-label" for="algorithm-select">Algorithm</label>
@@ -46,7 +42,7 @@
     </div>
     <hr class="tool-divider" />
     <p class="tool-hint">Inspired by <a href="https://jwt.io" target="_blank">JWT.io</a></p>
-</div>
+</ToolShell>
 
 @code {
     [Parameter] public string? Input { get; set; }

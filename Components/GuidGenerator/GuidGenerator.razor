@@ -1,11 +1,7 @@
 @using System.Text;
 @inject IJSRuntime JSRuntime
 
-<div class="tool-card">
-    <div class="tool-header">
-        <h3>GUID Generator</h3>
-        <p>Generate single or multiple GUIDs with formatting options.</p>
-    </div>
+<ToolShell Title="GUID Generator" Icon="bi-hash" Description="Generate single or multiple GUIDs with formatting options.">
     <div class="tool-form">
         <div class="tool-field">
             <label class="tool-label">Zero GUID</label>
@@ -58,7 +54,7 @@
             <textarea class="tool-textarea" rows="6" @bind="NewGuids" placeholder="Generated GUIDs..."></textarea>
         </div>
     </div>
-</div>
+</ToolShell>
 
 @code {
     private string newGuid = "";
