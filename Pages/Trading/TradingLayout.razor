@@ -5,20 +5,25 @@
     <div class="ts-body">
         @Body
     </div>
-    <TradingNewsPanel />
-    <TradingChatbox />
-    <TradingAlertOverlay />
+    @if (_overlaysReady)
+    {
+        <TradingNewsPanel />
+        <TradingChatbox />
+        <TradingAlertOverlay />
+    }
 </div>
 
 @code {
+    private bool _overlaysReady;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            try { await JS.InvokeVoidAsync("eval", "void 0"); }
-            catch { }
+            // Defer floating widgets until after first paint so navigation feels instant.
+            await Task.Delay(300);
+            _overlaysReady = true;
+            StateHasChanged();
         }
     }
-
-    [Inject] IJSRuntime JS { get; set; } = default!;
 }

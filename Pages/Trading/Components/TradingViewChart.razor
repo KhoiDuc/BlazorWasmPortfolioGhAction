@@ -1,21 +1,42 @@
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 
-<div id="@_elementId" class="ts-chart-wrap" style="min-height:@(Height)px"></div>
+<div id="@_elementId" class="ts-chart-wrap" style="min-height:@(Height)px">
+    @if (!_ready)
+    {
+        <div class="ts-empty" style="min-height:@(Height)px;display:flex;align-items:center;justify-content:center">
+            <div class="ts-spinner"></div>
+        </div>
+    }
+</div>
 
 @code {
     [Parameter] public string Symbol { get; set; } = "BTCUSDT";
     [Parameter] public int Height { get; set; } = 380;
+    [Parameter] public bool Lazy { get; set; } = true;
 
     private string _elementId = $"tv_{Guid.NewGuid():N}";
     private string? _lastSymbol;
+    private bool _ready;
+    private bool _rendered;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender || _lastSymbol != Symbol)
+        if (_rendered && _lastSymbol == Symbol) return;
+
+        if (Lazy && firstRender)
+        {
+            await Task.Delay(150);
+        }
+
+        if (_lastSymbol != Symbol || firstRender)
         {
             _lastSymbol = Symbol;
+            _ready = true;
+            StateHasChanged();
+            await Task.Yield();
             await JS.InvokeVoidAsync("tradingViewInterop.render", _elementId, Symbol, Height);
+            _rendered = true;
         }
     }
 

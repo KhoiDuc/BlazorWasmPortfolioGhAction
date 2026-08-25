@@ -64,19 +64,20 @@
         new("trading/community", "Community", "bi-people", AuthRequired: true),
     ];
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         Auth.AuthStateChanged += OnAuthChanged;
-        await RefreshAuth();
+        _ = RefreshAuthAsync();
     }
 
-    private async Task RefreshAuth()
+    private async Task RefreshAuthAsync()
     {
         _loggedIn = await Auth.IsLoggedInAsync();
         _user = await Auth.GetUserInfoAsync();
+        await InvokeAsync(StateHasChanged);
     }
 
-    private async void OnAuthChanged() => await InvokeAsync(async () => { await RefreshAuth(); StateHasChanged(); });
+    private async void OnAuthChanged() => await InvokeAsync(RefreshAuthAsync);
 
     private void ToggleMenu() => MenuOpen = !MenuOpen;
     private void CloseMenu() => MenuOpen = false;

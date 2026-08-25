@@ -3,7 +3,7 @@
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 @using BlazorWasmPortfolioGhAction.Models.Trading
 @inject ITradingApiClient Api
-@inject IJSRuntime JS
+@implements IDisposable
 
 <div class="ts-page">
     <div class="ts-header">
@@ -16,7 +16,11 @@
         </button>
     </div>
 
-    @if (_alerts?.Length > 0)
+    @if (_alertsLoading)
+    {
+        <div class="ts-panel"><div class="ts-spinner"></div><p class="ts-updated text-center">Loading alerts...</p></div>
+    }
+    else if (_alerts?.Length > 0)
     {
         <div class="ts-panel">
             <h3 style="font-size:1rem;margin:0 0 0.75rem">Latest Alerts</h3>
@@ -35,27 +39,43 @@
 
     <div class="ts-panel">
         <h3 style="font-size:1rem;margin:0 0 0.75rem">Assets RRG Chart</h3>
-        <img src="@Api.ProxyUrl("assets_rrgchart")" alt="Assets RRG" class="ts-rrg-img" />
+        <img src="@Api.ProxyUrl("assets_rrgchart")" alt="Assets RRG" class="ts-rrg-img" loading="lazy" />
     </div>
 
-    @if (_theses?.Length > 0)
-    {
-        <div class="ts-panel">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-                <h3 style="font-size:1rem;margin:0">Macro Theses</h3>
-                <button class="ts-btn ts-btn-outline" @onclick="TriggerThesis">Update Theses</button>
-            </div>
+    <div class="ts-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <h3 style="font-size:1rem;margin:0">Macro Theses</h3>
+            <button class="ts-btn ts-btn-outline" @onclick="TriggerThesis" disabled="@_thesesLoading">Update Theses</button>
+        </div>
+        @if (_thesesLoading)
+        {
+            <div class="ts-spinner"></div>
+        }
+        else if (_theses?.Length > 0)
+        {
             @foreach (var t in _theses)
             {
                 <div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #e2e8f0">
-                    <strong>@t.Title</strong> @if (!string.IsNullOrEmpty(t.AssetClass)) { <span class="ts-signal ts-signal-ema9_above_ema21">@t.AssetClass</span> }
+                    <strong>@t.Title</strong>
+                    @if (!string.IsNullOrEmpty(t.AssetClass))
+                    {
+                        <span class="ts-signal ts-signal-ema9_above_ema21">@t.AssetClass</span>
+                    }
                     <p style="font-size:0.88rem;margin:0.5rem 0">@t.Content</p>
                 </div>
             }
-        </div>
-    }
+        }
+        else
+        {
+            <p class="ts-updated">No theses loaded.</p>
+        }
+    </div>
 
-    @if (_worldState?.Summary is not null)
+    @if (_worldStateLoading)
+    {
+        <div class="ts-panel"><div class="ts-spinner"></div></div>
+    }
+    else if (_worldState?.Summary is not null)
     {
         <div class="ts-panel">
             <h3 style="font-size:1rem;margin:0 0 0.75rem">World State</h3>
@@ -63,7 +83,11 @@
         </div>
     }
 
-    @if (_calendar.HasValue)
+    @if (_calendarLoading)
+    {
+        <div class="ts-panel"><div class="ts-spinner"></div></div>
+    }
+    else if (_calendar.HasValue)
     {
         <div class="ts-panel">
             <h3 style="font-size:1rem;margin:0 0 0.75rem">Economic Calendar (This Week)</h3>
@@ -78,15 +102,81 @@
     private OsintWorldState? _worldState;
     private System.Text.Json.JsonElement? _calendar;
     private bool _scanning;
+    private bool _alertsLoading = true;
+    private bool _thesesLoading = true;
+    private bool _worldStateLoading = true;
+    private bool _calendarLoading = true;
+    private CancellationTokenSource? _cts;
 
-    protected override async Task OnInitializedAsync() => await Load();
-
-    private async Task Load()
+    protected override void OnInitialized()
     {
-        _alerts = await Api.GetTriggeredAlertsAsync();
-        _theses = await Api.GetThesesAsync();
-        _worldState = await Api.GetWorldStateAsync();
-        _calendar = await Api.GetCalendarAsync();
+        _cts = new CancellationTokenSource();
+        _ = LoadAllAsync(_cts.Token);
+    }
+
+    private async Task LoadAllAsync(CancellationToken ct)
+    {
+        var alertsTask = LoadAlertsAsync(ct);
+        var thesesTask = LoadThesesAsync(ct);
+        var worldTask = LoadWorldStateAsync(ct);
+        var calendarTask = LoadCalendarAsync(ct);
+        await Task.WhenAll(alertsTask, thesesTask, worldTask, calendarTask);
+    }
+
+    private async Task LoadAlertsAsync(CancellationToken ct)
+    {
+        try
+        {
+            _alerts = await Api.GetTriggeredAlertsAsync(50, ct);
+        }
+        catch { }
+        finally
+        {
+            _alertsLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task LoadThesesAsync(CancellationToken ct)
+    {
+        try
+        {
+            _theses = await Api.GetThesesAsync(ct: ct);
+        }
+        catch { }
+        finally
+        {
+            _thesesLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task LoadWorldStateAsync(CancellationToken ct)
+    {
+        try
+        {
+            _worldState = await Api.GetWorldStateAsync(ct);
+        }
+        catch { }
+        finally
+        {
+            _worldStateLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task LoadCalendarAsync(CancellationToken ct)
+    {
+        try
+        {
+            _calendar = await Api.GetCalendarAsync(ct);
+        }
+        catch { }
+        finally
+        {
+            _calendarLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task RefreshAssets()
@@ -98,7 +188,15 @@
 
     private async Task TriggerThesis()
     {
+        _thesesLoading = true;
         await Api.TriggerThesisUpdateAsync();
         _theses = await Api.GetThesesAsync(refresh: true);
+        _thesesLoading = false;
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 }
