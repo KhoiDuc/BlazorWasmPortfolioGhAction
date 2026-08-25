@@ -1,5 +1,14 @@
-/* Trading module — global styles */
-.ts-page { max-width: 1200px; margin: 0 auto; padding: 1.5rem min(5%, 1rem) 2rem; width: 100%; }
+/* =============================================================================
+   Trading module — aligned with portfolio design system (app.css tokens)
+   ============================================================================= */
+
+/* Page shell */
+.ts-page {
+    max-width: var(--max-width, 1200px);
+    margin: 0 auto;
+    padding: 1.5rem min(5%, 1rem) 2rem;
+    width: 100%;
+}
 
 /* Sub-nav — portfolio link style, sits below fixed navbar */
 .trading-subnav {
@@ -7,10 +16,10 @@
     top: 72px;
     z-index: 999;
     margin-top: 72px;
-    background: var(--color-bg-glass-heavy, rgba(255, 255, 255, 0.92));
+    background: var(--color-bg-glass-heavy);
     backdrop-filter: blur(14px) saturate(140%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
-    border-bottom: 1px solid var(--color-border, rgba(0, 0, 0, 0.1));
+    border-bottom: 1px solid var(--color-border);
 }
 
 .trading-subnav-inner {
@@ -36,17 +45,17 @@
 .trading-subnav-links a {
     position: relative;
     flex-shrink: 0;
-    color: var(--color-text-secondary, #64748b);
+    color: var(--color-text-secondary);
     font-size: 0.85rem;
     font-weight: 500;
     text-decoration: none;
     padding: 0.35rem 0;
     white-space: nowrap;
-    transition: color var(--transition, 0.2s);
+    transition: color var(--transition-fast);
 }
 
-.trading-subnav-links a:hover { color: var(--color-text-primary, #0f172a); }
-.trading-subnav-links a.active { color: var(--color-accent, #78350f); }
+.trading-subnav-links a:hover { color: var(--color-text-primary); }
+.trading-subnav-links a.active { color: var(--color-accent); }
 
 .trading-subnav-links a::after {
     content: "";
@@ -55,11 +64,11 @@
     right: 0;
     bottom: -0.35rem;
     height: 2px;
-    background-color: var(--color-accent, #78350f);
-    border-radius: var(--radius-full, 999px);
+    background-color: var(--color-accent);
+    border-radius: var(--radius-full);
     transform: scaleX(0);
     transform-origin: center;
-    transition: transform var(--transition, 0.2s);
+    transition: transform var(--transition-fast);
 }
 
 .trading-subnav-links a:hover::after,
@@ -74,7 +83,7 @@
 
 .trading-subnav-user {
     font-size: 0.82rem;
-    color: var(--color-text-secondary, #64748b);
+    color: var(--color-text-secondary);
     max-width: 120px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -85,18 +94,18 @@
     padding: 6px 14px;
     font-size: 0.82rem;
     font-weight: 600;
-    color: var(--color-accent, #78350f) !important;
+    color: var(--color-accent) !important;
     background: transparent;
-    border: 1px solid var(--color-border-accent, rgba(120, 53, 15, 0.38));
-    border-radius: var(--radius-full, 999px);
+    border: 1px solid var(--color-border-accent);
+    border-radius: var(--radius-full);
     text-decoration: none;
     cursor: pointer;
-    transition: background-color var(--transition, 0.2s), border-color var(--transition, 0.2s);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .trading-subnav-btn:hover {
-    background: var(--color-bg-glass-hover, rgba(0, 0, 0, 0.04));
-    border-color: var(--color-accent, #78350f);
+    background: var(--color-bg-glass-hover);
+    border-color: var(--color-accent);
 }
 
 .trading-subnav-toggle {
@@ -109,8 +118,8 @@
     justify-content: center;
     gap: 4px;
     background: transparent;
-    border: 1px solid var(--color-border, rgba(0, 0, 0, 0.1));
-    border-radius: var(--radius-full, 999px);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
     cursor: pointer;
     flex-shrink: 0;
 }
@@ -118,13 +127,15 @@
 .trading-subnav-toggle span {
     width: 16px;
     height: 2px;
-    background: var(--color-text-primary, #0f172a);
+    background: var(--color-text-primary);
     border-radius: 2px;
     transition: transform 0.2s, opacity 0.2s;
 }
 
 .trading-main {
     min-height: calc(100vh - 120px);
+    background-color: var(--color-bg-app);
+    color: var(--color-text);
 }
 
 @media (max-width: 768px) {
@@ -140,7 +151,7 @@
         align-items: stretch;
         gap: 0;
         padding: 0.5rem 5%;
-        background: var(--color-bg-app, #f8fafc);
+        background: var(--color-bg-app);
         border-bottom: 1px solid var(--color-border);
         max-height: 60vh;
         overflow-y: auto;
@@ -164,48 +175,137 @@
     .trading-subnav-toggle.open span:nth-child(2) { opacity: 0; }
     .trading-subnav-toggle.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 }
+
+/* Typography helpers — mirror portfolio section-heading */
+.ts-section-label {
+    margin-bottom: 0.5rem;
+    color: var(--color-accent);
+    font-size: 0.85rem;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.ts-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.ts-header h2 {
+    margin: 0;
+    font-size: clamp(1.35rem, 3vw, 1.75rem);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+}
+
+.ts-header p {
+    margin: 0.25rem 0 0;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.ts-panel-title {
+    font-size: 1rem;
+    font-weight: var(--font-weight-semibold);
+    margin: 0 0 0.75rem;
+    color: var(--color-text-primary);
+}
+
+.ts-muted { color: var(--color-text-secondary); }
+.ts-subtle { color: var(--color-text-muted); }
+.ts-divider { border-bottom: 1px solid var(--color-border); }
+
+/* Panels — glass-card style */
 .ts-panel {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    background: var(--color-bg-glass);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     padding: 1.25rem;
     margin-bottom: 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    box-shadow: var(--shadow-md);
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
-.ts-header { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
-.ts-header h2 { margin: 0; font-size: 1.35rem; font-weight: 700; }
-.ts-header p { margin: 0.25rem 0 0; color: #64748b; font-size: 0.9rem; }
 
-.ts-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.ts-panel:hover {
+    border-color: var(--color-border-hover);
+}
+
+/* Tabs */
+.ts-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
 .ts-tab {
     padding: 8px 16px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    background: #fff;
-    color: #475569;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-surface);
+    color: var(--color-text-secondary);
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
+    transition: all var(--transition-fast);
 }
-.ts-tab.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
 
+.ts-tab:hover {
+    color: var(--color-text-primary);
+    border-color: var(--color-border-hover);
+    background: var(--color-bg-glass-hover);
+}
+
+.ts-tab.active {
+    background: var(--gradient-accent);
+    color: var(--color-text-on-accent);
+    border-color: transparent;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Tables */
 .ts-table-wrap { overflow-x: auto; }
-.ts-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+
+.ts-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
 .ts-table th {
-    background: #f1f5f9;
+    background: var(--color-bg-surface-elevated);
     padding: 10px 12px;
     text-align: left;
-    font-weight: 600;
-    color: #475569;
-    border-bottom: 2px solid #e2e8f0;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    border-bottom: 2px solid var(--color-border);
 }
-.ts-table td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
-.ts-table tr:hover td { background: #f8fafc; cursor: pointer; }
-.ts-table tr.selected td { background: #eff6ff; }
 
+.ts-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+}
+
+.ts-table tr:hover td {
+    background: var(--color-bg-glass-hover);
+    cursor: pointer;
+}
+
+.ts-table tr.selected td {
+    background: var(--color-bg-glass-active);
+}
+
+/* Buttons */
 .ts-btn {
     padding: 8px 16px;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     font-size: 0.85rem;
     font-weight: 600;
     border: none;
@@ -213,107 +313,371 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
 }
-.ts-btn-primary { background: #3b82f6; color: #fff; }
-.ts-btn-primary:hover { background: #2563eb; }
-.ts-btn-outline { background: #fff; color: #3b82f6; border: 1px solid #3b82f6; }
-.ts-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.ts-input, .ts-select {
+.ts-btn-primary {
+    background: var(--gradient-accent);
+    color: var(--color-text-on-accent);
+    box-shadow: var(--shadow-sm);
+}
+
+.ts-btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-glow-accent);
+    opacity: 0.95;
+}
+
+.ts-btn-outline {
+    background: transparent;
+    color: var(--color-accent);
+    border: 1px solid var(--color-border-accent);
+}
+
+.ts-btn-outline:hover:not(:disabled) {
+    background: var(--color-bg-glass-hover);
+    border-color: var(--color-accent);
+}
+
+.ts-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Form controls */
+.ts-input,
+.ts-select {
     width: 100%;
     padding: 8px 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
     font-size: 0.9rem;
+    background: var(--color-bg-surface);
+    color: var(--color-text);
+    transition: border-color var(--transition-fast);
 }
-.ts-label { display: block; font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 4px; }
+
+.ts-input:focus,
+.ts-select:focus {
+    outline: none;
+    border-color: var(--color-border-accent);
+}
+
+.ts-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
 .ts-field { margin-bottom: 1rem; }
 
+/* Signals & badges */
 .ts-signal {
     display: inline-block;
     padding: 2px 8px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     font-size: 0.72rem;
     font-weight: 600;
 }
-.ts-signal-near_52w_ath, .ts-signal-near_52w_high { background: #fef3c7; color: #92400e; }
-.ts-signal-near_ath { background: #fce7f3; color: #9d174d; }
-.ts-signal-ema9_above_ema21 { background: #d1fae5; color: #065f46; }
-.ts-signal-top_growth_20d { background: #dbeafe; color: #1e40af; }
 
-.ts-positive { color: #10b981; font-weight: 600; }
-.ts-negative { color: #ef4444; font-weight: 600; }
-.ts-updated { font-size: 0.78rem; color: #94a3b8; }
+.ts-signal-near_52w_ath,
+.ts-signal-near_52w_high {
+    background: rgba(180, 83, 9, 0.15);
+    color: var(--color-accent-light);
+}
 
-.ts-chart-wrap { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 1rem; min-height: 120px; }
-.ts-rrg-img { width: 100%; border-radius: 12px; border: 1px solid #e2e8f0; min-height: 200px; background: #f1f5f9; }
+.ts-signal-near_ath {
+    background: rgba(217, 119, 6, 0.18);
+    color: var(--color-warning);
+}
 
-.ts-empty { text-align: center; padding: 3rem; color: #94a3b8; }
-.ts-spinner { width: 32px; height: 32px; border: 3px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: ts-spin 0.8s linear infinite; margin: 0 auto 1rem; }
+.ts-signal-ema9_above_ema21 {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--color-success);
+}
+
+.ts-signal-top_growth_20d {
+    background: rgba(120, 53, 15, 0.12);
+    color: var(--color-accent);
+}
+
+.ts-positive { color: var(--color-success); font-weight: 600; }
+.ts-negative { color: var(--color-danger); font-weight: 600; }
+.ts-updated { font-size: 0.78rem; color: var(--color-text-muted); }
+
+/* Charts & media */
+.ts-chart-wrap {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 1rem;
+    min-height: 120px;
+    background: var(--color-bg-surface);
+}
+
+.ts-rrg-img {
+    width: 100%;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    min-height: 200px;
+    background: var(--color-bg-surface-elevated);
+}
+
+/* Loading & empty states */
+.ts-empty {
+    text-align: center;
+    padding: 3rem;
+    color: var(--color-text-muted);
+}
+
+.ts-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-accent);
+    border-radius: 50%;
+    animation: ts-spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+}
+
 @keyframes ts-spin { to { transform: rotate(360deg); } }
 
-.ts-alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 1rem; font-size: 0.88rem; }
-.ts-alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-.ts-alert-info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+/* Alerts */
+.ts-alert {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1rem;
+    font-size: 0.88rem;
+}
 
+.ts-alert-error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.ts-alert-info {
+    background: rgba(120, 53, 15, 0.08);
+    color: var(--color-accent);
+    border: 1px solid var(--color-border-accent);
+}
+
+/* Floating overlays — portfolio accent palette */
 .ts-news-btn {
-    position: fixed; right: 0; top: 18%; z-index: 1001;
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    color: #fff; padding: 10px 16px; border-radius: 30px 0 0 30px;
-    border: none; cursor: pointer; font-weight: 700; font-size: 0.78rem;
-}
-.ts-chat-launcher {
-    position: fixed; bottom: 24px; right: 24px; z-index: 1001;
-    width: 56px; height: 56px; border-radius: 50%;
-    background: linear-gradient(135deg, #8b5cf6, #6366f1);
-    color: #fff; border: none; cursor: pointer; font-size: 1.4rem;
-    box-shadow: 0 4px 20px rgba(99,102,241,0.4);
-}
-.ts-alert-bell {
-    position: fixed; bottom: 90px; right: 24px; z-index: 1001;
-    width: 48px; height: 48px; border-radius: 50%;
-    background: #fff; border: 1px solid #e2e8f0; cursor: pointer;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-}
-.ts-badge {
-    position: absolute; top: -4px; right: -4px;
-    background: #ef4444; color: #fff; font-size: 0.65rem;
-    min-width: 18px; height: 18px; border-radius: 999px;
-    display: flex; align-items: center; justify-content: center;
+    position: fixed;
+    right: 0;
+    top: 18%;
+    z-index: 1001;
+    background: var(--gradient-accent);
+    color: var(--color-text-on-accent);
+    padding: 10px 16px;
+    border-radius: 30px 0 0 30px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.78rem;
+    box-shadow: var(--shadow-glow-accent);
+    transition: transform var(--transition-fast);
 }
 
-.ts-overlay-panel {
-    position: fixed; z-index: 1100;
-    background: #fff; border: 1px solid #e2e8f0;
-    border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-    overflow: hidden;
+.ts-news-btn:hover { transform: translateX(-2px); }
+
+.ts-chat-launcher {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1001;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gradient-brand);
+    color: var(--color-text-on-accent);
+    border: 1px solid var(--color-border-accent);
+    cursor: pointer;
+    font-size: 1.4rem;
+    box-shadow: var(--shadow-glow-primary);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
+
+.ts-chat-launcher:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow-accent);
+}
+
+.ts-alert-bell {
+    position: fixed;
+    bottom: 90px;
+    right: 24px;
+    z-index: 1001;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--color-bg-glass-heavy);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    color: var(--color-text-primary);
+    transition: border-color var(--transition-fast);
+}
+
+.ts-alert-bell:hover { border-color: var(--color-border-accent); }
+
+.ts-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--color-danger);
+    color: var(--color-text-on-danger);
+    font-size: 0.65rem;
+    min-width: 18px;
+    height: 18px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Overlay panels */
+.ts-overlay-panel {
+    position: fixed;
+    z-index: 1100;
+    background: var(--color-bg-glass-heavy);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+    color: var(--color-text);
+}
+
 .ts-news-panel { top: 0; right: 0; width: min(420px, 95vw); height: 100vh; }
 .ts-chat-panel { bottom: 90px; right: 24px; width: min(380px, 95vw); height: 480px; display: flex; flex-direction: column; }
 .ts-alert-panel { bottom: 150px; right: 24px; width: min(360px, 95vw); max-height: 400px; overflow-y: auto; }
 
 .ts-panel-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;
-    font-weight: 700; font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--color-bg-surface-elevated);
+    border-bottom: 1px solid var(--color-border);
+    font-weight: var(--font-weight-semibold);
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
 }
-.ts-panel-body { padding: 12px 16px; overflow-y: auto; flex: 1; }
 
-@media (max-width: 991px) {
-    .ts-crypto-sidebar, .ts-crypto-main { flex: 1 1 100%; }
-    .ts-crypto-ticker-list { max-height: 360px; }
+.ts-panel-body {
+    padding: 12px 16px;
+    overflow-y: auto;
+    flex: 1;
 }
-.ts-crypto-dashboard { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
+
+.ts-channel-label {
+    font-size: 0.78rem;
+    color: var(--color-accent);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Chat bubbles */
+.ts-chat-bubble {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    max-width: 85%;
+}
+
+.ts-chat-bubble-user {
+    background: var(--gradient-accent);
+    color: var(--color-text-on-accent);
+}
+
+.ts-chat-bubble-bot {
+    background: var(--color-bg-surface-elevated);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+/* Crypto dashboard */
+.ts-crypto-dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
 .ts-crypto-sidebar { flex: 0 1 340px; min-width: min(100%, 280px); }
 .ts-crypto-main { flex: 1 1 400px; min-width: 0; }
-.ts-crypto-ticker-list { display: flex; flex-direction: column; gap: 0.5rem; max-height: calc(100vh - 280px); overflow-y: auto; }
-.ts-crypto-empty-inline { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b; }
-.ts-crypto-empty-main { min-height: 420px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 0.5rem; }
-.ts-marquee { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
-.ts-marquee-item { min-width: 180px; scroll-snap-align: start; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; flex-shrink: 0; }
-.ts-vol-meter { height: 8px; border-radius: 999px; background: #e2e8f0; overflow: hidden; margin-top: 6px; }
-.ts-vol-meter-fill { height: 100%; background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444); transition: width 0.3s; }
-@media (max-width: 960px) {
-    .ts-crypto-sidebar, .ts-crypto-main { flex: 1 1 100%; }
+
+.ts-crypto-ticker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+}
+
+.ts-crypto-empty-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+}
+
+.ts-crypto-empty-main {
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.5rem;
+}
+
+.ts-marquee {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x mandatory;
+}
+
+.ts-marquee-item {
+    min-width: 180px;
+    scroll-snap-align: start;
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+    flex-shrink: 0;
+    transition: border-color var(--transition-fast);
+}
+
+.ts-marquee-item:hover { border-color: var(--color-border-accent); }
+
+.ts-vol-meter {
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--color-border);
+    overflow: hidden;
+    margin-top: 6px;
+}
+
+.ts-vol-meter-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-success), var(--color-warning), var(--color-danger));
+    transition: width 0.3s;
+}
+
+@media (max-width: 991px) {
+    .ts-crypto-sidebar,
+    .ts-crypto-main { flex: 1 1 100%; }
     .ts-crypto-ticker-list { max-height: 360px; }
 }
