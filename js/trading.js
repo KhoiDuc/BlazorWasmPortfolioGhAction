@@ -60,3 +60,33 @@ window.tradingSpeech = {
         if (window.speechSynthesis) window.speechSynthesis.cancel();
     }
 };
+
+window.tradingCharts = {
+    bar: function (canvasId, labels, values, label) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas || !window.Chart) return;
+        if (canvas._chart) canvas._chart.destroy();
+        canvas._chart = new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ label: label || 'Value', data: values, backgroundColor: '#3b82f6' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+    },
+    doughnut: function (canvasId, labels, values) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas || !window.Chart) return;
+        if (canvas._chart) canvas._chart.destroy();
+        var colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'];
+        canvas._chart = new Chart(canvas.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{ data: values, backgroundColor: labels.map(function (_, i) { return colors[i % colors.length]; }) }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+};
