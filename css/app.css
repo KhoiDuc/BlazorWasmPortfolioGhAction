@@ -1510,9 +1510,101 @@ html.motion-ready .motion-reveal.is-visible .skill-meter-fill,
     height: 20px;
 }
 
-.tool-page-section {
-    padding: 2rem 0;
+.tool-shell {
+    margin: 0;
 }
+
+.tool-grid-2,
+.tool-grid-3 {
+    display: grid;
+    gap: 1rem;
+}
+
+.tool-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tool-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.tool-card-nested {
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-secondary);
+}
+
+.tool-card-nested h4 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+}
+
+.tool-map-frame {
+    width: 100%;
+    min-height: 420px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.webgl-canvas-wrap {
+    min-height: auto;
+    display: flex;
+    justify-content: center;
+    background: var(--color-bg-secondary);
+}
+
+.bigbang-display { text-align: center; }
+.bigbang-value {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: clamp(1.25rem, 4vw, 2rem);
+    font-family: var(--font-family-mono);
+}
+
+.joke-panel { margin-top: 1rem; }
+.joke-quote {
+    margin: 0 0 1rem;
+    padding: 1rem 1.15rem;
+    border-left: 3px solid var(--color-accent);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--color-text-primary);
+    white-space: pre-line;
+}
+
+.diagram-editor-layout {
+    display: grid;
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+    gap: 1rem;
+    min-height: 480px;
+}
+
+.diagram-editor-sidebar {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 0.75rem;
+    background: var(--color-bg-secondary);
+    overflow: auto;
+}
+
+.diagram-editor-canvas {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    min-height: 480px;
+    overflow: auto;
+}
+
+@media (max-width: 900px) {
+    .tool-grid-2,
+    .tool-grid-3,
+    .diagram-editor-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tool-input-sm {
+    max-width: 160px;
+}
+
+.w-100 { width: 100%; }
+
 
 .tool-inline-search {
     display: flex;
