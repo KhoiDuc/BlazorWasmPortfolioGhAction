@@ -4,7 +4,8 @@
 @using BlazorWasmPortfolioGhAction.Components.Github
 @inject IJSRuntime JSRuntime
 
-<section class="utility-page">
+<div class="page-section utility-page">
+<section>
     <div class="container">
         <div class="section-heading">
             <p class="section-label">TOOLS</p>
@@ -16,7 +17,7 @@
                 <nav class="utility-nav" aria-label="Tool categories">
                     @foreach (var category in NavigationItems)
                     {
-                        <details class="nav-group">
+                        <details class="nav-group" open="@(category == NavigationItems[0])">
                             <summary class="nav-group-title">@category.CategoryName</summary>
                             <ul class="nav-group-items">
                                 @foreach (var item in category.Items)
@@ -47,6 +48,7 @@
         </div>
     </div>
 </section>
+</div>
 
 @code {
     [Parameter]

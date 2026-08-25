@@ -174,6 +174,56 @@ html {
     padding: 72px 0 0 0;
 }
 
+/* Global section layout — used by all pages */
+section {
+    padding: 5rem 0;
+}
+
+.container {
+    width: min(90%, var(--max-width));
+    margin: 0 auto;
+}
+
+.section-heading {
+    max-width: 750px;
+    margin-bottom: 2.5rem;
+}
+
+.section-label {
+    margin-bottom: 0.75rem;
+    color: var(--color-accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.section-heading h2 {
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+}
+
+/* Page-level wrapper for non-home pages (smaller top padding) */
+.page-section {
+    padding-top: 72px;
+}
+
+.page-section section {
+    padding: 3.5rem 0;
+}
+
+.page-section .section-heading {
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    section { padding: 3rem 0; }
+    .page-section section { padding: 2.5rem 0; }
+    .container { width: min(92%, var(--max-width)); }
+    .section-heading { margin-bottom: 1.75rem; }
+    .section-heading h2 { font-size: clamp(1.5rem, 9vw, 2.25rem); }
+}
+
 /* Motion reveal animations */
 html.motion-ready .motion-reveal {
     opacity: 0;
