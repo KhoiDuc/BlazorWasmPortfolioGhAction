@@ -1,53 +1,35 @@
 ﻿@using BlazorWasmPortfolioGhAction.Store.Services
-<div class="modal @(showModal ? "show d-block" : "")" tabindex="-1" style="background-color: rgba(0,0,0,0.5)">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">@UserDetail?.Login</h5>
-                <button type="button" class="btn-close" @onclick="Close"></button>
-            </div>
-            <div class="modal-body">
-                @if (UserDetail != null)
-                {
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="card mb-3">
-                                <div class="card-body text-center">
-                                    <div class="avatar-lg mb-3">
-                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" 
-                                             style="width: 80px; height: 80px">
-                                             @Initial
-                                        </div>
-                                    </div>
-                                    <h5>@UserDetail.Name</h5>
-                                    <p class="text-muted">@UserDetail.Bio</p>
-                                </div>
-                            </div>
+
+<div class="tool-modal-backdrop" @onclick="Close">
+    <div class="tool-modal tool-modal-lg" role="dialog" aria-modal="true" aria-labelledby="user-detail-title" @onclick:stopPropagation="true">
+        <div class="tool-modal-header">
+            <h5 id="user-detail-title" class="tool-modal-title">@UserDetail?.Login</h5>
+            <button type="button" class="tool-modal-close" aria-label="Close" @onclick="Close">&times;</button>
+        </div>
+        <div class="tool-modal-body">
+            @if (UserDetail != null)
+            {
+                <div class="tool-user-detail-grid">
+                    <div class="tool-inspect-card">
+                        <div class="tool-user-avatar tool-user-avatar-lg" aria-hidden="true">@Initial</div>
+                        <h5>@UserDetail.Name</h5>
+                        <p class="tool-user-bio">@UserDetail.Bio</p>
+                    </div>
+                    <div class="tool-user-stats">
+                        <div class="tool-stat-card">
+                            <span class="tool-stat-label">Followers</span>
+                            <strong class="tool-stat-value">@UserDetail.FollowersCount</strong>
                         </div>
-                        <div class="col-md-8">
-                            <div class="row">
-                                <div class="col-6">
-                                    <div class="card mb-3">
-                                        <div class="card-body">
-                                            <h6 class="card-subtitle mb-2 text-muted">Followers</h6>
-                                            <p class="h4">@UserDetail.FollowersCount</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="card mb-3">
-                                        <div class="card-body">
-                                            <h6 class="card-subtitle mb-2 text-muted">Following</h6>
-                                            <p class="h4">@UserDetail.FollowingCount</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <UserRepositories Login="UserDetail.Login" />
+                        <div class="tool-stat-card">
+                            <span class="tool-stat-label">Following</span>
+                            <strong class="tool-stat-value">@UserDetail.FollowingCount</strong>
                         </div>
                     </div>
-                }
-            </div>
+                    <div class="tool-user-repos">
+                        <UserRepositories Login="UserDetail.Login" />
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -59,13 +41,7 @@
     [Parameter]
     public EventCallback OnClose { get; set; }
 
-    private bool showModal = true;
-
     private string Initial => UserDetail?.Login?.Length > 0 ? UserDetail.Login[0].ToString().ToUpper() : "?";
 
-    private async Task Close()
-    {
-        showModal = false;
-        await OnClose.InvokeAsync();
-    }
+    private async Task Close() => await OnClose.InvokeAsync();
 }

@@ -2,17 +2,19 @@
 
 <PageTitle>Counter</PageTitle>
 
-<h1>Counter</h1>
-
-<p role="status">Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>Counter demo</h3>
+        <p>Simple Blazor state demo component.</p>
+    </div>
+    <p role="status">Current count: <strong>@currentCount</strong></p>
+    <div class="tool-actions">
+        <button type="button" class="tool-btn tool-btn-primary" @onclick="IncrementCount">Click me</button>
+    </div>
+</div>
 
 @code {
     private int currentCount = 0;
 
-    private void IncrementCount()
-    {
-        currentCount++;
-    }
+    private void IncrementCount() => currentCount++;
 }

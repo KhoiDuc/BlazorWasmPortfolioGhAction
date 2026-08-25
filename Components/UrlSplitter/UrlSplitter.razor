@@ -1,92 +1,55 @@
 @using System.Web;
 @using System.Collections.Specialized;
 
-<div class="container">
-    
-    <div class="row">
-        <div class="col">
-            <h2>Url Splitter</h2>
-        </div>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>URL Splitter</h3>
+        <p>Parse a URL into hostname, pathname, and query parameters.</p>
     </div>
-    
-    <div class="row">
-        <div class="col">
-            <div class="input-group mb-3">
-                <input type="text" id="path" name="path" class="form-control" @bind="Path">
-                <div class="input-group-append">
-                    <span class="input-group-text" id="urlCount">@pathLength</span>
-                </div>
-            </div>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="path">Full URL</label>
+            <input type="text" id="path" class="tool-input" @bind="Path" />
+            <span class="tool-hint">Length: @pathLength</span>
         </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            <button id="btnPathSplit" name="btnPathSplit" class="btn btn-success float-right"
-                @onclick="Split">Split</button>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="Split">Split URL</button>
         </div>
-    </div>
-
-    <br/>
-
-    <!-- Hostname -->
-    <div class="row">
-        <div class="col-12">
-            <div class="input-group mb-3">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Hostname</span>
-                </div>
-                <input type="text" class="form-control" placeholder="hostname" aria-label="hostname"
-                       id="hostname" name="hostname"
-                       @bind="hostname" disabled>
-            </div>
+        <div class="tool-field">
+            <label class="tool-label" for="hostname">Hostname</label>
+            <input type="text" id="hostname" class="tool-input" @bind="hostname" disabled />
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="pathname">Pathname</label>
+            <input type="text" id="pathname" class="tool-input" @bind="pathName" disabled />
         </div>
     </div>
 
-    <!-- Pathname -->
-    <div class="row">
-        <div class="col-12">
-            <div class="input-group mb-3">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Pathname</span>
-                </div>
-                <input type="text" class="form-control" placeholder="pathname" aria-label="pathname"
-                       id="pathname" name="pathname"
-                       @bind="pathName" disabled>
-            </div>
-        </div>
-    </div>
-
-    <!-- Params -->
-    <div class="row">
-        <div class="col-12">
-            <table id="urlParams">
+    @if (queryString.Count > 0)
+    {
+        <div class="tool-table-wrapper">
+            <table class="tool-table">
                 <thead>
-                <tr>
-                    <th>Key</th>
-                    <th>Value</th>
-                </tr>
+                    <tr><th>Key</th><th>Value</th></tr>
                 </thead>
-                <tfoot></tfoot>
                 <tbody>
-                @foreach (string key in queryString)
-                {
-                    <tr>
-                        <td><em>@key</em></td>
-                        <td><em>@queryString[key]</em></td>
-                    </tr>
-                }
+                    @foreach (string key in queryString)
+                    {
+                        <tr>
+                            <td>@key</td>
+                            <td>@queryString[key]</td>
+                        </tr>
+                    }
                 </tbody>
-
             </table>
         </div>
-    </div>
-
+    }
 </div>
 
 @code {
     [Parameter]
     public string Path { get; set; } = string.Empty;
-    
+
     int pathLength;
     string hostname = string.Empty;
     string pathName = string.Empty;
@@ -102,11 +65,9 @@
     private void Split()
     {
         pathLength = Path.Length;
-
-        Uri uri = new Uri(Path);
+        var uri = new Uri(Path);
         hostname = uri.Host;
         pathName = uri.AbsolutePath;
         queryString = HttpUtility.ParseQueryString(uri.Query);
     }
-
 }

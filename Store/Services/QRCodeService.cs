@@ -12,11 +12,10 @@ public class QRCodeService
 
         SvgQRCode svgQrCode = new SvgQRCode(qrCodeData);
 
-        var svgImg = svgQrCode.GetGraphic(20, darkColorHex: requestModel.WhiteColorHex,
-            lightColorHex: requestModel.DarkColorHex,
+        var svgImg = svgQrCode.GetGraphic(20, darkColorHex: requestModel.DarkColorHex,
+            lightColorHex: requestModel.WhiteColorHex,
             logo: requestModel.Logo);
         responseModel.SvgString = svgImg;
-        //SaveImage(responseModel.ByteData!);
         return responseModel;
     }
 
@@ -32,11 +31,5 @@ public class QRCodeService
         };
 
         return qrCodeData;
-    }
-
-    public void SaveImage(byte[] qrCodeImage)
-    {
-        var filePath = "D:\\QRImage.png";
-        File.WriteAllBytes(filePath, qrCodeImage);
     }
 }

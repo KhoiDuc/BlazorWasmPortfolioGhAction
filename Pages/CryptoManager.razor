@@ -6,6 +6,9 @@
 @using BlazorWasmPortfolioGhAction.Pages.CryptoManagerComponents
 @using BlazorWasmPortfolioGhAction.Pages
 
+@using BlazorWasmPortfolioGhAction.Services
+@inject IScriptLoaderService ScriptLoader
+
 <div class="page-section crypto-page">
 <section>
     <div class="container">
@@ -65,6 +68,8 @@
 </section>
 </div>
 
+@implements IAsyncDisposable
+
 @code {
     private List<Crypto> cryptos = new List<Crypto>();
     private List<Crypto> selectedCryptos = new List<Crypto>();
@@ -79,6 +84,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await ScriptLoader.EnsureChartJsAsync();
         objRef = DotNetObjectReference.Create(this);
         await JSRuntime.InvokeVoidAsync("initializeInterop", objRef);
         await JSRuntime.InvokeVoidAsync("fetchCryptoList", objRef, settings);
@@ -162,8 +168,9 @@
         selectedCryptos.Remove(crypto);
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
+        await JSRuntime.InvokeVoidAsync("destroyAllCryptoCharts");
         objRef?.Dispose();
     }
 }

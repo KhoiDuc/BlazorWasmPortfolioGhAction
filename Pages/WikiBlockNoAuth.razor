@@ -1,4 +1,6 @@
 ﻿@inject IState<ContentState> contentState
+@inject IHtmlSanitizerService Sanitizer
+@using BlazorWasmPortfolioGhAction.Services
 @inject IDispatcher Dispatcher
 @using BlazorWasmPortfolioGhAction.Shared.Model;
 @using BlazorWasmPortfolioGhAction.Store.Actions;
@@ -20,18 +22,18 @@
                 @if (type == "all" || type == "Search" || (!matchTypeSections && matchType))
                 {
                     <h3 class="kudosTextInline">
-                        @(new MarkupString(@contentState.Value.Contents[indexParsed].section ?? string.Empty))
+                        @(Sanitizer.ToSafeMarkup(@contentState.Value.Contents[indexParsed].section ?? string.Empty))
                         <small class="text-muted">
-                            @(new MarkupString(@contentState.Value.Contents[indexParsed].subSection ?? string.Empty))
+                            @(Sanitizer.ToSafeMarkup(@contentState.Value.Contents[indexParsed].subSection ?? string.Empty))
                         </small>
                     </h3>
                 }
                 else if (!matchTypeSectionsSubSections && matchTypeSections)
                 {
                     <h3 class="kudosTextInline">
-                        @(new MarkupString(@contentState.Value.Contents[indexParsed].section ?? string.Empty))
+                        @(Sanitizer.ToSafeMarkup(@contentState.Value.Contents[indexParsed].section ?? string.Empty))
                         <small class="text-muted">
-                            @(new MarkupString(@contentState.Value.Contents[indexParsed].subSection ?? string.Empty))
+                            @(Sanitizer.ToSafeMarkup(@contentState.Value.Contents[indexParsed].subSection ?? string.Empty))
                         </small>
                     </h3>
                 }
@@ -44,7 +46,7 @@
                     </h3>
                 }
                 <div class="dotted-lines">
-                    @(new MarkupString(@contentState.Value.Contents[indexParsed].content!))
+                    @(Sanitizer.ToSafeMarkup(@contentState.Value.Contents[indexParsed].content!))
                 </div>
             </td>
         </tr>
@@ -57,11 +59,11 @@
             {
                 <td class="kudosText col-1">
                     <h4>
-                        @(new MarkupString(contentState.Value.Contents[indexParsed].section ?? string.Empty))
+                        @(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].section ?? string.Empty))
                         <br>
                         <small>
                             <div class="text-muted">
-                                @(new MarkupString(@contentState.Value.Contents[indexParsed].subSection ?? string.Empty))
+                                @(Sanitizer.ToSafeMarkup(@contentState.Value.Contents[indexParsed].subSection ?? string.Empty))
                             </div>
                         </small>
                     </h4>
@@ -76,7 +78,7 @@
                             <h3 class="kudosTextInline">
                                 <small>
                                     <div class="text-muted">
-                                        @(new MarkupString(@contentState.Value.Contents[indexParsed].subSection ?? string.Empty))
+                                        @(Sanitizer.ToSafeMarkup(@contentState.Value.Contents[indexParsed].subSection ?? string.Empty))
                                     </div>
                                 </small>
                             </h3>
@@ -90,7 +92,7 @@
             }
 
             @* Render the de-serialized JSON string as HTML, including styling.  I need some sanitisation here but AntiXss from Microsoft is broken ATM... *@
-            <td>@(new MarkupString(@contentState.Value.Contents[indexParsed].content!))</td>
+            <td>@(Sanitizer.ToSafeMarkup(@contentState.Value.Contents[indexParsed].content!))</td>
         </tr>
         <tr>
             @if (!matchTypeSectionsSubSections)
@@ -100,11 +102,11 @@
                 </td>
             }
             <td>
-                <button class="btn btn-outline-warning" disabled>Clear</button>
-                <button class="btn btn-outline-danger" disabled>Delete</button>
-                <button class="btn btn-outline-primary" disabled>Edit</button>
-                <button class="btn btn-outline-primary" disabled>Save</button>
-                <button class="btn btn-outline-primary" disabled>Cancel</button>
+                <button type="button" class="tool-btn tool-btn-secondary" disabled>Clear</button>
+                <button type="button" class="tool-btn tool-btn-danger" disabled>Delete</button>
+                <button type="button" class="tool-btn tool-btn-primary" disabled>Edit</button>
+                <button type="button" class="tool-btn tool-btn-primary" disabled>Save</button>
+                <button type="button" class="tool-btn tool-btn-secondary" disabled>Cancel</button>
             </td>
         </tr>
     }

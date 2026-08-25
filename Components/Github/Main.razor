@@ -1,55 +1,45 @@
 ﻿@using BlazorWasmPortfolioGhAction.Store.Services
 @inject IGitHubGraphQLQueryService GitHubService
 
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-body">
-                    <div class="input-group mb-4">
-                        <input type="text" 
-                               class="form-control form-control-lg" 
-                               placeholder="Search GitHub users..."
-                               @bind="searchText"
-                               @onkeyup.enter="SearchUsers" />
-                        <button class="btn btn-primary btn-lg" 
-                                @onclick="SearchUsers">
-                            <i class="bi bi-search"></i> Search
-                        </button>
-                    </div>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3><i class="bi bi-github" aria-hidden="true"></i> GitHub User Search (GraphQL)</h3>
+        <p>Search GitHub users via GraphQL API (mock data when MockApi is enabled).</p>
+    </div>
 
-                    <RateLimitDisplay />
-
-                    @if (isLoading)
-                    {
-                        <div class="text-center my-5">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div>
-                    }
-
-                    @if (users?.Any() == true)
-                    {
-                        <div class="row row-cols-1 row-cols-md-2 g-4">
-                            @foreach (var user in users)
-                            {
-                                <div class="col">
-                                    <UserCard User="user" />
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="gh-user-search">Search query</label>
+            <div class="tool-inline-search">
+                <input id="gh-user-search" type="text" class="tool-input" placeholder="Search GitHub users..." @bind="searchText" @onkeyup.enter="SearchUsers" />
+                <button type="button" class="tool-btn tool-btn-primary" @onclick="SearchUsers">
+                    <i class="bi bi-search" aria-hidden="true"></i> Search
+                </button>
             </div>
         </div>
     </div>
+
+    <RateLimitDisplay />
+
+    @if (isLoading)
+    {
+        <div class="tool-alert tool-alert-info">Searching users...</div>
+    }
+
+    @if (users?.Any() == true)
+    {
+        <div class="tool-result-list">
+            @foreach (var user in users)
+            {
+                <UserCard User="user" />
+            }
+        </div>
+    }
 </div>
 
 @if (showUserDetails)
 {
-    <UserDetailsModal UserDetail="selectedUser" 
-                      OnClose="() => showUserDetails = false" />
+    <UserDetailsModal UserDetail="selectedUser" OnClose="() => showUserDetails = false" />
 }
 
 @code {
@@ -67,23 +57,10 @@
             var result = await GitHubService.SearchUsersAsync(searchText, "YOUR_TOKEN");
             users = result.IsSuccess && result.Value != null ? result.Value : new();
         }
-        catch
-        {
-            // Handle error
-        }
+        catch { }
         finally
         {
             isLoading = false;
-        }
-    }
-
-    private async Task ShowUserDetails(GitHubUser user)
-    {
-        var result = await GitHubService.GetUserAsync(user.Login ?? string.Empty, "YOUR_TOKEN");
-        if (result.IsSuccess && result.Value != null)
-        {
-            selectedUser = result.Value;
-            showUserDetails = true;
         }
     }
 }

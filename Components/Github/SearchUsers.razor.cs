@@ -40,13 +40,13 @@ namespace BlazorWasmPortfolioGhAction.Components.Github
 
         private void UpdateUsersPage(int page)
         {
-            if (page < 1) throw new ArgumentOutOfRangeException(nameof(page));
+            if (page < 1 || page > _totalPageCount) return;
 
-            if (_usersTotal.Count < PageSize)
+            _currentPage = page;
+
+            if (_usersTotal.Count <= PageSize)
             {
-                _currentPage = 1;
                 _users = new ObservableCollection<UserViewModel>(_usersTotal);
-
                 return;
             }
 

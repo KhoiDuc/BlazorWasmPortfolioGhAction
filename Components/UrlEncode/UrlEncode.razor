@@ -1,67 +1,33 @@
 ﻿@using System.Net;
-@*@using System.Net.WebUtility;*@
 
-<div class="container">
-    
-    <div class="row">
-        <div class="col">
-            <h2>Url Encode / Decode</h2>
-        </div>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3>URL Encode / Decode</h3>
+        <p>Percent-encode or decode URL strings.</p>
     </div>
-    
-    <div class="row">
-        <div class="col">
-
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Encode:</span>
-                </div>
-                <input id="urlEncode" name="urlEncode" class="form-control" @bind="url">
-                <span class="input-group-btn">
-                    <button id="btnEncode" name="btnEncode" @onclick="Encode" class="btn btn-success float-right">Encode</button>
-                </span>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="urlEncode">Plain URL</label>
+            <input id="urlEncode" class="tool-input" @bind="url" />
+            <div class="tool-actions">
+                <button type="button" class="tool-btn tool-btn-success" @onclick="Encode">Encode</button>
             </div>
-
         </div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Decode:</span>
-                </div>
-                <input id="urlDecode" name="urlDecode" class="form-control" @bind="dUrl">
-                <div class="input-group-append">
-                    <button id="btnDecode" name="btnDecode" @onclick="Decode" class="btn btn-success float-right">Decode</button>
-                </div>
+        <div class="tool-field">
+            <label class="tool-label" for="urlDecode">Encoded URL</label>
+            <input id="urlDecode" class="tool-input" @bind="dUrl" />
+            <div class="tool-actions">
+                <button type="button" class="tool-btn tool-btn-success" @onclick="Decode">Decode</button>
             </div>
-
         </div>
     </div>
-
-    <hr/>
-
-    <div class="row">
-        <div class="col">
-            <p>Inspired from <a href="https://meyerweb.com/eric/tools/dencoder/" target="_blank">meyerweb URL Decoder/Encoder</a></p>
-        </div>
-    </div>
+    <p class="tool-hint">Inspired by <a href="https://meyerweb.com/eric/tools/dencoder/" target="_blank" rel="noopener">meyerweb URL Decoder/Encoder</a></p>
 </div>
 
 @code {
-
     string url = "http://www.alexhedley.com";
     string dUrl = "";
 
-    private void Encode()
-    {
-        dUrl = WebUtility.UrlEncode(url);
-    }
-
-    private void Decode()
-    {
-        url = WebUtility.UrlDecode(dUrl);
-    }
+    private void Encode() => dUrl = WebUtility.UrlEncode(url);
+    private void Decode() => url = WebUtility.UrlDecode(dUrl);
 }

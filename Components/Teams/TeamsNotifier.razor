@@ -1,33 +1,38 @@
 @using BlazorWasmPortfolioGhAction.Services
 @inject IDevOpsService DevOpsService
 
-<div class="devops-container">
-    <h3>Teams Notifier</h3>
-    
-    <div class="form-group">
-        <label>Title:</label>
-        <input type="text" @bind="title" class="form-control" placeholder="Enter message title" />
+<div class="tool-card">
+    <div class="tool-header">
+        <h3><i class="bi bi-microsoft-teams" aria-hidden="true"></i> Teams Notifier</h3>
+        <p>Send MessageCard notifications to Microsoft Teams via webhook.</p>
     </div>
 
-    <div class="form-group">
-        <label>Message:</label>
-        <textarea @bind="message" class="form-control" rows="5" placeholder="Enter message content"></textarea>
-    </div>
+    @if (!string.IsNullOrEmpty(status))
+    {
+        <div class="tool-alert @(statusClass.Contains("success") ? "tool-alert-success" : "tool-alert-danger")">@status</div>
+    }
 
-    <div class="form-actions">
-        <button @onclick="SendMessage" class="btn btn-primary">Send to Teams</button>
-        @if (!string.IsNullOrEmpty(status))
-        {
-            <p class="@statusClass">@status</p>
-        }
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="teams-title">Title</label>
+            <input id="teams-title" type="text" @bind="title" class="tool-input" placeholder="Enter message title" />
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="teams-message">Message</label>
+            <textarea id="teams-message" @bind="message" class="tool-textarea" rows="5" placeholder="Enter message content"></textarea>
+        </div>
+        <div class="tool-actions">
+            <button type="button" @onclick="SendMessage" class="tool-btn tool-btn-primary">Send to Teams</button>
+            <button type="button" @onclick="() => showPreview = !showPreview" class="tool-btn tool-btn-secondary">@(showPreview ? "Hide preview" : "Show preview")</button>
+        </div>
     </div>
 
     @if (showPreview && !string.IsNullOrEmpty(message))
     {
-        <div class="preview-card teams-theme">
+        <div class="tool-inspect-card teams-preview">
             <h4>@title</h4>
             <p>@message</p>
-            <small>Portfolio Bot</small>
+            <small class="tool-hint">Portfolio Bot</small>
         </div>
     }
 </div>
@@ -49,17 +54,15 @@
         }
 
         var result = await DevOpsService.SendTeamsMessageAsync(title, message);
+        status = result
+            ? "Message sent successfully!"
+            : "Failed to send message. Check webhook URL in appsettings.";
+        statusClass = result ? "text-success" : "text-danger";
+
         if (result)
         {
-            status = "Message sent successfully!";
-            statusClass = "text-success";
             title = string.Empty;
             message = string.Empty;
-        }
-        else
-        {
-            status = "Failed to send message. Check webhook URL in appsettings.";
-            statusClass = "text-danger";
         }
     }
 }

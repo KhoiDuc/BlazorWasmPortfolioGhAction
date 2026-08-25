@@ -1,10 +1,8 @@
 ﻿@inject NavigationManager Navigation;
-@inject IJSRuntime JSRuntime;
 
-<div class="ps-1 pt-2 sticky-top searchBar" @onclick="NavigateToMainComponent">
-    <div class="input-group mb-3 text-dark" style="pointer-events: auto;">
-        <input id="searchBox" class="form-control bg-light text-dark" placeholder="Search Wiki" @bind="searchTerm" @bind:event="oninput" @onkeyup="SearchTermChangedInComponent" /*disabled="@IsSearchDisabled"*/>
-    </div>
+<div class="wiki-search">
+    <label class="tool-label" for="searchBox">Search wiki</label>
+    <input id="searchBox" class="tool-input" placeholder="Search wiki (try CV, Transcript, Degree)..." @bind="searchTerm" @bind:event="oninput" @onkeyup="SearchTermChangedInComponent" />
 </div>
 
 @code {
@@ -13,34 +11,23 @@
     [Parameter] public EventCallback<string> SearchTermChanged { get; set; }
     [Parameter] public bool IsSearchDisabled { get; set; } = false;
 
-    private void NavigateToMainComponent()
-    {
-        Console.WriteLine("Navigating to main component");
-        if (IsSearchDisabled)
-        {
-            Navigation.NavigateTo($"/");
-        }
-    }
-
     private void SearchTermChangedInComponent()
     {
-        Console.WriteLine("Search term changed");
         if (string.Equals(searchTerm, "CV", StringComparison.OrdinalIgnoreCase))
         {
-            Navigation.NavigateTo($"/Dissertation/CV");
+            Navigation.NavigateTo("/Dissertation/CV");
         }
         else if (string.Equals(searchTerm, "Transcript", StringComparison.OrdinalIgnoreCase))
         {
-            Navigation.NavigateTo($"/Dissertation/Transcript");
+            Navigation.NavigateTo("/Dissertation/Transcript");
         }
         else if (string.Equals(searchTerm, "Degree", StringComparison.OrdinalIgnoreCase))
         {
-            Navigation.NavigateTo($"/Dissertation/Degree");
+            Navigation.NavigateTo("/Dissertation/Degree");
         }
         else
         {
             SearchTermChanged.InvokeAsync(searchTerm);
         }
     }
-
 }

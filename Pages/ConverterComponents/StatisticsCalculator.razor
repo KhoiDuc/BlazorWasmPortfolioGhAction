@@ -1,0 +1,54 @@
+@inherits ConverterBase
+@using MathNet.Numerics.Statistics
+
+<div class="tool-card calc-panel">
+    <button type="button" class="calc-close-btn" @onclick="Close" aria-label="Close calculator">&times;</button>
+    <div class="tool-header">
+        <h3>@Name</h3>
+    </div>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="stats-input">Numbers (comma-separated)</label>
+            <textarea id="stats-input" class="tool-textarea" rows="3" @bind="Input" placeholder="1, 2, 3, 4, 5"></textarea>
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="Calculate">Calculate</button>
+        </div>
+        @if (!string.IsNullOrEmpty(StatsOutput))
+        {
+            <div class="tool-result">
+                <pre class="tool-code">@StatsOutput</pre>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string Input = string.Empty;
+    private string StatsOutput = string.Empty;
+
+    public override string Name => "Statistics Calculator";
+
+    private void Calculate()
+    {
+        var values = Input.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(v => double.TryParse(v, out var n) ? n : double.NaN)
+            .Where(v => !double.IsNaN(v))
+            .ToArray();
+
+        if (values.Length == 0)
+        {
+            StatsOutput = "Enter at least one valid number.";
+            return;
+        }
+
+        StatsOutput =
+            $"Count: {values.Length}\n" +
+            $"Mean: {values.Mean():F4}\n" +
+            $"Median: {values.Median():F4}\n" +
+            $"Std Dev: {values.StandardDeviation():F4}\n" +
+            $"Min: {values.Minimum():F4}\n" +
+            $"Max: {values.Maximum():F4}\n" +
+            $"Sum: {values.Sum():F4}";
+    }
+}

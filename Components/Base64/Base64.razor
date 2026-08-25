@@ -1,5 +1,6 @@
 @using System.Text
-@inject IJSRuntime JSRuntime
+@using BlazorWasmPortfolioGhAction.Services
+@inject IClipboardService Clipboard
 
 <div class="tool-card">
     <div class="tool-header">
@@ -59,7 +60,8 @@
 
     async Task Copy()
     {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Output);
+        if (!string.IsNullOrEmpty(Output))
+            await Clipboard.CopyTextAsync(Output);
     }
 
     public static string Base64Encode(string plainText)

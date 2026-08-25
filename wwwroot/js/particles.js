@@ -37,8 +37,8 @@
         let midX = (particleA.x + particleB.x) / 2;
         let midY = (particleA.y + particleB.y) / 2;
 
-        ctx.fillText(`r: ${distanceText} m`, midX - 20, midY + offsetY - 5);
-        ctx.fillText(`u(r): ${energyText} J`, midX - 20, midY + offsetY + 10);
+        ctx.fillText(`r: ${distanceText} m`, midX - 20, midY - 5);
+        ctx.fillText(`u(r): ${energyText} J`, midX - 20, midY + 10);
     });
 
     // Draw particles

@@ -1,3 +1,4 @@
+using BlazorWasmPortfolioGhAction.Services;
 using Bogus;
 using GraphQL;
 using GraphQL.Client.Abstractions;
@@ -322,10 +323,6 @@ namespace BlazorWasmPortfolioGhAction.Store.Services
     public class RateLimitResponse
     {
         public GitHubRateLimit RateLimit { get; set; } = null!;
-    }
-    public class StateContainer
-    {
-        public List<GitHubUser> SearchedUsers { get; } = new();
     }
     public class SearchUsersService : ISearchUsersService
     {

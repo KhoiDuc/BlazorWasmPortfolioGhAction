@@ -1,4 +1,6 @@
-﻿@inject IState<ContentState> contentState
+﻿@inject IHtmlSanitizerService Sanitizer
+@using BlazorWasmPortfolioGhAction.Services
+@inject IState<ContentState> contentState
 @inject IDispatcher Dispatcher
 @inject IJSRuntime JSRuntime;
 @using Newtonsoft.Json;
@@ -23,7 +25,7 @@
                     <h3 class="kudosTextInline">New Section: </h3>
                     @if (!contentState.Value.IsEditing[indexParsed])
                     {
-                        <div class="dotted-lines" @onclick="(() => Edit(indexParsed))">@(new MarkupString(contentState.Value.Contents.Last().content!))</div>
+                        <div class="dotted-lines" @onclick="(() => Edit(indexParsed))">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents.Last().content!))</div>
                     }
                     else
                     {
@@ -48,7 +50,7 @@
                 @* Render the de-serialized JSON string as HTML, including styling.  I need some sanitisation here but AntiXss from Microsoft is broken ATM... *@
                 @if (!contentState.Value.IsEditing[indexParsed])
                 {
-                    <td>@(new MarkupString(contentState.Value.Contents.Last().content!))</td>
+                    <td>@(Sanitizer.ToSafeMarkup(contentState.Value.Contents.Last().content!))</td>
                 }
                 else
                 {
@@ -75,9 +77,9 @@
                     var clearText = "";
                 }
                 <td>
-                    <button class="btn btn-outline-warning" @onclick="()=> contentState.Value.Contents.Last().content = clearText">Clear</button>
-                    <button class="btn btn-outline-primary" @onclick="(() => Save(true))" hidden="@(!contentState.Value.IsEditing[indexParsed])">Save</button>
-                    <button class="btn btn-outline-primary" @onclick="(() => Cancel())" hidden="@(!contentState.Value.IsEditing[indexParsed])">Cancel</button>
+                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="()=> contentState.Value.Contents.Last().content = clearText">Clear</button>
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="(() => Save(true))" hidden="@(!contentState.Value.IsEditing[indexParsed])">Save</button>
+                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="(() => Cancel())" hidden="@(!contentState.Value.IsEditing[indexParsed])">Cancel</button>
                 </td>
             </tr>
         }
@@ -94,9 +96,9 @@
                         @if (!contentState.Value.IsEditing[indexParsed])
                         {
                             <h3 class="kudosTextInline" @onclick="(() => Edit(indexParsed))">
-                                @(new MarkupString(@contentState.Value.Contents[indexParsed].section))
+                                @(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].section))
                                 <small>
-                                    <div class="text-muted">@(new MarkupString(@contentState.Value.Contents[indexParsed].subSection))</div>
+                                    <div class="text-muted">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].subSection))</div>
                                 </small>
                             </h3>
                         }
@@ -132,7 +134,7 @@
                         {
                             <h3 class="kudosTextInline" @onclick="(() => Edit(indexParsed))">
                                 <small>
-                                    <div class="text-muted">@(new MarkupString(contentState.Value.Contents[indexParsed].subSection))</div>
+                                    <div class="text-muted">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].subSection))</div>
                                 </small>
                             </h3>
                         }
@@ -164,7 +166,7 @@
                     }
                     @if (!contentState.Value.IsEditing[indexParsed])
                     {
-                        <div class="dotted-lines" @onclick="(() => Edit(indexParsed))">@(new MarkupString(@contentState.Value.Contents[indexParsed].content))</div>
+                        <div class="dotted-lines" @onclick="(() => Edit(indexParsed))">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].content))</div>
                     }
                     else
                     {
@@ -177,7 +179,7 @@
                                     ApiKey="@TinyAPIKey"
                                     ClassName="counterEditor"
                                     @bind-Value="@tempContent.content" />
-                            <button class="btn btn-outline-primary inlineBTN" @onclick="(() => RemoveSection(indexParsed, username!))">Delete</button>
+                            <button type="button" class="tool-btn tool-btn-danger inlineBTN" @onclick="(() => RemoveSection(indexParsed, username!))">Delete</button>
                         </div>
                     }
                 </td>
@@ -193,10 +195,10 @@
                     {
                         <td class="kudosText col-1">
                             <h4 @onclick="(() => Edit(indexParsed))">
-                                @(new MarkupString(@contentState.Value.Contents[indexParsed].section))
+                                @(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].section))
                                 <br>
                                 <small>
-                                    <div class="text-muted">@(new MarkupString(@contentState.Value.Contents[indexParsed].subSection))</div>
+                                    <div class="text-muted">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].subSection))</div>
                                 </small>
                             </h4>
                         </td>
@@ -235,7 +237,7 @@
                     {
                         <td class="kudosText col-1">
                             <h3 @onclick="(() => Edit(indexParsed))">
-                                <div class="text-muted">@(new MarkupString(@contentState.Value.Contents[indexParsed].subSection))</div>
+                                <div class="text-muted">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].subSection))</div>
                             </h3>
                         </td>
                     }
@@ -262,7 +264,7 @@
 
                 @if (!contentState.Value.IsEditing[indexParsed])
                 {
-                    <td>@(new MarkupString(@contentState.Value.Contents[indexParsed].content!))</td>
+                    <td>@(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].content!))</td>
                 }
                 else
                 {
@@ -288,11 +290,11 @@
                     </td>
                 }
                 <td>
-                    <button class="btn btn-outline-warning" @onclick="(() => ClearContent(indexParsed))">Clear</button>
-                    <button class="btn btn-outline-danger" @onclick="(() => RemoveSection(indexParsed, username!))">Delete</button>
-                    <button class="btn btn-outline-primary" @onclick="(() => Edit(indexParsed))" hidden="@contentState.Value.IsEditing[indexParsed]">Edit</button>
-                    <button class="btn btn-outline-primary" @onclick="(() => Save(false))" hidden="@(!contentState.Value.IsEditing[indexParsed])">Save</button>
-                    <button class="btn btn-outline-primary" @onclick="(() => Cancel())" hidden="@(!contentState.Value.IsEditing[indexParsed])">Cancel</button>
+                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="(() => ClearContent(indexParsed))">Clear</button>
+                    <button type="button" class="tool-btn tool-btn-danger" @onclick="(() => RemoveSection(indexParsed, username!))">Delete</button>
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="(() => Edit(indexParsed))" hidden="@contentState.Value.IsEditing[indexParsed]">Edit</button>
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="(() => Save(false))" hidden="@(!contentState.Value.IsEditing[indexParsed])">Save</button>
+                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="(() => Cancel())" hidden="@(!contentState.Value.IsEditing[indexParsed])">Cancel</button>
                 </td>
             </tr>
         }

@@ -1,74 +1,82 @@
 @page "/bindingEnergyCalculator"
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
+@inject IScriptLoaderService ScriptLoader
+@using BlazorWasmPortfolioGhAction.Services
 
-<h3>Binding Energy Calculator</h3>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3><i class="bi bi-atom" aria-hidden="true"></i> Binding Energy Calculator</h3>
+        <p>Lennard-Jones potential — calculate binding energy between particle pairs.</p>
+    </div>
 
-<div class="energy-container">
-    <div class="left-panel">
-        <div>
-            <label>Number of Particles: </label>
-            <button @onclick="DecreaseParticleCount">-</button>
-            <span>@particleCount</span>
-            <button @onclick="IncreaseParticleCount">+</button>
-        </div>
+    <div class="energy-container">
+        <div class="left-panel tool-form">
+            <div class="tool-field">
+                <label class="tool-label">Number of particles</label>
+                <div class="tool-stepper">
+                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="DecreaseParticleCount" aria-label="Decrease">−</button>
+                    <span class="tool-stepper-value">@particleCount</span>
+                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="IncreaseParticleCount" aria-label="Increase">+</button>
+                </div>
+            </div>
 
-        <div>
             @if (particlePairs != null && particlePairs.Count > 0)
             {
-                <h4>Distances between particles:</h4>
+                <h4 class="tool-subheading">Distances between particles</h4>
                 @foreach (var pair in particlePairs)
                 {
-                    <div>
-                        <label>Distance(m) between Particle @pair.ParticleA and @pair.ParticleB: </label>
-                        <input type="number" @bind="pair.Coefficient" step="0.01" />
-                        <span>X 10 ^ -</span>
-                        <input type="number" @bind="pair.Exponent" step="1" min="0" max="25" />
+                    <div class="tool-field tool-field-inline">
+                        <label class="tool-label">Distance (m) between Particle @pair.ParticleA and @pair.ParticleB</label>
+                        <div class="tool-inline-inputs">
+                            <input type="number" class="tool-input tool-input-sm" @bind="pair.Coefficient" step="0.01" />
+                            <span>× 10<sup>−</sup></span>
+                            <input type="number" class="tool-input tool-input-sm" @bind="pair.Exponent" step="1" min="0" max="25" />
+                        </div>
                     </div>
                 }
             }
+
+            <div class="tool-field">
+                <label class="tool-label" for="sig-figs">Significant figures</label>
+                <input id="sig-figs" type="number" class="tool-input" @bind="significantFigures" step="1" min="1" max="10" />
+            </div>
+
+            <div class="tool-actions">
+                <button type="button" class="tool-btn tool-btn-primary" @onclick="CalculateBindingEnergy">Calculate binding energy</button>
+            </div>
+
+            <div class="tool-result">
+                <h4>Total binding energy: @totalBindingEnergyFormatted J</h4>
+            </div>
+
+            <div class="tool-actions">
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="ShowDescriptionModal">Description</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="ShowChallengesModal">Creation process &amp; challenges</button>
+            </div>
         </div>
 
-        <div>
-            <label>Significant Figures: </label>
-            <input type="number" @bind="significantFigures" step="1" min="1" max="10" />
+        <div class="right-panel">
+            <canvas id="particleCanvas" width="600" height="400" aria-label="Particle visualization"></canvas>
         </div>
-
-        <div>
-            <button @onclick="CalculateBindingEnergy">Calculate Binding Energy</button>
-        </div>
-
-        <div>
-            <h4>Total Binding Energy: @totalBindingEnergyFormatted J</h4>
-        </div>
-
-        <div>
-            <button @onclick="ShowDescriptionModal">Description</button>
-            <button @onclick="ShowChallengesModal">Creation Process & Challenges</button>
-        </div>
-    </div>
-
-    <div class="right-panel">
-        <canvas id="particleCanvas" width="600" height="400"></canvas>
     </div>
 </div>
 
-<!-- Description Modal -->
-<div class="modal" tabindex="-1" style="display:@(isDescriptionModalVisible ? "block" : "none")" @onclick="HideDescriptionModal">
-    <!-- Prevent click on modal itself from closing -->
-    <div class="modal-dialog" @onclick:stopPropagation="true">
-        <div class="modal-content bg-light text-dark">
-            <div class="modal-header">
-                <h5 class="modal-title">App Description & Lennard-Jones Potential</h5>
-                <button type="button" class="btn-close btn-close-white" aria-label="Close" @onclick="HideDescriptionModal">X</button>
+@if (isDescriptionModalVisible)
+{
+    <div class="tool-modal-backdrop" @onclick="HideDescriptionModal">
+        <div class="tool-modal" role="dialog" aria-modal="true" aria-labelledby="desc-modal-title" @onclick:stopPropagation="true">
+            <div class="tool-modal-header">
+                <h5 id="desc-modal-title" class="tool-modal-title">App Description &amp; Lennard-Jones Potential</h5>
+                <button type="button" class="tool-modal-close" aria-label="Close" @onclick="HideDescriptionModal">&times;</button>
             </div>
-            <div class="modal-body">
+            <div class="tool-modal-body">
                 <div class="details">
                     <p>In this application, the parameter <strong>r</strong> denotes the distance between two particles, while <strong>u(r)</strong> represents the binding energy between them.</p>
                     <h3>The Lennard-Jones Potential</h3>
                     <p>The Lennard-Jones potential is a mathematical model used to describe the interaction between a pair of neutral atoms or molecules. The potential energy function is given by the formula:</p>
                     <p style="text-align: center;">
-                        <img src="images/Lennard-Jones.png" alt="Lennard-Jones Potential Formula" style="max-width: 100%; height: auto;">
+                        <img src="images/Lennard-Jones.png" alt="Lennard-Jones Potential Formula" loading="lazy" decoding="async" style="max-width: 100%; height: auto;">
                     </p>
                     <p>Where:</p>
                     <ul>
@@ -85,23 +93,23 @@
                     </ul>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @onclick="HideDescriptionModal">Close</button>
+            <div class="tool-modal-footer">
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="HideDescriptionModal">Close</button>
             </div>
         </div>
     </div>
-</div>
+}
 
 
-<!-- Challenges Modal -->
-<div class="modal" tabindex="-1" style="display:@(isChallengesModalVisible ? "block" : "none")" @onclick="HideChallengesModal">
-    <div class="modal-dialog" @onclick:stopPropagation="true">
-        <div class="modal-content bg-light text-dark">
-            <div class="modal-header">
-                <h5 class="modal-title">Creation Process & Challenges</h5>
-                <button type="button" class="btn-close btn-close-white" aria-label="Close" @onclick="HideChallengesModal">X</button>
+@if (isChallengesModalVisible)
+{
+    <div class="tool-modal-backdrop" @onclick="HideChallengesModal">
+        <div class="tool-modal" role="dialog" aria-modal="true" aria-labelledby="challenges-modal-title" @onclick:stopPropagation="true">
+            <div class="tool-modal-header">
+                <h5 id="challenges-modal-title" class="tool-modal-title">Creation Process &amp; Challenges</h5>
+                <button type="button" class="tool-modal-close" aria-label="Close" @onclick="HideChallengesModal">&times;</button>
             </div>
-            <div class="modal-body">
+            <div class="tool-modal-body">
                 <p>The task was to implement a solution for a scientist to calculate the resultant binding energy in a system of particles.</p>
                 <p>The equation used describes the interaction between a pair of neutral atoms or molecules using the Lennard-Jones Potential Model.</p>
                 <ul>
@@ -122,14 +130,12 @@
                     <li>If I continue this project, I might add some functionality for finding stable configurations, making use of machine learning.  I suspect a regression function exists for this problem, but it would be a fun challenge to train a neural network for this.</li>
                 </ul>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @onclick="HideChallengesModal">Close</button>
+            <div class="tool-modal-footer">
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="HideChallengesModal">Close</button>
             </div>
         </div>
     </div>
-</div>
-
-
+}
 
 
 @code {
@@ -140,6 +146,11 @@
     private int significantFigures = 3; // Default to 5 significant figures
     private bool isDescriptionModalVisible = false;
     private bool isChallengesModalVisible = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ScriptLoader.EnsurePhysicsLibsAsync();
+    }
 
     protected override void OnAfterRender(bool firstRender)
     {

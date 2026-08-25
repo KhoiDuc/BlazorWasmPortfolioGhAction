@@ -1,11 +1,13 @@
 @inject IJSRuntime JSRuntime
 @inject IConfiguration Configuration
+@inject IScriptLoaderService ScriptLoader
+@using BlazorWasmPortfolioGhAction.Services
 @using System.Text.RegularExpressions
 
 <div class="tool-card">
     <div class="tool-header">
         <h3>Email Composer</h3>
-        <p>Compose and send email. UI preview only — wire up EmailJS/SMTP later.</p>
+        <p>Compose and send email via EmailJS when configured in appsettings.json.</p>
     </div>
 
     @if (Sent)
@@ -105,7 +107,7 @@
                 </div>
 
                 <div class="tool-actions">
-                    <button type="button" class="tool-btn tool-btn-primary" @onclick="SendPreview">
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="SendEmail">
                         <i class="bi bi-send" aria-hidden="true"></i> Send
                     </button>
                     <button type="button" class="tool-btn" @onclick="ClearForm">
@@ -226,6 +228,12 @@
 
     private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
 
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsHtml)
+            await ScriptLoader.EnsureTinyMceAsync();
+    }
+
     private async Task OnAttachmentChange(InputFileChangeEventArgs e)
     {
         var files = e.GetMultipleFiles(MaxAttachments);
@@ -242,7 +250,7 @@
 
     private void RemoveAttachment(AttachmentPreview att) => Attachments.RemoveAll(a => a == att);
 
-    private async Task SendPreview()
+    private async Task SendEmail()
     {
         ShowToError = false;
         ShowSubjectError = false;
@@ -286,26 +294,51 @@
             return;
         }
 
-        var payload = new
+        if (!IsConfigured)
         {
-            service_id = Configuration["EmailJs:ServiceId"] ?? "NOT_CONFIGURED",
-            template_id = Configuration["EmailJs:TemplateId"] ?? "NOT_CONFIGURED",
-            user_id = Configuration["EmailJs:PublicKey"] ?? "NOT_CONFIGURED",
-            template_params = new
+            var payload = new
             {
-                to_email = To.Trim(),
-                cc_email = Cc,
-                bcc_email = Bcc,
-                subject = Subject,
-                message = Body,
-                from_name = "Portfolio Contact"
-            }
-        };
+                service_id = Configuration["EmailJs:ServiceId"] ?? "NOT_CONFIGURED",
+                template_id = Configuration["EmailJs:TemplateId"] ?? "NOT_CONFIGURED",
+                user_id = Configuration["EmailJs:PublicKey"] ?? "NOT_CONFIGURED",
+                template_params = new
+                {
+                    to_email = To.Trim(),
+                    cc_email = Cc,
+                    bcc_email = Bcc,
+                    subject = Subject,
+                    message = Body,
+                    from_name = "Portfolio Contact"
+                }
+            };
 
-        var json = System.Text.Json.JsonSerializer.Serialize(payload, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-        await JSRuntime.InvokeVoidAsync("console.log", "Email payload (preview):", json);
+            var json = System.Text.Json.JsonSerializer.Serialize(payload, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            await JSRuntime.InvokeVoidAsync("console.log", "Email payload (preview — configure EmailJs in appsettings.json):", json);
+            Sent = true;
+            return;
+        }
 
-        Sent = true;
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("emailJsBridge.send",
+                Configuration["EmailJs:PublicKey"],
+                Configuration["EmailJs:ServiceId"],
+                Configuration["EmailJs:TemplateId"],
+                new
+                {
+                    to_email = To.Trim(),
+                    cc_email = Cc,
+                    bcc_email = Bcc,
+                    subject = Subject,
+                    message = Body,
+                    from_name = "Portfolio Contact"
+                });
+            Sent = true;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to send email: {ex.Message}";
+        }
     }
 
     private void ClearForm()

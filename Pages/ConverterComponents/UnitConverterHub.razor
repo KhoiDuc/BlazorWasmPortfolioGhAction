@@ -1,0 +1,16 @@
+@inherits ConverterBase
+
+<div class="tool-card calc-panel">
+    <button type="button" class="calc-close-btn" @onclick="Close" aria-label="Close calculator">&times;</button>
+    <div class="tool-header">
+        <h3>@Name</h3>
+    </div>
+    <div class="calc-stack">
+        <TemperatureConverter />
+        <DistanceConverter />
+    </div>
+</div>
+
+@code {
+    public override string Name => "Unit Converter";
+}

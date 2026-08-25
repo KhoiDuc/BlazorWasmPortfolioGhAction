@@ -1,34 +1,24 @@
 ﻿@using BlazorWasmPortfolioGhAction.Store.Services
 @inject IGitHubGraphQLQueryService GitHubService
 
-<div class="mb-4">
+<div class="tool-result">
     <h5>Repositories</h5>
 
     @if (repositoriesLoading)
     {
-        <div class="text-center">
-            <div class="spinner-border spinner-border-sm"></div>
-        </div>
+        <div class="tool-alert tool-alert-info">Loading repositories...</div>
     }
     else
     {
-        <div class="list-group">
+        <div class="tool-result-list">
             @foreach (var repo in repositories)
             {
-                <div class="list-group-item">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="mb-1">@repo.Name</h6>
-                            <p class="mb-1 text-muted small">@repo.Description</p>
-                        </div>
-                        <div>
-                            <span class="badge bg-warning me-2">
-                                <i class="bi bi-star"></i> @repo.Stars
-                            </span>
-                            <span class="badge bg-info">
-                                <i class="bi bi-diagram-2"></i> @repo.Forks
-                            </span>
-                        </div>
+                <div class="tool-repo-card">
+                    <h4>@repo.Name</h4>
+                    <p class="tool-repo-description">@repo.Description</p>
+                    <div class="tool-repo-stats">
+                        <span><i class="bi bi-star" aria-hidden="true"></i> @repo.Stars</span>
+                        <span><i class="bi bi-diagram-2" aria-hidden="true"></i> @repo.Forks</span>
                     </div>
                 </div>
             }
@@ -36,10 +26,9 @@
 
         @if (hasMoreRepos)
         {
-            <button class="btn btn-outline-primary w-100 mt-3"
-                    @onclick="LoadMoreRepos">
-                Load More
-            </button>
+            <div class="tool-actions">
+                <button type="button" class="tool-btn tool-btn-secondary w-100" @onclick="LoadMoreRepos">Load more</button>
+            </div>
         }
     }
 </div>
@@ -53,10 +42,7 @@
     private bool hasMoreRepos;
     private string endCursor = string.Empty;
 
-    protected override async Task OnParametersSetAsync()
-    {
-        await LoadRepositories();
-    }
+    protected override async Task OnParametersSetAsync() => await LoadRepositories();
 
     private async Task LoadRepositories()
     {

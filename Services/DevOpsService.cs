@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using BlazorWasmPortfolioGhAction.Models.GitHub;
 
 namespace BlazorWasmPortfolioGhAction.Services;
 
@@ -10,10 +10,10 @@ public interface IDevOpsService
     Task<bool> SendDiscordMessageAsync(string message, string? title = null, string? description = null);
     Task<bool> SendTeamsMessageAsync(string title, string message);
     Task<GitHubSearchResult?> SearchGitHubReposAsync(string query, string? language = null, int sort = 0);
-    Task<GitHubUser?> GetGitHubUserAsync(string username);
-    Task<GitHubRepo?> GetGitHubRepoAsync(string owner, string repo);
-    Task<List<GitHubRepo>?> GetGitHubTrendingAsync(string language, string timeRange);
-    Task<GitHubGist?> CreateGistAsync(string description, Dictionary<string, string> files, bool isPublic);
+    Task<GitHubRestUser?> GetGitHubUserAsync(string username);
+    Task<GitHubRestRepo?> GetGitHubRepoAsync(string owner, string repo);
+    Task<List<GitHubRestRepo>?> GetGitHubTrendingAsync(string language, string timeRange);
+    Task<GitHubRestGist?> CreateGistAsync(string description, Dictionary<string, string> files, bool isPublic);
 }
 
 public class DevOpsService : IDevOpsService
@@ -150,7 +150,7 @@ public class DevOpsService : IDevOpsService
         }
     }
 
-    public async Task<GitHubUser?> GetGitHubUserAsync(string username)
+    public async Task<GitHubRestUser?> GetGitHubUserAsync(string username)
     {
         var token = _config["DevOps:GitHubToken"];
 
@@ -167,7 +167,7 @@ public class DevOpsService : IDevOpsService
             if (!response.IsSuccessStatusCode) return null;
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<GitHubUser>(json, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            return JsonSerializer.Deserialize<GitHubRestUser>(json, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
         catch
         {
@@ -175,7 +175,7 @@ public class DevOpsService : IDevOpsService
         }
     }
 
-    public async Task<GitHubRepo?> GetGitHubRepoAsync(string owner, string repo)
+    public async Task<GitHubRestRepo?> GetGitHubRepoAsync(string owner, string repo)
     {
         var token = _config["DevOps:GitHubToken"];
 
@@ -192,7 +192,7 @@ public class DevOpsService : IDevOpsService
             if (!response.IsSuccessStatusCode) return null;
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<GitHubRepo>(json, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            return JsonSerializer.Deserialize<GitHubRestRepo>(json, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
         catch
         {
@@ -200,7 +200,7 @@ public class DevOpsService : IDevOpsService
         }
     }
 
-    public async Task<List<GitHubRepo>?> GetGitHubTrendingAsync(string language, string timeRange)
+    public async Task<List<GitHubRestRepo>?> GetGitHubTrendingAsync(string language, string timeRange)
     {
         try
         {
@@ -229,7 +229,7 @@ public class DevOpsService : IDevOpsService
         }
     }
 
-    public async Task<GitHubGist?> CreateGistAsync(string description, Dictionary<string, string> files, bool isPublic)
+    public async Task<GitHubRestGist?> CreateGistAsync(string description, Dictionary<string, string> files, bool isPublic)
     {
         var token = _config["DevOps:GitHubToken"];
         if (string.IsNullOrWhiteSpace(token)) return null;
@@ -260,7 +260,7 @@ public class DevOpsService : IDevOpsService
             if (!response.IsSuccessStatusCode) return null;
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<GitHubGist>(json, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            return JsonSerializer.Deserialize<GitHubRestGist>(json, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
         catch
         {
@@ -274,110 +274,4 @@ public class DevOpsService : IDevOpsService
         "month" => DateTime.Now.AddDays(-30).ToString("yyyy-MM-dd"),
         _ => DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd")
     };
-}
-
-// DTOs
-public class GitHubSearchResult
-{
-    [JsonPropertyName("total_count")]
-    public int TotalCount { get; set; }
-
-    [JsonPropertyName("items")]
-    public List<GitHubRepo> Items { get; set; } = new();
-}
-
-public class GitHubRepo
-{
-    [JsonPropertyName("id")]
-    public int Id { get; set; }
-
-    [JsonPropertyName("name")]
-    public string Name { get; set; } = string.Empty;
-
-    [JsonPropertyName("full_name")]
-    public string FullName { get; set; } = string.Empty;
-
-    [JsonPropertyName("html_url")]
-    public string HtmlUrl { get; set; } = string.Empty;
-
-    [JsonPropertyName("description")]
-    public string? Description { get; set; }
-
-    [JsonPropertyName("stargazers_count")]
-    public int Stars { get; set; }
-
-    [JsonPropertyName("forks_count")]
-    public int Forks { get; set; }
-
-    [JsonPropertyName("language")]
-    public string? Language { get; set; }
-
-    [JsonPropertyName("topics")]
-    public List<string> Topics { get; set; } = new();
-
-    [JsonPropertyName("updated_at")]
-    public DateTime UpdatedAt { get; set; }
-
-    [JsonPropertyName("owner")]
-    public GitHubUser? Owner { get; set; }
-}
-
-public class GitHubUser
-{
-    [JsonPropertyName("login")]
-    public string Login { get; set; } = string.Empty;
-
-    [JsonPropertyName("id")]
-    public int Id { get; set; }
-
-    [JsonPropertyName("avatar_url")]
-    public string AvatarUrl { get; set; } = string.Empty;
-
-    [JsonPropertyName("html_url")]
-    public string HtmlUrl { get; set; } = string.Empty;
-
-    [JsonPropertyName("name")]
-    public string? Name { get; set; }
-
-    [JsonPropertyName("bio")]
-    public string? Bio { get; set; }
-
-    [JsonPropertyName("company")]
-    public string? Company { get; set; }
-
-    [JsonPropertyName("location")]
-    public string? Location { get; set; }
-
-    [JsonPropertyName("public_repos")]
-    public int PublicRepos { get; set; }
-
-    [JsonPropertyName("followers")]
-    public int Followers { get; set; }
-
-    [JsonPropertyName("following")]
-    public int Following { get; set; }
-
-    [JsonPropertyName("created_at")]
-    public DateTime CreatedAt { get; set; }
-
-    [JsonPropertyName("updated_at")]
-    public DateTime UpdatedAt { get; set; }
-}
-
-public class GitHubGist
-{
-    [JsonPropertyName("id")]
-    public string Id { get; set; } = string.Empty;
-
-    [JsonPropertyName("html_url")]
-    public string HtmlUrl { get; set; } = string.Empty;
-
-    [JsonPropertyName("description")]
-    public string Description { get; set; } = string.Empty;
-
-    [JsonPropertyName("public")]
-    public bool Public { get; set; }
-
-    [JsonPropertyName("created_at")]
-    public DateTime CreatedAt { get; set; }
 }

@@ -42,14 +42,6 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-
 
-      - name: Cache build outputs
-        uses: actions/cache@v4
-        with:
-          path: |
-            bin
-            obj
-          key: build-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
-
       - name: Restore NuGet packages
         run: dotnet restore ${{ env.PROJECT_NAME }}.csproj
 

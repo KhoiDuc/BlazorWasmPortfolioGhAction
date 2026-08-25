@@ -140,6 +140,8 @@ window.carouselFunctions = {
 
         return {
             changeSlide: function (direction) {
+                if (slides.length === 0) return;
+
                 slides[currentSlide].classList.remove('active');
 
                 currentSlide += direction;
@@ -147,6 +149,8 @@ window.carouselFunctions = {
                 if (currentSlide < 0) currentSlide = slides.length - 1;
 
                 slides[currentSlide].classList.add('active');
+            }
+        };
     }
 };
 
@@ -154,7 +158,5 @@ window.scrollToSection = function (sectionId) {
     const el = document.getElementById(sectionId);
     if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-};
     }
 };

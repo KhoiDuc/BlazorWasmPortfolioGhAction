@@ -1,0 +1,27 @@
+@inherits ConverterBase
+
+<div class="tool-card calc-panel">
+    <button type="button" class="calc-close-btn" @onclick="Close" aria-label="Close calculator">&times;</button>
+    <div class="tool-header">
+        <h3>@Name</h3>
+    </div>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="data-storage">Value (bytes)</label>
+            <input id="data-storage" type="number" class="tool-input" min="0" step="any" @bind="Bytes" />
+        </div>
+        <div class="tool-result">
+            <ul class="calc-conversion-list">
+                <li>KB: @(Bytes / 1024.0)</li>
+                <li>MB: @(Bytes / (1024.0 * 1024))</li>
+                <li>GB: @(Bytes / (1024.0 * 1024 * 1024))</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@code {
+    private double Bytes = 1024;
+
+    public override string Name => "Data Storage Converter";
+}

@@ -56,6 +56,9 @@
 
     private RenderFragment DynamicComponent => Component switch
     {
+        "base64" => RenderComponent<BlazorWasmPortfolioGhAction.Components.Base64.Base64>(),
+        "map" => RenderComponent<BlazorWasmPortfolioGhAction.Components.MapComponent>(),
+        "bigbangcounter" => RenderComponent<BigBangCounter>(),
         "mathcalculator" => RenderComponent<MathCalculator>(),
         "browserstorage" => RenderComponent<BrowserStorageWasm>(),
         "webglrender" => RenderComponent<WebGLRender>(),
@@ -161,6 +164,7 @@
             CategoryName = "General Tools",
             Items = new List<NavItem>
             {
+                new NavItem { Text = "Base64", Link = "Utility/base64" },
                 new NavItem { Text = "Urls", Link = "Utility/urls" },
                 new NavItem { Text = "Guid", Link = "Utility/guid" },
                 new NavItem { Text = "HTML", Link = "Utility/html" },
@@ -224,6 +228,8 @@
                 new NavItem { Text = "WebGL Canvas", Link = "Utility/webglrender" },
                 new NavItem { Text = "Browser Storage Wasm", Link = "Utility/browserstorage" },
                 new NavItem { Text = "QR Generator", Link = "Utility/qrgenerator" },
+                new NavItem { Text = "Google Maps", Link = "Utility/map" },
+                new NavItem { Text = "Big Bang Counter", Link = "Utility/bigbangcounter" },
                 new NavItem { Text = "Svg Diagram Editor", Link = "Utility/svgdiagrameditor" },
                 new NavItem { Text = "Email Composer", Link = "Utility/emailcomposer" }
             }
@@ -231,7 +237,10 @@
         new NavCategory
         {
             CategoryName = "Payment Tools",
-            Items = new List<NavItem>()
+            Items = new List<NavItem>
+            {
+                new NavItem { Text = "Luhn Checker", Link = "Utility/luhn" }
+            }
         },
         new NavCategory
         {

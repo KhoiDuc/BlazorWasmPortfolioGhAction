@@ -2,6 +2,11 @@
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
 
+<div class="tool-card">
+    <div class="tool-header">
+        <h3><i class="bi bi-thermometer-half" aria-hidden="true"></i> Overnight Minimum Temperature</h3>
+        <p>Estimate overnight minimum temperature from midday conditions.</p>
+    </div>
 <div class="calculator-container">
     <div class="input-section">
         <div class="input-group">
@@ -92,27 +97,27 @@
 </div>
 
 
-<div class="modelButtons">
-    <button @onclick="ShowDescriptionModal">Description</button>
-    <button @onclick="ShowInterviewModal">Interview Questions</button>
-    <button @onclick="ShowChallengesModal">Challenges</button>
+<div class="tool-actions modelButtons">
+    <button type="button" class="tool-btn tool-btn-secondary" @onclick="ShowDescriptionModal">Description</button>
+    <button type="button" class="tool-btn tool-btn-secondary" @onclick="ShowInterviewModal">Interview questions</button>
+    <button type="button" class="tool-btn tool-btn-secondary" @onclick="ShowChallengesModal">Challenges</button>
+</div>
 </div>
 
-<!-- Description Modal -->
-<div class="modal" tabindex="-1" style="display:@(isDescriptionModalVisible ? "block" : "none")" @onclick="HideDescriptionModal">
-    <!-- Prevent click on modal itself from closing -->
-    <div class="modal-dialog" @onclick:stopPropagation="true">
-        <div class="modal-content bg-light text-dark">
-            <div class="modal-header">
-                <h5 class="modal-title">Overnight Minimum Temperature Calculator</h5>
-                <button type="button" class="btn-close btn-close-white" aria-label="Close" @onclick="HideDescriptionModal">X</button>
+@if (isDescriptionModalVisible)
+{
+    <div class="tool-modal-backdrop" @onclick="HideDescriptionModal">
+        <div class="tool-modal" role="dialog" aria-modal="true" aria-labelledby="overnight-desc-title" @onclick:stopPropagation="true">
+            <div class="tool-modal-header">
+                <h5 id="overnight-desc-title" class="tool-modal-title">Overnight Minimum Temperature Calculator</h5>
+                <button type="button" class="tool-modal-close" aria-label="Close" @onclick="HideDescriptionModal">&times;</button>
             </div>
-            <div class="modal-body">
+            <div class="tool-modal-body">
                 <div class="details">
                     <p>This calculator is designed to test the accuracy of a method for calculating the overnight minimum temperature of a system given known starting conditions.</p>
                     <h3>The Equation Used:</h3>
                     <p style="text-align: center;">
-                        <img src="images/OvernightMinForcast.png" alt="Overnight Minimum Equation" style="max-width: 100%; height: auto;">
+                        <img src="images/OvernightMinForcast.png" alt="Overnight Minimum Equation" loading="lazy" decoding="async" style="max-width: 100%; height: auto;">
                     </p>
                     <p>Where:</p>
                     <ul>
@@ -123,23 +128,22 @@
                     </ul>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @onclick="HideDescriptionModal">Close</button>
+            <div class="tool-modal-footer">
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="HideDescriptionModal">Close</button>
             </div>
         </div>
     </div>
-</div>
+}
 
-<!-- Interview Modal -->
-<div class="modal" tabindex="-1" style="display:@(isInterviewModalVisible ? "block" : "none")" @onclick="HideInterviewModal">
-    <!-- Prevent click on modal itself from closing -->
-    <div class="modal-dialog" @onclick:stopPropagation="true">
-        <div class="modal-content bg-light text-dark">
-            <div class="modal-header">
-                <h5 class="modal-title">Overnight Minimum Temperature Calculator</h5>
-                <button type="button" class="btn-close btn-close-white" aria-label="Close" @onclick="HideInterviewModal">X</button>
+@if (isInterviewModalVisible)
+{
+    <div class="tool-modal-backdrop" @onclick="HideInterviewModal">
+        <div class="tool-modal" role="dialog" aria-modal="true" aria-labelledby="overnight-interview-title" @onclick:stopPropagation="true">
+            <div class="tool-modal-header">
+                <h5 id="overnight-interview-title" class="tool-modal-title">Interview Questions</h5>
+                <button type="button" class="tool-modal-close" aria-label="Close" @onclick="HideInterviewModal">&times;</button>
             </div>
-            <div class="modal-body">
+            <div class="tool-modal-body">
                 <div class="details">
                     <h4>Interview Questions:</h4>
                     <ul>
@@ -158,23 +162,22 @@
                     </ul>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @onclick="HideInterviewModal">Close</button>
+            <div class="tool-modal-footer">
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="HideInterviewModal">Close</button>
             </div>
         </div>
     </div>
-</div>
+}
 
-<!-- Description Modal -->
-<div class="modal" tabindex="-1" style="display:@(isChallengesModalVisible ? "block" : "none")" @onclick="HideChallengesModal">
-    <!-- Prevent click on modal itself from closing -->
-    <div class="modal-dialog" @onclick:stopPropagation="true">
-        <div class="modal-content bg-light text-dark">
-            <div class="modal-header">
-                <h5 class="modal-title">Overnight Minimum Temperature Calculator</h5>
-                <button type="button" class="btn-close btn-close-white" aria-label="Close" @onclick="HideChallengesModal">X</button>
+@if (isChallengesModalVisible)
+{
+    <div class="tool-modal-backdrop" @onclick="HideChallengesModal">
+        <div class="tool-modal" role="dialog" aria-modal="true" aria-labelledby="overnight-challenges-title" @onclick:stopPropagation="true">
+            <div class="tool-modal-header">
+                <h5 id="overnight-challenges-title" class="tool-modal-title">Challenges Developing this App</h5>
+                <button type="button" class="tool-modal-close" aria-label="Close" @onclick="HideChallengesModal">&times;</button>
             </div>
-            <div class="modal-body">
+            <div class="tool-modal-body">
                 <div class="details">
                     <h4>Challenges Developing this App</h4>
                     <p>There were a few points of note during development.  During a normal development cycle, I would ask for clarity on these points.</p>
@@ -199,12 +202,12 @@
                     </ul>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @onclick="HideChallengesModal">Close</button>
+            <div class="tool-modal-footer">
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="HideChallengesModal">Close</button>
             </div>
         </div>
     </div>
-</div>
+}
 
 @code {
     // Variables for user input

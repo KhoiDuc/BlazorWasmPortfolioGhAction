@@ -5,14 +5,14 @@
 
 <AuthorizeView>
     <Authorized>
-        <button class="nav-link btn btn-link logoutBTN" @onclick="BeginLogout">Logout</button>
+        <button type="button" class="login-display-btn" @onclick="BeginLogout">Logout</button>
     </Authorized>
     <NotAuthorized>
-        @* <a class="loginBTN" href="authentication/login">Login</a> *@
+        <a class="login-display-btn" href="authentication/login">Login</a>
     </NotAuthorized>
 </AuthorizeView>
 
-@code{
+@code {
     private void BeginLogout(MouseEventArgs args)
     {
         Navigation.NavigateToLogout("authentication/logout");

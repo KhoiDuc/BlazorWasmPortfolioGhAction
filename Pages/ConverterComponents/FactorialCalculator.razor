@@ -1,0 +1,61 @@
+@inherits ConverterBase
+
+<div class="tool-card calc-panel">
+    <button type="button" class="calc-close-btn" @onclick="Close" aria-label="Close calculator">&times;</button>
+    <div class="tool-header">
+        <h3>@Name</h3>
+    </div>
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="factorial-n">n</label>
+            <input id="factorial-n" type="number" class="tool-input" min="0" max="170" @bind="N" />
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="Calculate">Calculate n!</button>
+        </div>
+        @if (FactorialResult != null)
+        {
+            <div class="tool-result"><code class="tool-inline-code">@FactorialResult</code></div>
+        }
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <div class="tool-alert tool-alert-danger">@Error</div>
+        }
+    </div>
+</div>
+
+@code {
+    private int N = 5;
+    private string? FactorialResult;
+    private string? Error;
+
+    public override string Name => "Factorial and Combinatorics Calculator";
+
+    private void Calculate()
+    {
+        Error = null;
+        FactorialResult = null;
+
+        if (N < 0)
+        {
+            Error = "n must be non-negative.";
+            return;
+        }
+
+        if (N > 170)
+        {
+            Error = "n must be 170 or less.";
+            return;
+        }
+
+        FactorialResult = $"{N}! = {Factorial(N)}";
+    }
+
+    private static double Factorial(int n)
+    {
+        double result = 1;
+        for (var i = 2; i <= n; i++)
+            result *= i;
+        return result;
+    }
+}

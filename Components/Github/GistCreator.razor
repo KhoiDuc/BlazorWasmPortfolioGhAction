@@ -1,49 +1,50 @@
 @using BlazorWasmPortfolioGhAction.Services
 @inject IDevOpsService DevOpsService
 
-<div class="gist-creator-container">
-    <h3>Create GitHub Gist</h3>
-    
-    <div class="form-group">
-        <label>Description:</label>
-        <input type="text" @bind="gistDescription" class="form-control" placeholder="Brief description of your gist" />
-    </div>
-
-    <div class="form-group">
-        <label>File Name:</label>
-        <input type="text" @bind="fileName" class="form-control" placeholder="e.g. example.cs, script.js" />
-    </div>
-
-    <div class="form-group">
-        <label>File Content:</label>
-        <textarea @bind="fileContent" class="form-control" rows="10" placeholder="Paste your code here..."></textarea>
-    </div>
-
-    <div class="form-group">
-        <label>
-            <input type="checkbox" @bind="isPublic" />
-            Public Gist
-        </label>
-    </div>
-
-    <div class="form-actions">
-        <button @onclick="CreateGist" class="gist-btn gist-btn-primary" disabled="@isLoading">
-            @if (isLoading) { <span>Creating...</span> } else { <span>Create Gist</span> }
-        </button>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3><i class="bi bi-file-earmark-code" aria-hidden="true"></i> Create GitHub Gist</h3>
+        <p>Create a public or secret gist via the GitHub API (requires token in appsettings).</p>
     </div>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="gist-alert gist-alert-danger">@errorMessage</div>
+        <div class="tool-alert tool-alert-danger">@errorMessage</div>
     }
 
     @if (!string.IsNullOrEmpty(createdGistUrl))
     {
-        <div class="gist-alert gist-alert-success">
+        <div class="tool-alert tool-alert-success">
             <p>Gist created successfully!</p>
-            <a href="@createdGistUrl" target="_blank" class="gist-btn gist-btn-info">View Gist</a>
+            <a href="@createdGistUrl" target="_blank" rel="noopener" class="tool-btn tool-btn-secondary">View gist</a>
         </div>
     }
+
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="gist-desc">Description</label>
+            <input id="gist-desc" type="text" @bind="gistDescription" class="tool-input" placeholder="Brief description of your gist" />
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="gist-file">File name</label>
+            <input id="gist-file" type="text" @bind="fileName" class="tool-input" placeholder="e.g. example.cs, script.js" />
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="gist-content">File content</label>
+            <textarea id="gist-content" @bind="fileContent" class="tool-textarea" rows="10" placeholder="Paste your code here..."></textarea>
+        </div>
+        <div class="tool-field">
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="isPublic" />
+                Public gist
+            </label>
+        </div>
+        <div class="tool-actions">
+            <button type="button" @onclick="CreateGist" class="tool-btn tool-btn-primary" disabled="@isLoading">
+                @if (isLoading) { <span>Creating...</span> } else { <span>Create gist</span> }
+            </button>
+        </div>
+    </div>
 </div>
 
 @code {
@@ -77,13 +78,11 @@
         try
         {
             var files = new Dictionary<string, string> { { fileName, fileContent } };
-            var gist = await DevOpsService.CreateGistAsync(
-                gistDescription,
-                files,
-                isPublic
-            );
-
+            var gist = await DevOpsService.CreateGistAsync(gistDescription, files, isPublic);
             createdGistUrl = gist?.HtmlUrl ?? string.Empty;
+            if (string.IsNullOrEmpty(createdGistUrl))
+                errorMessage = "Failed to create gist. Check DevOps:GitHubToken in appsettings.";
+
             gistDescription = string.Empty;
             fileName = string.Empty;
             fileContent = string.Empty;

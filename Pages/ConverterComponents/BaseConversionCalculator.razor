@@ -1,0 +1,14 @@
+@inherits ConverterBase
+@using BlazorWasmPortfolioGhAction.Components.Binary
+
+<div class="tool-card calc-panel">
+    <button type="button" class="calc-close-btn" @onclick="Close" aria-label="Close calculator">&times;</button>
+    <div class="tool-header">
+        <h3>@Name</h3>
+    </div>
+    <Binary />
+</div>
+
+@code {
+    public override string Name => "Base Conversion Calculator";
+}

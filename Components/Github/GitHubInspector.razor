@@ -1,89 +1,99 @@
+@using BlazorWasmPortfolioGhAction.Models.GitHub
 @using BlazorWasmPortfolioGhAction.Services
 @inject IDevOpsService DevOpsService
 
-<div class="devops-container">
-    <h3>GitHub User/Repo Inspector</h3>
-    
-    <div class="form-group">
-        <label>Inspect Type:</label>
-        <select @bind="inspectType" class="form-control">
-            <option value="user">User</option>
-            <option value="repo">Repository</option>
-        </select>
+<div class="tool-card">
+    <div class="tool-header">
+        <h3><i class="bi bi-person-badge" aria-hidden="true"></i> GitHub User/Repo Inspector</h3>
+        <p>Look up GitHub users or repositories by name.</p>
     </div>
 
-    @if (inspectType == "user")
-    {
-        <div class="form-group">
-            <label>GitHub Username:</label>
-            <input type="text" @bind="username" class="form-control" placeholder="e.g. torvalds, octocat" />
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="gh-inspect-type">Inspect type</label>
+            <select id="gh-inspect-type" @bind="inspectType" class="tool-input">
+                <option value="user">User</option>
+                <option value="repo">Repository</option>
+            </select>
         </div>
-        <button @onclick="InspectUser" class="btn btn-primary" disabled="@isLoading">Inspect User</button>
-    }
-    else
-    {
-        <div class="form-group">
-            <label>Owner:</label>
-            <input type="text" @bind="owner" class="form-control" placeholder="e.g. dotnet" />
-        </div>
-        <div class="form-group">
-            <label>Repository:</label>
-            <input type="text" @bind="repo" class="form-control" placeholder="e.g. runtime" />
-        </div>
-        <button @onclick="InspectRepo" class="btn btn-primary" disabled="@isLoading">Inspect Repo</button>
-    }
+
+        @if (inspectType == "user")
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="gh-username">GitHub username</label>
+                <input id="gh-username" type="text" @bind="username" class="tool-input" placeholder="e.g. torvalds, octocat" />
+            </div>
+            <div class="tool-actions">
+                <button type="button" @onclick="InspectUser" class="tool-btn tool-btn-primary" disabled="@isLoading">Inspect user</button>
+            </div>
+        }
+        else
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="gh-owner">Owner</label>
+                <input id="gh-owner" type="text" @bind="owner" class="tool-input" placeholder="e.g. dotnet" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label" for="gh-repo">Repository</label>
+                <input id="gh-repo" type="text" @bind="repo" class="tool-input" placeholder="e.g. runtime" />
+            </div>
+            <div class="tool-actions">
+                <button type="button" @onclick="InspectRepo" class="tool-btn tool-btn-primary" disabled="@isLoading">Inspect repo</button>
+            </div>
+        }
+    </div>
 
     @if (user != null)
     {
-        <div class="inspect-card">
-            <img src="@user.AvatarUrl" alt="@user.Login" class="avatar" />
+        <div class="tool-inspect-card">
+            <img src="@user.AvatarUrl" alt="@user.Login avatar" class="tool-inspect-avatar" loading="lazy" decoding="async" />
             <h3>@user.Name (@user.Login)</h3>
             @if (!string.IsNullOrEmpty(user.Bio))
             {
-                <p>@user.Bio</p>
+                <p class="tool-repo-description">@user.Bio</p>
             }
-            <div class="user-stats">
-                <div><strong>Repos:</strong> @user.PublicRepos</div>
-                <div><strong>Followers:</strong> @user.Followers</div>
-                <div><strong>Following:</strong> @user.Following</div>
-                <div><strong>Joined:</strong> @user.CreatedAt.ToString("MMM d, yyyy")</div>
+            <div class="tool-user-stats">
+                <span><strong>Repos:</strong> @user.PublicRepos</span>
+                <span><strong>Followers:</strong> @user.Followers</span>
+                <span><strong>Following:</strong> @user.Following</span>
+                <span><strong>Joined:</strong> @user.CreatedAt.ToString("MMM d, yyyy")</span>
             </div>
             @if (!string.IsNullOrEmpty(user.Company))
             {
-                <p><strong>Company:</strong> @user.Company</p>
+                <p class="tool-hint"><strong>Company:</strong> @user.Company</p>
             }
             @if (!string.IsNullOrEmpty(user.Location))
             {
-                <p><strong>Location:</strong> @user.Location</p>
+                <p class="tool-hint"><strong>Location:</strong> @user.Location</p>
             }
-            <a href="@user.HtmlUrl" target="_blank" class="btn btn-secondary btn-sm">View on GitHub</a>
+            <div class="tool-actions">
+                <a href="@user.HtmlUrl" target="_blank" rel="noopener" class="tool-btn tool-btn-secondary">View on GitHub</a>
+            </div>
         </div>
     }
 
     @if (repoInfo != null)
     {
-        <div class="inspect-card">
-            <h3>
-                <a href="@repoInfo.HtmlUrl" target="_blank">@repoInfo.FullName</a>
-            </h3>
+        <div class="tool-inspect-card">
+            <h3><a href="@repoInfo.HtmlUrl" target="_blank" rel="noopener">@repoInfo.FullName</a></h3>
             @if (!string.IsNullOrEmpty(repoInfo.Description))
             {
-                <p>@repoInfo.Description</p>
+                <p class="tool-repo-description">@repoInfo.Description</p>
             }
-            <div class="repo-stats">
-                <span>⭐ Stars: @repoInfo.Stars</span>
-                <span>🔀 Forks: @repoInfo.Forks</span>
+            <div class="tool-repo-stats">
+                <span><i class="bi bi-star" aria-hidden="true"></i> @repoInfo.Stars</span>
+                <span><i class="bi bi-diagram-2" aria-hidden="true"></i> @repoInfo.Forks</span>
                 @if (!string.IsNullOrEmpty(repoInfo.Language))
                 {
-                    <span>Language: @repoInfo.Language</span>
+                    <span>@repoInfo.Language</span>
                 }
             </div>
             @if (repoInfo.Topics?.Count > 0)
             {
-                <div class="topics">
+                <div class="tool-badge-row">
                     @foreach (var topic in repoInfo.Topics)
                     {
-                        <span class="topic-badge">@topic</span>
+                        <span class="tool-badge">@topic</span>
                     }
                 </div>
             }
@@ -96,8 +106,8 @@
     private string username = string.Empty;
     private string owner = string.Empty;
     private string repo = string.Empty;
-    private GitHubUser? user = null;
-    private GitHubRepo? repoInfo = null;
+    private GitHubRestUser? user = null;
+    private GitHubRestRepo? repoInfo = null;
     private bool isLoading = false;
 
     private async Task InspectUser()

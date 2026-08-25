@@ -1,29 +1,27 @@
-﻿.loginBTN {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 50px !important;
-    font-weight: 700;
-    min-height: 25px;
-    color: var(--color-primary);
-    width: 100%;
-    display: flex;
+﻿.login-display-btn {
+    display: inline-flex;
     align-items: center;
-    justify-content: flex-start;
-    text-align: left;
-    transition: all var(--transition-base);
+    justify-content: center;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
     text-decoration: none;
-    text-transform: uppercase;
-}
-.logoutBTN {
-    /*position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 50px !important;*/
+    cursor: pointer;
+    transition: color var(--transition), border-color var(--transition), background-color var(--transition);
 }
 
-@media (max-width: 559px) {
-    .loginBTN {
-        color: var(--color-primary);
+.login-display-btn:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+    background-color: var(--color-bg-glass-hover);
+}
+
+@media (max-width: 768px) {
+    .login-display-btn {
+        display: none;
     }
 }

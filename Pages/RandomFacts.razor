@@ -1,46 +1,40 @@
 ﻿@inject RandomFactsService RandomFactsService
-@using System;
 @using BlazorWasmPortfolioGhAction.Store.Services
 
-<div class="facts-container">
-    <div class="fact-container">
-        @if (isLoading)
-        {
-            <div class="loader"></div>
-        }
-        else if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div class="error-message">@errorMessage</div>
-        }
-        else if (randomFact != null)
-        {
-            <div class="fact-card animate-fade-in">
-                <p class="fact-text">@randomFact.text</p>
-                @if (!string.IsNullOrEmpty(randomFact.source))
-                {
-                    <div class="fact-source">Source: @randomFact.source</div>
-                }
-            </div>
-        }
-        
-        <button 
-            class="fact-btn-primary" 
-            @onclick="ShowRandomFact" 
-            disabled="@isLoading">
-            @if (isLoading)
+<div class="tool-card">
+    <div class="tool-header">
+        <h3><i class="bi bi-lightbulb" aria-hidden="true"></i> Random Facts</h3>
+        <p>Fetch a random fact from uselessfacts.jsph.pl.</p>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="tool-alert tool-alert-info">Loading fact...</div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="tool-alert tool-alert-danger">@errorMessage</div>
+    }
+    else if (randomFact != null)
+    {
+        <div class="tool-inspect-card">
+            <p>@randomFact.text</p>
+            @if (!string.IsNullOrEmpty(randomFact.source))
             {
-                <span>Loading...</span>
+                <p class="tool-hint">Source: @randomFact.source</p>
             }
-            else
-            {
-                <span>Show Me a Random Fact</span>
-            }
+        </div>
+    }
+
+    <div class="tool-actions">
+        <button type="button" class="tool-btn tool-btn-primary" @onclick="ShowRandomFact" disabled="@isLoading">
+            @(isLoading ? "Loading..." : "Show me a random fact")
         </button>
     </div>
 </div>
 
 @code {
-    private RandomFact randomFact = null!;
+    private RandomFact? randomFact;
     private bool isLoading = false;
     private string errorMessage = string.Empty;
 
@@ -49,7 +43,7 @@
         try
         {
             isLoading = true;
-            errorMessage = null;
+            errorMessage = string.Empty;
             randomFact = await RandomFactsService.GetRandomFact();
         }
         catch (Exception ex)

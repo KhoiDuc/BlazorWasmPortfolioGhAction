@@ -1,0 +1,199 @@
+@page "/wiki"
+@page "/wiki/{PageName}/{Section?}/{SubSection?}"
+@page "/wiki/edit/{PageName}/{Section?}/{SubSection?}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using BlazorWasmPortfolioGhAction.Store.Actions
+@using BlazorWasmPortfolioGhAction.Store.State
+@using Fluxor
+@inject IDispatcher Dispatcher
+@inject IState<ContentState> ContentState
+@inject IConfiguration Configuration
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@implements IDisposable
+
+<div class="page-section wiki-page">
+    <section>
+        <div class="container">
+            <div class="section-heading">
+                <p class="section-label">WIKI</p>
+                <h2>Knowledge base.</h2>
+            </div>
+
+            <SearchBar type="Search" SearchTermChanged="OnSearchChanged" />
+
+            @if (!IsContentReady)
+            {
+                <div class="wiki-loading">
+                    <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                    <p>Loading wiki content...</p>
+                </div>
+            }
+            else if (FilteredContents.Count == 0)
+            {
+                <div class="wiki-empty tool-alert tool-alert-info">
+                    <p>No wiki sections found. @if (IsEditMode) { <span>Add content using the editor below.</span> }</p>
+                </div>
+            }
+            else
+            {
+                <div class="wiki-table-wrapper">
+                    <table class="wiki-table">
+                        <tbody>
+                            @for (var i = 0; i < FilteredContents.Count; i++)
+                            {
+                                var index = ContentState.Value.Contents.IndexOf(FilteredContents[i]);
+                                if (index < 0) continue;
+
+                                @if (IsEditMode)
+                                {
+                                    <WikiBlock type="@ViewType"
+                                               sections="@Section"
+                                               subSections="@SubSection"
+                                               TinyAPIKey="@TinyApiKey"
+                                               count="@FilteredContents.Count"
+                                               indexParsed="@index"
+                                               username="@Username"
+                                               matchType="@MatchPage"
+                                               matchTypeSections="@MatchSection"
+                                               matchTypeSectionsSubSections="@MatchSubSection"
+                                               inline="false" />
+                                }
+                                else
+                                {
+                                    <WikiBlockNoAuth type="@ViewType"
+                                                     sections="@Section"
+                                                     subSections="@SubSection"
+                                                     count="@FilteredContents.Count"
+                                                     indexParsed="@index"
+                                                     matchType="@MatchPage"
+                                                     matchTypeSections="@MatchSection"
+                                                     matchTypeSectionsSubSections="@MatchSubSection"
+                                                     inline="false" />
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <AuthorizeView>
+                <Authorized>
+                    @if (!IsEditMode)
+                    {
+                        <div class="wiki-actions">
+                            <a class="tool-btn tool-btn-primary" href="@EditUrl">
+                                <i class="bi bi-pencil" aria-hidden="true"></i> Edit wiki
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="wiki-actions">
+                            <a class="tool-btn tool-btn-secondary" href="@ReadUrl">
+                                <i class="bi bi-eye" aria-hidden="true"></i> View read-only
+                            </a>
+                        </div>
+                    }
+                </Authorized>
+                <NotAuthorized>
+                    <div class="wiki-actions">
+                        <a class="tool-btn tool-btn-primary" href="authentication/login?returnUrl=@Uri.EscapeDataString(Navigation.Uri)">
+                            <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Login to edit
+                        </a>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </section>
+</div>
+
+@code {
+    [Parameter] public string? PageName { get; set; }
+    [Parameter] public string? Section { get; set; }
+    [Parameter] public string? SubSection { get; set; }
+
+    private string? _searchTerm;
+    private string TinyApiKey => Configuration["Wiki:TinyMceApiKey"] ?? "no-api-key";
+    private string Username => "editor";
+
+    private bool IsEditMode => Navigation.Uri.Contains("/wiki/edit/", StringComparison.OrdinalIgnoreCase);
+    private bool IsContentReady => ContentState.Value.FileCount == ContentState.Value.LoadedFilesCount;
+
+    private string ViewType => string.IsNullOrEmpty(PageName) ? "all" :
+        string.IsNullOrEmpty(Section) || Section == "all" ? PageName :
+        string.IsNullOrEmpty(SubSection) || SubSection == "all" ? Section : SubSection;
+
+    private bool MatchPage => string.IsNullOrEmpty(PageName) || PageName == "all";
+    private bool MatchSection => string.IsNullOrEmpty(Section) || Section == "all";
+    private bool MatchSubSection => string.IsNullOrEmpty(SubSection) || SubSection == "all";
+
+    private string EditUrl => BuildWikiUrl("edit");
+    private string ReadUrl => BuildWikiUrl("read");
+
+    private List<Shared.Model.ContentHolder> FilteredContents =>
+        ContentState.Value.Contents
+            .Where(MatchesRoute)
+            .Where(MatchesSearch)
+            .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ContentState.StateChanged += OnContentStateChanged;
+
+        if (IsEditMode)
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated != true)
+            {
+                Navigation.NavigateTo($"authentication/login?returnUrl={Uri.EscapeDataString(Navigation.Uri)}");
+                return;
+            }
+
+            await JSRuntime.InvokeVoidAsync("tinyMceLoader.ensureLoaded");
+        }
+
+        if (ContentState.Value.FileCount == 0 && ContentState.Value.LoadedFilesCount == 0)
+        {
+            Dispatcher.Dispatch(new LoadContentsFromRepoAction());
+        }
+    }
+
+    private bool MatchesRoute(Shared.Model.ContentHolder item)
+    {
+        if (string.IsNullOrEmpty(PageName) || PageName == "all") return true;
+        if (!string.Equals(item.Page, PageName, StringComparison.OrdinalIgnoreCase)) return false;
+        if (string.IsNullOrEmpty(Section) || Section == "all") return true;
+        if (!string.Equals(item.Section, Section, StringComparison.OrdinalIgnoreCase)) return false;
+        if (string.IsNullOrEmpty(SubSection) || SubSection == "all") return true;
+        return string.Equals(item.SubSection, SubSection, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool MatchesSearch(Shared.Model.ContentHolder item)
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm)) return true;
+        var term = _searchTerm.Trim();
+        return (item.Page?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (item.Section?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (item.SubSection?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (item.Content?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
+    private void OnSearchChanged(string? term) => _searchTerm = term;
+
+    private string BuildWikiUrl(string mode)
+    {
+        var segments = new List<string> { "wiki" };
+        if (mode == "edit") segments.Add("edit");
+        if (!string.IsNullOrEmpty(PageName)) segments.Add(PageName);
+        if (!string.IsNullOrEmpty(Section)) segments.Add(Section);
+        if (!string.IsNullOrEmpty(SubSection)) segments.Add(SubSection);
+        return string.Join('/', segments);
+    }
+
+    private void OnContentStateChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => ContentState.StateChanged -= OnContentStateChanged;
+}

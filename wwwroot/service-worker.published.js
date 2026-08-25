@@ -20,7 +20,23 @@ const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
 //];
 
 // Include all file types for offline use
-const offlineAssetsInclude = [/.*$/];
+const offlineAssetsInclude = [
+    /\.wasm$/,
+    /\.dll$/,
+    /\.pdb$/,
+    /\.blat$/,
+    /\.dat$/,
+    /\.woff2?$/,
+    /\.png$/,
+    /\.jpe?g$/,
+    /\.gif$/,
+    /\.svg$/,
+    /\.ico$/,
+    /\.css$/,
+    /\.json$/,
+    /BlazorWasmPortfolioGhAction\.styles\.css$/,
+    /blazor\.boot\.json$/
+];
 
 const cacheFirstAssets = [
     // _content folder

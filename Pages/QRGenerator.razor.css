@@ -1,81 +1,56 @@
-﻿/* Add this in your CSS file or <style> tag */
-.qr-generator-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    animation: fadeIn 0.5s ease-in;
+﻿.qr-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 1.5rem;
+    align-items: start;
 }
-
-.qr-card {
-    background: var(--color-bg-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    transition: transform var(--transition-base);
-}
-
-    .qr-card:hover {
-        transform: translateY(-5px);
-    }
 
 .qr-preview {
-    border: 2px dashed var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 250px;
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
+    background: var(--color-bg-secondary);
+}
+
+.qr-preview-empty {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
     padding: 1rem;
-    background: var(--color-bg-surface);
-    min-height: 300px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    text-align: center;
 }
 
-.color-input-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.qr-color-row {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 0.75rem;
 }
 
-.color-preview {
-    width: 30px;
-    height: 30px;
+.qr-color-swatch {
+    width: 48px;
+    height: 42px;
+    padding: 0;
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-    border: 2px solid var(--color-border);
+    cursor: pointer;
 }
 
-.download-btn {
-    background: var(--gradient-brand);
-    border: none;
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    width: 100%;
-    transition: all var(--transition-base);
-}
-
-    .download-btn:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
-
-.loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--color-bg-glass);
+.qr-logo-preview {
     display: flex;
     align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-lg);
+    gap: 0.75rem;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
+.qr-logo-preview img {
+    max-width: 100px;
+    max-height: 100px;
+    border-radius: var(--radius-sm);
+}
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
+@media (max-width: 768px) {
+    .qr-layout {
+        grid-template-columns: 1fr;
     }
 }
