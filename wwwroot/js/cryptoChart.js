@@ -46,7 +46,7 @@ window.renderSmallChart = function (cryptoId, priceHistory) {
             labels: Array(priceHistory.length).fill(''),
             datasets: [{
                 data: priceHistory,
-                borderColor: 'rgba(75, 192, 192, 1)',
+                borderColor: 'rgba(245, 158, 11, 1)',
                 borderWidth: 1,
                 pointRadius: 0, 
             }]
@@ -97,7 +97,7 @@ window.renderDetailChart = function (cryptoId, priceHistory) {
             datasets: [{
                 label: cryptoId,
                 data: priceHistory,
-                borderColor: 'rgba(75, 192, 192, 1)',
+                borderColor: 'rgba(245, 158, 11, 1)',
                 borderWidth: 1
             }]
         },

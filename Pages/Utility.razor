@@ -4,64 +4,119 @@
 @using BlazorWasmPortfolioGhAction.Components.Github
 @inject NavigationManager Navigation
 
-<div class="page-section utility-page">
+<div class="page-section utility-deck">
     <section>
         <div class="container">
-            <div class="section-heading">
-                <p class="section-label">TOOLS</p>
-                <h2>Developer utilities.</h2>
-                <p class="utility-lead">Browse converters, DevOps helpers, and experimental tools in one place.</p>
-            </div>
+            <header class="utility-deck-header">
+                <div class="utility-deck-intro">
+                    <p class="section-label">DEVELOPER UTILITIES</p>
+                    <h2>Tool deck</h2>
+                    <p class="utility-deck-lead">Search, filter, and launch converters, calculators, and DevOps helpers.</p>
+                </div>
 
-            <div class="utility-layout">
-                <aside class="utility-sidebar" aria-label="Tool navigation">
-                    <div class="utility-sidebar-search">
-                        <label class="tool-label" for="utility-filter">Filter tools</label>
+                <div class="utility-deck-controls">
+                    <div class="utility-deck-search">
+                        <i class="bi bi-search" aria-hidden="true"></i>
                         <input id="utility-filter"
                                type="search"
-                               class="tool-input"
-                               placeholder="Search by name..."
+                               class="utility-deck-search-input"
+                               placeholder="Search tools..."
                                @bind="_filter"
-                               @bind:event="oninput" />
+                               @bind:event="oninput"
+                               aria-label="Search tools" />
                     </div>
 
-                    <nav class="utility-nav">
-                        @foreach (var category in FilteredCategories)
+                    <div class="utility-deck-pills" role="tablist" aria-label="Tool categories">
+                        <button type="button"
+                                class="utility-pill @(_activeCategory == null ? "is-active" : "")"
+                                @onclick="() => SelectCategory(null)">
+                            All
+                        </button>
+                        @foreach (var category in Categories)
                         {
-                            <details class="nav-group" open="@IsCategoryOpen(category)">
-                                <summary class="nav-group-title">@category.CategoryName</summary>
-                                <ul class="nav-group-items">
-                                    @foreach (var item in category.Items)
-                                    {
-                                        <li>
-                                            <NavLink href="@item.Link" class="nav-item" Match="NavLinkMatch.All">
-                                                @item.Text
-                                            </NavLink>
-                                        </li>
-                                    }
-                                </ul>
-                            </details>
+                            <button type="button"
+                                    class="utility-pill @(_activeCategory == category ? "is-active" : "")"
+                                    @onclick="() => SelectCategory(category)">
+                                @category
+                            </button>
                         }
-                    </nav>
-                </aside>
+                    </div>
+                </div>
+            </header>
 
-                <div class="utility-main">
-                    @if (Component == null)
+            @if (Component == null)
+            {
+                <div class="utility-launcher">
+                    @foreach (var group in LauncherGroups)
                     {
-                        <div class="utility-empty tool-card">
-                            <i class="bi bi-tools" aria-hidden="true"></i>
-                            <h3>Select a tool</h3>
-                            <p>Pick a utility from the sidebar or use the filter to find one quickly.</p>
-                        </div>
+                        <section class="utility-launch-group" aria-labelledby="@($"utility-group-{group.CategoryName}")">
+                            <h3 id="@($"utility-group-{group.CategoryName}")" class="utility-launch-group-title">
+                                <i class="bi @group.Icon" aria-hidden="true"></i>
+                                @group.CategoryName
+                                <span class="utility-launch-count">@group.Tools.Count</span>
+                            </h3>
+                            <div class="utility-launch-grid">
+                                @foreach (var tool in group.Tools)
+                                {
+                                    <NavLink href="@tool.Link" class="utility-launch-card">
+                                        <span class="utility-launch-icon" aria-hidden="true">
+                                            <i class="bi @tool.Icon"></i>
+                                        </span>
+                                        <span class="utility-launch-body">
+                                            <strong>@tool.Title</strong>
+                                            <span>@tool.Description</span>
+                                        </span>
+                                        <i class="bi bi-arrow-up-right utility-launch-arrow" aria-hidden="true"></i>
+                                    </NavLink>
+                                }
+                            </div>
+                        </section>
                     }
-                    else
+
+                    @if (!LauncherGroups.Any())
                     {
-                        <div class="utility-tool-body">
-                            @DynamicComponent
+                        <div class="utility-launch-empty">
+                            <i class="bi bi-search" aria-hidden="true"></i>
+                            <h3>No tools found</h3>
+                            <p>Try a different search term or category filter.</p>
                         </div>
                     }
                 </div>
-            </div>
+            }
+            else
+            {
+                <div class="utility-workspace">
+                    <div class="utility-workspace-bar">
+                        <NavLink href="Utility" class="utility-back-link">
+                            <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
+                            All tools
+                        </NavLink>
+                        <div class="utility-workspace-meta">
+                            @if (ActiveTool is not null)
+                            {
+                                <span class="utility-workspace-category">@ActiveTool.Category</span>
+                                <h3>@ActiveTool.Title</h3>
+                            }
+                        </div>
+                        <div class="utility-workspace-switch">
+                            <label class="visually-hidden" for="utility-switch">Switch tool</label>
+                            <select id="utility-switch"
+                                    class="utility-switch-select"
+                                    value="@Component"
+                                    @onchange="OnToolSwitch">
+                                @foreach (var tool in AllTools.OrderBy(t => t.Title))
+                                {
+                                    <option value="@tool.Key">@tool.Title</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="utility-workspace-panel">
+                        @DynamicComponent
+                    </div>
+                </div>
+            }
         </div>
     </section>
 </div>
@@ -71,32 +126,53 @@
     public string? Component { get; set; }
 
     private string _filter = "";
+    private string? _activeCategory;
 
-    private IEnumerable<NavCategory> FilteredCategories
+    private IEnumerable<string> Categories => AllTools.Select(t => t.Category).Distinct().OrderBy(c => c);
+
+    private ToolDef? ActiveTool =>
+        AllTools.FirstOrDefault(t => string.Equals(t.Key, Component, StringComparison.OrdinalIgnoreCase));
+
+    private IEnumerable<LaunchGroup> LauncherGroups
+    {
+        get
+        {
+            var tools = FilteredTools.ToList();
+            return tools
+                .GroupBy(t => t.Category)
+                .OrderBy(g => g.Key)
+                .Select(g => new LaunchGroup(
+                    g.Key,
+                    CategoryIcons.GetValueOrDefault(g.Key, "bi-folder2"),
+                    g.OrderBy(t => t.Title).ToList()));
+        }
+    }
+
+    private IEnumerable<ToolDef> FilteredTools
     {
         get
         {
             var term = _filter.Trim();
-            return NavigationItems
-                .Select(cat => new NavCategory
-                {
-                    CategoryName = cat.CategoryName,
-                    Items = cat.Items
-                        .Where(i => string.IsNullOrEmpty(term)
-                            || i.Text.Contains(term, StringComparison.OrdinalIgnoreCase)
-                            || cat.CategoryName.Contains(term, StringComparison.OrdinalIgnoreCase))
-                        .ToList()
-                })
-                .Where(cat => cat.Items.Count > 0);
+            return AllTools.Where(t =>
+                (_activeCategory == null || t.Category == _activeCategory)
+                && (string.IsNullOrEmpty(term)
+                    || t.Title.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || t.Description.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || t.Category.Contains(term, StringComparison.OrdinalIgnoreCase)));
         }
     }
 
-    private bool IsCategoryOpen(NavCategory category) =>
-        !string.IsNullOrWhiteSpace(_filter)
-        || category.Items.Any(i => IsActiveLink(i.Link));
+    private void SelectCategory(string? category)
+    {
+        _activeCategory = category;
+    }
 
-    private bool IsActiveLink(string link) =>
-        Navigation.Uri.Contains(link, StringComparison.OrdinalIgnoreCase);
+    private void OnToolSwitch(ChangeEventArgs e)
+    {
+        var key = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(key))
+            Navigation.NavigateTo($"Utility/{key}");
+    }
 
     private RenderFragment DynamicComponent => (Component?.ToLowerInvariant()) switch
     {
@@ -141,25 +217,6 @@
         "githubtrending" => RenderComponent<GitHubTrending>(),
         "gist" => RenderComponent<GistCreator>(),
         _ => RenderDefaultComponent()
-    };
-
-    private static readonly List<(string Key, string Title)> AllItems = new()
-    {
-        ("base64", "Base64"), ("map", "Google Maps"), ("bigbangcounter", "Big Bang Counter"),
-        ("mathcalculator", "Math Calculator"), ("browserstorage", "Browser Storage WASM"),
-        ("webglrender", "WebGL Canvas"), ("overnightmintemp", "Min Temp Calculator"),
-        ("cidrcalculator", "CIDR Calculator"), ("geminispellchecker", "Spell Checker (Gemini)"),
-        ("currenttime", "Current Time"), ("ascii", "ASCII"), ("urls", "URL Tools"),
-        ("guid", "GUID Generator"), ("sqlite", "SQLite Integration"), ("html", "HTML Encode/Decode"),
-        ("markdown", "Markdown Converter"), ("timerstopwatch", "Timer / Stopwatch"),
-        ("colourconverter", "Colour Converter"), ("binary", "Binary"), ("stringconverter", "String Converter"),
-        ("epoch", "Epoch Converter"), ("converter", "Unit Converters"), ("jwt", "JWT Debugger"),
-        ("luhn", "Luhn Checker"), ("hcf", "Hidden Char Finder"), ("unicode", "Unicode Picker"),
-        ("cryptography", "MD5 / Hash"), ("fluxortest", "Fluxor Test"), ("qrgenerator", "QR Generator"),
-        ("randomfact", "Random Fact"), ("jokequotes", "Joke Quotes"), ("svgdiagrameditor", "SVG Diagram Editor"),
-        ("emailcomposer", "Email Composer"), ("discord", "Discord Notifier"), ("slack", "Slack Notifier"),
-        ("teams", "Teams Notifier"), ("githubsearch", "GitHub Search"), ("githubinspector", "GitHub Inspector"),
-        ("githubtrending", "GitHub Trending"), ("gist", "Gist Creator")
     };
 
     private RenderFragment RenderComponent<TComponent>() where TComponent : IComponent => builder =>
@@ -222,108 +279,68 @@
 
     private RenderFragment RenderDefaultComponent() => builder =>
     {
-        builder.AddMarkupContent(0, "<div class=\"tool-alert tool-alert-info\">Unknown tool. Choose one from the sidebar.</div>");
+        builder.AddMarkupContent(0, "<div class=\"utility-unknown tool-alert tool-alert-info\">Unknown tool. Pick one from the tool deck.</div>");
     };
 
-    private readonly List<NavCategory> NavigationItems = new()
+    private static readonly Dictionary<string, string> CategoryIcons = new(StringComparer.OrdinalIgnoreCase)
     {
-        new NavCategory
-        {
-            CategoryName = "General Tools",
-            Items = new List<NavItem>
-            {
-                new() { Text = "Base64", Link = "Utility/base64" },
-                new() { Text = "Urls", Link = "Utility/urls" },
-                new() { Text = "Guid", Link = "Utility/guid" },
-                new() { Text = "HTML", Link = "Utility/html" },
-                new() { Text = "Markdown", Link = "Utility/markdown" },
-                new() { Text = "Converter", Link = "Utility/converter" },
-                new() { Text = "String Converter", Link = "Utility/stringconverter" },
-                new() { Text = "Spell Checker (Gemini)", Link = "Utility/geminispellchecker" },
-                new() { Text = "Random Fact", Link = "Utility/randomfact" },
-                new() { Text = "Joke quotes", Link = "Utility/jokequotes" },
-            }
-        },
-        new NavCategory
-        {
-            CategoryName = "SQL Tools",
-            Items = new List<NavItem> { new() { Text = "SQLite Integration", Link = "Utility/sqlite" } }
-        },
-        new NavCategory
-        {
-            CategoryName = "Cryptography Tools",
-            Items = new List<NavItem>
-            {
-                new() { Text = "JWT", Link = "Utility/jwt" },
-                new() { Text = "Luhn", Link = "Utility/luhn" },
-                new() { Text = "Cryptography", Link = "Utility/cryptography" }
-            }
-        },
-        new NavCategory
-        {
-            CategoryName = "Time & Calculation Tools",
-            Items = new List<NavItem>
-            {
-                new() { Text = "Math Calculator", Link = "Utility/mathcalculator" },
-                new() { Text = "Min Temp Calculator", Link = "Utility/overnightmintemp" },
-                new() { Text = "CIDR Calculator", Link = "Utility/cidrcalculator" },
-                new() { Text = "Timer / Stopwatch", Link = "Utility/timerstopwatch" },
-                new() { Text = "Epoch", Link = "Utility/epoch" },
-                new() { Text = "Current Time", Link = "Utility/currenttime" }
-            }
-        },
-        new NavCategory
-        {
-            CategoryName = "Encoding & Format Tools",
-            Items = new List<NavItem>
-            {
-                new() { Text = "Ascii", Link = "Utility/ascii" },
-                new() { Text = "Colour Converter", Link = "Utility/colourconverter" },
-                new() { Text = "Binary", Link = "Utility/binary" },
-                new() { Text = "Unicode", Link = "Utility/unicode" },
-                new() { Text = "Hidden Char Finder", Link = "Utility/hcf" }
-            }
-        },
-        new NavCategory
-        {
-            CategoryName = "Testing Library Tools",
-            Items = new List<NavItem>
-            {
-                new() { Text = "Fluxor Test", Link = "Utility/fluxortest" },
-                new() { Text = "WebGL Canvas", Link = "Utility/webglrender" },
-                new() { Text = "Browser Storage Wasm", Link = "Utility/browserstorage" },
-                new() { Text = "QR Generator", Link = "Utility/qrgenerator" },
-                new() { Text = "Google Maps", Link = "Utility/map" },
-                new() { Text = "Big Bang Counter", Link = "Utility/bigbangcounter" },
-                new() { Text = "Svg Diagram Editor", Link = "Utility/svgdiagrameditor" },
-                new() { Text = "Email Composer", Link = "Utility/emailcomposer" }
-            }
-        },
-        new NavCategory
-        {
-            CategoryName = "DevOps Tools",
-            Items = new List<NavItem>
-            {
-                new() { Text = "Discord Notifier", Link = "Utility/discord" },
-                new() { Text = "Slack Notifier", Link = "Utility/slack" },
-                new() { Text = "Teams Notifier", Link = "Utility/teams" },
-                new() { Text = "GitHub Search", Link = "Utility/githubsearch" },
-                new() { Text = "GitHub Inspector", Link = "Utility/githubinspector" },
-                new() { Text = "GitHub Trending", Link = "Utility/githubtrending" },
-                new() { Text = "Gist Creator", Link = "Utility/gist" }
-            }
-        }
+        ["General Tools"] = "bi-box-seam",
+        ["SQL Tools"] = "bi-database",
+        ["Cryptography Tools"] = "bi-shield-lock",
+        ["Time & Calculation Tools"] = "bi-calculator",
+        ["Encoding & Format Tools"] = "bi-braces",
+        ["Testing Library Tools"] = "bi-bezier2",
+        ["DevOps Tools"] = "bi-rocket-takeoff"
     };
 
-    public class NavCategory
+    private static readonly List<ToolDef> AllTools = new()
     {
-        public string CategoryName { get; set; } = "";
-        public List<NavItem> Items { get; set; } = new();
+        new("base64", "Base64", "bi-file-binary", "Encode and decode Base64 strings.", "General Tools"),
+        new("urls", "URL Tools", "bi-link-45deg", "Split URLs and percent-encode text.", "General Tools"),
+        new("guid", "GUID Generator", "bi-hash", "Generate formatted GUIDs in bulk.", "General Tools"),
+        new("html", "HTML Encode/Decode", "bi-code-slash", "Convert HTML entities safely.", "General Tools"),
+        new("markdown", "Markdown Converter", "bi-markdown", "Transform HTML into Markdown.", "General Tools"),
+        new("converter", "Unit Converters", "bi-arrow-left-right", "Hex, memory, and time converters.", "General Tools"),
+        new("stringconverter", "String Converter", "bi-fonts", "Change text casing and formats.", "General Tools"),
+        new("geminispellchecker", "Spell Checker (Gemini)", "bi-spellcheck", "Vietnamese spell check via Gemini.", "General Tools"),
+        new("randomfact", "Random Fact", "bi-lightbulb", "Fetch a random fact from the web.", "General Tools"),
+        new("jokequotes", "Joke Quotes", "bi-emoji-laughing", "Random jokes with category filters.", "General Tools"),
+        new("sqlite", "SQLite Integration", "bi-database", "Client-side SQLite + EF Core demo.", "SQL Tools"),
+        new("jwt", "JWT Debugger", "bi-shield-lock", "Inspect JWT header, payload, signature.", "Cryptography Tools"),
+        new("luhn", "Luhn Checker", "bi-credit-card", "Validate numbers with Luhn algorithm.", "Cryptography Tools"),
+        new("cryptography", "MD5 / Hash", "bi-fingerprint", "Generate MD5 hashes from text.", "Cryptography Tools"),
+        new("mathcalculator", "Math Calculator", "bi-calculator", "Squaring and perimeter demos.", "Time & Calculation Tools"),
+        new("overnightmintemp", "Min Temp Calculator", "bi-thermometer-half", "Estimate overnight minimum temperature.", "Time & Calculation Tools"),
+        new("cidrcalculator", "CIDR Calculator", "bi-diagram-3", "Convert IP ranges and CIDR notation.", "Time & Calculation Tools"),
+        new("timerstopwatch", "Timer / Stopwatch", "bi-stopwatch", "Countdown timer and stopwatch.", "Time & Calculation Tools"),
+        new("epoch", "Epoch Converter", "bi-clock-history", "Unix timestamp to readable dates.", "Time & Calculation Tools"),
+        new("currenttime", "Current Time", "bi-clock", "UTC, local, and world clocks.", "Time & Calculation Tools"),
+        new("ascii", "ASCII", "bi-keyboard", "Decimal, hex, and oct ASCII values.", "Encoding & Format Tools"),
+        new("colourconverter", "Colour Converter", "bi-palette", "Pick colors and read RGB values.", "Encoding & Format Tools"),
+        new("binary", "Binary", "bi-0-circle", "Convert binary strings and text.", "Encoding & Format Tools"),
+        new("unicode", "Unicode Picker", "bi-translate", "Browse and search Unicode chars.", "Encoding & Format Tools"),
+        new("hcf", "Hidden Char Finder", "bi-eye", "Reveal invisible Unicode characters.", "Encoding & Format Tools"),
+        new("fluxortest", "Fluxor Test", "bi-boxes", "Fluxor state management examples.", "Testing Library Tools"),
+        new("webglrender", "WebGL Canvas", "bi-gpu-card", "WebGL rendering experiments.", "Testing Library Tools"),
+        new("browserstorage", "Browser Storage WASM", "bi-hdd-stack", "localStorage / sessionStorage demo.", "Testing Library Tools"),
+        new("qrgenerator", "QR Generator", "bi-qr-code", "Custom SVG QR codes with logo.", "Testing Library Tools"),
+        new("map", "Google Maps", "bi-geo-alt", "Embedded Google Maps component.", "Testing Library Tools"),
+        new("bigbangcounter", "Big Bang Counter", "bi-stars", "Seconds since the Big Bang.", "Testing Library Tools"),
+        new("svgdiagrameditor", "SVG Diagram Editor", "bi-diagram-2", "Create SVG diagrams interactively.", "Testing Library Tools"),
+        new("emailcomposer", "Email Composer", "bi-envelope", "Send email via EmailJS.", "Testing Library Tools"),
+        new("discord", "Discord Notifier", "bi-discord", "Rich Discord webhook messages.", "DevOps Tools"),
+        new("slack", "Slack Notifier", "bi-slack", "Send Slack channel notifications.", "DevOps Tools"),
+        new("teams", "Teams Notifier", "bi-microsoft-teams", "Microsoft Teams MessageCards.", "DevOps Tools"),
+        new("githubsearch", "GitHub Search", "bi-search", "Search public GitHub repositories.", "DevOps Tools"),
+        new("githubinspector", "GitHub Inspector", "bi-person-badge", "Look up users and repositories.", "DevOps Tools"),
+        new("githubtrending", "GitHub Trending", "bi-graph-up-arrow", "Discover trending repositories.", "DevOps Tools"),
+        new("gist", "Gist Creator", "bi-file-earmark-code", "Create public or secret gists.", "DevOps Tools")
+    };
+
+    private record ToolDef(string Key, string Title, string Icon, string Description, string Category)
+    {
+        public string Link => $"Utility/{Key}";
     }
 
-    public class NavItem
-    {
-        public string Text { get; set; } = "";
-        public string Link { get; set; } = "";
-    }
+    private record LaunchGroup(string CategoryName, string Icon, List<ToolDef> Tools);
 }

@@ -12,11 +12,9 @@
 
 @if (contentState.Value.Contents[indexParsed] != null)
 {
-    @if (type == "all" && lastPage != contentState.Value.Contents[indexParsed].page)
-    {
-        <h1 class="kudosTextInline">@contentState.Value.Contents[indexParsed].page</h1>
-        lastPage = contentState.Value.Contents[indexParsed].page;
-    }
+    var anchorId = $"wiki-section-{indexParsed}";
+    var isEditing = contentState.Value.IsEditing[indexParsed];
+
     @if (type == "add")
     {
         if (inline == true)
@@ -24,7 +22,7 @@
             <tr>
                 <td>
                     <h3 class="kudosTextInline">New Section: </h3>
-                    @if (!contentState.Value.IsEditing[indexParsed])
+                    @if (!isEditing)
                     {
                         <div class="dotted-lines" @onclick="(() => Edit(indexParsed))">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents.Last().content!))</div>
                     }
@@ -46,259 +44,94 @@
         }
         else
         {
-            <tr>
-                <td class="kudosText">New Section: </td>
-                @* Render the de-serialized JSON string as HTML, including styling.  I need some sanitisation here but AntiXss from Microsoft is broken ATM... *@
-                @if (!contentState.Value.IsEditing[indexParsed])
+            <article class="wiki-article wiki-article-editable is-new" id="@anchorId">
+                <header class="wiki-article-header">
+                    <span class="wiki-article-badge">New</span>
+                    <h3 class="wiki-article-title">New section</h3>
+                </header>
+                <div class="wiki-article-body dotted-lines tinymce-editor">
+                    @if (!isEditing)
+                    {
+                        <div @onclick="(() => Edit(indexParsed))">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents.Last().content!))</div>
+                    }
+                    else
+                    {
+                        <Editor Id="@($"{indexParsed}-content")"
+                                Inline=false
+                                CloudChannel="5"
+                                Disable=false
+                                Conf="@GetEditorConf($"{indexParsed}-content")"
+                                ApiKey="@TinyAPIKey"
+                                ClassName="counterEditor"
+                                @bind-Value="@tempContent.content" />
+                    }
+                </div>
+                <footer class="wiki-article-toolbar">
+                    @{
+                        var clearText = "";
+                    }
+                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="()=> contentState.Value.Contents.Last().content = clearText">Clear</button>
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="(() => Save(true))" hidden="@(!isEditing)">Save</button>
+                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="(() => Cancel())" hidden="@(!isEditing)">Cancel</button>
+                </footer>
+            </article>
+        }
+    }
+    else if (inline == true)
+    {
+        <tr>
+            <td>
+                @RenderEditableHeader()
+                @if (!isEditing)
                 {
-                    <td>@(Sanitizer.ToSafeMarkup(contentState.Value.Contents.Last().content!))</td>
+                    <div class="wiki-article-body dotted-lines" @onclick="(() => Edit(indexParsed))">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].content))</div>
                 }
                 else
                 {
-                    <td>
-                        <div class="dotted-lines tinymce-editor">
-                            <Editor Id="@($"{indexParsed}-content")"
-                                    Inline=false
-                                    CloudChannel="5"
-                                    Disable=false
-                                    Conf="@GetEditorConf($"{indexParsed}-content")"
-                                    ApiKey="@TinyAPIKey"
-                                    ClassName="counterEditor"
-                                    @bind-Value="@tempContent.content" />
-                        </div>
-                    </td>
+                    <div class="wiki-article-body dotted-lines">
+                        <Editor Id="@($"{indexParsed}-content")"
+                                Inline=true
+                                CloudChannel="5"
+                                Disable=false
+                                Conf="@GetEditorConfInline($"{indexParsed}-content")"
+                                ApiKey="@TinyAPIKey"
+                                ClassName="counterEditor"
+                                @bind-Value="@tempContent.content" />
+                        <button type="button" class="tool-btn tool-btn-danger inlineBTN" @onclick="(() => RemoveSection(indexParsed, username!))">Delete</button>
+                    </div>
                 }
-            </tr>
-            <tr>
-                <td>
-                    @*Spacing*@
-                </td>
-                @* Button bank to be generated per section.  Using lambda expression to parse value to function *@
-                @{
-                    var clearText = "";
-                }
-                <td>
-                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="()=> contentState.Value.Contents.Last().content = clearText">Clear</button>
-                    <button type="button" class="tool-btn tool-btn-primary" @onclick="(() => Save(true))" hidden="@(!contentState.Value.IsEditing[indexParsed])">Save</button>
-                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="(() => Cancel())" hidden="@(!contentState.Value.IsEditing[indexParsed])">Cancel</button>
-                </td>
-            </tr>
-        }
+            </td>
+        </tr>
     }
     else
     {
-        @if (inline == true)
-        {
-            <tr>
-                @* Currently showing all details about the section, but once I split into multiple pages, this will likley be hidden *@
-                <td>
-                    @if (type == "all" || type == "Search" || (!matchTypeSections && matchType))
-                    {
-                        @if (!contentState.Value.IsEditing[indexParsed])
-                        {
-                            <h3 class="kudosTextInline" @onclick="(() => Edit(indexParsed))">
-                                @(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].section))
-                                <small>
-                                    <div class="text-muted">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].subSection))</div>
-                                </small>
-                            </h3>
-                        }
-                        else
-                        {
-                            <h3 class="kudosTextInline" @onclick="(() => Edit(indexParsed))">
-                                <Editor Id="@($"{indexParsed}-section")"
-                                        Inline=true
-                                        CloudChannel="5"
-                                        Disable=false
-                                        Conf="@GetEditorConfHeaders($"{indexParsed}-section")"
-                                        ApiKey="@TinyAPIKey"
-                                        ClassName="counterEditor"
-                                        @bind-Value="@tempContent.section" />
-                                <small>
-                                    <div class="text-muted">
-                                        <Editor Id="@($"{indexParsed}-subSection")"
-                                                Inline=true
-                                                CloudChannel="5"
-                                                Disable=false
-                                                Conf="@GetEditorConfHeaders($"{indexParsed}-subSection")"
-                                                ApiKey="@TinyAPIKey"
-                                                ClassName="counterEditor"
-                                                @bind-Value="@tempContent.subSection" />
-                                    </div>
-                                </small>
-                            </h3>
-                        }
-                    }
-                    else if (!matchTypeSectionsSubSections && matchTypeSections)
-                    {
-                        @if (!contentState.Value.IsEditing[indexParsed])
-                        {
-                            <h3 class="kudosTextInline" @onclick="(() => Edit(indexParsed))">
-                                <small>
-                                    <div class="text-muted">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].subSection))</div>
-                                </small>
-                            </h3>
-                        }
-                        else
-                        {
-                            <h3 class="kudosTextInline">
-                                <small>
-                                    <div class="text-muted">
-                                        <Editor Id="@($"{indexParsed}-subSection")"
-                                                Inline=true
-                                                CloudChannel="5"
-                                                Disable=false
-                                                Conf="@GetEditorConfHeaders($"{indexParsed}-subSection")"
-                                                ApiKey="@TinyAPIKey"
-                                                ClassName="counterEditor"
-                                                @bind-Value="@tempContent.subSection" />
-                                    </div>
-                                </small>
-                            </h3>
-                        }
-                    }
-                    else
-                    {
-                        <h3 class="kudosTextInline">
-                            <small class="text-muted">
-
-                            </small>
-                        </h3>
-                    }
-                    @if (!contentState.Value.IsEditing[indexParsed])
-                    {
-                        <div class="dotted-lines" @onclick="(() => Edit(indexParsed))">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].content))</div>
-                    }
-                    else
-                    {
-                        <div class="dotted-lines">
-                            <Editor Id="@($"{indexParsed}-content")"
-                                    Inline=true
-                                    CloudChannel="5"
-                                    Disable=false
-                                    Conf="@GetEditorConfInline($"{indexParsed}-content")"
-                                    ApiKey="@TinyAPIKey"
-                                    ClassName="counterEditor"
-                                    @bind-Value="@tempContent.content" />
-                            <button type="button" class="tool-btn tool-btn-danger inlineBTN" @onclick="(() => RemoveSection(indexParsed, username!))">Delete</button>
-                        </div>
-                    }
-                </td>
-            </tr>
-        }
-        else
-        {
-            <tr>
-                @* Currently showing all details about the section, but once I split into multiple pages, this will likley be hidden *@
-                @if (type == "all" || type == "Search" || (!matchTypeSections && matchType))
+        <article class="wiki-article wiki-article-editable @(isEditing ? "is-editing" : "")" id="@anchorId">
+            @RenderEditableHeader()
+            <div class="wiki-article-body dotted-lines @(isEditing ? "tinymce-editor" : "")">
+                @if (!isEditing)
                 {
-                    @if (!contentState.Value.IsEditing[indexParsed])
-                    {
-                        <td class="kudosText col-1">
-                            <h4 @onclick="(() => Edit(indexParsed))">
-                                @(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].section))
-                                <br>
-                                <small>
-                                    <div class="text-muted">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].subSection))</div>
-                                </small>
-                            </h4>
-                        </td>
-                    }
-                    else
-                    {
-                        <td class="kudosText col-1">
-                            <h4>
-                                <Editor Id="@($"{indexParsed}-section")"
-                                        Inline=true
-                                        CloudChannel="5"
-                                        Disable=false
-                                        Conf="@GetEditorConfHeaders($"{indexParsed}-section")"
-                                        ApiKey="@TinyAPIKey"
-                                        ClassName="counterEditor"
-                                        @bind-Value="@tempContent.section" />
-                                <br><small>
-                                    <div class="text-muted">
-                                        <Editor Id="@($"{indexParsed}-subSection")"
-                                                Inline=true
-                                                CloudChannel="5"
-                                                Disable=false
-                                                Conf="@GetEditorConfHeaders($"{indexParsed}-subSection")"
-                                                ApiKey="@TinyAPIKey"
-                                                ClassName="counterEditor"
-                                                @bind-Value="@tempContent.subSection" />
-                                    </div>
-                                </small>
-                            </h4>
-                        </td>
-                    }
-                }
-                else if (!matchTypeSectionsSubSections && matchTypeSections)
-                {
-                    @if (!contentState.Value.IsEditing[indexParsed])
-                    {
-                        <td class="kudosText col-1">
-                            <h3 @onclick="(() => Edit(indexParsed))">
-                                <div class="text-muted">@(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].subSection))</div>
-                            </h3>
-                        </td>
-                    }
-                    else
-                    {
-                        <td class="kudosText col-1">
-                            <h3 class="kudosTextInline">
-                                <Editor Id="@($"{indexParsed}-subSection")"
-                                        Inline=true
-                                        CloudChannel="5"
-                                        Disable=false
-                                        Conf="@GetEditorConfHeaders($"{indexParsed}-subSection")"
-                                        ApiKey="@TinyAPIKey"
-                                        ClassName="counterEditor"
-                                        @bind-Value="@tempContent.subSection" />
-                            </h3>
-                        </td>
-                    }
-                }
-                else if (matchTypeSectionsSubSections)
-                {
-
-                }
-
-                @if (!contentState.Value.IsEditing[indexParsed])
-                {
-                    <td>@(Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].content!))</td>
+                    @((MarkupString)Sanitizer.ToSafeMarkup(contentState.Value.Contents[indexParsed].content!))
                 }
                 else
                 {
-                    <td>
-                        <div class="dotted-lines tinymce-editor">
-                            <Editor Id="@($"{indexParsed}-content")"
-                                    Inline=false
-                                    CloudChannel="5"
-                                    Disable=false
-                                    Conf="@GetEditorConf($"{indexParsed}-content")"
-                                    ApiKey="@TinyAPIKey"
-                                    ClassName="counterEditor"
-                                    @bind-Value="@tempContent.content" />
-                        </div>
-                    </td>
+                    <Editor Id="@($"{indexParsed}-content")"
+                            Inline=false
+                            CloudChannel="5"
+                            Disable=false
+                            Conf="@GetEditorConf($"{indexParsed}-content")"
+                            ApiKey="@TinyAPIKey"
+                            ClassName="counterEditor"
+                            @bind-Value="@tempContent.content" />
                 }
-            </tr>
-            <tr>
-                @if (!matchTypeSectionsSubSections)
-                {
-                    <td>
-                        @*Spacing*@
-                    </td>
-                }
-                <td>
-                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="(() => ClearContent(indexParsed))">Clear</button>
-                    <button type="button" class="tool-btn tool-btn-danger" @onclick="(() => RemoveSection(indexParsed, username!))">Delete</button>
-                    <button type="button" class="tool-btn tool-btn-primary" @onclick="(() => Edit(indexParsed))" hidden="@contentState.Value.IsEditing[indexParsed]">Edit</button>
-                    <button type="button" class="tool-btn tool-btn-primary" @onclick="(() => Save(false))" hidden="@(!contentState.Value.IsEditing[indexParsed])">Save</button>
-                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="(() => Cancel())" hidden="@(!contentState.Value.IsEditing[indexParsed])">Cancel</button>
-                </td>
-            </tr>
-        }
+            </div>
+            <footer class="wiki-article-toolbar">
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="(() => ClearContent(indexParsed))">Clear</button>
+                <button type="button" class="tool-btn tool-btn-danger" @onclick="(() => RemoveSection(indexParsed, username!))">Delete</button>
+                <button type="button" class="tool-btn tool-btn-primary" @onclick="(() => Edit(indexParsed))" hidden="@isEditing">Edit</button>
+                <button type="button" class="tool-btn tool-btn-primary" @onclick="(() => Save(false))" hidden="@(!isEditing)">Save</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="(() => Cancel())" hidden="@(!isEditing)">Cancel</button>
+            </footer>
+        </article>
     }
 }
 
@@ -329,6 +162,106 @@
 
     private string? lastPage;
     private ContentHolder? tempContent;
+
+    private RenderFragment RenderEditableHeader() => __builder =>
+    {
+        var item = contentState.Value.Contents[indexParsed];
+        var isEditing = contentState.Value.IsEditing[indexParsed];
+        var showSection = type == "all" || type == "Search" || (!matchTypeSections && matchType);
+        var showSubOnly = !matchTypeSectionsSubSections && matchTypeSections;
+
+        if (!showSection && !showSubOnly && matchTypeSectionsSubSections)
+            return;
+
+        __builder.OpenElement(0, "header");
+        __builder.AddAttribute(1, "class", "wiki-article-header");
+
+        if (showSection)
+        {
+            __builder.OpenElement(2, "span");
+            __builder.AddAttribute(3, "class", "wiki-article-badge");
+            __builder.AddContent(4, "Section");
+            __builder.CloseElement();
+
+            __builder.OpenElement(5, "h3");
+            __builder.AddAttribute(6, "class", "wiki-article-title");
+            if (!isEditing)
+            {
+                __builder.AddAttribute(7, "onclick", EventCallback.Factory.Create(this, () => Edit(indexParsed)));
+                __builder.AddContent(8, (MarkupString)Sanitizer.ToSafeMarkup(item.section ?? string.Empty));
+            }
+            else
+            {
+                __builder.OpenComponent<Editor>(9);
+                __builder.AddAttribute(10, "Id", $"{indexParsed}-section");
+                __builder.AddAttribute(11, "Inline", true);
+                __builder.AddAttribute(12, "CloudChannel", "5");
+                __builder.AddAttribute(13, "Disable", false);
+                __builder.AddAttribute(14, "Conf", GetEditorConfHeaders($"{indexParsed}-section"));
+                __builder.AddAttribute(15, "ApiKey", TinyAPIKey);
+                __builder.AddAttribute(16, "ClassName", "counterEditor");
+                __builder.AddAttribute(17, "Value", tempContent!.section);
+                __builder.AddAttribute(18, "ValueChanged", EventCallback.Factory.Create<string?>(this, v => tempContent.section = v));
+                __builder.AddAttribute(19, "ValueExpression", (System.Linq.Expressions.Expression<Func<string?>>)(() => tempContent.section));
+                __builder.CloseComponent();
+            }
+            __builder.CloseElement();
+
+            if (!string.IsNullOrWhiteSpace(item.subSection) || isEditing)
+            {
+                __builder.OpenElement(20, "p");
+                __builder.AddAttribute(21, "class", "wiki-article-subtitle");
+                if (!isEditing)
+                {
+                    __builder.AddContent(22, (MarkupString)Sanitizer.ToSafeMarkup(item.subSection ?? string.Empty));
+                }
+                else
+                {
+                    __builder.OpenComponent<Editor>(23);
+                    __builder.AddAttribute(24, "Id", $"{indexParsed}-subSection");
+                    __builder.AddAttribute(25, "Inline", true);
+                    __builder.AddAttribute(26, "CloudChannel", "5");
+                    __builder.AddAttribute(27, "Disable", false);
+                    __builder.AddAttribute(28, "Conf", GetEditorConfHeaders($"{indexParsed}-subSection"));
+                    __builder.AddAttribute(29, "ApiKey", TinyAPIKey);
+                    __builder.AddAttribute(30, "ClassName", "counterEditor");
+                    __builder.AddAttribute(31, "Value", tempContent!.subSection);
+                    __builder.AddAttribute(32, "ValueChanged", EventCallback.Factory.Create<string?>(this, v => tempContent.subSection = v));
+                    __builder.AddAttribute(33, "ValueExpression", (System.Linq.Expressions.Expression<Func<string?>>)(() => tempContent.subSection));
+                    __builder.CloseComponent();
+                }
+                __builder.CloseElement();
+            }
+        }
+        else if (showSubOnly)
+        {
+            __builder.OpenElement(34, "h3");
+            __builder.AddAttribute(35, "class", "wiki-article-title");
+            if (!isEditing)
+            {
+                __builder.AddAttribute(36, "onclick", EventCallback.Factory.Create(this, () => Edit(indexParsed)));
+                __builder.AddContent(37, (MarkupString)Sanitizer.ToSafeMarkup(item.subSection ?? string.Empty));
+            }
+            else
+            {
+                __builder.OpenComponent<Editor>(38);
+                __builder.AddAttribute(39, "Id", $"{indexParsed}-subSection");
+                __builder.AddAttribute(40, "Inline", true);
+                __builder.AddAttribute(41, "CloudChannel", "5");
+                __builder.AddAttribute(42, "Disable", false);
+                __builder.AddAttribute(43, "Conf", GetEditorConfHeaders($"{indexParsed}-subSection"));
+                __builder.AddAttribute(44, "ApiKey", TinyAPIKey);
+                __builder.AddAttribute(45, "ClassName", "counterEditor");
+                __builder.AddAttribute(46, "Value", tempContent!.subSection);
+                __builder.AddAttribute(47, "ValueChanged", EventCallback.Factory.Create<string?>(this, v => tempContent.subSection = v));
+                __builder.AddAttribute(48, "ValueExpression", (System.Linq.Expressions.Expression<Func<string?>>)(() => tempContent.subSection));
+                __builder.CloseComponent();
+            }
+            __builder.CloseElement();
+        }
+
+        __builder.CloseElement();
+    };
 
     protected override async Task OnInitializedAsync()
     {

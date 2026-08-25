@@ -14,98 +14,145 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @implements IDisposable
 
-<div class="page-section wiki-page">
+<div class="page-section wiki-hub">
     <section>
         <div class="container">
-            <div class="section-heading">
-                <p class="section-label">WIKI</p>
-                <h2>Knowledge base.</h2>
-            </div>
+            <header class="wiki-hero">
+                <div class="wiki-hero-copy">
+                    <p class="section-label">WIKI</p>
+                    <h2>Knowledge base</h2>
+                    <p class="wiki-hero-lead">Browse portfolio notes, project docs, and editable sections.</p>
+                </div>
+                <div class="wiki-hero-actions">
+                    <AuthorizeView>
+                        <Authorized>
+                            @if (!IsEditMode)
+                            {
+                                <a class="tool-btn tool-btn-primary" href="@EditUrl">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i> Edit wiki
+                                </a>
+                            }
+                            else
+                            {
+                                <a class="tool-btn tool-btn-secondary" href="@ReadUrl">
+                                    <i class="bi bi-eye" aria-hidden="true"></i> Read-only view
+                                </a>
+                            }
+                        </Authorized>
+                        <NotAuthorized>
+                            <a class="tool-btn tool-btn-primary" href="authentication/login?returnUrl=@Uri.EscapeDataString(Navigation.Uri)">
+                                <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Login to edit
+                            </a>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+            </header>
 
-            <SearchBar type="Search" SearchTermChanged="OnSearchChanged" />
+            <div class="wiki-toolbar">
+                <SearchBar type="Search"
+                           Label=""
+                           Placeholder="Search pages, sections, or content..."
+                           SearchTermChanged="OnSearchChanged" />
+                <div class="wiki-toolbar-meta">
+                    @if (IsEditMode)
+                    {
+                        <span class="wiki-mode-badge is-edit">Editing</span>
+                    }
+                    @if (IsContentReady)
+                    {
+                        <span class="wiki-stat">@FilteredContents.Count section@(FilteredContents.Count == 1 ? "" : "s")</span>
+                    }
+                </div>
+            </div>
 
             @if (!IsContentReady)
             {
-                <div class="wiki-loading">
-                    <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                <div class="wiki-state wiki-state-loading">
+                    <div class="tool-spinner" role="status" aria-label="Loading wiki"></div>
                     <p>Loading wiki content...</p>
                 </div>
             }
             else if (FilteredContents.Count == 0)
             {
-                <div class="wiki-empty tool-alert tool-alert-info">
-                    <p>No wiki sections found. @if (IsEditMode) { <span>Add content using the editor below.</span> }</p>
+                <div class="wiki-state wiki-state-empty">
+                    <i class="bi bi-journal-x" aria-hidden="true"></i>
+                    <h3>No sections found</h3>
+                    <p>
+                        @if (IsEditMode)
+                        {
+                            <span>Add content using the editor below or adjust your search.</span>
+                        }
+                        else
+                        {
+                            <span>Try another search term or open a different wiki route.</span>
+                        }
+                    </p>
                 </div>
             }
             else
             {
-                <div class="wiki-table-wrapper">
-                    <table class="wiki-table">
-                        <tbody>
-                            @for (var i = 0; i < FilteredContents.Count; i++)
+                <div class="wiki-layout">
+                    <aside class="wiki-toc" aria-label="Table of contents">
+                        <p class="wiki-toc-label">On this page</p>
+                        <nav class="wiki-toc-nav">
+                            @foreach (var entry in TocEntries)
                             {
-                                var index = ContentState.Value.Contents.IndexOf(FilteredContents[i]);
-                                if (index < 0) continue;
-
-                                @if (IsEditMode)
-                                {
-                                    <WikiBlock type="@ViewType"
-                                               sections="@Section"
-                                               subSections="@SubSection"
-                                               TinyAPIKey="@TinyApiKey"
-                                               count="@FilteredContents.Count"
-                                               indexParsed="@index"
-                                               username="@Username"
-                                               matchType="@MatchPage"
-                                               matchTypeSections="@MatchSection"
-                                               matchTypeSectionsSubSections="@MatchSubSection"
-                                               inline="false" />
-                                }
-                                else
-                                {
-                                    <WikiBlockNoAuth type="@ViewType"
-                                                     sections="@Section"
-                                                     subSections="@SubSection"
-                                                     count="@FilteredContents.Count"
-                                                     indexParsed="@index"
-                                                     matchType="@MatchPage"
-                                                     matchTypeSections="@MatchSection"
-                                                     matchTypeSectionsSubSections="@MatchSubSection"
-                                                     inline="false" />
-                                }
+                                <a href="@($"#wiki-section-{entry.Index}")" class="wiki-toc-link @entry.LevelClass">
+                                    @entry.Label
+                                </a>
                             }
-                        </tbody>
-                    </table>
+                        </nav>
+                    </aside>
+
+                    <div class="wiki-stream">
+                        @{
+                            string? lastPageHeading = null;
+                        }
+                        @for (var i = 0; i < FilteredContents.Count; i++)
+                        {
+                            var index = ContentState.Value.Contents.IndexOf(FilteredContents[i]);
+                            if (index < 0) continue;
+
+                            var pageName = FilteredContents[i].Page;
+                            if (!string.IsNullOrEmpty(pageName) && pageName != lastPageHeading && (string.IsNullOrEmpty(PageName) || PageName == "all"))
+                            {
+                                lastPageHeading = pageName;
+                                <div class="wiki-page-heading">
+                                    <span class="wiki-page-badge">Page</span>
+                                    <h2>@pageName</h2>
+                                </div>
+                            }
+
+                            @if (IsEditMode)
+                            {
+                                <WikiBlock type="@ViewType"
+                                           sections="@Section"
+                                           subSections="@SubSection"
+                                           TinyAPIKey="@TinyApiKey"
+                                           count="@FilteredContents.Count"
+                                           indexParsed="@index"
+                                           username="@Username"
+                                           matchType="@MatchPage"
+                                           matchTypeSections="@MatchSection"
+                                           matchTypeSectionsSubSections="@MatchSubSection"
+                                           inline="false" />
+                            }
+                            else
+                            {
+                                <WikiBlockNoAuth type="@ViewType"
+                                                 sections="@Section"
+                                                 subSections="@SubSection"
+                                                 count="@FilteredContents.Count"
+                                                 indexParsed="@index"
+                                                 matchType="@MatchPage"
+                                                 matchTypeSections="@MatchSection"
+                                                 matchTypeSectionsSubSections="@MatchSubSection"
+                                                 inline="false" />
+                            }
+                        }
+                    </div>
                 </div>
             }
-
-            <AuthorizeView>
-                <Authorized>
-                    @if (!IsEditMode)
-                    {
-                        <div class="wiki-actions">
-                            <a class="tool-btn tool-btn-primary" href="@EditUrl">
-                                <i class="bi bi-pencil" aria-hidden="true"></i> Edit wiki
-                            </a>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="wiki-actions">
-                            <a class="tool-btn tool-btn-secondary" href="@ReadUrl">
-                                <i class="bi bi-eye" aria-hidden="true"></i> View read-only
-                            </a>
-                        </div>
-                    }
-                </Authorized>
-                <NotAuthorized>
-                    <div class="wiki-actions">
-                        <a class="tool-btn tool-btn-primary" href="authentication/login?returnUrl=@Uri.EscapeDataString(Navigation.Uri)">
-                            <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Login to edit
-                        </a>
-                    </div>
-                </NotAuthorized>
-            </AuthorizeView>
         </div>
     </section>
 </div>
@@ -142,6 +189,22 @@
             .Where(MatchesRoute)
             .Where(MatchesSearch)
             .ToList();
+
+    private IEnumerable<TocEntry> TocEntries =>
+        FilteredContents
+            .Select(item =>
+            {
+                var index = ContentState.Value.Contents.IndexOf(item);
+                var section = item.Section?.Trim();
+                var sub = item.SubSection?.Trim();
+                var label = !string.IsNullOrEmpty(sub) ? sub
+                    : !string.IsNullOrEmpty(section) ? section
+                    : item.Page ?? "Section";
+                var level = !string.IsNullOrEmpty(sub) && !string.IsNullOrEmpty(section) ? "is-sub"
+                    : !string.IsNullOrEmpty(section) ? "is-section" : "is-page";
+                return new TocEntry(index, label, level);
+            })
+            .Where(e => e.Index >= 0);
 
     private string BuildWikiUrl(string mode)
     {
@@ -204,4 +267,6 @@
     private void OnContentStateChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
     public void Dispose() => ContentState.StateChanged -= OnContentStateChanged;
+
+    private record TocEntry(int Index, string Label, string LevelClass);
 }
