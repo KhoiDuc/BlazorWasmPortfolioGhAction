@@ -1,0 +1,154 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@inject IVnMarketClient Market
+@inject VnSectorService Sectors
+
+<div class="ts-panel">
+    <div class="ts-tabs">
+        <button class="ts-tab @(_sub == "overview" ? "active" : "")" @onclick='() => _sub = "overview"'>Tổng quan</button>
+        <button class="ts-tab @(_sub == "sector" ? "active" : "")" @onclick='() => _sub = "sector"'>Heatmap ngành</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:0.75rem">
+        <button class="ts-btn ts-btn-primary" @onclick="LoadOverview" disabled="@_busy">@(_market is null ? "Tải thị trường" : "Làm mới")</button>
+        @if (_sub == "sector")
+        {
+            <input class="ts-input" style="max-width:180px" @bind="_sectorFilter" placeholder="Lọc ngành / mã..." />
+            <button class="ts-btn ts-btn-outline" @onclick="LoadSectors" disabled="@_busy">Tải ngành</button>
+        }
+    </div>
+    @if (!string.IsNullOrEmpty(_error)) { <div class="ts-alert ts-alert-error mt-2">@_error</div> }
+    @if (_busy) { <div class="ts-spinner mt-2"></div> }
+</div>
+
+@if (_sub == "overview" && _market is not null)
+{
+    <div class="ts-panel">
+        <h4 style="margin:0 0 0.75rem">Chỉ số</h4>
+        <table class="ts-table">
+            <thead><tr><th>Chỉ số</th><th>Giá trị</th><th>+/-</th><th>%</th></tr></thead>
+            <tbody>
+                @foreach (var idx in _market.Indices)
+                {
+                    <tr>
+                        <td><strong>@idx.Name</strong></td>
+                        <td>@idx.Index</td>
+                        <td class="@(idx.ParsedChange >= 0 ? "ts-positive" : "ts-negative")">@idx.Change</td>
+                        <td class="@(idx.ParsedPercent >= 0 ? "ts-positive" : "ts-negative")">@idx.Percent%</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <p class="ts-updated mt-2">Cập nhật: @_market.LoadedAt.ToLocalTime():HH:mm:ss</p>
+    </div>
+    <div class="ts-panel ts-table-wrap">
+        <h4 style="margin:0 0 0.75rem">Top tăng</h4>
+        <table class="ts-table">
+            <thead><tr><th>Mã</th><th>Giá</th><th>%</th><th>KL</th></tr></thead>
+            <tbody>
+                @foreach (var s in _market.Stocks.OrderByDescending(x => x.PercentChange).Take(10))
+                {
+                    <tr @onclick="() => OnSymbolSelected.InvokeAsync(s.Symbol)" style="cursor:pointer">
+                        <td><strong>@s.Symbol</strong></td>
+                        <td>@s.Close.ToString("N2")</td>
+                        <td class="ts-positive">@s.PercentChange.ToString("F2")%</td>
+                        <td>@s.Volume.ToString("N0")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="ts-panel ts-table-wrap">
+        <h4 style="margin:0 0 0.75rem">Top giảm</h4>
+        <table class="ts-table">
+            <thead><tr><th>Mã</th><th>Giá</th><th>%</th><th>KL</th></tr></thead>
+            <tbody>
+                @foreach (var s in _market.Stocks.OrderBy(x => x.PercentChange).Take(10))
+                {
+                    <tr @onclick="() => OnSymbolSelected.InvokeAsync(s.Symbol)" style="cursor:pointer">
+                        <td><strong>@s.Symbol</strong></td>
+                        <td>@s.Close.ToString("N2")</td>
+                        <td class="ts-negative">@s.PercentChange.ToString("F2")%</td>
+                        <td>@s.Volume.ToString("N0")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else if (_sub == "sector" && _sectorData?.Count > 0)
+{
+    var filtered = string.IsNullOrWhiteSpace(_sectorFilter)
+        ? _sectorData.OrderByDescending(x => x.Value.AverageChange)
+        : _sectorData.Where(kv => kv.Key.Contains(_sectorFilter, StringComparison.OrdinalIgnoreCase)
+            || kv.Value.TopGainer?.Symbol?.Contains(_sectorFilter, StringComparison.OrdinalIgnoreCase) == true);
+    <div class="ts-panel ts-table-wrap">
+        <table class="ts-table">
+            <thead><tr><th>Ngành</th><th>Tăng</th><th>Giảm</th><th>TB %</th><th>Top</th><th>Bottom</th></tr></thead>
+            <tbody>
+                @foreach (var kv in filtered)
+                {
+                    var s = kv.Value;
+                    <tr>
+                        <td><strong>@s.Name</strong> <span class="ts-muted">(@s.StockCount)</span></td>
+                        <td class="ts-positive">@s.UpCount</td>
+                        <td class="ts-negative">@s.DownCount</td>
+                        <td class="@(s.AverageChange >= 0 ? "ts-positive" : "ts-negative")">@s.AverageChange.ToString("F2")%</td>
+                        <td>@(s.TopGainer is null ? "—" : $"{s.TopGainer.Symbol} {s.TopGainer.PercentChange:F1}%")</td>
+                        <td>@(s.TopLoser is null ? "—" : $"{s.TopLoser.Symbol} {s.TopLoser.PercentChange:F1}%")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback<string> OnSymbolSelected { get; set; }
+
+    private string _sub = "overview";
+    private MarketSnapshot? _market;
+    private Dictionary<string, SectorAnalysis>? _sectorData;
+    private string _sectorFilter = "";
+    private string? _error;
+    private bool _busy;
+
+    private async Task LoadOverview()
+    {
+        _busy = true;
+        _error = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var indices = await Market.FetchIndicesAsync();
+            var symbols = (await Sectors.GetAllSymbolsAsync()).Take(400).ToList();
+            if (symbols.Count == 0)
+            {
+                var lists = await Market.FetchSymbolsAsync();
+                symbols = lists.Take(400).ToList();
+            }
+            var stocks = await Market.GetLatestManyAsync(symbols, new Progress<int>(_ => { }));
+            _market = new MarketSnapshot { Indices = indices, Stocks = stocks, LoadedAt = DateTime.Now };
+            if (indices.Count == 0 && stocks.Count == 0)
+                _error = "Không tải được dữ liệu (CORS hoặc API). Thử lại sau.";
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private async Task LoadSectors()
+    {
+        _busy = true;
+        _error = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            Market.ClearCache();
+            var symbols = await Sectors.GetAllSymbolsAsync();
+            var stocks = await Market.GetLatestManyAsync(symbols, new Progress<int>(n => { }));
+            _sectorData = await Sectors.AnalyzeAsync(stocks);
+            if (_sectorData.Count == 0) _error = "Không có dữ liệu ngành.";
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; await InvokeAsync(StateHasChanged); }
+    }
+}

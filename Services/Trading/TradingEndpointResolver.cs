@@ -77,6 +77,9 @@ public class TradingEndpointResolver
         if (p.StartsWith("dnse-", StringComparison.OrdinalIgnoreCase))
             return $"https://services.entrade.com.vn/{p}";
 
+        if (p.StartsWith("cafef/", StringComparison.OrdinalIgnoreCase))
+            return RewritePrefix(p, "cafef", "https://banggia.cafef.vn");
+
         if (p.StartsWith("v4/", StringComparison.OrdinalIgnoreCase))
             return RewritePrefix(p, "v4", "https://api-finfo.vndirect.com.vn/v4");
 

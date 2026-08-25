@@ -1,0 +1,110 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@inject ITradingApiClient Api
+@inject IVnMarketClient Market
+@inject IndicatorService Indicators
+
+<div class="ts-panel">
+    <div class="ts-tabs">
+        <button class="ts-tab @(_sub == "news" ? "active" : "")" @onclick='() => _sub = "news"'>News brief</button>
+        <button class="ts-tab @(_sub == "thesis" ? "active" : "")" @onclick='() => _sub = "thesis"'>Draft thesis</button>
+    </div>
+    <p class="ts-muted mt-2" style="font-size:0.82rem">Dán tin thủ công. AI soạn thảo — người quyết định.</p>
+</div>
+
+@if (_sub == "news")
+{
+    <div class="ts-panel">
+        <textarea class="ts-input" rows="6" @bind="_newsRaw" placeholder="Dán nội dung tin tức..."></textarea>
+        <button class="ts-btn ts-btn-primary mt-2" @onclick="AnalyzeNews" disabled="@_busy">Phân tích (Gemini/Groq)</button>
+        @if (_brief is not null)
+        {
+            <div class="mt-3" style="font-size:0.88rem">
+                <p><strong>FACTS</strong><br/>@_brief.Facts</p>
+                <p><strong>SOURCES</strong><br/>@_brief.Sources</p>
+                <p><strong>IMPLICATIONS</strong><br/>@_brief.Implications</p>
+                <label><input type="checkbox" @bind="_briefVerified" /> Đã đối chiếu nguồn</label>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="ts-panel">
+        <input class="ts-input mb-2" @bind="_symbol" placeholder="Mã" />
+        <textarea class="ts-input mb-2" rows="3" @bind="_notes" placeholder="Ghi chú..."></textarea>
+        <button class="ts-btn ts-btn-primary" @onclick="DraftThesis" disabled="@_busy">Soạn thesis</button>
+        @if (!string.IsNullOrEmpty(_thesisText))
+        {
+            <pre class="mt-3" style="font-size:0.82rem;white-space:pre-wrap">@_thesisText</pre>
+            <button class="ts-btn ts-btn-outline mt-2" @onclick="() => OnThesisReady.InvokeAsync(_thesisText)">Copy sang Trading plan</button>
+        }
+    </div>
+}
+@if (_busy) { <div class="ts-spinner"></div> }
+@if (!string.IsNullOrEmpty(_error)) { <div class="ts-alert ts-alert-error mt-2">@_error</div> }
+
+@code {
+    [Parameter] public string Symbol { get; set; } = "VNM";
+    [Parameter] public EventCallback<string> OnThesisReady { get; set; }
+
+    private string _sub = "news";
+    private string _symbol = "VNM";
+    private string _newsRaw = "";
+    private string _notes = "";
+    private string? _thesisText;
+    private NewsBrief? _brief;
+    private bool _briefVerified;
+    private string? _error;
+    private bool _busy;
+
+    protected override void OnParametersSet() => _symbol = Symbol;
+
+    private async Task AnalyzeNews()
+    {
+        if (string.IsNullOrWhiteSpace(_newsRaw)) return;
+        _busy = true;
+        _error = null;
+        var text = await Api.ChatAsync(PromptLibrary.News(_newsRaw));
+        _brief = new NewsBrief { Raw = _newsRaw };
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _brief.Facts = _newsRaw;
+            _brief.Sources = "(AI không khả dụng)";
+            _error = "AI skip — hiển thị raw.";
+        }
+        else ParseNews(text, _brief);
+        _busy = false;
+    }
+
+    private async Task DraftThesis()
+    {
+        _busy = true;
+        _error = null;
+        var hist = await Market.GetHistoricalAsync(_symbol.Trim().ToUpperInvariant(), 250);
+        var ta = Indicators.Calculate(_symbol, hist);
+        var numbers = ta is null
+            ? "(không có chỉ báo)"
+            : $"{ta.Symbol} close={ta.LatestClose:N2} trend={ta.Trend} RSI={ta.RSI:N1} signal={ta.TradingSignal.Action}";
+        _thesisText = await Api.ChatAsync(PromptLibrary.Thesis(_symbol, numbers, _notes)) ?? "AI không khả dụng.";
+        _busy = false;
+    }
+
+    private static void ParseNews(string text, NewsBrief brief)
+    {
+        brief.Facts = Slice(text, "FACTS", "SOURCES");
+        brief.Sources = Slice(text, "SOURCES", "IMPLICATIONS");
+        brief.Implications = Slice(text, "IMPLICATIONS", null);
+        if (string.IsNullOrWhiteSpace(brief.Facts)) brief.Facts = text;
+    }
+
+    private static string Slice(string text, string from, string? until)
+    {
+        var i = text.IndexOf(from, StringComparison.OrdinalIgnoreCase);
+        if (i < 0) return "";
+        i += from.Length;
+        var j = until is null ? text.Length : text.IndexOf(until, i, StringComparison.OrdinalIgnoreCase);
+        if (j < 0) j = text.Length;
+        return text[i..j].Trim().TrimStart(':', '-', '\n', '\r', ' ');
+    }
+}

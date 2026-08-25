@@ -425,7 +425,19 @@ Fly.io **proxy** request `/api/osint/*` và `/api/news/telegram` sang VPS OSINT.
 
 ---
 
-## Blazor — URL config (`appsettings.json`)
+## Blazor module `/trading` (phạm vi được owner cho phép)
+
+Chỉ giữ **Stock** và **Real Estate**:
+
+| Route | Trang |
+|---|---|
+| `/trading` | Redirect → `/trading/stock` |
+| `/trading/stock` | VN Stock Desk + scanner |
+| `/trading/real-estate` | BĐS + chart |
+
+Các tab Crypto, Forex, Macro, Community, Portfolio… đã gỡ khỏi UI.
+
+---
 
 ```json
 "TradingApi": {

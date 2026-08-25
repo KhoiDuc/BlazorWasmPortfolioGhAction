@@ -1,39 +1,70 @@
 @page "/trading/stock"
 @layout TradingLayout
 @using BlazorWasmPortfolioGhAction.Models.Trading
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading
+@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
 @using System.Text.Json
 @inject ITradingApiClient Api
 
 <div class="ts-page">
-    <div class="ts-tabs">
-        <button class="ts-tab @(_tab == "vn" ? "active" : "")" @onclick='() => _tab = "vn"'>VN Stock</button>
-        <button class="ts-tab @(_tab == "sector" ? "active" : "")" @onclick='() => _tab = "sector"'>Sector</button>
-        <button class="ts-tab @(_tab == "rrg" ? "active" : "")" @onclick='() => _tab = "rrg"'>VN RRG</button>
-        <button class="ts-tab @(_tab == "global" ? "active" : "")" @onclick='() => _tab = "global"'>Global</button>
+    <div class="ts-panel">
+        <div class="ts-header">
+            <div>
+                <h2>VN Stock Desk</h2>
+                <p>Thị trường VN — AI soạn thảo, người quyết định. Không tự đặt lệnh.</p>
+            </div>
+            <button class="ts-btn ts-btn-outline" @onclick="RunDailySequence" disabled="@_dailyBusy">Chuỗi ngày (A→C→D)</button>
+        </div>
+        <div class="ts-tabs">
+            <button class="ts-tab @(_main == "desk" ? "active" : "")" @onclick='() => SetMain("desk")'>VnDesk</button>
+            <button class="ts-tab @(_main == "scan" ? "active" : "")" @onclick='() => SetMain("scan")'>Scan</button>
+            <button class="ts-tab @(_main == "sector" ? "active" : "")" @onclick='() => _main = "sector"'>Sector</button>
+            <button class="ts-tab @(_main == "rrg" ? "active" : "")" @onclick='() => _main = "rrg"'>VN RRG</button>
+            <button class="ts-tab @(_main == "global" ? "active" : "")" @onclick='() => SetMain("global")'>Global</button>
+        </div>
     </div>
 
-    @if (_tab == "vn")
+    @if (_main == "desk")
     {
-        <div class="ts-panel">
-            <div class="ts-header">
-                <div>
-                    <h2>Vietnam Stock Evaluator</h2>
-                    <p>Search &amp; discover potential VN stocks</p>
-                </div>
-                <button class="ts-btn ts-btn-primary" @onclick="Scan" disabled="@_scanning">Scan VN Stocks</button>
-            </div>
-            <div class="ts-field">
-                <label class="ts-label">Stock symbol</label>
-                <div style="display:flex;gap:8px">
-                    <input class="ts-input" @bind="_selectedStock" placeholder="VNM, FPT..." />
-                    <button class="ts-btn ts-btn-outline" @onclick="LoadTcbs">TCBS Eval</button>
-                </div>
-            </div>
+        <div class="ts-tabs" style="margin-bottom:0.5rem">
+            <button class="ts-tab @(_desk == "market" ? "active" : "")" @onclick='() => _desk = "market"'>A Thị trường</button>
+            <button class="ts-tab @(_desk == "analysis" ? "active" : "")" @onclick='() => _desk = "analysis"'>B Phân tích</button>
+            <button class="ts-tab @(_desk == "screen" ? "active" : "")" @onclick='() => _desk = "screen"'>C Lọc</button>
+            <button class="ts-tab @(_desk == "decide" ? "active" : "")" @onclick='() => _desk = "decide"' title="Size → Pre-trade → Plan → Alert (không đặt lệnh)">D Quyết định</button>
+            <button class="ts-tab @(_desk == "journal" ? "active" : "")" @onclick='() => _desk = "journal"'>E Nhật ký</button>
+            <button class="ts-tab @(_desk == "ai" ? "active" : "")" @onclick='() => _desk = "ai"'>F AI</button>
         </div>
 
-        @if (_tcbsJson.HasValue)
+        @if (_desk == "market")
         {
-            <div class="ts-panel"><pre style="font-size:0.78rem;overflow:auto;max-height:240px">@_tcbsJson.Value.ToString()</pre></div>
+            <VnMarketPanel OnSymbolSelected="SelectSymbol" />
+        }
+        else if (_desk == "analysis")
+        {
+            <VnAnalysisPanel @ref="_analysis" Symbol="@_selectedStock" />
+        }
+        else if (_desk == "screen")
+        {
+            <VnScreenerPanel OnSymbolSelected="SelectSymbol" />
+        }
+        else if (_desk == "decide")
+        {
+            <VnWorkflowPanel Symbol="@_selectedStock"
+                             Mode="decide"
+                             AlertSignal="@_alertSignal"
+                             TaPrice="@TaPrice"
+                             TaStop="@TaStop"
+                             TaTarget="@TaTarget"
+                             OnSizeCalculated="OnSizeCalculated" />
+        }
+        else if (_desk == "journal")
+        {
+            <VnWorkflowPanel Symbol="@_selectedStock" Mode="journal" />
+        }
+        else
+        {
+            <VnAiPanel Symbol="@_selectedStock" OnThesisReady="OnThesisReady" />
         }
 
         @if (!string.IsNullOrEmpty(_selectedStock))
@@ -43,16 +74,50 @@
             </div>
             <PriceAlertWidget Symbol="@_selectedStock" AssetType="stock" />
         }
+    }
+    else if (_main == "scan")
+    {
+        <div class="ts-panel">
+            <div class="ts-header">
+                <div>
+                    <h2>VN Signal Scanner</h2>
+                    <p>Backend watchlist — tín hiệu kỹ thuật</p>
+                </div>
+                @if (_vnData?.LatestUpdated is not null)
+                {
+                    <span class="ts-updated">Updated: @_vnData.LatestUpdated.Value.ToLocalTime():g</span>
+                }
+                <button class="ts-btn ts-btn-primary" @onclick="Scan" disabled="@_scanning">Scan VN Stocks</button>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <input class="ts-input" style="max-width:200px" @bind="_filter" placeholder="Filter symbol..." />
+                <select class="ts-select" style="max-width:220px" @bind="_signalFilter">
+                    <option value="">All signals</option>
+                    <option value="near_52w_ath">Near 52W high</option>
+                    <option value="near_ath">Near ATH</option>
+                    <option value="ema9_above_ema21">Uptrend EMA</option>
+                    <option value="top_growth_20d">Top growth 20d</option>
+                </select>
+                <input class="ts-input" style="max-width:140px" @bind="_selectedStock" placeholder="VNM, FPT..." />
+                <button class="ts-btn ts-btn-outline" @onclick="LoadTcbs">TCBS Eval</button>
+            </div>
+        </div>
 
-        @if (_vnData?.Data?.Length > 0)
+        <TcbsCard Symbol="@_selectedStock" Data="@_tcbsJson" />
+
+        @if (_loading)
+        {
+            <div class="ts-panel ts-empty"><div class="ts-spinner"></div><span>Đang tải watchlist...</span></div>
+        }
+        else if (FilteredStocks.Length > 0)
         {
             <div class="ts-panel ts-table-wrap">
                 <table class="ts-table">
                     <thead><tr><th>Symbol</th><th>Volume</th><th>Score</th><th>Signal</th></tr></thead>
                     <tbody>
-                        @foreach (var s in _vnData.Data)
+                        @foreach (var s in FilteredStocks)
                         {
-                            <tr @onclick="() => _selectedStock = s.Symbol">
+                            <tr class="@(_selectedStock == s.Symbol ? "selected" : "")" @onclick="() => SelectSymbol(s.Symbol)">
                                 <td><strong>@s.Symbol</strong></td>
                                 <td>@s.Volume.ToString("N0")</td>
                                 <td class="@(s.ScoreDiff >= 0 ? "ts-positive" : "ts-negative")">@s.ScoreDiff.ToString("F2")%</td>
@@ -63,22 +128,27 @@
                 </table>
             </div>
         }
+
+        @if (!string.IsNullOrEmpty(_selectedStock))
+        {
+            <div class="ts-chart-wrap">
+                <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={_selectedStock}")" width="100%" height="380" frameborder="0" title="Vietstock chart"></iframe>
+            </div>
+            <PriceAlertWidget Symbol="@_selectedStock" AssetType="stock" />
+        }
     }
-    else if (_tab == "sector")
+    else if (_main == "sector")
     {
         <div class="ts-panel">
-            <div class="ts-header"><div><h2>VN Sector Categories</h2><p>Vietstock sector heatmap &amp; category view</p></div></div>
-            <div class="ts-field">
-                <label class="ts-label">Sector iframe URL</label>
-                <select class="ts-select" @bind="_sectorUrl">
-                    <option value="https://finance.vietstock.vn/chi-so-nganh.htm">Sector Index</option>
-                    <option value="https://finance.vietstock.vn/doanh-nghiep-nhom-nganh.htm">Industry Groups</option>
-                </select>
-            </div>
-            <iframe src="@_sectorUrl" width="100%" height="520" style="border:1px solid #e2e8f0;border-radius:12px" title="Vietstock sectors"></iframe>
+            <div class="ts-header"><div><h2>VN Sector Categories</h2><p>Vietstock sector heatmap</p></div></div>
+            <select class="ts-select" @bind="_sectorUrl">
+                <option value="https://finance.vietstock.vn/chi-so-nganh.htm">Sector Index</option>
+                <option value="https://finance.vietstock.vn/doanh-nghiep-nhom-nganh.htm">Industry Groups</option>
+            </select>
+            <iframe src="@_sectorUrl" width="100%" height="520" style="border:1px solid #e2e8f0;border-radius:12px;margin-top:0.75rem" title="Vietstock sectors"></iframe>
         </div>
     }
-    else if (_tab == "rrg")
+    else if (_main == "rrg")
     {
         <div class="ts-panel">
             <img src="@Api.ProxyUrl("vnstock_rrgchart")" alt="VN RRG" class="ts-rrg-img" loading="lazy" />
@@ -117,16 +187,40 @@
 </div>
 
 @code {
-    private string _tab = "vn";
+    private string _main = "desk";
+    private string _desk = "market";
     private WatchlistResponse<StockSignal>? _vnData;
     private WatchlistResponse<WorldStock>? _worldData;
     private string _selectedStock = "VNM";
     private string _globalSymbol = "";
     private string _sectorUrl = "https://finance.vietstock.vn/chi-so-nganh.htm";
     private JsonElement? _tcbsJson;
+    private string _filter = "";
+    private string _signalFilter = "";
     private bool _scanning;
+    private bool _loading;
+    private bool _dailyBusy;
+    private SizeResult? _lastSize;
+    private string? _alertSignal;
+    private VnAnalysisPanel? _analysis;
+
+    private decimal? TaPrice => _analysis?.LastTa?.LatestClose;
+    private decimal? TaStop => _analysis?.LastTa?.TradingSignal.StopLoss;
+    private decimal? TaTarget => _analysis?.LastTa?.TradingSignal.TakeProfit;
+
+    private StockSignal[] FilteredStocks => (_vnData?.Data ?? [])
+        .Where(s => string.IsNullOrEmpty(_filter) || s.Symbol.Contains(_filter, StringComparison.OrdinalIgnoreCase))
+        .Where(s => string.IsNullOrEmpty(_signalFilter) || s.SignalType == _signalFilter)
+        .ToArray();
 
     protected override void OnInitialized() => _ = LoadInBackgroundAsync();
+
+    private void SetMain(string tab)
+    {
+        _main = tab;
+        if (tab == "scan" && _vnData is null) _ = LoadScanAsync();
+        if (tab == "global" && _worldData is null) _ = LoadWorldAsync();
+    }
 
     private async Task LoadInBackgroundAsync()
     {
@@ -139,6 +233,36 @@
         await InvokeAsync(StateHasChanged);
     }
 
+    private async Task LoadScanAsync()
+    {
+        _loading = true;
+        await InvokeAsync(StateHasChanged);
+        try { _vnData = await Api.GetPotentialSymbolsAsync(string.IsNullOrEmpty(_signalFilter) ? null : _signalFilter); }
+        catch { }
+        finally { _loading = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private async Task LoadWorldAsync()
+    {
+        try { _worldData = await Api.GetPotentialWorldSymbolsAsync(); }
+        catch { }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void SelectSymbol(string sym)
+    {
+        _selectedStock = sym.Trim().ToUpperInvariant();
+        _alertSignal = $"{_selectedStock} selected from screener/market";
+    }
+
+    private void OnSizeCalculated(SizeResult? size) => _lastSize = size;
+
+    private Task OnThesisReady(string thesis)
+    {
+        _desk = "decide";
+        return Task.CompletedTask;
+    }
+
     private async Task LoadTcbs()
     {
         if (string.IsNullOrWhiteSpace(_selectedStock)) return;
@@ -149,15 +273,31 @@
     {
         _scanning = true;
         await Api.RunSshScriptAsync("vnstock_potential");
-        _vnData = await Api.GetPotentialSymbolsAsync();
+        await LoadScanAsync();
         _scanning = false;
     }
 
     private async Task ScanWorld()
     {
         await Api.RunSshScriptAsync("world_potential");
-        _worldData = await Api.GetPotentialWorldSymbolsAsync();
+        await LoadWorldAsync();
     }
 
     private Task ScanRrg() => Api.RunSshScriptAsync("vnstock_rrg");
+
+    private async Task RunDailySequence()
+    {
+        _dailyBusy = true;
+        _main = "desk";
+        _desk = "market";
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(300);
+        _desk = "screen";
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(300);
+        _desk = "analysis";
+        await InvokeAsync(StateHasChanged);
+        _dailyBusy = false;
+        _desk = "decide";
+    }
 }

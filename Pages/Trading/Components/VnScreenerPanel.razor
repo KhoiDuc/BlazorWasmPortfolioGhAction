@@ -1,0 +1,160 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@inject IVnMarketClient Market
+@inject VnScreenerService Screener
+@inject VnDeskOptions Options
+@inject IndicatorService Indicators
+@inject WatchlistScorer Scorer
+@inject IVnDeskStore Store
+
+<div class="ts-panel">
+    <div class="ts-tabs">
+        <button class="ts-tab @(_sub == "screen" ? "active" : "")" @onclick='() => _sub = "screen"'>Screener</button>
+        <button class="ts-tab @(_sub == "watch" ? "active" : "")" @onclick='() => _sub = "watch"'>Watchlist chấm điểm</button>
+    </div>
+    @if (_sub == "screen")
+    {
+        <div class="ts-field mt-2">
+            <label class="ts-label">Danh sách</label>
+            <select class="ts-select" @bind="_listKey">
+                <option value="VN30">VN30</option>
+                <option value="HOSE">HOSE</option>
+                <option value="HNX30">HNX30</option>
+                <option value="UPCOM">UPCOM</option>
+                <option value="NganHang">Ngân hàng</option>
+            </select>
+        </div>
+        <button class="ts-btn ts-btn-primary mt-2" @onclick="RunScreener" disabled="@_busy">Quét @_listKey</button>
+        @if (_progress > 0) { <p class="ts-muted mt-1">@_progress / @_progressTotal</p> }
+    }
+    else
+    {
+        <div class="ts-field mt-2">
+            <label class="ts-label">Danh mã (cách nhau dấu phẩy, tối đa 10)</label>
+            <input class="ts-input" @bind="_watchSymbols" placeholder="VNM,FPT,MWG..." />
+        </div>
+        <button class="ts-btn ts-btn-primary mt-2" @onclick="RunWatchlist" disabled="@_busy">Chấm điểm</button>
+    }
+    @if (_busy) { <div class="ts-spinner mt-2"></div> }
+    @if (!string.IsNullOrEmpty(_error)) { <div class="ts-alert ts-alert-error mt-2">@_error</div> }
+</div>
+
+@if (_sub == "screen" && _screenResults.Count > 0)
+{
+    <div class="ts-panel ts-table-wrap">
+        <table class="ts-table">
+            <thead><tr><th>Mã</th><th>Giá</th><th>%</th><th>Score</th><th>Lý do</th></tr></thead>
+            <tbody>
+                @foreach (var s in _screenResults.Take(30))
+                {
+                    <tr @onclick="() => OnSymbolSelected.InvokeAsync(s.Symbol)" style="cursor:pointer">
+                        <td><strong>@s.Symbol</strong></td>
+                        <td>@s.LastPrice.ToString("N2")</td>
+                        <td class="@(s.PriceChange >= 0 ? "ts-positive" : "ts-negative")">@s.PriceChange.ToString("F2")%</td>
+                        <td>@s.PotentialScore.ToString("F1")</td>
+                        <td style="font-size:0.75rem">@s.Reason</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else if (_sub == "watch" && _watchScores.Count > 0)
+{
+    <div class="ts-panel">
+        <p class="ts-muted" style="font-size:0.82rem">Tiêu chí (pass ≥ 12/20): @string.Join(" | ", _criteria)</p>
+    </div>
+    <div class="ts-panel ts-table-wrap">
+        <table class="ts-table">
+            <thead><tr><th>Mã</th><th>LQ</th><th>Trend</th><th>RSI</th><th>Support</th><th>Vol</th><th>Tổng</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var s in _watchScores)
+                {
+                    <tr @onclick="() => OnSymbolSelected.InvokeAsync(s.Symbol)" style="cursor:pointer">
+                        <td><strong>@s.Symbol</strong></td>
+                        <td>@s.Liquidity</td>
+                        <td>@s.Trend</td>
+                        <td>@s.Rsi</td>
+                        <td>@s.NearSupport</td>
+                        <td>@s.Volume</td>
+                        <td><strong>@s.Total</strong></td>
+                        <td><span class="ts-signal @(s.Pass ? "ts-signal-near_ath" : "")">@s.Note</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback<string> OnSymbolSelected { get; set; }
+
+    private string _sub = "screen";
+    private string _listKey = "VN30";
+    private string _watchSymbols = "";
+    private List<PotentialStock> _screenResults = [];
+    private List<WatchlistScore> _watchScores = [];
+    private List<string> _criteria = [];
+    private int _progress;
+    private int _progressTotal;
+    private string? _error;
+    private bool _busy;
+
+    private async Task RunScreener()
+    {
+        _busy = true;
+        _error = null;
+        _screenResults = [];
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var lists = await Screener.GetListsAsync();
+            if (!lists.TryGetValue(_listKey, out var symbols) || symbols.Count == 0)
+            {
+                _error = "Danh sách rỗng.";
+                return;
+            }
+            _progressTotal = symbols.Count;
+            var histAll = new List<StockData>();
+            foreach (var sym in symbols)
+            {
+                var h = await Market.GetHistoricalAsync(sym, Options.ScreenerDays);
+                histAll.AddRange(h);
+                _progress++;
+                await InvokeAsync(StateHasChanged);
+            }
+            _screenResults = Screener.Scan(histAll);
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private async Task RunWatchlist()
+    {
+        _busy = true;
+        _error = null;
+        _watchScores = [];
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var state = await Store.GetWatchlistAsync();
+            _criteria = state.Criteria;
+            var symbols = string.IsNullOrWhiteSpace(_watchSymbols)
+                ? (await Screener.GetListsAsync()).GetValueOrDefault("VN30")?.Take(10).ToList() ?? []
+                : _watchSymbols.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(s => s.ToUpperInvariant()).Take(10).ToList();
+            foreach (var sym in symbols)
+            {
+                var hist = await Market.GetHistoricalAsync(sym, 250);
+                var ta = Indicators.Calculate(sym, hist);
+                if (ta is not null)
+                    _watchScores.Add(Scorer.Score(ta));
+            }
+            state.LastScores = _watchScores;
+            state.UpdatedAt = DateTime.Now;
+            await Store.SaveWatchlistAsync(state);
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; await InvokeAsync(StateHasChanged); }
+    }
+}

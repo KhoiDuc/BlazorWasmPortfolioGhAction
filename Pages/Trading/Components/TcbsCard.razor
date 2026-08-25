@@ -1,0 +1,62 @@
+@using System.Text.Json
+
+@if (Data.HasValue)
+{
+    <div class="ts-panel">
+        <h4 style="margin:0 0 0.75rem">TCBS — @Symbol</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;font-size:0.85rem">
+            @foreach (var row in ExtractFields(Data.Value))
+            {
+                <div>
+                    <span class="ts-muted">@row.Label</span><br/>
+                    <strong>@row.Value</strong>
+                </div>
+            }
+        </div>
+        @if (ExtractFields(Data.Value).Count == 0)
+        {
+            <pre style="font-size:0.78rem;overflow:auto;max-height:200px;margin-top:0.75rem">@Data.Value.ToString()</pre>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string Symbol { get; set; } = "";
+    [Parameter] public JsonElement? Data { get; set; }
+
+    private static List<(string Label, string Value)> ExtractFields(JsonElement root)
+    {
+        var rows = new List<(string, string)>();
+        TryAdd(root, rows, "price", "Giá");
+        TryAdd(root, rows, "targetPrice", "Target");
+        TryAdd(root, rows, "recommendation", "Khuyến nghị");
+        TryAdd(root, rows, "pe", "P/E");
+        TryAdd(root, rows, "pb", "P/B");
+        TryAdd(root, rows, "eps", "EPS");
+        TryAdd(root, rows, "roe", "ROE");
+        TryAdd(root, rows, "marketCap", "Vốn hóa");
+        if (root.TryGetProperty("financialRatio", out var fr))
+        {
+            TryAdd(fr, rows, "pe", "P/E");
+            TryAdd(fr, rows, "pb", "P/B");
+            TryAdd(fr, rows, "roe", "ROE");
+            TryAdd(fr, rows, "eps", "EPS");
+        }
+        if (root.TryGetProperty("company", out var co) && co.TryGetProperty("shortName", out var sn))
+            rows.Insert(0, ("Tên", sn.GetString() ?? ""));
+        return rows.Where(r => !string.IsNullOrWhiteSpace(r.Item2)).DistinctBy(r => r.Item1).ToList();
+    }
+
+    private static void TryAdd(JsonElement el, List<(string, string)> rows, string prop, string label)
+    {
+        if (!el.TryGetProperty(prop, out var p)) return;
+        var val = p.ValueKind switch
+        {
+            JsonValueKind.String => p.GetString(),
+            JsonValueKind.Number => p.GetRawText(),
+            JsonValueKind.True or JsonValueKind.False => p.GetBoolean().ToString(),
+            _ => null
+        };
+        if (!string.IsNullOrWhiteSpace(val)) rows.Add((label, val));
+    }
+}

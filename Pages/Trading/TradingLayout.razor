@@ -8,28 +8,3 @@
 </main>
 
 <Footer />
-
-@if (_overlaysReady)
-{
-    <TradingNewsPanel />
-    <TradingChatbox />
-    <TradingAlertOverlay />
-}
-
-@code {
-    private bool _overlaysReady;
-
-    protected override Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-            _ = EnableOverlaysAfterIdleAsync();
-        return Task.CompletedTask;
-    }
-
-    private async Task EnableOverlaysAfterIdleAsync()
-    {
-        await Task.Delay(3000);
-        _overlaysReady = true;
-        await InvokeAsync(StateHasChanged);
-    }
-}

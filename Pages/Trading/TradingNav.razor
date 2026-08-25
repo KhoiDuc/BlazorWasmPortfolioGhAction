@@ -1,8 +1,3 @@
-@using BlazorWasmPortfolioGhAction.Services.Trading
-@inject ITradingAuthService Auth
-@inject NavigationManager Nav
-@implements IDisposable
-
 <nav class="trading-subnav" aria-label="Trading navigation">
     <div class="trading-subnav-inner">
         <button type="button" class="trading-subnav-toggle @(_menuOpen ? "open" : "")"
@@ -15,76 +10,15 @@
         </button>
 
         <div class="trading-subnav-links @(_menuOpen ? "open" : "")">
-            @foreach (var item in VisibleItems)
-            {
-                <NavLink href="@item.Href" Match="@item.Match" @onclick="CloseMenu">
-                    @item.Label
-                </NavLink>
-            }
-        </div>
-
-        <div class="trading-subnav-actions">
-            @if (_loggedIn && _user is not null)
-            {
-                <span class="trading-subnav-user">@_user.Name</span>
-                <button type="button" class="trading-subnav-btn" @onclick="Logout">Logout</button>
-            }
-            else
-            {
-                <NavLink class="trading-subnav-btn" href="trading/login" @onclick="CloseMenu">Login</NavLink>
-            }
+            <NavLink href="trading/stock" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">Stock</NavLink>
+            <NavLink href="trading/real-estate" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">Real Estate</NavLink>
         </div>
     </div>
 </nav>
 
 @code {
     private bool _menuOpen;
-    private bool _loggedIn;
-    private Models.Trading.DnseUserInfo? _user;
-
-    private record NavItem(string Href, string Label, bool AuthRequired = false, NavLinkMatch Match = NavLinkMatch.Prefix);
-
-    private static readonly NavItem[] NavItems =
-    [
-        new("trading", "Dashboard", Match: NavLinkMatch.All),
-        new("trading/crypto", "Crypto"),
-        new("trading/futures", "Futures"),
-        new("trading/stock", "Stock"),
-        new("trading/commodities", "Commodities"),
-        new("trading/forex", "Forex"),
-        new("trading/real-estate", "Real Estate"),
-        new("trading/central-banks", "Bonds"),
-        new("trading/macro", "Macro", AuthRequired: true),
-        new("trading/others", "Others"),
-        new("trading/portfolio", "Portfolio", AuthRequired: true),
-        new("trading/community", "Community", AuthRequired: true),
-    ];
-
-    private IEnumerable<NavItem> VisibleItems => NavItems.Where(i => !i.AuthRequired || _loggedIn);
-
-    protected override void OnInitialized()
-    {
-        Auth.AuthStateChanged += OnAuthChanged;
-        _ = RefreshAuthAsync();
-    }
-
-    private async Task RefreshAuthAsync()
-    {
-        _loggedIn = await Auth.IsLoggedInAsync();
-        _user = await Auth.GetUserInfoAsync();
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async void OnAuthChanged() => await InvokeAsync(RefreshAuthAsync);
 
     private void ToggleMenu() => _menuOpen = !_menuOpen;
     private void CloseMenu() => _menuOpen = false;
-
-    private async Task Logout()
-    {
-        await Auth.LogoutAsync();
-        Nav.NavigateTo("trading");
-    }
-
-    public void Dispose() => Auth.AuthStateChanged -= OnAuthChanged;
 }

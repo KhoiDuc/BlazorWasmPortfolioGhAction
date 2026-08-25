@@ -1,0 +1,160 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@inject IVnMarketClient Market
+@inject IndicatorService Indicators
+@inject PositionService Positions
+@inject ITradingApiClient Api
+
+<div class="ts-panel">
+    <div class="ts-tabs">
+        <button class="ts-tab @(_sub == "ta" ? "active" : "")" @onclick='() => _sub = "ta"'>Phân tích TA</button>
+        <button class="ts-tab @(_sub == "check" ? "active" : "")" @onclick='() => _sub = "check"'>Checklist</button>
+        <button class="ts-tab @(_sub == "pnl" ? "active" : "")" @onclick='() => _sub = "pnl"'>P&amp;L</button>
+    </div>
+    <div class="ts-field mt-2">
+        <label class="ts-label">Mã CK</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input class="ts-input" @bind="_symbol" placeholder="VNM, FPT..." />
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.85rem">
+                <input type="checkbox" @bind="_intraday" /> Intraday
+            </label>
+            <button class="ts-btn ts-btn-primary" @onclick="Analyze" disabled="@_busy">Phân tích</button>
+        </div>
+    </div>
+    @if (_busy) { <div class="ts-spinner mt-2"></div> }
+    @if (!string.IsNullOrEmpty(_error)) { <div class="ts-alert ts-alert-error mt-2">@_error</div> }
+</div>
+
+@if (_ta is not null && _sub == "ta")
+{
+    <div class="ts-panel">
+        <h4 style="margin:0 0 0.75rem">@_ta.Symbol — @_ta.Trend</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;font-size:0.85rem">
+            <div><span class="ts-muted">Close</span><br/><strong>@_ta.LatestClose.ToString("N2")</strong></div>
+            <div><span class="ts-muted">RSI</span><br/><strong>@_ta.RSI.ToString("F1")</strong></div>
+            <div><span class="ts-muted">SMA20/50/200</span><br/><strong>@_ta.SMA20.ToString("N1") / @_ta.SMA50.ToString("N1") / @_ta.SMA200.ToString("N1")</strong></div>
+            <div><span class="ts-muted">MACD</span><br/><strong>@_ta.MACD.ToString("F3")</strong></div>
+            <div><span class="ts-muted">ATR%</span><br/><strong>@_ta.ATR.ToString("F2")</strong></div>
+            <div><span class="ts-muted">Vol xTB</span><br/><strong>@_ta.VolumeRatio.ToString("F2")</strong></div>
+            <div><span class="ts-muted">Signal</span><br/><span class="ts-signal">@_ta.TradingSignal.Action</span></div>
+            <div><span class="ts-muted">SL / TP</span><br/><strong>@(_ta.TradingSignal.StopLoss?.ToString("N2") ?? "—") / @(_ta.TradingSignal.TakeProfit?.ToString("N2") ?? "—")</strong></div>
+        </div>
+        @if (_ta.Patterns.Count > 0)
+        {
+            <p class="mt-2 mb-0" style="font-size:0.82rem"><strong>Patterns:</strong> @string.Join("; ", _ta.Patterns.Take(5).Select(p => p.Name))</p>
+        }
+        @if (!string.IsNullOrEmpty(_ta.IntradayNote))
+        {
+            <p class="ts-alert ts-alert-info mt-2 mb-0">@_ta.IntradayNote</p>
+        }
+    </div>
+}
+else if (_checklist is not null && _sub == "check")
+{
+    <div class="ts-panel">
+        <h4>Checklist — @_checklist.Symbol</h4>
+        <p><strong>Context:</strong> @_checklist.Context</p>
+        <p><strong>Confirm / Invalidate:</strong> @_checklist.ConfirmInvalidate</p>
+        <p><strong>Risk:</strong> @_checklist.Risk</p>
+        <p><strong>Verify:</strong> @_checklist.Verify</p>
+        <p><strong>Observation:</strong> @_checklist.Observation</p>
+        <div class="ts-field">
+            <label class="ts-label">Ghi chú chart</label>
+            <textarea class="ts-input" rows="2" @bind="_notes"></textarea>
+        </div>
+        <button class="ts-btn ts-btn-outline" @onclick="AiChecklist" disabled="@_aiBusy">AI nhập trung lập</button>
+        @if (!string.IsNullOrEmpty(_aiText)) { <pre class="mt-2" style="font-size:0.78rem;white-space:pre-wrap">@_aiText</pre> }
+    </div>
+}
+else if (_sub == "pnl")
+{
+    <div class="ts-panel">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+            <input type="number" class="ts-input" @bind="_entry" placeholder="Giá mua" step="any" />
+            <input type="number" class="ts-input" @bind="_shares" placeholder="Số CP" />
+            <select class="ts-select" @bind="_broker">
+                <option value="A">VPS 0.15%</option>
+                <option value="B">SSI 0.15%</option>
+                <option value="C">TCBS 0.10%</option>
+                <option value="D">MBS 0.12%</option>
+            </select>
+            <button class="ts-btn ts-btn-primary" @onclick="CalcPnl">Tính P&amp;L</button>
+        </div>
+        @if (_pnl is not null)
+        {
+            <div class="mt-3" style="font-size:0.88rem">
+                <p>Broker: @_pnl.Broker | Phí: @_pnl.FeeRatePct%</p>
+                <p>Lãi/lỗ: <strong class="@(_pnl.ProfitLoss >= 0 ? "ts-positive" : "ts-negative")">@_pnl.ProfitLoss.ToString("N0") VND (@_pnl.ProfitLossPercent.ToString("F2")%)</strong></p>
+                <p class="ts-muted">@_pnl.Note</p>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string Symbol { get; set; } = "VNM";
+
+    private string _sub = "ta";
+    private string _symbol = "VNM";
+    private bool _intraday;
+    private TechnicalIndicators? _ta;
+    private TechnicalChecklist? _checklist;
+    private PositionResult? _pnl;
+    private string _notes = "";
+    private string? _error;
+    private string? _aiText;
+    private bool _busy;
+    private bool _aiBusy;
+    private decimal _entry;
+    private int _shares = 100;
+    private string _broker = "C";
+
+    protected override void OnParametersSet() => _symbol = Symbol;
+
+    public TechnicalIndicators? LastTa => _ta;
+
+    private async Task Analyze()
+    {
+        if (string.IsNullOrWhiteSpace(_symbol)) return;
+        _symbol = _symbol.Trim().ToUpperInvariant();
+        _busy = true;
+        _error = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var hist = await Market.GetHistoricalAsync(_symbol, 250);
+            _ta = Indicators.Calculate(_symbol, hist);
+            if (_ta is null)
+            {
+                _error = $"Không đủ dữ liệu TA cho {_symbol} (cần ~200 phiên, có {hist.Count}).";
+                return;
+            }
+            if (_intraday)
+            {
+                var ticks = await Market.FetchIntradayAsync(_symbol);
+                Indicators.ApplyIntraday(_ta, ticks);
+                if (ticks.Count == 0)
+                    _ta.IntradayNote = "Không có intraday (TCBS). Dùng dữ liệu daily.";
+            }
+            _checklist = Indicators.BuildTechnicalChecklist(_ta, _notes);
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private async Task AiChecklist()
+    {
+        if (_ta is null) return;
+        _aiBusy = true;
+        var numbers = $"{_ta.Symbol} close={_ta.LatestClose:N2} trend={_ta.Trend} RSI={_ta.RSI:N1} signal={_ta.TradingSignal.Action}";
+        _aiText = await Api.ChatAsync(PromptLibrary.NeutralChecklist(_ta.Symbol, numbers, _notes)) ?? "AI không khả dụng.";
+        _aiBusy = false;
+    }
+
+    private async Task CalcPnl()
+    {
+        if (_ta is null) await Analyze();
+        if (_ta is null) return;
+        _pnl = Positions.Calculate(_symbol, _entry, _shares, _ta.LatestClose, _broker);
+    }
+}
