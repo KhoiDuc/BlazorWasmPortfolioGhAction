@@ -1,0 +1,47 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading
+@inject ITradingApiClient Api
+@inject ITradingAuthService Auth
+
+<div style="border-top:1px solid #e2e8f0;padding-top:12px">
+    @if (_comments?.Length > 0)
+    {
+        @foreach (var c in _comments)
+        {
+            <div style="font-size:0.82rem;padding:6px 0;color:#475569">
+                <strong>@c.UserName:</strong> @c.Content
+            </div>
+        }
+    }
+    <div style="display:flex;gap:8px;margin-top:8px">
+        <input class="ts-input" style="font-size:0.82rem" @bind="_comment" placeholder="Add comment..." />
+        <button class="ts-btn ts-btn-outline" style="padding:4px 12px;font-size:0.78rem" @onclick="Submit">Reply</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int PostId { get; set; }
+
+    private CommunityComment[]? _comments;
+    private string _comment = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _comments = await Api.GetCommunityCommentsAsync(PostId);
+    }
+
+    private async Task Submit()
+    {
+        if (string.IsNullOrWhiteSpace(_comment)) return;
+        var user = await Auth.GetUserInfoAsync();
+        var userId = await Auth.GetUserIdAsync();
+        await Api.CreateCommunityCommentAsync(new
+        {
+            post_id = PostId,
+            user_id = userId,
+            user_name = user?.Name ?? "User",
+            content = _comment
+        });
+        _comment = "";
+        _comments = await Api.GetCommunityCommentsAsync(PostId);
+    }
+}

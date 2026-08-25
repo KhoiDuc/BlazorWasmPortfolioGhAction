@@ -1,0 +1,86 @@
+@page "/trading/community"
+@layout TradingLayout
+@using BlazorWasmPortfolioGhAction.Models.Trading
+@inject ITradingApiClient Api
+@inject ITradingAuthService Auth
+
+<div class="ts-page">
+    @if (!_authorized)
+    {
+        <div class="ts-panel ts-alert ts-alert-info">
+            Community requires login. <NavLink href="trading/login">Login</NavLink>
+        </div>
+    }
+    else
+    {
+        <div class="ts-panel">
+            <div class="ts-header">
+                <div><h2>Community</h2><p>Share ideas and market insights</p></div>
+            </div>
+            <div class="ts-field">
+                <textarea class="ts-input" rows="3" @bind="_newPost" placeholder="Share your trading idea..."></textarea>
+            </div>
+            <button class="ts-btn ts-btn-primary" @onclick="CreatePost" disabled="@_busy">Post</button>
+        </div>
+
+        @if (_loading) { <div class="ts-spinner"></div> }
+        else if (_posts?.Length > 0)
+        {
+            @foreach (var post in _posts.OrderByDescending(p => p.CreatedAt))
+            {
+                <div class="ts-panel">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                        <strong>@post.UserName</strong>
+                        <span class="ts-updated">@post.CreatedAt.ToLocalTime().ToString("g")</span>
+                    </div>
+                    <p style="font-size:0.9rem;margin:0 0 12px">@post.Content</p>
+                    <CommunityComments PostId="post.Id" />
+                </div>
+            }
+        }
+        else
+        {
+            <div class="ts-empty">No posts yet. Be the first!</div>
+        }
+    }
+</div>
+
+@code {
+    private bool _authorized;
+    private bool _loading = true;
+    private bool _busy;
+    private CommunityPost[]? _posts;
+    private string _newPost = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _authorized = await Auth.IsLoggedInAsync();
+        if (_authorized) await Load();
+    }
+
+    private async Task Load()
+    {
+        _loading = true;
+        _posts = await Api.GetCommunityPostsAsync();
+        _loading = false;
+    }
+
+    private async Task CreatePost()
+    {
+        if (string.IsNullOrWhiteSpace(_newPost)) return;
+        _busy = true;
+        var user = await Auth.GetUserInfoAsync();
+        var userId = await Auth.GetUserIdAsync();
+        await Api.CreateCommunityPostAsync(new
+        {
+            user_id = userId,
+            user_name = user?.Name ?? "User",
+            user_code = user?.CustodyCode ?? "",
+            content = _newPost,
+            image = ""
+        });
+        _newPost = "";
+        await Load();
+        _busy = false;
+    }
+}

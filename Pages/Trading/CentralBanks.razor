@@ -1,0 +1,38 @@
+@page "/trading/central-banks"
+@layout TradingLayout
+
+<div class="ts-page">
+    <div class="ts-panel">
+        <div class="ts-header">
+            <div>
+                <h2>Central Banks &amp; Macro Rates</h2>
+                <p>Track monetary policy and bond yields</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="ts-panel">
+        <h3 style="margin:0 0 1rem">Bond Yield Cheat Sheet</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div style="padding:16px;background:#f8fafc;border-radius:8px">
+                <strong>2-Year (US2Y)</strong>
+                <p style="font-size:0.85rem;margin-top:8px">Reflects short-term Fed policy expectations. Rising = hawkish; falling = dovish.</p>
+            </div>
+            <div style="padding:16px;background:#f8fafc;border-radius:8px">
+                <strong>10-Year (US10Y)</strong>
+                <p style="font-size:0.85rem;margin-top:8px">Long-term growth &amp; inflation expectations. Key for equity valuations.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="ts-panel">
+        <h3 style="margin:0 0 1rem">Yield Charts</h3>
+        <TradingViewChart Symbol="TVC:US02Y" Height="300" />
+        <TradingViewChart Symbol="TVC:US10Y" Height="300" />
+    </div>
+
+    <div class="ts-panel">
+        <h3 style="margin:0 0 1rem">Rate Probabilities</h3>
+        <iframe src="https://centralbank.watch/" width="100%" height="500" style="border:1px solid #e2e8f0;border-radius:12px" title="Central bank watch"></iframe>
+    </div>
+</div>

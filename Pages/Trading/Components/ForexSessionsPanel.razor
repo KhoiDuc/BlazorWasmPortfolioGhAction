@@ -1,0 +1,26 @@
+<div class="ts-panel">
+    <h3 style="margin:0 0 1rem">Forex Trading Sessions (UTC+7)</h3>
+    @{
+        var now = DateTime.UtcNow.AddHours(7);
+        var hour = now.Hour;
+    }
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+        <div class="ts-panel" style="margin:0;border-left:4px solid #3b82f6">
+            <strong>Sydney</strong>
+            <p style="font-size:0.85rem;margin:4px 0">@(hour >= 5 && hour < 14 ? "OPEN" : "Closed")</p>
+        </div>
+        <div class="ts-panel" style="margin:0;border-left:4px solid #10b981">
+            <strong>Tokyo</strong>
+            <p style="font-size:0.85rem;margin:4px 0">@(hour >= 6 && hour < 15 ? "OPEN" : "Closed")</p>
+        </div>
+        <div class="ts-panel" style="margin:0;border-left:4px solid #f59e0b">
+            <strong>London</strong>
+            <p style="font-size:0.85rem;margin:4px 0">@(hour >= 14 && hour < 23 ? "OPEN" : "Closed")</p>
+        </div>
+        <div class="ts-panel" style="margin:0;border-left:4px solid #8b5cf6">
+            <strong>New York</strong>
+            <p style="font-size:0.85rem;margin:4px 0">@(hour >= 19 || hour < 4 ? "OPEN" : "Closed")</p>
+        </div>
+    </div>
+    <p class="ts-updated mt-3">Current time (UTC+7): @now.ToString("HH:mm:ss")</p>
+</div>

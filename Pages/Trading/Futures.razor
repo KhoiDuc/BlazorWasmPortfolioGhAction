@@ -1,0 +1,87 @@
+@page "/trading/futures"
+@layout TradingLayout
+@using BlazorWasmPortfolioGhAction.Models.Trading
+@inject ITradingApiClient Api
+
+<div class="ts-page">
+    <div class="ts-tabs">
+        <button class="ts-tab @(_tab == "coins" ? "active" : "")" @onclick='() => _tab = "coins"'>Potential Futures</button>
+        <button class="ts-tab @(_tab == "rrg" ? "active" : "")" @onclick='() => _tab = "rrg"'>Futures RRG</button>
+    </div>
+
+    @if (_tab == "coins")
+    {
+        <div class="ts-panel">
+            <div class="ts-header">
+                <div>
+                    <h2>Futures Scanner</h2>
+                    <p>High-volume perpetual contracts &amp; EMA9/EMA21 crossovers</p>
+                </div>
+            </div>
+            <div class="ts-field">
+                <input class="ts-input" @bind="_symbolInput" placeholder="BTCUSDT" />
+                <button class="ts-btn ts-btn-primary mt-2" @onclick="SelectInput">View Chart</button>
+            </div>
+            <button class="ts-btn ts-btn-primary" @onclick="Scan" disabled="@_scanning">Start Scanning</button>
+        </div>
+
+        <TradingViewChart Symbol="@_selectedSymbol" />
+        <PriceAlertWidget Symbol="@_selectedSymbol" AssetType="futures" />
+
+        @if (_loading) { <div class="ts-spinner"></div> }
+        else if (_data?.Data?.Length > 0)
+        {
+            <div class="ts-panel ts-table-wrap">
+                <table class="ts-table">
+                    <thead><tr><th>Symbol</th><th>Market Cap</th><th>Signal</th></tr></thead>
+                    <tbody>
+                        @foreach (var f in _data.Data)
+                        {
+                            <tr @onclick="() => Select(f.Symbol)">
+                                <td><strong>@f.Symbol</strong></td>
+                                <td>@f.MarketCap.ToString("N0")</td>
+                                <td><span class="ts-signal ts-signal-@f.SignalType">@f.SignalLabel</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="ts-panel">
+            <img src="@Api.ProxyUrl("futures_rrgchart")" alt="Futures RRG" class="ts-rrg-img" />
+            <button class="ts-btn ts-btn-primary mt-3" @onclick="ScanRrg">Refresh RRG</button>
+        </div>
+    }
+</div>
+
+@code {
+    private string _tab = "coins";
+    private WatchlistResponse<FuturesSignal>? _data;
+    private string _selectedSymbol = "BTCUSDT";
+    private string _symbolInput = "BTCUSDT";
+    private bool _loading = true;
+    private bool _scanning;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _data = await Api.GetPotentialFuturesAsync();
+        _loading = false;
+    }
+
+    private void Select(string s) { _selectedSymbol = s; _symbolInput = s; }
+    private void SelectInput() { if (!string.IsNullOrWhiteSpace(_symbolInput)) _selectedSymbol = _symbolInput.Trim().ToUpperInvariant(); }
+
+    private async Task Scan()
+    {
+        _scanning = true;
+        await Api.RunSshScriptAsync("futures_potential");
+        _data = await Api.GetPotentialFuturesAsync();
+        _scanning = false;
+    }
+
+    private Task ScanRrg() => Api.RunSshScriptAsync("futures_rrg");
+}

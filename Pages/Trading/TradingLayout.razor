@@ -1,0 +1,24 @@
+@inherits LayoutComponentBase
+
+<div class="ts-app">
+    <TradingNav />
+    <div class="ts-body">
+        @Body
+    </div>
+    <TradingNewsPanel />
+    <TradingChatbox />
+    <TradingAlertOverlay />
+</div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try { await JS.InvokeVoidAsync("eval", "void 0"); }
+            catch { }
+        }
+    }
+
+    [Inject] IJSRuntime JS { get; set; } = default!;
+}

@@ -1,0 +1,62 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading
+@inject ITradingApiClient Api
+
+<div class="ts-panel">
+    <h4 style="margin:0 0 0.75rem;font-size:0.95rem;"><i class="bi bi-bell"></i> Price Alert — @Symbol</h4>
+    <div class="ts-field">
+        <label class="ts-label">Alert price</label>
+        <input type="number" class="ts-input" @bind="_price" step="any" />
+    </div>
+    <div class="ts-field">
+        <label class="ts-label">Condition</label>
+        <select class="ts-select" @bind="_operator">
+            <option value="above">Price above</option>
+            <option value="below">Price below</option>
+        </select>
+    </div>
+    <button class="ts-btn ts-btn-primary" @onclick="CreateAlert" disabled="@_busy">Set Alert</button>
+    @if (!string.IsNullOrEmpty(_message))
+    {
+        <p class="ts-alert ts-alert-info mt-2 mb-0">@_message</p>
+    }
+    @if (_alerts?.Length > 0)
+    {
+        <ul style="margin-top:1rem;padding-left:1.2rem;font-size:0.85rem;">
+            @foreach (var a in _alerts.Where(x => x.Symbol == Symbol && x.AssetType == AssetType))
+            {
+                <li>@a.Operator @a.AlertPrice — <button class="ts-btn ts-btn-outline" style="padding:2px 8px;font-size:0.75rem" @onclick="() => DeleteAlert(a)">Remove</button></li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    [Parameter] public string Symbol { get; set; } = "";
+    [Parameter] public string AssetType { get; set; } = "crypto";
+
+    private double _price;
+    private string _operator = "above";
+    private string? _message;
+    private bool _busy;
+    private PriceAlert[]? _alerts;
+
+    protected override async Task OnInitializedAsync() => await LoadAlerts();
+
+    private async Task LoadAlerts() => _alerts = await Api.GetPriceAlertsAsync();
+
+    private async Task CreateAlert()
+    {
+        _busy = true;
+        _message = null;
+        await Api.CreatePriceAlertAsync(new CreateAlertRequest(Symbol, AssetType, _price, _operator));
+        _message = "Alert created.";
+        await LoadAlerts();
+        _busy = false;
+    }
+
+    private async Task DeleteAlert(PriceAlert a)
+    {
+        await Api.DeletePriceAlertAsync(a.Symbol, a.AssetType);
+        await LoadAlerts();
+    }
+}

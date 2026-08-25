@@ -1,0 +1,116 @@
+@page "/trading/portfolio"
+@layout TradingLayout
+@using BlazorWasmPortfolioGhAction.Models.Trading
+@inject ITradingApiClient Api
+@inject ITradingAuthService Auth
+@inject NavigationManager Nav
+
+<div class="ts-page">
+    @if (!_authorized)
+    {
+        <div class="ts-panel ts-alert ts-alert-info">
+            Please <NavLink href="trading/login">login</NavLink> to view your portfolio.
+        </div>
+    }
+    else
+    {
+        <div class="ts-panel">
+            <div class="ts-header">
+                <div>
+                    <h2>My Portfolio</h2>
+                    <p>Overview of holdings and journal</p>
+                </div>
+            </div>
+            <div class="ts-tabs">
+                <button class="ts-tab @(_tab == "balance" ? "active" : "")" @onclick='() => _tab = "balance"'>Balance</button>
+                <button class="ts-tab @(_tab == "journal" ? "active" : "")" @onclick='() => _tab = "journal"'>Journal</button>
+                <button class="ts-tab @(_tab == "deals" ? "active" : "")" @onclick='() => _tab = "deals"'>Deals</button>
+            </div>
+        </div>
+
+        @if (_tab == "balance")
+        {
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <div class="ts-alert ts-alert-error">@_error</div>
+            }
+            @if (_balanceJson is not null)
+            {
+                <div class="ts-panel">
+                    <pre style="font-size:0.82rem;overflow:auto">@_balanceJson</pre>
+                </div>
+            }
+            else if (!_loading)
+            {
+                <p class="ts-empty">Connect a real DNSE account to view balances. Demo mode shows sample data.</p>
+                @if (_isDemo)
+                {
+                    <div class="ts-panel">
+                        <h3>Demo Portfolio</h3>
+                        <p>Net Asset Value: <strong>1,250,000,000 VND</strong></p>
+                        <p>Cash: 350,000,000 VND | Stocks: 900,000,000 VND</p>
+                    </div>
+                }
+            }
+        }
+        else if (_tab == "journal")
+        {
+            <JournalComponent UserId="@(_userId ?? "")" />
+        }
+        else
+        {
+            @if (_dealsJson is not null)
+            {
+                <div class="ts-panel"><pre style="font-size:0.82rem;overflow:auto">@_dealsJson</pre></div>
+            }
+            else { <p class="ts-empty">No deals data.</p> }
+        }
+    }
+</div>
+
+@code {
+    private bool _authorized;
+    private bool _loading;
+    private bool _isDemo;
+    private string? _userId;
+    private string _tab = "balance";
+    private string? _error;
+    private string? _balanceJson;
+    private string? _dealsJson;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _authorized = await Auth.IsLoggedInAsync();
+        if (!_authorized) return;
+
+        _userId = await Auth.GetUserIdAsync();
+        var token = await Auth.GetTokenAsync();
+        _isDemo = token == "demo-token";
+
+        if (!_isDemo)
+            await LoadDnseData();
+    }
+
+    private async Task LoadDnseData()
+    {
+        _loading = true;
+        try
+        {
+            var client = await Api.CreateAuthorizedClientAsync();
+            var accResp = await client.GetAsync(Api.ProxyUrl("dnse-order-service/accounts"));
+            if (!accResp.IsSuccessStatusCode)
+            {
+                _error = "Could not load DNSE accounts.";
+                _loading = false;
+                return;
+            }
+            var accJson = await accResp.Content.ReadAsStringAsync();
+            _balanceJson = accJson;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        _loading = false;
+    }
+}

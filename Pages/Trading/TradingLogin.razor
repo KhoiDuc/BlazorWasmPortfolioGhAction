@@ -1,0 +1,48 @@
+@page "/trading/login"
+@inject ITradingAuthService Auth
+@inject NavigationManager Nav
+
+<div class="ts-page" style="max-width:480px">
+    <div class="ts-panel">
+        <h2 style="text-align:center;margin:0 0 1.5rem">Trading Login</h2>
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <div class="ts-alert ts-alert-error">@_error</div>
+        }
+        <div class="ts-field">
+            <label class="ts-label">Email</label>
+            <input type="email" class="ts-input" @bind="_email" />
+        </div>
+        <div class="ts-field">
+            <label class="ts-label">Password</label>
+            <input type="password" class="ts-input" @bind="_password" />
+        </div>
+        <button class="ts-btn ts-btn-primary w-100 mb-2" @onclick="DoLogin" disabled="@_busy">Login (DNSE)</button>
+        <button class="ts-btn ts-btn-outline w-100" @onclick="DemoLogin" disabled="@_busy">Demo Login</button>
+    </div>
+</div>
+
+@code {
+    private string _email = "";
+    private string _password = "";
+    private string? _error;
+    private bool _busy;
+
+    private async Task DoLogin()
+    {
+        _busy = true;
+        _error = null;
+        var result = await Auth.LoginAsync(_email, _password);
+        if (result?.Token is null)
+            _error = "Login failed. Check credentials.";
+        else
+            Nav.NavigateTo("trading/portfolio");
+        _busy = false;
+    }
+
+    private async Task DemoLogin()
+    {
+        await Auth.DemoLoginAsync();
+        Nav.NavigateTo("trading/portfolio");
+    }
+}

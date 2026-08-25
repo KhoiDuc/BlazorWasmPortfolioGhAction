@@ -1,0 +1,91 @@
+@using BlazorWasmPortfolioGhAction.Services.Trading
+@inject ITradingAuthService Auth
+@inject NavigationManager Nav
+@implements IDisposable
+
+<nav class="ts-navbar">
+    <div class="ts-navbar-inner">
+        <NavLink class="ts-brand" href="trading">
+            <i class="bi bi-graph-up-arrow"></i>
+            <span>Trading Signals</span>
+        </NavLink>
+        <button class="ts-toggler" @onclick="ToggleMenu" aria-label="Toggle navigation">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="ts-nav-collapse @(MenuOpen ? "ts-nav-open" : "")">
+            <ul class="ts-nav-list">
+                @foreach (var item in NavItems)
+                {
+                    @if (!item.AuthRequired || _loggedIn)
+                    {
+                        <li class="ts-nav-item">
+                            <NavLink class="ts-nav-link" href="@item.Href" Match="@item.Match" @onclick="CloseMenu">
+                                <i class="bi @item.Icon"></i> @item.Label
+                            </NavLink>
+                        </li>
+                    }
+                }
+            </ul>
+        </div>
+        <div class="ts-user-area">
+            @if (_loggedIn && _user is not null)
+            {
+                <span class="ts-user-name">@_user.Name</span>
+                <button class="ts-login-btn" @onclick="Logout">Logout</button>
+            }
+            else
+            {
+                <NavLink class="ts-login-btn" href="trading/login">Login</NavLink>
+            }
+        </div>
+    </div>
+</nav>
+
+@code {
+    private bool MenuOpen;
+    private bool _loggedIn;
+    private Models.Trading.DnseUserInfo? _user;
+
+    private record NavItem(string Href, string Label, string Icon, bool AuthRequired = false, NavLinkMatch Match = NavLinkMatch.Prefix);
+
+    private static readonly NavItem[] NavItems =
+    [
+        new("trading", "Home", "bi-house", Match: NavLinkMatch.All),
+        new("trading/crypto", "Crypto", "bi-currency-bitcoin"),
+        new("trading/futures", "Futures", "bi-arrow-left-right"),
+        new("trading/stock", "Stock", "bi-bar-chart"),
+        new("trading/commodities", "Commodities", "bi-gem"),
+        new("trading/forex", "Forex", "bi-cash-stack"),
+        new("trading/real-estate", "Real Estate", "bi-building"),
+        new("trading/central-banks", "Bonds", "bi-bank"),
+        new("trading/macro", "Macro Intel", "bi-globe2", AuthRequired: true),
+        new("trading/others", "Others", "bi-grid"),
+        new("trading/portfolio", "Portfolio", "bi-wallet2", AuthRequired: true),
+        new("trading/community", "Community", "bi-people", AuthRequired: true),
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Auth.AuthStateChanged += OnAuthChanged;
+        await RefreshAuth();
+    }
+
+    private async Task RefreshAuth()
+    {
+        _loggedIn = await Auth.IsLoggedInAsync();
+        _user = await Auth.GetUserInfoAsync();
+    }
+
+    private async void OnAuthChanged() => await InvokeAsync(async () => { await RefreshAuth(); StateHasChanged(); });
+
+    private void ToggleMenu() => MenuOpen = !MenuOpen;
+    private void CloseMenu() => MenuOpen = false;
+
+    private async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("trading");
+    }
+
+    public void Dispose() => Auth.AuthStateChanged -= OnAuthChanged;
+}

@@ -1,0 +1,64 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading
+@inject ITradingApiClient Api
+@inject IJSRuntime JS
+
+<button class="ts-news-btn" @onclick="Toggle" title="News">
+    <i class="bi bi-newspaper"></i> News
+</button>
+
+@if (_visible)
+{
+    <div class="ts-overlay-panel ts-news-panel">
+        <div class="ts-panel-header">
+            <span>Telegram News</span>
+            <button class="ts-btn ts-btn-outline" style="padding:4px 10px" @onclick="Toggle">✕</button>
+        </div>
+        <div class="ts-panel-body">
+            @if (_loading)
+            {
+                <div class="ts-spinner"></div>
+            }
+            else if (_items?.Length > 0)
+            {
+                @foreach (var item in _items)
+                {
+                    <div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #e2e8f0">
+                        <strong style="font-size:0.78rem;color:#3b82f6">@item.Channel</strong>
+                        <p style="font-size:0.85rem;margin:0.4rem 0">@item.Text</p>
+                        <button class="ts-btn ts-btn-outline" style="padding:2px 8px;font-size:0.72rem" @onclick="() => Speak(item.Text)">
+                            <i class="bi bi-volume-up"></i> Read
+                        </button>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="ts-empty">No news available.</p>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private bool _visible;
+    private bool _loading;
+    private TelegramNewsItem[]? _items;
+
+    private async Task Toggle()
+    {
+        _visible = !_visible;
+        if (_visible && _items is null)
+        {
+            _loading = true;
+            _items = await Api.GetTelegramNewsAsync();
+            _loading = false;
+        }
+    }
+
+    private Task Speak(string? text)
+    {
+        if (!string.IsNullOrEmpty(text))
+            return JS.InvokeVoidAsync("tradingSpeech.speak", text).AsTask();
+        return Task.CompletedTask;
+    }
+}

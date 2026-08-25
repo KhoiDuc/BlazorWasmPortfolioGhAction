@@ -1,0 +1,27 @@
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div id="@_elementId" class="ts-chart-wrap" style="min-height:@(Height)px"></div>
+
+@code {
+    [Parameter] public string Symbol { get; set; } = "BTCUSDT";
+    [Parameter] public int Height { get; set; } = 380;
+
+    private string _elementId = $"tv_{Guid.NewGuid():N}";
+    private string? _lastSymbol;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender || _lastSymbol != Symbol)
+        {
+            _lastSymbol = Symbol;
+            await JS.InvokeVoidAsync("tradingViewInterop.render", _elementId, Symbol, Height);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("tradingViewInterop.destroy", _elementId); }
+        catch { }
+    }
+}

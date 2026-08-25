@@ -1,0 +1,59 @@
+@inject ITradingApiClient Api
+
+<button class="ts-chat-launcher" @onclick="Toggle" title="Ask AI">🤖</button>
+
+@if (_open)
+{
+    <div class="ts-overlay-panel ts-chat-panel">
+        <div class="ts-panel-header">
+            <span>Trading AI Assistant</span>
+            <button class="ts-btn ts-btn-outline" style="padding:4px 10px" @onclick="Toggle">✕</button>
+        </div>
+        <div class="ts-panel-body" style="display:flex;flex-direction:column;gap:8px">
+            <div style="flex:1;overflow-y:auto;min-height:200px">
+                @foreach (var msg in _messages)
+                {
+                    <div style="margin-bottom:8px;font-size:0.85rem;@(msg.IsUser ? "text-align:right" : "")">
+                        <span style="display:inline-block;padding:8px 12px;border-radius:12px;@(msg.IsUser ? "background:#3b82f6;color:#fff" : "background:#f1f5f9")">
+                            @msg.Text
+                        </span>
+                    </div>
+                }
+                @if (_busy) { <div class="ts-spinner"></div> }
+            </div>
+            <div style="display:flex;gap:8px">
+                <input class="ts-input" @bind="_input" @bind:event="oninput" placeholder="Ask about markets..." @onkeydown="OnKey" />
+                <button class="ts-btn ts-btn-primary" @onclick="Send" disabled="@_busy">Send</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _open;
+    private bool _busy;
+    private string _input = "";
+    private List<ChatMsg> _messages = [];
+
+    private record ChatMsg(string Text, bool IsUser);
+
+    private void Toggle() => _open = !_open;
+
+    private async Task Send()
+    {
+        if (string.IsNullOrWhiteSpace(_input) || _busy) return;
+        var q = _input.Trim();
+        _input = "";
+        _messages.Add(new ChatMsg(q, true));
+        _busy = true;
+        StateHasChanged();
+        var reply = await Api.ChatAsync(q);
+        _messages.Add(new ChatMsg(reply ?? "Sorry, I could not respond.", false));
+        _busy = false;
+    }
+
+    private async Task OnKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await Send();
+    }
+}

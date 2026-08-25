@@ -84,6 +84,7 @@ public static class Program
         var googleMapsKey = builder.Configuration["GoogleMaps:ApiKey"] ?? "YOUR_GOOGLE_MAPS_API_KEY";
         builder.Services.AddBlazorGoogleMaps(googleMapsKey);
         builder.Services.AddLocalization();
+        builder.Services.AddTradingServices(builder.Configuration);
 
         // build the host
         var host = builder.Build();

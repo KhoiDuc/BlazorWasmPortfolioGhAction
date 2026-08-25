@@ -1,0 +1,92 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading
+@inject ITradingApiClient Api
+@inject ITradingAuthService Auth
+
+<div class="ts-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <h3 style="margin:0">Investment Journal</h3>
+        <button class="ts-btn ts-btn-primary" @onclick="() => _showForm = !_showForm">+ Entry</button>
+    </div>
+
+    @if (_showForm)
+    {
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:1rem">
+            <input class="ts-input" @bind="_symbol" placeholder="Symbol" />
+            <select class="ts-select" @bind="_assetType">
+                <option value="stock">Stock</option>
+                <option value="crypto">Crypto</option>
+                <option value="forex">Forex</option>
+            </select>
+            <input type="number" class="ts-input" @bind="_quantity" placeholder="Qty" />
+            <input type="number" class="ts-input" @bind="_price" placeholder="Price" step="any" />
+            <input class="ts-input" @bind="_currency" placeholder="Currency" />
+            <button class="ts-btn ts-btn-primary" @onclick="Save">Save</button>
+        </div>
+    }
+
+    @if (_entries?.Length > 0)
+    {
+        <table class="ts-table">
+            <thead><tr><th>Date</th><th>Symbol</th><th>Qty</th><th>Price</th><th>Notes</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var e in _entries)
+                {
+                    <tr>
+                        <td>@e.EntryDate.ToLocalTime().ToString("d")</td>
+                        <td><strong>@e.Symbol</strong> <span class="ts-updated">@e.AssetType</span></td>
+                        <td>@e.Quantity</td>
+                        <td>@e.Price @e.Currency</td>
+                        <td>@e.Notes</td>
+                        <td><button class="ts-btn ts-btn-outline" style="padding:2px 8px;font-size:0.72rem" @onclick="() => Delete(e.Id)">Del</button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="ts-empty">No journal entries.</p>
+    }
+</div>
+
+@code {
+    [Parameter] public string UserId { get; set; } = "";
+
+    private JournalEntry[]? _entries;
+    private bool _showForm;
+    private string _symbol = "";
+    private string _assetType = "stock";
+    private double _quantity;
+    private double _price;
+    private string _currency = "VND";
+
+    protected override async Task OnParametersSetAsync() => await Load();
+
+    private async Task Load()
+    {
+        if (!string.IsNullOrEmpty(UserId))
+            _entries = await Api.GetJournalAsync(UserId);
+    }
+
+    private async Task Save()
+    {
+        await Api.CreateJournalEntryAsync(UserId, new
+        {
+            asset_type = _assetType,
+            symbol = _symbol,
+            quantity = _quantity,
+            price = _price,
+            currency = _currency,
+            entry_date = DateTime.UtcNow,
+            notes = ""
+        });
+        _showForm = false;
+        await Load();
+    }
+
+    private async Task Delete(int id)
+    {
+        await Api.DeleteJournalEntryAsync(UserId, id);
+        await Load();
+    }
+}

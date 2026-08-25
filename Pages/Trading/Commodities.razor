@@ -1,0 +1,42 @@
+@page "/trading/commodities"
+@layout TradingLayout
+@inject ITradingApiClient Api
+
+<div class="ts-page">
+    <div class="ts-tabs">
+        <button class="ts-tab @(_tab == "gold" ? "active" : "")" @onclick='() => _tab = "gold"'>Gold</button>
+        <button class="ts-tab @(_tab == "silver" ? "active" : "")" @onclick='() => _tab = "silver"'>Silver</button>
+        <button class="ts-tab @(_tab == "oil" ? "active" : "")" @onclick='() => _tab = "oil"'>Oil</button>
+    </div>
+
+    <div class="ts-panel">
+        <div class="ts-header">
+            <div><h2>Commodities Terminal</h2><p>Gold • Silver • Crude Oil</p></div>
+        </div>
+    </div>
+
+    @if (_tab == "gold")
+    {
+        <TradingViewChart Symbol="OANDA:XAUUSD" />
+        <PriceAlertWidget Symbol="XAUUSD" AssetType="gold" />
+        <div class="ts-panel">
+            <h3>VN Gold (SJC)</h3>
+            <p class="ts-updated">Data via proxy from SJC — refresh page to update.</p>
+            <iframe src="@Api.ProxyUrl("goldprice/services/priceservice.ashx")" style="width:100%;height:200px;border:none" title="SJC gold"></iframe>
+        </div>
+    }
+    else if (_tab == "silver")
+    {
+        <TradingViewChart Symbol="OANDA:XAGUSD" />
+        <PriceAlertWidget Symbol="XAGUSD" AssetType="silver" />
+    }
+    else
+    {
+        <TradingViewChart Symbol="TVC:USOIL" />
+        <PriceAlertWidget Symbol="USOIL" AssetType="oil" />
+    }
+</div>
+
+@code {
+    private string _tab = "gold";
+}

@@ -1,0 +1,104 @@
+@page "/trading"
+@page "/trading/home"
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@using BlazorWasmPortfolioGhAction.Models.Trading
+@inject ITradingApiClient Api
+@inject IJSRuntime JS
+
+<div class="ts-page">
+    <div class="ts-header">
+        <div>
+            <h2>Trading Dashboard</h2>
+            <p>Market overview, economic calendar, and macro intelligence</p>
+        </div>
+        <button class="ts-btn ts-btn-primary" @onclick="RefreshAssets" disabled="@_scanning">
+            <i class="bi bi-arrow-repeat"></i> Refresh Assets RRG
+        </button>
+    </div>
+
+    @if (_alerts?.Length > 0)
+    {
+        <div class="ts-panel">
+            <h3 style="font-size:1rem;margin:0 0 0.75rem">Latest Alerts</h3>
+            <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px">
+                @foreach (var a in _alerts.Take(12))
+                {
+                    <div style="min-width:180px;padding:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff">
+                        <strong>@a.Symbol</strong>
+                        <p style="font-size:0.78rem;margin:4px 0;color:#64748b">@a.Message</p>
+                        <span class="@(a.Price >= 0 ? "ts-positive" : "ts-negative")">@a.Price</span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="ts-panel">
+        <h3 style="font-size:1rem;margin:0 0 0.75rem">Assets RRG Chart</h3>
+        <img src="@Api.ProxyUrl("assets_rrgchart")" alt="Assets RRG" class="ts-rrg-img" />
+    </div>
+
+    @if (_theses?.Length > 0)
+    {
+        <div class="ts-panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+                <h3 style="font-size:1rem;margin:0">Macro Theses</h3>
+                <button class="ts-btn ts-btn-outline" @onclick="TriggerThesis">Update Theses</button>
+            </div>
+            @foreach (var t in _theses)
+            {
+                <div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #e2e8f0">
+                    <strong>@t.Title</strong> @if (!string.IsNullOrEmpty(t.AssetClass)) { <span class="ts-signal ts-signal-ema9_above_ema21">@t.AssetClass</span> }
+                    <p style="font-size:0.88rem;margin:0.5rem 0">@t.Content</p>
+                </div>
+            }
+        </div>
+    }
+
+    @if (_worldState?.Summary is not null)
+    {
+        <div class="ts-panel">
+            <h3 style="font-size:1rem;margin:0 0 0.75rem">World State</h3>
+            <p style="font-size:0.9rem">@_worldState.Summary</p>
+        </div>
+    }
+
+    @if (_calendar.HasValue)
+    {
+        <div class="ts-panel">
+            <h3 style="font-size:1rem;margin:0 0 0.75rem">Economic Calendar (This Week)</h3>
+            <pre style="font-size:0.75rem;overflow:auto;max-height:300px;background:#f8fafc;padding:12px;border-radius:8px">@_calendar.Value.ToString()</pre>
+        </div>
+    }
+</div>
+
+@code {
+    private TriggeredAlert[]? _alerts;
+    private OsintThesis[]? _theses;
+    private OsintWorldState? _worldState;
+    private System.Text.Json.JsonElement? _calendar;
+    private bool _scanning;
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Load()
+    {
+        _alerts = await Api.GetTriggeredAlertsAsync();
+        _theses = await Api.GetThesesAsync();
+        _worldState = await Api.GetWorldStateAsync();
+        _calendar = await Api.GetCalendarAsync();
+    }
+
+    private async Task RefreshAssets()
+    {
+        _scanning = true;
+        await Api.RunSshScriptAsync("assets_rrg");
+        _scanning = false;
+    }
+
+    private async Task TriggerThesis()
+    {
+        await Api.TriggerThesisUpdateAsync();
+        _theses = await Api.GetThesesAsync(refresh: true);
+    }
+}
