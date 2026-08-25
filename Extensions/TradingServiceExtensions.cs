@@ -13,7 +13,7 @@ public static class TradingServiceExtensions
         services.AddHttpClient(TradingApiClientName, client =>
         {
             client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
-            client.Timeout = TimeSpan.FromSeconds(8);
+            client.Timeout = TimeSpan.FromSeconds(5);
         });
 
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.ITradingAuthService,

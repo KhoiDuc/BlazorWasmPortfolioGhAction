@@ -4,7 +4,6 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading
 @inject ITradingApiClient Api
 @inject ITradingAuthService Auth
-@inject NavigationManager Nav
 
 <div class="ts-page">
     @if (!_authorized)
@@ -21,9 +20,10 @@
                     <h2>Macro Intelligence Hub</h2>
                     <p>Manage macro events and AI strategy analysis</p>
                 </div>
-                <div style="display:flex;gap:8px">
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
                     <button class="ts-btn ts-btn-primary" @onclick="() => _showGroupForm = true">+ New Group</button>
                     <button class="ts-btn ts-btn-outline" @onclick="GeneratePrompt">AI Strategy</button>
+                    <button class="ts-btn ts-btn-outline" @onclick="() => _showAiSettings = true">AI Settings</button>
                 </div>
             </div>
         </div>
@@ -33,6 +33,17 @@
             <div class="ts-panel">
                 <h3 style="margin:0 0 0.5rem">World State</h3>
                 <p style="font-size:0.9rem">@_worldState.Summary</p>
+                @if (_signals?.Length > 0)
+                {
+                    <h4 style="font-size:0.9rem;margin:1rem 0 0.5rem">OSINT Signals</h4>
+                    @foreach (var s in _signals.Take(8))
+                    {
+                        <div style="font-size:0.82rem;padding:6px 0;border-top:1px solid #e2e8f0">
+                            <strong>@s.Symbol</strong> <span class="ts-updated">@s.AssetClass</span>
+                            <p style="margin:2px 0 0;color:#64748b">@s.Title</p>
+                        </div>
+                    }
+                }
             </div>
         }
 
@@ -53,12 +64,15 @@
             @foreach (var g in _groups)
             {
                 <div class="ts-panel">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;gap:8px">
                         <strong>@g.Name</strong>
-                        @if (g.Name != "Telegram News")
-                        {
-                            <button class="ts-btn ts-btn-outline" style="padding:4px 10px;font-size:0.78rem" @onclick="() => AddNews(g.Id)">+ Add News</button>
-                        }
+                        <div style="display:flex;gap:4px">
+                            @if (g.Name != "Telegram News")
+                            {
+                                <button class="ts-btn ts-btn-outline" style="padding:4px 10px;font-size:0.78rem" @onclick="() => AddNews(g.Id)">+ News</button>
+                                <button class="ts-btn ts-btn-outline" style="padding:4px 10px;font-size:0.78rem" @onclick="() => DeleteGroup(g.Id)">Delete</button>
+                            }
+                        </div>
                     </div>
                     @if (!string.IsNullOrEmpty(g.Conclusion))
                     {
@@ -69,8 +83,14 @@
                         @foreach (var item in items)
                         {
                             <div style="padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:0.85rem">
-                                <strong>@item.Title</strong>
-                                <span class="ts-signal ts-signal-@item.Status" style="margin-left:8px">@item.Status</span>
+                                <div style="display:flex;justify-content:space-between;gap:8px">
+                                    <strong>@item.Title</strong>
+                                    <div style="display:flex;gap:4px;flex-shrink:0">
+                                        <button class="ts-btn ts-btn-outline" style="padding:2px 6px;font-size:0.7rem" @onclick="() => ToggleItemStatus(item)">Toggle</button>
+                                        <button class="ts-btn ts-btn-outline" style="padding:2px 6px;font-size:0.7rem" @onclick="() => DeleteItem(item.Id)">Del</button>
+                                    </div>
+                                </div>
+                                <span class="ts-signal ts-signal-@item.Status">@item.Status</span>
                                 @if (!string.IsNullOrEmpty(item.Content))
                                 {
                                     <p style="margin:4px 0 0;color:#64748b">@item.Content</p>
@@ -78,10 +98,7 @@
                             </div>
                         }
                     }
-                    else
-                    {
-                        <p class="ts-updated">No news items.</p>
-                    }
+                    else { <p class="ts-updated">No news items.</p> }
                 </div>
             }
         }
@@ -107,13 +124,17 @@
                 <button class="ts-btn ts-btn-outline ms-2" @onclick="() => _showNewsForm = false">Cancel</button>
             </div>
         }
+
+        <AiSettingsModal Visible="_showAiSettings" VisibleChanged="v => _showAiSettings = v" />
     }
 </div>
 
 @code {
     private bool _authorized;
     private bool _loading;
+    private bool _showAiSettings;
     private NewsGroup[]? _groups;
+    private OsintSignal[]? _signals;
     private Dictionary<int, NewsItem[]> _newsByGroup = new();
     private OsintWorldState? _worldState;
     private bool _showGroupForm;
@@ -130,8 +151,7 @@
 
     private async Task InitAsync()
     {
-        try { _authorized = await Auth.IsLoggedInAsync(); }
-        catch { }
+        try { _authorized = await Auth.IsLoggedInAsync(); } catch { }
         await InvokeAsync(StateHasChanged);
         if (_authorized) _ = LoadAsync();
     }
@@ -145,16 +165,13 @@
             var userId = await Auth.GetUserIdAsync();
             _groups = await Api.GetNewsGroupsAsync(userId);
             _worldState = await Api.GetWorldStateAsync();
+            _signals = await Api.GetOsintSignalsAsync();
             _newsByGroup.Clear();
             if (_groups != null)
             {
                 foreach (var g in _groups)
                 {
-                    try
-                    {
-                        var items = await Api.GetNewsItemsAsync(g.Id);
-                        if (items != null) _newsByGroup[g.Id] = items;
-                    }
+                    try { var items = await Api.GetNewsItemsAsync(g.Id); if (items != null) _newsByGroup[g.Id] = items; }
                     catch { }
                 }
             }
@@ -179,6 +196,25 @@
         var client = await Api.CreateAuthorizedClientAsync();
         await client.PostAsJsonAsync($"api/news-items?group_id={_newsGroupId}", new { title = _newNewsTitle, content = _newNewsContent, status = "active" });
         _showNewsForm = false;
+        await LoadAsync();
+    }
+
+    private async Task DeleteGroup(int id)
+    {
+        await Api.DeleteNewsGroupAsync(id);
+        await LoadAsync();
+    }
+
+    private async Task DeleteItem(int id)
+    {
+        await Api.DeleteNewsItemAsync(id);
+        await LoadAsync();
+    }
+
+    private async Task ToggleItemStatus(NewsItem item)
+    {
+        var next = item.Status == "active" ? "inactive" : "active";
+        await Api.UpdateNewsItemAsync(item.Id, new { title = item.Title, content = item.Content, status = next });
         await LoadAsync();
     }
 

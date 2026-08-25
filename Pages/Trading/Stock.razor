@@ -1,11 +1,13 @@
 @page "/trading/stock"
 @layout TradingLayout
 @using BlazorWasmPortfolioGhAction.Models.Trading
+@using System.Text.Json
 @inject ITradingApiClient Api
 
 <div class="ts-page">
     <div class="ts-tabs">
         <button class="ts-tab @(_tab == "vn" ? "active" : "")" @onclick='() => _tab = "vn"'>VN Stock</button>
+        <button class="ts-tab @(_tab == "sector" ? "active" : "")" @onclick='() => _tab = "sector"'>Sector</button>
         <button class="ts-tab @(_tab == "rrg" ? "active" : "")" @onclick='() => _tab = "rrg"'>VN RRG</button>
         <button class="ts-tab @(_tab == "global" ? "active" : "")" @onclick='() => _tab = "global"'>Global</button>
     </div>
@@ -22,9 +24,17 @@
             </div>
             <div class="ts-field">
                 <label class="ts-label">Stock symbol</label>
-                <input class="ts-input" @bind="_selectedStock" placeholder="VNM, FPT..." />
+                <div style="display:flex;gap:8px">
+                    <input class="ts-input" @bind="_selectedStock" placeholder="VNM, FPT..." />
+                    <button class="ts-btn ts-btn-outline" @onclick="LoadTcbs">TCBS Eval</button>
+                </div>
             </div>
         </div>
+
+        @if (_tcbsJson.HasValue)
+        {
+            <div class="ts-panel"><pre style="font-size:0.78rem;overflow:auto;max-height:240px">@_tcbsJson.Value.ToString()</pre></div>
+        }
 
         @if (!string.IsNullOrEmpty(_selectedStock))
         {
@@ -54,6 +64,20 @@
             </div>
         }
     }
+    else if (_tab == "sector")
+    {
+        <div class="ts-panel">
+            <div class="ts-header"><div><h2>VN Sector Categories</h2><p>Vietstock sector heatmap &amp; category view</p></div></div>
+            <div class="ts-field">
+                <label class="ts-label">Sector iframe URL</label>
+                <select class="ts-select" @bind="_sectorUrl">
+                    <option value="https://finance.vietstock.vn/chi-so-nganh.htm">Sector Index</option>
+                    <option value="https://finance.vietstock.vn/doanh-nghiep-nhom-nganh.htm">Industry Groups</option>
+                </select>
+            </div>
+            <iframe src="@_sectorUrl" width="100%" height="520" style="border:1px solid #e2e8f0;border-radius:12px" title="Vietstock sectors"></iframe>
+        </div>
+    }
     else if (_tab == "rrg")
     {
         <div class="ts-panel">
@@ -71,16 +95,24 @@
             @if (_worldData?.Data?.Length > 0)
             {
                 <table class="ts-table">
-                    <thead><tr><th>Symbol</th><th>Country</th></tr></thead>
+                    <thead><tr><th>Symbol</th><th>Country</th><th></th></tr></thead>
                     <tbody>
                         @foreach (var w in _worldData.Data)
                         {
-                            <tr><td>@w.Symbol</td><td>@w.Country</td></tr>
+                            <tr>
+                                <td><strong>@w.Symbol</strong></td>
+                                <td>@w.Country</td>
+                                <td><button class="ts-btn ts-btn-outline" style="padding:2px 8px;font-size:0.72rem" @onclick="() => _globalSymbol = w.Symbol">Chart</button></td>
+                            </tr>
                         }
                     </tbody>
                 </table>
             }
         </div>
+        @if (!string.IsNullOrEmpty(_globalSymbol))
+        {
+            <TradingViewChart Symbol="@_globalSymbol" />
+        }
     }
 </div>
 
@@ -89,6 +121,9 @@
     private WatchlistResponse<StockSignal>? _vnData;
     private WatchlistResponse<WorldStock>? _worldData;
     private string _selectedStock = "VNM";
+    private string _globalSymbol = "";
+    private string _sectorUrl = "https://finance.vietstock.vn/chi-so-nganh.htm";
+    private JsonElement? _tcbsJson;
     private bool _scanning;
 
     protected override void OnInitialized() => _ = LoadInBackgroundAsync();
@@ -102,6 +137,12 @@
         }
         catch { }
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadTcbs()
+    {
+        if (string.IsNullOrWhiteSpace(_selectedStock)) return;
+        _tcbsJson = await Api.GetTcbsStockInfoAsync(_selectedStock.Trim().ToUpperInvariant());
     }
 
     private async Task Scan()

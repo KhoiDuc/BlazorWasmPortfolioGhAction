@@ -3,6 +3,7 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading
 @inject ITradingApiClient Api
 @inject ITradingAuthService Auth
+@inject IJSRuntime JS
 
 <div class="ts-page">
     @if (!_authorized)
@@ -20,6 +21,14 @@
             <div class="ts-field">
                 <textarea class="ts-input" rows="3" @bind="_newPost" placeholder="Share your trading idea..."></textarea>
             </div>
+            <div class="ts-field">
+                <label class="ts-label">Image (optional)</label>
+                <InputFile OnChange="OnImageSelected" accept="image/*" />
+                @if (!string.IsNullOrEmpty(_imagePreview))
+                {
+                    <img src="@_imagePreview" alt="Preview" style="max-width:200px;margin-top:8px;border-radius:8px" />
+                }
+            </div>
             <button class="ts-btn ts-btn-primary" @onclick="CreatePost" disabled="@_busy">Post</button>
         </div>
 
@@ -34,14 +43,18 @@
                         <span class="ts-updated">@post.CreatedAt.ToLocalTime().ToString("g")</span>
                     </div>
                     <p style="font-size:0.9rem;margin:0 0 12px">@post.Content</p>
+                    @if (!string.IsNullOrEmpty(post.Image))
+                    {
+                        <img src="@post.Image" alt="Post" style="max-width:100%;border-radius:8px;margin-bottom:12px" />
+                    }
+                    <button class="ts-btn ts-btn-outline" style="padding:4px 12px;font-size:0.78rem" @onclick="() => Like(post.Id)">
+                        <i class="bi bi-heart"></i> @post.Likes
+                    </button>
                     <CommunityComments PostId="post.Id" />
                 </div>
             }
         }
-        else
-        {
-            <div class="ts-empty">No posts yet. Be the first!</div>
-        }
+        else { <div class="ts-empty">No posts yet. Be the first!</div> }
     }
 </div>
 
@@ -51,13 +64,14 @@
     private bool _busy;
     private CommunityPost[]? _posts;
     private string _newPost = "";
+    private string? _imageBase64;
+    private string? _imagePreview;
 
     protected override void OnInitialized() => _ = InitAsync();
 
     private async Task InitAsync()
     {
-        try { _authorized = await Auth.IsLoggedInAsync(); }
-        catch { }
+        try { _authorized = await Auth.IsLoggedInAsync(); } catch { }
         await InvokeAsync(StateHasChanged);
         if (_authorized) _ = LoadAsync();
     }
@@ -69,6 +83,17 @@
         try { _posts = await Api.GetCommunityPostsAsync(); }
         catch { }
         finally { _loading = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private async Task OnImageSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file.Size > 512_000) return;
+        using var stream = file.OpenReadStream(512_000);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        _imageBase64 = Convert.ToBase64String(ms.ToArray());
+        _imagePreview = $"data:{file.ContentType};base64,{_imageBase64}";
     }
 
     private async Task CreatePost()
@@ -83,10 +108,18 @@
             user_name = user?.Name ?? "User",
             user_code = user?.CustodyCode ?? "",
             content = _newPost,
-            image = ""
+            image = _imagePreview ?? ""
         });
         _newPost = "";
+        _imagePreview = null;
+        _imageBase64 = null;
         await LoadAsync();
         _busy = false;
+    }
+
+    private async Task Like(int postId)
+    {
+        await Api.LikeCommunityPostAsync(postId);
+        await LoadAsync();
     }
 }

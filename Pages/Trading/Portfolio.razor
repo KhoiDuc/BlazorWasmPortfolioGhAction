@@ -1,6 +1,7 @@
 @page "/trading/portfolio"
 @layout TradingLayout
 @using BlazorWasmPortfolioGhAction.Models.Trading
+@using System.Text.Json
 @inject ITradingApiClient Api
 @inject ITradingAuthService Auth
 @inject NavigationManager Nav
@@ -16,54 +17,74 @@
     {
         <div class="ts-panel">
             <div class="ts-header">
-                <div>
-                    <h2>My Portfolio</h2>
-                    <p>Overview of holdings and journal</p>
-                </div>
+                <div><h2>My Portfolio</h2><p>Balance, journal, deals &amp; orders</p></div>
             </div>
             <div class="ts-tabs">
                 <button class="ts-tab @(_tab == "balance" ? "active" : "")" @onclick='() => _tab = "balance"'>Balance</button>
                 <button class="ts-tab @(_tab == "journal" ? "active" : "")" @onclick='() => _tab = "journal"'>Journal</button>
                 <button class="ts-tab @(_tab == "deals" ? "active" : "")" @onclick='() => _tab = "deals"'>Deals</button>
+                <button class="ts-tab @(_tab == "orders" ? "active" : "")" @onclick='() => _tab = "orders"'>Place Order</button>
             </div>
         </div>
 
         @if (_tab == "balance")
         {
-            @if (!string.IsNullOrEmpty(_error))
+            @if (!string.IsNullOrEmpty(_error)) { <div class="ts-alert ts-alert-error">@_error</div> }
+            @if (_loading) { <div class="ts-spinner"></div> }
+            else if (_balanceJson is not null)
             {
-                <div class="ts-alert ts-alert-error">@_error</div>
+                <div class="ts-panel"><pre style="font-size:0.82rem;overflow:auto">@_balanceJson</pre></div>
             }
-            @if (_balanceJson is not null)
+            else if (_isDemo)
             {
                 <div class="ts-panel">
-                    <pre style="font-size:0.82rem;overflow:auto">@_balanceJson</pre>
+                    <h3>Demo Portfolio</h3>
+                    <p>Net Asset Value: <strong>1,250,000,000 VND</strong></p>
+                    <p>Cash: 350,000,000 VND | Stocks: 900,000,000 VND</p>
                 </div>
             }
-            else if (!_loading)
-            {
-                <p class="ts-empty">Connect a real DNSE account to view balances. Demo mode shows sample data.</p>
-                @if (_isDemo)
-                {
-                    <div class="ts-panel">
-                        <h3>Demo Portfolio</h3>
-                        <p>Net Asset Value: <strong>1,250,000,000 VND</strong></p>
-                        <p>Cash: 350,000,000 VND | Stocks: 900,000,000 VND</p>
-                    </div>
-                }
-            }
+            else { <p class="ts-empty">Connect DNSE account to view balances.</p> }
         }
         else if (_tab == "journal")
         {
             <JournalComponent UserId="@(_userId ?? "")" />
         }
-        else
+        else if (_tab == "deals")
         {
-            @if (_dealsJson is not null)
+            @if (_dealsJson.HasValue)
             {
-                <div class="ts-panel"><pre style="font-size:0.82rem;overflow:auto">@_dealsJson</pre></div>
+                <div class="ts-panel"><pre style="font-size:0.82rem;overflow:auto">@_dealsJson.Value.ToString()</pre></div>
             }
             else { <p class="ts-empty">No deals data.</p> }
+        }
+        else
+        {
+            <div class="ts-panel">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+                    <input class="ts-input" @bind="_orderSymbol" placeholder="Symbol (VNM)" />
+                    <input type="number" class="ts-input" @bind="_orderQty" placeholder="Quantity" />
+                    <input type="number" class="ts-input" @bind="_orderPrice" placeholder="Price" step="any" />
+                    <select class="ts-select" @bind="_orderSide">
+                        <option value="NB">Buy</option>
+                        <option value="NS">Sell</option>
+                    </select>
+                    <button class="ts-btn ts-btn-primary" @onclick="PlaceOrder" disabled="@_orderBusy">Submit</button>
+                </div>
+                @if (!string.IsNullOrEmpty(_orderMsg))
+                {
+                    <p class="ts-alert ts-alert-info mt-2">@_orderMsg</p>
+                }
+                @if (_showOtp)
+                {
+                    <div class="ts-field mt-3">
+                        <label class="ts-label">OTP confirmation</label>
+                        <div style="display:flex;gap:8px">
+                            <input class="ts-input" @bind="_otp" placeholder="Enter OTP" />
+                            <button class="ts-btn ts-btn-primary" @onclick="ConfirmOtp">Confirm</button>
+                        </div>
+                    </div>
+                }
+            </div>
         }
     }
 </div>
@@ -76,27 +97,27 @@
     private string _tab = "balance";
     private string? _error;
     private string? _balanceJson;
-    private string? _dealsJson;
+    private JsonElement? _dealsJson;
+    private string _orderSymbol = "VNM";
+    private int _orderQty = 100;
+    private double _orderPrice;
+    private string _orderSide = "NB";
+    private bool _orderBusy;
+    private bool _showOtp;
+    private string _otp = "";
+    private string? _orderSessionId;
+    private string? _orderMsg;
 
     protected override void OnInitialized() => _ = InitAsync();
 
     private async Task InitAsync()
     {
-        try { _authorized = await Auth.IsLoggedInAsync(); }
-        catch { }
-        if (!_authorized)
-        {
-            await InvokeAsync(StateHasChanged);
-            return;
-        }
-
+        try { _authorized = await Auth.IsLoggedInAsync(); } catch { }
+        if (!_authorized) { await InvokeAsync(StateHasChanged); return; }
         _userId = await Auth.GetUserIdAsync();
-        var token = await Auth.GetTokenAsync();
-        _isDemo = token == "demo-token";
+        _isDemo = await Auth.GetTokenAsync() == "demo-token";
         await InvokeAsync(StateHasChanged);
-
-        if (!_isDemo)
-            _ = LoadDnseDataAsync();
+        if (!_isDemo) _ = LoadDnseDataAsync();
     }
 
     private async Task LoadDnseDataAsync()
@@ -107,21 +128,38 @@
         {
             var client = await Api.CreateAuthorizedClientAsync();
             var accResp = await client.GetAsync(Api.ProxyUrl("dnse-order-service/accounts"));
-            if (!accResp.IsSuccessStatusCode)
-            {
-                _error = "Could not load DNSE accounts.";
-                return;
-            }
-            _balanceJson = await accResp.Content.ReadAsStringAsync();
+            if (accResp.IsSuccessStatusCode)
+                _balanceJson = await accResp.Content.ReadAsStringAsync();
+            else _error = "Could not load DNSE accounts.";
+            _dealsJson = await Api.GetDnseDealsAsync();
         }
-        catch (Exception ex)
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _loading = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private async Task PlaceOrder()
+    {
+        if (_isDemo) { _orderMsg = "Demo mode — order simulated."; return; }
+        _orderBusy = true;
+        _orderMsg = null;
+        var result = await Api.PlaceDnseOrderAsync(new DnseOrderRequest(_orderSymbol, _orderQty, _orderPrice, _orderSide));
+        if (result.HasValue)
         {
-            _error = ex.Message;
+            if (result.Value.TryGetProperty("session_id", out var sid))
+                _orderSessionId = sid.GetString();
+            if (result.Value.TryGetProperty("require_otp", out var otp) && otp.GetBoolean())
+                _showOtp = true;
+            _orderMsg = result.Value.ToString();
         }
-        finally
-        {
-            _loading = false;
-            await InvokeAsync(StateHasChanged);
-        }
+        else _orderMsg = "Order failed.";
+        _orderBusy = false;
+    }
+
+    private async Task ConfirmOtp()
+    {
+        var result = await Api.ConfirmDnseOtpAsync(_otp, _orderSessionId);
+        _orderMsg = result?.ToString() ?? "OTP confirmed or failed.";
+        _showOtp = false;
+        await LoadDnseDataAsync();
     }
 }

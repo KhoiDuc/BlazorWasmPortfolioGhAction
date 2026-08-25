@@ -1,0 +1,63 @@
+@inject ITradingApiClient Api
+
+@if (_visible)
+{
+    <div class="ts-overlay-panel ts-chat-panel" style="bottom:auto;top:10%;right:24px;height:auto;max-height:70vh">
+        <div class="ts-panel-header">
+            <span>AI Settings</span>
+            <button class="ts-btn ts-btn-outline" style="padding:4px 10px" @onclick="Close">✕</button>
+        </div>
+        <div class="ts-panel-body">
+            @if (_loading) { <div class="ts-spinner"></div> }
+            else
+            {
+                @foreach (var s in _settings)
+                {
+                    <div class="ts-field">
+                        <label class="ts-label">@s.Key</label>
+                        <input class="ts-input" value="@s.Value" @onchange="e => _draft[s.Key] = e.Value?.ToString() ?? string.Empty"/>
+                    </div>
+                }
+                <button class="ts-btn ts-btn-primary" @onclick="Save">Save Settings</button>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+
+    private bool _visible;
+    private bool _loading;
+    private SystemSetting[] _settings = [];
+    private Dictionary<string, string> _draft = new();
+
+    protected override void OnParametersSet()
+    {
+        if (Visible && !_visible) _ = Load();
+        _visible = Visible;
+    }
+
+    private async Task Load()
+    {
+        _loading = true;
+        _settings = await Api.GetSystemSettingsAsync() ?? [];
+        _draft = _settings.ToDictionary(s => s.Key, s => s.Value);
+        _loading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task Save()
+    {
+        foreach (var kv in _draft)
+            await Api.UpdateSystemSettingAsync(kv.Key, kv.Value);
+        await Close();
+    }
+
+    private async Task Close()
+    {
+        _visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+}

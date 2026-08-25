@@ -2,14 +2,20 @@
 @layout TradingLayout
 @using BlazorWasmPortfolioGhAction.Models.Trading
 @inject ITradingApiClient Api
+@inject NavigationManager Nav
 
 <div class="ts-page">
     <div class="ts-tabs">
-        <button class="ts-tab @(_tab == "coins" ? "active" : "")" @onclick='() => _tab = "coins"'>Potential Coins</button>
-        <button class="ts-tab @(_tab == "rrg" ? "active" : "")" @onclick='() => _tab = "rrg"'>RRG Chart</button>
+        <button class="ts-tab @(_tab == "coins" ? "active" : "")" @onclick='() => SetTab("coins")'>Potential Coins</button>
+        <button class="ts-tab @(_tab == "ticker" ? "active" : "")" @onclick='() => SetTab("ticker")'>Live Ticker</button>
+        <button class="ts-tab @(_tab == "rrg" ? "active" : "")" @onclick='() => SetTab("rrg")'>RRG Chart</button>
     </div>
 
-    @if (_tab == "coins")
+    @if (_tab == "ticker")
+    {
+        <CryptoTickerPanel />
+    }
+    else if (_tab == "coins")
     {
         <div class="ts-panel">
             <div class="ts-header">
@@ -44,7 +50,6 @@
         </div>
 
         <TradingViewChart Symbol="@_selectedSymbol" />
-
         <PriceAlertWidget Symbol="@_selectedSymbol" AssetType="crypto" />
 
         @if (_loading)
@@ -56,12 +61,7 @@
             <div class="ts-panel ts-table-wrap">
                 <table class="ts-table">
                     <thead>
-                        <tr>
-                            <th>Coin</th>
-                            <th>Market Cap</th>
-                            <th>Score Diff</th>
-                            <th>Signal</th>
-                        </tr>
+                        <tr><th>Coin</th><th>Market Cap</th><th>Score Diff</th><th>Signal</th></tr>
                     </thead>
                     <tbody>
                         @foreach (var c in FilteredCoins)
@@ -107,14 +107,26 @@
         .Where(c => string.IsNullOrEmpty(_signalFilter) || c.SignalType == _signalFilter)
         .ToArray();
 
-    protected override void OnInitialized() => _ = LoadAsync();
+    protected override void OnInitialized()
+    {
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("t", out var t) && t == "ticker")
+            _tab = "ticker";
+        if (_tab == "coins") _ = LoadAsync();
+    }
+
+    private void SetTab(string tab)
+    {
+        _tab = tab;
+        if (tab == "coins" && _data is null) _ = LoadAsync();
+    }
 
     private async Task LoadAsync()
     {
         _loading = true;
         await InvokeAsync(StateHasChanged);
         try { _data = await Api.GetPotentialCoinsAsync(); }
-        catch { /* API offline — chart & search vẫn dùng được */ }
+        catch { }
         finally { _loading = false; await InvokeAsync(StateHasChanged); }
     }
 

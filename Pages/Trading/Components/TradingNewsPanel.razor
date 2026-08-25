@@ -1,6 +1,7 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading
 @inject ITradingApiClient Api
 @inject IJSRuntime JS
+@implements IDisposable
 
 <button class="ts-news-btn" @onclick="Toggle" title="News">
     <i class="bi bi-newspaper"></i> News
@@ -13,14 +14,21 @@
             <span>Telegram News</span>
             <button class="ts-btn ts-btn-outline" style="padding:4px 10px" @onclick="Toggle">✕</button>
         </div>
+        @if (_channels.Length > 0)
+        {
+            <div style="display:flex;gap:4px;padding:8px 12px;overflow-x:auto;border-bottom:1px solid #e2e8f0">
+                <button class="ts-tab @(_channel == "" ? "active" : "")" style="padding:4px 10px;font-size:0.75rem" @onclick='() => _channel = ""'>All</button>
+                @foreach (var ch in _channels)
+                {
+                    <button class="ts-tab @(_channel == ch ? "active" : "")" style="padding:4px 10px;font-size:0.75rem" @onclick='() => _channel = ch'>@ch</button>
+                }
+            </div>
+        }
         <div class="ts-panel-body">
-            @if (_loading)
+            @if (_loading) { <div class="ts-spinner"></div> }
+            else if (FilteredItems.Length > 0)
             {
-                <div class="ts-spinner"></div>
-            }
-            else if (_items?.Length > 0)
-            {
-                @foreach (var item in _items)
+                @foreach (var item in FilteredItems)
                 {
                     <div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #e2e8f0">
                         <strong style="font-size:0.78rem;color:#3b82f6">@item.Channel</strong>
@@ -31,10 +39,7 @@
                     </div>
                 }
             }
-            else
-            {
-                <p class="ts-empty">No news available.</p>
-            }
+            else { <p class="ts-empty">No news available.</p> }
         </div>
     </div>
 }
@@ -43,22 +48,46 @@
     private bool _visible;
     private bool _loading;
     private TelegramNewsItem[]? _items;
+    private string _channel = "";
+    private Timer? _timer;
+
+    private TelegramNewsItem[] FilteredItems => (_items ?? [])
+        .Where(i => string.IsNullOrEmpty(_channel) || i.Channel == _channel)
+        .ToArray();
+
+    private string[] _channels => (_items ?? []).Select(i => i.Channel).Distinct().OrderBy(x => x).ToArray();
 
     private async Task Toggle()
     {
         _visible = !_visible;
-        if (_visible && _items is null)
-        {
-            _loading = true;
-            _items = await Api.GetTelegramNewsAsync();
-            _loading = false;
-        }
+        if (_visible && _items is null) await Refresh();
+        if (_visible) StartPolling(); else StopPolling();
     }
 
-    private Task Speak(string? text)
+    private void StartPolling()
     {
-        if (!string.IsNullOrEmpty(text))
-            return JS.InvokeVoidAsync("tradingSpeech.speak", text).AsTask();
-        return Task.CompletedTask;
+        _timer ??= new Timer(async _ =>
+        {
+            if (!_visible) return;
+            await InvokeAsync(async () => { await Refresh(); StateHasChanged(); });
+        }, null, 60000, 60000);
     }
+
+    private void StopPolling()
+    {
+        _timer?.Dispose();
+        _timer = null;
+    }
+
+    private async Task Refresh()
+    {
+        _loading = _items is null;
+        _items = await Api.GetTelegramNewsAsync();
+        _loading = false;
+    }
+
+    private Task Speak(string? text) =>
+        string.IsNullOrEmpty(text) ? Task.CompletedTask : JS.InvokeVoidAsync("tradingSpeech.speak", text).AsTask();
+
+    public void Dispose() => StopPolling();
 }

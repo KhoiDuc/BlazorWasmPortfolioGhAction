@@ -1,4 +1,5 @@
 @inject ITradingApiClient Api
+@inject IJSRuntime JS
 
 <button class="ts-chat-launcher" @onclick="Toggle" title="Ask AI">🤖</button>
 
@@ -14,12 +15,22 @@
                 @foreach (var msg in _messages)
                 {
                     <div style="margin-bottom:8px;font-size:0.85rem;@(msg.IsUser ? "text-align:right" : "")">
-                        <span style="display:inline-block;padding:8px 12px;border-radius:12px;@(msg.IsUser ? "background:#3b82f6;color:#fff" : "background:#f1f5f9")">
-                            @msg.Text
-                        </span>
+                        @if (msg.Image is not null)
+                        {
+                            <img src="@msg.Image" alt="" style="max-width:160px;border-radius:8px;display:block;margin-left:auto" />
+                        }
+                        @if (!string.IsNullOrEmpty(msg.Text))
+                        {
+                            <span style="display:inline-block;padding:8px 12px;border-radius:12px;@(msg.IsUser ? "background:#3b82f6;color:#fff" : "background:#f1f5f9")">
+                                @msg.Text
+                            </span>
+                        }
                     </div>
                 }
                 @if (_busy) { <div class="ts-spinner"></div> }
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+                <InputFile OnChange="OnImage" accept="image/*" />
             </div>
             <div style="display:flex;gap:8px">
                 <input class="ts-input" @bind="_input" @bind:event="oninput" placeholder="Ask about markets..." @onkeydown="OnKey" />
@@ -33,22 +44,37 @@
     private bool _open;
     private bool _busy;
     private string _input = "";
+    private string? _imageContext;
     private List<ChatMsg> _messages = [];
 
-    private record ChatMsg(string Text, bool IsUser);
+    private record ChatMsg(string? Text, bool IsUser, string? Image = null);
 
     private void Toggle() => _open = !_open;
 
+    private async Task OnImage(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file.Size > 300_000) return;
+        using var stream = file.OpenReadStream(300_000);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        var b64 = Convert.ToBase64String(ms.ToArray());
+        _imageContext = $"data:{file.ContentType};base64,{b64}";
+        _messages.Add(new ChatMsg("[Image attached]", true, _imageContext));
+    }
+
     private async Task Send()
     {
-        if (string.IsNullOrWhiteSpace(_input) || _busy) return;
+        if ((string.IsNullOrWhiteSpace(_input) && _imageContext is null) || _busy) return;
         var q = _input.Trim();
         _input = "";
-        _messages.Add(new ChatMsg(q, true));
+        if (!string.IsNullOrEmpty(q)) _messages.Add(new ChatMsg(q, true));
         _busy = true;
         StateHasChanged();
-        var reply = await Api.ChatAsync(q);
+        var ctx = _imageContext is not null ? "User attached chart/image for analysis." : null;
+        var reply = await Api.ChatAsync(q.Length > 0 ? q : "Analyze this image in trading context.", ctx);
         _messages.Add(new ChatMsg(reply ?? "Sorry, I could not respond.", false));
+        _imageContext = null;
         _busy = false;
     }
 

@@ -7,11 +7,12 @@
         <button class="ts-tab @(_tab == "gold" ? "active" : "")" @onclick='() => _tab = "gold"'>Gold</button>
         <button class="ts-tab @(_tab == "silver" ? "active" : "")" @onclick='() => _tab = "silver"'>Silver</button>
         <button class="ts-tab @(_tab == "oil" ? "active" : "")" @onclick='() => _tab = "oil"'>Oil</button>
+        <button class="ts-tab @(_tab == "fuel" ? "active" : "")" @onclick='() => _tab = "fuel"'>Petrolimex</button>
     </div>
 
     <div class="ts-panel">
         <div class="ts-header">
-            <div><h2>Commodities Terminal</h2><p>Gold • Silver • Crude Oil</p></div>
+            <div><h2>Commodities Terminal</h2><p>Gold • Silver • Crude Oil • Fuel</p></div>
         </div>
     </div>
 
@@ -19,21 +20,24 @@
     {
         <TradingViewChart Symbol="OANDA:XAUUSD" />
         <PriceAlertWidget Symbol="XAUUSD" AssetType="gold" />
-        <div class="ts-panel">
-            <h3>VN Gold (SJC)</h3>
-            <p class="ts-updated">Data via proxy from SJC — refresh page to update.</p>
-            <iframe src="@Api.ProxyUrl("goldprice/services/priceservice.ashx")" style="width:100%;height:200px;border:none" title="SJC gold"></iframe>
-        </div>
+        <GoldSpreadPanel />
     }
     else if (_tab == "silver")
     {
         <TradingViewChart Symbol="OANDA:XAGUSD" />
         <PriceAlertWidget Symbol="XAGUSD" AssetType="silver" />
     }
-    else
+    else if (_tab == "oil")
     {
         <TradingViewChart Symbol="TVC:USOIL" />
         <PriceAlertWidget Symbol="USOIL" AssetType="oil" />
+    }
+    else
+    {
+        <div class="ts-panel">
+            <h3>Petrolimex Fuel Prices (VN)</h3>
+            <iframe src="@Api.ProxyUrl("petrolimex")" style="width:100%;height:480px;border:none;border-radius:12px" title="Petrolimex" loading="lazy"></iframe>
+        </div>
     }
 </div>
 

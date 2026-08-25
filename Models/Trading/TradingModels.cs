@@ -160,3 +160,39 @@ public class OsintThesis
 }
 
 public record TelegramNewsItem(string Channel, string Text, DateTime? Date);
+
+public class OsintSignal
+{
+    public int Id { get; set; }
+    public string? Symbol { get; set; }
+    public string? AssetClass { get; set; }
+    public string? SignalType { get; set; }
+    public string? Title { get; set; }
+    public string? Content { get; set; }
+    public string? Source { get; set; }
+    public DateTime? CreatedAt { get; set; }
+}
+
+public record FxRateRow(
+    string Currency,
+    string? Name,
+    double Rate,
+    double? ChangePct);
+
+public record CalendarEvent(
+    string? Title,
+    string? Country,
+    string? Currency,
+    string? Impact,
+    string? Actual,
+    string? Forecast,
+    string? Previous,
+    DateTime? DateTime);
+
+public record DnseOrderRequest(
+    string Symbol,
+    int Quantity,
+    double Price,
+    string Side,
+    string? AccountId = null,
+    string OrderType = "LO");

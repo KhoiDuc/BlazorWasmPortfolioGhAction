@@ -16,14 +16,18 @@
 @code {
     private bool _overlaysReady;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
-        {
-            // Defer floating widgets until after first paint so navigation feels instant.
-            await Task.Delay(300);
-            _overlaysReady = true;
-            StateHasChanged();
-        }
+            _ = EnableOverlaysAfterIdleAsync();
+        return Task.CompletedTask;
+    }
+
+    private async Task EnableOverlaysAfterIdleAsync()
+    {
+        // Let the page paint first; widgets are optional and load later.
+        await Task.Delay(3000);
+        _overlaysReady = true;
+        await InvokeAsync(StateHasChanged);
     }
 }

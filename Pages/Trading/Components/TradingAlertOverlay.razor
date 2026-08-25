@@ -5,10 +5,7 @@
 <div style="position:fixed;bottom:90px;right:24px;z-index:1001">
     <button class="ts-alert-bell" @onclick="Toggle" title="Alerts">
         <i class="bi bi-bell"></i>
-        @if (_unread > 0)
-        {
-            <span class="ts-badge">@_unread</span>
-        }
+        @if (_unread > 0) { <span class="ts-badge">@_unread</span> }
     </button>
 </div>
 
@@ -17,16 +14,17 @@
     <div class="ts-overlay-panel ts-alert-panel">
         <div class="ts-panel-header">
             <span>Triggered Alerts</span>
-            <div style="display:flex;gap:4px">
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
                 <button class="ts-btn ts-btn-outline" style="padding:2px 8px;font-size:0.72rem" @onclick="MarkRead">Mark read</button>
+                <button class="ts-btn ts-btn-outline" style="padding:2px 8px;font-size:0.72rem" @onclick="RestartScript">Restart</button>
                 <button class="ts-btn ts-btn-outline" style="padding:4px 10px" @onclick="Toggle">✕</button>
             </div>
         </div>
         <div class="ts-panel-body">
-            @if (_loading)
-            {
-                <div class="ts-spinner"></div>
-            }
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:0.85rem">
+                <label><input type="checkbox" @bind="_scanEnabled" @bind:after="ToggleScan" /> Price scan monitor</label>
+            </div>
+            @if (_loading) { <div class="ts-spinner"></div> }
             else if (_alerts?.Length > 0)
             {
                 @foreach (var a in _alerts.Take(20))
@@ -38,10 +36,7 @@
                     </div>
                 }
             }
-            else
-            {
-                <p class="ts-empty">No alerts.</p>
-            }
+            else { <p class="ts-empty">No alerts.</p> }
             @if (_status is not null)
             {
                 <p class="ts-updated mt-2">Monitor: @(_status.Running ? "Running" : "Stopped")</p>
@@ -54,6 +49,7 @@
     private bool _open;
     private bool _loading;
     private bool _loaded;
+    private bool _scanEnabled = true;
     private TriggeredAlert[]? _alerts;
     private ScriptStatusResponse? _status;
     private int _unread;
@@ -62,12 +58,8 @@
     private async Task Toggle()
     {
         _open = !_open;
-        if (_open && !_loaded)
-            await Refresh();
-        if (_open)
-            StartPolling();
-        else
-            StopPolling();
+        if (_open && !_loaded) await Refresh();
+        if (_open) StartPolling(); else StopPolling();
     }
 
     private void StartPolling()
@@ -92,22 +84,33 @@
         {
             var alertsTask = Api.GetTriggeredAlertsAsync();
             var statusTask = Api.GetScriptStatusAsync();
-            await Task.WhenAll(alertsTask, statusTask);
+            var settingsTask = Api.GetSystemSettingsAsync();
+            await Task.WhenAll(alertsTask, statusTask, settingsTask);
             _alerts = await alertsTask;
             _status = await statusTask;
+            var settings = await settingsTask;
+            _scanEnabled = settings?.FirstOrDefault(s => s.Key == "script_scan_enabled")?.Value != "false";
             _unread = _alerts?.Count(a => !a.IsRead) ?? 0;
             _loaded = true;
         }
-        finally
-        {
-            _loading = false;
-        }
+        finally { _loading = false; }
     }
 
     private async Task MarkRead()
     {
         await Api.MarkAlertsReadAsync();
         await Refresh();
+    }
+
+    private async Task RestartScript()
+    {
+        await Api.RestartScriptAsync();
+        await Refresh();
+    }
+
+    private async Task ToggleScan()
+    {
+        await Api.ToggleScriptScanAsync(_scanEnabled);
     }
 
     public void Dispose() => StopPolling();

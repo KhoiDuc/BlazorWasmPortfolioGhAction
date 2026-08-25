@@ -1,5 +1,6 @@
 @page "/trading"
 @page "/trading/home"
+@layout TradingLayout
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 @using BlazorWasmPortfolioGhAction.Models.Trading
 @inject ITradingApiClient Api
@@ -16,19 +17,16 @@
         </button>
     </div>
 
-    @if (_alertsLoading)
-    {
-        <div class="ts-panel"><div class="ts-spinner"></div><p class="ts-updated text-center">Loading alerts...</p></div>
-    }
-    else if (_alerts?.Length > 0)
+    @if (_alerts?.Length > 0)
     {
         <div class="ts-panel">
             <h3 style="font-size:1rem;margin:0 0 0.75rem">Latest Alerts</h3>
-            <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px">
-                @foreach (var a in _alerts.Take(12))
+            <div class="ts-marquee">
+                @foreach (var a in _alerts.Take(20))
                 {
-                    <div style="min-width:180px;padding:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff">
+                    <div class="ts-marquee-item">
                         <strong>@a.Symbol</strong>
+                        <span class="ts-updated">@a.AssetType</span>
                         <p style="font-size:0.78rem;margin:4px 0;color:#64748b">@a.Message</p>
                         <span class="@(a.Price >= 0 ? "ts-positive" : "ts-negative")">@a.Price</span>
                     </div>
@@ -42,15 +40,14 @@
         <img src="@Api.ProxyUrl("assets_rrgchart")" alt="Assets RRG" class="ts-rrg-img" loading="lazy" />
     </div>
 
+    <EconomicCalendarPanel />
+
     <div class="ts-panel">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
             <h3 style="font-size:1rem;margin:0">Macro Theses</h3>
             <button class="ts-btn ts-btn-outline" @onclick="TriggerThesis" disabled="@_thesesLoading">Update Theses</button>
         </div>
-        @if (_thesesLoading)
-        {
-            <div class="ts-spinner"></div>
-        }
+        @if (_thesesLoading) { <div class="ts-spinner"></div> }
         else if (_theses?.Length > 0)
         {
             @foreach (var t in _theses)
@@ -65,17 +62,10 @@
                 </div>
             }
         }
-        else
-        {
-            <p class="ts-updated">No theses loaded.</p>
-        }
+        else { <p class="ts-updated">No theses loaded.</p> }
     </div>
 
-    @if (_worldStateLoading)
-    {
-        <div class="ts-panel"><div class="ts-spinner"></div></div>
-    }
-    else if (_worldState?.Summary is not null)
+    @if (_worldState?.Summary is not null)
     {
         <div class="ts-panel">
             <h3 style="font-size:1rem;margin:0 0 0.75rem">World State</h3>
@@ -83,15 +73,16 @@
         </div>
     }
 
-    @if (_calendarLoading)
-    {
-        <div class="ts-panel"><div class="ts-spinner"></div></div>
-    }
-    else if (_calendar.HasValue)
+    @if (_signals?.Length > 0)
     {
         <div class="ts-panel">
-            <h3 style="font-size:1rem;margin:0 0 0.75rem">Economic Calendar (This Week)</h3>
-            <pre style="font-size:0.75rem;overflow:auto;max-height:300px;background:#f8fafc;padding:12px;border-radius:8px">@_calendar.Value.ToString()</pre>
+            <h3 style="font-size:1rem;margin:0 0 0.75rem">OSINT Signals</h3>
+            @foreach (var s in _signals.Take(6))
+            {
+                <div style="font-size:0.85rem;padding:8px 0;border-bottom:1px solid #e2e8f0">
+                    <strong>@s.Symbol</strong> — @s.Title
+                </div>
+            }
         </div>
     }
 </div>
@@ -100,83 +91,33 @@
     private TriggeredAlert[]? _alerts;
     private OsintThesis[]? _theses;
     private OsintWorldState? _worldState;
-    private System.Text.Json.JsonElement? _calendar;
+    private OsintSignal[]? _signals;
     private bool _scanning;
-    private bool _alertsLoading;
     private bool _thesesLoading;
-    private bool _worldStateLoading;
-    private bool _calendarLoading;
     private CancellationTokenSource? _cts;
 
-    protected override void OnInitialized()
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
-        _cts = new CancellationTokenSource();
-        _ = LoadAllAsync(_cts.Token);
+        if (firstRender)
+        {
+            _cts = new CancellationTokenSource();
+            _ = LoadAllDeferredAsync(_cts.Token);
+        }
+        return Task.CompletedTask;
     }
 
-    private async Task LoadAllAsync(CancellationToken ct)
+    private async Task LoadAllDeferredAsync(CancellationToken ct)
     {
-        var alertsTask = LoadAlertsAsync(ct);
-        var thesesTask = LoadThesesAsync(ct);
-        var worldTask = LoadWorldStateAsync(ct);
-        var calendarTask = LoadCalendarAsync(ct);
-        await Task.WhenAll(alertsTask, thesesTask, worldTask, calendarTask);
-    }
-
-    private async Task LoadAlertsAsync(CancellationToken ct)
-    {
+        await Task.Delay(1500, ct);
         try
         {
             _alerts = await Api.GetTriggeredAlertsAsync(50, ct);
-        }
-        catch { }
-        finally
-        {
-            _alertsLoading = false;
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    private async Task LoadThesesAsync(CancellationToken ct)
-    {
-        try
-        {
             _theses = await Api.GetThesesAsync(ct: ct);
-        }
-        catch { }
-        finally
-        {
-            _thesesLoading = false;
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    private async Task LoadWorldStateAsync(CancellationToken ct)
-    {
-        try
-        {
             _worldState = await Api.GetWorldStateAsync(ct);
+            _signals = await Api.GetOsintSignalsAsync(ct);
         }
         catch { }
-        finally
-        {
-            _worldStateLoading = false;
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    private async Task LoadCalendarAsync(CancellationToken ct)
-    {
-        try
-        {
-            _calendar = await Api.GetCalendarAsync(ct);
-        }
-        catch { }
-        finally
-        {
-            _calendarLoading = false;
-            await InvokeAsync(StateHasChanged);
-        }
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task RefreshAssets()

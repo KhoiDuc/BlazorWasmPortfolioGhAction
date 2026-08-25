@@ -1,0 +1,88 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading
+@using System.Text.Json
+@inject ITradingApiClient Api
+
+<div class="ts-panel">
+    <div class="ts-header">
+        <h3 style="margin:0">Live FX Rates</h3>
+        <button class="ts-btn ts-btn-outline" @onclick="Load" disabled="@_loading">Refresh</button>
+    </div>
+    @if (_loading) { <div class="ts-spinner"></div> }
+    else if (_rows.Count > 0)
+    {
+        <div class="ts-table-wrap">
+            <table class="ts-table">
+                <thead><tr><th>Currency</th><th>Rate</th><th>Change</th></tr></thead>
+                <tbody>
+                    @foreach (var r in _rows)
+                    {
+                        <tr>
+                            <td><strong>@r.Currency</strong> @if (!string.IsNullOrEmpty(r.Name)) { <span class="ts-updated">@r.Name</span> }</td>
+                            <td>@r.Rate.ToString("N4")</td>
+                            <td class="@(r.ChangePct >= 0 ? "ts-positive" : "ts-negative")">@(r.ChangePct?.ToString("F2") ?? "—")%</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else { <p class="ts-empty">Rates unavailable.</p> }
+</div>
+
+@code {
+    private List<FxRateRow> _rows = [];
+    private bool _loading;
+
+    protected override void OnInitialized() => _ = Load();
+
+    private async Task Load()
+    {
+        _loading = true;
+        await InvokeAsync(StateHasChanged);
+        _rows.Clear();
+        try
+        {
+            var json = await Api.GetFxRatesAsync();
+            if (json.HasValue) ParseRates(json.Value);
+        }
+        catch { }
+        _loading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void ParseRates(JsonElement root)
+    {
+        if (root.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var el in root.EnumerateArray())
+                TryAddRow(el);
+            return;
+        }
+        if (root.TryGetProperty("rates", out var rates) && rates.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var p in rates.EnumerateObject())
+                _rows.Add(new FxRateRow(p.Name, null, p.Value.GetDouble(), null));
+            return;
+        }
+        if (root.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var p in root.EnumerateObject())
+            {
+                if (p.Value.ValueKind == JsonValueKind.Number)
+                    _rows.Add(new FxRateRow(p.Name, null, p.Value.GetDouble(), null));
+                else if (p.Value.ValueKind == JsonValueKind.Object)
+                    TryAddRow(p.Value);
+            }
+        }
+    }
+
+    private void TryAddRow(JsonElement el)
+    {
+        var cur = el.TryGetProperty("currency", out var c) ? c.GetString() : el.TryGetProperty("code", out var code) ? code.GetString() : null;
+        if (cur is null) return;
+        var rate = el.TryGetProperty("rate", out var r) ? r.GetDouble() : el.TryGetProperty("value", out var v) ? v.GetDouble() : 0;
+        var name = el.TryGetProperty("name", out var n) ? n.GetString() : null;
+        double? ch = el.TryGetProperty("change", out var chEl) && chEl.TryGetDouble(out var d) ? d : null;
+        _rows.Add(new FxRateRow(cur, name, rate, ch));
+    }
+}

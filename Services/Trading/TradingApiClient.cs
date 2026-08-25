@@ -41,6 +41,18 @@ public interface ITradingApiClient
     Task<string?> ChatAsync(string message, string? context = null, CancellationToken ct = default);
     Task<JsonElement?> GetCalendarAsync(CancellationToken ct = default);
     Task<JsonElement?> GetFxRatesAsync(CancellationToken ct = default);
+    Task<OsintSignal[]?> GetOsintSignalsAsync(CancellationToken ct = default);
+    Task LikeCommunityPostAsync(int postId, CancellationToken ct = default);
+    Task UpdateNewsItemAsync(int id, object body, CancellationToken ct = default);
+    Task DeleteNewsItemAsync(int id, CancellationToken ct = default);
+    Task UpdateNewsGroupAsync(int id, object body, CancellationToken ct = default);
+    Task DeleteNewsGroupAsync(int id, CancellationToken ct = default);
+    Task<JsonElement?> GetDnseDealsAsync(string? accountId = null, CancellationToken ct = default);
+    Task<JsonElement?> PlaceDnseOrderAsync(object order, CancellationToken ct = default);
+    Task<JsonElement?> ConfirmDnseOtpAsync(string otp, string? sessionId = null, CancellationToken ct = default);
+    Task<JsonElement?> GetTcbsStockInfoAsync(string symbol, CancellationToken ct = default);
+    Task<JsonElement?> GetProxyJsonAsync(string path, CancellationToken ct = default);
+    Task ToggleScriptScanAsync(bool enabled, CancellationToken ct = default);
     Task<HttpClient> CreateAuthorizedClientAsync();
     string ProxyUrl(string path);
 }
@@ -216,6 +228,80 @@ public class TradingApiClient : ITradingApiClient
         var resp = await _http.GetAsync("api/rates", ct);
         if (!resp.IsSuccessStatusCode) return null;
         return await resp.Content.ReadFromJsonAsync<JsonElement>(JsonOpts, ct);
+    }
+
+    public Task<OsintSignal[]?> GetOsintSignalsAsync(CancellationToken ct = default) =>
+        GetAsync<OsintSignal[]>("api/osint/signals", ct);
+
+    public Task LikeCommunityPostAsync(int postId, CancellationToken ct = default) =>
+        PostAsync($"community/posts/{postId}/like", new { }, ct);
+
+    public Task UpdateNewsItemAsync(int id, object body, CancellationToken ct = default) =>
+        SendAsync(HttpMethod.Put, $"api/news-items/{id}", body, ct);
+
+    public Task DeleteNewsItemAsync(int id, CancellationToken ct = default) =>
+        DeleteAsync($"api/news-items/{id}", ct);
+
+    public Task UpdateNewsGroupAsync(int id, object body, CancellationToken ct = default) =>
+        SendAsync(HttpMethod.Put, $"api/news-groups/{id}", body, ct);
+
+    public Task DeleteNewsGroupAsync(int id, CancellationToken ct = default) =>
+        DeleteAsync($"api/news-groups/{id}", ct);
+
+    public Task<JsonElement?> GetDnseDealsAsync(string? accountId = null, CancellationToken ct = default)
+    {
+        var path = string.IsNullOrWhiteSpace(accountId)
+            ? "dnse-order-service/deals"
+            : $"dnse-order-service/accounts/{Uri.EscapeDataString(accountId)}/deals";
+        return GetJsonAsync(path, ct);
+    }
+
+    public Task<JsonElement?> PlaceDnseOrderAsync(object order, CancellationToken ct = default) =>
+        PostJsonAsync("dnse-order-service/orders", order, ct);
+
+    public Task<JsonElement?> ConfirmDnseOtpAsync(string otp, string? sessionId = null, CancellationToken ct = default) =>
+        PostJsonAsync("dnse-order-service/orders/confirm", new { otp, session_id = sessionId }, ct);
+
+    public Task<JsonElement?> GetTcbsStockInfoAsync(string symbol, CancellationToken ct = default) =>
+        GetJsonAsync($"tcanalysis/{Uri.EscapeDataString(symbol)}", ct);
+
+    public Task<JsonElement?> GetProxyJsonAsync(string path, CancellationToken ct = default) =>
+        GetJsonAsync(path, ct);
+
+    public Task ToggleScriptScanAsync(bool enabled, CancellationToken ct = default) =>
+        UpdateSystemSettingAsync("script_scan_enabled", enabled ? "true" : "false", ct);
+
+    private async Task<JsonElement?> GetJsonAsync(string path, CancellationToken ct)
+    {
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, path.TrimStart('/'));
+            var resp = await SendAuthorizedAsync(req, ct);
+            if (!resp.IsSuccessStatusCode) return null;
+            return await resp.Content.ReadFromJsonAsync<JsonElement>(JsonOpts, ct);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<JsonElement?> PostJsonAsync(string path, object body, CancellationToken ct)
+    {
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Post, path.TrimStart('/'))
+            {
+                Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json")
+            };
+            var resp = await SendAuthorizedAsync(req, ct);
+            if (!resp.IsSuccessStatusCode) return null;
+            return await resp.Content.ReadFromJsonAsync<JsonElement>(JsonOpts, ct);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private async Task PostAsync(string path, object body, CancellationToken ct)

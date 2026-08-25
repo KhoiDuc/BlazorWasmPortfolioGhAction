@@ -1,0 +1,42 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading
+@using BlazorWasmPortfolioGhAction.Services
+@inject IJSRuntime JS
+@inject IScriptLoaderService ScriptLoader
+
+<div class="ts-panel">
+    <h3 style="margin:0 0 1rem">Price per m² by Region</h3>
+    @if (Items.Length == 0)
+    {
+        <p class="ts-updated">No data for chart.</p>
+    }
+    else
+    {
+        <div style="max-height:320px"><canvas id="@_canvasId"></canvas></div>
+    }
+</div>
+
+@code {
+    [Parameter] public RealEstatePrice[] Items { get; set; } = [];
+
+    private string _canvasId = $"re_chart_{Guid.NewGuid():N}";
+    private bool _rendered;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Items.Length == 0 || _rendered) return;
+        _rendered = true;
+        await ScriptLoader.EnsureChartJsAsync();
+        var groups = Items
+            .Where(i => i.Area > 0 && i.PriceNumeric > 0)
+            .GroupBy(i => i.Region)
+            .Select(g => new { Region = g.Key, Avg = g.Average(x => x.PriceNumeric / x.Area) })
+            .OrderByDescending(x => x.Avg)
+            .Take(10)
+            .ToList();
+        if (groups.Count == 0) return;
+        await JS.InvokeVoidAsync("tradingCharts.bar", _canvasId,
+            groups.Select(g => g.Region).ToArray(),
+            groups.Select(g => Math.Round(g.Avg / 1_000_000, 2)).ToArray(),
+            "Avg price (M VND/m²)");
+    }
+}

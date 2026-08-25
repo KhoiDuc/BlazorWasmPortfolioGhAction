@@ -7,6 +7,7 @@
     <div class="ts-tabs">
         <button class="ts-tab @(_tab == "potential" ? "active" : "")" @onclick='() => _tab = "potential"'>Potential Pairs</button>
         <button class="ts-tab @(_tab == "rates" ? "active" : "")" @onclick='() => _tab = "rates"'>FX Rates</button>
+        <button class="ts-tab @(_tab == "cheat" ? "active" : "")" @onclick='() => _tab = "cheat"'>Cheat Sheet</button>
         <button class="ts-tab @(_tab == "rrg" ? "active" : "")" @onclick='() => _tab = "rrg"'>RRG Chart</button>
         <button class="ts-tab @(_tab == "sessions" ? "active" : "")" @onclick='() => _tab = "sessions"'>Sessions</button>
     </div>
@@ -18,13 +19,10 @@
                 <div><h2>Forex Scanner</h2><p>Buy strong / sell weak currency pairs</p></div>
                 <button class="ts-btn ts-btn-primary" @onclick="Scan" disabled="@_scanning">Scan Forex</button>
             </div>
-            <div class="ts-field">
-                <input class="ts-input" @bind="_pair" placeholder="EURUSD" />
-            </div>
+            <div class="ts-field"><input class="ts-input" @bind="_pair" placeholder="EURUSD" /></div>
         </div>
         <TradingViewChart Symbol="@_pair" />
         <PriceAlertWidget Symbol="@_pair" AssetType="forex" />
-
         @if (_data?.Data?.Length > 0)
         {
             <div class="ts-panel ts-table-wrap">
@@ -45,51 +43,29 @@
             </div>
         }
     }
-    else if (_tab == "rates")
-    {
-        <div class="ts-panel">
-            <h3>Live FX Rates</h3>
-            @if (_ratesLoading)
-            {
-                <div class="ts-spinner"></div>
-            }
-            else if (_rates.HasValue)
-            {
-                <pre style="font-size:0.78rem;overflow:auto;max-height:400px">@_rates.Value.ToString()</pre>
-            }
-            else { <p class="ts-empty">Rates unavailable.</p> }
-        </div>
-    }
+    else if (_tab == "rates") { <FxRatesTable /> }
+    else if (_tab == "cheat") { <ForexCheatSheetPanel /> }
     else if (_tab == "rrg")
     {
         <div class="ts-panel">
             <img src="@Api.ProxyUrl("forex_rrgchart")" alt="Forex RRG" class="ts-rrg-img" loading="lazy" />
         </div>
     }
-    else
-    {
-        <ForexSessionsPanel />
-    }
+    else { <ForexSessionsPanel /> }
 </div>
 
 @code {
     private string _tab = "potential";
     private WatchlistResponse<ForexPair>? _data;
     private string _pair = "EURUSD";
-    private System.Text.Json.JsonElement? _rates;
     private bool _scanning;
-    private bool _ratesLoading;
 
     protected override void OnInitialized() => _ = LoadAsync();
 
     private async Task LoadAsync()
     {
         try { _data = await Api.GetPotentialForexPairsAsync(); } catch { }
-        _ratesLoading = true;
         await InvokeAsync(StateHasChanged);
-        try { _rates = await Api.GetFxRatesAsync(); }
-        catch { }
-        finally { _ratesLoading = false; await InvokeAsync(StateHasChanged); }
     }
 
     private async Task Scan()

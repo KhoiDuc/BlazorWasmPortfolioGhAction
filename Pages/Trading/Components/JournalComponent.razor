@@ -1,12 +1,36 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading
+@using BlazorWasmPortfolioGhAction.Services
 @inject ITradingApiClient Api
-@inject ITradingAuthService Auth
+@inject IJSRuntime JS
+@inject IScriptLoaderService ScriptLoader
 
 <div class="ts-panel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
         <h3 style="margin:0">Investment Journal</h3>
         <button class="ts-btn ts-btn-primary" @onclick="() => _showForm = !_showForm">+ Entry</button>
     </div>
+
+    @if (_entries?.Length > 0)
+    {
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+            <div><canvas id="@_pieId" style="max-height:200px"></canvas></div>
+            <div class="ts-table-wrap" style="max-height:200px;overflow:auto">
+                <table class="ts-table">
+                    <thead><tr><th>Symbol</th><th>Value</th><th>Live</th></tr></thead>
+                    <tbody>
+                        @foreach (var e in _entries)
+                        {
+                            <tr>
+                                <td><strong>@e.Symbol</strong></td>
+                                <td>@((e.Quantity * e.Price).ToString("N0")) @e.Currency</td>
+                                <td class="ts-updated">@(e.CurrentPrice?.ToString("N2") ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
 
     @if (_showForm)
     {
@@ -20,6 +44,7 @@
             <input type="number" class="ts-input" @bind="_quantity" placeholder="Qty" />
             <input type="number" class="ts-input" @bind="_price" placeholder="Price" step="any" />
             <input class="ts-input" @bind="_currency" placeholder="Currency" />
+            <input class="ts-input" @bind="_notes" placeholder="Notes" />
             <button class="ts-btn ts-btn-primary" @onclick="Save">Save</button>
         </div>
     }
@@ -43,10 +68,7 @@
             </tbody>
         </table>
     }
-    else
-    {
-        <p class="ts-empty">No journal entries.</p>
-    }
+    else { <p class="ts-empty">No journal entries.</p> }
 </div>
 
 @code {
@@ -59,18 +81,35 @@
     private double _quantity;
     private double _price;
     private string _currency = "VND";
+    private string _notes = "";
+    private string _pieId = $"journal_pie_{Guid.NewGuid():N}";
+    private bool _chartRendered;
 
     protected override void OnParametersSet()
     {
-        if (!string.IsNullOrEmpty(UserId))
-            _ = LoadAsync();
+        if (!string.IsNullOrEmpty(UserId)) _ = LoadAsync();
     }
 
     private async Task LoadAsync()
     {
         try { _entries = await Api.GetJournalAsync(UserId); }
         catch { }
+        _chartRendered = false;
         await InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_entries?.Length > 0 && !_chartRendered)
+        {
+            _chartRendered = true;
+            await ScriptLoader.EnsureChartJsAsync();
+            var groups = _entries.GroupBy(e => e.AssetType)
+                .Select(g => (g.Key, g.Sum(x => x.Quantity * x.Price))).ToList();
+            await JS.InvokeVoidAsync("tradingCharts.doughnut", _pieId,
+                groups.Select(g => g.Item1).ToArray(),
+                groups.Select(g => Math.Round(g.Item2, 2)).ToArray());
+        }
     }
 
     private async Task Save()
@@ -83,7 +122,7 @@
             price = _price,
             currency = _currency,
             entry_date = DateTime.UtcNow,
-            notes = ""
+            notes = _notes
         });
         _showForm = false;
         await LoadAsync();
