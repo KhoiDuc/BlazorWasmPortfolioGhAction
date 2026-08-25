@@ -12,10 +12,12 @@
     <div class="broker-form-grid">
         <div class="ts-field">
             <label class="ts-label">Ngành</label>
-            <input class="ts-input" @bind="Position.Sector" @bind:event="oninput" @bind:after="Changed" />
+            <span class="ts-field-hint">Tự điền khi thêm mã; sửa nếu cần</span>
+            <input class="ts-input" placeholder="Ngân hàng, Bán lẻ…" @bind="Position.Sector" @bind:event="oninput" @bind:after="Changed" maxlength="80" />
         </div>
         <div class="ts-field">
             <label class="ts-label">Trạng thái</label>
+            <span class="ts-field-hint">Chọn sau khi đã theo dõi / vào lệnh</span>
             <select class="ts-select" @bind="Position.Status" @bind:after="Changed">
                 @foreach (var s in Enum.GetValues<BrokerPositionStatus>())
                 {
@@ -25,11 +27,21 @@
         </div>
         <div class="ts-field">
             <label class="ts-label">Cắt lỗ (mã)</label>
-            <input class="ts-input" type="number" step="any" @bind="Position.StopLoss" @bind:after="Changed" placeholder="—" />
+            <span class="ts-field-hint">Thấp hơn giá TB; để trống nếu chưa có</span>
+            <input class="ts-input" type="number" min="0.0001" step="any" placeholder="55.5" @bind="Position.StopLoss" @bind:after="ValidatePositionLevels" />
+            @if (!string.IsNullOrEmpty(_posStopErr))
+            {
+                <p class="ts-field-error">@_posStopErr</p>
+            }
         </div>
         <div class="ts-field">
             <label class="ts-label">Mục tiêu (mã)</label>
-            <input class="ts-input" type="number" step="any" @bind="Position.TargetPrice" @bind:after="Changed" placeholder="—" />
+            <span class="ts-field-hint">Cao hơn giá TB; để trống nếu chưa có</span>
+            <input class="ts-input" type="number" min="0.0001" step="any" placeholder="70.5" @bind="Position.TargetPrice" @bind:after="ValidatePositionLevels" />
+            @if (!string.IsNullOrEmpty(_posTargetErr))
+            {
+                <p class="ts-field-error">@_posTargetErr</p>
+            }
         </div>
     </div>
 
@@ -56,13 +68,19 @@
                     <tr>
                         <td>L@i</td>
                         <td><input class="ts-input" type="date" @bind="lot.BoughtAt" @bind:format="yyyy-MM-dd" @bind:after="Changed" /></td>
-                        <td><input class="ts-input" type="number" step="any" @bind="lot.Price" @bind:after="Changed" /></td>
-                        <td><input class="ts-input" type="number" step="any" @bind="lot.Quantity" @bind:after="Changed" /></td>
-                        <td><input class="ts-input" type="number" step="any" @bind="lot.StopLoss" @bind:after="Changed" placeholder="—" /></td>
-                        <td><input class="ts-input" type="number" step="any" @bind="lot.TargetPrice" @bind:after="Changed" placeholder="—" /></td>
-                        <td><input class="ts-input" @bind="lot.Note" @bind:after="Changed" placeholder="—" /></td>
+                        <td><input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.Price" @bind:after="() => ValidateLot(lot)" /></td>
+                        <td><input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.Quantity" @bind:after="() => ValidateLot(lot)" /></td>
+                        <td><input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.StopLoss" @bind:after="() => ValidateLot(lot)" /></td>
+                        <td><input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.TargetPrice" @bind:after="() => ValidateLot(lot)" /></td>
+                        <td><input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" @bind="lot.Note" @bind:after="Changed" /></td>
                         <td><button class="ts-btn ts-btn-outline" type="button" @onclick="() => RemoveLot(lot)">Xóa</button></td>
                     </tr>
+                    @if (_lotErrors.TryGetValue(lot.Id, out var lotErr))
+                    {
+                        <tr>
+                            <td colspan="8"><p class="ts-field-error mb-0">@lotErr</p></td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
@@ -76,7 +94,12 @@
                 <input class="ts-input" type="datetime-local" @bind="note.At" @bind:format="yyyy-MM-ddTHH:mm" @bind:after="Changed" />
                 <button class="ts-btn ts-btn-outline" type="button" @onclick="() => RemoveNote(note)">Xóa</button>
             </div>
-            <textarea class="ts-input ts-textarea" rows="3" @bind="note.Text" @bind:event="oninput" @bind:after="Changed"></textarea>
+            <textarea class="ts-input ts-textarea"
+                      rows="3"
+                      maxlength="@BrokerInputValidation.NoteMaxLen"
+                      @bind="note.Text"
+                      @bind:event="oninput"
+                      @bind:after="Changed"></textarea>
             <button class="ts-btn ts-btn-outline" type="button" disabled="@_explainBusy" @onclick="() => Explain(note)">
                 AI giải thích
             </button>
@@ -89,7 +112,17 @@
 
     <div class="ts-field">
         <label class="ts-label">Thêm note</label>
-        <textarea class="ts-input ts-textarea" rows="2" @bind="_noteText" placeholder="Note broker ngày hôm sau…"></textarea>
+        <span class="ts-field-hint">Note broker ngày hôm sau hoặc cập nhật mới</span>
+        <textarea class="ts-input ts-textarea @(_noteErr is not null ? "ts-input-invalid" : "")"
+                  placeholder="VD: Broker kêu mua thêm vùng 58…"
+                  rows="2"
+                  maxlength="@BrokerInputValidation.NoteMaxLen"
+                  @bind="_noteText"
+                  @bind:after="() => _noteErr = null"></textarea>
+        @if (!string.IsNullOrEmpty(_noteErr))
+        {
+            <p class="ts-field-error">@_noteErr</p>
+        }
     </div>
     <button class="ts-btn ts-btn-primary" type="button" @onclick="AddNote">Thêm note</button>
 
@@ -105,24 +138,78 @@
     [Parameter] public EventCallback OnDeleted { get; set; }
 
     private string _noteText = "";
+    private string? _noteErr;
+    private string? _posStopErr;
+    private string? _posTargetErr;
     private bool _explainBusy;
     private string? _error;
+    private readonly Dictionary<string, string> _lotErrors = new();
 
     private Task Changed() => OnChanged.InvokeAsync();
+
+    private void ValidatePositionLevels()
+    {
+        _posStopErr = null;
+        _posTargetErr = null;
+        var refPrice = Position.AvgBuy ?? Position.Buys.FirstOrDefault(b => b.Price > 0)?.Price;
+        if (refPrice is not > 0)
+        {
+            _ = Changed();
+            return;
+        }
+
+        if (Position.StopLoss is > 0 && Position.StopLoss >= refPrice)
+            _posStopErr = "Cắt lỗ phải thấp hơn giá TB / giá mua.";
+        if (Position.TargetPrice is > 0 && Position.TargetPrice <= refPrice)
+            _posTargetErr = "Mục tiêu phải cao hơn giá TB / giá mua.";
+        _ = Changed();
+    }
+
+    private void ValidateLot(BrokerLot lot)
+    {
+        if (lot.Price is not > 0)
+        {
+            _lotErrors[lot.Id] = "Giá mua > 0.";
+            return;
+        }
+
+        if (!BrokerInputValidation.TryValidateQuantity(lot.Quantity, out var qtyErr))
+        {
+            _lotErrors[lot.Id] = qtyErr!;
+            return;
+        }
+
+        if (!BrokerInputValidation.TryValidateStopTarget(lot.Price, lot.StopLoss, lot.TargetPrice, out var stErr))
+        {
+            _lotErrors[lot.Id] = stErr!;
+            return;
+        }
+
+        _lotErrors.Remove(lot.Id);
+        _ = Changed();
+    }
 
     private async Task RemoveLot(BrokerLot lot)
     {
         Position.Buys.Remove(lot);
+        _lotErrors.Remove(lot.Id);
         await Changed();
     }
 
     private async Task AddNote()
     {
-        if (string.IsNullOrWhiteSpace(_noteText))
+        if (!BrokerInputValidation.TryValidateNote(_noteText, out var noteErr) || noteErr is not null)
         {
-            _error = "Note trống.";
+            _noteErr = noteErr ?? "Note không hợp lệ.";
             return;
         }
+
+        if (string.IsNullOrWhiteSpace(_noteText))
+        {
+            _noteErr = "Note không được để trống.";
+            return;
+        }
+
         Position.Notes.Add(new BrokerNote
         {
             At = DateTime.Now,
@@ -130,6 +217,7 @@
             Text = _noteText.Trim()
         });
         _noteText = "";
+        _noteErr = null;
         _error = null;
         await Changed();
     }

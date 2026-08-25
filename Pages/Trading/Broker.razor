@@ -34,32 +34,107 @@
 
     <div class="ts-panel">
         <h3 class="ts-panel-title">Ghi khuyến nghị broker</h3>
-        <p class="ts-muted" style="font-size:0.82rem;margin:-0.25rem 0 0.75rem">Chỉ cần mã + giá mua. Cắt lỗ / mục tiêu để trống nếu broker không nói. Trạng thái chọn sau ở chi tiết mã.</p>
         <div class="broker-form-grid">
             <div class="ts-field">
-                <label class="ts-label">Mã CP</label>
-                <input class="ts-input" @bind="_newSymbol" placeholder="VNM" maxlength="10" />
+                <label class="ts-label" for="broker-symbol">Mã CP</label>
+                <span class="ts-field-hint">3–10 ký tự, chữ và số. VD: VNM, VCB</span>
+                <input id="broker-symbol"
+                       class='ts-input @FieldClass("symbol")'
+                       placeholder="VNM"
+                       @bind="_newSymbol"
+                       @bind:event="oninput"
+                       @bind:after="OnSymbolInput"
+                       maxlength="@BrokerInputValidation.SymbolMaxLen"
+                       minlength="@BrokerInputValidation.SymbolMinLen"
+                       pattern="[A-Za-z0-9]{3,10}"
+                       required
+                       autocomplete="off"
+                       inputmode="text" />
+                @if (_fieldErrors.TryGetValue("symbol", out var errSymbol))
+                {
+                    <p class="ts-field-error">@errSymbol</p>
+                }
             </div>
             <div class="ts-field">
-                <label class="ts-label">Giá mua</label>
-                <input class="ts-input" type="number" step="any" @bind="_newPrice" placeholder="60" />
+                <label class="ts-label" for="broker-price">Giá mua</label>
+                <span class="ts-field-hint">Giá broker khuyên mua, &gt; 0. Có thể nhập thập phân (VD: 58.5)</span>
+                <input id="broker-price"
+                       class='ts-input @FieldClass("price")'
+                       placeholder="60.5"
+                       type="number"
+                       min="0.0001"
+                       step="any"
+                       required
+                       @bind="_newPrice"
+                       @bind:after='() => ClearFieldError("price")' />
+                @if (_fieldErrors.TryGetValue("price", out var errPrice))
+                {
+                    <p class="ts-field-error">@errPrice</p>
+                }
             </div>
             <div class="ts-field">
-                <label class="ts-label">KL (tùy chọn)</label>
-                <input class="ts-input" type="number" step="any" @bind="_newQty" />
+                <label class="ts-label" for="broker-qty">KL (tùy chọn)</label>
+                <span class="ts-field-hint">Tùy chọn, &gt; 0. Có thể nhập thập phân</span>
+                <input id="broker-qty"
+                       class='ts-input @FieldClass("qty")'
+                       placeholder="100, 250.5…"
+                       type="number"
+                       min="0.0001"
+                       step="any"
+                       @bind="_newQty"
+                       @bind:after='() => ClearFieldError("qty")' />
+                @if (_fieldErrors.TryGetValue("qty", out var errQty))
+                {
+                    <p class="ts-field-error">@errQty</p>
+                }
             </div>
             <div class="ts-field">
-                <label class="ts-label">Mục tiêu</label>
-                <input class="ts-input" type="number" step="any" @bind="_newTarget" placeholder="Để trống nếu chưa có" />
+                <label class="ts-label" for="broker-target">Mục tiêu</label>
+                <span class="ts-field-hint">Để trống nếu chưa có; &gt; giá mua. VD: 65.5</span>
+                <input id="broker-target"
+                       class='ts-input @FieldClass("target")'
+                       placeholder="65.5"
+                       type="number"
+                       min="0.0001"
+                       step="any"
+                       @bind="_newTarget"
+                       @bind:after='() => ClearFieldError("target")' />
+                @if (_fieldErrors.TryGetValue("target", out var errTarget))
+                {
+                    <p class="ts-field-error">@errTarget</p>
+                }
             </div>
             <div class="ts-field">
-                <label class="ts-label">Cắt lỗ</label>
-                <input class="ts-input" type="number" step="any" @bind="_newStop" placeholder="Để trống nếu chưa có" />
+                <label class="ts-label" for="broker-stop">Cắt lỗ</label>
+                <span class="ts-field-hint">Để trống nếu chưa có; &lt; giá mua. VD: 55.5</span>
+                <input id="broker-stop"
+                       class='ts-input @FieldClass("stop")'
+                       placeholder="55.5"
+                       type="number"
+                       min="0.0001"
+                       step="any"
+                       @bind="_newStop"
+                       @bind:after='() => ClearFieldError("stop")' />
+                @if (_fieldErrors.TryGetValue("stop", out var errStop))
+                {
+                    <p class="ts-field-error">@errStop</p>
+                }
             </div>
         </div>
         <div class="ts-field">
-            <label class="ts-label">Note broker</label>
-            <textarea class="ts-input ts-textarea" rows="2" @bind="_newNote" placeholder="Lời broker hôm nay — lần 2, 3, 4 ghi note mới."></textarea>
+            <label class="ts-label" for="broker-note">Note broker</label>
+            <span class="ts-field-hint">Ghi đúng lời broker; lần 2, 3… thêm note mới khi khuyên mua tiếp</span>
+            <textarea id="broker-note"
+                      class='ts-input ts-textarea @FieldClass("note")'
+                      placeholder="VD: Tích lũy vùng 58–60, canh mua dần…"
+                      rows="2"
+                      maxlength="@BrokerInputValidation.NoteMaxLen"
+                      @bind="_newNote"
+                      @bind:after='() => ClearFieldError("note")'></textarea>
+            @if (_fieldErrors.TryGetValue("note", out var errNote))
+            {
+                <p class="ts-field-error">@errNote</p>
+            }
         </div>
         <button class="ts-btn ts-btn-primary" @onclick="AddRecommendation" disabled="@_busy">Thêm</button>
     </div>
@@ -107,6 +182,7 @@
     private decimal? _newStop;
     private decimal? _newTarget;
     private string _newNote = "";
+    private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.OrdinalIgnoreCase);
 
     private BrokerPosition? Selected =>
         string.IsNullOrEmpty(_selected)
@@ -131,12 +207,54 @@
         _portfolio.UpdatedAt = DateTime.Now;
     }
 
+    private void OnSymbolInput()
+    {
+        _newSymbol = _newSymbol.Trim().ToUpperInvariant();
+        ClearFieldError("symbol");
+    }
+
+    private void ClearFieldError(string field)
+    {
+        if (_fieldErrors.Remove(field) && _fieldErrors.Count == 0 && _messageError)
+            _message = null;
+    }
+
+    private void SetFieldError(string field, string message) => _fieldErrors[field] = message;
+
+    private string FieldClass(string field) =>
+        _fieldErrors.ContainsKey(field) ? "ts-input-invalid" : "";
+
+    private bool ValidateForm(out string symbol)
+    {
+        _fieldErrors.Clear();
+        symbol = "";
+
+        if (!BrokerInputValidation.TryNormalizeSymbol(_newSymbol, out symbol, out var symErr))
+            SetFieldError("symbol", symErr!);
+        if (!BrokerInputValidation.TryValidateBuyPrice(_newPrice, out var priceErr))
+            SetFieldError("price", priceErr!);
+        if (!BrokerInputValidation.TryValidateQuantity(_newQty, out var qtyErr))
+            SetFieldError("qty", qtyErr!);
+        if (!BrokerInputValidation.TryValidateNote(_newNote, out var noteErr))
+            SetFieldError("note", noteErr!);
+
+        if (_newPrice is > 0 &&
+            !BrokerInputValidation.TryValidateStopTarget(_newPrice.Value, _newStop, _newTarget, out var stErr))
+        {
+            if (_newStop is > 0 && _newStop >= _newPrice)
+                SetFieldError("stop", stErr!);
+            else if (_newTarget is > 0 && _newTarget <= _newPrice)
+                SetFieldError("target", stErr!);
+        }
+
+        return _fieldErrors.Count == 0;
+    }
+
     private async Task AddRecommendation()
     {
-        var symbol = _newSymbol.Trim().ToUpperInvariant();
-        if (string.IsNullOrWhiteSpace(symbol) || _newPrice is not > 0)
+        if (!ValidateForm(out var symbol))
         {
-            Flash("Nhập mã CP và giá mua > 0.", error: true);
+            Flash("Kiểm tra lại các ô được đánh dấu.", error: true);
             return;
         }
 
@@ -183,6 +301,7 @@
             _newSymbol = "";
             _newPrice = _newQty = _newStop = _newTarget = null;
             _newNote = "";
+            _fieldErrors.Clear();
             MarkDirty();
 
             var avg = existing.AvgBuy;
