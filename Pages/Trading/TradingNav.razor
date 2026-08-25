@@ -3,67 +3,64 @@
 @inject NavigationManager Nav
 @implements IDisposable
 
-<nav class="ts-navbar">
-    <div class="ts-navbar-inner">
-        <NavLink class="ts-back-link" href="" Match="NavLinkMatch.All">← Portfolio</NavLink>
-        <NavLink class="ts-brand" href="trading">
-            <i class="bi bi-graph-up-arrow"></i>
-            <span>Trading Signals</span>
-        </NavLink>
-        <button class="ts-toggler" @onclick="ToggleMenu" aria-label="Toggle navigation">
-            <span></span><span></span><span></span>
+<nav class="trading-subnav" aria-label="Trading navigation">
+    <div class="trading-subnav-inner">
+        <button type="button" class="trading-subnav-toggle @(_menuOpen ? "open" : "")"
+                @onclick="ToggleMenu"
+                aria-label="@(_menuOpen ? "Close trading menu" : "Open trading menu")"
+                aria-expanded="@_menuOpen.ToString().ToLowerInvariant()">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
         </button>
-        <div class="ts-nav-collapse @(MenuOpen ? "ts-nav-open" : "")">
-            <ul class="ts-nav-list">
-                @foreach (var item in NavItems)
-                {
-                    @if (!item.AuthRequired || _loggedIn)
-                    {
-                        <li class="ts-nav-item">
-                            <NavLink class="ts-nav-link" href="@item.Href" Match="@item.Match" @onclick="CloseMenu">
-                                <i class="bi @item.Icon"></i> @item.Label
-                            </NavLink>
-                        </li>
-                    }
-                }
-            </ul>
+
+        <div class="trading-subnav-links @(_menuOpen ? "open" : "")">
+            @foreach (var item in VisibleItems)
+            {
+                <NavLink href="@item.Href" Match="@item.Match" @onclick="CloseMenu">
+                    @item.Label
+                </NavLink>
+            }
         </div>
-        <div class="ts-user-area">
+
+        <div class="trading-subnav-actions">
             @if (_loggedIn && _user is not null)
             {
-                <span class="ts-user-name">@_user.Name</span>
-                <button class="ts-login-btn" @onclick="Logout">Logout</button>
+                <span class="trading-subnav-user">@_user.Name</span>
+                <button type="button" class="trading-subnav-btn" @onclick="Logout">Logout</button>
             }
             else
             {
-                <NavLink class="ts-login-btn" href="trading/login">Login</NavLink>
+                <NavLink class="trading-subnav-btn" href="trading/login" @onclick="CloseMenu">Login</NavLink>
             }
         </div>
     </div>
 </nav>
 
 @code {
-    private bool MenuOpen;
+    private bool _menuOpen;
     private bool _loggedIn;
     private Models.Trading.DnseUserInfo? _user;
 
-    private record NavItem(string Href, string Label, string Icon, bool AuthRequired = false, NavLinkMatch Match = NavLinkMatch.Prefix);
+    private record NavItem(string Href, string Label, bool AuthRequired = false, NavLinkMatch Match = NavLinkMatch.Prefix);
 
     private static readonly NavItem[] NavItems =
     [
-        new("trading", "Home", "bi-house", Match: NavLinkMatch.All),
-        new("trading/crypto", "Crypto", "bi-currency-bitcoin"),
-        new("trading/futures", "Futures", "bi-arrow-left-right"),
-        new("trading/stock", "Stock", "bi-bar-chart"),
-        new("trading/commodities", "Commodities", "bi-gem"),
-        new("trading/forex", "Forex", "bi-cash-stack"),
-        new("trading/real-estate", "Real Estate", "bi-building"),
-        new("trading/central-banks", "Bonds", "bi-bank"),
-        new("trading/macro", "Macro Intel", "bi-globe2", AuthRequired: true),
-        new("trading/others", "Others", "bi-grid"),
-        new("trading/portfolio", "Portfolio", "bi-wallet2", AuthRequired: true),
-        new("trading/community", "Community", "bi-people", AuthRequired: true),
+        new("trading", "Dashboard", Match: NavLinkMatch.All),
+        new("trading/crypto", "Crypto"),
+        new("trading/futures", "Futures"),
+        new("trading/stock", "Stock"),
+        new("trading/commodities", "Commodities"),
+        new("trading/forex", "Forex"),
+        new("trading/real-estate", "Real Estate"),
+        new("trading/central-banks", "Bonds"),
+        new("trading/macro", "Macro", AuthRequired: true),
+        new("trading/others", "Others"),
+        new("trading/portfolio", "Portfolio", AuthRequired: true),
+        new("trading/community", "Community", AuthRequired: true),
     ];
+
+    private IEnumerable<NavItem> VisibleItems => NavItems.Where(i => !i.AuthRequired || _loggedIn);
 
     protected override void OnInitialized()
     {
@@ -80,8 +77,8 @@
 
     private async void OnAuthChanged() => await InvokeAsync(RefreshAuthAsync);
 
-    private void ToggleMenu() => MenuOpen = !MenuOpen;
-    private void CloseMenu() => MenuOpen = false;
+    private void ToggleMenu() => _menuOpen = !_menuOpen;
+    private void CloseMenu() => _menuOpen = false;
 
     private async Task Logout()
     {

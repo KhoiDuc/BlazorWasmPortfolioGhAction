@@ -1,122 +1,169 @@
-/* Trading module — global styles (child components don't receive scoped layout CSS) */
-.ts-app {
-    min-height: 100vh;
-    background: #f8fafc;
-    color: #1e293b;
-    font-family: 'Inter', system-ui, sans-serif;
-}
+/* Trading module — global styles */
+.ts-page { max-width: 1200px; margin: 0 auto; padding: 1.5rem min(5%, 1rem) 2rem; width: 100%; }
 
-.ts-body {
-    flex: 1;
-    padding-bottom: 2rem;
-}
-
-.ts-navbar {
+/* Sub-nav — portfolio link style, sits below fixed navbar */
+.trading-subnav {
     position: sticky;
-    top: 0;
-    z-index: 1050;
-    background: #0d101b;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    top: 72px;
+    z-index: 999;
+    margin-top: 72px;
+    background: var(--color-bg-glass-heavy, rgba(255, 255, 255, 0.92));
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-bottom: 1px solid var(--color-border, rgba(0, 0, 0, 0.1));
 }
 
-.ts-navbar-inner {
-    display: flex;
-    align-items: center;
-    max-width: 1440px;
+.trading-subnav-inner {
+    width: min(90%, var(--max-width, 1200px));
     margin: 0 auto;
-    padding: 0 1rem;
-    height: 56px;
-    gap: 0.5rem;
-}
-
-.ts-brand {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    color: #f1f5f9 !important;
-    text-decoration: none;
-    font-weight: 700;
-    font-size: 0.95rem;
-    flex-shrink: 0;
+    gap: 1rem;
+    min-height: 48px;
+    padding: 0.35rem 0;
 }
 
-.ts-back-link {
-    font-size: 0.78rem;
-    color: #94a3b8 !important;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.ts-back-link:hover { color: #f1f5f9 !important; }
-
-.ts-toggler {
-    display: none;
-    flex-direction: column;
-    gap: 4px;
-    background: none;
-    border: none;
-    padding: 6px;
-    margin-left: auto;
-    cursor: pointer;
-}
-
-.ts-toggler span {
-    display: block;
-    width: 22px;
-    height: 2px;
-    background: #fff;
-}
-
-.ts-nav-collapse {
+.trading-subnav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
     flex: 1;
     overflow-x: auto;
+    scrollbar-width: none;
 }
+.trading-subnav-links::-webkit-scrollbar { display: none; }
 
-.ts-nav-list {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    gap: 2px;
-}
-
-.ts-nav-link {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    font-size: 0.82rem;
-    color: #94a3b8 !important;
+.trading-subnav-links a {
+    position: relative;
+    flex-shrink: 0;
+    color: var(--color-text-secondary, #64748b);
+    font-size: 0.85rem;
+    font-weight: 500;
     text-decoration: none;
-    border-radius: 6px;
+    padding: 0.35rem 0;
     white-space: nowrap;
+    transition: color var(--transition, 0.2s);
 }
 
-.ts-nav-link:hover { color: #f1f5f9 !important; background: rgba(255,255,255,0.06); }
-.ts-nav-link.active { color: #3b82f6 !important; background: rgba(59,130,246,0.12); font-weight: 600; }
+.trading-subnav-links a:hover { color: var(--color-text-primary, #0f172a); }
+.trading-subnav-links a.active { color: var(--color-accent, #78350f); }
 
-.ts-user-area {
+.trading-subnav-links a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.35rem;
+    height: 2px;
+    background-color: var(--color-accent, #78350f);
+    border-radius: var(--radius-full, 999px);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform var(--transition, 0.2s);
+}
+
+.trading-subnav-links a:hover::after,
+.trading-subnav-links a.active::after { transform: scaleX(1); }
+
+.trading-subnav-actions {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     flex-shrink: 0;
 }
 
-.ts-user-name { color: #e2e8f0; font-size: 0.82rem; }
+.trading-subnav-user {
+    font-size: 0.82rem;
+    color: var(--color-text-secondary, #64748b);
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
-.ts-login-btn {
+.trading-subnav-btn {
     padding: 6px 14px;
     font-size: 0.82rem;
     font-weight: 600;
-    color: #f1f5f9 !important;
-    background: rgba(59,130,246,0.2);
-    border: 1px solid rgba(59,130,246,0.4);
-    border-radius: 6px;
+    color: var(--color-accent, #78350f) !important;
+    background: transparent;
+    border: 1px solid var(--color-border-accent, rgba(120, 53, 15, 0.38));
+    border-radius: var(--radius-full, 999px);
     text-decoration: none;
     cursor: pointer;
+    transition: background-color var(--transition, 0.2s), border-color var(--transition, 0.2s);
 }
 
-.ts-page { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1rem; }
+.trading-subnav-btn:hover {
+    background: var(--color-bg-glass-hover, rgba(0, 0, 0, 0.04));
+    border-color: var(--color-accent, #78350f);
+}
+
+.trading-subnav-toggle {
+    display: none;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: transparent;
+    border: 1px solid var(--color-border, rgba(0, 0, 0, 0.1));
+    border-radius: var(--radius-full, 999px);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.trading-subnav-toggle span {
+    width: 16px;
+    height: 2px;
+    background: var(--color-text-primary, #0f172a);
+    border-radius: 2px;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.trading-main {
+    min-height: calc(100vh - 120px);
+}
+
+@media (max-width: 768px) {
+    .trading-subnav-toggle { display: flex; }
+
+    .trading-subnav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding: 0.5rem 5%;
+        background: var(--color-bg-app, #f8fafc);
+        border-bottom: 1px solid var(--color-border);
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .trading-subnav-links.open { display: flex; }
+
+    .trading-subnav-links a {
+        padding: 0.85rem 0;
+        border-bottom: 1px solid var(--color-border);
+        font-size: 0.95rem;
+    }
+
+    .trading-subnav-links a::after { display: none; }
+
+    .trading-subnav-inner { position: relative; flex-wrap: wrap; }
+
+    .trading-subnav-actions { margin-left: auto; }
+
+    .trading-subnav-toggle.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .trading-subnav-toggle.open span:nth-child(2) { opacity: 0; }
+    .trading-subnav-toggle.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+}
 .ts-panel {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -253,14 +300,9 @@
 .ts-panel-body { padding: 12px 16px; overflow-y: auto; flex: 1; }
 
 @media (max-width: 991px) {
-    .ts-toggler { display: flex; }
-    .ts-nav-collapse { display: none; position: absolute; top: 56px; left: 0; right: 0; background: #0d101b; padding: 12px; }
-    .ts-nav-collapse.ts-nav-open { display: block; }
-    .ts-nav-list { flex-direction: column; }
-    .ts-user-name { display: none; }
+    .ts-crypto-sidebar, .ts-crypto-main { flex: 1 1 100%; }
+    .ts-crypto-ticker-list { max-height: 360px; }
 }
-
-/* Live crypto ticker (from CryptoManager) */
 .ts-crypto-dashboard { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
 .ts-crypto-sidebar { flex: 0 1 340px; min-width: min(100%, 280px); }
 .ts-crypto-main { flex: 1 1 400px; min-width: 0; }

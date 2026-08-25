@@ -1,17 +1,20 @@
 @inherits LayoutComponentBase
 
-<div class="ts-app">
-    <TradingNav />
-    <div class="ts-body">
-        @Body
-    </div>
-    @if (_overlaysReady)
-    {
-        <TradingNewsPanel />
-        <TradingChatbox />
-        <TradingAlertOverlay />
-    }
-</div>
+<Navbar />
+<TradingNav />
+
+<main class="trading-main">
+    @Body
+</main>
+
+<Footer />
+
+@if (_overlaysReady)
+{
+    <TradingNewsPanel />
+    <TradingChatbox />
+    <TradingAlertOverlay />
+}
 
 @code {
     private bool _overlaysReady;
@@ -25,7 +28,6 @@
 
     private async Task EnableOverlaysAfterIdleAsync()
     {
-        // Let the page paint first; widgets are optional and load later.
         await Task.Delay(3000);
         _overlaysReady = true;
         await InvokeAsync(StateHasChanged);
