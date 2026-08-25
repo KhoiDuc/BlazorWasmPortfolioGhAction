@@ -1,71 +1,48 @@
-﻿.crypto-detail {
-    width: 300px;
-    max-height: 1000px;
-    flex: 1 1 300px;
-    margin: 10px;
-    padding: 20px;
-    background-color: var(--color-bg-glass);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+﻿.crypto-detail-card {
+    margin: 0;
 }
 
-.crypto-header {
-    width: 100%;
-    display: flex;
-    color: var(--color-text-primary);
-    justify-content: space-between;
-    align-items: center;
+.crypto-detail-header {
     border-bottom: 1px solid var(--color-border);
-    padding-bottom: 10px;
-    margin-bottom: 10px;
 }
 
-.current-price {
-    font-size: 1.5em;
-    color: var(--color-text);
+.crypto-detail-symbol {
+    margin: 0.15rem 0 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    font-family: var(--font-family-mono);
 }
 
-.crypto-stats {
-    width: 100%;
+.crypto-detail-price {
+    margin: 0 0 1rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    font-family: var(--font-family-mono);
+}
+
+.crypto-stats-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 1rem;
 }
 
-.stat {
-    background-color: var(--color-bg-surface);
-    padding: 10px;
-    border-radius: var(--radius-sm);
-    text-align: center;
+.crypto-stat-time {
+    font-size: 0.95rem !important;
 }
 
-.close-button {
-    position: absolute;
-    top: 4px;
-    right: 10px;
-    background: none;
-    border: none;
-    font-size: 1.2em;
-    cursor: pointer;
+.crypto-up { color: var(--color-success); }
+.crypto-down { color: var(--color-danger); }
+
+.crypto-detail-chart {
+    min-height: 220px;
 }
 
-    .close-button .oi {
-        color: var(--color-text);
-    }
+.crypto-detail-chart canvas {
+    width: 100% !important;
+    max-height: 280px;
+}
 
-    .close-button:hover .oi {
-        color: var(--color-danger);
-    }
-
-canvas {
-    width: 100%;
-    height: auto;
-    padding: 20px;
-    border-radius: var(--radius-md);
+@media (max-width: 520px) {
+    .crypto-stats-grid { grid-template-columns: 1fr; }
 }

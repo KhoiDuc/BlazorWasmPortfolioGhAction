@@ -15,6 +15,7 @@ using GoogleMapsComponents;
 using Fluxor.Blazor.Web.ReduxDevTools;
 using BlazorWasmPortfolioGhAction.Extensions;
 using BlazorWasmPortfolioGhAction.Services;
+using Microsoft.Authentication.WebAssembly.Msal;
 
 public static class Program
 {
@@ -52,9 +53,14 @@ public static class Program
         builder.Services.AddScoped<IScriptLoaderService, ScriptLoaderService>();
         builder.Services.AddScoped<IClipboardService, ClipboardService>();
         builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
-        builder.Services.AddOidcAuthentication(options =>
+        builder.Services.AddMsalAuthentication(options =>
         {
-            builder.Configuration.Bind("Auth0", options.ProviderOptions);
+            builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
+            options.ProviderOptions.LoginMode = "redirect";
+
+            var baseAddress = builder.HostEnvironment.BaseAddress.TrimEnd('/') + "/";
+            options.ProviderOptions.Authentication.RedirectUri ??= $"{baseAddress}authentication/login-callback";
+            options.ProviderOptions.Authentication.PostLogoutRedirectUri ??= baseAddress;
         });
         builder.Services.AddSingleton<ITimeZoneQueryProviderService, TimeZoneQueryProviderService>();
 

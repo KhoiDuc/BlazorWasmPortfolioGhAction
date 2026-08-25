@@ -59,10 +59,11 @@ namespace BlazorWasmPortfolioGhAction.Store.Reducers
             var updatedContents = new List<ContentHolder>(state.Contents);
 
             var index = updatedContents.FindIndex(x => x.Id == action.Index);
-            if (index != -1 && !Equals(updatedContents[index], action.TempContent))
-            {
+            if (index == -1 && action.Index >= 0 && action.Index < updatedContents.Count)
+                index = action.Index;
+
+            if (index != -1)
                 updatedContents[index] = action.TempContent;
-            }
             return state with { Contents = updatedContents };
         }
 

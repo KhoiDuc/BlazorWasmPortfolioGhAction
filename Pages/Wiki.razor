@@ -133,11 +133,25 @@
     private string EditUrl => BuildWikiUrl("edit");
     private string ReadUrl => BuildWikiUrl("read");
 
+    private string EffectivePageName =>
+        !string.IsNullOrEmpty(PageName) ? PageName :
+        ContentState.Value.Contents.FirstOrDefault()?.Page ?? "Portfolio";
+
     private List<Shared.Model.ContentHolder> FilteredContents =>
         ContentState.Value.Contents
             .Where(MatchesRoute)
             .Where(MatchesSearch)
             .ToList();
+
+    private string BuildWikiUrl(string mode)
+    {
+        var segments = new List<string> { "wiki" };
+        if (mode == "edit") segments.Add("edit");
+        segments.Add(EffectivePageName);
+        if (!string.IsNullOrEmpty(Section) && Section != "all") segments.Add(Section);
+        if (!string.IsNullOrEmpty(SubSection) && SubSection != "all") segments.Add(SubSection);
+        return string.Join('/', segments);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -181,16 +195,10 @@
             || (item.Content?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
-    private void OnSearchChanged(string? term) => _searchTerm = term;
-
-    private string BuildWikiUrl(string mode)
+    private void OnSearchChanged(string? term)
     {
-        var segments = new List<string> { "wiki" };
-        if (mode == "edit") segments.Add("edit");
-        if (!string.IsNullOrEmpty(PageName)) segments.Add(PageName);
-        if (!string.IsNullOrEmpty(Section)) segments.Add(Section);
-        if (!string.IsNullOrEmpty(SubSection)) segments.Add(SubSection);
-        return string.Join('/', segments);
+        _searchTerm = term;
+        StateHasChanged();
     }
 
     private void OnContentStateChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);

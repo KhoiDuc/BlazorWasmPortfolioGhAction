@@ -91,23 +91,8 @@
 
             }
 
-            @* Render the de-serialized JSON string as HTML, including styling.  I need some sanitisation here but AntiXss from Microsoft is broken ATM... *@
-            <td>@(Sanitizer.ToSafeMarkup(@contentState.Value.Contents[indexParsed].content!))</td>
-        </tr>
-        <tr>
-            @if (!matchTypeSectionsSubSections)
-            {
-                <td>
-                    @*Spacing*@
-                </td>
-            }
-            <td>
-                <button type="button" class="tool-btn tool-btn-secondary" disabled>Clear</button>
-                <button type="button" class="tool-btn tool-btn-danger" disabled>Delete</button>
-                <button type="button" class="tool-btn tool-btn-primary" disabled>Edit</button>
-                <button type="button" class="tool-btn tool-btn-primary" disabled>Save</button>
-                <button type="button" class="tool-btn tool-btn-secondary" disabled>Cancel</button>
-            </td>
+            @* Render content — read-only, no action buttons *@
+            <td colspan="@(matchTypeSectionsSubSections ? 2 : 1)">@(Sanitizer.ToSafeMarkup(@contentState.Value.Contents[indexParsed].content!))</td>
         </tr>
     }
 }

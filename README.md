@@ -16,7 +16,7 @@ A feature-rich personal portfolio and developer utility suite built with **Blazo
 - **State**: [Fluxor](https://github.com/mrpmorris/Fluxor)
 - **Database**: EF Core + SQLite Wasm
 - **UI**: Bootstrap 5 + Bootstrap Icons + CSS isolation (`.tool-*` design system)
-- **Auth**: Auth0 / OIDC via MSAL
+- **Auth**: Microsoft account (Azure AD) via MSAL
 - **Deploy**: GitHub Pages CI/CD
 
 ## Getting Started
@@ -51,9 +51,25 @@ Fill the `Wiki` section with your repo owner/name. Editing requires `DevOps:GitH
 
 Fill `EmailJs:ServiceId`, `TemplateId`, and `PublicKey` to enable send from the Email Composer utility.
 
-### Auth0
+### Microsoft login (Azure AD / MSA)
 
-Set `Auth0:Authority` (with `https://`) and `ClientId`. Login appears in the navbar; wiki edit mode requires authentication.
+1. Register an app in [Azure Portal → App registrations](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade).
+2. Set **Supported account types** to *Accounts in any organizational directory and personal Microsoft accounts*.
+3. Add **Single-page application** redirect URIs (match your dev/prod origins):
+   - `https://localhost:7255/authentication/login-callback`
+   - `http://localhost:5288/authentication/login-callback`
+   - `https://<your-github-pages-domain>/authentication/login-callback`
+4. Copy the **Application (client) ID** into `wwwroot/appsettings.json`:
+
+```json
+"AzureAd": {
+  "Authority": "https://login.microsoftonline.com/common",
+  "ClientId": "YOUR_CLIENT_ID",
+  "ValidateAuthority": true
+}
+```
+
+Login appears in the navbar; wiki edit mode requires authentication.
 
 ---
 © 2026 Khoi Nguyen Minh Duc. All rights reserved.

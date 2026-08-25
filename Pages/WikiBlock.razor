@@ -8,6 +8,7 @@
 @using BlazorWasmPortfolioGhAction.Store.Actions;
 @using BlazorWasmPortfolioGhAction.Store.State;
 @using Fluxor;
+@implements IDisposable
 
 @if (contentState.Value.Contents[indexParsed] != null)
 {
@@ -29,7 +30,7 @@
                     }
                     else
                     {
-                        <div class="dotted-lines" @onfocusout="(() => Save(true))">
+                        <div class="dotted-lines" @onclick="(() => Edit(indexParsed))">
                             <Editor Id="@($"{indexParsed}-content")"
                                     Inline=true
                                     CloudChannel="5"
@@ -104,7 +105,7 @@
                         }
                         else
                         {
-                            <h3 class="kudosTextInline" @onfocusout="(() => Save(true))">
+                            <h3 class="kudosTextInline" @onclick="(() => Edit(indexParsed))">
                                 <Editor Id="@($"{indexParsed}-section")"
                                         Inline=true
                                         CloudChannel="5"
@@ -140,7 +141,7 @@
                         }
                         else
                         {
-                            <h3 class="kudosTextInline" @onfocusout="(() => Save(false))">
+                            <h3 class="kudosTextInline">
                                 <small>
                                     <div class="text-muted">
                                         <Editor Id="@($"{indexParsed}-subSection")"
@@ -170,7 +171,7 @@
                     }
                     else
                     {
-                        <div class="dotted-lines" @onfocusout="(() => Save(false))">
+                        <div class="dotted-lines">
                             <Editor Id="@($"{indexParsed}-content")"
                                     Inline=true
                                     CloudChannel="5"
@@ -206,7 +207,7 @@
                     else
                     {
                         <td class="kudosText col-1">
-                            <h4 @onfocusout="(() => Save(false))">
+                            <h4>
                                 <Editor Id="@($"{indexParsed}-section")"
                                         Inline=true
                                         CloudChannel="5"
@@ -244,7 +245,7 @@
                     else
                     {
                         <td class="kudosText col-1">
-                            <h3 class="kudosTextInline" @onfocusout="(() => Save(false))">
+                            <h3 class="kudosTextInline">
                                 <Editor Id="@($"{indexParsed}-subSection")"
                                         Inline=true
                                         CloudChannel="5"
@@ -334,13 +335,21 @@
         tempContent = CloneContentHolder(contentState.Value.Contents![indexParsed]);
         contentState.StateChanged += HandleStateChanged;
     }
-    private void HandleStateChanged(object sender, EventArgs e)
+    private void HandleStateChanged(object? sender, EventArgs e)
     {
         if (contentState.Value.FileCount == contentState.Value.LoadedFilesCount)
         {
+            if (indexParsed >= 0 && indexParsed < contentState.Value.Contents.Count
+                && indexParsed < contentState.Value.IsEditing.Count
+                && !contentState.Value.IsEditing[indexParsed])
+            {
+                tempContent = CloneContentHolder(contentState.Value.Contents[indexParsed]);
+            }
             InvokeAsync(StateHasChanged);
         }
     }
+
+    public void Dispose() => contentState.StateChanged -= HandleStateChanged;
     private async Task Edit(int globalSectionNo)
     {
         StateHasChanged();

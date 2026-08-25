@@ -49,6 +49,10 @@ public class ContentEffects
         {
             var contents = await _wikiContentService.LoadFileContentsAsync(action.FileNameWithoutSuffix);
             dispatcher.Dispatch(new FileContentFetchedAction(action.FileNameWithoutSuffix, contents));
+
+            var sha = await _wikiContentService.GetFileShaAsync(action.FileNameWithoutSuffix);
+            if (!string.IsNullOrEmpty(sha))
+                dispatcher.Dispatch(new UpdateShaDictionaryAction(action.FileNameWithoutSuffix, sha));
         }
         catch (Exception ex)
         {
@@ -70,7 +74,15 @@ public class ContentEffects
                 action.ShaDictionary);
 
             if (!success)
+            {
                 _logger.LogWarning("Wiki content update failed — check DevOps:GitHubToken and Wiki config");
+                return;
+            }
+
+            var fileKey = $"{action.Page}{action.Section}";
+            var sha = await _wikiContentService.GetFileShaAsync(fileKey);
+            if (!string.IsNullOrEmpty(sha))
+                dispatcher.Dispatch(new UpdateShaDictionaryAction(fileKey, sha));
         }
         catch (Exception ex)
         {

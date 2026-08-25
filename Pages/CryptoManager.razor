@@ -4,83 +4,84 @@
 @using System.Text.Json
 @using Microsoft.JSInterop
 @using BlazorWasmPortfolioGhAction.Pages.CryptoManagerComponents
-@using BlazorWasmPortfolioGhAction.Pages
-
 @using BlazorWasmPortfolioGhAction.Services
 @inject IScriptLoaderService ScriptLoader
 
 <div class="page-section crypto-page">
-<section>
-    <div class="container">
-        <div class="section-heading">
-            <p class="section-label">CRYPTO</p>
-            <h2>Crypto ticker dashboard.</h2>
-        </div>
-
-        <div class="crypto-controls">
-            <div class="control-group">
-                <label for="tickerCount">Tickers</label>
-                <input id="tickerCount" type="number" @bind="settings.NumberOfTickers" min="1" max="100" />
+    <section>
+        <div class="container">
+            <div class="section-heading">
+                <p class="section-label">CRYPTO</p>
+                <h2>Live ticker dashboard.</h2>
+                <p class="crypto-lead">Stream Binance tickers, compare volume, and inspect price history with Chart.js.</p>
             </div>
-            <div class="control-group">
-                <label for="quoteUnit">Quote</label>
-                <select id="quoteUnit" @bind="settings.QuoteUnit">
-                    <option value="USDT">USDT</option>
-                    <option value="BTC">BTC</option>
-                    <option value="ETH">ETH</option>
-                </select>
-            </div>
-            <button class="crypto-update-btn" @onclick="UpdateSettings">
-                <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Update
-            </button>
-        </div>
 
-        <div class="crypto-layout">
-            <div class="crypto-card-list">
-                @if (cryptos.Count == 0)
-                {
-                    <div class="crypto-empty">
-                        <i class="bi bi-graph-up" aria-hidden="true"></i>
-                        <p>Loading tickers...</p>
+            <div class="tool-card crypto-controls-card">
+                <div class="tool-form crypto-controls-form">
+                    <div class="tool-field">
+                        <label class="tool-label" for="tickerCount">Tickers</label>
+                        <input id="tickerCount" type="number" class="tool-input tool-input-sm" @bind="settings.NumberOfTickers" min="1" max="100" />
                     </div>
-                }
-                @foreach (var crypto in cryptos)
-                {
-                    <CryptoCard Crypto="crypto" OnCryptoSelected="LoadCryptoDetails" />
-                }
+                    <div class="tool-field">
+                        <label class="tool-label" for="quoteUnit">Quote unit</label>
+                        <select id="quoteUnit" class="tool-input tool-input-sm" @bind="settings.QuoteUnit">
+                            <option value="USDT">USDT</option>
+                            <option value="BTC">BTC</option>
+                            <option value="ETH">ETH</option>
+                        </select>
+                    </div>
+                    <div class="tool-actions crypto-controls-actions">
+                        <button type="button" class="tool-btn tool-btn-primary" @onclick="UpdateSettings">
+                            <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Refresh stream
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <div class="crypto-detail-view">
-                @if (selectedCryptos.Count == 0)
-                {
-                    <div class="crypto-empty">
-                        <i class="bi bi-currency-exchange" aria-hidden="true"></i>
-                        <p>Select a ticker to view details.</p>
-                    </div>
-                }
-                @foreach (var selectedCrypto in selectedCryptos)
-                {
-                    <CryptoDetails Crypto="selectedCrypto" OnClose="CloseCryptoDetail" />
-                }
+            <div class="crypto-layout">
+                <aside class="crypto-card-list" aria-label="Ticker list">
+                    @if (cryptos.Count == 0)
+                    {
+                        <div class="crypto-empty">
+                            <div class="tool-spinner" role="status" aria-label="Loading"></div>
+                            <p>Connecting to ticker stream...</p>
+                        </div>
+                    }
+                    @foreach (var crypto in cryptos)
+                    {
+                        <CryptoCard Crypto="crypto"
+                                    IsSelected="selectedCryptos.Contains(crypto)"
+                                    OnCryptoSelected="LoadCryptoDetails" />
+                    }
+                </aside>
+
+                <div class="crypto-detail-view" aria-label="Ticker details">
+                    @if (selectedCryptos.Count == 0)
+                    {
+                        <div class="crypto-empty tool-card">
+                            <i class="bi bi-currency-exchange" aria-hidden="true"></i>
+                            <h3>Select a ticker</h3>
+                            <p>Click a card on the left to open detailed charts and 24h stats.</p>
+                        </div>
+                    }
+                    @foreach (var selectedCrypto in selectedCryptos)
+                    {
+                        <CryptoDetails Crypto="selectedCrypto" OnClose="CloseCryptoDetail" />
+                    }
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 </div>
 
 @implements IAsyncDisposable
 
 @code {
-    private List<Crypto> cryptos = new List<Crypto>();
-    private List<Crypto> selectedCryptos = new List<Crypto>();
-    private Settings settings = new Settings();
+    private List<Crypto> cryptos = new();
+    private List<Crypto> selectedCryptos = new();
+    private Settings settings = new();
 
-    private JsonSerializerOptions options = new JsonSerializerOptions
-    {
-        Converters = { new DecimalConverter() }
-    };
-
-    private DotNetObjectReference<CryptoManager> objRef;
+    private DotNetObjectReference<CryptoManager>? objRef;
 
     protected override async Task OnInitializedAsync()
     {
@@ -105,68 +106,47 @@
             existingCrypto.Change24h = crypto.Change24h;
             existingCrypto.LastUpdate = crypto.LastUpdate;
         }
-        else
+        else if (cryptos.Count >= settings.NumberOfTickers)
         {
-            if (cryptos.Count >= settings.NumberOfTickers)
+            var minVolumeCrypto = cryptos.OrderBy(c => c.VolumeInQuoteCurrency).First();
+            if (crypto.VolumeInQuoteCurrency > minVolumeCrypto.VolumeInQuoteCurrency)
             {
-                var minVolumeCrypto = cryptos.OrderBy(c => c.VolumeInQuoteCurrency).First();
-                if (crypto.VolumeInQuoteCurrency > minVolumeCrypto.VolumeInQuoteCurrency)
-                {
-                    cryptos.Remove(minVolumeCrypto);
-                    AddCrypto(crypto);
-                }
-            }
-            else
-            {
+                cryptos.Remove(minVolumeCrypto);
                 AddCrypto(crypto);
             }
+        }
+        else
+        {
+            AddCrypto(crypto);
         }
 
         cryptos = cryptos.OrderByDescending(c => c.VolumeInQuoteCurrency).ToList();
         StateHasChanged();
     }
 
-    public void AddCrypto(Crypto crypto)
+    private void AddCrypto(Crypto crypto)
     {
-        if (crypto.Symbol.EndsWith(settings.QuoteUnit))
-        {
+        if (crypto.Symbol.EndsWith(settings.QuoteUnit, StringComparison.OrdinalIgnoreCase))
             cryptos.Add(crypto);
-        }
     }
 
     private async Task UpdateSettings()
     {
         cryptos.Clear();
+        selectedCryptos.Clear();
         await JSRuntime.InvokeVoidAsync("fetchCryptoList", objRef, settings);
         StateHasChanged();
     }
 
-    [JSInvokable]
-    public static Task ResetObjectReference()
-    {
-        var instance = new CryptoManager();
-        instance.objRef?.Dispose();
-        instance.objRef = DotNetObjectReference.Create(instance);
-
-        return Task.CompletedTask;
-    }
-
     private void LoadCryptoDetails(Crypto crypto)
     {
-        if (!selectedCryptos.Contains(crypto))
-        {
-            selectedCryptos.Add(crypto);
-        }
-        else if (selectedCryptos.Contains(crypto))
-        {
+        if (selectedCryptos.Contains(crypto))
             selectedCryptos.Remove(crypto);
-        }
+        else
+            selectedCryptos.Add(crypto);
     }
 
-    private void CloseCryptoDetail(Crypto crypto)
-    {
-        selectedCryptos.Remove(crypto);
-    }
+    private void CloseCryptoDetail(Crypto crypto) => selectedCryptos.Remove(crypto);
 
     public async ValueTask DisposeAsync()
     {

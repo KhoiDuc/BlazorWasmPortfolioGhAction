@@ -16,7 +16,8 @@ public interface IWikiContentService
         string section,
         Dictionary<string, string> shaDictionary,
         CancellationToken cancellationToken = default);
-    Task<bool> DeleteGitHubFileAsync(string commitMessage, string section, string sha, CancellationToken cancellationToken = default);
+    Task<string?> GetFileShaAsync(string fileKey, CancellationToken cancellationToken = default);
+    Task<bool> DeleteGitHubFileAsync(string commitMessage, string fileKey, string sha, CancellationToken cancellationToken = default);
 }
 
 public class WikiContentService : IWikiContentService
@@ -80,7 +81,7 @@ public class WikiContentService : IWikiContentService
         var json = JsonSerializer.Serialize(contentHolders, new JsonSerializerOptions { WriteIndented = true });
         var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
 
-        shaDictionary.TryGetValue(section, out var sha);
+        shaDictionary.TryGetValue(fileKey, out var sha);
 
         var payload = new Dictionary<string, object>
         {
@@ -112,7 +113,7 @@ public class WikiContentService : IWikiContentService
         }
     }
 
-    public async Task<bool> DeleteGitHubFileAsync(string commitMessage, string section, string sha, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteGitHubFileAsync(string commitMessage, string fileKey, string sha, CancellationToken cancellationToken = default)
     {
         var token = _config["DevOps:GitHubToken"];
         var owner = _config["Wiki:GitHubOwner"];
@@ -123,7 +124,7 @@ public class WikiContentService : IWikiContentService
         if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(owner) || string.IsNullOrWhiteSpace(repo) || string.IsNullOrWhiteSpace(sha))
             return false;
 
-        var path = $"{contentDir}/{section}.json";
+        var path = $"{contentDir}/{fileKey}.json";
         var payload = new { message = commitMessage, sha, branch };
 
         try
@@ -143,6 +144,40 @@ public class WikiContentService : IWikiContentService
         catch
         {
             return false;
+        }
+    }
+
+    public async Task<string?> GetFileShaAsync(string fileKey, CancellationToken cancellationToken = default)
+    {
+        var token = _config["DevOps:GitHubToken"];
+        var owner = _config["Wiki:GitHubOwner"];
+        var repo = _config["Wiki:GitHubRepo"];
+        var contentDir = _config["Wiki:ContentDirectory"] ?? "wwwroot/wiki";
+
+        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(owner) || string.IsNullOrWhiteSpace(repo))
+            return null;
+
+        var path = $"{contentDir}/{fileKey}.json";
+
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get,
+                $"https://api.github.com/repos/{owner}/{repo}/contents/{path}");
+            request.Headers.Add("Authorization", $"token {token}");
+            request.Headers.Add("Accept", "application/vnd.github.v3+json");
+            request.Headers.Add("User-Agent", "BlazorPortfolio");
+
+            var response = await _http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.TryGetProperty("sha", out var shaEl) ? shaEl.GetString() : null;
+        }
+        catch
+        {
+            return null;
         }
     }
 

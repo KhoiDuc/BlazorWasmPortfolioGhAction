@@ -1,18 +1,26 @@
 ﻿@inject NavigationManager Navigation;
 
 <div class="wiki-search">
-    <label class="tool-label" for="searchBox">Search wiki</label>
-    <input id="searchBox" class="tool-input" placeholder="Search wiki (try CV, Transcript, Degree)..." @bind="searchTerm" @bind:event="oninput" @onkeyup="SearchTermChangedInComponent" />
+    <label class="tool-label" for="searchBox">@Label</label>
+    <input id="searchBox" class="tool-input" placeholder="@Placeholder" @bind="searchTerm" @bind:event="oninput" @onkeyup="SearchTermChangedInComponent" />
 </div>
 
 @code {
     public string? searchTerm { get; set; }
     [Parameter] public string? type { get; set; } = "No Type";
+    [Parameter] public string Label { get; set; } = "Search wiki";
+    [Parameter] public string Placeholder { get; set; } = "Filter sections by title or content...";
     [Parameter] public EventCallback<string> SearchTermChanged { get; set; }
     [Parameter] public bool IsSearchDisabled { get; set; } = false;
 
     private void SearchTermChangedInComponent()
     {
+        if (string.Equals(type, "Search", StringComparison.OrdinalIgnoreCase))
+        {
+            SearchTermChanged.InvokeAsync(searchTerm);
+            return;
+        }
+
         if (string.Equals(searchTerm, "CV", StringComparison.OrdinalIgnoreCase))
         {
             Navigation.NavigateTo("/Dissertation/CV");
