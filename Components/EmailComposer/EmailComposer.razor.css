@@ -1,7 +1,17 @@
 .email-layout {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: 1.25rem;
+}
+
+.email-form-card {
+    flex: 2 1 400px;
+    min-width: 0;
+}
+
+.email-sidebar {
+    flex: 1 1 280px;
+    min-width: 0;
 }
 
 .email-form-card,
@@ -120,7 +130,8 @@
 }
 
 @media (max-width: 768px) {
-    .email-layout {
-        grid-template-columns: 1fr;
+    .email-form-card,
+    .email-sidebar {
+        flex: 1 1 100%;
     }
 }

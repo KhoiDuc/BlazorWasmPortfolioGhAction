@@ -11,10 +11,20 @@
 }
 
 .resume-hero-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.7fr);
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 4rem;
+}
+
+.resume-hero-content {
+    flex: 1 1 400px;
+    min-width: 0;
+}
+
+.resume-hero-layout > .carousel-container {
+    flex: 0 1 280px;
+    min-width: min(100%, 280px);
 }
 
 .resume-hero-content h1 {
@@ -115,7 +125,8 @@
 /* --------------------------------------------------------------------------- */
 .about-content {
     max-width: 760px;
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 1.25rem;
 }
 
@@ -129,12 +140,13 @@
 /* EXPERIENCE (shared structure with home)                                      */
 /* --------------------------------------------------------------------------- */
 .experience-list {
-    display: grid;
+    display: flex;
+    flex-direction: column;
 }
 
 .experience-item {
-    display: grid;
-    grid-template-columns: 180px 1fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: 3rem;
     padding: 2.5rem 0;
     border-top: 1px solid var(--color-border);
@@ -145,11 +157,15 @@
     }
 
 .experience-meta {
+    flex: 0 0 180px;
+    max-width: 100%;
     color: var(--color-text-secondary);
     font-size: 0.9rem;
 }
 
 .experience-content {
+    flex: 1 1 300px;
+    min-width: 0;
     max-width: 750px;
 }
 
@@ -189,9 +205,14 @@
 /* PROJECTS GRID (shared structure with home)                                   */
 /* --------------------------------------------------------------------------- */
 .projects-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 1.25rem;
+}
+
+.projects-grid > * {
+    flex: 1 1 calc(50% - 0.625rem);
+    min-width: min(100%, 280px);
 }
 
 .project-card {
@@ -272,12 +293,14 @@
 /* TECHNOLOGY GRID (skills — shared with home)                                  */
 /* --------------------------------------------------------------------------- */
 .technology-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     border-top: 1px solid var(--color-border);
 }
 
 .technology-group {
+    flex: 1 1 calc(50% - 0px);
+    min-width: min(100%, 280px);
     padding: 2rem 0;
     border-bottom: 1px solid var(--color-border);
 }
@@ -322,12 +345,15 @@
 /* EDUCATION GRID (certifications — shared with home)                           */
 /* --------------------------------------------------------------------------- */
 .education-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 4rem;
 }
 
-.education-column { min-width: 0; }
+.education-column {
+    flex: 1 1 calc(50% - 2rem);
+    min-width: min(100%, 280px);
+}
 
 .column-title {
     margin-bottom: 1.5rem;
@@ -444,8 +470,12 @@
 /* RESPONSIVE                                                                   */
 /* --------------------------------------------------------------------------- */
 @media (max-width: 1000px) {
+    .resume-hero-content,
+    .resume-hero-layout > .carousel-container {
+        flex: 1 1 100%;
+    }
+
     .resume-hero-layout {
-        grid-template-columns: 1fr;
         gap: 3rem;
     }
 }
@@ -454,14 +484,21 @@
     .resume-hero { padding-top: 130px; }
 
     .experience-item {
-        grid-template-columns: 1fr;
         gap: 0.75rem;
         padding: 2rem 0;
     }
 
-    .projects-grid { grid-template-columns: 1fr; }
+    .experience-meta {
+        flex: 1 1 100%;
+    }
 
-    .technology-grid { grid-template-columns: 1fr; }
+    .experience-content {
+        flex: 1 1 100%;
+    }
+
+    .projects-grid > * { flex: 1 1 100%; }
+
+    .technology-group { flex: 1 1 100%; }
 
     .technology-group:nth-child(odd),
     .technology-group:nth-child(even) {
@@ -469,8 +506,11 @@
         border-right: none;
     }
 
+    .education-column {
+        flex: 1 1 100%;
+    }
+
     .education-grid {
-        grid-template-columns: 1fr;
         gap: 3rem;
     }
 

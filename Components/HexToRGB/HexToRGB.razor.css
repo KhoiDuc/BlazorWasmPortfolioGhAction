@@ -15,14 +15,16 @@
 }
 
 .hexrgb-rgb-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.75rem;
 }
 
 .hexrgb-channel {
     display: flex;
     align-items: center;
+    flex: 1 1 calc(33.333% - 0.5rem);
+    min-width: min(100%, 120px);
     gap: 0.4rem;
 }
 
@@ -38,5 +40,5 @@
 }
 
 @media (max-width: 768px) {
-    .hexrgb-rgb-row { grid-template-columns: 1fr; }
+    .hexrgb-channel { flex: 1 1 100%; }
 }

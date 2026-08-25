@@ -1,7 +1,12 @@
 .jwt-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: 1.25rem;
+}
+
+.jwt-layout > * {
+    flex: 1 1 calc(50% - 0.625rem);
+    min-width: min(100%, 280px);
 }
 
 .jwt-decoded {
@@ -11,5 +16,5 @@
 }
 
 @media (max-width: 768px) {
-    .jwt-layout { grid-template-columns: 1fr; }
+    .jwt-layout > * { flex: 1 1 100%; }
 }

@@ -114,16 +114,21 @@
 }
 
 .crypto-detail-stats {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.65rem;
 }
 
+.crypto-detail-stats > * {
+    flex: 1 1 calc(25% - 0.49rem);
+    min-width: min(100%, 140px);
+}
+
 @media (max-width: 900px) {
-    .crypto-detail-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .crypto-detail-stats > * { flex: 1 1 calc(50% - 0.33rem); }
 }
 
 @media (max-width: 520px) {
-    .crypto-detail-stats { grid-template-columns: 1fr; }
+    .crypto-detail-stats > * { flex: 1 1 100%; }
     .crypto-detail-price { font-size: 1.5rem; }
 }

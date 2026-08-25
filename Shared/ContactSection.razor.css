@@ -1,12 +1,19 @@
 .contact-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 2.5rem;
-    align-items: start;
+    align-items: flex-start;
 }
 
 .contact-heading {
+    flex: 1 1 400px;
+    min-width: 0;
     padding-top: 0.5rem;
+}
+
+.contact-form-wrapper {
+    flex: 1 1 400px;
+    min-width: 0;
 }
 
 .contact-description {
@@ -64,8 +71,12 @@
 }
 
 @media (max-width: 768px) {
+    .contact-heading,
+    .contact-form-wrapper {
+        flex: 1 1 100%;
+    }
+
     .contact-layout {
-        grid-template-columns: 1fr;
         gap: 1.5rem;
     }
 }

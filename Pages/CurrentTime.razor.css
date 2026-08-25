@@ -7,9 +7,14 @@
 }
 
 .currenttime-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
+}
+
+.currenttime-grid > * {
+    flex: 1 1 calc(33.333% - 0.67rem);
+    min-width: min(100%, 280px);
 }
 
 .currenttime-clock {
@@ -56,6 +61,6 @@
 }
 
 @media (max-width: 768px) {
-    .currenttime-grid { grid-template-columns: 1fr; }
+    .currenttime-grid > * { flex: 1 1 100%; }
     .currenttime-time { font-size: 1.4rem; }
 }

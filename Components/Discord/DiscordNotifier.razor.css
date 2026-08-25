@@ -1,7 +1,17 @@
 .discord-layout {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: 1.25rem;
+}
+
+.discord-form-card {
+    flex: 2 1 400px;
+    min-width: 0;
+}
+
+.discord-sidebar {
+    flex: 1 1 280px;
+    min-width: 0;
 }
 
 .discord-form-card,
@@ -84,7 +94,8 @@
 }
 
 @media (max-width: 768px) {
-    .discord-layout {
-        grid-template-columns: 1fr;
+    .discord-form-card,
+    .discord-sidebar {
+        flex: 1 1 100%;
     }
 }

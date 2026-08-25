@@ -9,17 +9,18 @@
 }
 
 .crypto-dashboard {
-    display: grid;
-    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 1.25rem;
-    align-items: start;
+    align-items: flex-start;
 }
 
 .crypto-sidebar {
+    flex: 0 1 340px;
+    min-width: min(100%, 280px);
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    min-width: 0;
 }
 
 .crypto-controls-card { margin: 0; }
@@ -40,6 +41,7 @@
 }
 
 .crypto-main-panel {
+    flex: 1 1 400px;
     min-width: 0;
     min-height: 520px;
 }
@@ -78,6 +80,7 @@
 }
 
 @media (max-width: 960px) {
-    .crypto-dashboard { grid-template-columns: 1fr; }
+    .crypto-sidebar,
+    .crypto-main-panel { flex: 1 1 100%; }
     .crypto-ticker-list { max-height: 360px; }
 }

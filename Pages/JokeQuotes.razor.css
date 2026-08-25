@@ -14,10 +14,15 @@
 }
 
 .flags-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
     margin: 1rem 0;
+}
+
+.flags-grid > * {
+    flex: 1 1 calc(25% - 0.375rem);
+    min-width: min(100%, 120px);
 }
 
 .flag-item {
@@ -131,7 +136,8 @@
         padding: 0 0.5rem;
     }
 
-    .flags-grid {
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    .flags-grid > * {
+        flex: 1 1 calc(50% - 0.25rem);
+        min-width: min(100%, 100px);
     }
 }

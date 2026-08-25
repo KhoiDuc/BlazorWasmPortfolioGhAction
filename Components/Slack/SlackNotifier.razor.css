@@ -1,7 +1,17 @@
 .slack-layout {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: 1.25rem;
+}
+
+.slack-form-card {
+    flex: 2 1 400px;
+    min-width: 0;
+}
+
+.slack-sidebar {
+    flex: 1 1 280px;
+    min-width: 0;
 }
 
 .slack-form-card,
@@ -76,7 +86,8 @@
 }
 
 @media (max-width: 768px) {
-    .slack-layout {
-        grid-template-columns: 1fr;
+    .slack-form-card,
+    .slack-sidebar {
+        flex: 1 1 100%;
     }
 }
