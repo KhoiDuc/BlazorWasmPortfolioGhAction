@@ -9,8 +9,8 @@ public partial class JWTDebugger
     [Inject] private JwtCodec Codec { get; set; } = default!;
     [Inject] private IClipboardService Clipboard { get; set; } = default!;
 
-    private enum JwtMode { Decoder, Encoder }
-    private enum JsonView { Json, Claims }
+    public enum JwtMode { Decoder, Encoder }
+    public enum JsonView { Json, Claims }
 
     private JwtMode _mode = JwtMode.Decoder;
     private JsonView _headerView = JsonView.Json;
@@ -37,9 +37,12 @@ public partial class JWTDebugger
     private bool _syncing;
     private bool _initialized;
 
+    private bool IsDecoder => _mode == JwtMode.Decoder;
+    private bool IsEncoder => _mode == JwtMode.Encoder;
+
     protected override void OnInitialized()
     {
-        LoadHs256Example();
+        LoadDecoderExample();
         _initialized = true;
     }
 
@@ -49,16 +52,31 @@ public partial class JWTDebugger
     {
         if (_mode == mode)
             return;
+
         _mode = mode;
-        if (mode == JwtMode.Encoder && string.IsNullOrWhiteSpace(_headerJson))
-            LoadHs256Example();
+        _headerView = JsonView.Json;
+        _payloadView = JsonView.Json;
+        _headerError = null;
+        _payloadError = null;
+        _encodeError = null;
+        _structureMessage = null;
+        _verifyMessage = null;
+
+        if (mode == JwtMode.Decoder)
+            LoadDecoderExample();
+        else
+            LoadEncoderExample();
     }
+
+    private void SetHeaderView(JsonView view) => _headerView = view;
+    private void SetPayloadView(JsonView view) => _payloadView = view;
 
     private void OnEncodedInput(ChangeEventArgs e)
     {
         _encoded = e.Value?.ToString() ?? string.Empty;
         if (!_initialized || _syncing)
             return;
+
         SyncFromEncoded();
     }
 
@@ -67,7 +85,9 @@ public partial class JWTDebugger
         _headerJson = e.Value?.ToString() ?? string.Empty;
         if (!_initialized || _syncing)
             return;
-        SyncFromJson();
+
+        if (IsEncoder || HasSigningMaterial())
+            SyncFromJson();
     }
 
     private void OnPayloadInput(ChangeEventArgs e)
@@ -75,7 +95,9 @@ public partial class JWTDebugger
         _payloadJson = e.Value?.ToString() ?? string.Empty;
         if (!_initialized || _syncing)
             return;
-        SyncFromJson();
+
+        if (IsEncoder || HasSigningMaterial())
+            SyncFromJson();
     }
 
     private void OnAlgorithmChanged(ChangeEventArgs e)
@@ -83,7 +105,11 @@ public partial class JWTDebugger
         _algorithm = e.Value?.ToString() ?? "HS256";
         if (!_initialized || _syncing)
             return;
-        SyncFromJson();
+
+        if (IsEncoder)
+            SyncFromJson();
+        else
+            VerifyCurrent();
     }
 
     private void OnHmacSecretInput(ChangeEventArgs e)
@@ -91,8 +117,11 @@ public partial class JWTDebugger
         _hmacSecret = e.Value?.ToString() ?? string.Empty;
         if (!_initialized || _syncing)
             return;
-        SyncFromJson();
-        VerifyCurrent();
+
+        if (IsEncoder || !string.IsNullOrWhiteSpace(_hmacSecret))
+            SyncFromJson();
+        else
+            VerifyCurrent();
     }
 
     private void OnPublicKeyInput(ChangeEventArgs e)
@@ -108,16 +137,32 @@ public partial class JWTDebugger
         _privateKeyPem = e.Value?.ToString() ?? string.Empty;
         if (!_initialized || _syncing)
             return;
-        SyncFromJson();
+
+        if (IsEncoder)
+            SyncFromJson();
+        else
+            VerifyCurrent();
     }
 
     private void OnSecretEncodingChanged()
     {
         if (!_initialized || _syncing)
             return;
-        SyncFromJson();
-        VerifyCurrent();
+
+        if (IsEncoder || !string.IsNullOrWhiteSpace(_hmacSecret))
+            SyncFromJson();
+        else
+            VerifyCurrent();
     }
+
+    private bool HasSigningMaterial() =>
+        KeyKind switch
+        {
+            JwtKeyKind.None => true,
+            JwtKeyKind.Hmac => !string.IsNullOrWhiteSpace(_hmacSecret),
+            JwtKeyKind.Rsa or JwtKeyKind.Ecdsa => !string.IsNullOrWhiteSpace(_privateKeyPem),
+            _ => false
+        };
 
     private void SyncFromEncoded()
     {
@@ -202,7 +247,8 @@ public partial class JWTDebugger
             _canVerify = false;
             _isSignatureVerified = false;
             _verifyMessage = null;
-            _structureMessage = null;
+            if (IsEncoder)
+                _structureMessage = null;
             return;
         }
 
@@ -232,15 +278,44 @@ public partial class JWTDebugger
 
     private void LoadExample()
     {
-        if (KeyKind is JwtKeyKind.Rsa or JwtKeyKind.Ecdsa)
-            ApplyExample(Codec.CreateRs256Example());
+        if (_mode == JwtMode.Decoder)
+            LoadDecoderExample();
         else
-            LoadHs256Example();
+            LoadEncoderExample();
     }
 
-    private void LoadHs256Example()
+    private void LoadDecoderExample()
     {
         ApplyExample(Codec.CreateHs256Example());
+    }
+
+    private void LoadEncoderExample()
+    {
+        var example = Codec.CreateHs256Example();
+
+        _syncing = true;
+        try
+        {
+            _algorithm = example.Algorithm;
+            _headerJson = example.HeaderJson;
+            _payloadJson = example.PayloadJson;
+            _hmacSecret = example.HmacSecret ?? string.Empty;
+            _publicKeyPem = string.Empty;
+            _privateKeyPem = string.Empty;
+            _secretIsBase64Url = false;
+            _encoded = string.Empty;
+            _headerError = null;
+            _payloadError = null;
+            _encodeError = null;
+            _structureMessage = null;
+            _verifyMessage = null;
+
+            SyncFromJson();
+        }
+        finally
+        {
+            _syncing = false;
+        }
     }
 
     private void ApplyExample(JwtExample example)

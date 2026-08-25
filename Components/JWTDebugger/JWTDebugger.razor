@@ -31,11 +31,20 @@
             </div>
         </div>
 
-        <div class="jwt-layout">
+        <div class="jwt-layout @(IsEncoder ? "jwt-layout-encoder" : "jwt-layout-decoder")">
             <section class="jwt-pane jwt-pane-encoded">
                 <div class="jwt-pane-header">
-                    <h4>Encoded Token</h4>
-                    <p>Paste a JWT below that you'd like to decode, validate, and verify.</p>
+                    <h4>@(IsDecoder ? "Encoded Token" : "Generated Token")</h4>
+                    <p>
+                        @if (IsDecoder)
+                        {
+                            @:Paste a JWT below that you'd like to decode, validate, and verify.
+                        }
+                        else
+                        {
+                            @:The signed JWT appears here as you edit header, payload, and signing key.
+                        }
+                    </p>
                 </div>
 
                 <label class="tool-label" for="jwt-encoded">JSON Web Token (JWT)</label>
@@ -91,8 +100,17 @@
             <section class="jwt-pane jwt-pane-decoded">
                 <div class="jwt-pane-header jwt-pane-header-row">
                     <div>
-                        <h4>Decoded Token</h4>
-                        <p>Edit header, payload, or algorithm to re-encode the token.</p>
+                        <h4>@(IsDecoder ? "Decoded Token" : "Token Builder")</h4>
+                        <p>
+                            @if (IsDecoder)
+                            {
+                                @:Inspect decoded header and payload. Edit JSON to re-sign when a secret/key is provided.
+                            }
+                            else
+                            {
+                                @:Edit header, payload, algorithm, and signing key to build a new JWT.
+                            }
+                        </p>
                     </div>
                     <div class="tool-field jwt-alg-field">
                         <label class="tool-label" for="jwt-algorithm">Signing algorithm</label>
@@ -119,10 +137,10 @@
                         <div class="jwt-view-tabs" role="tablist">
                             <button type="button"
                                     class="jwt-view-tab @(_headerView == JsonView.Json ? "is-active" : "")"
-                                    @onclick="() => _headerView = JsonView.Json">JSON</button>
+                                    @onclick="() => SetHeaderView(JsonView.Json)">JSON</button>
                             <button type="button"
                                     class="jwt-view-tab @(_headerView == JsonView.Claims ? "is-active" : "")"
-                                    @onclick="() => _headerView = JsonView.Claims">Claims Breakdown</button>
+                                    @onclick="() => SetHeaderView(JsonView.Claims)">Claims Breakdown</button>
                         </div>
                     </div>
 
@@ -178,10 +196,10 @@
                         <div class="jwt-view-tabs" role="tablist">
                             <button type="button"
                                     class="jwt-view-tab @(_payloadView == JsonView.Json ? "is-active" : "")"
-                                    @onclick="() => _payloadView = JsonView.Json">JSON</button>
+                                    @onclick="() => SetPayloadView(JsonView.Json)">JSON</button>
                             <button type="button"
                                     class="jwt-view-tab @(_payloadView == JsonView.Claims ? "is-active" : "")"
-                                    @onclick="() => _payloadView = JsonView.Claims">Claims Breakdown</button>
+                                    @onclick="() => SetPayloadView(JsonView.Claims)">Claims Breakdown</button>
                         </div>
                     </div>
 
@@ -237,7 +255,7 @@
                 }
 
                 <div class="jwt-key-section">
-                    <h4 class="jwt-key-title">JWT Signature Verification</h4>
+                    <h4 class="jwt-key-title">@(IsEncoder ? "JWT Signature Signing" : "JWT Signature Verification")</h4>
                     @if (KeyKind == JwtKeyKind.Hmac)
                     {
                         <p class="jwt-key-hint">Enter the secret used to sign the JWT below.</p>
