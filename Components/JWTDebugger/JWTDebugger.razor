@@ -1,71 +1,292 @@
-@using System.Text
-@using System.IdentityModel.Tokens.Jwt
-@using BlazorWasmPortfolioGhAction.Services
-@inject IClipboardService Clipboard
+@using BlazorWasmPortfolioGhAction.Services.Jwt
+@using Microsoft.AspNetCore.Components
 
-<ToolShell Title="JWT Debugger" Icon="bi-shield-lock" Description="Decode JWT tokens to inspect header, payload, and signature.">
-    <div class="tool-form">
-        <div class="tool-field">
-            <label class="tool-label" for="algorithm-select">Algorithm</label>
-            <select id="algorithm-select" class="tool-select">
-                <option value="HS256" selected>HS256</option>
-            </select>
+<ToolShell Title="JWT Debugger" Icon="bi-shield-lock" Description="Decode and encode JWTs, verify signatures, and inspect claims — inspired by jwt.io.">
+    <div class="jwt-debugger">
+        <div class="jwt-toolbar">
+            <div class="jwt-mode-toggle" role="tablist" aria-label="JWT mode">
+                <button type="button"
+                        class="jwt-mode-btn @(_mode == JwtMode.Decoder ? "is-active" : "")"
+                        role="tab"
+                        aria-selected="@(_mode == JwtMode.Decoder)"
+                        @onclick="() => SetMode(JwtMode.Decoder)">
+                    JWT Decoder
+                </button>
+                <button type="button"
+                        class="jwt-mode-btn @(_mode == JwtMode.Encoder ? "is-active" : "")"
+                        role="tab"
+                        aria-selected="@(_mode == JwtMode.Encoder)"
+                        @onclick="() => SetMode(JwtMode.Encoder)">
+                    JWT Encoder
+                </button>
+            </div>
+
+            <div class="jwt-toolbar-actions">
+                <button type="button" class="tool-btn" @onclick="LoadExample">
+                    <i class="bi bi-stars" aria-hidden="true"></i> Generate example
+                </button>
+                <button type="button" class="tool-btn tool-btn-danger" @onclick="ClearAll">
+                    <i class="bi bi-trash" aria-hidden="true"></i> Clear
+                </button>
+            </div>
         </div>
+
         <div class="jwt-layout">
-            <div class="tool-field">
-                <label class="tool-label" for="Input">Encoded JWT</label>
-                <textarea id="Input" class="tool-textarea" rows="8" @bind="Input" placeholder="eyJhbGciOiJIUzI1NiIs..."></textarea>
+            <section class="jwt-pane jwt-pane-encoded">
+                <div class="jwt-pane-header">
+                    <h4>Encoded Token</h4>
+                    <p>Paste a JWT below that you'd like to decode, validate, and verify.</p>
+                </div>
+
+                <label class="tool-label" for="jwt-encoded">JSON Web Token (JWT)</label>
+                <div class="jwt-editor">
+                    <pre class="jwt-highlight jwt-highlight-token" aria-hidden="true">@((MarkupString)JwtCodec.HighlightToken(_encoded))</pre>
+                    <textarea id="jwt-encoded"
+                              class="jwt-textarea jwt-textarea-overlay"
+                              rows="8"
+                              value="@_encoded"
+                              @oninput="OnEncodedInput"
+                              placeholder="eyJhbGciOiJIUzI1NiIs..."></textarea>
+                </div>
+
+                <div class="jwt-status-row">
+                    @if (!string.IsNullOrWhiteSpace(_encoded))
+                    {
+                        <span class="jwt-status @(_isValidStructure ? "is-valid" : "is-invalid")">
+                            <i class="bi @(_isValidStructure ? "bi-check-circle-fill" : "bi-x-circle-fill")" aria-hidden="true"></i>
+                            @(_isValidStructure ? "Valid JWT" : "Invalid JWT")
+                        </span>
+                        @if (_isValidStructure && _canVerify)
+                        {
+                            <span class="jwt-status @(_isSignatureVerified ? "is-valid" : "is-invalid")">
+                                <i class="bi @(_isSignatureVerified ? "bi-shield-check" : "bi-shield-x")" aria-hidden="true"></i>
+                                @(_isSignatureVerified ? "Signature Verified" : "Signature Invalid")
+                            </span>
+                        }
+                        else if (_isValidStructure && string.Equals(_algorithm, "none", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <span class="jwt-status jwt-status-warn">
+                                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                                Unsigned (none)
+                            </span>
+                        }
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(_structureMessage))
+                {
+                    <p class="jwt-error">@_structureMessage</p>
+                }
+                @if (_canVerify && !string.IsNullOrEmpty(_verifyMessage) && !_isSignatureVerified)
+                {
+                    <p class="jwt-error">@_verifyMessage</p>
+                }
+
                 <div class="tool-actions">
-                    <button class="tool-btn tool-btn-success" @onclick="Decode">
-                        <i class="bi bi-arrow-down" aria-hidden="true"></i> Decode
-                    </button>
-                    <button class="tool-btn tool-btn-danger" @onclick="Clear">
-                        <i class="bi bi-trash" aria-hidden="true"></i> Clear
+                    <button type="button" class="tool-btn" @onclick="CopyEncoded" disabled="@string.IsNullOrWhiteSpace(_encoded)">
+                        <i class="bi bi-clipboard" aria-hidden="true"></i> Copy token
                     </button>
                 </div>
-            </div>
-            <div class="jwt-decoded">
-                <div class="tool-field">
-                    <span class="tool-result-label">Header</span>
-                    <textarea id="Header" class="tool-textarea" rows="3" @bind="Header" placeholder="Decoded header" readonly></textarea>
+            </section>
+
+            <section class="jwt-pane jwt-pane-decoded">
+                <div class="jwt-pane-header jwt-pane-header-row">
+                    <div>
+                        <h4>Decoded Token</h4>
+                        <p>Edit header, payload, or algorithm to re-encode the token.</p>
+                    </div>
+                    <div class="tool-field jwt-alg-field">
+                        <label class="tool-label" for="jwt-algorithm">Signing algorithm</label>
+                        <select id="jwt-algorithm" class="tool-select" value="@_algorithm" @onchange="OnAlgorithmChanged">
+                            @foreach (var alg in JwtAlgorithm.All)
+                            {
+                                <option value="@alg">@alg</option>
+                            }
+                        </select>
+                    </div>
                 </div>
-                <div class="tool-field">
-                    <span class="tool-result-label">Payload</span>
-                    <textarea id="Payload" class="tool-textarea" rows="4" @bind="Payload" placeholder="Decoded payload" readonly></textarea>
+
+                @if (string.Equals(_algorithm, "none", StringComparison.OrdinalIgnoreCase))
+                {
+                    <div class="tool-alert tool-alert-warning jwt-none-warning">
+                        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                        The <strong>none</strong> algorithm produces unsigned tokens. Do not use in production.
+                    </div>
+                }
+
+                <div class="jwt-decoded-block">
+                    <div class="jwt-block-header">
+                        <span class="tool-result-label">Decoded Header</span>
+                        <div class="jwt-view-tabs" role="tablist">
+                            <button type="button"
+                                    class="jwt-view-tab @(_headerView == JsonView.Json ? "is-active" : "")"
+                                    @onclick="() => _headerView = JsonView.Json">JSON</button>
+                            <button type="button"
+                                    class="jwt-view-tab @(_headerView == JsonView.Claims ? "is-active" : "")"
+                                    @onclick="() => _headerView = JsonView.Claims">Claims Breakdown</button>
+                        </div>
+                    </div>
+
+                    @if (_headerView == JsonView.Json)
+                    {
+                        <div class="jwt-editor">
+                            <pre class="jwt-highlight jwt-highlight-json" aria-hidden="true">@((MarkupString)JwtCodec.HighlightJson(_headerJson))</pre>
+                            <textarea class="jwt-textarea jwt-textarea-overlay"
+                                      rows="4"
+                                      value="@_headerJson"
+                                      @oninput="OnHeaderInput"
+                                      placeholder="{ &quot;alg&quot;: &quot;HS256&quot;, &quot;typ&quot;: &quot;JWT&quot; }"></textarea>
+                        </div>
+                        @if (_headerError is not null)
+                        {
+                            <p class="jwt-error">@_headerError</p>
+                        }
+                        <div class="tool-actions">
+                            <button type="button" class="tool-btn" @onclick="CopyHeader" disabled="@string.IsNullOrWhiteSpace(_headerJson)">
+                                <i class="bi bi-clipboard" aria-hidden="true"></i> Copy header
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="jwt-claims-table-wrap">
+                            <table class="jwt-claims-table">
+                                <thead>
+                                    <tr>
+                                        <th>Claim</th>
+                                        <th>Value</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var claim in JwtClaimCatalog.Breakdown(_headerJson))
+                                    {
+                                        <tr>
+                                            <td><code>@claim.Name</code></td>
+                                            <td>@claim.Value</td>
+                                            <td>@claim.Description</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
                 </div>
-                <div class="tool-field">
-                    <span class="tool-result-label">Verify signature</span>
-                    <textarea id="VerifySignature" class="tool-textarea" rows="2" @bind="Signature" placeholder="Signature" readonly></textarea>
+
+                <div class="jwt-decoded-block">
+                    <div class="jwt-block-header">
+                        <span class="tool-result-label">Decoded Payload</span>
+                        <div class="jwt-view-tabs" role="tablist">
+                            <button type="button"
+                                    class="jwt-view-tab @(_payloadView == JsonView.Json ? "is-active" : "")"
+                                    @onclick="() => _payloadView = JsonView.Json">JSON</button>
+                            <button type="button"
+                                    class="jwt-view-tab @(_payloadView == JsonView.Claims ? "is-active" : "")"
+                                    @onclick="() => _payloadView = JsonView.Claims">Claims Breakdown</button>
+                        </div>
+                    </div>
+
+                    @if (_payloadView == JsonView.Json)
+                    {
+                        <div class="jwt-editor">
+                            <pre class="jwt-highlight jwt-highlight-json" aria-hidden="true">@((MarkupString)JwtCodec.HighlightJson(_payloadJson))</pre>
+                            <textarea class="jwt-textarea jwt-textarea-overlay"
+                                      rows="6"
+                                      value="@_payloadJson"
+                                      @oninput="OnPayloadInput"
+                                      placeholder="{ &quot;sub&quot;: &quot;1234567890&quot; }"></textarea>
+                        </div>
+                        @if (_payloadError is not null)
+                        {
+                            <p class="jwt-error">@_payloadError</p>
+                        }
+                        <div class="tool-actions">
+                            <button type="button" class="tool-btn" @onclick="CopyPayload" disabled="@string.IsNullOrWhiteSpace(_payloadJson)">
+                                <i class="bi bi-clipboard" aria-hidden="true"></i> Copy payload
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="jwt-claims-table-wrap">
+                            <table class="jwt-claims-table">
+                                <thead>
+                                    <tr>
+                                        <th>Claim</th>
+                                        <th>Value</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var claim in JwtClaimCatalog.Breakdown(_payloadJson))
+                                    {
+                                        <tr>
+                                            <td><code>@claim.Name</code></td>
+                                            <td>@claim.Value</td>
+                                            <td>@claim.Description</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
                 </div>
-            </div>
+
+                @if (_encodeError is not null)
+                {
+                    <p class="jwt-error">@_encodeError</p>
+                }
+
+                <div class="jwt-key-section">
+                    <h4 class="jwt-key-title">JWT Signature Verification</h4>
+                    @if (KeyKind == JwtKeyKind.Hmac)
+                    {
+                        <p class="jwt-key-hint">Enter the secret used to sign the JWT below.</p>
+                        <div class="tool-field">
+                            <div class="jwt-secret-row">
+                                <label class="tool-label" for="jwt-secret">Secret</label>
+                                <label class="jwt-toggle">
+                                    <input type="checkbox" @bind="_secretIsBase64Url" @bind:after="OnSecretEncodingChanged" />
+                                    BASE64URL ENCODED
+                                </label>
+                            </div>
+                            <input id="jwt-secret"
+                                   class="tool-input jwt-secret-input"
+                                   value="@_hmacSecret"
+                                   @oninput="OnHmacSecretInput"
+                                   placeholder="a-string-secret-at-least-256-bits-long" />
+                        </div>
+                    }
+                    else if (KeyKind is JwtKeyKind.Rsa or JwtKeyKind.Ecdsa)
+                    {
+                        <p class="jwt-key-hint">Paste PEM-encoded @(KeyKind == JwtKeyKind.Rsa ? "RSA" : "EC") keys for verify / sign.</p>
+                        <div class="tool-field">
+                            <label class="tool-label" for="jwt-public-key">Public Key (verify)</label>
+                            <textarea id="jwt-public-key"
+                                      class="tool-textarea"
+                                      rows="4"
+                                      value="@_publicKeyPem"
+                                      @oninput="OnPublicKeyInput"
+                                      placeholder="-----BEGIN PUBLIC KEY-----"></textarea>
+                        </div>
+                        <div class="tool-field">
+                            <label class="tool-label" for="jwt-private-key">Private Key (sign)</label>
+                            <textarea id="jwt-private-key"
+                                      class="tool-textarea"
+                                      rows="6"
+                                      value="@_privateKeyPem"
+                                      @oninput="OnPrivateKeyInput"
+                                      placeholder="-----BEGIN PRIVATE KEY-----"></textarea>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="jwt-key-hint">No signature verification for the <strong>none</strong> algorithm.</p>
+                    }
+                </div>
+            </section>
         </div>
     </div>
+
     <hr class="tool-divider" />
-    <p class="tool-hint">Inspired by <a href="https://jwt.io" target="_blank">JWT.io</a></p>
+    <p class="tool-hint">Inspired by <a href="https://jwt.io" target="_blank" rel="noopener">JWT.io</a>. All processing runs in your browser — secrets never leave this page.</p>
 </ToolShell>
-
-@code {
-    [Parameter] public string? Input { get; set; }
-    [Parameter] public string? Output { get; set; }
-    [Parameter] public string Header { get; set; } = "";
-    [Parameter] public string Payload { get; set; } = "";
-    [Parameter] public string Signature { get; set; } = "";
-
-    void Decode()
-    {
-        if (string.IsNullOrEmpty(Input)) return;
-        var handler = new JwtSecurityTokenHandler();
-        var jwtSecurityToken = handler.ReadJwtToken(Input);
-        Header = jwtSecurityToken.Header.SerializeToJson();
-        Payload = jwtSecurityToken.Payload.SerializeToJson();
-        Signature = jwtSecurityToken.RawSignature;
-    }
-
-    private void Clear() { Input = string.Empty; }
-
-    async Task Copy()
-    {
-        if (!string.IsNullOrEmpty(Output))
-            await Clipboard.CopyTextAsync(Output);
-    }
-}

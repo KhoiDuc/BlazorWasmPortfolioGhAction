@@ -16,6 +16,7 @@ using Fluxor.Blazor.Web.ReduxDevTools;
 using BlazorWasmPortfolioGhAction.Extensions;
 using BlazorWasmPortfolioGhAction.Services;
 using BlazorWasmPortfolioGhAction.Services.Auth;
+using BlazorWasmPortfolioGhAction.Services.Jwt;
 using Microsoft.AspNetCore.Components.Authorization;
 using Blazored.LocalStorage;
 // using Microsoft.Authentication.WebAssembly.Msal; // MSAL — disabled (learning/demo only)
@@ -55,6 +56,7 @@ public static class Program
         builder.Services.AddScoped<IHtmlSanitizerService, HtmlSanitizerService>();
         builder.Services.AddScoped<IScriptLoaderService, ScriptLoaderService>();
         builder.Services.AddScoped<IClipboardService, ClipboardService>();
+        builder.Services.AddScoped<JwtCodec>();
         builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
 
         // MSAL / Azure AD — disabled (was for learning only)
