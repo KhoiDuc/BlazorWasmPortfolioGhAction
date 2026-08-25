@@ -2112,7 +2112,7 @@
     right: -5%;
     width: min(900px, 65vw);
     height: 82%;
-    background-image: radial-gradient(circle, rgba(99, 102, 241, var(--pattern-opacity)) 1px, transparent 1.5px);
+    background-image: radial-gradient(circle, rgba(180, 83, 9, var(--pattern-opacity)) 1px, transparent 1.5px);
     background-size: 26px 26px;
     -webkit-mask-image: radial-gradient(ellipse at 72% 42%, #000 0%, #000 30%, rgba(0, 0, 0, 0.8) 48%, rgba(0, 0, 0, 0.35) 65%, transparent 82%);
     mask-image: radial-gradient(ellipse at 72% 42%, #000 0%, #000 30%, rgba(0, 0, 0, 0.8) 48%, rgba(0, 0, 0, 0.35) 65%, transparent 82%);
@@ -2155,13 +2155,13 @@
     height: 8px;
     background-color: var(--color-accent);
     border-radius: var(--radius-full);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.09), 0 0 8px rgba(99, 102, 241, 0.28);
+    box-shadow: 0 0 0 4px rgba(180, 83, 9, 0.09), 0 0 8px rgba(180, 83, 9, 0.28);
     animation: status-indicator-glow-b-e42tnukhfb 2.6s ease-in-out infinite;
 }
 
 @keyframes status-indicator-glow-b-e42tnukhfb {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.09), 0 0 8px rgba(99, 102, 241, 0.26); }
-    50% { transform: scale(1.04); box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.13), 0 0 13px rgba(99, 102, 241, 0.45); }
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 4px rgba(180, 83, 9, 0.09), 0 0 8px rgba(180, 83, 9, 0.26); }
+    50% { transform: scale(1.04); box-shadow: 0 0 0 5px rgba(180, 83, 9, 0.13), 0 0 13px rgba(180, 83, 9, 0.45); }
 }
 
 .hero-greeting[b-e42tnukhfb] {
@@ -3917,144 +3917,294 @@ input[type="range"][b-2h15zs2qqi] {
 /* /Pages/Sqlite.razor.rz.scp.css */
 /* /Pages/Utility.razor.rz.scp.css */
 /* =============================================================================
-   UTILITY — rebuilt layout
+   UTILITY DECK — launcher grid + workspace (no sidebar)
    ============================================================================= */
 
-.utility-page section[b-vlpqqjoo1n] { padding: 3rem 0 5rem; }
+.utility-deck section[b-vlpqqjoo1n] {
+    padding: 2.5rem 0 4.5rem;
+}
 
-.utility-lead[b-vlpqqjoo1n] {
-    max-width: 640px;
-    margin-top: 0.75rem;
+.utility-deck-header[b-vlpqqjoo1n] {
+    display: flex;
+    flex-direction: column;
+    gap: 1.35rem;
+    margin-bottom: 2rem;
+}
+
+.utility-deck-intro h2[b-vlpqqjoo1n] {
+    margin: 0.2rem 0 0.45rem;
+    font-size: clamp(1.85rem, 4vw, 2.65rem);
+    letter-spacing: -0.03em;
+}
+
+.utility-deck-lead[b-vlpqqjoo1n] {
+    margin: 0;
+    max-width: 620px;
     color: var(--color-text-secondary);
+    line-height: 1.55;
 }
 
-.utility-layout[b-vlpqqjoo1n] {
+.utility-deck-controls[b-vlpqqjoo1n] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.utility-deck-search[b-vlpqqjoo1n] {
+    position: relative;
+    max-width: 420px;
+}
+
+.utility-deck-search i[b-vlpqqjoo1n] {
+    position: absolute;
+    left: 0.95rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    pointer-events: none;
+}
+
+.utility-deck-search-input[b-vlpqqjoo1n] {
+    width: 100%;
+    padding: 0.72rem 1rem 0.72rem 2.45rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    font-size: 0.92rem;
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.utility-deck-search-input:focus[b-vlpqqjoo1n] {
+    outline: none;
+    border-color: var(--color-border-accent);
+    box-shadow: var(--shadow-glow-accent);
+}
+
+.utility-deck-pills[b-vlpqqjoo1n] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.utility-pill[b-vlpqqjoo1n] {
+    padding: 0.38rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: var(--color-bg-surface);
+    color: var(--color-text-secondary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color var(--transition), background-color var(--transition), border-color var(--transition), transform var(--transition);
+}
+
+.utility-pill:hover[b-vlpqqjoo1n] {
+    color: var(--color-text-primary);
+    border-color: var(--color-border-hover);
+    transform: translateY(-1px);
+}
+
+.utility-pill.is-active[b-vlpqqjoo1n] {
+    color: #fff;
+    border-color: transparent;
+    background: var(--gradient-accent);
+    box-shadow: var(--shadow-glow-primary);
+}
+
+/* Launcher grid */
+.utility-launcher[b-vlpqqjoo1n] {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.utility-launch-group-title[b-vlpqqjoo1n] {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0 0 0.85rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.utility-launch-group-title i[b-vlpqqjoo1n] {
+    color: var(--color-accent, #b45309);
+}
+
+.utility-launch-count[b-vlpqqjoo1n] {
+    margin-left: auto;
+    padding: 0.12rem 0.5rem;
+    border-radius: var(--radius-full);
+    background: var(--color-bg-glass-hover);
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.utility-launch-grid[b-vlpqqjoo1n] {
     display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
-    gap: 1.25rem;
-    align-items: start;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.75rem;
 }
 
-.utility-sidebar[b-vlpqqjoo1n] {
-    position: sticky;
-    top: 88px;
-    max-height: calc(100vh - 108px);
-    overflow-y: auto;
-    padding: 1rem;
+.utility-launch-card[b-vlpqqjoo1n] {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 0.75rem;
+    padding: 0.95rem 1rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     background: var(--color-bg-surface);
+    text-decoration: none;
+    color: inherit;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 
-.utility-sidebar-search[b-vlpqqjoo1n] {
-    margin-bottom: 0.85rem;
+.utility-launch-card:hover[b-vlpqqjoo1n] {
+    transform: translateY(-2px);
+    border-color: var(--color-border-accent);
+    box-shadow: var(--shadow-md), var(--shadow-glow-accent);
 }
 
-.utility-nav[b-vlpqqjoo1n] {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-}
-
-.nav-group[b-vlpqqjoo1n] {
-    border: none;
-    border-bottom: 1px solid var(--color-border-subtle);
-    padding: 0;
-}
-
-.nav-group:last-child[b-vlpqqjoo1n] { border-bottom: none; }
-
-.nav-group-title[b-vlpqqjoo1n] {
-    padding: 0.6rem 0;
-    color: var(--color-text-secondary);
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    list-style: none;
+.utility-launch-icon[b-vlpqqjoo1n] {
+    width: 2.35rem;
+    height: 2.35rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background: var(--gradient-brand-subtle);
+    color: var(--color-accent, #b45309);
+    font-size: 1.05rem;
 }
 
-.nav-group-title[b-vlpqqjoo1n]::-webkit-details-marker { display: none; }
-
-.nav-group-title[b-vlpqqjoo1n]::after {
-    content: "\F282";
-    font-family: "bootstrap-icons";
-    font-size: 0.65rem;
-    color: var(--color-text-muted);
-    transition: transform var(--transition);
-}
-
-.nav-group[open] .nav-group-title[b-vlpqqjoo1n]::after { transform: rotate(90deg); }
-.nav-group[open] .nav-group-title[b-vlpqqjoo1n] { color: var(--color-accent); }
-
-.nav-group-items[b-vlpqqjoo1n] {
-    list-style: none;
-    margin: 0 0 0.5rem;
-    padding: 0;
+.utility-launch-body[b-vlpqqjoo1n] {
     display: flex;
     flex-direction: column;
-    gap: 1px;
-}
-
-.nav-item[b-vlpqqjoo1n] {
-    display: block;
-    padding: 0.42rem 0.65rem;
-    color: var(--color-text-secondary);
-    font-size: 0.84rem;
-    border-radius: var(--radius-sm);
-    text-decoration: none;
-    transition: color var(--transition), background-color var(--transition);
-}
-
-.nav-item:hover[b-vlpqqjoo1n] {
-    color: var(--color-text-primary);
-    background: var(--color-bg-glass-hover);
-}
-
-.nav-item.active[b-vlpqqjoo1n] {
-    color: var(--color-accent);
-    background: var(--color-bg-glass-active);
-    font-weight: 600;
-}
-
-.utility-main[b-vlpqqjoo1n] {
+    gap: 0.2rem;
     min-width: 0;
+}
+
+.utility-launch-body strong[b-vlpqqjoo1n] {
+    font-size: 0.92rem;
+    color: var(--color-text-primary);
+}
+
+.utility-launch-body span[b-vlpqqjoo1n] {
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--color-text-secondary);
+}
+
+.utility-launch-arrow[b-vlpqqjoo1n] {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    margin-top: 0.15rem;
+    transition: transform var(--transition), color var(--transition);
+}
+
+.utility-launch-card:hover .utility-launch-arrow[b-vlpqqjoo1n] {
+    transform: translate(2px, -2px);
+    color: var(--color-accent, #b45309);
+}
+
+.utility-launch-empty[b-vlpqqjoo1n] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 3rem 1.5rem;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    color: var(--color-text-secondary);
+}
+
+.utility-launch-empty i[b-vlpqqjoo1n] {
+    font-size: 2rem;
+    color: var(--color-text-muted);
+}
+
+.utility-launch-empty h3[b-vlpqqjoo1n] {
+    margin: 0;
+    color: var(--color-text-primary);
+}
+
+/* Workspace */
+.utility-workspace[b-vlpqqjoo1n] {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
-.utility-tool-header[b-vlpqqjoo1n] {
-    display: flex;
-    flex-wrap: wrap;
+.utility-workspace-bar[b-vlpqqjoo1n] {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    background: var(--color-bg-surface);
+    background: var(--gradient-brand-subtle);
 }
 
-.utility-tool-label[b-vlpqqjoo1n] {
-    margin: 0;
-    font-size: 0.7rem;
+.utility-back-link[b-vlpqqjoo1n] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color var(--transition), border-color var(--transition);
+}
+
+.utility-back-link:hover[b-vlpqqjoo1n] {
+    color: var(--color-text-primary);
+    border-color: var(--color-border-hover);
+}
+
+.utility-workspace-meta h3[b-vlpqqjoo1n] {
+    margin: 0.15rem 0 0;
+    font-size: 1.05rem;
+}
+
+.utility-workspace-category[b-vlpqqjoo1n] {
+    display: inline-block;
+    font-size: 0.68rem;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--color-text-muted);
 }
 
-.utility-tool-header h3[b-vlpqqjoo1n] {
-    margin: 0.25rem 0 0;
-    font-size: 1.25rem;
+.utility-switch-select[b-vlpqqjoo1n] {
+    min-width: 180px;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    font-size: 0.82rem;
 }
 
-.utility-tool-body[b-vlpqqjoo1n] {
-    min-height: 360px;
+.utility-workspace-panel[b-vlpqqjoo1n] {
+    min-height: 420px;
+}
+
+.utility-workspace-panel :global(.tool-shell)[b-vlpqqjoo1n] {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-content);
 }
 
 .utility-tool-stack[b-vlpqqjoo1n] {
@@ -4063,169 +4213,480 @@ input[type="range"][b-2h15zs2qqi] {
     gap: 1rem;
 }
 
-.utility-tool-body > :global(.tool-card:first-child)[b-vlpqqjoo1n] {
-    margin-top: 0;
+.utility-unknown[b-vlpqqjoo1n] {
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
 }
 
-.utility-empty[b-vlpqqjoo1n] {
+.visually-hidden[b-vlpqqjoo1n] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 768px) {
+    .utility-deck section[b-vlpqqjoo1n] { padding: 2rem 0 3.5rem; }
+
+    .utility-workspace-bar[b-vlpqqjoo1n] {
+        grid-template-columns: 1fr;
+    }
+
+    .utility-workspace-switch[b-vlpqqjoo1n] {
+        width: 100%;
+    }
+
+    .utility-switch-select[b-vlpqqjoo1n] {
+        width: 100%;
+    }
+
+    .utility-launch-grid[b-vlpqqjoo1n] {
+        grid-template-columns: 1fr;
+    }
+}
+/* /Pages/Wiki.razor.rz.scp.css */
+/* =============================================================================
+   WIKI HUB — documentation layout with TOC sidebar
+   ============================================================================= */
+
+.wiki-hub section[b-pq7jgpo65l] {
+    padding: 2.5rem 0 4.5rem;
+}
+
+.wiki-hero[b-pq7jgpo65l] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+    padding: 1.35rem 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--gradient-brand-subtle);
+    box-shadow: var(--shadow-sm);
+}
+
+.wiki-hero-copy h2[b-pq7jgpo65l] {
+    margin: 0.2rem 0 0.45rem;
+    font-size: clamp(1.85rem, 4vw, 2.5rem);
+    letter-spacing: -0.03em;
+}
+
+.wiki-hero-lead[b-pq7jgpo65l] {
+    margin: 0;
+    max-width: 560px;
+    color: var(--color-text-secondary);
+    line-height: 1.55;
+}
+
+.wiki-toolbar[b-pq7jgpo65l] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+    position: sticky;
+    top: 72px;
+    z-index: 20;
+}
+
+.wiki-toolbar :global(.wiki-search)[b-pq7jgpo65l] {
+    flex: 1 1 280px;
+    margin: 0;
+    position: static;
+    background: transparent;
+    padding: 0;
+}
+
+.wiki-toolbar :global(.wiki-search .tool-label)[b-pq7jgpo65l] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.wiki-toolbar :global(.wiki-search .tool-input)[b-pq7jgpo65l] {
+    width: 100%;
+    padding: 0.68rem 1rem 0.68rem 2.45rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-surface-elevated);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242 1.156a5 5 0 1 1 0-10 5 5 0 0 1 0 10'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 0.95rem center;
+}
+
+.wiki-toolbar-meta[b-pq7jgpo65l] {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.wiki-mode-badge[b-pq7jgpo65l] {
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-full);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.wiki-mode-badge.is-edit[b-pq7jgpo65l] {
+    color: #fff;
+    background: var(--gradient-accent);
+}
+
+.wiki-stat[b-pq7jgpo65l] {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    font-family: var(--font-family-mono);
+}
+
+.wiki-layout[b-pq7jgpo65l] {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.wiki-toc[b-pq7jgpo65l] {
+    position: sticky;
+    top: 148px;
+    max-height: calc(100vh - 168px);
+    overflow-y: auto;
+    padding: 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+}
+
+.wiki-toc-label[b-pq7jgpo65l] {
+    margin: 0 0 0.65rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+}
+
+.wiki-toc-nav[b-pq7jgpo65l] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.wiki-toc-link[b-pq7jgpo65l] {
+    display: block;
+    padding: 0.38rem 0.55rem;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.35;
+    text-decoration: none;
+    transition: color var(--transition), background-color var(--transition);
+}
+
+.wiki-toc-link:hover[b-pq7jgpo65l] {
+    color: var(--color-text-primary);
+    background: var(--color-bg-glass-hover);
+}
+
+.wiki-toc-link.is-section[b-pq7jgpo65l] {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.wiki-toc-link.is-sub[b-pq7jgpo65l] {
+    padding-left: 1rem;
+    font-size: 0.76rem;
+}
+
+.wiki-stream[b-pq7jgpo65l] {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.wiki-page-heading[b-pq7jgpo65l] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.25rem 0 0.5rem;
+    border-bottom: 1px solid var(--color-border-subtle);
+    margin-top: 0.5rem;
+}
+
+.wiki-page-heading h2[b-pq7jgpo65l] {
+    margin: 0;
+    font-size: 1.55rem;
+    letter-spacing: -0.02em;
+}
+
+.wiki-page-badge[b-pq7jgpo65l] {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent, #b45309);
+}
+
+.wiki-state[b-pq7jgpo65l] {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    padding: 3rem 2rem;
+    padding: 3rem 1.5rem;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
     text-align: center;
-    min-height: 360px;
+    color: var(--color-text-secondary);
 }
 
-.utility-empty i[b-vlpqqjoo1n] {
-    font-size: 2.5rem;
-    color: var(--color-text-subtle);
+.wiki-state i[b-pq7jgpo65l] {
+    font-size: 2rem;
+    color: var(--color-text-muted);
 }
 
-.utility-empty h3[b-vlpqqjoo1n] { margin: 0; }
-
-.utility-empty p[b-vlpqqjoo1n] {
+.wiki-state h3[b-pq7jgpo65l] {
     margin: 0;
-    color: var(--color-text-secondary);
-    max-width: 360px;
-}
-
-@media (max-width: 768px) {
-    .utility-page section[b-vlpqqjoo1n] { padding: 2rem 0 3.5rem; }
-
-    .utility-layout[b-vlpqqjoo1n] {
-        grid-template-columns: 1fr;
-    }
-
-    .utility-sidebar[b-vlpqqjoo1n] {
-        position: static;
-        max-height: none;
-    }
-}
-/* /Pages/Wiki.razor.rz.scp.css */
-.wiki-page .wiki-loading[b-pq7jgpo65l],
-.wiki-page .wiki-empty[b-pq7jgpo65l] {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 2rem;
-    text-align: center;
-    color: var(--color-text-secondary);
-}
-
-.wiki-table-wrapper[b-pq7jgpo65l] {
-    overflow-x: auto;
-    margin-top: 1rem;
-}
-
-.wiki-table[b-pq7jgpo65l] {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.wiki-actions[b-pq7jgpo65l] {
-    margin-top: 1.5rem;
-    display: flex;
-    gap: 0.75rem;
-}
-
-.wiki-page .wiki-search[b-pq7jgpo65l] {
-    position: sticky;
-    top: 72px;
-    z-index: 10;
-    background: var(--color-bg-primary);
-    padding: 0.5rem 0;
-}
-
-.wiki-page .searchBar .tool-input[b-pq7jgpo65l] {
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-border);
-    background: var(--color-bg-secondary);
     color: var(--color-text-primary);
 }
 
+@media (max-width: 900px) {
+    .wiki-layout[b-pq7jgpo65l] {
+        grid-template-columns: 1fr;
+    }
+
+    .wiki-toc[b-pq7jgpo65l] {
+        position: static;
+        max-height: none;
+    }
+
+    .wiki-toc-nav[b-pq7jgpo65l] {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .wiki-toc-link.is-sub[b-pq7jgpo65l] {
+        padding-left: 0.55rem;
+    }
+}
+
 @media (max-width: 768px) {
-    .wiki-page .wiki-search[b-pq7jgpo65l] {
+    .wiki-hub section[b-pq7jgpo65l] { padding: 2rem 0 3.5rem; }
+
+    .wiki-toolbar[b-pq7jgpo65l] {
         top: 64px;
     }
 }
 /* /Pages/WikiBlock.razor.rz.scp.css */
-.kudosText[b-xtwal4usc9] {
-    color: var(--color-primary);
+.wiki-article[b-xtwal4usc9] {
+    padding: 1.15rem 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+    box-shadow: var(--shadow-sm);
+    scroll-margin-top: 160px;
 }
 
-    .kudosText .text-muted[b-xtwal4usc9] {
-        background-color: var(--color-bg-surface);
-        padding: 2px;
-        border-radius: var(--radius-sm);
-        color: var(--color-primary);
-    }
-
-.kudosTextInline[b-xtwal4usc9] {
-    color: var(--color-primary);
-    padding-top: 40px;
+.wiki-article-editable.is-editing[b-xtwal4usc9] {
+    border-color: var(--color-border-accent);
+    box-shadow: var(--shadow-md), var(--shadow-glow-accent);
 }
 
-    .kudosTextInline .text-muted[b-xtwal4usc9] {
-        border-radius: var(--radius-sm);
-        color: var(--color-primary);
-    }
+.wiki-article-editable.is-new[b-xtwal4usc9] {
+    border-style: dashed;
+}
+
+.wiki-article-header[b-xtwal4usc9] {
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.wiki-article-badge[b-xtwal4usc9] {
+    display: inline-block;
+    margin-bottom: 0.35rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-full);
+    background: var(--color-bg-glass-hover);
+    color: var(--color-text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.wiki-article-title[b-xtwal4usc9] {
+    margin: 0;
+    font-size: 1.15rem;
+    line-height: 1.35;
+    color: var(--color-text-primary);
+}
+
+.wiki-article-subtitle[b-xtwal4usc9] {
+    margin: 0.35rem 0 0;
+    font-size: 0.88rem;
+    color: var(--color-text-secondary);
+}
+
+.wiki-article-body[b-xtwal4usc9] {
+    color: var(--color-text-primary);
+    line-height: 1.65;
+    font-size: 0.95rem;
+}
+
+.wiki-article-body :is(p, ul, ol, blockquote)[b-xtwal4usc9] {
+    margin-top: 0;
+    margin-bottom: 0.85rem;
+}
+
+.wiki-article-body :is(h1, h2, h3, h4)[b-xtwal4usc9] {
+    margin: 1rem 0 0.5rem;
+    line-height: 1.25;
+}
+
+.wiki-article-body a[b-xtwal4usc9] {
+    color: var(--color-accent, #b45309);
+}
+
+.wiki-article-body img[b-xtwal4usc9] {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-sm);
+}
+
+.wiki-article-toolbar[b-xtwal4usc9] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--color-border-subtle);
+}
+
+.wiki-article-empty[b-xtwal4usc9] {
+    color: var(--color-text-muted);
+    font-size: 0.88rem;
+}
 
 .dotted-lines[b-xtwal4usc9] {
     position: relative;
 }
 
-    .dotted-lines *[b-xtwal4usc9] {
-        z-index: -1;
-    }
-
 .inlineBTN[b-xtwal4usc9] {
     position: absolute;
-    padding: .05rem .5rem;
-    font-size: .85rem;
-    right: 0px;
-    top: 0px;
-    z-index: 0;
+    padding: 0.05rem 0.5rem;
+    font-size: 0.85rem;
+    right: 0;
+    top: 0;
+    z-index: 2;
+}
+
+.tinymce-editor[b-xtwal4usc9] {
+    min-height: 120px;
+}
+
+@media (max-width: 768px) {
+    .wiki-article[b-xtwal4usc9] {
+        padding: 1rem;
+    }
 }
 /* /Pages/WikiBlockNoAuth.razor.rz.scp.css */
-.kudosText[b-0umek18f5q] {
-    color: var(--color-primary);
+.wiki-article[b-0umek18f5q] {
+    padding: 1.15rem 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+    box-shadow: var(--shadow-sm);
+    scroll-margin-top: 160px;
 }
 
-    .kudosText .text-muted[b-0umek18f5q] {
-        background-color: var(--color-bg-surface);
-        padding: 2px;
-        border-radius: var(--radius-sm);
-        color: var(--color-primary);
-    }
-
-.kudosTextInline[b-0umek18f5q] {
-    color: var(--color-primary);
-    padding-top: 40px;
+.wiki-article-header[b-0umek18f5q] {
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-border-subtle);
 }
 
-    .kudosTextInline .text-muted[b-0umek18f5q] {
-        border-radius: var(--radius-sm);
-        color: var(--color-primary);
-    }
+.wiki-article-badge[b-0umek18f5q] {
+    display: inline-block;
+    margin-bottom: 0.35rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-full);
+    background: var(--color-bg-glass-hover);
+    color: var(--color-text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.wiki-article-title[b-0umek18f5q] {
+    margin: 0;
+    font-size: 1.15rem;
+    line-height: 1.35;
+    color: var(--color-text-primary);
+}
+
+.wiki-article-subtitle[b-0umek18f5q] {
+    margin: 0.35rem 0 0;
+    font-size: 0.88rem;
+    color: var(--color-text-secondary);
+}
+
+.wiki-article-body[b-0umek18f5q] {
+    color: var(--color-text-primary);
+    line-height: 1.65;
+    font-size: 0.95rem;
+}
+
+.wiki-article-body :is(p, ul, ol, blockquote)[b-0umek18f5q] {
+    margin-top: 0;
+    margin-bottom: 0.85rem;
+}
+
+.wiki-article-body :is(h1, h2, h3, h4)[b-0umek18f5q] {
+    margin: 1rem 0 0.5rem;
+    line-height: 1.25;
+}
+
+.wiki-article-body a[b-0umek18f5q] {
+    color: var(--color-accent, #b45309);
+}
+
+.wiki-article-body img[b-0umek18f5q] {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-sm);
+}
+
+.wiki-article-empty[b-0umek18f5q] {
+    color: var(--color-text-muted);
+    font-size: 0.88rem;
+}
 
 .dotted-lines[b-0umek18f5q] {
     position: relative;
 }
 
-    .dotted-lines *[b-0umek18f5q] {
-        z-index: -1;
+@media (max-width: 768px) {
+    .wiki-article[b-0umek18f5q] {
+        padding: 1rem;
     }
-
-.inlineBTN[b-0umek18f5q] {
-    position: absolute;
-    padding: .05rem .5rem;
-    font-size: .85rem;
-    right: 0px;
-    top: 0px;
-    z-index: 0;
 }
 /* /Shared/ContactSection.razor.rz.scp.css */
 .contact-layout[b-plvw88pkun] {
