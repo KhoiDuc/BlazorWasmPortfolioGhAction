@@ -6,10 +6,33 @@ const refreshInterval = 100; // 0.1 seconds
 let settings = { numberOfTickers: 11, quoteUnit: 'USDT' };
 let intervalId;
 let objRef;
+const chartInstances = new Map();
+
+function destroyChart(chartId) {
+    const existing = chartInstances.get(chartId);
+    if (existing) {
+        existing.destroy();
+        chartInstances.delete(chartId);
+    }
+}
+
+window.destroyAllCryptoCharts = function () {
+    chartInstances.forEach((chart) => chart.destroy());
+    chartInstances.clear();
+    if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+    }
+};
 
 window.renderSmallChart = function (cryptoId, priceHistory) {
-    var ctx = document.getElementById('chart_' + cryptoId).getContext('2d');
-    new Chart(ctx, {
+    const chartId = 'chart_' + cryptoId;
+    const canvas = document.getElementById(chartId);
+    if (!canvas) return;
+
+    destroyChart(chartId);
+    var ctx = canvas.getContext('2d');
+    chartInstances.set(chartId, new Chart(ctx, {
         type: 'line',
         data: {
             labels: Array(priceHistory.length).fill(''),
@@ -40,13 +63,18 @@ window.renderSmallChart = function (cryptoId, priceHistory) {
                 }
             }
         }
-    });
-}
+    }));
+};
 
 
 window.renderDetailChart = function (cryptoId, priceHistory) {
-    var ctx = document.getElementById('detailChart_' + cryptoId).getContext('2d');
-    new Chart(ctx, {
+    const chartId = 'detailChart_' + cryptoId;
+    const canvas = document.getElementById(chartId);
+    if (!canvas) return;
+
+    destroyChart(chartId);
+    var ctx = canvas.getContext('2d');
+    chartInstances.set(chartId, new Chart(ctx, {
         type: 'line',
         data: {
             labels: Array(priceHistory.length).fill(''),
@@ -65,8 +93,8 @@ window.renderDetailChart = function (cryptoId, priceHistory) {
                 }
             }
         }
-    });
-}
+    }));
+};
 
 window.fetchCryptoList = async function (dotNetHelper, currentSettings) {
     settings = currentSettings;
