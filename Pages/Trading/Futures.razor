@@ -51,7 +51,7 @@
     else
     {
         <div class="ts-panel">
-            <img src="@Api.ProxyUrl("futures_rrgchart")" alt="Futures RRG" class="ts-rrg-img" />
+            <img src="@Api.ProxyUrl("futures_rrgchart")" alt="Futures RRG" class="ts-rrg-img" loading="lazy" />
             <button class="ts-btn ts-btn-primary mt-3" @onclick="ScanRrg">Refresh RRG</button>
         </div>
     }
@@ -62,14 +62,18 @@
     private WatchlistResponse<FuturesSignal>? _data;
     private string _selectedSymbol = "BTCUSDT";
     private string _symbolInput = "BTCUSDT";
-    private bool _loading = true;
+    private bool _loading;
     private bool _scanning;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized() => _ = LoadAsync();
+
+    private async Task LoadAsync()
     {
         _loading = true;
-        _data = await Api.GetPotentialFuturesAsync();
-        _loading = false;
+        await InvokeAsync(StateHasChanged);
+        try { _data = await Api.GetPotentialFuturesAsync(); }
+        catch { }
+        finally { _loading = false; await InvokeAsync(StateHasChanged); }
     }
 
     private void Select(string s) { _selectedSymbol = s; _symbolInput = s; }

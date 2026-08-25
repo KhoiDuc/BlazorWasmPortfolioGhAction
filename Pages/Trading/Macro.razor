@@ -112,7 +112,7 @@
 
 @code {
     private bool _authorized;
-    private bool _loading = true;
+    private bool _loading;
     private NewsGroup[]? _groups;
     private Dictionary<int, NewsItem[]> _newsByGroup = new();
     private OsintWorldState? _worldState;
@@ -126,29 +126,41 @@
     private string _newNewsContent = "";
     private int _newsGroupId;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized() => _ = InitAsync();
+
+    private async Task InitAsync()
     {
-        _authorized = await Auth.IsLoggedInAsync();
-        if (!_authorized) return;
-        await Load();
+        try { _authorized = await Auth.IsLoggedInAsync(); }
+        catch { }
+        await InvokeAsync(StateHasChanged);
+        if (_authorized) _ = LoadAsync();
     }
 
-    private async Task Load()
+    private async Task LoadAsync()
     {
         _loading = true;
-        var userId = await Auth.GetUserIdAsync();
-        _groups = await Api.GetNewsGroupsAsync(userId);
-        _worldState = await Api.GetWorldStateAsync();
-        _newsByGroup.Clear();
-        if (_groups != null)
+        await InvokeAsync(StateHasChanged);
+        try
         {
-            foreach (var g in _groups)
+            var userId = await Auth.GetUserIdAsync();
+            _groups = await Api.GetNewsGroupsAsync(userId);
+            _worldState = await Api.GetWorldStateAsync();
+            _newsByGroup.Clear();
+            if (_groups != null)
             {
-                var items = await Api.GetNewsItemsAsync(g.Id);
-                if (items != null) _newsByGroup[g.Id] = items;
+                foreach (var g in _groups)
+                {
+                    try
+                    {
+                        var items = await Api.GetNewsItemsAsync(g.Id);
+                        if (items != null) _newsByGroup[g.Id] = items;
+                    }
+                    catch { }
+                }
             }
         }
-        _loading = false;
+        catch { }
+        finally { _loading = false; await InvokeAsync(StateHasChanged); }
     }
 
     private void AddNews(int groupId) { _newsGroupId = groupId; _showNewsForm = true; }
@@ -159,7 +171,7 @@
         var client = await Api.CreateAuthorizedClientAsync();
         await client.PostAsJsonAsync($"api/news-groups?user_id={userId}", new { name = _newGroupName, description = _newGroupDesc });
         _showGroupForm = false;
-        await Load();
+        await LoadAsync();
     }
 
     private async Task SaveNews()
@@ -167,7 +179,7 @@
         var client = await Api.CreateAuthorizedClientAsync();
         await client.PostAsJsonAsync($"api/news-items?group_id={_newsGroupId}", new { title = _newNewsTitle, content = _newNewsContent, status = "active" });
         _showNewsForm = false;
-        await Load();
+        await LoadAsync();
     }
 
     private async Task GeneratePrompt()

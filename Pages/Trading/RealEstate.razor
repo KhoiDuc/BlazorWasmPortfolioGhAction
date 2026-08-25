@@ -36,7 +36,10 @@
         </div>
     </div>
 
-    @if (_loading) { <div class="ts-spinner"></div> }
+    @if (_loading)
+    {
+        <div class="ts-panel ts-empty"><div class="ts-spinner"></div><span>Đang tải dữ liệu...</span></div>
+    }
     else if (_items?.Length > 0)
     {
         <div class="ts-panel ts-table-wrap">
@@ -62,7 +65,7 @@
     }
     else
     {
-        <div class="ts-empty">No listings found.</div>
+        <div class="ts-empty">Chưa có dữ liệu — thử Refresh hoặc đổi bộ lọc.</div>
     }
 </div>
 
@@ -75,20 +78,25 @@
     private string[] _regions = [];
     private string[] _types = [];
 
-    protected override async Task OnInitializedAsync() => await Load();
+    protected override void OnInitialized() => _ = Load();
 
     private async Task Load()
     {
         _loading = true;
-        _items = await Api.GetRealEstateAsync(
-            string.IsNullOrEmpty(_region) ? null : _region,
-            string.IsNullOrEmpty(_type) ? null : _type,
-            string.IsNullOrEmpty(_location) ? null : _location);
-        if (_items?.Length > 0)
+        await InvokeAsync(StateHasChanged);
+        try
         {
-            _regions = _items.Select(i => i.Region).Distinct().OrderBy(x => x).ToArray();
-            _types = _items.Select(i => i.PropertyType).Distinct().OrderBy(x => x).ToArray();
+            _items = await Api.GetRealEstateAsync(
+                string.IsNullOrEmpty(_region) ? null : _region,
+                string.IsNullOrEmpty(_type) ? null : _type,
+                string.IsNullOrEmpty(_location) ? null : _location);
+            if (_items?.Length > 0)
+            {
+                _regions = _items.Select(i => i.Region).Distinct().OrderBy(x => x).ToArray();
+                _types = _items.Select(i => i.PropertyType).Distinct().OrderBy(x => x).ToArray();
+            }
         }
-        _loading = false;
+        catch { }
+        finally { _loading = false; await InvokeAsync(StateHasChanged); }
     }
 }

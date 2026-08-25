@@ -78,22 +78,31 @@
     private string? _balanceJson;
     private string? _dealsJson;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized() => _ = InitAsync();
+
+    private async Task InitAsync()
     {
-        _authorized = await Auth.IsLoggedInAsync();
-        if (!_authorized) return;
+        try { _authorized = await Auth.IsLoggedInAsync(); }
+        catch { }
+        if (!_authorized)
+        {
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
 
         _userId = await Auth.GetUserIdAsync();
         var token = await Auth.GetTokenAsync();
         _isDemo = token == "demo-token";
+        await InvokeAsync(StateHasChanged);
 
         if (!_isDemo)
-            await LoadDnseData();
+            _ = LoadDnseDataAsync();
     }
 
-    private async Task LoadDnseData()
+    private async Task LoadDnseDataAsync()
     {
         _loading = true;
+        await InvokeAsync(StateHasChanged);
         try
         {
             var client = await Api.CreateAuthorizedClientAsync();
@@ -101,16 +110,18 @@
             if (!accResp.IsSuccessStatusCode)
             {
                 _error = "Could not load DNSE accounts.";
-                _loading = false;
                 return;
             }
-            var accJson = await accResp.Content.ReadAsStringAsync();
-            _balanceJson = accJson;
+            _balanceJson = await accResp.Content.ReadAsStringAsync();
         }
         catch (Exception ex)
         {
             _error = ex.Message;
         }
-        _loading = false;
+        finally
+        {
+            _loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 }

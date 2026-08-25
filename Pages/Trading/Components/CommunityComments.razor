@@ -24,9 +24,17 @@
     private CommunityComment[]? _comments;
     private string _comment = "";
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
-        _comments = await Api.GetCommunityCommentsAsync(PostId);
+        if (PostId > 0)
+            _ = LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try { _comments = await Api.GetCommunityCommentsAsync(PostId); }
+        catch { }
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task Submit()
@@ -42,6 +50,6 @@
             content = _comment
         });
         _comment = "";
-        _comments = await Api.GetCommunityCommentsAsync(PostId);
+        await LoadAsync();
     }
 }

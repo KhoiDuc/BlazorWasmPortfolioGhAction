@@ -40,9 +40,14 @@
     private bool _busy;
     private PriceAlert[]? _alerts;
 
-    protected override async Task OnInitializedAsync() => await LoadAlerts();
+    protected override void OnInitialized() => _ = LoadAlertsAsync();
 
-    private async Task LoadAlerts() => _alerts = await Api.GetPriceAlertsAsync();
+    private async Task LoadAlertsAsync()
+    {
+        try { _alerts = await Api.GetPriceAlertsAsync(); }
+        catch { }
+        await InvokeAsync(StateHasChanged);
+    }
 
     private async Task CreateAlert()
     {
@@ -50,13 +55,13 @@
         _message = null;
         await Api.CreatePriceAlertAsync(new CreateAlertRequest(Symbol, AssetType, _price, _operator));
         _message = "Alert created.";
-        await LoadAlerts();
+        await LoadAlertsAsync();
         _busy = false;
     }
 
     private async Task DeleteAlert(PriceAlert a)
     {
         await Api.DeletePriceAlertAsync(a.Symbol, a.AssetType);
-        await LoadAlerts();
+        await LoadAlertsAsync();
     }
 }

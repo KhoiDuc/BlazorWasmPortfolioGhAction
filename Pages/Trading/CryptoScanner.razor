@@ -49,7 +49,7 @@
 
         @if (_loading)
         {
-            <div class="ts-empty"><div class="ts-spinner"></div>Loading...</div>
+            <div class="ts-panel ts-empty"><div class="ts-spinner"></div><span>Đang tải watchlist...</span></div>
         }
         else if (FilteredCoins.Length > 0)
         {
@@ -86,7 +86,7 @@
     {
         <div class="ts-panel">
             <h3 style="margin:0 0 1rem">Crypto RRG Chart</h3>
-            <img src="@Api.ProxyUrl("crypto_rrgchart")" alt="Crypto RRG" class="ts-rrg-img" />
+            <img src="@Api.ProxyUrl("crypto_rrgchart")" alt="Crypto RRG" class="ts-rrg-img" loading="lazy" />
             <button class="ts-btn ts-btn-primary mt-3" @onclick="ScanRrg" disabled="@_scanning">Refresh RRG</button>
         </div>
     }
@@ -99,7 +99,7 @@
     private string _symbolInput = "BTCUSDT";
     private string _filter = "";
     private string _signalFilter = "";
-    private bool _loading = true;
+    private bool _loading;
     private bool _scanning;
 
     private CryptoSignal[] FilteredCoins => (_data?.Data ?? [])
@@ -107,13 +107,15 @@
         .Where(c => string.IsNullOrEmpty(_signalFilter) || c.SignalType == _signalFilter)
         .ToArray();
 
-    protected override async Task OnInitializedAsync() => await Load();
+    protected override void OnInitialized() => _ = LoadAsync();
 
-    private async Task Load()
+    private async Task LoadAsync()
     {
         _loading = true;
-        _data = await Api.GetPotentialCoinsAsync();
-        _loading = false;
+        await InvokeAsync(StateHasChanged);
+        try { _data = await Api.GetPotentialCoinsAsync(); }
+        catch { /* API offline — chart & search vẫn dùng được */ }
+        finally { _loading = false; await InvokeAsync(StateHasChanged); }
     }
 
     private void Select(string sym) { _selectedSymbol = sym; _symbolInput = sym; }
@@ -123,7 +125,7 @@
     {
         _scanning = true;
         await Api.RunSshScriptAsync("crypto_potential");
-        await Load();
+        await LoadAsync();
         _scanning = false;
     }
 

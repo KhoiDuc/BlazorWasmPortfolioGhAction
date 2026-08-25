@@ -60,12 +60,17 @@
     private double _price;
     private string _currency = "VND";
 
-    protected override async Task OnParametersSetAsync() => await Load();
-
-    private async Task Load()
+    protected override void OnParametersSet()
     {
         if (!string.IsNullOrEmpty(UserId))
-            _entries = await Api.GetJournalAsync(UserId);
+            _ = LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try { _entries = await Api.GetJournalAsync(UserId); }
+        catch { }
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task Save()
@@ -81,12 +86,12 @@
             notes = ""
         });
         _showForm = false;
-        await Load();
+        await LoadAsync();
     }
 
     private async Task Delete(int id)
     {
         await Api.DeleteJournalEntryAsync(UserId, id);
-        await Load();
+        await LoadAsync();
     }
 }

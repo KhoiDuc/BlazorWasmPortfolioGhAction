@@ -49,7 +49,11 @@
     {
         <div class="ts-panel">
             <h3>Live FX Rates</h3>
-            @if (_rates.HasValue)
+            @if (_ratesLoading)
+            {
+                <div class="ts-spinner"></div>
+            }
+            else if (_rates.HasValue)
             {
                 <pre style="font-size:0.78rem;overflow:auto;max-height:400px">@_rates.Value.ToString()</pre>
             }
@@ -59,7 +63,7 @@
     else if (_tab == "rrg")
     {
         <div class="ts-panel">
-            <img src="@Api.ProxyUrl("forex_rrgchart")" alt="Forex RRG" class="ts-rrg-img" />
+            <img src="@Api.ProxyUrl("forex_rrgchart")" alt="Forex RRG" class="ts-rrg-img" loading="lazy" />
         </div>
     }
     else
@@ -74,11 +78,18 @@
     private string _pair = "EURUSD";
     private System.Text.Json.JsonElement? _rates;
     private bool _scanning;
+    private bool _ratesLoading;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized() => _ = LoadAsync();
+
+    private async Task LoadAsync()
     {
-        _data = await Api.GetPotentialForexPairsAsync();
-        _rates = await Api.GetFxRatesAsync();
+        try { _data = await Api.GetPotentialForexPairsAsync(); } catch { }
+        _ratesLoading = true;
+        await InvokeAsync(StateHasChanged);
+        try { _rates = await Api.GetFxRatesAsync(); }
+        catch { }
+        finally { _ratesLoading = false; await InvokeAsync(StateHasChanged); }
     }
 
     private async Task Scan()

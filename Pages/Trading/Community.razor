@@ -47,22 +47,28 @@
 
 @code {
     private bool _authorized;
-    private bool _loading = true;
+    private bool _loading;
     private bool _busy;
     private CommunityPost[]? _posts;
     private string _newPost = "";
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized() => _ = InitAsync();
+
+    private async Task InitAsync()
     {
-        _authorized = await Auth.IsLoggedInAsync();
-        if (_authorized) await Load();
+        try { _authorized = await Auth.IsLoggedInAsync(); }
+        catch { }
+        await InvokeAsync(StateHasChanged);
+        if (_authorized) _ = LoadAsync();
     }
 
-    private async Task Load()
+    private async Task LoadAsync()
     {
         _loading = true;
-        _posts = await Api.GetCommunityPostsAsync();
-        _loading = false;
+        await InvokeAsync(StateHasChanged);
+        try { _posts = await Api.GetCommunityPostsAsync(); }
+        catch { }
+        finally { _loading = false; await InvokeAsync(StateHasChanged); }
     }
 
     private async Task CreatePost()
@@ -80,7 +86,7 @@
             image = ""
         });
         _newPost = "";
-        await Load();
+        await LoadAsync();
         _busy = false;
     }
 }

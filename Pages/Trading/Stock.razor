@@ -57,7 +57,7 @@
     else if (_tab == "rrg")
     {
         <div class="ts-panel">
-            <img src="@Api.ProxyUrl("vnstock_rrgchart")" alt="VN RRG" class="ts-rrg-img" />
+            <img src="@Api.ProxyUrl("vnstock_rrgchart")" alt="VN RRG" class="ts-rrg-img" loading="lazy" />
             <button class="ts-btn ts-btn-primary mt-3" @onclick="ScanRrg">Refresh</button>
         </div>
     }
@@ -91,10 +91,17 @@
     private string _selectedStock = "VNM";
     private bool _scanning;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized() => _ = LoadInBackgroundAsync();
+
+    private async Task LoadInBackgroundAsync()
     {
-        _vnData = await Api.GetPotentialSymbolsAsync();
-        _worldData = await Api.GetPotentialWorldSymbolsAsync();
+        try
+        {
+            _vnData = await Api.GetPotentialSymbolsAsync();
+            _worldData = await Api.GetPotentialWorldSymbolsAsync();
+        }
+        catch { }
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task Scan()
