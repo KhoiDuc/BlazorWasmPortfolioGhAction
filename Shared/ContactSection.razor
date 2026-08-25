@@ -1,0 +1,111 @@
+@using System.ComponentModel.DataAnnotations
+@inject NavigationManager NavigationManager
+
+<section class="resume-contact">
+    <div class="container">
+        <div class="section-heading">
+            <p class="section-label">CONTACT</p>
+            <h2>Let's build something together.</h2>
+        </div>
+        <div class="contact-layout">
+            <div class="contact-heading">
+                <p class="contact-description">
+                    I'm open to remote opportunities and interesting projects.
+                    Send me a message and I'll get back to you.
+                </p>
+            </div>
+            <div class="contact-form-wrapper">
+                <EditForm Model="@model" OnValidSubmit="Submit" class="contact-form">
+                    <DataAnnotationsValidator />
+                    <div class="tool-field">
+                        <label class="tool-label" for="contact-name">Name</label>
+                        <InputText id="contact-name" class="tool-input" @bind-Value="model.Name" placeholder="Your name" />
+                        <ValidationMessage For="@(() => model.Name)" class="contact-error" />
+                    </div>
+                    <div class="tool-field">
+                        <label class="tool-label" for="contact-email">Email</label>
+                        <InputText id="contact-email" class="tool-input" @bind-Value="model.Email" placeholder="your@email.com" />
+                        <ValidationMessage For="@(() => model.Email)" class="contact-error" />
+                    </div>
+                    <div class="tool-field">
+                        <label class="tool-label" for="contact-subject">Subject</label>
+                        <InputText id="contact-subject" class="tool-input" @bind-Value="model.Subject" placeholder="Subject (optional)" />
+                    </div>
+                    <div class="tool-field">
+                        <label class="tool-label" for="contact-message">Message</label>
+                        <InputTextArea id="contact-message" class="tool-textarea" @bind-Value="model.Message" placeholder="Your message..." rows="5" />
+                        <ValidationMessage For="@(() => model.Message)" class="contact-error" />
+                    </div>
+                    <div class="contact-honeypot" aria-hidden="true">
+                        <label>Website <InputText @bind-Value="model.Website" /></label>
+                    </div>
+                    @if (sent)
+                    {
+                        <div class="tool-alert tool-alert-success">
+                            <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                            Message ready! Your email client should open.
+                        </div>
+                    }
+                    <div class="tool-actions">
+                        <button type="submit" class="tool-btn tool-btn-primary" disabled="@sending">
+                            @if (sending)
+                            {
+                                <i class="bi bi-arrow-clockwise contact-spinner" aria-hidden="true"></i>
+                            }
+                            else
+                            {
+                                <i class="bi bi-send" aria-hidden="true"></i>
+                            }
+                            Compose Email
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    private ContactModel model = new();
+    private bool sending = false;
+    private bool sent = false;
+
+    private async Task Submit()
+    {
+        if (!string.IsNullOrEmpty(model.Website)) return;
+
+        sending = true;
+        await Task.Delay(300);
+
+        var subject = Uri.EscapeDataString(model.Subject ?? "Portfolio Contact");
+        var body = Uri.EscapeDataString($"Name: {model.Name}\nEmail: {model.Email}\n\n{model.Message}");
+        var mailto = $"mailto:khoi.duc.dev@gmail.com?subject={subject}&body={body}";
+
+        NavigationManager.NavigateTo(mailto, forceLoad: true);
+
+        sending = false;
+        sent = true;
+        model = new ContactModel();
+    }
+
+    public class ContactModel
+    {
+        [Required(ErrorMessage = "Name is required")]
+        [StringLength(100, ErrorMessage = "Name too long")]
+        public string Name { get; set; } = "";
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email")]
+        [StringLength(200, ErrorMessage = "Email too long")]
+        public string Email { get; set; } = "";
+
+        [StringLength(200)]
+        public string? Subject { get; set; }
+
+        [Required(ErrorMessage = "Message is required")]
+        [StringLength(2000, ErrorMessage = "Message too long (max 2000 chars)")]
+        public string Message { get; set; } = "";
+
+        public string? Website { get; set; }
+    }
+}

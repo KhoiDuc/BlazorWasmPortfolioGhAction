@@ -3,11 +3,12 @@
 @page "/{lang}/resume"
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
+@using BlazorWasmPortfolioGhAction.Data
 @implements IAsyncDisposable
 
 <div class="language-toggle">
     <button @onclick="ToggleLanguage" class="btn-lang">
-        @(currentLanguage == "en" ? "🇻🇳 Tiếng Việt" : "🇺🇸 English")
+        @(IsEn ? "🇻🇳 Tiếng Việt" : "🇺🇸 English")
     </button>
 </div>
 
@@ -16,20 +17,26 @@
         <div class="resume-hero-layout">
             <div class="resume-hero-content">
                 <p class="section-label">RESUME</p>
-                <h1>@(currentLanguage == "en" ? "Khoi Duc" : "Khoi Duc") <span class="chinese-name">(Nguyen Minh Duc Khoi)</span></h1>
-                <p class="resume-hero-role">@(currentLanguage == "en" ? "Junior Developer" : "Lập trình viên")</p>
+                <h1>@Resume.Profile.NameEn <span class="chinese-name">(@Resume.Profile.FullName)</span></h1>
+                <p class="resume-hero-role">@(IsEn ? Resume.Profile.RoleEn : Resume.Profile.RoleVn)</p>
                 <div class="resume-contact-info">
-                    <p><span class="icon">📞</span> <a href="tel:+84938751116">(+84) 0938751116</a> &amp; <a href="tel:+84384223897">(+84) 0384223897</a></p>
-                    <p><span class="icon">✉️</span> <a href="mailto:khoi.duc.dev@gmail.com">khoi.duc.dev@gmail.com</a> &amp; <a href="mailto:khoimessi99@gmail.com">khoimessi99@gmail.com</a></p>
-                    <p><span class="icon">💬</span> <a href="https://www.facebook.com/messi.khoi.9" target="_blank">Facebook</a></p>
-                    <p><span class="icon">🔗</span> <a href="https://www.linkedin.com/in/%C4%91%E1%BB%A9c-kh%C3%B4i-354b77269/" target="_blank">LinkedIn</a></p>
-                    <p><span class="icon">📬</span> <a href="https://t.me/warman99" target="_blank">Telegram @@warman99</a></p>
+                    @foreach (var phone in Resume.Profile.PhoneNumbers)
+                    {
+                        <p><span class="icon">📞</span> <a href="tel:@phone.Replace(" ", "")">(+84) @phone</a></p>
+                    }
+                    @foreach (var email in Resume.Profile.Emails)
+                    {
+                        <p><span class="icon">✉️</span> <a href="mailto:@email">@email</a></p>
+                    }
+                    <p><span class="icon">💬</span> <a href="@Resume.Profile.FacebookUrl" target="_blank">Facebook</a></p>
+                    <p><span class="icon">🔗</span> <a href="@Resume.Profile.LinkedInUrl" target="_blank">LinkedIn</a></p>
+                    <p><span class="icon">📬</span> <a href="https://t.me/@Resume.Profile.TelegramHandle" target="_blank">Telegram @@@Resume.Profile.TelegramHandle</a></p>
                 </div>
                 <div class="resume-hero-links">
-                    <a href="https://github.com/KhoiDuc" target="_blank" class="resume-btn">GitHub</a>
-                    <a href="files/resume.pdf" target="_blank" class="resume-btn">@(currentLanguage == "en" ? "PDF Resume" : "CV PDF")</a>
-                    <a href="https://drive.google.com/file/d/17NgDYao2f84W4U346hyuSWZkDIkg612e/view?usp=sharing" target="_blank" class="resume-btn">@(currentLanguage == "en" ? "Certificate" : "Chứng chỉ")</a>
-                    <a href="files/transcript.pdf" target="_blank" class="resume-btn">@(currentLanguage == "en" ? "Transcript" : "Bảng điểm")</a>
+                    <a href="@Resume.Profile.GitHubUrl" target="_blank" class="resume-btn">GitHub</a>
+                    <a href="@Resume.Profile.PdfResumeUrl" target="_blank" class="resume-btn">@(IsEn ? "PDF Resume" : "CV PDF")</a>
+                    <a href="@Resume.Profile.CertificateUrl" target="_blank" class="resume-btn">@(IsEn ? "Certificate" : "Chứng chỉ")</a>
+                    <a href="@Resume.Profile.TranscriptUrl" target="_blank" class="resume-btn">@(IsEn ? "Transcript" : "Bảng điểm")</a>
                 </div>
             </div>
             <div class="carousel-container">
@@ -47,18 +54,12 @@
     <div class="container">
         <div class="section-heading">
             <p class="section-label">ABOUT</p>
-            <h2>@(currentLanguage == "en" ? "Profile" : "Hồ sơ")</h2>
+            <h2>@(IsEn ? "Profile" : "Hồ sơ")</h2>
         </div>
         <div class="about-content">
-            @if (currentLanguage == "en")
+            @foreach (var para in IsEn ? Resume.Profile.AboutEn : Resume.Profile.AboutVn)
             {
-                <p>I am Nguyen Minh Duc Khoi, a passionate and dedicated software developer specializing in .NET technologies, with a strong focus on building scalable, maintainable solutions and solving real-world problems through code.</p>
-                <p>A highly skilled Backend Developer with 3 years of experience in C# and JavaScript, proficient in building high-performance, scalable ASP.NET Core applications and optimizing database queries (MySQL, PostgreSQL, Elasticsearch, SQL Server). Possessing strong analytical skills and practical knowledge of architecture design patterns, this developer has experience designing and developing WCAG 2.1 compliant web/API applications using .NET MVC and .NET Core, with domain expertise in Data Security, E-Commerce & Retail, and Human Resource Management.</p>
-            }
-            else
-            {
-                <p>Tôi là Nguyễn Minh Đức Khôi, một lập trình viên phần mềm đam mê và tận tâm, chuyên về các công nghệ .NET, với trọng tâm xây dựng các giải pháp có khả năng mở rộng, dễ bảo trì và giải quyết các vấn đề thực tế thông qua mã lệnh.</p>
-                <p>Là một Lập trình viên Backend có kinh nghiệm 3 năm với C# và JavaScript, thành thạo trong việc xây dựng các ứng dụng ASP.NET Core hiệu suất cao, có khả năng mở rộng và tối ưu hóa truy vấn cơ sở dữ liệu (MySQL, PostgreSQL, Elasticsearch, SQL Server). Với kỹ năng phân tích mạnh mẽ và kiến thức thực tiễn về các mẫu thiết kế kiến trúc, tôi có kinh nghiệm thiết kế và phát triển các ứng dụng web/API tuân thủ WCAG 2.1 sử dụng .NET MVC và .NET Core.</p>
+                <p>@para</p>
             }
         </div>
     </div>
@@ -68,23 +69,25 @@
     <div class="container">
         <div class="section-heading">
             <p class="section-label">EDUCATION</p>
-            <h2>@(currentLanguage == "en" ? "Academic background" : "Học vấn")</h2>
+            <h2>@(IsEn ? "Academic background" : "Học vấn")</h2>
         </div>
         <div class="experience-list">
-            <div class="experience-item">
-                <div class="experience-meta">2017 — 2021</div>
-                <div class="experience-content">
-                    <h3>@(currentLanguage == "en" ? "HUFLIT University (GRADUATED)" : "Đại học HUFLIT (ĐÃ TỐT NGHIỆP)")</h3>
-                    <p class="experience-company">@(currentLanguage == "en" ? "Software Engineering" : "Kỹ thuật Phần mềm")</p>
-                    <p class="experience-description">
-                        <a href="https://huflit.edu.vn/" target="_blank">@(currentLanguage == "en" ? "Ho Chi Minh City University of Foreign Languages - Information Technology" : "Trường Đại học Ngoại ngữ - Tin học TP. Hồ Chí Minh")</a>
-                        — GPA: 3.33/4.0 (8.32/10)
-                    </p>
-                    <div class="technology-list">
-                        <span><a target="_blank" href="https://drive.google.com/file/d/17NgDYao2f84W4U346hyuSWZkDIkg612e/view?usp=sharing" class="resume-btn">@(currentLanguage == "en" ? "View Document" : "Xem Tài liệu")</a></span>
+            @foreach (var edu in Resume.Education)
+            {
+                <div class="experience-item">
+                    <div class="experience-meta">@edu.Period</div>
+                    <div class="experience-content">
+                        <h3>@(IsEn ? edu.NameEn : edu.NameVn)</h3>
+                        <p class="experience-company">@(IsEn ? edu.ProgramEn : edu.ProgramVn)</p>
+                        <p class="experience-description">
+                            <a href="@edu.Url" target="_blank">@edu.Gpa</a>
+                        </p>
+                        <div class="technology-list">
+                            <span><a target="_blank" href="@edu.DocumentUrl" class="resume-btn">@(IsEn ? edu.DocumentLabelEn : edu.DocumentLabelVn)</a></span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
     </div>
 </section>
@@ -93,73 +96,29 @@
     <div class="container">
         <div class="section-heading">
             <p class="section-label">EXPERIENCE</p>
-            <h2>@(currentLanguage == "en" ? "Work projects" : "Dự án làm việc")</h2>
+            <h2>@(IsEn ? "Work projects" : "Dự án làm việc")</h2>
         </div>
         <div class="experience-list">
-            <div class="experience-item">
-                <div class="experience-meta">2023 — @(currentLanguage == "en" ? "Now" : "Hiện tại")</div>
-                <div class="experience-content">
-                    <h3>Site Manager Plus Plus (SM++)</h3>
-                    <p class="experience-company">S3Corp · Full Stack Developer</p>
-                    <p class="experience-description">
-                        @(currentLanguage == "en" ? "Upgraded version of Site Manager running on .NET 8. Platform for rapid website setup and management with modular page architecture. Supports SSO integration with third-party identity providers including Citi and Wells Fargo." : "Phiên bản nâng cấp của Site Manager chạy trên .NET 8. Nền tảng thiết lập và quản lý trang web nhanh chóng với kiến trúc trang mô-đun. Hỗ trợ tích hợp SSO với các nhà cung cấp danh tính bên thứ ba bao gồm Citi và Wells Fargo.")
-                    </p>
-                    <div class="technology-list">
-                        <span>.NET 8 MVC</span><span>jQuery</span><span>EF</span><span>SQL Server</span><span>Redis</span><span>Azure CDN</span><span>Kontent.AI</span><span>WCAG 2.2</span>
-                    </div>
-                    <div class="project-links">
-                        <a href="/project/smpp" class="resume-btn">@(currentLanguage == "en" ? "View Details" : "Xem chi tiết")</a>
-                    </div>
-                </div>
-            </div>
-            <div class="experience-item">
-                <div class="experience-meta">2022 — 2024</div>
-                <div class="experience-content">
-                    <h3>Site Manager</h3>
-                    <p class="experience-company">S3Corp · Full Stack Developer</p>
-                    <p class="experience-description">
-                        @(currentLanguage == "en" ? "Platform for creating and deploying websites quickly. Enables users to search, explore, and book services (dining, hotels, flights, spas, limousines). Built to comply with WCAG 2.1, PCI DSS, and Veracode security scanning." : "Nền tảng tạo và triển khai trang web nhanh chóng. Cho phép người dùng tìm kiếm, khám phá và đặt dịch vụ (ăn uống, khách sạn, chuyến bay, spa, xe limousine). Xây dựng tuân thủ WCAG 2.1, PCI DSS và quét bảo mật Veracode.")
-                    </p>
-                    <div class="technology-list">
-                        <span>.NET 4 MVC</span><span>jQuery</span><span>EF</span><span>SQL Server</span><span>Redis</span><span>Azure CDN</span><span>Kontent.AI</span><span>WCAG 2.1</span>
-                    </div>
-                    <div class="project-links">
-                        <a href="/project/sm" class="resume-btn">@(currentLanguage == "en" ? "View Details" : "Xem chi tiết")</a>
+            @foreach (var exp in Resume.Experience)
+            {
+                <div class="experience-item">
+                    <div class="experience-meta">@(IsEn ? exp.PeriodEn : exp.PeriodVn)</div>
+                    <div class="experience-content">
+                        <h3>@exp.Title</h3>
+                        <p class="experience-company">@exp.Company · @exp.Role</p>
+                        <p class="experience-description">@(IsEn ? exp.DescriptionEn : exp.DescriptionVn)</p>
+                        <div class="technology-list">
+                            @foreach (var tech in exp.TechStack) { <span>@tech</span> }
+                        </div>
+                        @if (!string.IsNullOrEmpty(exp.DetailLink))
+                        {
+                            <div class="project-links">
+                                <a href="@exp.DetailLink" class="resume-btn">@(IsEn ? "View Details" : "Xem chi tiết")</a>
+                            </div>
+                        }
                     </div>
                 </div>
-            </div>
-            <div class="experience-item">
-                <div class="experience-meta">2022 — @(currentLanguage == "en" ? "Now" : "Hiện tại")</div>
-                <div class="experience-content">
-                    <h3>Payment Portal</h3>
-                    <p class="experience-company">S3Corp · Full Stack Developer</p>
-                    <p class="experience-description">
-                        @(currentLanguage == "en" ? "Manages international transactions through Adyen payment system integration. Currently upgrading from .NET MVC to .NET 8." : "Quản lý giao dịch quốc tế thông qua tích hợp hệ thống thanh toán Adyen. Đang nâng cấp từ .NET MVC lên .NET 8.")
-                    </p>
-                    <div class="technology-list">
-                        <span>.NET MVC 4</span><span>EF</span><span>SQL Server</span><span>JavaScript</span><span>Webhook</span>
-                    </div>
-                    <div class="project-links">
-                        <a href="/project/payment-portal" class="resume-btn">@(currentLanguage == "en" ? "View Details" : "Xem chi tiết")</a>
-                    </div>
-                </div>
-            </div>
-            <div class="experience-item">
-                <div class="experience-meta">06/2022 — 09/2022</div>
-                <div class="experience-content">
-                    <h3>Simply Blast</h3>
-                    <p class="experience-company">S3Corp · Full Stack Developer</p>
-                    <p class="experience-description">
-                        @(currentLanguage == "en" ? "Web application for clients to create and manage advertising campaigns through WhatsApp messages." : "Ứng dụng web cho khách hàng tạo và quản lý chiến dịch quảng cáo qua tin nhắn WhatsApp.")
-                    </p>
-                    <div class="technology-list">
-                        <span>.NET 6</span><span>Blazor</span><span>EF Core</span><span>SQL Server</span>
-                    </div>
-                    <div class="project-links">
-                        <a href="/project/simply-blast" class="resume-btn">@(currentLanguage == "en" ? "View Details" : "Xem chi tiết")</a>
-                    </div>
-                </div>
-            </div>
+            }
         </div>
     </div>
 </section>
@@ -168,87 +127,36 @@
     <div class="container">
         <div class="section-heading">
             <p class="section-label">PROJECTS</p>
-            <h2>@(currentLanguage == "en" ? "Personal & school projects" : "Dự án cá nhân & học tập")</h2>
+            <h2>@(IsEn ? "Personal & school projects" : "Dự án cá nhân & học tập")</h2>
         </div>
         <div class="projects-grid">
-            <article class="project-card">
-                <div class="project-header">
-                    <span class="project-type">Personal</span>
-                    <span class="project-number">01</span>
-                </div>
-                <div class="project-content">
-                    <h3>BlazorWasmPortfolioGhAction</h3>
-                    <p>@(currentLanguage == "en" ? "Personal portfolio site built with Blazor WebAssembly, featuring DevOps utilities, email composer, and 40+ tools." : "Site cá nhân built bằng Blazor WebAssembly, gồm công cụ DevOps, email composer, và 40+ tool.")</p>
-                </div>
-                <div class="project-links">
-                    <a href="https://github.com/KhoiDuc/BlazorWasmPortfolioGhAction" target="_blank" rel="noopener noreferrer">
-                        <i class="bi bi-github" aria-hidden="true"></i> Repository
-                    </a>
-                </div>
-                <div class="technology-list">
-                    <span>Blazor WASM</span><span>.NET 9</span><span>Fluxor</span><span>GitHub Actions</span>
-                </div>
-            </article>
-            <article class="project-card">
-                <div class="project-header">
-                    <span class="project-type">School</span>
-                    <span class="project-number">02</span>
-                </div>
-                <div class="project-content">
-                    <h3>Food Ordering System</h3>
-                    <p>@(currentLanguage == "en" ? "Full-stack food ordering with .NET 5 backend and Flutter frontend." : "Đặt đồ ăn full-stack với backend .NET 5 và frontend Flutter.")</p>
-                </div>
-                <div class="project-links">
-                    <a href="https://github.com/khoinmdIT99/FoodOrder_NET5_FLUTTER" target="_blank" rel="noopener noreferrer">
-                        <i class="bi bi-github" aria-hidden="true"></i> Repository
-                    </a>
-                    <a href="/project/food-ordering">
-                        <i class="bi bi-info-circle" aria-hidden="true"></i> @(currentLanguage == "en" ? "Details" : "Chi tiết")
-                    </a>
-                </div>
-                <div class="technology-list">
-                    <span>.NET 5</span><span>Flutter</span>
-                </div>
-            </article>
-            <article class="project-card">
-                <div class="project-header">
-                    <span class="project-type">School</span>
-                    <span class="project-number">03</span>
-                </div>
-                <div class="project-content">
-                    <h3>Building Material E-Commerce</h3>
-                    <p>@(currentLanguage == "en" ? "Full-stack e-commerce platform for building materials with .NET 5 backend and Angular frontend." : "Nền tảng TMĐT vật liệu xây dựng full-stack với .NET 5 và Angular.")</p>
-                </div>
-                <div class="project-links">
-                    <a href="https://github.com/khoinmdIT99/BuildingMaterialShop_NET5_ANUGLAR" target="_blank" rel="noopener noreferrer">
-                        <i class="bi bi-github" aria-hidden="true"></i> Repository
-                    </a>
-                    <a href="/project/building-material">
-                        <i class="bi bi-info-circle" aria-hidden="true"></i> @(currentLanguage == "en" ? "Details" : "Chi tiết")
-                    </a>
-                </div>
-                <div class="technology-list">
-                    <span>.NET 5</span><span>Angular</span>
-                </div>
-            </article>
-            <article class="project-card">
-                <div class="project-header">
-                    <span class="project-type">School</span>
-                    <span class="project-number">04</span>
-                </div>
-                <div class="project-content">
-                    <h3>Payroll Management System</h3>
-                    <p>@(currentLanguage == "en" ? "Enterprise payroll management system built with .NET Core MVC." : "Hệ thống quản lý lương doanh nghiệp built với .NET Core MVC.")</p>
-                </div>
-                <div class="project-links">
-                    <a href="https://github.com/khoinmdIT99/Payroll-Manager/" target="_blank" rel="noopener noreferrer">
-                        <i class="bi bi-github" aria-hidden="true"></i> Repository
-                    </a>
-                </div>
-                <div class="technology-list">
-                    <span>.NET Core MVC</span>
-                </div>
-            </article>
+            @foreach (var proj in Resume.Projects)
+            {
+                <article class="project-card">
+                    <div class="project-header">
+                        <span class="project-type">@proj.Type</span>
+                        <span class="project-number">@proj.Number.ToString("00")</span>
+                    </div>
+                    <div class="project-content">
+                        <h3>@proj.Name</h3>
+                        <p>@(IsEn ? proj.DescriptionEn : proj.DescriptionVn)</p>
+                    </div>
+                    <div class="project-links">
+                        <a href="@proj.RepoUrl" target="_blank" rel="noopener noreferrer">
+                            <i class="bi bi-github" aria-hidden="true"></i> Repository
+                        </a>
+                        @if (!string.IsNullOrEmpty(proj.DetailLink))
+                        {
+                            <a href="@proj.DetailLink">
+                                <i class="bi bi-info-circle" aria-hidden="true"></i> @(IsEn ? "Details" : "Chi tiết")
+                            </a>
+                        }
+                    </div>
+                    <div class="technology-list">
+                        @foreach (var tech in proj.TechStack) { <span>@tech</span> }
+                    </div>
+                </article>
+            }
         </div>
     </div>
 </section>
@@ -257,81 +165,40 @@
     <div class="container">
         <div class="section-heading">
             <p class="section-label">TECHNOLOGIES</p>
-            <h2>@(currentLanguage == "en" ? "Skills" : "Kỹ năng")</h2>
+            <h2>@(IsEn ? "Skills" : "Kỹ năng")</h2>
         </div>
         <div class="technology-grid">
-            <div class="technology-group" style="--reveal-delay: 0ms">
-                <p class="technology-category">@(currentLanguage == "en" ? "Programming Languages" : "Ngôn ngữ lập trình")</p>
-                <div class="skill-meter-list">
-                    <div class="skill-meter" role="meter" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100" aria-label="C# / .NET">
-                        <div class="skill-meter-header"><span class="skill-meter-name">C# / .NET</span><span class="skill-meter-value">90%</span></div>
-                        <div class="skill-meter-track"><div class="skill-meter-fill" style="--level: 90%"></div></div>
-                    </div>
-                    <div class="skill-meter" role="meter" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" aria-label="JavaScript">
-                        <div class="skill-meter-header"><span class="skill-meter-name">JavaScript</span><span class="skill-meter-value">75%</span></div>
-                        <div class="skill-meter-track"><div class="skill-meter-fill" style="--level: 75%"></div></div>
-                    </div>
-                    <div class="skill-meter" role="meter" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" aria-label="Java">
-                        <div class="skill-meter-header"><span class="skill-meter-name">Java</span><span class="skill-meter-value">60%</span></div>
-                        <div class="skill-meter-track"><div class="skill-meter-fill" style="--level: 60%"></div></div>
-                    </div>
-                    <div class="skill-meter" role="meter" aria-valuenow="55" aria-valuemin="0" aria-valuemax="100" aria-label="Dart">
-                        <div class="skill-meter-header"><span class="skill-meter-name">Dart (Flutter)</span><span class="skill-meter-value">55%</span></div>
-                        <div class="skill-meter-track"><div class="skill-meter-fill" style="--level: 55%"></div></div>
-                    </div>
+            @{ var i = 0; }
+            @foreach (var cat in Resume.Skills)
+            {
+                <div class="technology-group" style="--reveal-delay: @(i * 90)ms">
+                    <p class="technology-category">@(IsEn ? cat.NameEn : cat.NameVn)</p>
+                    @if (cat.UseMeters && cat.Skills != null)
+                    {
+                        <div class="skill-meter-list">
+                            @foreach (var skill in cat.Skills)
+                            {
+                                <div class="skill-meter" role="meter" aria-valuenow="@skill.Level" aria-valuemin="0" aria-valuemax="100" aria-label="@skill.Name">
+                                    <div class="skill-meter-header">
+                                        <span class="skill-meter-name">@skill.Name</span>
+                                        <span class="skill-meter-value">@skill.Level%</span>
+                                    </div>
+                                    <div class="skill-meter-track">
+                                        <div class="skill-meter-fill" style="--level: @(skill.Level)%"></div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (cat.Tags != null)
+                    {
+                        <div class="technology-items">
+                            @foreach (var tag in cat.Tags) { <span>@tag</span> }
+                        </div>
+                    }
                 </div>
-            </div>
-            <div class="technology-group" style="--reveal-delay: 90ms">
-                <p class="technology-category">@(currentLanguage == "en" ? "Frontend" : "Frontend")</p>
-                <div class="technology-items">
-                    <span>HTML5</span><span>CSS3</span><span>jQuery</span><span>Vanilla JS</span><span>React</span><span>Angular</span><span>Blazor</span>
-                </div>
-            </div>
-            <div class="technology-group" style="--reveal-delay: 180ms">
-                <p class="technology-category">@(currentLanguage == "en" ? "Databases" : "Cơ sở dữ liệu")</p>
-                <div class="skill-meter-list">
-                    <div class="skill-meter" role="meter" aria-valuenow="88" aria-valuemin="0" aria-valuemax="100" aria-label="SQL Server">
-                        <div class="skill-meter-header"><span class="skill-meter-name">SQL Server</span><span class="skill-meter-value">88%</span></div>
-                        <div class="skill-meter-track"><div class="skill-meter-fill" style="--level: 88%"></div></div>
-                    </div>
-                    <div class="skill-meter" role="meter" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" aria-label="MySQL">
-                        <div class="skill-meter-header"><span class="skill-meter-name">MySQL</span><span class="skill-meter-value">80%</span></div>
-                        <div class="skill-meter-track"><div class="skill-meter-fill" style="--level: 80%"></div></div>
-                    </div>
-                    <div class="skill-meter" role="meter" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" aria-label="PostgreSQL">
-                        <div class="skill-meter-header"><span class="skill-meter-name">PostgreSQL</span><span class="skill-meter-value">70%</span></div>
-                        <div class="skill-meter-track"><div class="skill-meter-fill" style="--level: 70%"></div></div>
-                    </div>
-                    <div class="skill-meter" role="meter" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100" aria-label="MongoDB">
-                        <div class="skill-meter-header"><span class="skill-meter-name">MongoDB</span><span class="skill-meter-value">65%</span></div>
-                        <div class="skill-meter-track"><div class="skill-meter-fill" style="--level: 65%"></div></div>
-                    </div>
-                </div>
-            </div>
-            <div class="technology-group" style="--reveal-delay: 270ms">
-                <p class="technology-category">@(currentLanguage == "en" ? "Frameworks" : "Framework")</p>
-                <div class="technology-items">
-                    <span>.NET Core 6/8/9</span><span>.NET Framework 4.8</span><span>.NET MVC</span><span>WPF</span><span>Web API</span><span>WinForms</span>
-                </div>
-            </div>
-            <div class="technology-group" style="--reveal-delay: 360ms">
-                <p class="technology-category">@(currentLanguage == "en" ? "Tools & DevOps" : "Công cụ & DevOps")</p>
-                <div class="technology-items">
-                    <span>Visual Studio</span><span>VS Code</span><span>ReSharper</span><span>Redis</span><span>Docker</span><span>Azure</span><span>GitHub Actions</span>
-                </div>
-            </div>
-            <div class="technology-group" style="--reveal-delay: 450ms">
-                <p class="technology-category">@(currentLanguage == "en" ? "Architecture & Practices" : "Kiến trúc & Thực hành")</p>
-                <div class="technology-items">
-                    <span>Microservices</span><span>Monolithic</span><span>Database Design</span><span>WCAG 2.1/2.2</span><span>PCI DSS</span>
-                </div>
-            </div>
-            <div class="technology-group" style="--reveal-delay: 540ms">
-                <p class="technology-category">@(currentLanguage == "en" ? "Payment Integration" : "Tích hợp thanh toán")</p>
-                <div class="technology-items">
-                    <span>Adyen</span><span>PayPal</span><span>Momo</span>
-                </div>
-            </div>
+                i++;
+            }
         </div>
     </div>
 </section>
@@ -340,70 +207,44 @@
     <div class="container">
         <div class="section-heading">
             <p class="section-label">CERTIFICATIONS</p>
-            <h2>@(currentLanguage == "en" ? "TOEIC & Courses" : "TOEIC & Khóa học")</h2>
+            <h2>@(IsEn ? "TOEIC & Courses" : "TOEIC & Khóa học")</h2>
         </div>
         <div class="education-grid">
             <div class="education-column">
                 <p class="column-title">TOEIC SCORES</p>
-                <div class="education-item">
-                    <div class="education-header">
-                        <div><h3>TOEIC</h3></div>
-                        <span class="status">2024</span>
+                @foreach (var toeic in Resume.ToeicScores)
+                {
+                    <div class="education-item">
+                        <div class="education-header">
+                            <div><h3>TOEIC</h3></div>
+                            <span class="status">@toeic.Year</span>
+                        </div>
+                        <p class="education-description">Score: @toeic.Score</p>
                     </div>
-                    <p class="education-description">Score: 600</p>
-                </div>
-                <div class="education-item">
-                    <div class="education-header">
-                        <div><h3>TOEIC</h3></div>
-                        <span class="status">2023</span>
-                    </div>
-                    <p class="education-description">Score: 686</p>
-                </div>
-                <div class="education-item">
-                    <div class="education-header">
-                        <div><h3>TOEIC</h3></div>
-                        <span class="status">2022</span>
-                    </div>
-                    <p class="education-description">Score: 595</p>
-                </div>
+                }
             </div>
             <div class="education-column">
-                <p class="column-title">@(currentLanguage == "en" ? "RELEVANT COURSES" : "KHÓA HỌC LIÊN QUAN")</p>
-                <div class="education-item">
-                    <div class="education-header">
-                        <div><h3>[TEDU-42] @(currentLanguage == "en" ? "Master Docker to Conquer DevOps" : "Làm chủ Docker để chinh phục DevOps")</h3></div>
+                <p class="column-title">@(IsEn ? "RELEVANT COURSES" : "KHÓA HỌC LIÊN QUAN")</p>
+                @foreach (var course in Resume.Courses)
+                {
+                    <div class="education-item">
+                        <div class="education-header">
+                            <div><h3>@course.Code @(IsEn ? course.TitleEn : course.TitleVn)</h3></div>
+                        </div>
                     </div>
-                </div>
-                <div class="education-item">
-                    <div class="education-header">
-                        <div><h3>[TEDU-47] @(currentLanguage == "en" ? "Mastering Microsoft Azure Cloud" : "Làm chủ đám mây Azure")</h3></div>
-                    </div>
-                </div>
-                <div class="education-item">
-                    <div class="education-header">
-                        <div><h3>[TEDU-35] @(currentLanguage == "en" ? "ASP.NET Core Web API + Identity Server + Angular" : "ASP.NET Core Web API + Identity Server + Angular")</h3></div>
-                    </div>
-                </div>
-                <div class="education-item">
-                    <div class="education-header">
-                        <div><h3>[TEDU-43] @(currentLanguage == "en" ? "DDD API, MongoDB and Blazor" : "API DDD, MongoDB và Blazor")</h3></div>
-                    </div>
-                </div>
-                <div class="education-item">
-                    <div class="education-header">
-                        <div><h3>[TEDU-49] @(currentLanguage == "en" ? "Micro-service Architecture" : "Kiến trúc Micro-service")</h3></div>
-                    </div>
-                </div>
+                }
             </div>
         </div>
     </div>
 </section>
 
+<ContactSection />
+
 <footer class="resume-footer">
     <div class="container">
         <p>
-            &copy; 2025 Khoi Duc. @(currentLanguage == "en" ? "All rights reserved." : "Mọi quyền được bảo lưu.")
-            <a href="https://github.com/KhoiDuc/BlazorWasmPortfolioGhAction" target="_blank">@(currentLanguage == "en" ? "Repository" : "Kho lưu trữ")</a>
+            &copy; @DateTime.Now.Year @Resume.Profile.NameEn. @(IsEn ? "All rights reserved." : "Mọi quyền được bảo lưu.")
+            <a href="https://github.com/KhoiDuc/BlazorWasmPortfolioGhAction" target="_blank">@(IsEn ? "Repository" : "Kho lưu trữ")</a>
         </p>
     </div>
 </footer>
@@ -411,6 +252,8 @@
 @code {
     private IJSObjectReference? carouselInstance;
     private string currentLanguage = "en";
+    private Resume Resume => ResumeData.Current;
+    private bool IsEn => currentLanguage == "en";
 
     [Parameter]
     public string? Lang { get; set; }
