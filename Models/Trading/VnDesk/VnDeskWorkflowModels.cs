@@ -59,12 +59,14 @@ public class TradePlan
 public class PlanStore
 {
     public List<TradePlan> Plans { get; set; } = [];
+    public List<SimpleDecision> Decisions { get; set; } = [];
 }
 
 public class JournalStore
 {
     public List<SessionLog> Sessions { get; set; } = [];
     public List<TradeReview> Reviews { get; set; } = [];
+    public List<SimpleJournalEntry> SimpleEntries { get; set; } = [];
 }
 
 public class SessionLog
@@ -86,6 +88,38 @@ public class TradeReview
     public string Learned { get; set; } = "";
     public string ProcessChange { get; set; } = "";
     public string? AiDraft { get; set; }
+}
+
+public class SimpleDecision
+{
+    public DateTime At { get; set; } = DateTime.Now;
+    public string Symbol { get; set; } = "";
+    public bool ShouldBuy { get; set; }
+    public string Verdict { get; set; } = "";
+    public int DisciplineScore { get; set; }
+    public decimal EntryPrice { get; set; }
+    public decimal StopLoss { get; set; }
+    public decimal TakeProfit { get; set; }
+    public int Shares { get; set; }
+    public decimal RiskAmount { get; set; }
+    public string Reason { get; set; } = "";
+    public string Summary { get; set; } = "";
+}
+
+public class SimpleJournalEntry
+{
+    public DateTime At { get; set; } = DateTime.Now;
+    public string Symbol { get; set; } = "";
+    public string DayPlan { get; set; } = "";
+    public string DayNote { get; set; } = "";
+    public string Action { get; set; } = "";
+    public decimal EntryPrice { get; set; }
+    public int Shares { get; set; }
+    public string Outcome { get; set; } = "";
+    public string Mood { get; set; } = "";
+    public string NextTime { get; set; } = "";
+    public string Note { get; set; } = "";
+    public bool IsMorningOnly { get; set; }
 }
 
 public class AlertLog

@@ -4,81 +4,353 @@
 @inject ChecklistService Checklist
 @inject PositionService Positions
 @inject ITradingApiClient Api
+@inject IJSRuntime JS
 
 <div class="ts-panel">
-    @if (_mode == "decide")
-    {
-        <div class="ts-alert ts-alert-info mb-0" style="font-size:0.82rem;line-height:1.5">
-            <strong>D — Quyết định:</strong> @VnDeskTemplates.DecideGuide
-        </div>
-    }
-    <div class="ts-tabs mt-2">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
         @if (_mode == "decide")
         {
+            <div class="ts-alert ts-alert-info mb-0" style="font-size:0.82rem;line-height:1.5;flex:1">
+                <strong>D — Có nên mua?</strong>
+                @if (_advanced)
+                {
+                    @VnDeskTemplates.DecideGuide
+                }
+                else
+                {
+                    @VnDeskTemplates.NewbieDecideGuide
+                }
+            </div>
+        }
+        else
+        {
+            <div class="ts-alert ts-alert-info mb-0" style="font-size:0.82rem;line-height:1.5;flex:1">
+                <strong>E — Nhật ký</strong>
+                @if (_advanced)
+                {
+                    <span> Session / Review chi tiết cho trader có kinh nghiệm.</span>
+                }
+                else
+                {
+                    @VnDeskTemplates.NewbieJournalGuide
+                }
+            </div>
+        }
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;white-space:nowrap;cursor:pointer">
+            <input type="checkbox" checked="@_advanced" @onchange="ToggleAdvanced" />
+            Chế độ nâng cao
+        </label>
+    </div>
+
+    @if (_mode == "decide" && !_advanced)
+    {
+        <div class="ts-tabs mt-2">
+            <button class="ts-tab @(_dStep == 1 ? "active" : "")" @onclick='() => _dStep = 1'>① Mất bao nhiêu nếu sai?</button>
+            <button class="ts-tab @(_dStep == 2 ? "active" : "")" @onclick='() => _dStep = 2'>② 5 câu hỏi</button>
+            <button class="ts-tab @(_dStep == 3 ? "active" : "")" @onclick='() => _dStep = 3'>③ Tờ quyết định</button>
+        </div>
+    }
+    else if (_mode == "decide" && _advanced)
+    {
+        <div class="ts-tabs mt-2">
             <button class="ts-tab @(_sub == "size" ? "active" : "")" @onclick='() => _sub = "size"'>① Size</button>
             <button class="ts-tab @(_sub == "pre" ? "active" : "")" @onclick='() => _sub = "pre"'>② Pre-trade</button>
             <button class="ts-tab @(_sub == "plan" ? "active" : "")" @onclick='() => _sub = "plan"'>③ Plan</button>
             <button class="ts-tab @(_sub == "alert" ? "active" : "")" @onclick='() => _sub = "alert"'>④ Alert</button>
-        }
-        else
-        {
+        </div>
+    }
+    else if (_mode == "journal" && !_advanced)
+    {
+        <div class="ts-tabs mt-2">
+            <button class="ts-tab @(_jSub == "morning" ? "active" : "")" @onclick='() => _jSub = "morning"'>Trước phiên</button>
+            <button class="ts-tab @(_jSub == "today" ? "active" : "")" @onclick='() => _jSub = "today"'>Sau lệnh / hết ngày</button>
+        </div>
+    }
+    else if (_mode == "journal" && _advanced)
+    {
+        <div class="ts-tabs mt-2">
             <button class="ts-tab @(_sub == "session" ? "active" : "")" @onclick='() => _sub = "session"'>Session</button>
             <button class="ts-tab @(_sub == "review" ? "active" : "")" @onclick='() => _sub = "review"'>Review</button>
-        }
-    </div>
+        </div>
+    }
 </div>
 
-@if (_sub == "size" && _mode == "decide")
+@* ── NEWBIE D: Step 1 ── *@
+@if (_mode == "decide" && !_advanced && _dStep == 1)
 {
     <div class="ts-panel">
-        <p class="ts-muted" style="font-size:0.82rem">@VnDeskTemplates.SizeHint</p>
-        <input class="ts-input mb-2" @bind="_symbol" placeholder="Mã (VNM)" />
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+        @if (!HasTaData)
+        {
+            <div class="ts-alert ts-alert-info mb-2" style="font-size:0.82rem">
+                Chưa có số liệu phân tích cho <strong>@_symbol</strong>.
+                @if (OnGoToAnalysis.HasDelegate)
+                {
+                    <button class="ts-btn ts-btn-outline" style="margin-left:8px" @onclick="GoAnalysis">Sang B Phân tích</button>
+                }
+                <span class="ts-muted"> hoặc nhập giá / cắt lỗ tay bên dưới.</span>
+            </div>
+        }
+        <p class="ts-muted" style="font-size:0.82rem">@VnDeskTemplates.Step1Hint</p>
+        <input class="ts-input mb-2" @bind="_symbol" placeholder="Mã cổ phiếu (VNM, FPT...)" />
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
             <div class="ts-field">
-                <label class="ts-label">Vốn (VND)</label>
+                <label class="ts-label">Bạn có bao nhiêu tiền chơi CK?</label>
                 <input type="number" class="ts-input" @bind="_capital" />
             </div>
             <div class="ts-field">
-                <label class="ts-label">% risk / lệnh</label>
+                <label class="ts-label">Chấp nhận mất tối đa / 1 lệnh (%)</label>
                 <input type="number" class="ts-input" @bind="_riskPct" step="0.1" />
+                <span class="ts-muted" style="font-size:0.75rem">≈ @RiskAmountPreview.ToString("N0")đ</span>
             </div>
             <div class="ts-field">
-                <label class="ts-label">Giá vào</label>
+                <label class="ts-label">Giá mua dự kiến</label>
                 <input type="number" class="ts-input" @bind="_price" step="any" />
             </div>
             <div class="ts-field">
-                <label class="ts-label">Stop</label>
+                <label class="ts-label">Cắt lỗ (giá thoát nếu sai)</label>
                 <input type="number" class="ts-input" @bind="_stop" step="any" />
             </div>
             <div class="ts-field">
-                <label class="ts-label">Target (tùy chọn)</label>
+                <label class="ts-label">Chốt lời (tùy chọn)</label>
                 <input type="number" class="ts-input" @bind="_target" step="any" />
             </div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:0.5rem">
-            <button class="ts-btn ts-btn-primary" @onclick="CalcSize">Tính size</button>
-            @if (TaPrice is > 0)
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:0.75rem">
+            @if (HasTaData)
             {
-                <button class="ts-btn ts-btn-outline" @onclick="FillFromTa">Lấy giá/stop từ TA</button>
+                <button class="ts-btn ts-btn-outline" @onclick="FillFromTa">Dùng số từ phân tích (tab B)</button>
             }
+            <button class="ts-btn ts-btn-primary" @onclick="CalcSizeAndNext">Tính &amp; sang bước 2</button>
         </div>
         @if (_size is not null)
         {
             <div class="mt-3" style="font-size:0.88rem">
                 @if (_size.NoTrade)
                 {
-                    <p class="ts-alert ts-alert-error">No-trade: @_size.Reason</p>
+                    <p class="ts-alert ts-alert-error">Không nên vào: @_size.Reason</p>
                 }
                 else
                 {
-                    <p>Lot: <strong>@_size.Shares CP</strong> | Giá trị: @_size.PositionValue.ToString("N0") VND | Risk: @_size.RiskAmount.ToString("N0") VND</p>
-                    <p>R:R = @_size.RiskReward.ToString("N2") — dùng số này cho Pre-trade &amp; Plan.</p>
+                    <p>Mua tối đa <strong>@_size.Shares CP</strong> (~@_size.PositionValue.ToString("N0")đ).</p>
+                    <p>Nếu sai (chạm cắt lỗ @_stop.ToString("N2")): mất khoảng <strong>@_size.RiskAmount.ToString("N0")đ</strong>.</p>
+                    @if (_size.Reward > 0)
+                    {
+                        <p>Nếu đúng (chạm chốt lời): lời khoảng <strong>@_size.Reward.ToString("N0")đ</strong> (tỷ lệ @_size.RiskReward.ToString("N1") : 1).</p>
+                    }
+                    @if (_size.RiskReward < 1.2m)
+                    {
+                        <p class="ts-alert ts-alert-info mb-0">Lời dự kiến chưa lớn hơn lỗ đủ — cân nhắc kỹ hoặc chờ setup đẹp hơn.</p>
+                    }
                 }
             </div>
         }
     </div>
 }
-else if (_sub == "pre" && _mode == "decide")
+
+@* ── NEWBIE D: Step 2 ── *@
+else if (_mode == "decide" && !_advanced && _dStep == 2)
+{
+    <div class="ts-panel">
+        <p class="ts-muted" style="font-size:0.82rem">@VnDeskTemplates.Step2Hint</p>
+        @if (_size is null)
+        {
+            <p class="ts-alert ts-alert-info">Hãy hoàn thành bước 1 trước.</p>
+            <button class="ts-btn ts-btn-outline" @onclick='() => _dStep = 1'>← Quay lại bước 1</button>
+        }
+        else
+        {
+            @RenderYesNo("1. Bạn đã xem chart / phân tích mã này chưa?", _q1ViewedChart, v => _q1ViewedChart = v)
+            @RenderYesNo("2. Bạn đã chốt mức cắt lỗ chưa?", _q2HasStop, v => _q2HasStop = v)
+            <div class="ts-field mb-2">
+                <label class="ts-label">3. Số tiền có thể mất (~@(_size?.RiskAmount.ToString("N0") ?? "0")đ) có làm bạn khó chịu / mất ngủ không?</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="ts-btn @(_q3LossOk == true ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _q3LossOk = true'>Không, chấp nhận được</button>
+                    <button class="ts-btn @(_q3LossOk == false ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _q3LossOk = false'>Có, hơi lo</button>
+                </div>
+            </div>
+            <div class="ts-field mb-2">
+                <label class="ts-label">4. Bạn muốn mua vì đã tính kỹ, hay vì sợ bỏ lỡ / thấy mọi người mua?</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="ts-btn @(_q4Motivation == "planned" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _q4Motivation = "planned"'>Đã tính kỹ</button>
+                    <button class="ts-btn @(_q4Motivation == "fomo" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _q4Motivation = "fomo"'>Sợ bỏ lỡ / theo đám đông</button>
+                </div>
+            </div>
+            @RenderYesNo("5. Nếu thị trường hôm nay xấu, bạn vẫn cắt lỗ đúng mức đã chọn chứ?", _q5KeepStop, v => _q5KeepStop = v)
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:0.75rem">
+                <button class="ts-btn ts-btn-outline" @onclick='() => _dStep = 1'>← Bước 1</button>
+                <button class="ts-btn ts-btn-primary" @onclick="GoStep3" disabled="@(!QuestionsAnswered)">Xem kết luận →</button>
+            </div>
+        }
+    </div>
+}
+
+@* ── NEWBIE D: Step 3 ── *@
+else if (_mode == "decide" && !_advanced && _dStep == 3)
+{
+    <div class="ts-panel">
+        <p class="ts-muted" style="font-size:0.82rem">@VnDeskTemplates.Step3Hint</p>
+        @if (_eval is not null)
+        {
+            <div class="ts-alert @(_eval.Value.ShouldBuy ? "ts-alert-info" : "ts-alert-error") mb-2" style="font-size:0.9rem">
+                <strong>@_eval.Value.Verdict</strong> — @_eval.Value.Score/5 câu kỷ luật
+                @foreach (var w in _eval.Value.Warnings)
+                {
+                    <div style="margin-top:4px;font-size:0.82rem">• @w</div>
+                }
+            </div>
+        }
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+            <div class="ts-field"><label class="ts-label">Mã</label><input class="ts-input" @bind="_symbol" /></div>
+            <div class="ts-field"><label class="ts-label">Giá mua</label><input type="number" class="ts-input" @bind="_price" step="any" /></div>
+            <div class="ts-field"><label class="ts-label">Cắt lỗ</label><input type="number" class="ts-input" @bind="_stop" step="any" /></div>
+            <div class="ts-field"><label class="ts-label">Chốt lời</label><input type="number" class="ts-input" @bind="_target" step="any" /></div>
+            <div class="ts-field"><label class="ts-label">Số CP</label><input type="number" class="ts-input" @bind="_decisionShares" /></div>
+        </div>
+        <div class="ts-field mt-2">
+            <label class="ts-label">Lý do mua (chọn sẵn)</label>
+            <select class="ts-select" @bind="_buyReason">
+                @foreach (var r in VnDeskTemplates.BuyReasons)
+                {
+                    <option value="@r">@r</option>
+                }
+            </select>
+        </div>
+        @if (_buyReason == "Khác (tự ghi)")
+        {
+            <div class="ts-field"><textarea class="ts-input" rows="2" @bind="_buyReasonCustom" placeholder="Ghi lý do của bạn..."></textarea></div>
+        }
+        <div class="ts-field">
+            <label class="ts-label">Tóm tắt (có thể sửa)</label>
+            <textarea class="ts-input" rows="4" @bind="_decisionSummary"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="ts-btn ts-btn-outline" @onclick='() => _dStep = 2'>← Bước 2</button>
+            <button class="ts-btn ts-btn-primary" @onclick="() => SaveSimpleDecision(true)">Lưu — Tôi sẽ mua</button>
+            <button class="ts-btn ts-btn-outline" @onclick="() => SaveSimpleDecision(false)">Không mua, ghi lại</button>
+        </div>
+        @if (!string.IsNullOrEmpty(_msg)) { <p class="ts-alert ts-alert-info mt-2">@_msg</p> }
+        @if (_recentDecisions.Count > 0)
+        {
+            <h4 class="mt-3" style="font-size:0.9rem">Quyết định gần đây</h4>
+            <ul style="font-size:0.82rem;padding-left:1.2rem">
+                @foreach (var d in _recentDecisions)
+                {
+                    <li>@d.At.ToLocalTime():g — <strong>@d.Symbol</strong> @(d.ShouldBuy ? "Mua" : "Không mua") — @d.Verdict</li>
+                }
+            </ul>
+        }
+    </div>
+}
+
+@* ── NEWBIE E: Morning ── *@
+else if (_mode == "journal" && !_advanced && _jSub == "morning")
+{
+    <div class="ts-panel">
+        <p class="ts-muted" style="font-size:0.82rem">Tuỳ chọn — ghi nhanh trước khi mở sàn (30 giây).</p>
+        <div class="ts-field">
+            <label class="ts-label">Hôm nay bạn định làm gì?</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                @foreach (var p in VnDeskTemplates.DayPlans)
+                {
+                    <button class="ts-btn @(_dayPlan == p ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _dayPlan = p'>@p</button>
+                }
+            </div>
+        </div>
+        <div class="ts-field">
+            <label class="ts-label">Ghi chú 1 dòng</label>
+            <input class="ts-input" @bind="_dayNote" placeholder="VD: Chỉ xem VNM, không FOMO." />
+        </div>
+        <button class="ts-btn ts-btn-primary" @onclick="SaveMorning">Lưu kế hoạch sáng</button>
+        @if (!string.IsNullOrEmpty(_msg)) { <p class="ts-alert ts-alert-info mt-2">@_msg</p> }
+    </div>
+    @RenderJournalCards()
+}
+
+@* ── NEWBIE E: Today ── *@
+else if (_mode == "journal" && !_advanced && _jSub == "today")
+{
+    <div class="ts-panel">
+        <p class="ts-muted" style="font-size:0.82rem">Sau khi mua/bán hoặc cuối ngày — ghi lại để nhìn lại sau.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+            <div class="ts-field"><label class="ts-label">Mã</label><input class="ts-input" @bind="_symbol" /></div>
+            <div class="ts-field">
+                <label class="ts-label">Bạn đã làm gì?</label>
+                <select class="ts-select" @bind="_jAction">
+                    @foreach (var a in VnDeskTemplates.JournalActions) { <option value="@a">@a</option> }
+                </select>
+            </div>
+            <div class="ts-field"><label class="ts-label">Giá</label><input type="number" class="ts-input" @bind="_jPrice" step="any" /></div>
+            <div class="ts-field"><label class="ts-label">Số CP</label><input type="number" class="ts-input" @bind="_jShares" /></div>
+        </div>
+        <div class="ts-field mt-2">
+            <label class="ts-label">Kết quả</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                @foreach (var o in VnDeskTemplates.JournalOutcomes)
+                {
+                    <button class="ts-btn @(_jOutcome == o ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _jOutcome = o'>@o</button>
+                }
+            </div>
+        </div>
+        <div class="ts-field">
+            <label class="ts-label">Cảm xúc lúc đó</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                @foreach (var m in VnDeskTemplates.JournalMoods)
+                {
+                    <button class="ts-btn @(_jMood == m ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _jMood = m'>@m</button>
+                }
+            </div>
+        </div>
+        <div class="ts-field">
+            <label class="ts-label">Lần sau mình sẽ...</label>
+            <input class="ts-input" @bind="_jNextTime" placeholder="VD: Không mua khi chưa có cắt lỗ." />
+        </div>
+        <div class="ts-field">
+            <label class="ts-label">Ghi chú thêm (tuỳ chọn)</label>
+            <textarea class="ts-input" rows="2" @bind="_jNote"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="ts-btn ts-btn-primary" @onclick="SaveTodayJournal">Lưu nhật ký</button>
+            <button class="ts-btn ts-btn-outline" @onclick="FillFromLastDecision">Dùng số từ tờ D gần nhất</button>
+            <button class="ts-btn ts-btn-outline" @onclick="AiJournalHint" disabled="@_aiBusy">Nhờ AI góp ý 1 đoạn</button>
+        </div>
+        @if (!string.IsNullOrEmpty(_msg)) { <p class="ts-alert ts-alert-info mt-2">@_msg</p> }
+        @if (!string.IsNullOrEmpty(_aiText)) { <pre class="mt-2" style="font-size:0.78rem;white-space:pre-wrap">@_aiText</pre> }
+    </div>
+    @RenderJournalCards()
+}
+
+@* ── ADVANCED D: Size ── *@
+else if (_sub == "size" && _mode == "decide" && _advanced)
+{
+    <div class="ts-panel">
+        <p class="ts-muted" style="font-size:0.82rem">@VnDeskTemplates.SizeHint</p>
+        <input class="ts-input mb-2" @bind="_symbol" placeholder="Mã (VNM)" />
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+            <div class="ts-field"><label class="ts-label">Vốn (VND)</label><input type="number" class="ts-input" @bind="_capital" /></div>
+            <div class="ts-field"><label class="ts-label">% risk / lệnh</label><input type="number" class="ts-input" @bind="_riskPct" step="0.1" /></div>
+            <div class="ts-field"><label class="ts-label">Giá vào</label><input type="number" class="ts-input" @bind="_price" step="any" /></div>
+            <div class="ts-field"><label class="ts-label">Stop</label><input type="number" class="ts-input" @bind="_stop" step="any" /></div>
+            <div class="ts-field"><label class="ts-label">Target (tùy chọn)</label><input type="number" class="ts-input" @bind="_target" step="any" /></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:0.5rem">
+            <button class="ts-btn ts-btn-primary" @onclick="CalcSize">Tính size</button>
+            @if (HasTaData) { <button class="ts-btn ts-btn-outline" @onclick="FillFromTa">Lấy giá/stop từ TA</button> }
+        </div>
+        @if (_size is not null)
+        {
+            <div class="mt-3" style="font-size:0.88rem">
+                @if (_size.NoTrade) { <p class="ts-alert ts-alert-error">No-trade: @_size.Reason</p> }
+                else
+                {
+                    <p>Lot: <strong>@_size.Shares CP</strong> | Giá trị: @_size.PositionValue.ToString("N0") VND | Risk: @_size.RiskAmount.ToString("N0") VND</p>
+                    <p>R:R = @_size.RiskReward.ToString("N2")</p>
+                }
+            </div>
+        }
+    </div>
+}
+else if (_sub == "pre" && _mode == "decide" && _advanced)
 {
     <div class="ts-panel">
         <p class="ts-muted" style="font-size:0.82rem">@VnDeskTemplates.PreTradeHint</p>
@@ -86,38 +358,14 @@ else if (_sub == "pre" && _mode == "decide")
             <input class="ts-input" style="max-width:120px" @bind="_symbol" placeholder="Mã" />
             <button class="ts-btn ts-btn-outline" @onclick="FillPreTradeTemplate">Điền mẫu</button>
         </div>
-        <div class="ts-field">
-            <label class="ts-label">1. Thesis — vì sao trade?</label>
-            <textarea class="ts-input" rows="2" @bind="_preThesis" placeholder="VD: Mua VNM vì trend trung hạn tích cực, volume xác nhận..."></textarea>
-        </div>
-        <div class="ts-field">
-            <label class="ts-label">2. Nguồn dữ liệu</label>
-            <textarea class="ts-input" rows="2" @bind="_preSource" placeholder="VD: VNDirect daily, TA tab B, heatmap ngành tab A..."></textarea>
-        </div>
-        <div class="ts-field">
-            <label class="ts-label">3. Invalidation — khi nào plan sai?</label>
-            <textarea class="ts-input" rows="2" @bind="_preInvalid" placeholder="VD: Đóng cửa dưới stop / mất SMA20 + volume bán mạnh..."></textarea>
-        </div>
-        <div class="ts-field">
-            <label class="ts-label">4. Max loss chấp nhận</label>
-            <textarea class="ts-input" rows="2" @bind="_preMaxLoss" placeholder="VD: Tối đa 1% NAV (~1 triệu trên 100M vốn)..."></textarea>
-        </div>
-        <div class="ts-field">
-            <label class="ts-label">5. Position size logic</label>
-            <textarea class="ts-input" rows="2" @bind="_preSize" placeholder="VD: Risk 1% / stop distance → X lot 100 CP (tab Size)..."></textarea>
-        </div>
-        <div class="ts-field">
-            <label class="ts-label">6. Stop conditions</label>
-            <textarea class="ts-input" rows="2" @bind="_preStop" placeholder="VD: Cắt lỗ cứng tại stop, không gồng thêm..."></textarea>
-        </div>
-        <div class="ts-field">
-            <label class="ts-label">7. Scenario đổi plan</label>
-            <textarea class="ts-input" rows="2" @bind="_preScenario" placeholder="VD: VN-Index giảm >1.5% hoặc tin vĩ mô bất lợi..."></textarea>
-        </div>
-        <div class="ts-field">
-            <label class="ts-label">8. Vẫn làm nếu không áp lực?</label>
-            <textarea class="ts-input" rows="2" @bind="_prePressure" placeholder="VD: Có, nếu đủ 8/8 câu và R:R ≥ 1.2 — không FOMO..."></textarea>
-        </div>
+        <div class="ts-field"><label class="ts-label">1. Thesis</label><textarea class="ts-input" rows="2" @bind="_preThesis"></textarea></div>
+        <div class="ts-field"><label class="ts-label">2. Nguồn dữ liệu</label><textarea class="ts-input" rows="2" @bind="_preSource"></textarea></div>
+        <div class="ts-field"><label class="ts-label">3. Invalidation</label><textarea class="ts-input" rows="2" @bind="_preInvalid"></textarea></div>
+        <div class="ts-field"><label class="ts-label">4. Max loss</label><textarea class="ts-input" rows="2" @bind="_preMaxLoss"></textarea></div>
+        <div class="ts-field"><label class="ts-label">5. Position size</label><textarea class="ts-input" rows="2" @bind="_preSize"></textarea></div>
+        <div class="ts-field"><label class="ts-label">6. Stop conditions</label><textarea class="ts-input" rows="2" @bind="_preStop"></textarea></div>
+        <div class="ts-field"><label class="ts-label">7. Scenario đổi plan</label><textarea class="ts-input" rows="2" @bind="_preScenario"></textarea></div>
+        <div class="ts-field"><label class="ts-label">8. Vẫn làm nếu không áp lực?</label><textarea class="ts-input" rows="2" @bind="_prePressure"></textarea></div>
         <div style="display:flex;gap:8px">
             <button class="ts-btn ts-btn-primary" @onclick="() => SavePreTrade(true)">Confirm (log)</button>
             <button class="ts-btn ts-btn-outline" @onclick="() => SavePreTrade(false)">Reject</button>
@@ -125,7 +373,7 @@ else if (_sub == "pre" && _mode == "decide")
         @if (!string.IsNullOrEmpty(_msg)) { <p class="ts-alert ts-alert-info mt-2">@_msg</p> }
     </div>
 }
-else if (_sub == "plan" && _mode == "decide")
+else if (_sub == "plan" && _mode == "decide" && _advanced)
 {
     <div class="ts-panel">
         <p class="ts-muted" style="font-size:0.82rem">@VnDeskTemplates.PlanHint</p>
@@ -133,26 +381,11 @@ else if (_sub == "plan" && _mode == "decide")
             <input class="ts-input" style="max-width:120px" @bind="_symbol" placeholder="Mã" />
             <button class="ts-btn ts-btn-outline" @onclick="FillPlanTemplate">Điền mẫu</button>
         </div>
-        <div class="ts-field">
-            <label class="ts-label">Entry logic</label>
-            <textarea class="ts-input" rows="2" @bind="_planEntry" placeholder="VD: Limit quanh giá X khi pullback + volume ≥ TB20..."></textarea>
-        </div>
-        <div class="ts-field">
-            <label class="ts-label">Exit criteria</label>
-            <textarea class="ts-input" rows="2" @bind="_planExit" placeholder="VD: Chốt 1/2 tại TP1, trailing SMA20 phần còn lại..."></textarea>
-        </div>
-        <div class="ts-field">
-            <label class="ts-label">Risk parameters</label>
-            <textarea class="ts-input" rows="2" @bind="_planRisk" placeholder="VD: Stop Y, risk ≤1% vốn, size Z lot..."></textarea>
-        </div>
-        <div class="ts-field">
-            <label class="ts-label">Thesis summary</label>
-            <textarea class="ts-input" rows="2" @bind="_planThesis" placeholder="VD: Trend + sector ủng hộ, RR hợp lý..."></textarea>
-        </div>
-        <div class="ts-field">
-            <label class="ts-label">Invalidation</label>
-            <textarea class="ts-input" rows="2" @bind="_planInvalid" placeholder="VD: Đóng tuần dưới stop hoặc sector đảo chiều..."></textarea>
-        </div>
+        <div class="ts-field"><label class="ts-label">Entry logic</label><textarea class="ts-input" rows="2" @bind="_planEntry"></textarea></div>
+        <div class="ts-field"><label class="ts-label">Exit criteria</label><textarea class="ts-input" rows="2" @bind="_planExit"></textarea></div>
+        <div class="ts-field"><label class="ts-label">Risk parameters</label><textarea class="ts-input" rows="2" @bind="_planRisk"></textarea></div>
+        <div class="ts-field"><label class="ts-label">Thesis summary</label><textarea class="ts-input" rows="2" @bind="_planThesis"></textarea></div>
+        <div class="ts-field"><label class="ts-label">Invalidation</label><textarea class="ts-input" rows="2" @bind="_planInvalid"></textarea></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="ts-btn ts-btn-primary" @onclick="SavePlan">Lưu plan</button>
             <button class="ts-btn ts-btn-outline" @onclick="AiStructurePlan" disabled="@_aiBusy">AI cấu trúc</button>
@@ -161,7 +394,7 @@ else if (_sub == "plan" && _mode == "decide")
         @if (!string.IsNullOrEmpty(_aiText)) { <pre class="mt-2" style="font-size:0.78rem;white-space:pre-wrap">@_aiText</pre> }
     </div>
 }
-else if (_sub == "alert" && _mode == "decide")
+else if (_sub == "alert" && _mode == "decide" && _advanced)
 {
     <div class="ts-panel">
         <p class="ts-muted" style="font-size:0.82rem">@VnDeskTemplates.AlertHint</p>
@@ -176,14 +409,14 @@ else if (_sub == "alert" && _mode == "decide")
         @if (!string.IsNullOrEmpty(_msg)) { <p class="ts-alert ts-alert-info mt-2">@_msg</p> }
     </div>
 }
-else if (_sub == "session")
+else if (_sub == "session" && _mode == "journal" && _advanced)
 {
     <div class="ts-panel">
         <p class="ts-muted" style="font-size:0.82rem">Ghi chú trước phiên: lịch kinh tế, cờ watchlist, rủi ro, plan phiên.</p>
-        <div class="ts-field"><label class="ts-label">Market calendar</label><textarea class="ts-input" rows="2" @bind="_sessCalendar" placeholder="VD: 14h CPI Mỹ, 15h họp Fed phát biểu..."></textarea></div>
-        <div class="ts-field"><label class="ts-label">Watchlist flags</label><textarea class="ts-input" rows="2" @bind="_sessWatch" placeholder="VD: Theo dõi VNM, FPT — chờ breakout SMA20..."></textarea></div>
-        <div class="ts-field"><label class="ts-label">Risks</label><textarea class="ts-input" rows="2" @bind="_sessRisks" placeholder="VD: Thanh khoản thấp cuối tuần, VN-Index gần kháng cự..."></textarea></div>
-        <div class="ts-field"><label class="ts-label">Plan phiên</label><textarea class="ts-input" rows="2" @bind="_sessPlan" placeholder="VD: Chỉ vào lệnh đã có plan D; tối đa 2 lệnh..."></textarea></div>
+        <div class="ts-field"><label class="ts-label">Market calendar</label><textarea class="ts-input" rows="2" @bind="_sessCalendar"></textarea></div>
+        <div class="ts-field"><label class="ts-label">Watchlist flags</label><textarea class="ts-input" rows="2" @bind="_sessWatch"></textarea></div>
+        <div class="ts-field"><label class="ts-label">Risks</label><textarea class="ts-input" rows="2" @bind="_sessRisks"></textarea></div>
+        <div class="ts-field"><label class="ts-label">Plan phiên</label><textarea class="ts-input" rows="2" @bind="_sessPlan"></textarea></div>
         <input class="ts-input mb-2" @bind="_sessStop" placeholder="Giờ dừng (VD: 14:30)" />
         <button class="ts-btn ts-btn-primary" @onclick="SaveSession">Lưu session</button>
         @if (_recentSessions.Count > 0)
@@ -197,14 +430,14 @@ else if (_sub == "session")
         }
     </div>
 }
-else if (_sub == "review")
+else if (_sub == "review" && _mode == "journal" && _advanced)
 {
     <div class="ts-panel">
         <p class="ts-muted" style="font-size:0.82rem">Review sau khi đóng lệnh — tách facts vs cảm xúc.</p>
         <input class="ts-input mb-2" @bind="_symbol" placeholder="Mã" />
-        <div class="ts-field"><label class="ts-label">Điều gì xảy ra</label><textarea class="ts-input" rows="2" @bind="_revHappened" placeholder="VD: Chạm stop sau tin xấu, không theo plan exit..."></textarea></div>
-        <div class="ts-field"><label class="ts-label">Học được</label><textarea class="ts-input" rows="2" @bind="_revLearned" placeholder="VD: Không vào trước tin lớn; chờ xác nhận volume..."></textarea></div>
-        <div class="ts-field"><label class="ts-label">Sửa process</label><textarea class="ts-input" rows="2" @bind="_revProcess" placeholder="VD: Bắt buộc hoàn thành Pre-trade trước mọi lệnh..."></textarea></div>
+        <div class="ts-field"><label class="ts-label">Điều gì xảy ra</label><textarea class="ts-input" rows="2" @bind="_revHappened"></textarea></div>
+        <div class="ts-field"><label class="ts-label">Học được</label><textarea class="ts-input" rows="2" @bind="_revLearned"></textarea></div>
+        <div class="ts-field"><label class="ts-label">Sửa process</label><textarea class="ts-input" rows="2" @bind="_revProcess"></textarea></div>
         <button class="ts-btn ts-btn-outline" @onclick="AiReview" disabled="@_aiBusy">AI nháp</button>
         <button class="ts-btn ts-btn-primary" @onclick="SaveReview">Lưu review</button>
         @if (!string.IsNullOrEmpty(_msg)) { <p class="ts-alert ts-alert-info mt-2">@_msg</p> }
@@ -212,16 +445,23 @@ else if (_sub == "review")
 }
 
 @code {
+    private const string AdvancedKey = "vndesk.advancedMode";
+
     [Parameter] public string Symbol { get; set; } = "VNM";
     [Parameter] public string? AlertSignal { get; set; }
     [Parameter] public string Mode { get; set; } = "decide";
+    [Parameter] public bool HasTaData { get; set; }
     [Parameter] public decimal? TaPrice { get; set; }
     [Parameter] public decimal? TaStop { get; set; }
     [Parameter] public decimal? TaTarget { get; set; }
     [Parameter] public EventCallback<SizeResult?> OnSizeCalculated { get; set; }
+    [Parameter] public EventCallback OnGoToAnalysis { get; set; }
 
     private string _mode = "decide";
     private string _sub = "size";
+    private string _jSub = "morning";
+    private int _dStep = 1;
+    private bool _advanced;
     private string _symbol = "VNM";
     private string? _msg;
     private string? _aiText;
@@ -233,41 +473,129 @@ else if (_sub == "review")
     private string _preThesis = "", _preSource = "", _preInvalid = "", _preMaxLoss = "", _preSize = "";
     private string _preStop = "", _preScenario = "", _prePressure = "";
     private List<SessionLog> _recentSessions = [];
+    private List<SimpleDecision> _recentDecisions = [];
+    private List<SimpleJournalEntry> _recentJournal = [];
     private SizeResult? _size;
     private decimal _capital = 100_000_000;
     private decimal _riskPct = 1;
     private decimal _price;
     private decimal _stop;
     private decimal _target;
+    private bool? _q1ViewedChart;
+    private bool? _q2HasStop;
+    private bool? _q3LossOk;
+    private string? _q4Motivation;
+    private bool? _q5KeepStop;
+    private (int Score, bool ShouldBuy, string Verdict, List<string> Warnings)? _eval;
+    private string _buyReason = VnDeskTemplates.BuyReasons[0];
+    private string _buyReasonCustom = "";
+    private string _decisionSummary = "";
+    private int _decisionShares;
+    private string _dayPlan = VnDeskTemplates.DayPlans[0];
+    private string _dayNote = "";
+    private string _jAction = "Mua";
+    private string _jOutcome = "Đang giữ";
+    private string _jMood = "Bình tĩnh";
+    private decimal _jPrice;
+    private int _jShares;
+    private string _jNextTime = "";
+    private string _jNote = "";
+
+    private decimal RiskAmountPreview => _capital * _riskPct / 100m;
+    private bool QuestionsAnswered =>
+        _q1ViewedChart.HasValue && _q2HasStop.HasValue && _q3LossOk.HasValue &&
+        !string.IsNullOrEmpty(_q4Motivation) && _q5KeepStop.HasValue;
 
     protected override void OnParametersSet()
     {
         _symbol = Symbol;
         _mode = Mode;
         _alertSignal = AlertSignal ?? _alertSignal;
-        if (_mode == "journal" && _sub is "size" or "pre" or "plan" or "alert")
-            _sub = InitialSubForJournal();
-        else if (_mode == "decide" && _sub is "session" or "review")
-            _sub = "size";
-
         if (TaPrice is > 0 && _price == 0) _price = TaPrice.Value;
         if (TaStop is > 0 && _stop == 0) _stop = TaStop.Value;
         if (TaTarget is > 0 && _target == 0) _target = TaTarget.Value;
+        if (HasTaData && _q1ViewedChart is null) _q1ViewedChart = true;
+        if (_stop > 0 && _q2HasStop is null) _q2HasStop = true;
     }
 
     protected override async Task OnInitializedAsync()
     {
-        var journal = await Store.GetJournalAsync();
-        _recentSessions = journal.Sessions.Where(s => s.At >= DateTime.Now.AddDays(-7)).ToList();
+        var adv = await JS.InvokeAsync<string?>("tradingAuth.getItem", AdvancedKey);
+        _advanced = adv == "1";
+        await LoadRecentAsync();
     }
 
-    private static string InitialSubForJournal() => "session";
+    private async Task LoadRecentAsync()
+    {
+        var journal = await Store.GetJournalAsync();
+        _recentSessions = journal.Sessions.Where(s => s.At >= DateTime.Now.AddDays(-7)).ToList();
+        _recentJournal = journal.SimpleEntries.Where(e => e.At >= DateTime.Now.AddDays(-7)).OrderByDescending(e => e.At).ToList();
+        var plans = await Store.GetPlansAsync();
+        _recentDecisions = plans.Decisions.OrderByDescending(d => d.At).Take(5).ToList();
+    }
+
+    private async Task ToggleAdvanced(ChangeEventArgs e)
+    {
+        _advanced = e.Value is true;
+        await JS.InvokeVoidAsync("tradingAuth.setItem", AdvancedKey, _advanced ? "1" : "0");
+        _msg = null;
+    }
+
+    private RenderFragment RenderYesNo(string label, bool? value, Action<bool> set) => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "ts-field mb-2");
+        builder.OpenElement(2, "label");
+        builder.AddAttribute(3, "class", "ts-label");
+        builder.AddContent(4, label);
+        builder.CloseElement();
+        builder.OpenElement(5, "div");
+        builder.AddAttribute(6, "style", "display:flex;gap:8px;flex-wrap:wrap");
+        builder.OpenElement(7, "button");
+        builder.AddAttribute(8, "class", $"ts-btn {(value == true ? "ts-btn-primary" : "ts-btn-outline")}");
+        builder.AddAttribute(9, "onclick", EventCallback.Factory.Create(this, () => { set(true); StateHasChanged(); }));
+        builder.AddContent(10, "Có");
+        builder.CloseElement();
+        builder.OpenElement(11, "button");
+        builder.AddAttribute(12, "class", $"ts-btn {(value == false ? "ts-btn-primary" : "ts-btn-outline")}");
+        builder.AddAttribute(13, "onclick", EventCallback.Factory.Create(this, () => { set(false); StateHasChanged(); }));
+        builder.AddContent(14, "Không");
+        builder.CloseElement();
+        builder.CloseElement();
+        builder.CloseElement();
+    };
+
+    private RenderFragment RenderJournalCards() => builder =>
+    {
+        if (_recentJournal.Count == 0) return;
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "ts-panel mt-2");
+        builder.OpenElement(2, "h4");
+        builder.AddAttribute(3, "style", "font-size:0.9rem;margin:0 0 0.75rem");
+        builder.AddContent(4, "7 ngày gần đây");
+        builder.CloseElement();
+        foreach (var e in _recentJournal)
+        {
+            builder.OpenElement(5, "div");
+            builder.AddAttribute(6, "style", "border:1px solid var(--ts-border,#333);border-radius:8px;padding:10px;margin-bottom:8px;font-size:0.82rem");
+            if (e.IsMorningOnly)
+                builder.AddContent(7, $"{e.At.ToLocalTime():g} — ☀️ {e.DayPlan}. {e.DayNote}");
+            else
+                builder.AddContent(8, $"{e.At.ToLocalTime():g} — {e.Symbol} {e.Action} | {e.Outcome} | {e.Mood}. {e.NextTime}");
+            builder.CloseElement();
+        }
+        builder.CloseElement();
+    };
+
+    private async Task GoAnalysis() => await OnGoToAnalysis.InvokeAsync();
 
     private void FillFromTa()
     {
         if (TaPrice is > 0) _price = TaPrice.Value;
         if (TaStop is > 0) _stop = TaStop.Value;
         if (TaTarget is > 0) _target = TaTarget.Value;
+        if (HasTaData) _q1ViewedChart = true;
+        if (_stop > 0) _q2HasStop = true;
     }
 
     private async Task CalcSize()
@@ -276,6 +604,122 @@ else if (_sub == "review")
         _size = Positions.Size(_capital, _riskPct, _price, _stop, tp);
         await OnSizeCalculated.InvokeAsync(_size);
         ApplySizeToForms();
+    }
+
+    private async Task CalcSizeAndNext()
+    {
+        await CalcSize();
+        if (_size is not null) _dStep = 2;
+    }
+
+    private void GoStep3()
+    {
+        _eval = VnNewbieScoring.Evaluate(_q1ViewedChart, _q2HasStop, _q3LossOk, _q4Motivation, _q5KeepStop, _size);
+        _decisionShares = _size?.Shares ?? 0;
+        var reason = _buyReason == "Khác (tự ghi)" ? _buyReasonCustom : _buyReason;
+        if (_size is not null)
+            _decisionSummary = VnDeskTemplates.BuildDecisionSummary(_symbol, _size, _eval.Value.ShouldBuy, reason, _eval.Value.Score);
+        _dStep = 3;
+    }
+
+    private async Task SaveSimpleDecision(bool willBuy)
+    {
+        if (_size is null) { _msg = "Chưa tính size — quay bước 1."; return; }
+        _eval ??= VnNewbieScoring.Evaluate(_q1ViewedChart, _q2HasStop, _q3LossOk, _q4Motivation, _q5KeepStop, _size);
+        var reason = _buyReason == "Khác (tự ghi)" ? _buyReasonCustom : _buyReason;
+        var decision = new SimpleDecision
+        {
+            Symbol = _symbol,
+            ShouldBuy = willBuy && _eval.Value.ShouldBuy,
+            Verdict = willBuy ? (_eval.Value.ShouldBuy ? "Có thể mua" : "Muốn mua nhưng chưa đủ điều kiện") : "Không mua",
+            DisciplineScore = _eval.Value.Score,
+            EntryPrice = _price,
+            StopLoss = _stop,
+            TakeProfit = _target,
+            Shares = _decisionShares,
+            RiskAmount = _size.RiskAmount,
+            Reason = reason,
+            Summary = _decisionSummary
+        };
+        var store = await Store.GetPlansAsync();
+        store.Decisions.Insert(0, decision);
+        store.Plans.Insert(0, new TradePlan
+        {
+            Symbol = _symbol,
+            EntryLogic = $"Giá {_price:N2}, {_decisionShares} CP",
+            ExitCriteria = _target > 0 ? $"Chốt lời {_target:N2}" : "Chưa chốt lời",
+            RiskParameters = $"Cắt lỗ {_stop:N2}, risk {_size.RiskAmount:N0}đ",
+            ThesisSummary = reason,
+            InvalidationConditions = decision.Verdict
+        });
+        await Store.SavePlansAsync(store);
+        var journal = await Store.GetJournalAsync();
+        journal.Sessions.Insert(0, new SessionLog { Notes = $"DECIDE {_symbol} buy={willBuy} | {decision.Verdict}" });
+        await Store.SaveJournalAsync(journal);
+        await LoadRecentAsync();
+        _msg = willBuy ? "Đã lưu quyết định mua. Sang tab E ghi nhật ký sau phiên nhé." : "Đã ghi — không mua lần này.";
+    }
+
+    private async Task SaveMorning()
+    {
+        var journal = await Store.GetJournalAsync();
+        journal.SimpleEntries.Insert(0, new SimpleJournalEntry
+        {
+            DayPlan = _dayPlan,
+            DayNote = _dayNote,
+            IsMorningOnly = true,
+            Note = _dayNote
+        });
+        await Store.SaveJournalAsync(journal);
+        await LoadRecentAsync();
+        _msg = "Đã lưu kế hoạch sáng.";
+    }
+
+    private async Task SaveTodayJournal()
+    {
+        var journal = await Store.GetJournalAsync();
+        journal.SimpleEntries.Insert(0, new SimpleJournalEntry
+        {
+            Symbol = _symbol,
+            Action = _jAction,
+            EntryPrice = _jPrice,
+            Shares = _jShares,
+            Outcome = _jOutcome,
+            Mood = _jMood,
+            NextTime = _jNextTime,
+            Note = _jNote
+        });
+        journal.Reviews.Insert(0, new TradeReview
+        {
+            Symbol = _symbol,
+            WhatHappened = $"{_jAction} {_jShares} CP @ {_jPrice:N2} — {_jOutcome}",
+            Learned = _jNextTime,
+            ProcessChange = $"Cảm xúc: {_jMood}. {_jNote}"
+        });
+        await Store.SaveJournalAsync(journal);
+        await LoadRecentAsync();
+        _msg = "Đã lưu nhật ký.";
+    }
+
+    private async Task FillFromLastDecision()
+    {
+        var plans = await Store.GetPlansAsync();
+        var last = plans.Decisions.FirstOrDefault();
+        if (last is null) { _msg = "Chưa có quyết định nào ở tab D."; return; }
+        _symbol = last.Symbol;
+        _jPrice = last.EntryPrice;
+        _jShares = last.Shares;
+        _msg = "Đã điền từ tờ D gần nhất.";
+        await Task.CompletedTask;
+    }
+
+    private async Task AiJournalHint()
+    {
+        _aiBusy = true;
+        var notes = $"{_jAction} {_symbol} @ {_jPrice:N2}, kết quả {_jOutcome}, cảm xúc {_jMood}. Lần sau: {_jNextTime}";
+        _aiText = await Api.ChatAsync(PromptLibrary.Journal(_symbol, notes)) ?? "AI không khả dụng.";
+        _aiBusy = false;
+        _msg = "Gợi ý AI — tham khảo, không bắt buộc.";
     }
 
     private void ApplySizeToForms()
@@ -289,42 +733,28 @@ else if (_sub == "review")
     private void FillPreTradeTemplate()
     {
         var t = VnDeskTemplates.PreTrade(_symbol);
-        _preThesis = t.Thesis;
-        _preSource = t.SourceData;
-        _preInvalid = t.Invalidation;
-        _preMaxLoss = t.MaxLoss;
-        if (string.IsNullOrWhiteSpace(_preSize)) _preSize = t.PositionSizeLogic;
-        _preStop = t.StopConditions;
-        _preScenario = t.ScenarioChange;
+        _preThesis = t.Thesis; _preSource = t.SourceData; _preInvalid = t.Invalidation;
+        _preMaxLoss = t.MaxLoss; _preStop = t.StopConditions; _preScenario = t.ScenarioChange;
         _prePressure = t.WithoutPressure;
-        if (_size is not null && !_size.NoTrade)
-            _preSize = $"Size {_size.Shares} CP, R:R {_size.RiskReward:N2}";
+        if (string.IsNullOrWhiteSpace(_preSize)) _preSize = t.PositionSizeLogic;
+        if (_size is not null && !_size.NoTrade) _preSize = $"Size {_size.Shares} CP, R:R {_size.RiskReward:N2}";
     }
 
     private void FillPlanTemplate()
     {
         var t = VnDeskTemplates.Plan(_symbol, _price > 0 ? _price : TaPrice, _stop > 0 ? _stop : TaStop);
-        _planEntry = t.EntryLogic;
-        _planExit = t.ExitCriteria;
-        if (string.IsNullOrWhiteSpace(_planRisk)) _planRisk = t.RiskParameters;
-        _planThesis = t.ThesisSummary;
+        _planEntry = t.EntryLogic; _planExit = t.ExitCriteria; _planThesis = t.ThesisSummary;
         _planInvalid = t.Invalidation;
+        if (string.IsNullOrWhiteSpace(_planRisk)) _planRisk = t.RiskParameters;
     }
 
     private async Task SavePreTrade(bool confirmed)
     {
         var c = new PreTradeChecklist
         {
-            Symbol = _symbol,
-            Thesis = _preThesis,
-            SourceData = _preSource,
-            Invalidation = _preInvalid,
-            MaxLoss = _preMaxLoss,
-            PositionSizeLogic = _preSize,
-            StopConditions = _preStop,
-            ScenarioChange = _preScenario,
-            WithoutPressure = _prePressure,
-            Confirmed = confirmed
+            Symbol = _symbol, Thesis = _preThesis, SourceData = _preSource, Invalidation = _preInvalid,
+            MaxLoss = _preMaxLoss, PositionSizeLogic = _preSize, StopConditions = _preStop,
+            ScenarioChange = _preScenario, WithoutPressure = _prePressure, Confirmed = confirmed
         };
         Checklist.Set(c);
         var journal = await Store.GetJournalAsync();
@@ -338,12 +768,8 @@ else if (_sub == "review")
         var store = await Store.GetPlansAsync();
         store.Plans.Insert(0, new TradePlan
         {
-            Symbol = _symbol,
-            EntryLogic = _planEntry,
-            ExitCriteria = _planExit,
-            RiskParameters = _planRisk,
-            ThesisSummary = _planThesis,
-            InvalidationConditions = _planInvalid
+            Symbol = _symbol, EntryLogic = _planEntry, ExitCriteria = _planExit,
+            RiskParameters = _planRisk, ThesisSummary = _planThesis, InvalidationConditions = _planInvalid
         });
         await Store.SavePlansAsync(store);
         _msg = "Đã lưu plan.";
@@ -370,11 +796,8 @@ else if (_sub == "review")
         var journal = await Store.GetJournalAsync();
         journal.Sessions.Insert(0, new SessionLog
         {
-            Calendar = _sessCalendar,
-            WatchlistFlags = _sessWatch,
-            Risks = _sessRisks,
-            SessionPlan = _sessPlan,
-            StopTime = _sessStop
+            Calendar = _sessCalendar, WatchlistFlags = _sessWatch, Risks = _sessRisks,
+            SessionPlan = _sessPlan, StopTime = _sessStop
         });
         await Store.SaveJournalAsync(journal);
         _recentSessions = journal.Sessions.Where(s => s.At >= DateTime.Now.AddDays(-7)).ToList();
@@ -396,10 +819,7 @@ else if (_sub == "review")
         var journal = await Store.GetJournalAsync();
         journal.Reviews.Insert(0, new TradeReview
         {
-            Symbol = _symbol,
-            WhatHappened = _revHappened,
-            Learned = _revLearned,
-            ProcessChange = _revProcess
+            Symbol = _symbol, WhatHappened = _revHappened, Learned = _revLearned, ProcessChange = _revProcess
         });
         await Store.SaveJournalAsync(journal);
         _msg = "Review đã lưu.";
