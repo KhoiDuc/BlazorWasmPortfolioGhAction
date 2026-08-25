@@ -26,21 +26,25 @@
                                aria-label="Search tools" />
                     </div>
 
-                    <div class="utility-deck-pills" role="tablist" aria-label="Tool categories">
+            @if (Component == null)
+            {
+                <div class="utility-deck-pills" role="tablist" aria-label="Tool categories">
+                    <button type="button"
+                            class="utility-pill @(_activeCategory == null ? "is-active" : "")"
+                            @onclick="SelectAllCategories">
+                        All
+                    </button>
+                    @foreach (var category in Categories)
+                    {
+                        var cat = category;
                         <button type="button"
-                                class="utility-pill @(_activeCategory == null ? "is-active" : "")"
-                                @onclick="() => SelectCategory(null)">
-                            All
+                                class="utility-pill @(_activeCategory == cat ? "is-active" : "")"
+                                @onclick="() => SelectCategory(cat)">
+                            @cat
                         </button>
-                        @foreach (var category in Categories)
-                        {
-                            <button type="button"
-                                    class="utility-pill @(_activeCategory == category ? "is-active" : "")"
-                                    @onclick="() => SelectCategory(category)">
-                                @category
-                            </button>
-                        }
-                    </div>
+                    }
+                </div>
+            }
                 </div>
             </header>
 
@@ -162,9 +166,13 @@
         }
     }
 
+    private void SelectAllCategories() => SelectCategory(null);
+
     private void SelectCategory(string? category)
     {
         _activeCategory = category;
+        if (Component is not null)
+            Navigation.NavigateTo("Utility");
     }
 
     private void OnToolSwitch(ChangeEventArgs e)

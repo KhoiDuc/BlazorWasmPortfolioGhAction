@@ -3,7 +3,6 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading
 @using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
 @using BlazorWasmPortfolioGhAction.Services.Trading
-@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
 @using System.Text.Json
 @inject ITradingApiClient Api
 
@@ -19,9 +18,7 @@
         <div class="ts-tabs">
             <button class="ts-tab @(_main == "desk" ? "active" : "")" @onclick='() => SetMain("desk")'>VnDesk</button>
             <button class="ts-tab @(_main == "scan" ? "active" : "")" @onclick='() => SetMain("scan")'>Scan</button>
-            <button class="ts-tab @(_main == "sector" ? "active" : "")" @onclick='() => _main = "sector"'>Sector</button>
-            <button class="ts-tab @(_main == "rrg" ? "active" : "")" @onclick='() => _main = "rrg"'>VN RRG</button>
-            <button class="ts-tab @(_main == "global" ? "active" : "")" @onclick='() => SetMain("global")'>Global</button>
+            <button class="ts-tab @(_main == "rrg" ? "active" : "")" @onclick='() => SetMain("rrg")'>VN RRG</button>
         </div>
     </div>
 
@@ -137,52 +134,12 @@
             <PriceAlertWidget Symbol="@_selectedStock" AssetType="stock" />
         }
     }
-    else if (_main == "sector")
-    {
-        <div class="ts-panel">
-            <div class="ts-header"><div><h2>VN Sector Categories</h2><p>Vietstock sector heatmap</p></div></div>
-            <select class="ts-select" @bind="_sectorUrl">
-                <option value="https://finance.vietstock.vn/chi-so-nganh.htm">Sector Index</option>
-                <option value="https://finance.vietstock.vn/doanh-nghiep-nhom-nganh.htm">Industry Groups</option>
-            </select>
-            <iframe src="@_sectorUrl" width="100%" height="520" style="border:1px solid #e2e8f0;border-radius:12px;margin-top:0.75rem" title="Vietstock sectors"></iframe>
-        </div>
-    }
-    else if (_main == "rrg")
+    else
     {
         <div class="ts-panel">
             <img src="@Api.ProxyUrl("vnstock_rrgchart")" alt="VN RRG" class="ts-rrg-img" loading="lazy" />
             <button class="ts-btn ts-btn-primary mt-3" @onclick="ScanRrg">Refresh</button>
         </div>
-    }
-    else
-    {
-        <div class="ts-panel">
-            <div class="ts-header">
-                <h2>Global Stocks</h2>
-                <button class="ts-btn ts-btn-primary" @onclick="ScanWorld">Scan World</button>
-            </div>
-            @if (_worldData?.Data?.Length > 0)
-            {
-                <table class="ts-table">
-                    <thead><tr><th>Symbol</th><th>Country</th><th></th></tr></thead>
-                    <tbody>
-                        @foreach (var w in _worldData.Data)
-                        {
-                            <tr>
-                                <td><strong>@w.Symbol</strong></td>
-                                <td>@w.Country</td>
-                                <td><button class="ts-btn ts-btn-outline" style="padding:2px 8px;font-size:0.72rem" @onclick="() => _globalSymbol = w.Symbol">Chart</button></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-        </div>
-        @if (!string.IsNullOrEmpty(_globalSymbol))
-        {
-            <TradingViewChart Symbol="@_globalSymbol" />
-        }
     }
 </div>
 
@@ -190,17 +147,13 @@
     private string _main = "desk";
     private string _desk = "market";
     private WatchlistResponse<StockSignal>? _vnData;
-    private WatchlistResponse<WorldStock>? _worldData;
     private string _selectedStock = "VNM";
-    private string _globalSymbol = "";
-    private string _sectorUrl = "https://finance.vietstock.vn/chi-so-nganh.htm";
     private JsonElement? _tcbsJson;
     private string _filter = "";
     private string _signalFilter = "";
     private bool _scanning;
     private bool _loading;
     private bool _dailyBusy;
-    private SizeResult? _lastSize;
     private string? _alertSignal;
     private VnAnalysisPanel? _analysis;
 
@@ -218,17 +171,13 @@
     private void SetMain(string tab)
     {
         _main = tab;
-        if (tab == "scan" && _vnData is null) _ = LoadScanAsync();
-        if (tab == "global" && _worldData is null) _ = LoadWorldAsync();
+        if (tab == "scan" && _vnData is null)
+            _ = LoadScanAsync();
     }
 
     private async Task LoadInBackgroundAsync()
     {
-        try
-        {
-            _vnData = await Api.GetPotentialSymbolsAsync();
-            _worldData = await Api.GetPotentialWorldSymbolsAsync();
-        }
+        try { _vnData = await Api.GetPotentialSymbolsAsync(); }
         catch { }
         await InvokeAsync(StateHasChanged);
     }
@@ -242,20 +191,13 @@
         finally { _loading = false; await InvokeAsync(StateHasChanged); }
     }
 
-    private async Task LoadWorldAsync()
-    {
-        try { _worldData = await Api.GetPotentialWorldSymbolsAsync(); }
-        catch { }
-        await InvokeAsync(StateHasChanged);
-    }
-
     private void SelectSymbol(string sym)
     {
         _selectedStock = sym.Trim().ToUpperInvariant();
         _alertSignal = $"{_selectedStock} selected from screener/market";
     }
 
-    private void OnSizeCalculated(SizeResult? size) => _lastSize = size;
+    private void OnSizeCalculated(SizeResult? size) { }
 
     private Task OnThesisReady(string thesis)
     {
@@ -275,12 +217,6 @@
         await Api.RunSshScriptAsync("vnstock_potential");
         await LoadScanAsync();
         _scanning = false;
-    }
-
-    private async Task ScanWorld()
-    {
-        await Api.RunSshScriptAsync("world_potential");
-        await LoadWorldAsync();
     }
 
     private Task ScanRrg() => Api.RunSshScriptAsync("vnstock_rrg");
