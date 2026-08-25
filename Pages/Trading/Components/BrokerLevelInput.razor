@@ -1,18 +1,23 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading.Broker
 
-<div class="ts-field">
-    <label class="ts-label" for="@Id">@Label</label>
-    <span class="ts-field-hint">@ActiveHint</span>
-    <div class="broker-level-mode">
-        <button type="button"
-                class="broker-mode-btn @(Mode == BrokerLevelInputMode.Price ? "active" : "")"
-                @onclick='() => SetMode(BrokerLevelInputMode.Price)'>Giá trị</button>
-        <button type="button"
-                class="broker-mode-btn @(Mode == BrokerLevelInputMode.Percent ? "active" : "")"
-                @onclick='() => SetMode(BrokerLevelInputMode.Percent)'>%</button>
+<div class="broker-field @CssClass">
+    <div class="broker-field-top">
+        <label class="broker-field-label" for="@Id">@Label</label>
+        <div class="broker-level-mode" role="group" aria-label="@Label mode">
+            <button type="button"
+                    class="broker-mode-btn @(Mode == BrokerLevelInputMode.Price ? "active" : "")"
+                    @onclick='() => SetMode(BrokerLevelInputMode.Price)'>Giá</button>
+            <button type="button"
+                    class="broker-mode-btn @(Mode == BrokerLevelInputMode.Percent ? "active" : "")"
+                    @onclick='() => SetMode(BrokerLevelInputMode.Percent)'>%</button>
+        </div>
     </div>
+    @if (!Compact && !string.IsNullOrWhiteSpace(ActiveHint))
+    {
+        <p class="broker-field-hint">@ActiveHint</p>
+    }
     <input id="@Id"
-           class="ts-input @(Invalid ? "ts-input-invalid" : "")"
+           class="ts-input broker-field-input @(Invalid ? "ts-input-invalid" : "")"
            type="number"
            min="0.0001"
            step="any"
@@ -21,7 +26,7 @@
            @bind:after="NotifyChanged" />
     @if (ShowPreview)
     {
-        <p class="ts-field-hint">≈ @ResolvedPrice:N2 (từ giá mua @BuyPrice:N2)</p>
+        <p class="broker-field-preview">≈ @ResolvedPrice:N2 từ giá @BuyPrice:N2</p>
     }
     @if (!string.IsNullOrEmpty(Error))
     {
@@ -44,6 +49,8 @@
     [Parameter] public bool IsStop { get; set; }
     [Parameter] public string? Error { get; set; }
     [Parameter] public bool Invalid { get; set; }
+    [Parameter] public bool Compact { get; set; }
+    [Parameter] public string? CssClass { get; set; }
 
     private string ActiveHint => Mode == BrokerLevelInputMode.Percent ? HintPercent : HintPrice;
     private string ActivePlaceholder => Mode == BrokerLevelInputMode.Percent ? PlaceholderPercent : PlaceholderPrice;

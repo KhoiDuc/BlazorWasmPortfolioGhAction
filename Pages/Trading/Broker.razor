@@ -35,20 +35,24 @@
         <div class="ts-alert @(_messageError ? "ts-alert-error" : "ts-alert-info") broker-alert">@_message</div>
     }
 
-    <div class="broker-layout">
-        <aside class="broker-sidebar">
-            <div class="ts-panel broker-form-card">
-                <div class="broker-form-card-head">
+    <div class="broker-stack">
+        <section class="ts-panel broker-form-card">
+            <div class="broker-form-card-head">
+                <span class="broker-form-icon" aria-hidden="true">+</span>
+                <div>
                     <h3 class="ts-panel-title">Ghi khuyến nghị</h3>
-                    <span class="broker-form-card-sub">Thêm lần mua mới từ broker</span>
+                    <span class="broker-form-card-sub">Mỗi lần broker khuyên mua → thêm 1 dòng vào danh mục bên dưới</span>
                 </div>
+            </div>
 
-                <div class="broker-form-row broker-form-row-3">
-                    <div class="ts-field">
-                        <label class="ts-label" for="broker-symbol">Mã CP</label>
+            <div class="broker-form-blocks">
+                <section class="broker-block">
+                    <h4 class="broker-block-title">Thông tin mua</h4>
+                    <div class="broker-field broker-field-symbol">
+                        <label class="broker-field-label" for="broker-symbol">Mã cổ phiếu</label>
                         <input id="broker-symbol"
-                               class='ts-input @FieldClass("symbol")'
-                               placeholder="VNM"
+                               class='ts-input broker-input-symbol @FieldClass("symbol")'
+                               placeholder="VD: VNM, HPG"
                                @bind="_newSymbol"
                                @bind:event="oninput"
                                @bind:after="OnSymbolInput"
@@ -63,104 +67,113 @@
                             <p class="ts-field-error">@errSymbol</p>
                         }
                     </div>
-                    <div class="ts-field">
-                        <label class="ts-label" for="broker-price">Giá mua</label>
-                        <input id="broker-price"
-                               class='ts-input @FieldClass("price")'
-                               placeholder="60.5"
-                               type="number"
-                               min="0.0001"
-                               step="any"
-                               required
-                               @bind="_newPrice"
-                               @bind:after='() => ClearFieldError("price")' />
-                        @if (_fieldErrors.TryGetValue("price", out var errPrice))
+                    <div class="broker-form-row broker-form-row-2">
+                        <div class="broker-field">
+                            <label class="broker-field-label" for="broker-price">Giá mua</label>
+                            <input id="broker-price"
+                                   class='ts-input @FieldClass("price")'
+                                   placeholder="60.5"
+                                   type="number"
+                                   min="0.0001"
+                                   step="any"
+                                   required
+                                   @bind="_newPrice"
+                                   @bind:after='() => ClearFieldError("price")' />
+                            @if (_fieldErrors.TryGetValue("price", out var errPrice))
+                            {
+                                <p class="ts-field-error">@errPrice</p>
+                            }
+                        </div>
+                        <div class="broker-field">
+                            <label class="broker-field-label" for="broker-qty">Khối lượng <span class="broker-optional">tùy chọn</span></label>
+                            <input id="broker-qty"
+                                   class='ts-input @FieldClass("qty")'
+                                   placeholder="100"
+                                   type="number"
+                                   min="0.0001"
+                                   step="any"
+                                   @bind="_newQty"
+                                   @bind:after='() => ClearFieldError("qty")' />
+                            @if (_fieldErrors.TryGetValue("qty", out var errQty))
+                            {
+                                <p class="ts-field-error">@errQty</p>
+                            }
+                        </div>
+                    </div>
+                </section>
+
+                <section class="broker-block">
+                    <h4 class="broker-block-title">Mục tiêu &amp; cắt lỗ</h4>
+                    <p class="broker-block-desc">Để trống nếu broker chưa nói — có thể bổ sung sau.</p>
+                    <div class="broker-level-stack">
+                        <BrokerLevelInput Id="broker-target"
+                                          CssClass="broker-level-target"
+                                          Label="Mục tiêu"
+                                          HintPrice="Giá chốt lời"
+                                          HintPercent="VD +10% → nhập 10"
+                                          PlaceholderPrice="65.5"
+                                          PlaceholderPercent="10"
+                                          Compact="true"
+                                          @bind-Mode="_targetMode"
+                                          @bind-Input="_targetInput"
+                                          @bind-Input:after='() => ClearFieldError("target")'
+                                          BuyPrice="_newPrice"
+                                          IsStop="false"
+                                          Error="@(_fieldErrors.GetValueOrDefault("target"))"
+                                          Invalid="@_fieldErrors.ContainsKey("target")" />
+                        <BrokerLevelInput Id="broker-stop"
+                                          CssClass="broker-level-stop"
+                                          Label="Cắt lỗ"
+                                          HintPrice="Giá cắt lỗ"
+                                          HintPercent="VD -5% → nhập 5"
+                                          PlaceholderPrice="55.5"
+                                          PlaceholderPercent="5"
+                                          Compact="true"
+                                          @bind-Mode="_stopMode"
+                                          @bind-Input="_stopInput"
+                                          @bind-Input:after='() => ClearFieldError("stop")'
+                                          BuyPrice="_newPrice"
+                                          IsStop="true"
+                                          Error="@(_fieldErrors.GetValueOrDefault("stop"))"
+                                          Invalid="@_fieldErrors.ContainsKey("stop")" />
+                    </div>
+                </section>
+
+                <section class="broker-block broker-block-note">
+                    <h4 class="broker-block-title">Note broker</h4>
+                    <div class="broker-field broker-field-grow">
+                        <textarea id="broker-note"
+                                  class='ts-input ts-textarea broker-textarea @FieldClass("note")'
+                                  placeholder="Ghi đúng lời broker: lý do mua, vùng giá, kỳ vọng…"
+                                  rows="5"
+                                  maxlength="@BrokerInputValidation.NoteMaxLen"
+                                  @bind="_newNote"
+                                  @bind:after='() => ClearFieldError("note")'></textarea>
+                        @if (_fieldErrors.TryGetValue("note", out var errNote))
                         {
-                            <p class="ts-field-error">@errPrice</p>
+                            <p class="ts-field-error">@errNote</p>
                         }
                     </div>
-                    <div class="ts-field">
-                        <label class="ts-label" for="broker-qty">KL <span class="ts-muted">(tùy chọn)</span></label>
-                        <input id="broker-qty"
-                               class='ts-input @FieldClass("qty")'
-                               placeholder="100"
-                               type="number"
-                               min="0.0001"
-                               step="any"
-                               @bind="_newQty"
-                               @bind:after='() => ClearFieldError("qty")' />
-                        @if (_fieldErrors.TryGetValue("qty", out var errQty))
-                        {
-                            <p class="ts-field-error">@errQty</p>
-                        }
-                    </div>
-                </div>
-
-                <div class="broker-form-row broker-form-row-2">
-                    <BrokerLevelInput Id="broker-target"
-                                      Label="Mục tiêu"
-                                      HintPrice="Giá chốt lời — để trống nếu chưa có"
-                                      HintPercent="VD broker nói +10% → nhập 10"
-                                      PlaceholderPrice="65.5"
-                                      PlaceholderPercent="10"
-                                      @bind-Mode="_targetMode"
-                                      @bind-Input="_targetInput"
-                                      @bind-Input:after='() => ClearFieldError("target")'
-                                      BuyPrice="_newPrice"
-                                      IsStop="false"
-                                      Error="@(_fieldErrors.GetValueOrDefault("target"))"
-                                      Invalid="@_fieldErrors.ContainsKey("target")" />
-                    <BrokerLevelInput Id="broker-stop"
-                                      Label="Cắt lỗ"
-                                      HintPrice="Giá cắt — để trống nếu chưa có"
-                                      HintPercent="VD broker nói -5% → nhập 5"
-                                      PlaceholderPrice="55.5"
-                                      PlaceholderPercent="5"
-                                      @bind-Mode="_stopMode"
-                                      @bind-Input="_stopInput"
-                                      @bind-Input:after='() => ClearFieldError("stop")'
-                                      BuyPrice="_newPrice"
-                                      IsStop="true"
-                                      Error="@(_fieldErrors.GetValueOrDefault("stop"))"
-                                      Invalid="@_fieldErrors.ContainsKey("stop")" />
-                </div>
-
-                <div class="ts-field">
-                    <label class="ts-label" for="broker-note">Note broker</label>
-                    <textarea id="broker-note"
-                              class='ts-input ts-textarea @FieldClass("note")'
-                              placeholder="Ghi đúng lời broker cho lần mua này…"
-                              rows="3"
-                              maxlength="@BrokerInputValidation.NoteMaxLen"
-                              @bind="_newNote"
-                              @bind:after='() => ClearFieldError("note")'></textarea>
-                    @if (_fieldErrors.TryGetValue("note", out var errNote))
-                    {
-                        <p class="ts-field-error">@errNote</p>
-                    }
-                </div>
-
-                <button class="ts-btn ts-btn-primary broker-submit" @onclick="AddRecommendation" disabled="@_busy">
-                    @( _busy ? "Đang lưu…" : "Thêm khuyến nghị" )
-                </button>
+                    <button class="ts-btn ts-btn-primary broker-submit" @onclick="AddRecommendation" disabled="@_busy">
+                        @( _busy ? "Đang lưu…" : "Thêm khuyến nghị" )
+                    </button>
+                </section>
             </div>
-        </aside>
+        </section>
 
-        <main class="broker-main">
-            @if (_loading)
-            {
-                <div class="ts-panel broker-loading"><div class="ts-spinner"></div></div>
-            }
-            else
-            {
-                <BrokerWatchlistTable @key="_portfolioRevision"
-                                      Portfolio="_portfolio"
-                                      Quotes="_quotes"
-                                      SelectedSymbol="@_selected"
-                                      PriceBusy="_priceBusy"
-                                      OnSelect="SelectSymbol" />
-            }
-        </main>
+        @if (_loading)
+        {
+            <div class="ts-panel broker-loading"><div class="ts-spinner"></div></div>
+        }
+        else
+        {
+            <BrokerWatchlistTable @key="_portfolioRevision"
+                                  Portfolio="_portfolio"
+                                  Quotes="_quotes"
+                                  SelectedSymbol="@_selected"
+                                  PriceBusy="_priceBusy"
+                                  OnSelect="SelectSymbol" />
+        }
     </div>
 
     @if (Selected is not null)
