@@ -1,78 +1,87 @@
-<div class="ts-panel ts-table-wrap">
+<div class="ts-panel ts-table-wrap broker-watchlist">
     <div class="broker-table-head">
-        <h3 class="ts-panel-title" style="margin:0">
-            Danh mục khuyến nghị
+        <div>
+            <h3 class="ts-panel-title broker-table-title">Danh mục khuyến nghị</h3>
             @if ((Portfolio.Positions?.Count ?? 0) > 0)
             {
-                <span class="ts-muted" style="font-size:0.85rem;font-weight:normal">(@Portfolio.Positions!.Count mã)</span>
+                <span class="broker-table-count">@Portfolio.Positions!.Count mã · bấm dòng để xem chi tiết</span>
             }
-        </h3>
+        </div>
         @if (PriceBusy)
         {
-            <span class="ts-muted" style="font-size:0.8rem">Đang lấy giá…</span>
+            <span class="broker-table-sync">Đang lấy giá…</span>
         }
     </div>
+
     @if ((Portfolio.Positions?.Count ?? 0) == 0)
     {
-        <p class="ts-empty" style="padding:1.5rem">Chưa có mã. Ghi khuyến nghị broker phía trên — bảng sẽ hiện sau lần đầu.</p>
+        <div class="broker-empty">
+            <p class="broker-empty-title">Chưa có mã nào</p>
+            <p class="broker-empty-sub">Ghi khuyến nghị bên trái hoặc Import JSON — bảng sẽ hiện sau lần đầu.</p>
+        </div>
     }
     else
     {
-        <table class="ts-table broker-table">
-            <thead>
-                <tr>
-                    <th>Ngành</th>
-                    <th>Mã CP</th>
-                    <th>Giá mua</th>
-                    <th>Giá TB</th>
-                    <th>Hiện tại</th>
-                    <th>%Lãi/Lỗ</th>
-                    <th>Cắt lỗ</th>
-                    <th>Mục tiêu</th>
-                    <th>Trạng thái</th>
-                    <th>Note</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var p in Portfolio.Positions.OrderBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase))
-                {
-                    var current = Quote(p.Symbol);
-                    var pnl = p.PnlPct(current);
-                    <tr class="@(p.Symbol.Equals(SelectedSymbol, StringComparison.OrdinalIgnoreCase) ? "selected" : "")"
-                        @onclick="() => OnSelect.InvokeAsync(p.Symbol)">
-                        <td>@DisplaySector(p.Sector)</td>
-                        <td><strong>@p.Symbol</strong></td>
-                        <td>
-                            <div class="broker-lots">
-                                @foreach (var (lot, i) in p.Buys.OrderBy(b => b.BoughtAt).Select((b, i) => (b, i)))
-                                {
-                                    <span class="broker-lot-chip" title="@LotTitle(lot)">L@(i + 1) @lot.Price.ToString("N2")</span>
-                                }
-                            </div>
-                        </td>
-                        <td>@(p.AvgBuy?.ToString("N2") ?? "—")</td>
-                        <td>@(current?.ToString("N2") ?? "—")</td>
-                        <td class="@(pnl is > 0 ? "ts-positive" : pnl is < 0 ? "ts-negative" : "")">
-                            @(pnl is null ? "—" : $"{pnl.Value:N2}%")
-                        </td>
-                        <td class="broker-stop">@BrokerLevelHelper.FormatDisplay(p.StopLoss, p.StopLossMode, p.StopLossInput, isStop: true)</td>
-                        <td class="broker-target">@BrokerLevelHelper.FormatDisplay(p.TargetPrice, p.TargetPriceMode, p.TargetPriceInput, isStop: false)</td>
-                        <td>
-                            @if (p.Status == BrokerPositionStatus.ChuaQuyet)
-                            {
-                                <span class="ts-muted">—</span>
-                            }
-                            else
-                            {
-                                <span class="ts-signal broker-status-@p.Status">@BrokerStatusLabels.Vi(p.Status)</span>
-                            }
-                        </td>
-                        <td class="broker-note-cell">@DisplayLatestNote(p)</td>
+        <div class="broker-table-scroll">
+            <table class="ts-table broker-table">
+                <thead>
+                    <tr>
+                        <th>Mã</th>
+                        <th>Ngành</th>
+                        <th>Lần mua</th>
+                        <th>Giá TB</th>
+                        <th>Hiện tại</th>
+                        <th>% Lãi/Lỗ</th>
+                        <th>Cắt lỗ</th>
+                        <th>Mục tiêu</th>
+                        <th>TT</th>
+                        <th>Note</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-        <p class="ts-muted" style="font-size:0.78rem;margin:0.75rem 0 0">%Lãi/Lỗ = (giá hiện tại − giá TB) / giá TB. Mỗi lần broker khuyên mua thêm → thêm dòng L2, L3… → giá TB đổi.</p>
+                </thead>
+                <tbody>
+                    @foreach (var p in Portfolio.Positions!.OrderBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase))
+                    {
+                        var current = Quote(p.Symbol);
+                        var pnl = p.PnlPct(current);
+                        var selected = p.Symbol.Equals(SelectedSymbol, StringComparison.OrdinalIgnoreCase);
+                        <tr class="@(selected ? "selected" : "")"
+                            @onclick="() => OnSelect.InvokeAsync(p.Symbol)">
+                            <td>
+                                <span class="broker-symbol">@p.Symbol</span>
+                            </td>
+                            <td class="broker-sector">@DisplaySector(p.Sector)</td>
+                            <td>
+                                <div class="broker-lots">
+                                    @foreach (var (lot, idx) in p.Buys.OrderBy(b => b.BoughtAt).Select((b, idx) => (b, idx)))
+                                    {
+                                        <span class="broker-lot-chip" title="@LotTitle(lot)">L@(idx + 1) @lot.Price.ToString("N2")</span>
+                                    }
+                                </div>
+                            </td>
+                            <td class="broker-num">@(p.AvgBuy?.ToString("N2") ?? "—")</td>
+                            <td class="broker-num">@(current?.ToString("N2") ?? "—")</td>
+                            <td class="broker-num @(pnl is > 0 ? "ts-positive" : pnl is < 0 ? "ts-negative" : "")">
+                                @(pnl is null ? "—" : $"{pnl.Value:N2}%")
+                            </td>
+                            <td class="broker-num broker-stop">@BrokerLevelHelper.FormatDisplay(p.StopLoss, p.StopLossMode, p.StopLossInput, isStop: true)</td>
+                            <td class="broker-num broker-target">@BrokerLevelHelper.FormatDisplay(p.TargetPrice, p.TargetPriceMode, p.TargetPriceInput, isStop: false)</td>
+                            <td>
+                                @if (p.Status == BrokerPositionStatus.ChuaQuyet)
+                                {
+                                    <span class="broker-status-pill broker-status-muted">—</span>
+                                }
+                                else
+                                {
+                                    <span class="broker-status-pill broker-status-@p.Status">@BrokerStatusLabels.Vi(p.Status)</span>
+                                }
+                            </td>
+                            <td class="broker-note-cell">@DisplayLatestNote(p)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="broker-table-foot">% Lãi/Lỗ = (giá hiện tại − giá TB) / giá TB · Mỗi lần mua thêm → L2, L3… → giá TB đổi.</p>
     }
 </div>
 

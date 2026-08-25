@@ -1,35 +1,71 @@
 @inject IBrokerGeminiClient Gemini
 
-<div class="ts-panel">
-    <div class="ts-header" style="margin-bottom:1rem">
-        <div>
-            <h3 class="ts-panel-title" style="margin:0">Chi tiết @Position.Symbol</h3>
-            <p class="ts-muted" style="font-size:0.82rem;margin:0.2rem 0 0">Sửa lần mua cũ, chọn trạng thái, thêm note / AI giải thích.</p>
+<div class="ts-panel broker-detail">
+    @{
+        var pnl = Position.PnlPct(CurrentPrice);
+    }
+
+    <div class="broker-detail-hero">
+        <div class="broker-detail-hero-main">
+            <span class="broker-detail-symbol">@Position.Symbol</span>
+            @if (!string.IsNullOrWhiteSpace(Position.Sector))
+            {
+                <span class="broker-detail-sector">@Position.Sector</span>
+            }
+            @if (Position.Status != BrokerPositionStatus.ChuaQuyet)
+            {
+                <span class="broker-status-pill broker-status-@Position.Status">@BrokerStatusLabels.Vi(Position.Status)</span>
+            }
         </div>
-        <button class="ts-btn ts-btn-outline" @onclick="Delete">Xóa mã</button>
+        <button class="ts-btn ts-btn-outline ts-btn-sm broker-detail-delete" type="button" @onclick="Delete">Xóa mã</button>
     </div>
 
-    <div class="broker-form-grid">
-        <div class="ts-field">
-            <label class="ts-label">Ngành</label>
-            <span class="ts-field-hint">Tự điền khi thêm mã; sửa nếu cần</span>
-            <input class="ts-input" placeholder="Ngân hàng, Bán lẻ…" @bind="Position.Sector" @bind:event="oninput" @bind:after="Changed" maxlength="80" />
+    <div class="broker-detail-stats">
+        <div class="broker-stat">
+            <span class="broker-stat-label">Giá TB</span>
+            <span class="broker-stat-value">@(Position.AvgBuy?.ToString("N2") ?? "—")</span>
         </div>
-        <div class="ts-field">
-            <label class="ts-label">Trạng thái</label>
-            <span class="ts-field-hint">Chọn sau khi đã theo dõi / vào lệnh</span>
-            <select class="ts-select" @bind="Position.Status" @bind:after="Changed">
-                @foreach (var s in Enum.GetValues<BrokerPositionStatus>())
-                {
-                    <option value="@s">@BrokerStatusLabels.Vi(s)</option>
-                }
-            </select>
+        <div class="broker-stat">
+            <span class="broker-stat-label">Hiện tại</span>
+            <span class="broker-stat-value">@(CurrentPrice?.ToString("N2") ?? "—")</span>
+        </div>
+        <div class="broker-stat">
+            <span class="broker-stat-label">% Lãi/Lỗ</span>
+            <span class="broker-stat-value @(pnl is > 0 ? "ts-positive" : pnl is < 0 ? "ts-negative" : "")">
+                @(pnl is null ? "—" : $"{pnl.Value:N2}%")
+            </span>
+        </div>
+        <div class="broker-stat">
+            <span class="broker-stat-label">Cắt lỗ</span>
+            <span class="broker-stat-value broker-stop">@BrokerLevelHelper.FormatDisplay(Position.StopLoss, Position.StopLossMode, Position.StopLossInput, isStop: true)</span>
+        </div>
+        <div class="broker-stat">
+            <span class="broker-stat-label">Mục tiêu</span>
+            <span class="broker-stat-value broker-target">@BrokerLevelHelper.FormatDisplay(Position.TargetPrice, Position.TargetPriceMode, Position.TargetPriceInput, isStop: false)</span>
         </div>
     </div>
-    <div class="broker-form-stack" style="max-width:480px;margin-top:0.5rem">
+
+    <div class="broker-detail-section">
+        <h4 class="broker-section-title">Thông tin mã</h4>
+        <div class="broker-form-row broker-form-row-2">
+            <div class="ts-field">
+                <label class="ts-label">Ngành</label>
+                <input class="ts-input" placeholder="Ngân hàng, Bán lẻ…" @bind="Position.Sector" @bind:event="oninput" @bind:after="Changed" maxlength="80" />
+            </div>
+            <div class="ts-field">
+                <label class="ts-label">Trạng thái</label>
+                <select class="ts-select" @bind="Position.Status" @bind:after="Changed">
+                    @foreach (var s in Enum.GetValues<BrokerPositionStatus>())
+                    {
+                        <option value="@s">@BrokerStatusLabels.Vi(s)</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="broker-form-row broker-form-row-2">
             <BrokerLevelInput Id="pos-target"
                               Label="Mục tiêu (mã)"
-                              HintPrice="Giá chốt lời. Để trống nếu chưa có"
+                              HintPrice="Giá chốt lời — để trống nếu chưa có"
                               HintPercent="Broker nói +10% → nhập 10"
                               PlaceholderPrice="70.5"
                               PlaceholderPercent="10"
@@ -41,7 +77,7 @@
                               Invalid="@(_posTargetErr is not null)" />
             <BrokerLevelInput Id="pos-stop"
                               Label="Cắt lỗ (mã)"
-                              HintPrice="Giá cắt lỗ. Để trống nếu chưa có"
+                              HintPrice="Giá cắt lỗ — để trống nếu chưa có"
                               HintPercent="Broker nói -5% → nhập 5"
                               PlaceholderPrice="55.5"
                               PlaceholderPercent="5"
@@ -51,109 +87,130 @@
                               IsStop="true"
                               Error="@_posStopErr"
                               Invalid="@(_posStopErr is not null)" />
+        </div>
     </div>
 
-    <h4 class="broker-subhead">Lần mua</h4>
-    <div class="ts-table-wrap">
-        <table class="ts-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Ngày</th>
-                    <th>Giá</th>
-                    <th>KL</th>
-                    <th>Cắt lỗ</th>
-                    <th>Mục tiêu</th>
-                    <th>Note</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @{ var i = 0; }
-                @foreach (var lot in Position.Buys.OrderBy(b => b.BoughtAt).ToList())
-                {
-                    i++;
-                    <tr>
-                        <td>L@i</td>
-                        <td><input class="ts-input" type="date" @bind="lot.BoughtAt" @bind:format="yyyy-MM-dd" @bind:after="Changed" /></td>
-                        <td><input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.Price" @bind:after="() => ValidateLot(lot)" /></td>
-                        <td><input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.Quantity" @bind:after="() => ValidateLot(lot)" /></td>
-                        <td>
-                            <select class="ts-select broker-lot-mode" @bind="lot.StopLossMode" @bind:after="() => ValidateLot(lot)">
-                                <option value="@BrokerLevelInputMode.Price">Giá</option>
-                                <option value="@BrokerLevelInputMode.Percent">%</option>
-                            </select>
-                            <input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.StopLossInput" @bind:after="() => ValidateLot(lot)" />
-                        </td>
-                        <td>
-                            <select class="ts-select broker-lot-mode" @bind="lot.TargetPriceMode" @bind:after="() => ValidateLot(lot)">
-                                <option value="@BrokerLevelInputMode.Price">Giá</option>
-                                <option value="@BrokerLevelInputMode.Percent">%</option>
-                            </select>
-                            <input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.TargetPriceInput" @bind:after="() => ValidateLot(lot)" />
-                        </td>
-                        <td><input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" @bind="lot.Note" @bind:after="Changed" /></td>
-                        <td><button class="ts-btn ts-btn-outline" type="button" @onclick="() => RemoveLot(lot)">Xóa</button></td>
-                    </tr>
+    <div class="broker-detail-section">
+        <h4 class="broker-section-title">Lần mua (@Position.Buys.Count)</h4>
+        <div class="broker-lot-list">
+            @{ var lotIndex = 0; }
+            @foreach (var lot in Position.Buys.OrderBy(b => b.BoughtAt).ToList())
+            {
+                lotIndex++;
+                <div class="broker-lot-card">
+                    <div class="broker-lot-card-head">
+                        <span class="broker-lot-badge">L@(lotIndex)</span>
+                        <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="() => RemoveLot(lot)">Xóa</button>
+                    </div>
+                    <div class="broker-lot-grid">
+                        <div class="ts-field">
+                            <label class="ts-label">Ngày</label>
+                            <input class="ts-input" type="date" @bind="lot.BoughtAt" @bind:format="yyyy-MM-dd" @bind:after="Changed" />
+                        </div>
+                        <div class="ts-field">
+                            <label class="ts-label">Giá</label>
+                            <input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.Price" @bind:after="() => ValidateLot(lot)" />
+                        </div>
+                        <div class="ts-field">
+                            <label class="ts-label">KL</label>
+                            <input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.Quantity" @bind:after="() => ValidateLot(lot)" />
+                        </div>
+                        <div class="ts-field">
+                            <label class="ts-label">Cắt lỗ</label>
+                            <div class="broker-lot-level">
+                                <select class="ts-select" @bind="lot.StopLossMode" @bind:after="() => ValidateLot(lot)">
+                                    <option value="@BrokerLevelInputMode.Price">Giá</option>
+                                    <option value="@BrokerLevelInputMode.Percent">%</option>
+                                </select>
+                                <input class="ts-input" type="number" min="0.0001" step="any" placeholder="—" @bind="lot.StopLossInput" @bind:after="() => ValidateLot(lot)" />
+                            </div>
+                        </div>
+                        <div class="ts-field">
+                            <label class="ts-label">Mục tiêu</label>
+                            <div class="broker-lot-level">
+                                <select class="ts-select" @bind="lot.TargetPriceMode" @bind:after="() => ValidateLot(lot)">
+                                    <option value="@BrokerLevelInputMode.Price">Giá</option>
+                                    <option value="@BrokerLevelInputMode.Percent">%</option>
+                                </select>
+                                <input class="ts-input" type="number" min="0.0001" step="any" placeholder="—" @bind="lot.TargetPriceInput" @bind:after="() => ValidateLot(lot)" />
+                            </div>
+                        </div>
+                        <div class="ts-field broker-lot-note">
+                            <label class="ts-label">Note</label>
+                            <input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" placeholder="Ghi chú lần mua…" @bind="lot.Note" @bind:after="Changed" />
+                        </div>
+                    </div>
                     @if (_lotErrors.TryGetValue(lot.Id, out var lotErr))
                     {
-                        <tr>
-                            <td colspan="8"><p class="ts-field-error mb-0">@lotErr</p></td>
-                        </tr>
+                        <p class="ts-field-error broker-lot-error">@lotErr</p>
                     }
-                }
-            </tbody>
-        </table>
-    </div>
-
-    <h4 class="broker-subhead">Note broker (timeline)</h4>
-    @foreach (var note in Position.Notes.OrderByDescending(n => n.At).ToList())
-    {
-        <div class="broker-note-card">
-            <div class="broker-note-meta">
-                <input class="ts-input" type="datetime-local" @bind="note.At" @bind:format="yyyy-MM-ddTHH:mm" @bind:after="Changed" />
-                <button class="ts-btn ts-btn-outline" type="button" @onclick="() => RemoveNote(note)">Xóa</button>
-            </div>
-            <textarea class="ts-input ts-textarea"
-                      rows="3"
-                      maxlength="@BrokerInputValidation.NoteMaxLen"
-                      @bind="note.Text"
-                      @bind:event="oninput"
-                      @bind:after="Changed"></textarea>
-            <button class="ts-btn ts-btn-outline" type="button" disabled="@_explainBusy" @onclick="() => Explain(note)">
-                AI giải thích
-            </button>
-            @if (!string.IsNullOrWhiteSpace(note.AiExplain))
-            {
-                <pre class="broker-ai-out">@note.AiExplain</pre>
+                </div>
             }
         </div>
-    }
-
-    <div class="ts-field">
-        <label class="ts-label">Thêm note</label>
-        <span class="ts-field-hint">Note broker ngày hôm sau hoặc cập nhật mới</span>
-        <textarea class="ts-input ts-textarea @(_noteErr is not null ? "ts-input-invalid" : "")"
-                  placeholder="VD: Broker kêu mua thêm vùng 58…"
-                  rows="2"
-                  maxlength="@BrokerInputValidation.NoteMaxLen"
-                  @bind="_noteText"
-                  @bind:after="() => _noteErr = null"></textarea>
-        @if (!string.IsNullOrEmpty(_noteErr))
-        {
-            <p class="ts-field-error">@_noteErr</p>
-        }
     </div>
-    <button class="ts-btn ts-btn-primary" type="button" @onclick="AddNote">Thêm note</button>
+
+    <div class="broker-detail-section">
+        <h4 class="broker-section-title">Note broker</h4>
+        <div class="broker-timeline">
+            @if (Position.Notes.Count == 0)
+            {
+                <p class="broker-timeline-empty">Chưa có note timeline.</p>
+            }
+            @foreach (var note in Position.Notes.OrderByDescending(n => n.At).ToList())
+            {
+                <div class="broker-timeline-item">
+                    <div class="broker-timeline-dot"></div>
+                    <div class="broker-timeline-body">
+                        <div class="broker-timeline-head">
+                            <input class="ts-input broker-timeline-date" type="datetime-local" @bind="note.At" @bind:format="yyyy-MM-ddTHH:mm" @bind:after="Changed" />
+                            <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="() => RemoveNote(note)">Xóa</button>
+                        </div>
+                        <textarea class="ts-input ts-textarea"
+                                  rows="3"
+                                  maxlength="@BrokerInputValidation.NoteMaxLen"
+                                  placeholder="Nội dung note broker…"
+                                  @bind="note.Text"
+                                  @bind:event="oninput"
+                                  @bind:after="Changed"></textarea>
+                        <div class="broker-timeline-actions">
+                            <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" disabled="@_explainBusy" @onclick="() => Explain(note)">
+                                @(_explainBusy ? "Đang giải thích…" : "AI giải thích")
+                            </button>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(note.AiExplain))
+                        {
+                            <div class="broker-ai-out">@note.AiExplain</div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="broker-add-note">
+            <label class="ts-label">Thêm note mới</label>
+            <textarea class="ts-input ts-textarea @(_noteErr is not null ? "ts-input-invalid" : "")"
+                      placeholder="Broker cập nhật / khuyên mua thêm…"
+                      rows="2"
+                      maxlength="@BrokerInputValidation.NoteMaxLen"
+                      @bind="_noteText"
+                      @bind:after="() => _noteErr = null"></textarea>
+            @if (!string.IsNullOrEmpty(_noteErr))
+            {
+                <p class="ts-field-error">@_noteErr</p>
+            }
+            <button class="ts-btn ts-btn-primary ts-btn-sm" type="button" @onclick="AddNote">Thêm note</button>
+        </div>
+    </div>
 
     @if (!string.IsNullOrEmpty(_error))
     {
-        <div class="ts-alert ts-alert-error mt-2">@_error</div>
+        <div class="ts-alert ts-alert-error">@_error</div>
     }
 </div>
 
 @code {
     [Parameter, EditorRequired] public BrokerPosition Position { get; set; } = new();
+    [Parameter] public decimal? CurrentPrice { get; set; }
     [Parameter] public EventCallback OnChanged { get; set; }
     [Parameter] public EventCallback OnDeleted { get; set; }
 
