@@ -1,0 +1,96 @@
+@page "/admin"
+@using Microsoft.AspNetCore.Components.Authorization
+@using BlazorWasmPortfolioGhAction.Services.Auth
+@inject CustomAuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<div class="page-section admin-page">
+    <section>
+        <div class="container">
+            <AuthorizeView Context="auth">
+                <Authorized>
+                    <div class="admin-panel tool-card">
+                        <p class="section-label">ADMIN</p>
+                        <h2>Signed in</h2>
+                        <p class="admin-lead">You can edit wiki content. Sign out when finished.</p>
+                        <div class="tool-actions">
+                            <a class="tool-btn tool-btn-primary" href="wiki/edit/Portfolio">
+                                <i class="bi bi-pencil" aria-hidden="true"></i> Edit wiki
+                            </a>
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="LogoutAsync">
+                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sign out
+                            </button>
+                        </div>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="admin-login tool-card">
+                        <p class="section-label">ADMIN</p>
+                        <h2>Sign in</h2>
+                        <p class="admin-lead">Local demo login for wiki editing.</p>
+
+                        @if (!string.IsNullOrEmpty(_error))
+                        {
+                            <div class="tool-alert tool-alert-danger">@_error</div>
+                        }
+
+                        <EditForm Model="_model" OnValidSubmit="LoginAsync" class="tool-form">
+                            <div class="tool-field">
+                                <label class="tool-label" for="admin-user">Username</label>
+                                <InputText id="admin-user" class="tool-input" @bind-Value="_model.Username" autocomplete="username" />
+                            </div>
+                            <div class="tool-field">
+                                <label class="tool-label" for="admin-pass">Password</label>
+                                <InputText id="admin-pass" type="password" class="tool-input" @bind-Value="_model.Password" autocomplete="current-password" />
+                            </div>
+                            <div class="tool-actions">
+                                <button type="submit" class="tool-btn tool-btn-primary" disabled="@_busy">
+                                    @(_busy ? "Signing in..." : "Sign in")
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </section>
+</div>
+
+@code {
+    private readonly LoginModel _model = new();
+    private string? _error;
+    private bool _busy;
+
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    private async Task LoginAsync()
+    {
+        _busy = true;
+        _error = null;
+
+        var ok = await AuthStateProvider.LoginAsync(_model.Username.Trim(), _model.Password);
+        _busy = false;
+
+        if (!ok)
+        {
+            _error = "Invalid username or password.";
+            return;
+        }
+
+        var target = string.IsNullOrWhiteSpace(ReturnUrl) ? "/admin" : ReturnUrl;
+        Navigation.NavigateTo(target);
+    }
+
+    private async Task LogoutAsync()
+    {
+        await AuthStateProvider.LogoutAsync();
+        Navigation.NavigateTo("/admin");
+    }
+
+    private sealed class LoginModel
+    {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+}

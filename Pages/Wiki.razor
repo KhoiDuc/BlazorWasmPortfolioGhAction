@@ -40,8 +40,8 @@
                             }
                         </Authorized>
                         <NotAuthorized>
-                            <a class="tool-btn tool-btn-primary" href="authentication/login?returnUrl=@Uri.EscapeDataString(Navigation.Uri)">
-                                <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Login to edit
+                            <a class="tool-btn tool-btn-primary" href="@AdminLoginUrl">
+                                <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Admin login
                             </a>
                         </NotAuthorized>
                     </AuthorizeView>
@@ -179,6 +179,7 @@
 
     private string EditUrl => BuildWikiUrl("edit");
     private string ReadUrl => BuildWikiUrl("read");
+    private string AdminLoginUrl => $"/admin?returnUrl={Uri.EscapeDataString(Navigation.Uri)}";
 
     private string EffectivePageName =>
         !string.IsNullOrEmpty(PageName) ? PageName :
@@ -225,7 +226,7 @@
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             if (authState.User.Identity?.IsAuthenticated != true)
             {
-                Navigation.NavigateTo($"authentication/login?returnUrl={Uri.EscapeDataString(Navigation.Uri)}");
+                Navigation.NavigateTo($"/admin?returnUrl={Uri.EscapeDataString(Navigation.Uri)}");
                 return;
             }
 

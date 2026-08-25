@@ -54,7 +54,7 @@ public interface ITradingApiClient
     Task<JsonElement?> GetProxyJsonAsync(string path, CancellationToken ct = default);
     Task ToggleScriptScanAsync(bool enabled, CancellationToken ct = default);
     Task<HttpClient> CreateAuthorizedClientAsync();
-    /// <summary>HTTP client for macro news CRUD — OSINT VPS when UseOwnerEndpoints.</summary>
+    /// <summary>HTTP client for macro news CRUD — OsintBaseUrl.</summary>
     Task<HttpClient> CreateNewsClientAsync();
     string ProxyUrl(string path);
 }
@@ -63,7 +63,6 @@ public class TradingApiClient : ITradingApiClient
 {
     private readonly HttpClient _http;
     private readonly HttpClient _osintHttp;
-    private readonly TradingApiOptions _options;
     private readonly TradingEndpointResolver _endpoints;
     private readonly ITradingAuthService _auth;
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
@@ -71,13 +70,11 @@ public class TradingApiClient : ITradingApiClient
     public TradingApiClient(
         HttpClient http,
         HttpClient osintHttp,
-        TradingApiOptions options,
         TradingEndpointResolver endpoints,
         ITradingAuthService auth)
     {
         _http = http;
         _osintHttp = osintHttp;
-        _options = options;
         _endpoints = endpoints;
         _auth = auth;
     }
@@ -86,8 +83,7 @@ public class TradingApiClient : ITradingApiClient
 
     public string ProxyUrl(string path) => _endpoints.ResolveProxyUrl(path);
 
-    public Task<HttpClient> CreateNewsClientAsync() =>
-        Task.FromResult(_options.UseOwnerEndpoints ? _osintHttp : _http);
+    public Task<HttpClient> CreateNewsClientAsync() => Task.FromResult(_osintHttp);
 
     public async Task<HttpClient> CreateAuthorizedClientAsync()
     {
@@ -104,17 +100,8 @@ public class TradingApiClient : ITradingApiClient
 
     private async Task<T?> GetAsync<T>(string path, CancellationToken ct) =>
         _endpoints.IsOsintPath(path)
-            ? await GetOsintAsync<T>(path, ct)
+            ? await GetWithClientAsync<T>(_osintHttp, path, ct)
             : await GetWithClientAsync<T>(_http, path, ct);
-
-    private async Task<T?> GetOsintAsync<T>(string path, CancellationToken ct)
-    {
-        var result = await GetWithClientAsync<T>(_http, path, ct);
-        if (result != null || !_options.OsintFallbackDirect)
-            return result;
-
-        return await GetWithClientAsync<T>(_osintHttp, path, ct);
-    }
 
     private async Task<T?> GetWithClientAsync<T>(HttpClient client, string path, CancellationToken ct)
     {
@@ -361,13 +348,8 @@ public class TradingApiClient : ITradingApiClient
     private Task SendAsync(HttpMethod method, string path, object? body, CancellationToken ct) =>
         SendWithClientAsync(_http, method, path, body, ct);
 
-    private Task SendOsintAsync(HttpMethod method, string path, object? body, CancellationToken ct)
-    {
-        if (!_options.UseOwnerEndpoints)
-            return SendWithClientAsync(_http, method, path, body, ct);
-
-        return SendWithClientAsync(_osintHttp, method, path, body, ct);
-    }
+    private Task SendOsintAsync(HttpMethod method, string path, object? body, CancellationToken ct) =>
+        SendWithClientAsync(_osintHttp, method, path, body, ct);
 
     private async Task SendWithClientAsync(HttpClient client, HttpMethod method, string path, object? body, CancellationToken ct)
     {

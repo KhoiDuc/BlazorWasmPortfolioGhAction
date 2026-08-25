@@ -40,9 +40,6 @@ public class TradingEndpointResolver
 
         var p = Normalize(path);
 
-        if (!_options.UseOwnerEndpoints)
-            return $"{FlyBase}/{p}";
-
         if (RrgFiles.TryGetValue(p, out var rrgFile))
             return $"{_options.RrgBaseUrl.TrimEnd('/')}/{rrgFile}";
 
@@ -94,14 +91,11 @@ public class TradingEndpointResolver
     {
         var p = Normalize(path);
 
-        if (_options.UseOwnerEndpoints)
-        {
-            if (p.Equals("ff_calendar_thisweek.json", StringComparison.OrdinalIgnoreCase))
-                return _options.CalendarUrl;
+        if (p.Equals("ff_calendar_thisweek.json", StringComparison.OrdinalIgnoreCase))
+            return _options.CalendarUrl;
 
-            if (p.Equals("api/rates", StringComparison.OrdinalIgnoreCase))
-                return _options.FxRatesUrl;
-        }
+        if (p.Equals("api/rates", StringComparison.OrdinalIgnoreCase))
+            return _options.FxRatesUrl;
 
         if (Uri.TryCreate(ResolveProxyUrl(path), UriKind.Absolute, out var direct)
             && (direct.Scheme == Uri.UriSchemeHttps || direct.Host != new Uri(FlyBase).Host))

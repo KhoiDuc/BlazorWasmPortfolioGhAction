@@ -15,7 +15,10 @@ using GoogleMapsComponents;
 using Fluxor.Blazor.Web.ReduxDevTools;
 using BlazorWasmPortfolioGhAction.Extensions;
 using BlazorWasmPortfolioGhAction.Services;
-using Microsoft.Authentication.WebAssembly.Msal;
+using BlazorWasmPortfolioGhAction.Services.Auth;
+using Microsoft.AspNetCore.Components.Authorization;
+using Blazored.LocalStorage;
+// using Microsoft.Authentication.WebAssembly.Msal; // MSAL — disabled (learning/demo only)
 
 public static class Program
 {
@@ -53,15 +56,20 @@ public static class Program
         builder.Services.AddScoped<IScriptLoaderService, ScriptLoaderService>();
         builder.Services.AddScoped<IClipboardService, ClipboardService>();
         builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
-        builder.Services.AddMsalAuthentication(options =>
-        {
-            builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
-            options.ProviderOptions.LoginMode = "redirect";
 
-            var baseAddress = builder.HostEnvironment.BaseAddress.TrimEnd('/') + "/";
-            options.ProviderOptions.Authentication.RedirectUri ??= $"{baseAddress}authentication/login-callback";
-            options.ProviderOptions.Authentication.PostLogoutRedirectUri ??= baseAddress;
-        });
+        // MSAL / Azure AD — disabled (was for learning only)
+        // builder.Services.AddMsalAuthentication(options =>
+        // {
+        //     builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
+        //     options.ProviderOptions.LoginMode = "redirect";
+        //     var baseAddress = builder.HostEnvironment.BaseAddress.TrimEnd('/') + "/";
+        //     options.ProviderOptions.Authentication.RedirectUri ??= $"{baseAddress}authentication/login-callback";
+        //     options.ProviderOptions.Authentication.PostLogoutRedirectUri ??= baseAddress;
+        // });
+
+        builder.Services.AddAuthorizationCore();
+        builder.Services.AddScoped<CustomAuthStateProvider>();
+        builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<CustomAuthStateProvider>());
         builder.Services.AddSingleton<ITimeZoneQueryProviderService, TimeZoneQueryProviderService>();
 
         builder.Services.AddFluxor(opt => {
@@ -81,6 +89,7 @@ public static class Program
                 .EnableSensitiveDataLogging());
 
         builder.Services.AddWasmBrowserStorage();
+        builder.Services.AddBlazoredLocalStorage();
         var googleMapsKey = builder.Configuration["GoogleMaps:ApiKey"] ?? "YOUR_GOOGLE_MAPS_API_KEY";
         builder.Services.AddBlazorGoogleMaps(googleMapsKey);
         builder.Services.AddLocalization();

@@ -1,53 +1,22 @@
-﻿@page "/authentication/{action}"
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
-@using BlazorWasmPortfolioGhAction.Components.Auth
+﻿@* MSAL authentication page — disabled (was for learning only). Redirect to /admin. *@
+@page "/authentication/{action}"
+@inject NavigationManager Navigation
 
-<div class="auth-page">
-    <RemoteAuthenticatorView Action="@Action">
-        <LoggingIn>
-            <div class="auth-card tool-card">
-                <div class="tool-spinner" role="status" aria-label="Signing in"></div>
-                <p>Signing in with Microsoft...</p>
+<div class="page-section">
+    <section>
+        <div class="container">
+            <div class="tool-alert tool-alert-info">
+                Microsoft login is disabled. Redirecting to <a href="/admin">/admin</a>...
             </div>
-        </LoggingIn>
-        <CompletingLoggingIn>
-            <div class="auth-card tool-card">
-                <div class="tool-spinner" role="status" aria-label="Completing sign in"></div>
-                <p>Completing sign in...</p>
-            </div>
-        </CompletingLoggingIn>
-        <LogOut>
-            <div class="auth-card tool-card">
-                <div class="tool-spinner" role="status" aria-label="Signing out"></div>
-                <p>Signing out...</p>
-            </div>
-        </LogOut>
-        <CompletingLogOut>
-            <div class="auth-card tool-card">
-                <div class="tool-spinner" role="status" aria-label="Completing sign out"></div>
-                <p>Completing sign out...</p>
-            </div>
-        </CompletingLogOut>
-        <LogInFailed>
-            <LoginFailedView ErrorMessage="@context" />
-        </LogInFailed>
-        <LogOutFailed>
-            <div class="auth-card tool-card">
-                <div class="tool-alert tool-alert-danger">
-                    <p><strong>Sign out failed.</strong> @context</p>
-                </div>
-                <a href="/" class="tool-btn tool-btn-secondary">Back to home</a>
-            </div>
-        </LogOutFailed>
-        <LogOutSucceeded>
-            <div class="auth-card tool-card">
-                <p>You have been signed out.</p>
-                <a href="/" class="tool-btn tool-btn-primary">Back to home</a>
-            </div>
-        </LogOutSucceeded>
-    </RemoteAuthenticatorView>
+        </div>
+    </section>
 </div>
 
 @code {
     [Parameter] public string? Action { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Navigation.NavigateTo("/admin");
+    }
 }

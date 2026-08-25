@@ -16,7 +16,7 @@ A feature-rich personal portfolio and developer utility suite built with **Blazo
 - **State**: [Fluxor](https://github.com/mrpmorris/Fluxor)
 - **Database**: EF Core + SQLite Wasm
 - **UI**: Bootstrap 5 + Bootstrap Icons + CSS isolation (`.tool-*` design system)
-- **Auth**: Microsoft account (Azure AD) via MSAL
+- **Auth**: Local admin login at `/admin` (wiki edit only; demo credentials)
 - **Deploy**: GitHub Pages CI/CD
 
 ## Getting Started
@@ -51,25 +51,22 @@ Fill the `Wiki` section with your repo owner/name. Editing requires `DevOps:GitH
 
 Fill `EmailJs:ServiceId`, `TemplateId`, and `PublicKey` to enable send from the Email Composer utility.
 
-### Microsoft login (Azure AD / MSA)
+### Wiki admin login
 
-1. Register an app in [Azure Portal → App registrations](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade).
-2. Set **Supported account types** to *Accounts in any organizational directory and personal Microsoft accounts*.
-3. Add **Single-page application** redirect URIs (match your dev/prod origins):
-   - `https://localhost:7255/authentication/login-callback`
-   - `http://localhost:5288/authentication/login-callback`
-   - `https://<your-github-pages-domain>/authentication/login-callback`
-4. Copy the **Application (client) ID** into `wwwroot/appsettings.json`:
+Wiki edit mode uses a **local demo login** (not production-grade):
 
-```json
-"AzureAd": {
-  "Authority": "https://login.microsoftonline.com/common",
-  "ClientId": "YOUR_CLIENT_ID",
-  "ValidateAuthority": true
-}
-```
+1. Open `/admin`
+2. Sign in with `admin` / `admin`
+3. Use **Edit wiki** or navigate to `/wiki/edit/...`
 
-Login appears in the navbar; wiki edit mode requires authentication.
+Login is **not shown in the navbar**. Microsoft/Azure AD (MSAL) was removed — it was only used for learning.
+
+<!--
+### Microsoft login (Azure AD / MSA) — disabled
+
+Previously used MSAL for wiki editing. Re-enable by restoring `AddMsalAuthentication` in `Program.cs`,
+`AuthenticationService.js` in `index.html`, and `AzureAd` in `appsettings.json`.
+-->
 
 ---
 © 2026 Khoi Nguyen Minh Duc. All rights reserved.

@@ -425,9 +425,7 @@ Fly.io **proxy** request `/api/osint/*` và `/api/news/telegram` sang VPS OSINT.
 
 ---
 
-## Blazor — dùng tạm endpoint owner (`UseOwnerEndpoints`)
-
-Config trong `wwwroot/appsettings.json`:
+## Blazor — URL config (`appsettings.json`)
 
 ```json
 "TradingApi": {
@@ -435,23 +433,23 @@ Config trong `wwwroot/appsettings.json`:
   "OsintBaseUrl": "http://152.53.208.182:8080",
   "RrgBaseUrl": "https://thehaohcm.alwaysdata.net",
   "CalendarUrl": "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
-  "FxRatesUrl": "https://live-rates.com/rates",
-  "UseOwnerEndpoints": true,
-  "OsintFallbackDirect": true
+  "FxRatesUrl": "https://live-rates.com/rates"
 }
 ```
 
+Đổi link trực tiếp trong config khi endpoint die — không có flag bật/tắt.
+
 Routing (`Services/Trading/TradingEndpointResolver.cs`):
 
-| Loại request | Đích |
+| Loại request | Config key |
 |---|---|
-| Watchlist, journal, community, chat, alerts | Fly `BaseUrl` |
-| OSINT, Telegram news, macro news CRUD | Fly trước → fallback `OsintBaseUrl` |
-| RRG PNG, gold iframe, petrolimex, yahoo | HTTPS trực tiếp (alwaysdata, SJC, …) |
-| Calendar, FX rates | URL trực tiếp (faireconomy, live-rates) |
-| DNSE login/orders | Fly proxy hoặc Entrade HTTPS trực tiếp |
+| Watchlist, journal, community, chat, alerts | `BaseUrl` |
+| OSINT, Telegram news, macro news CRUD | `OsintBaseUrl` |
+| RRG PNG | `RrgBaseUrl` |
+| Calendar, FX rates | `CalendarUrl`, `FxRatesUrl` |
+| Gold, petrolimex, yahoo, DNSE… | URL ngoài cố định (giống vercel.json) |
 
-**Lưu ý GitHub Pages (HTTPS):** gọi `http://152.53.208.182` từ browser bị chặn mixed content — OSINT/Telegram trên production cần Fly proxy hoạt động, hoặc test trên `http://localhost`.
+**Lưu ý GitHub Pages (HTTPS):** `OsintBaseUrl` là HTTP — browser có thể chặn mixed content trên production. Test trên `http://localhost` hoặc đổi sang HTTPS gateway khi có.
 
 ---
 

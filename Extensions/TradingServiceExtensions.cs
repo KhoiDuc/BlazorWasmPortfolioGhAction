@@ -46,7 +46,7 @@ public static class TradingServiceExtensions
             var opts = sp.GetRequiredService<BlazorWasmPortfolioGhAction.Services.Trading.TradingApiOptions>();
             var endpoints = sp.GetRequiredService<BlazorWasmPortfolioGhAction.Services.Trading.TradingEndpointResolver>();
             var auth = sp.GetRequiredService<BlazorWasmPortfolioGhAction.Services.Trading.ITradingAuthService>();
-            return new BlazorWasmPortfolioGhAction.Services.Trading.TradingApiClient(http, osint, opts, endpoints, auth);
+            return new BlazorWasmPortfolioGhAction.Services.Trading.TradingApiClient(http, osint, endpoints, auth);
         });
 
         return services;
