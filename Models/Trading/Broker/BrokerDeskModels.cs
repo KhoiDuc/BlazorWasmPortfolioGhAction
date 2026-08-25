@@ -30,7 +30,11 @@ public class BrokerPosition
     public string Sector { get; set; } = "";
     public BrokerPositionStatus Status { get; set; } = BrokerPositionStatus.ChuaQuyet;
     public decimal? StopLoss { get; set; }
+    public BrokerLevelInputMode? StopLossMode { get; set; }
+    public decimal? StopLossInput { get; set; }
     public decimal? TargetPrice { get; set; }
+    public BrokerLevelInputMode? TargetPriceMode { get; set; }
+    public decimal? TargetPriceInput { get; set; }
     public decimal? WeightPct { get; set; }
     public List<BrokerLot> Buys { get; set; } = [];
     public List<BrokerNote> Notes { get; set; } = [];
@@ -70,7 +74,11 @@ public class BrokerLot
     public decimal Price { get; set; }
     public decimal? Quantity { get; set; }
     public decimal? StopLoss { get; set; }
+    public BrokerLevelInputMode? StopLossMode { get; set; }
+    public decimal? StopLossInput { get; set; }
     public decimal? TargetPrice { get; set; }
+    public BrokerLevelInputMode? TargetPriceMode { get; set; }
+    public decimal? TargetPriceInput { get; set; }
     public string? Note { get; set; }
 }
 

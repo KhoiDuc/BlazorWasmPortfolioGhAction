@@ -1,0 +1,68 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading.Broker
+
+<div class="ts-field">
+    <label class="ts-label" for="@Id">@Label</label>
+    <span class="ts-field-hint">@ActiveHint</span>
+    <div class="broker-level-mode">
+        <button type="button"
+                class="broker-mode-btn @(Mode == BrokerLevelInputMode.Price ? "active" : "")"
+                @onclick='() => SetMode(BrokerLevelInputMode.Price)'>Giá trị</button>
+        <button type="button"
+                class="broker-mode-btn @(Mode == BrokerLevelInputMode.Percent ? "active" : "")"
+                @onclick='() => SetMode(BrokerLevelInputMode.Percent)'>%</button>
+    </div>
+    <input id="@Id"
+           class="ts-input @(Invalid ? "ts-input-invalid" : "")"
+           type="number"
+           min="0.0001"
+           step="any"
+           placeholder="@ActivePlaceholder"
+           @bind="Input"
+           @bind:after="NotifyChanged" />
+    @if (ShowPreview)
+    {
+        <p class="ts-field-hint">≈ @ResolvedPrice:N2 (từ giá mua @BuyPrice:N2)</p>
+    }
+    @if (!string.IsNullOrEmpty(Error))
+    {
+        <p class="ts-field-error">@Error</p>
+    }
+</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = "";
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string HintPrice { get; set; } = "";
+    [Parameter] public string HintPercent { get; set; } = "";
+    [Parameter] public string PlaceholderPrice { get; set; } = "";
+    [Parameter] public string PlaceholderPercent { get; set; } = "";
+    [Parameter] public BrokerLevelInputMode Mode { get; set; } = BrokerLevelInputMode.Price;
+    [Parameter] public EventCallback<BrokerLevelInputMode> ModeChanged { get; set; }
+    [Parameter] public decimal? Input { get; set; }
+    [Parameter] public EventCallback<decimal?> InputChanged { get; set; }
+    [Parameter] public decimal? BuyPrice { get; set; }
+    [Parameter] public bool IsStop { get; set; }
+    [Parameter] public string? Error { get; set; }
+    [Parameter] public bool Invalid { get; set; }
+
+    private string ActiveHint => Mode == BrokerLevelInputMode.Percent ? HintPercent : HintPrice;
+    private string ActivePlaceholder => Mode == BrokerLevelInputMode.Percent ? PlaceholderPercent : PlaceholderPrice;
+
+    private decimal? ResolvedPrice => IsStop
+        ? BrokerLevelHelper.ResolveStop(BuyPrice ?? 0, Mode, Input)
+        : BrokerLevelHelper.ResolveTarget(BuyPrice ?? 0, Mode, Input);
+
+    private bool ShowPreview =>
+        Mode == BrokerLevelInputMode.Percent
+        && Input is > 0
+        && BuyPrice is > 0
+        && ResolvedPrice is > 0;
+
+    private async Task SetMode(BrokerLevelInputMode mode)
+    {
+        await ModeChanged.InvokeAsync(mode);
+        await NotifyChanged();
+    }
+
+    private Task NotifyChanged() => InputChanged.InvokeAsync(Input);
+}

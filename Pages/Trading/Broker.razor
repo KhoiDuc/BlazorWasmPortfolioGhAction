@@ -34,7 +34,7 @@
 
     <div class="ts-panel">
         <h3 class="ts-panel-title">Ghi khuyến nghị broker</h3>
-        <div class="broker-form-grid">
+        <div class="broker-form-stack">
             <div class="ts-field">
                 <label class="ts-label" for="broker-symbol">Mã CP</label>
                 <span class="ts-field-hint">3–10 ký tự, chữ và số. VD: VNM, VCB</span>
@@ -88,38 +88,32 @@
                     <p class="ts-field-error">@errQty</p>
                 }
             </div>
-            <div class="ts-field">
-                <label class="ts-label" for="broker-target">Mục tiêu</label>
-                <span class="ts-field-hint">Để trống nếu chưa có; &gt; giá mua. VD: 65.5</span>
-                <input id="broker-target"
-                       class='ts-input @FieldClass("target")'
-                       placeholder="65.5"
-                       type="number"
-                       min="0.0001"
-                       step="any"
-                       @bind="_newTarget"
-                       @bind:after='() => ClearFieldError("target")' />
-                @if (_fieldErrors.TryGetValue("target", out var errTarget))
-                {
-                    <p class="ts-field-error">@errTarget</p>
-                }
-            </div>
-            <div class="ts-field">
-                <label class="ts-label" for="broker-stop">Cắt lỗ</label>
-                <span class="ts-field-hint">Để trống nếu chưa có; &lt; giá mua. VD: 55.5</span>
-                <input id="broker-stop"
-                       class='ts-input @FieldClass("stop")'
-                       placeholder="55.5"
-                       type="number"
-                       min="0.0001"
-                       step="any"
-                       @bind="_newStop"
-                       @bind:after='() => ClearFieldError("stop")' />
-                @if (_fieldErrors.TryGetValue("stop", out var errStop))
-                {
-                    <p class="ts-field-error">@errStop</p>
-                }
-            </div>
+            <BrokerLevelInput Id="broker-target"
+                              Label="Mục tiêu"
+                              HintPrice="Để trống nếu chưa có. Nhập giá (VD: 65.5)"
+                              HintPercent="Broker nói +10% → chọn %, nhập 10"
+                              PlaceholderPrice="65.5"
+                              PlaceholderPercent="10"
+                              @bind-Mode="_targetMode"
+                              @bind-Input="_targetInput"
+                              @bind-Input:after='() => ClearFieldError("target")'
+                              BuyPrice="_newPrice"
+                              IsStop="false"
+                              Error="@(_fieldErrors.GetValueOrDefault("target"))"
+                              Invalid="@_fieldErrors.ContainsKey("target")" />
+            <BrokerLevelInput Id="broker-stop"
+                              Label="Cắt lỗ"
+                              HintPrice="Để trống nếu chưa có. Nhập giá (VD: 55.5)"
+                              HintPercent="Broker nói -5% → chọn %, nhập 5"
+                              PlaceholderPrice="55.5"
+                              PlaceholderPercent="5"
+                              @bind-Mode="_stopMode"
+                              @bind-Input="_stopInput"
+                              @bind-Input:after='() => ClearFieldError("stop")'
+                              BuyPrice="_newPrice"
+                              IsStop="true"
+                              Error="@(_fieldErrors.GetValueOrDefault("stop"))"
+                              Invalid="@_fieldErrors.ContainsKey("stop")" />
         </div>
         <div class="ts-field">
             <label class="ts-label" for="broker-note">Note broker</label>
@@ -179,8 +173,10 @@
     private string _newSymbol = "";
     private decimal? _newPrice;
     private decimal? _newQty;
-    private decimal? _newStop;
-    private decimal? _newTarget;
+    private BrokerLevelInputMode _stopMode = BrokerLevelInputMode.Price;
+    private BrokerLevelInputMode _targetMode = BrokerLevelInputMode.Price;
+    private decimal? _stopInput;
+    private decimal? _targetInput;
     private string _newNote = "";
     private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.OrdinalIgnoreCase);
 
@@ -238,13 +234,12 @@
         if (!BrokerInputValidation.TryValidateNote(_newNote, out var noteErr))
             SetFieldError("note", noteErr!);
 
-        if (_newPrice is > 0 &&
-            !BrokerInputValidation.TryValidateStopTarget(_newPrice.Value, _newStop, _newTarget, out var stErr))
+        if (_newPrice is > 0)
         {
-            if (_newStop is > 0 && _newStop >= _newPrice)
-                SetFieldError("stop", stErr!);
-            else if (_newTarget is > 0 && _newTarget <= _newPrice)
-                SetFieldError("target", stErr!);
+            if (!BrokerLevelHelper.TryValidateStop(_newPrice.Value, _stopMode, _stopInput, out _, out var stopErr))
+                SetFieldError("stop", stopErr!);
+            if (!BrokerLevelHelper.TryValidateTarget(_newPrice.Value, _targetMode, _targetInput, out _, out var targetErr))
+                SetFieldError("target", targetErr!);
         }
 
         return _fieldErrors.Count == 0;
@@ -256,6 +251,14 @@
         {
             Flash("Kiểm tra lại các ô được đánh dấu.", error: true);
             return;
+        }
+
+        decimal? resolvedStop = null;
+        decimal? resolvedTarget = null;
+        if (_newPrice is > 0)
+        {
+            BrokerLevelHelper.TryValidateStop(_newPrice.Value, _stopMode, _stopInput, out resolvedStop, out _);
+            BrokerLevelHelper.TryValidateTarget(_newPrice.Value, _targetMode, _targetInput, out resolvedTarget, out _);
         }
 
         _busy = true;
@@ -275,16 +278,30 @@
             var lot = new BrokerLot
             {
                 BoughtAt = DateTime.Today,
-                Price = _newPrice.Value,
+                Price = _newPrice!.Value,
                 Quantity = _newQty is > 0 ? _newQty : null,
-                StopLoss = _newStop is > 0 ? _newStop : null,
-                TargetPrice = _newTarget is > 0 ? _newTarget : null,
+                StopLossMode = _stopInput is > 0 ? _stopMode : null,
+                StopLossInput = _stopInput is > 0 ? _stopInput : null,
+                StopLoss = resolvedStop,
+                TargetPriceMode = _targetInput is > 0 ? _targetMode : null,
+                TargetPriceInput = _targetInput is > 0 ? _targetInput : null,
+                TargetPrice = resolvedTarget,
                 Note = string.IsNullOrWhiteSpace(_newNote) ? null : _newNote.Trim()
             };
             existing.Buys.Add(lot);
 
-            if (_newStop is > 0) existing.StopLoss = _newStop;
-            if (_newTarget is > 0) existing.TargetPrice = _newTarget;
+            if (resolvedStop is > 0)
+            {
+                existing.StopLoss = resolvedStop;
+                existing.StopLossMode = _stopMode;
+                existing.StopLossInput = _stopInput;
+            }
+            if (resolvedTarget is > 0)
+            {
+                existing.TargetPrice = resolvedTarget;
+                existing.TargetPriceMode = _targetMode;
+                existing.TargetPriceInput = _targetInput;
+            }
 
             if (!string.IsNullOrWhiteSpace(_newNote))
             {
@@ -299,7 +316,8 @@
             _selected = existing.Symbol;
             var lotNo = existing.Buys.Count;
             _newSymbol = "";
-            _newPrice = _newQty = _newStop = _newTarget = null;
+            _newPrice = _newQty = _stopInput = _targetInput = null;
+            _stopMode = _targetMode = BrokerLevelInputMode.Price;
             _newNote = "";
             _fieldErrors.Clear();
             MarkDirty();

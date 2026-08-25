@@ -25,24 +25,32 @@
                 }
             </select>
         </div>
-        <div class="ts-field">
-            <label class="ts-label">Cắt lỗ (mã)</label>
-            <span class="ts-field-hint">Thấp hơn giá TB; để trống nếu chưa có</span>
-            <input class="ts-input" type="number" min="0.0001" step="any" placeholder="55.5" @bind="Position.StopLoss" @bind:after="ValidatePositionLevels" />
-            @if (!string.IsNullOrEmpty(_posStopErr))
-            {
-                <p class="ts-field-error">@_posStopErr</p>
-            }
-        </div>
-        <div class="ts-field">
-            <label class="ts-label">Mục tiêu (mã)</label>
-            <span class="ts-field-hint">Cao hơn giá TB; để trống nếu chưa có</span>
-            <input class="ts-input" type="number" min="0.0001" step="any" placeholder="70.5" @bind="Position.TargetPrice" @bind:after="ValidatePositionLevels" />
-            @if (!string.IsNullOrEmpty(_posTargetErr))
-            {
-                <p class="ts-field-error">@_posTargetErr</p>
-            }
-        </div>
+    </div>
+    <div class="broker-form-stack" style="max-width:480px;margin-top:0.5rem">
+            <BrokerLevelInput Id="pos-target"
+                              Label="Mục tiêu (mã)"
+                              HintPrice="Giá chốt lời. Để trống nếu chưa có"
+                              HintPercent="Broker nói +10% → nhập 10"
+                              PlaceholderPrice="70.5"
+                              PlaceholderPercent="10"
+                              @bind-Mode="PositionTargetMode"
+                              @bind-Input="PositionTargetInput"
+                              BuyPrice="PositionRefPrice"
+                              IsStop="false"
+                              Error="@_posTargetErr"
+                              Invalid="@(_posTargetErr is not null)" />
+            <BrokerLevelInput Id="pos-stop"
+                              Label="Cắt lỗ (mã)"
+                              HintPrice="Giá cắt lỗ. Để trống nếu chưa có"
+                              HintPercent="Broker nói -5% → nhập 5"
+                              PlaceholderPrice="55.5"
+                              PlaceholderPercent="5"
+                              @bind-Mode="PositionStopMode"
+                              @bind-Input="PositionStopInput"
+                              BuyPrice="PositionRefPrice"
+                              IsStop="true"
+                              Error="@_posStopErr"
+                              Invalid="@(_posStopErr is not null)" />
     </div>
 
     <h4 class="broker-subhead">Lần mua</h4>
@@ -70,8 +78,20 @@
                         <td><input class="ts-input" type="date" @bind="lot.BoughtAt" @bind:format="yyyy-MM-dd" @bind:after="Changed" /></td>
                         <td><input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.Price" @bind:after="() => ValidateLot(lot)" /></td>
                         <td><input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.Quantity" @bind:after="() => ValidateLot(lot)" /></td>
-                        <td><input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.StopLoss" @bind:after="() => ValidateLot(lot)" /></td>
-                        <td><input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.TargetPrice" @bind:after="() => ValidateLot(lot)" /></td>
+                        <td>
+                            <select class="ts-select broker-lot-mode" @bind="lot.StopLossMode" @bind:after="() => ValidateLot(lot)">
+                                <option value="@BrokerLevelInputMode.Price">Giá</option>
+                                <option value="@BrokerLevelInputMode.Percent">%</option>
+                            </select>
+                            <input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.StopLossInput" @bind:after="() => ValidateLot(lot)" />
+                        </td>
+                        <td>
+                            <select class="ts-select broker-lot-mode" @bind="lot.TargetPriceMode" @bind:after="() => ValidateLot(lot)">
+                                <option value="@BrokerLevelInputMode.Price">Giá</option>
+                                <option value="@BrokerLevelInputMode.Percent">%</option>
+                            </select>
+                            <input class="ts-input" type="number" min="0.0001" step="any" @bind="lot.TargetPriceInput" @bind:after="() => ValidateLot(lot)" />
+                        </td>
                         <td><input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" @bind="lot.Note" @bind:after="Changed" /></td>
                         <td><button class="ts-btn ts-btn-outline" type="button" @onclick="() => RemoveLot(lot)">Xóa</button></td>
                     </tr>
@@ -145,23 +165,56 @@
     private string? _error;
     private readonly Dictionary<string, string> _lotErrors = new();
 
+    private decimal? PositionRefPrice =>
+        Position.AvgBuy ?? Position.Buys.FirstOrDefault(b => b.Price > 0)?.Price;
+
+    private BrokerLevelInputMode PositionStopMode
+    {
+        get => Position.StopLossMode ?? BrokerLevelInputMode.Price;
+        set { Position.StopLossMode = value; ValidatePositionLevels(); }
+    }
+
+    private decimal? PositionStopInput
+    {
+        get => Position.StopLossInput ?? (Position.StopLossMode is null or BrokerLevelInputMode.Price ? Position.StopLoss : null);
+        set { Position.StopLossInput = value; ValidatePositionLevels(); }
+    }
+
+    private BrokerLevelInputMode PositionTargetMode
+    {
+        get => Position.TargetPriceMode ?? BrokerLevelInputMode.Price;
+        set { Position.TargetPriceMode = value; ValidatePositionLevels(); }
+    }
+
+    private decimal? PositionTargetInput
+    {
+        get => Position.TargetPriceInput ?? (Position.TargetPriceMode is null or BrokerLevelInputMode.Price ? Position.TargetPrice : null);
+        set { Position.TargetPriceInput = value; ValidatePositionLevels(); }
+    }
+
     private Task Changed() => OnChanged.InvokeAsync();
 
     private void ValidatePositionLevels()
     {
         _posStopErr = null;
         _posTargetErr = null;
-        var refPrice = Position.AvgBuy ?? Position.Buys.FirstOrDefault(b => b.Price > 0)?.Price;
+        var refPrice = PositionRefPrice;
         if (refPrice is not > 0)
         {
             _ = Changed();
             return;
         }
 
-        if (Position.StopLoss is > 0 && Position.StopLoss >= refPrice)
-            _posStopErr = "Cắt lỗ phải thấp hơn giá TB / giá mua.";
-        if (Position.TargetPrice is > 0 && Position.TargetPrice <= refPrice)
-            _posTargetErr = "Mục tiêu phải cao hơn giá TB / giá mua.";
+        if (BrokerLevelHelper.TryValidateStop(refPrice.Value, PositionStopMode, PositionStopInput, out var stop, out var stopErr))
+            Position.StopLoss = stop;
+        else
+            _posStopErr = stopErr;
+
+        if (BrokerLevelHelper.TryValidateTarget(refPrice.Value, PositionTargetMode, PositionTargetInput, out var target, out var targetErr))
+            Position.TargetPrice = target;
+        else
+            _posTargetErr = targetErr;
+
         _ = Changed();
     }
 
@@ -179,11 +232,29 @@
             return;
         }
 
-        if (!BrokerInputValidation.TryValidateStopTarget(lot.Price, lot.StopLoss, lot.TargetPrice, out var stErr))
+        var stopMode = lot.StopLossMode ?? BrokerLevelInputMode.Price;
+        var targetMode = lot.TargetPriceMode ?? BrokerLevelInputMode.Price;
+        var stopInput = lot.StopLossInput ?? (stopMode == BrokerLevelInputMode.Price ? lot.StopLoss : null);
+        var targetInput = lot.TargetPriceInput ?? (targetMode == BrokerLevelInputMode.Price ? lot.TargetPrice : null);
+
+        if (!BrokerLevelHelper.TryValidateStop(lot.Price, stopMode, stopInput, out var resolvedStop, out var stopErr))
         {
-            _lotErrors[lot.Id] = stErr!;
+            _lotErrors[lot.Id] = stopErr!;
             return;
         }
+
+        if (!BrokerLevelHelper.TryValidateTarget(lot.Price, targetMode, targetInput, out var resolvedTarget, out var targetErr))
+        {
+            _lotErrors[lot.Id] = targetErr!;
+            return;
+        }
+
+        lot.StopLossMode = stopInput is > 0 ? stopMode : null;
+        lot.StopLossInput = stopInput is > 0 ? stopInput : null;
+        lot.StopLoss = resolvedStop;
+        lot.TargetPriceMode = targetInput is > 0 ? targetMode : null;
+        lot.TargetPriceInput = targetInput is > 0 ? targetInput : null;
+        lot.TargetPrice = resolvedTarget;
 
         _lotErrors.Remove(lot.Id);
         _ = Changed();

@@ -49,8 +49,8 @@
                         <td class="@(pnl is > 0 ? "ts-positive" : pnl is < 0 ? "ts-negative" : "")">
                             @(pnl is null ? "—" : $"{pnl.Value:N2}%")
                         </td>
-                        <td class="broker-stop">@(p.StopLoss?.ToString("N2") ?? "—")</td>
-                        <td class="broker-target">@(p.TargetPrice?.ToString("N2") ?? "—")</td>
+                        <td class="broker-stop">@BrokerLevelHelper.FormatDisplay(p.StopLoss, p.StopLossMode, p.StopLossInput, isStop: true)</td>
+                        <td class="broker-target">@BrokerLevelHelper.FormatDisplay(p.TargetPrice, p.TargetPriceMode, p.TargetPriceInput, isStop: false)</td>
                         <td>
                             @if (p.Status == BrokerPositionStatus.ChuaQuyet)
                             {
