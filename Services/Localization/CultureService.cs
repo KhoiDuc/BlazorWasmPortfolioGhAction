@@ -23,6 +23,15 @@ public sealed class CultureService : ICultureService
 
     public async Task InitializeAsync()
     {
+        // Prefer culture already applied at startup (Program.SetStartupCultureAsync)
+        var startup = CultureInfo.DefaultThreadCurrentUICulture?.TwoLetterISOLanguageName;
+        if (!string.IsNullOrEmpty(startup)
+            && (startup.Equals("vi", StringComparison.OrdinalIgnoreCase)
+                || startup.Equals("en", StringComparison.OrdinalIgnoreCase)))
+        {
+            Apply(Normalize(startup), persist: false, notify: false);
+        }
+
         string? saved = null;
         try
         {
@@ -30,10 +39,12 @@ public sealed class CultureService : ICultureService
         }
         catch
         {
-            // JS not ready; keep default Vietnamese
+            // JS not ready; keep current
         }
 
-        Apply(Normalize(saved), persist: false, notify: false);
+        if (!string.IsNullOrEmpty(saved))
+            Apply(Normalize(saved), persist: false, notify: false);
+
         await SyncDocumentLangAsync();
     }
 
@@ -43,7 +54,10 @@ public sealed class CultureService : ICultureService
         if (_current.TwoLetterISOLanguageName.Equals(cultureName, StringComparison.OrdinalIgnoreCase))
             return;
 
-        Apply(cultureName, persist: true, notify: true);
+        Apply(cultureName, persist: false, notify: true);
+        // Must finish writing localStorage BEFORE any force-reload, otherwise boot
+        // still sees the old culture and never loads the other satellite assembly.
+        await PersistAsync(cultureName);
         await SyncDocumentLangAsync();
     }
 
@@ -52,7 +66,17 @@ public sealed class CultureService : ICultureService
 
     private void Apply(string cultureName, bool persist, bool notify)
     {
-        _current = new CultureInfo(cultureName);
+        CultureInfo culture;
+        try
+        {
+            culture = CultureInfo.GetCultureInfo(cultureName);
+        }
+        catch (CultureNotFoundException)
+        {
+            culture = CultureInfo.GetCultureInfo(DefaultCultureName);
+        }
+
+        _current = culture;
         CultureInfo.DefaultThreadCurrentCulture = _current;
         CultureInfo.DefaultThreadCurrentUICulture = _current;
 

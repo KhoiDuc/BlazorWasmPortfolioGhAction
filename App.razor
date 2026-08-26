@@ -26,3 +26,11 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Sync scoped CultureService with culture already applied in Program.cs
+        await CultureService.InitializeAsync();
+    }
+}

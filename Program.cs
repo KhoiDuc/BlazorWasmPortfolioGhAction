@@ -9,6 +9,7 @@ using BlazorWasmPortfolioGhAction.Data;
 using Microsoft.EntityFrameworkCore;
 using BlazorWasmPortfolioGhAction.Pages;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using BlazorWasmPortfolioGhAction.Shared.Model;
 using ManuHub.Blazor.Wasm.BrowserStorage;
 using GoogleMapsComponents;
@@ -19,6 +20,7 @@ using BlazorWasmPortfolioGhAction.Services.Auth;
 using BlazorWasmPortfolioGhAction.Services.Jwt;
 using BlazorWasmPortfolioGhAction.Services.Localization;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.JSInterop;
 using Blazored.LocalStorage;
 // using Microsoft.Authentication.WebAssembly.Msal; // MSAL — disabled (learning/demo only)
 
@@ -102,10 +104,50 @@ public static partial class Program
         // build the host
         var host = builder.Build();
 
-        var cultureService = host.Services.GetRequiredService<ICultureService>();
-        await cultureService.InitializeAsync();
+        // Culture must be set before first render. Do NOT resolve scoped services
+        // (ICultureService / IJSRuntime) from the root provider — that crashes WASM boot.
+        await SetStartupCultureAsync(host.Services);
 
         // Run the app
         await host.RunAsync();
+    }
+
+    private static async Task SetStartupCultureAsync(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var js = scope.ServiceProvider.GetRequiredService<IJSRuntime>();
+
+        string? saved = null;
+        try
+        {
+            saved = await js.InvokeAsync<string?>("cultureManager.get");
+        }
+        catch
+        {
+            // JS bridge may not be ready; keep Vietnamese default
+        }
+
+        var cultureName = CultureService.Normalize(saved);
+        CultureInfo culture;
+        try
+        {
+            culture = CultureInfo.GetCultureInfo(cultureName);
+        }
+        catch (CultureNotFoundException)
+        {
+            culture = CultureInfo.GetCultureInfo(CultureService.DefaultCultureName);
+        }
+
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+        try
+        {
+            await js.InvokeVoidAsync("cultureManager.setDocumentLang", culture.TwoLetterISOLanguageName);
+        }
+        catch
+        {
+            // ignore
+        }
     }
 }

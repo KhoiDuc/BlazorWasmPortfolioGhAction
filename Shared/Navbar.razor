@@ -73,7 +73,8 @@
     {
         await CultureService.ToggleAsync();
 
-        // Keep resume deep-link URL in sync when on a resume route
+        // Blazor WASM loads culture satellite assemblies (en/*.resources.wasm) at boot.
+        // Changing UICulture alone does not swap .resx strings — force a reload.
         var relative = Navigation.ToBaseRelativePath(Navigation.Uri).Trim('/');
         if (relative.Equals("resume", StringComparison.OrdinalIgnoreCase)
             || relative.Equals("MyResume", StringComparison.OrdinalIgnoreCase)
@@ -81,7 +82,11 @@
             || relative.StartsWith("en/resume", StringComparison.OrdinalIgnoreCase)
             || relative.StartsWith("vn/resume", StringComparison.OrdinalIgnoreCase))
         {
-            Navigation.NavigateTo($"{CultureService.UrlLang}/resume");
+            Navigation.NavigateTo($"{CultureService.UrlLang}/resume", forceLoad: true);
+        }
+        else
+        {
+            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
         }
     }
 
