@@ -1,17 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Khoi Nguyen Minh Duc - .NET Developer Portfolio featuring projects, utilities, and CV." />
-    <title>Khoi Duc - .NET Developer Portfolio</title>
+    <meta name="description" content="Khoi Nguyen Minh Duc - Portfolio .NET Developer với dự án, tiện ích và CV." />
+    <title>Khoi Duc - Portfolio .NET Developer</title>
     <base href="/BlazorWasmPortfolioGhAction/" />
     <script>
         (function () {
             var t = 'light';
             try { var s = localStorage.getItem('portfolio-theme'); if (s === 'dark' || s === 'light') t = s; } catch (e) {}
             document.documentElement.setAttribute('data-theme', t);
+            var c = 'vi';
+            try {
+                var lc = localStorage.getItem('app-culture');
+                if (lc) {
+                    lc = String(lc).toLowerCase();
+                    if (lc === 'en' || lc.indexOf('en-') === 0) c = 'en';
+                }
+            } catch (e) {}
+            document.documentElement.setAttribute('lang', c);
         })();
     </script>
     <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" />
@@ -113,6 +122,7 @@
     <script src="js/svg-diagram/SvgDiagram.js"></script>
 
     <script src="js/theme.js"></script>
+    <script src="js/culture.js"></script>
     <script src="js/script-loader.js"></script>
     <script src="js/tinymce-loader.js"></script>
     <script src="js/emailjs-bridge.js"></script>

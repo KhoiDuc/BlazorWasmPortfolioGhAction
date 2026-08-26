@@ -5662,54 +5662,65 @@ input[type="range"][b-2h15zs2qqi] {
 .contact-form[b-plvw88pkun] {
     display: flex;
     flex-direction: column;
-    gap: 1.1rem;
-    padding: 1.75rem;
-    border: 1px solid var(--color-border);
+    gap: 1.75rem;
+    padding: 2rem;
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
     border-radius: var(--radius-lg);
-    background:
-        linear-gradient(
-            165deg,
-            color-mix(in srgb, var(--color-accent) 4%, var(--color-bg-surface)) 0%,
-            var(--color-bg-surface) 45%
-        );
+    background: var(--color-bg-surface);
+    box-shadow:
+        0 1px 2px color-mix(in srgb, var(--color-text-primary) 5%, transparent),
+        0 10px 28px color-mix(in srgb, var(--color-text-primary) 7%, transparent);
+}
+
+.contact-form[b-plvw88pkun] (form) {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
 }
 
 .contact-form-row[b-plvw88pkun] {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 1.25rem;
 }
 
-.contact-form .tool-field[b-plvw88pkun] {
-    gap: 0.4rem;
+.contact-form[b-plvw88pkun] (.tool-field) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
 }
 
-.contact-form .tool-label[b-plvw88pkun] {
+.contact-form[b-plvw88pkun] (.tool-label) {
     letter-spacing: 0.06em;
 }
 
-.contact-form .tool-input[b-plvw88pkun],
-.contact-form .tool-textarea[b-plvw88pkun] {
+.contact-form[b-plvw88pkun] (.tool-input),
+.contact-form[b-plvw88pkun] (.tool-textarea) {
     width: 100%;
-    padding: 0.7rem 0.9rem;
+    box-sizing: border-box;
+    padding: 0.85rem 1rem;
     font-size: 0.95rem;
+    font-family: var(--font-family-base);
     line-height: 1.45;
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 14%, transparent);
     border-radius: var(--radius-sm);
     background-color: var(--color-bg-app);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--color-text-primary) 4%, transparent);
 }
 
-.contact-form .tool-textarea[b-plvw88pkun] {
-    min-height: 130px;
+.contact-form[b-plvw88pkun] (.tool-textarea) {
+    min-height: 150px;
     resize: vertical;
 }
 
-.contact-form .tool-actions[b-plvw88pkun] {
-    margin-top: 0.25rem;
+.contact-form[b-plvw88pkun] (.tool-actions) {
+    margin-top: 0.5rem;
+    padding-top: 0.35rem;
 }
 
 .contact-submit[b-plvw88pkun] {
-    min-height: 2.75rem;
-    padding-inline: 1.35rem;
+    min-height: 2.85rem;
+    padding-inline: 1.5rem;
     gap: 0.55rem;
 }
 
@@ -5752,7 +5763,12 @@ input[type="range"][b-2h15zs2qqi] {
     }
 
     .contact-form[b-plvw88pkun] {
-        padding: 1.25rem;
+        padding: 1.5rem;
+        gap: 1.5rem;
+    }
+
+    .contact-form[b-plvw88pkun] (form) {
+        gap: 1.5rem;
     }
 
     .contact-submit[b-plvw88pkun] {
@@ -5930,6 +5946,30 @@ body.is-scrolled .navbar[b-i080xik3gy] {
 
 .navbar-right[b-i080xik3gy] { display: flex; align-items: center; gap: 1rem; }
 
+.lang-toggle[b-i080xik3gy] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 0.75rem;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    transition: color var(--transition), border-color var(--transition), background-color var(--transition);
+}
+
+.lang-toggle:hover[b-i080xik3gy] {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+    background-color: var(--color-bg-glass-hover);
+}
+
 .theme-toggle[b-i080xik3gy] {
     display: flex;
     align-items: center;
@@ -5957,6 +5997,7 @@ body.is-scrolled .navbar[b-i080xik3gy] {
 @media (max-width: 768px) {
     .menu-toggle[b-i080xik3gy] { display: flex; }
     .theme-toggle[b-i080xik3gy] { display: flex !important; }
+    .lang-toggle[b-i080xik3gy] { display: inline-flex !important; }
     .navbar-links[b-i080xik3gy] {
         position: fixed;
         top: 72px;
