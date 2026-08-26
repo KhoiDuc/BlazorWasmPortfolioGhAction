@@ -69,19 +69,25 @@
         {
             <section class="broker-block">
                 <h4 class="broker-block-title">Thông tin mã</h4>
-                <div class="broker-form-row broker-form-row-2">
+                <div class="broker-form-row broker-form-row-2 broker-form-row-align">
                     <div class="broker-field">
-                        <label class="broker-field-label">Ngành</label>
-                        <input class="ts-input" placeholder="Ngân hàng, Bán lẻ…" @bind="Position.Sector" @bind:event="oninput" @bind:after="Changed" maxlength="80" />
+                        <label class="broker-field-label" for="pos-sector">Ngành</label>
+                        <input id="pos-sector" class="ts-input" placeholder="Ngân hàng, Bán lẻ…" @bind="Position.Sector" @bind:event="oninput" @bind:after="Changed" maxlength="80" />
+                        <div class="broker-field-footer">
+                            <span class="broker-field-slot-spacer" aria-hidden="true"></span>
+                        </div>
                     </div>
                     <div class="broker-field">
-                        <label class="broker-field-label">Trạng thái</label>
-                        <select class="ts-select" @bind="Position.Status" @bind:after="Changed">
+                        <label class="broker-field-label" for="pos-status">Trạng thái</label>
+                        <select id="pos-status" class="ts-select" @bind="Position.Status" @bind:after="Changed">
                             @foreach (var s in Enum.GetValues<BrokerPositionStatus>())
                             {
                                 <option value="@s">@BrokerStatusLabels.Vi(s)</option>
                             }
                         </select>
+                        <div class="broker-field-footer">
+                            <span class="broker-field-slot-spacer" aria-hidden="true"></span>
+                        </div>
                     </div>
                 </div>
             </section>

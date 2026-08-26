@@ -23,6 +23,15 @@
     else
     {
         var stats = BrokerPortfolioStatsCalculator.Compute(Portfolio, Quotes);
+        var filtered = GetFilteredPositions().ToList();
+        var sorted = GetSortedPositions(filtered).ToList();
+        var totalRows = sorted.Count;
+        var pageSize = _pageSize == 0 ? totalRows : _pageSize;
+        var totalPages = pageSize > 0 ? Math.Max(1, (int)Math.Ceiling(totalRows / (double)pageSize)) : 1;
+        var effectivePage = Math.Clamp(_page, 1, totalPages);
+        var pageRows = GetPageRows(sorted, pageSize, effectivePage);
+        var rangeStart = totalRows == 0 ? 0 : ((effectivePage - 1) * pageSize) + 1;
+        var rangeEnd = totalRows == 0 ? 0 : Math.Min(effectivePage * pageSize, totalRows);
 
         <div class="broker-portfolio-stats">
             @if (stats.HasMoneyStats)
@@ -73,85 +82,284 @@
             }
         </div>
 
-        <div class="broker-table-scroll">
-            <table class="ts-table broker-table">
-                <thead>
-                    <tr>
-                        <th>Mã</th>
-                        <th>Ngành</th>
-                        <th>Lần mua</th>
-                        <th>KL</th>
-                        <th>Giá TB</th>
-                        <th>Hiện tại</th>
-                        <th>% L/L</th>
-                        <th>Lãi/Lỗ (đ)</th>
-                        <th>Cắt lỗ</th>
-                        <th>Mục tiêu</th>
-                        <th>TT</th>
-                        <th>Note</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var p in Portfolio.Positions!.OrderBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase))
-                    {
-                        var current = Quote(p.Symbol);
-                        var pnl = p.PnlPct(current);
-                        var pnlAmt = p.PnlAmount(current);
-                        var selected = p.Symbol.Equals(SelectedSymbol, StringComparison.OrdinalIgnoreCase);
-                        <tr class="@(selected ? "selected" : "")"
-                            @onclick="() => OnSelect.InvokeAsync(p.Symbol)">
-                            <td>
-                                <span class="broker-symbol">@p.Symbol</span>
-                            </td>
-                            <td class="broker-sector">@DisplaySector(p.Sector)</td>
-                            <td>
-                                <div class="broker-lots">
-                                    @foreach (var (lot, idx) in p.Buys.OrderBy(b => b.BoughtAt).Select((b, idx) => (b, idx)))
-                                    {
-                                        <span class="broker-lot-chip" title="@LotTitle(lot)">@LotLabel(lot, idx + 1)</span>
-                                    }
-                                </div>
-                            </td>
-                            <td class="broker-num broker-qty">@BrokerFormat.Quantity(p.TotalQuantity)</td>
-                            <td class="broker-num">@(p.AvgBuy?.ToString("N2") ?? "—")</td>
-                            <td class="broker-num">@(current?.ToString("N2") ?? "—")</td>
-                            <td class="broker-num @(pnl is > 0 ? "ts-positive" : pnl is < 0 ? "ts-negative" : "")">
-                                @(pnl is null ? "—" : $"{pnl.Value:N2}%")
-                            </td>
-                            <td class="broker-num broker-pnl-amt @(pnlAmt is > 0 ? "ts-positive" : pnlAmt is < 0 ? "ts-negative" : "")">
-                                @BrokerFormat.Vnd(pnlAmt)
-                            </td>
-                            <td class="broker-num broker-stop">@BrokerLevelHelper.FormatDisplay(p.StopLoss, p.StopLossMode, p.StopLossInput, isStop: true)</td>
-                            <td class="broker-num broker-target">@BrokerLevelHelper.FormatDisplay(p.TargetPrice, p.TargetPriceMode, p.TargetPriceInput, isStop: false)</td>
-                            <td>
-                                @if (p.Status == BrokerPositionStatus.ChuaQuyet)
-                                {
-                                    <span class="broker-status-pill broker-status-muted">—</span>
-                                }
-                                else
-                                {
-                                    <span class="broker-status-pill broker-status-@p.Status">@BrokerStatusLabels.Vi(p.Status)</span>
-                                }
-                            </td>
-                            <td class="broker-note-cell">@DisplayLatestNote(p)</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <div class="broker-dt-toolbar">
+            <div class="broker-dt-toolbar-left">
+                <label class="broker-dt-label" for="broker-dt-search">Tìm kiếm</label>
+                <input id="broker-dt-search"
+                       class="ts-input broker-dt-search"
+                       type="search"
+                       placeholder="Mã, ngành, trạng thái, note…"
+                       @bind="_search"
+                       @bind:event="oninput"
+                       @bind:after="ResetPage" />
+            </div>
+            <div class="broker-dt-toolbar-right">
+                <label class="broker-dt-label" for="broker-dt-length">Hiển thị</label>
+                <select id="broker-dt-length" class="ts-select broker-dt-length" @bind="_pageSize" @bind:after="ResetPage">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="0">Tất cả</option>
+                </select>
+                <span class="broker-dt-label">dòng</span>
+            </div>
         </div>
+
+        @if (totalRows == 0)
+        {
+            <div class="broker-dt-empty-filter">
+                Không có dòng nào khớp “@_search”. <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ClearSearch">Xóa bộ lọc</button>
+            </div>
+        }
+        else
+        {
+            <div class="broker-table-scroll">
+                <table class="ts-table broker-table">
+                    <thead>
+                        <tr>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.Symbol)" @onclick='() => ToggleSort(SortColumn.Symbol)' @onclick:stopPropagation="true">
+                                Mã@SortIcon(SortColumn.Symbol)
+                            </th>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.Sector)" @onclick='() => ToggleSort(SortColumn.Sector)' @onclick:stopPropagation="true">
+                                Ngành@SortIcon(SortColumn.Sector)
+                            </th>
+                            <th>Lần mua</th>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.Quantity)" @onclick='() => ToggleSort(SortColumn.Quantity)' @onclick:stopPropagation="true">
+                                KL@SortIcon(SortColumn.Quantity)
+                            </th>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.AvgBuy)" @onclick='() => ToggleSort(SortColumn.AvgBuy)' @onclick:stopPropagation="true">
+                                Giá TB@SortIcon(SortColumn.AvgBuy)
+                            </th>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.Current)" @onclick='() => ToggleSort(SortColumn.Current)' @onclick:stopPropagation="true">
+                                Hiện tại@SortIcon(SortColumn.Current)
+                            </th>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.PnlPct)" @onclick='() => ToggleSort(SortColumn.PnlPct)' @onclick:stopPropagation="true">
+                                % L/L@SortIcon(SortColumn.PnlPct)
+                            </th>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.PnlAmount)" @onclick='() => ToggleSort(SortColumn.PnlAmount)' @onclick:stopPropagation="true">
+                                Lãi/Lỗ (đ)@SortIcon(SortColumn.PnlAmount)
+                            </th>
+                            <th>Cắt lỗ</th>
+                            <th>Mục tiêu</th>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.Status)" @onclick='() => ToggleSort(SortColumn.Status)' @onclick:stopPropagation="true">
+                                TT@SortIcon(SortColumn.Status)
+                            </th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in pageRows)
+                        {
+                            var current = Quote(p.Symbol);
+                            var pnl = p.PnlPct(current);
+                            var pnlAmt = p.PnlAmount(current);
+                            var selected = p.Symbol.Equals(SelectedSymbol, StringComparison.OrdinalIgnoreCase);
+                            <tr class="@(selected ? "selected" : "")"
+                                @onclick="() => OnSelect.InvokeAsync(p.Symbol)">
+                                <td>
+                                    <span class="broker-symbol">@p.Symbol</span>
+                                </td>
+                                <td class="broker-sector">@DisplaySector(p.Sector)</td>
+                                <td>
+                                    <div class="broker-lots">
+                                        @foreach (var (lot, idx) in p.Buys.OrderBy(b => b.BoughtAt).Select((b, idx) => (b, idx)))
+                                        {
+                                            <span class="broker-lot-chip" title="@LotTitle(lot)">@LotLabel(lot, idx + 1)</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="broker-num broker-qty">@BrokerFormat.Quantity(p.TotalQuantity)</td>
+                                <td class="broker-num">@(p.AvgBuy?.ToString("N2") ?? "—")</td>
+                                <td class="broker-num">@(current?.ToString("N2") ?? "—")</td>
+                                <td class="broker-num @(pnl is > 0 ? "ts-positive" : pnl is < 0 ? "ts-negative" : "")">
+                                    @(pnl is null ? "—" : $"{pnl.Value:N2}%")
+                                </td>
+                                <td class="broker-num broker-pnl-amt @(pnlAmt is > 0 ? "ts-positive" : pnlAmt is < 0 ? "ts-negative" : "")">
+                                    @BrokerFormat.Vnd(pnlAmt)
+                                </td>
+                                <td class="broker-num broker-stop">@BrokerLevelHelper.FormatDisplay(p.StopLoss, p.StopLossMode, p.StopLossInput, isStop: true)</td>
+                                <td class="broker-num broker-target">@BrokerLevelHelper.FormatDisplay(p.TargetPrice, p.TargetPriceMode, p.TargetPriceInput, isStop: false)</td>
+                                <td>
+                                    @if (p.Status == BrokerPositionStatus.ChuaQuyet)
+                                    {
+                                        <span class="broker-status-pill broker-status-muted">—</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="broker-status-pill broker-status-@p.Status">@BrokerStatusLabels.Vi(p.Status)</span>
+                                    }
+                                </td>
+                                <td class="broker-note-cell">@DisplayLatestNote(p)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="broker-dt-toolbar broker-dt-footer">
+                <span class="broker-dt-info">
+                    Hiển thị @rangeStart–@rangeEnd / @totalRows mã
+                    @if (!string.IsNullOrWhiteSpace(_search))
+                    {
+                        <text> (lọc từ @Portfolio.Positions!.Count)</text>
+                    }
+                </span>
+                <div class="broker-dt-pager">
+                    <button type="button"
+                            class="ts-btn ts-btn-outline ts-btn-sm broker-dt-page-btn"
+                            disabled="@(effectivePage <= 1)"
+                            @onclick="PrevPage">Trước</button>
+                    <span class="broker-dt-info">Trang @effectivePage / @totalPages</span>
+                    <button type="button"
+                            class="ts-btn ts-btn-outline ts-btn-sm broker-dt-page-btn"
+                            disabled="@(effectivePage >= totalPages)"
+                            @onclick="NextPage">Sau</button>
+                </div>
+            </div>
+        }
+
         <p class="broker-table-foot">Giá CP theo nghìn đồng (×1.000 đ) · Lãi/Lỗ (đ) = (giá hiện tại − giá TB) × KL × 1.000 · Cần KL để tính tiền.</p>
     }
 </div>
 
 @code {
+    private enum SortColumn
+    {
+        Symbol,
+        Sector,
+        Quantity,
+        AvgBuy,
+        Current,
+        PnlPct,
+        PnlAmount,
+        Status
+    }
+
     [Parameter] public BrokerPortfolio Portfolio { get; set; } = new();
     [Parameter] public Dictionary<string, decimal> Quotes { get; set; } = new();
     [Parameter] public string? SelectedSymbol { get; set; }
     [Parameter] public bool PriceBusy { get; set; }
     [Parameter] public EventCallback<string> OnSelect { get; set; }
 
+    private string _search = "";
+    private SortColumn _sortColumn = SortColumn.Symbol;
+    private bool _sortDesc;
+    private int _page = 1;
+    private int _pageSize = 10;
+
     private decimal? Quote(string symbol) =>
         Quotes.TryGetValue(symbol, out var v) ? v : null;
+
+    private IEnumerable<BrokerPosition> GetFilteredPositions()
+    {
+        var positions = Portfolio.Positions ?? [];
+        if (string.IsNullOrWhiteSpace(_search))
+            return positions;
+
+        var q = _search.Trim();
+        return positions.Where(p => MatchesSearch(p, q));
+    }
+
+    private bool MatchesSearch(BrokerPosition p, string q)
+    {
+        if (p.Symbol.Contains(q, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (!string.IsNullOrWhiteSpace(p.Sector) && p.Sector.Contains(q, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (BrokerStatusLabels.Vi(p.Status).Contains(q, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        var note = DisplayLatestNote(p);
+        if (!note.Equals("—", StringComparison.Ordinal) && note.Contains(q, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        foreach (var lot in p.Buys)
+        {
+            if (!string.IsNullOrWhiteSpace(lot.Note) && lot.Note.Contains(q, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    private IOrderedEnumerable<BrokerPosition> GetSortedPositions(IReadOnlyList<BrokerPosition> rows)
+    {
+        IEnumerable<BrokerPosition> source = rows;
+
+        return _sortColumn switch
+        {
+            SortColumn.Sector => OrderBy(source, p => p.Sector ?? "", StringComparer.OrdinalIgnoreCase),
+            SortColumn.Quantity => OrderBy(source, p => p.TotalQuantity),
+            SortColumn.AvgBuy => OrderBy(source, p => p.AvgBuy),
+            SortColumn.Current => OrderBy(source, p => Quote(p.Symbol)),
+            SortColumn.PnlPct => OrderBy(source, p => p.PnlPct(Quote(p.Symbol))),
+            SortColumn.PnlAmount => OrderBy(source, p => p.PnlAmount(Quote(p.Symbol))),
+            SortColumn.Status => OrderBy(source, p => (int)p.Status),
+            _ => OrderBy(source, p => p.Symbol, StringComparer.OrdinalIgnoreCase)
+        };
+    }
+
+    private IOrderedEnumerable<BrokerPosition> OrderBy<T>(
+        IEnumerable<BrokerPosition> source,
+        Func<BrokerPosition, T> key,
+        IComparer<T>? comparer = null)
+    {
+        comparer ??= Comparer<T>.Default;
+        return _sortDesc
+            ? source.OrderByDescending(key, comparer)
+            : source.OrderBy(key, comparer);
+    }
+
+    private static List<BrokerPosition> GetPageRows(IEnumerable<BrokerPosition> sorted, int pageSize, int page)
+    {
+        var list = sorted.ToList();
+        if (pageSize <= 0 || pageSize >= list.Count)
+            return list;
+
+        var skip = Math.Max(0, (page - 1) * pageSize);
+        return list.Skip(skip).Take(pageSize).ToList();
+    }
+
+    private void ToggleSort(SortColumn column)
+    {
+        if (_sortColumn == column)
+            _sortDesc = !_sortDesc;
+        else
+        {
+            _sortColumn = column;
+            _sortDesc = column is SortColumn.PnlPct or SortColumn.PnlAmount or SortColumn.Current;
+        }
+
+        ResetPage();
+    }
+
+    private string SortClass(SortColumn column) =>
+        _sortColumn == column ? "broker-dt-sorted" : "";
+
+    private MarkupString SortIcon(SortColumn column)
+    {
+        if (_sortColumn != column)
+            return new MarkupString("");
+
+        return new MarkupString(_sortDesc
+            ? "<span class=\"broker-dt-sort-icon\" aria-hidden=\"true\">▼</span>"
+            : "<span class=\"broker-dt-sort-icon\" aria-hidden=\"true\">▲</span>");
+    }
+
+    private void ResetPage() => _page = 1;
+
+    private void ClearSearch()
+    {
+        _search = "";
+        ResetPage();
+    }
+
+    private void PrevPage()
+    {
+        if (_page > 1) _page--;
+    }
+
+    private void NextPage() => _page++;
 
     private static string DisplaySector(string sector) =>
         string.IsNullOrWhiteSpace(sector) ? "—" : sector;

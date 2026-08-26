@@ -18,23 +18,13 @@
             <div class="jwt-global-actions">
                 <div class="jwt-action-group">
                     <button type="button" class="jwt-link-btn" @onclick="LoadExample">Generate example</button>
-                    <div class="jwt-alg-dropdown">
-                        <button type="button" class="jwt-alg-trigger" @onclick="ToggleAlgMenu" aria-haspopup="listbox" aria-expanded="@_algMenuOpen" aria-label="Select signing algorithm">
-                            <span>Select signing algorithm</span>
-                            <i class="bi bi-chevron-down" aria-hidden="true"></i>
-                        </button>
-                        @if (_algMenuOpen)
+                    <select @key="_exampleSelectKey" class="jwt-alg-select" value="@_exampleSelectValue" @onchange="OnExampleAlgorithmSelected" aria-label="Select signing algorithm">
+                        <option value="">Select signing algorithm</option>
+                        @foreach (var alg in JwtAlgorithm.All)
                         {
-                            <ul class="jwt-alg-menu" role="listbox" aria-label="Select signing algorithm">
-                                @foreach (var alg in JwtAlgorithm.All)
-                                {
-                                    <li role="presentation">
-                                        <button type="button" role="option" class="jwt-alg-option @(_algorithm == alg ? "is-selected" : "")" aria-selected="@(_algorithm == alg)" @onclick="() => SelectExampleAlgorithm(alg)">@alg</button>
-                                    </li>
-                                }
-                            </ul>
+                            <option value="@alg">@alg</option>
                         }
-                    </div>
+                    </select>
                 </div>
                 <button type="button" class="tool-btn tool-btn-danger jwt-clear-btn" @onclick="ClearAll" title="Clear">
                     <i class="bi bi-trash" aria-hidden="true"></i>

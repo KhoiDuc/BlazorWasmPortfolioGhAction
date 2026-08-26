@@ -24,14 +24,20 @@
            placeholder="@ActivePlaceholder"
            @bind="Input"
            @bind:after="NotifyChanged" />
-    @if (ShowPreview)
-    {
-        <p class="broker-field-preview">≈ @ResolvedPrice:N2 từ giá @BuyPrice:N2</p>
-    }
-    @if (!string.IsNullOrEmpty(Error))
-    {
-        <p class="ts-field-error">@Error</p>
-    }
+    <div class="broker-field-footer">
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <p class="ts-field-error">@Error</p>
+        }
+        else if (ShowPreview)
+        {
+            <p class="broker-field-preview">≈ @ResolvedPrice:N2 từ giá @BuyPrice:N2</p>
+        }
+        else
+        {
+            <span class="broker-field-slot-spacer" aria-hidden="true"></span>
+        }
+    </div>
 </div>
 
 @code {

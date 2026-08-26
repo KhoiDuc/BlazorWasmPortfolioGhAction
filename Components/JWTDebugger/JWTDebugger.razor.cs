@@ -36,7 +36,8 @@ public partial class JWTDebugger
 
     private bool _syncing;
     private bool _initialized;
-    private bool _algMenuOpen;
+    private string _exampleSelectValue = string.Empty;
+    private int _exampleSelectKey;
 
     private bool IsDecoder => _mode == JwtMode.Decoder;
     private bool IsEncoder => _mode == JwtMode.Encoder;
@@ -79,15 +80,18 @@ public partial class JWTDebugger
     private void SetHeaderView(JsonView view) => _headerView = view;
     private void SetPayloadView(JsonView view) => _payloadView = view;
 
-    private void ToggleAlgMenu() => _algMenuOpen = !_algMenuOpen;
-
-    private void SelectExampleAlgorithm(string algorithm)
+    private void OnExampleAlgorithmSelected(ChangeEventArgs e)
     {
-        if (!JwtAlgorithm.IsSupported(algorithm))
+        var algorithm = e.Value?.ToString();
+        if (string.IsNullOrWhiteSpace(algorithm) || !JwtAlgorithm.IsSupported(algorithm))
+        {
+            _exampleSelectValue = string.Empty;
             return;
+        }
 
         _algorithm = algorithm;
-        _algMenuOpen = false;
+        _exampleSelectValue = string.Empty;
+        _exampleSelectKey++;
         LoadExampleForAlgorithm();
     }
 
@@ -285,11 +289,7 @@ public partial class JWTDebugger
         _verifyMessage = verify.Message;
     }
 
-    private void LoadExample()
-    {
-        _algMenuOpen = false;
-        LoadExampleForAlgorithm();
-    }
+    private void LoadExample() => LoadExampleForAlgorithm();
 
     private void LoadExampleForAlgorithm()
     {
@@ -335,7 +335,7 @@ public partial class JWTDebugger
 
     private void ClearAll()
     {
-        _algMenuOpen = false;
+        _exampleSelectValue = string.Empty;
         _encoded = string.Empty;
         _headerJson = string.Empty;
         _payloadJson = string.Empty;

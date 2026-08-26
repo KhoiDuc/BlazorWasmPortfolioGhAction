@@ -67,7 +67,7 @@
                             <p class="ts-field-error">@errSymbol</p>
                         }
                     </div>
-                    <div class="broker-form-row broker-form-row-2">
+                    <div class="broker-form-row broker-form-row-2 broker-form-row-align">
                         <div class="broker-field">
                             <label class="broker-field-label" for="broker-price">Giá mua</label>
                             <input id="broker-price"
@@ -79,13 +79,22 @@
                                    required
                                    @bind="_newPrice"
                                    @bind:after='() => ClearFieldError("price")' />
-                            @if (_fieldErrors.TryGetValue("price", out var errPrice))
-                            {
-                                <p class="ts-field-error">@errPrice</p>
-                            }
+                            <div class="broker-field-footer">
+                                @if (_fieldErrors.TryGetValue("price", out var errPrice))
+                                {
+                                    <p class="ts-field-error">@errPrice</p>
+                                }
+                                else
+                                {
+                                    <span class="broker-field-slot-spacer" aria-hidden="true"></span>
+                                }
+                            </div>
                         </div>
                         <div class="broker-field">
-                            <label class="broker-field-label" for="broker-qty">Khối lượng <span class="broker-optional">tùy chọn</span></label>
+                            <label class="broker-field-label" for="broker-qty">
+                                Khối lượng
+                                <span class="broker-optional">(tùy chọn)</span>
+                            </label>
                             <input id="broker-qty"
                                    class='ts-input @FieldClass("qty")'
                                    placeholder="100"
@@ -94,10 +103,16 @@
                                    step="any"
                                    @bind="_newQty"
                                    @bind:after='() => ClearFieldError("qty")' />
-                            @if (_fieldErrors.TryGetValue("qty", out var errQty))
-                            {
-                                <p class="ts-field-error">@errQty</p>
-                            }
+                            <div class="broker-field-footer">
+                                @if (_fieldErrors.TryGetValue("qty", out var errQty))
+                                {
+                                    <p class="ts-field-error">@errQty</p>
+                                }
+                                else
+                                {
+                                    <span class="broker-field-slot-spacer" aria-hidden="true"></span>
+                                }
+                            </div>
                         </div>
                     </div>
                 </section>
