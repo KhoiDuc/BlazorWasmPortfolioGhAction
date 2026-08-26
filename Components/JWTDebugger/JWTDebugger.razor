@@ -2,23 +2,38 @@
 
 <ToolShell Title="JWT Debugger" Icon="bi-shield-lock" Description="Decode and encode JWTs, verify signatures, and inspect claims — inspired by jwt.io.">
     <div class="jwt-debugger">
-        <div class="jwt-toolbar">
+        <div class="jwt-mode-bar">
             <div class="jwt-mode-toggle" role="tablist" aria-label="JWT mode">
                 <button type="button" class="jwt-mode-btn @(_mode == JwtMode.Decoder ? "is-active" : "")" @onclick="() => SetMode(JwtMode.Decoder)">JWT Decoder</button>
                 <button type="button" class="jwt-mode-btn @(_mode == JwtMode.Encoder ? "is-active" : "")" @onclick="() => SetMode(JwtMode.Encoder)">JWT Encoder</button>
             </div>
-            @if (IsDecoder)
-            {
-                <div class="jwt-toolbar-actions">
-                    <button type="button" class="tool-btn" @onclick="LoadExample"><i class="bi bi-stars" aria-hidden="true"></i> Generate example</button>
-                    <button type="button" class="tool-btn tool-btn-danger" @onclick="ClearAll"><i class="bi bi-trash" aria-hidden="true"></i> Clear</button>
+        </div>
+
+        <div class="jwt-action-bar">
+            <p class="jwt-mode-lead">
+                @(IsDecoder
+                    ? "Paste a JWT below that you'd like to decode, validate, and verify."
+                    : "Fill in the fields below to generate a signed JWT.")
+            </p>
+            <div class="jwt-global-actions">
+                <button type="button" class="jwt-link-btn" @onclick="LoadExample">Generate example</button>
+                <div class="jwt-alg-picker">
+                    <label class="visually-hidden" for="jwt-algorithm">Select signing algorithm</label>
+                    <select id="jwt-algorithm" class="tool-select jwt-alg-select" value="@_algorithm" @onchange="OnAlgorithmChanged" aria-label="Select signing algorithm">
+                        @foreach (var alg in JwtAlgorithm.All)
+                        {
+                            <option value="@alg">@alg</option>
+                        }
+                    </select>
                 </div>
-            }
+                <button type="button" class="tool-btn tool-btn-danger jwt-clear-btn" @onclick="ClearAll" title="Clear">
+                    <i class="bi bi-trash" aria-hidden="true"></i>
+                </button>
+            </div>
         </div>
 
         @if (IsDecoder)
         {
-            <p class="jwt-mode-lead">Paste a JWT below that you'd like to decode, validate, and verify.</p>
             <div class="jwt-layout jwt-layout-decoder">
                 <section class="jwt-pane jwt-pane-encoded">
                     <h4 class="jwt-section-title">Encoded Token</h4>
@@ -51,18 +66,7 @@
                 </section>
 
                 <section class="jwt-pane jwt-pane-decoded">
-                    <div class="jwt-pane-header jwt-pane-header-row">
-                        <div>
-                            <h4 class="jwt-section-title">Decoded Token</h4>
-                            <p class="jwt-pane-desc">Inspect decoded header and payload. Edit JSON to re-sign when a secret/key is provided.</p>
-                        </div>
-                        <div class="tool-field jwt-alg-field">
-                            <label class="tool-label" for="jwt-algorithm-decoder">Signing algorithm</label>
-                            <select id="jwt-algorithm-decoder" class="tool-select" value="@_algorithm" @onchange="OnAlgorithmChanged">
-                                @foreach (var alg in JwtAlgorithm.All) { <option value="@alg">@alg</option> }
-                            </select>
-                        </div>
-                    </div>
+                    <h4 class="jwt-section-title">Decoded Token</h4>
 
                     @if (string.Equals(_algorithm, "none", StringComparison.OrdinalIgnoreCase))
                     {
@@ -134,17 +138,6 @@
         }
         else
         {
-            <div class="jwt-encoder-head">
-                <p class="jwt-mode-lead">Fill in the fields below to generate a signed JWT.</p>
-                <div class="jwt-encoder-tools">
-                    <select id="jwt-algorithm" class="tool-select jwt-alg-select" value="@_algorithm" @onchange="OnAlgorithmChanged">
-                        @foreach (var alg in JwtAlgorithm.All) { <option value="@alg">@alg</option> }
-                    </select>
-                    <button type="button" class="tool-btn" @onclick="LoadExample"><i class="bi bi-stars" aria-hidden="true"></i> Generate example</button>
-                    <button type="button" class="tool-btn tool-btn-danger" @onclick="ClearAll"><i class="bi bi-trash" aria-hidden="true"></i> Clear</button>
-                </div>
-            </div>
-
             @if (string.Equals(_algorithm, "none", StringComparison.OrdinalIgnoreCase))
             {
                 <div class="tool-alert tool-alert-warning jwt-none-warning"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> The <strong>none</strong> algorithm produces unsigned tokens.</div>
