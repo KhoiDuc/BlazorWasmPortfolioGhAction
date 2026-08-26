@@ -671,26 +671,80 @@
     white-space: nowrap;
 }
 
-.jwt-alg-label[b-pq9h7es952] {
-    padding: 0.45rem 0.65rem;
-    border-right: 1px solid var(--color-border);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-secondary);
-    white-space: nowrap;
-    cursor: default;
-    user-select: none;
-}
-
 .jwt-action-group .jwt-link-btn:hover[b-pq9h7es952] {
     background: var(--color-bg-glass-hover);
 }
 
-.jwt-action-group .jwt-alg-select[b-pq9h7es952] {
-    min-width: 130px;
+.jwt-alg-dropdown[b-pq9h7es952] {
+    position: relative;
+    min-width: 220px;
+}
+
+.jwt-alg-trigger[b-pq9h7es952] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.45rem 0.85rem;
     border: none;
     border-radius: 0;
     background: transparent;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    text-align: left;
+}
+
+.jwt-alg-trigger:hover[b-pq9h7es952],
+.jwt-alg-trigger[aria-expanded="True"][b-pq9h7es952] {
+    background: var(--color-bg-glass-hover);
+    color: var(--color-text-primary);
+}
+
+.jwt-alg-trigger i[b-pq9h7es952] {
+    font-size: 0.75rem;
+    opacity: 0.75;
+}
+
+.jwt-alg-menu[b-pq9h7es952] {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    right: 0;
+    z-index: 20;
+    min-width: 100%;
+    max-height: 280px;
+    margin: 0;
+    padding: 0.35rem 0;
+    list-style: none;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.jwt-alg-option[b-pq9h7es952] {
+    display: block;
+    width: 100%;
+    padding: 0.45rem 0.85rem;
+    border: none;
+    background: transparent;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    text-align: left;
+    cursor: pointer;
+}
+
+.jwt-alg-option:hover[b-pq9h7es952],
+.jwt-alg-option.is-selected[b-pq9h7es952] {
+    background: var(--color-bg-glass-hover);
+}
+
+.jwt-alg-option.is-selected[b-pq9h7es952] {
+    color: var(--color-accent);
+    font-weight: var(--font-weight-semibold);
 }
 
 .jwt-link-btn[b-pq9h7es952] {
