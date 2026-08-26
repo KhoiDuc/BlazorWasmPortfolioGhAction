@@ -1,4 +1,7 @@
-﻿<Fluxor.Blazor.Web.StoreInitializer />
+﻿@inherits CultureAwareComponent
+@inject IStringLocalizer<SharedResources> L
+
+<Fluxor.Blazor.Web.StoreInitializer />
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
@@ -10,7 +13,7 @@
                     }
                     else
                     {
-                        <p role="alert">You are not authorized to access this resource.</p>
+                        <p role="alert">@L["App_NotAuthorized"]</p>
                     }
                 </NotAuthorized>
             </AuthorizeRouteView>

@@ -1,6 +1,7 @@
 @page "/wiki"
 @page "/wiki/{PageName}/{Section?}/{SubSection?}"
 @page "/wiki/edit/{PageName}/{Section?}/{SubSection?}"
+@inherits CultureAwareComponent
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using BlazorWasmPortfolioGhAction.Store.Actions
@@ -12,6 +13,7 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthStateProvider
+@inject IStringLocalizer<SharedResources> L
 @implements IDisposable
 
 <div class="page-section wiki-hub">
@@ -19,9 +21,9 @@
         <div class="container">
             <header class="wiki-hero">
                 <div class="wiki-hero-copy">
-                    <p class="section-label">WIKI</p>
-                    <h2>Knowledge base</h2>
-                    <p class="wiki-hero-lead">Browse portfolio notes, project docs, and editable sections.</p>
+                    <p class="section-label">@L["Wiki_Label"]</p>
+                    <h2>@L["Wiki_Title"]</h2>
+                    <p class="wiki-hero-lead">@L["Wiki_Lead"]</p>
                 </div>
                 <div class="wiki-hero-actions">
                     <AuthorizeView>
@@ -29,19 +31,19 @@
                             @if (!IsEditMode)
                             {
                                 <a class="tool-btn tool-btn-primary" href="@EditUrl">
-                                    <i class="bi bi-pencil" aria-hidden="true"></i> Edit wiki
+                                    <i class="bi bi-pencil" aria-hidden="true"></i> @L["Wiki_Edit"]
                                 </a>
                             }
                             else
                             {
                                 <a class="tool-btn tool-btn-secondary" href="@ReadUrl">
-                                    <i class="bi bi-eye" aria-hidden="true"></i> Read-only view
+                                    <i class="bi bi-eye" aria-hidden="true"></i> @L["Wiki_ReadOnly"]
                                 </a>
                             }
                         </Authorized>
                         <NotAuthorized>
                             <a class="tool-btn tool-btn-primary" href="@AdminLoginUrl">
-                                <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Admin login
+                                <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> @L["Wiki_AdminLogin"]
                             </a>
                         </NotAuthorized>
                     </AuthorizeView>
@@ -51,16 +53,16 @@
             <div class="wiki-toolbar">
                 <SearchBar type="Search"
                            Label=""
-                           Placeholder="Search pages, sections, or content..."
+                           Placeholder="@L["Wiki_SearchPlaceholder"]"
                            SearchTermChanged="OnSearchChanged" />
                 <div class="wiki-toolbar-meta">
                     @if (IsEditMode)
                     {
-                        <span class="wiki-mode-badge is-edit">Editing</span>
+                        <span class="wiki-mode-badge is-edit">@L["Wiki_Editing"]</span>
                     }
                     @if (IsContentReady)
                     {
-                        <span class="wiki-stat">@FilteredContents.Count section@(FilteredContents.Count == 1 ? "" : "s")</span>
+                        <span class="wiki-stat">@string.Format(L["Wiki_Sections"], FilteredContents.Count)</span>
                     }
                 </div>
             </div>
@@ -68,23 +70,23 @@
             @if (!IsContentReady)
             {
                 <div class="wiki-state wiki-state-loading">
-                    <div class="tool-spinner" role="status" aria-label="Loading wiki"></div>
-                    <p>Loading wiki content...</p>
+                    <div class="tool-spinner" role="status" aria-label="@L["Wiki_LoadingAria"]"></div>
+                    <p>@L["Wiki_Loading"]</p>
                 </div>
             }
             else if (FilteredContents.Count == 0)
             {
                 <div class="wiki-state wiki-state-empty">
                     <i class="bi bi-journal-x" aria-hidden="true"></i>
-                    <h3>No sections found</h3>
+                    <h3>@L["Wiki_EmptyTitle"]</h3>
                     <p>
                         @if (IsEditMode)
                         {
-                            <span>Add content using the editor below or adjust your search.</span>
+                            <span>@L["Wiki_EmptyEdit"]</span>
                         }
                         else
                         {
-                            <span>Try another search term or open a different wiki route.</span>
+                            <span>@L["Wiki_EmptyRead"]</span>
                         }
                     </p>
                 </div>
@@ -267,7 +269,11 @@
 
     private void OnContentStateChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
-    public void Dispose() => ContentState.StateChanged -= OnContentStateChanged;
+    public override void Dispose()
+    {
+        ContentState.StateChanged -= OnContentStateChanged;
+        base.Dispose();
+    }
 
     private record TocEntry(int Index, string Label, string LevelClass);
 }

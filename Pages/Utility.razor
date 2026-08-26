@@ -1,4 +1,6 @@
 @page "/Utility/{Component?}"
+@inherits CultureAwareComponent
+@inject IStringLocalizer<SharedResources> L
 @using BlazorWasmPortfolioGhAction.Components.Ascii
 @using BlazorWasmPortfolioGhAction.Components.Teams
 @using BlazorWasmPortfolioGhAction.Components.Github
@@ -9,9 +11,9 @@
         <div class="container">
             <header class="utility-deck-header">
                 <div class="utility-deck-intro">
-                    <p class="section-label">DEVELOPER UTILITIES</p>
-                    <h2>Tool deck</h2>
-                    <p class="utility-deck-lead">Search, filter, and launch converters, calculators, and DevOps helpers.</p>
+                    <p class="section-label">@L["Utility_Label"]</p>
+                    <h2>@L["Utility_Title"]</h2>
+                    <p class="utility-deck-lead">@L["Utility_Lead"]</p>
                 </div>
 
                 <div class="utility-deck-controls">
@@ -20,19 +22,19 @@
                         <input id="utility-filter"
                                type="search"
                                class="utility-deck-search-input"
-                               placeholder="Search tools..."
+                               placeholder="@L["Utility_SearchPlaceholder"]"
                                @bind="_filter"
                                @bind:event="oninput"
-                               aria-label="Search tools" />
+                               aria-label="@L["Utility_SearchAria"]" />
                     </div>
 
             @if (Component == null)
             {
-                <div class="utility-deck-pills" role="tablist" aria-label="Tool categories">
+                <div class="utility-deck-pills" role="tablist" aria-label="@L["Utility_CategoriesAria"]">
                     <button type="button"
                             class="utility-pill @(_activeCategory == null ? "is-active" : "")"
                             @onclick="SelectAllCategories">
-                        All
+                        @L["Utility_All"]
                     </button>
                     @foreach (var category in Categories)
                     {
@@ -40,7 +42,7 @@
                         <button type="button"
                                 class="utility-pill @(_activeCategory == cat ? "is-active" : "")"
                                 @onclick="() => SelectCategory(cat)">
-                            @cat
+                            @LocalizeCategory(cat)
                         </button>
                     }
                 </div>
@@ -53,10 +55,10 @@
                 <div class="utility-launcher">
                     @foreach (var group in LauncherGroups)
                     {
-                        <section class="utility-launch-group" aria-labelledby="@($"utility-group-{group.CategoryName}")">
-                            <h3 id="@($"utility-group-{group.CategoryName}")" class="utility-launch-group-title">
+                        <section class="utility-launch-group" aria-labelledby="@($"utility-group-{group.CategoryKey}")">
+                            <h3 id="@($"utility-group-{group.CategoryKey}")" class="utility-launch-group-title">
                                 <i class="bi @group.Icon" aria-hidden="true"></i>
-                                @group.CategoryName
+                                @LocalizeCategory(group.CategoryKey)
                                 <span class="utility-launch-count">@group.Tools.Count</span>
                             </h3>
                             <div class="utility-launch-grid">
@@ -67,8 +69,8 @@
                                             <i class="bi @tool.Icon"></i>
                                         </span>
                                         <span class="utility-launch-body">
-                                            <strong>@tool.Title</strong>
-                                            <span>@tool.Description</span>
+                                            <strong>@L[tool.TitleKey]</strong>
+                                            <span>@L[tool.DescKey]</span>
                                         </span>
                                         <i class="bi bi-arrow-up-right utility-launch-arrow" aria-hidden="true"></i>
                                     </NavLink>
@@ -81,8 +83,8 @@
                     {
                         <div class="utility-launch-empty">
                             <i class="bi bi-search" aria-hidden="true"></i>
-                            <h3>No tools found</h3>
-                            <p>Try a different search term or category filter.</p>
+                            <h3>@L["Utility_NoToolsTitle"]</h3>
+                            <p>@L["Utility_NoToolsLead"]</p>
                         </div>
                     }
                 </div>
@@ -93,24 +95,24 @@
                     <div class="utility-workspace-bar">
                         <NavLink href="Utility" class="utility-back-link">
                             <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
-                            All tools
+                            @L["Utility_AllTools"]
                         </NavLink>
                         <div class="utility-workspace-meta">
                             @if (ActiveTool is not null)
                             {
-                                <span class="utility-workspace-category">@ActiveTool.Category</span>
-                                <h3>@ActiveTool.Title</h3>
+                                <span class="utility-workspace-category">@LocalizeCategory(ActiveTool.CategoryKey)</span>
+                                <h3>@L[ActiveTool.TitleKey]</h3>
                             }
                         </div>
                         <div class="utility-workspace-switch">
-                            <label class="visually-hidden" for="utility-switch">Switch tool</label>
+                            <label class="visually-hidden" for="utility-switch">@L["Utility_SwitchTool"]</label>
                             <select id="utility-switch"
                                     class="utility-switch-select"
                                     value="@Component"
                                     @onchange="OnToolSwitch">
-                                @foreach (var tool in AllTools.OrderBy(t => t.Title))
+                                @foreach (var tool in AllTools.OrderBy(t => L[t.TitleKey].Value))
                                 {
-                                    <option value="@tool.Key">@tool.Title</option>
+                                    <option value="@tool.Key">@L[tool.TitleKey]</option>
                                 }
                             </select>
                         </div>
@@ -132,7 +134,7 @@
     private string _filter = "";
     private string? _activeCategory;
 
-    private IEnumerable<string> Categories => AllTools.Select(t => t.Category).Distinct().OrderBy(c => c);
+    private IEnumerable<string> Categories => AllTools.Select(t => t.CategoryKey).Distinct().OrderBy(c => LocalizeCategory(c));
 
     private ToolDef? ActiveTool =>
         AllTools.FirstOrDefault(t => string.Equals(t.Key, Component, StringComparison.OrdinalIgnoreCase));
@@ -143,12 +145,12 @@
         {
             var tools = FilteredTools.ToList();
             return tools
-                .GroupBy(t => t.Category)
-                .OrderBy(g => g.Key)
+                .GroupBy(t => t.CategoryKey)
+                .OrderBy(g => LocalizeCategory(g.Key))
                 .Select(g => new LaunchGroup(
                     g.Key,
                     CategoryIcons.GetValueOrDefault(g.Key, "bi-folder2"),
-                    g.OrderBy(t => t.Title).ToList()));
+                    g.OrderBy(t => L[t.TitleKey].Value).ToList()));
         }
     }
 
@@ -158,13 +160,25 @@
         {
             var term = _filter.Trim();
             return AllTools.Where(t =>
-                (_activeCategory == null || t.Category == _activeCategory)
+                (_activeCategory == null || t.CategoryKey == _activeCategory)
                 && (string.IsNullOrEmpty(term)
-                    || t.Title.Contains(term, StringComparison.OrdinalIgnoreCase)
-                    || t.Description.Contains(term, StringComparison.OrdinalIgnoreCase)
-                    || t.Category.Contains(term, StringComparison.OrdinalIgnoreCase)));
+                    || L[t.TitleKey].Value.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || L[t.DescKey].Value.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || LocalizeCategory(t.CategoryKey).Contains(term, StringComparison.OrdinalIgnoreCase)));
         }
     }
+
+    private string LocalizeCategory(string categoryKey) => categoryKey switch
+    {
+        "General Tools" => L["Cat_General"],
+        "SQL Tools" => L["Cat_SQL"],
+        "Cryptography Tools" => L["Cat_Crypto"],
+        "Time & Calculation Tools" => L["Cat_TimeCalc"],
+        "Encoding & Format Tools" => L["Cat_Encoding"],
+        "Testing Library Tools" => L["Cat_Testing"],
+        "DevOps Tools" => L["Cat_DevOps"],
+        _ => categoryKey
+    };
 
     private void SelectAllCategories() => SelectCategory(null);
 
@@ -287,7 +301,10 @@
 
     private RenderFragment RenderDefaultComponent() => builder =>
     {
-        builder.AddMarkupContent(0, "<div class=\"utility-unknown tool-alert tool-alert-info\">Unknown tool. Pick one from the tool deck.</div>");
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "utility-unknown tool-alert tool-alert-info");
+        builder.AddContent(2, L["Utility_Unknown"]);
+        builder.CloseElement();
     };
 
     private static readonly Dictionary<string, string> CategoryIcons = new(StringComparer.OrdinalIgnoreCase)
@@ -303,52 +320,54 @@
 
     private static readonly List<ToolDef> AllTools = new()
     {
-        new("base64", "Base64", "bi-file-binary", "Encode and decode Base64 strings.", "General Tools"),
-        new("urls", "URL Tools", "bi-link-45deg", "Split URLs and percent-encode text.", "General Tools"),
-        new("guid", "GUID Generator", "bi-hash", "Generate formatted GUIDs in bulk.", "General Tools"),
-        new("html", "HTML Encode/Decode", "bi-code-slash", "Convert HTML entities safely.", "General Tools"),
-        new("markdown", "Markdown Converter", "bi-markdown", "Transform HTML into Markdown.", "General Tools"),
-        new("converter", "Unit Converters", "bi-arrow-left-right", "Hex, memory, and time converters.", "General Tools"),
-        new("stringconverter", "String Converter", "bi-fonts", "Change text casing and formats.", "General Tools"),
-        new("geminispellchecker", "Spell Checker (Gemini)", "bi-spellcheck", "Vietnamese spell check via Gemini.", "General Tools"),
-        new("randomfact", "Random Fact", "bi-lightbulb", "Fetch a random fact from the web.", "General Tools"),
-        new("jokequotes", "Joke Quotes", "bi-emoji-laughing", "Random jokes with category filters.", "General Tools"),
-        new("sqlite", "SQLite Integration", "bi-database", "Client-side SQLite + EF Core demo.", "SQL Tools"),
-        new("jwt", "JWT Debugger", "bi-shield-lock", "Decode, encode, and verify JWTs with live sync like jwt.io.", "Cryptography Tools"),
-        new("luhn", "Luhn Checker", "bi-credit-card", "Validate numbers with Luhn algorithm.", "Cryptography Tools"),
-        new("cryptography", "MD5 / Hash", "bi-fingerprint", "Generate MD5 hashes from text.", "Cryptography Tools"),
-        new("mathcalculator", "Math Calculator", "bi-calculator", "Squaring and perimeter demos.", "Time & Calculation Tools"),
-        new("overnightmintemp", "Min Temp Calculator", "bi-thermometer-half", "Estimate overnight minimum temperature.", "Time & Calculation Tools"),
-        new("cidrcalculator", "CIDR Calculator", "bi-diagram-3", "Convert IP ranges and CIDR notation.", "Time & Calculation Tools"),
-        new("timerstopwatch", "Timer / Stopwatch", "bi-stopwatch", "Countdown timer and stopwatch.", "Time & Calculation Tools"),
-        new("epoch", "Epoch Converter", "bi-clock-history", "Unix timestamp to readable dates.", "Time & Calculation Tools"),
-        new("currenttime", "Current Time", "bi-clock", "UTC, local, and world clocks.", "Time & Calculation Tools"),
-        new("ascii", "ASCII", "bi-keyboard", "Decimal, hex, and oct ASCII values.", "Encoding & Format Tools"),
-        new("colourconverter", "Colour Converter", "bi-palette", "Pick colors and read RGB values.", "Encoding & Format Tools"),
-        new("binary", "Binary", "bi-0-circle", "Convert binary strings and text.", "Encoding & Format Tools"),
-        new("unicode", "Unicode Picker", "bi-translate", "Browse and search Unicode chars.", "Encoding & Format Tools"),
-        new("hcf", "Hidden Char Finder", "bi-eye", "Reveal invisible Unicode characters.", "Encoding & Format Tools"),
-        new("fluxortest", "Fluxor Test", "bi-boxes", "Fluxor state management examples.", "Testing Library Tools"),
-        new("webglrender", "WebGL Canvas", "bi-gpu-card", "WebGL rendering experiments.", "Testing Library Tools"),
-        new("browserstorage", "Browser Storage WASM", "bi-hdd-stack", "localStorage / sessionStorage demo.", "Testing Library Tools"),
-        new("qrgenerator", "QR Generator", "bi-qr-code", "Custom SVG QR codes with logo.", "Testing Library Tools"),
-        new("map", "Google Maps", "bi-geo-alt", "Embedded Google Maps component.", "Testing Library Tools"),
-        new("bigbangcounter", "Big Bang Counter", "bi-stars", "Seconds since the Big Bang.", "Testing Library Tools"),
-        new("svgdiagrameditor", "SVG Diagram Editor", "bi-diagram-2", "Create SVG diagrams interactively.", "Testing Library Tools"),
-        new("emailcomposer", "Email Composer", "bi-envelope", "Send email via EmailJS.", "Testing Library Tools"),
-        new("discord", "Discord Notifier", "bi-discord", "Rich Discord webhook messages.", "DevOps Tools"),
-        new("slack", "Slack Notifier", "bi-slack", "Send Slack channel notifications.", "DevOps Tools"),
-        new("teams", "Teams Notifier", "bi-microsoft-teams", "Microsoft Teams MessageCards.", "DevOps Tools"),
-        new("githubsearch", "GitHub Search", "bi-search", "Search public GitHub repositories.", "DevOps Tools"),
-        new("githubinspector", "GitHub Inspector", "bi-person-badge", "Look up users and repositories.", "DevOps Tools"),
-        new("githubtrending", "GitHub Trending", "bi-graph-up-arrow", "Discover trending repositories.", "DevOps Tools"),
-        new("gist", "Gist Creator", "bi-file-earmark-code", "Create public or secret gists.", "DevOps Tools")
+        new("base64", "bi-file-binary", "General Tools"),
+        new("urls", "bi-link-45deg", "General Tools"),
+        new("guid", "bi-hash", "General Tools"),
+        new("html", "bi-code-slash", "General Tools"),
+        new("markdown", "bi-markdown", "General Tools"),
+        new("converter", "bi-arrow-left-right", "General Tools"),
+        new("stringconverter", "bi-fonts", "General Tools"),
+        new("geminispellchecker", "bi-spellcheck", "General Tools"),
+        new("randomfact", "bi-lightbulb", "General Tools"),
+        new("jokequotes", "bi-emoji-laughing", "General Tools"),
+        new("sqlite", "bi-database", "SQL Tools"),
+        new("jwt", "bi-shield-lock", "Cryptography Tools"),
+        new("luhn", "bi-credit-card", "Cryptography Tools"),
+        new("cryptography", "bi-fingerprint", "Cryptography Tools"),
+        new("mathcalculator", "bi-calculator", "Time & Calculation Tools"),
+        new("overnightmintemp", "bi-thermometer-half", "Time & Calculation Tools"),
+        new("cidrcalculator", "bi-diagram-3", "Time & Calculation Tools"),
+        new("timerstopwatch", "bi-stopwatch", "Time & Calculation Tools"),
+        new("epoch", "bi-clock-history", "Time & Calculation Tools"),
+        new("currenttime", "bi-clock", "Time & Calculation Tools"),
+        new("ascii", "bi-keyboard", "Encoding & Format Tools"),
+        new("colourconverter", "bi-palette", "Encoding & Format Tools"),
+        new("binary", "bi-0-circle", "Encoding & Format Tools"),
+        new("unicode", "bi-translate", "Encoding & Format Tools"),
+        new("hcf", "bi-eye", "Encoding & Format Tools"),
+        new("fluxortest", "bi-boxes", "Testing Library Tools"),
+        new("webglrender", "bi-gpu-card", "Testing Library Tools"),
+        new("browserstorage", "bi-hdd-stack", "Testing Library Tools"),
+        new("qrgenerator", "bi-qr-code", "Testing Library Tools"),
+        new("map", "bi-geo-alt", "Testing Library Tools"),
+        new("bigbangcounter", "bi-stars", "Testing Library Tools"),
+        new("svgdiagrameditor", "bi-diagram-2", "Testing Library Tools"),
+        new("emailcomposer", "bi-envelope", "Testing Library Tools"),
+        new("discord", "bi-discord", "DevOps Tools"),
+        new("slack", "bi-slack", "DevOps Tools"),
+        new("teams", "bi-microsoft-teams", "DevOps Tools"),
+        new("githubsearch", "bi-search", "DevOps Tools"),
+        new("githubinspector", "bi-person-badge", "DevOps Tools"),
+        new("githubtrending", "bi-graph-up-arrow", "DevOps Tools"),
+        new("gist", "bi-file-earmark-code", "DevOps Tools")
     };
 
-    private record ToolDef(string Key, string Title, string Icon, string Description, string Category)
+    private record ToolDef(string Key, string Icon, string CategoryKey)
     {
         public string Link => $"Utility/{Key}";
+        public string TitleKey => $"Tool_{Key}_Title";
+        public string DescKey => $"Tool_{Key}_Desc";
     }
 
-    private record LaunchGroup(string CategoryName, string Icon, List<ToolDef> Tools);
+    private record LaunchGroup(string CategoryKey, string Icon, List<ToolDef> Tools);
 }

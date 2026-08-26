@@ -1,5 +1,8 @@
+@inherits CultureAwareComponent
+@inject IStringLocalizer<SharedResources> L
+
 <div class="tool-card tool-shell">
-    @if (!string.IsNullOrEmpty(Title))
+    @if (!string.IsNullOrEmpty(DisplayTitle))
     {
         <div class="tool-header">
             <h3>
@@ -7,11 +10,11 @@
                 {
                     <i class="bi @Icon" aria-hidden="true"></i>
                 }
-                @Title
+                @DisplayTitle
             </h3>
-            @if (!string.IsNullOrEmpty(Description))
+            @if (!string.IsNullOrEmpty(DisplayDescription))
             {
-                <p>@Description</p>
+                <p>@DisplayDescription</p>
             }
         </div>
     }
@@ -19,8 +22,40 @@
 </div>
 
 @code {
+    /// <summary>Utility catalog key, e.g. "base64" → Tool_base64_Title / Desc.</summary>
+    [Parameter] public string? ResourceKey { get; set; }
     [Parameter] public string Title { get; set; } = "";
     [Parameter] public string? Description { get; set; }
     [Parameter] public string? Icon { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string DisplayTitle
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(ResourceKey))
+            {
+                var key = $"Tool_{ResourceKey}_Title";
+                var localized = L[key];
+                if (!localized.ResourceNotFound)
+                    return localized.Value;
+            }
+            return Title;
+        }
+    }
+
+    private string? DisplayDescription
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(ResourceKey))
+            {
+                var key = $"Tool_{ResourceKey}_Desc";
+                var localized = L[key];
+                if (!localized.ResourceNotFound)
+                    return localized.Value;
+            }
+            return Description;
+        }
+    }
 }

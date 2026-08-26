@@ -1,19 +1,21 @@
 @page "/trading/broker"
 @layout TradingLayout
+@inherits CultureAwareComponent
 @inject IBrokerDeskStore Store
 @inject IVnMarketClient Market
 @inject VnSectorService Sectors
 @inject BrokerOptions GeminiOptions
+@inject IStringLocalizer<SharedResources> L
 
 <div class="ts-page broker-page">
     <div class="ts-panel broker-hero">
         <div class="broker-hero-text">
-            <h2>Broker Desk</h2>
-            <p>Ghi từng lần broker khuyến nghị — danh mục tự hình thành, cập nhật giá TB và % lãi/lỗ theo thị trường.</p>
+            <h2>@L["TradingNav_Broker"]</h2>
+            <p>@L["Trading_BrokerLead"]</p>
         </div>
         <div class="broker-header-actions">
             <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="RefreshPrices" disabled="@_priceBusy">
-                @( _priceBusy ? "Đang lấy giá…" : "Làm mới giá" )
+                @( _priceBusy ? L["Trading_RefreshingPrices"] : L["Trading_RefreshPrices"] )
             </button>
             <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ExportCsv">Export CSV</button>
             <label class="ts-btn ts-btn-outline ts-btn-sm broker-file-btn" for="broker-import-json">Import JSON</label>
@@ -22,7 +24,7 @@
                        class="broker-file-input"
                        OnChange="ImportJson"
                        accept=".json,application/json" />
-            <button class="ts-btn ts-btn-primary ts-btn-sm" @onclick="SaveJson">Lưu JSON</button>
+            <button class="ts-btn ts-btn-primary ts-btn-sm" @onclick="SaveJson">@L["Trading_SaveJson"]</button>
         </div>
     </div>
 

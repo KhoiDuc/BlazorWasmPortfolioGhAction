@@ -17,11 +17,12 @@ using BlazorWasmPortfolioGhAction.Extensions;
 using BlazorWasmPortfolioGhAction.Services;
 using BlazorWasmPortfolioGhAction.Services.Auth;
 using BlazorWasmPortfolioGhAction.Services.Jwt;
+using BlazorWasmPortfolioGhAction.Services.Localization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Blazored.LocalStorage;
 // using Microsoft.Authentication.WebAssembly.Msal; // MSAL — disabled (learning/demo only)
 
-public static class Program
+public static partial class Program
 {
     /// <summary>
     /// FIXME: This is required for EF Core 6.0 as it is not compatible with trimming.
@@ -95,10 +96,14 @@ public static class Program
         var googleMapsKey = builder.Configuration["GoogleMaps:ApiKey"] ?? "YOUR_GOOGLE_MAPS_API_KEY";
         builder.Services.AddBlazorGoogleMaps(googleMapsKey);
         builder.Services.AddLocalization();
+        builder.Services.AddScoped<ICultureService, CultureService>();
         builder.Services.AddTradingServices(builder.Configuration);
 
         // build the host
         var host = builder.Build();
+
+        var cultureService = host.Services.GetRequiredService<ICultureService>();
+        await cultureService.InitializeAsync();
 
         // Run the app
         await host.RunAsync();

@@ -1,8 +1,10 @@
 @page "/admin"
+@inherits CultureAwareComponent
 @using Microsoft.AspNetCore.Components.Authorization
 @using BlazorWasmPortfolioGhAction.Services.Auth
 @inject CustomAuthStateProvider AuthStateProvider
 @inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResources> L
 
 <div class="page-section admin-page">
     <section>
@@ -10,24 +12,24 @@
             <AuthorizeView Context="auth">
                 <Authorized>
                     <div class="admin-panel tool-card">
-                        <p class="section-label">ADMIN</p>
-                        <h2>Signed in</h2>
-                        <p class="admin-lead">You can edit wiki content. Sign out when finished.</p>
+                        <p class="section-label">@L["Admin_Label"]</p>
+                        <h2>@L["Admin_SignedIn"]</h2>
+                        <p class="admin-lead">@L["Admin_SignedInLead"]</p>
                         <div class="tool-actions">
                             <a class="tool-btn tool-btn-primary" href="wiki/edit/Portfolio">
-                                <i class="bi bi-pencil" aria-hidden="true"></i> Edit wiki
+                                <i class="bi bi-pencil" aria-hidden="true"></i> @L["Wiki_Edit"]
                             </a>
                             <button type="button" class="tool-btn tool-btn-secondary" @onclick="LogoutAsync">
-                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sign out
+                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i> @L["Admin_SignOut"]
                             </button>
                         </div>
                     </div>
                 </Authorized>
                 <NotAuthorized>
                     <div class="admin-login tool-card">
-                        <p class="section-label">ADMIN</p>
-                        <h2>Sign in</h2>
-                        <p class="admin-lead">Local demo login for wiki editing.</p>
+                        <p class="section-label">@L["Admin_Label"]</p>
+                        <h2>@L["Admin_SignIn"]</h2>
+                        <p class="admin-lead">@L["Admin_SignInLead"]</p>
 
                         @if (!string.IsNullOrEmpty(_error))
                         {
@@ -36,16 +38,16 @@
 
                         <EditForm Model="_model" OnValidSubmit="LoginAsync" class="tool-form">
                             <div class="tool-field">
-                                <label class="tool-label" for="admin-user">Username</label>
+                                <label class="tool-label" for="admin-user">@L["Admin_Username"]</label>
                                 <InputText id="admin-user" class="tool-input" @bind-Value="_model.Username" autocomplete="username" />
                             </div>
                             <div class="tool-field">
-                                <label class="tool-label" for="admin-pass">Password</label>
+                                <label class="tool-label" for="admin-pass">@L["Admin_Password"]</label>
                                 <InputText id="admin-pass" type="password" class="tool-input" @bind-Value="_model.Password" autocomplete="current-password" />
                             </div>
                             <div class="tool-actions">
                                 <button type="submit" class="tool-btn tool-btn-primary" disabled="@_busy">
-                                    @(_busy ? "Signing in..." : "Sign in")
+                                    @(_busy ? L["Admin_SigningIn"] : L["Admin_SignIn"])
                                 </button>
                             </div>
                         </EditForm>
@@ -74,7 +76,7 @@
 
         if (!ok)
         {
-            _error = "Invalid username or password.";
+            _error = L["Admin_Invalid"];
             return;
         }
 

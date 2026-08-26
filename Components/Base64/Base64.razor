@@ -1,30 +1,32 @@
 @using System.Text
 @using BlazorWasmPortfolioGhAction.Services
+@inherits CultureAwareComponent
 @inject IClipboardService Clipboard
+@inject IStringLocalizer<SharedResources> L
 
-<ToolShell Title="Base64 Encode/Decode" Icon="bi-file-binary" Description="Encode or decode Base64 strings.">
+<ToolShell ResourceKey="base64" Title="Base64 Encode/Decode" Icon="bi-file-binary" Description="Encode or decode Base64 strings.">
     <div class="tool-form">
         <div class="tool-field">
-            <label class="tool-label" for="binary">Base64 input</label>
+            <label class="tool-label" for="binary">@L["Tool_Input"]</label>
             <textarea id="binary" class="tool-textarea" rows="4" @bind="Input" placeholder="QWxleEhlZGxleQ=="></textarea>
             <div class="tool-actions">
                 <button class="tool-btn tool-btn-success" @onclick="Decode">
-                    <i class="bi bi-arrow-down" aria-hidden="true"></i> Decode
+                    <i class="bi bi-arrow-down" aria-hidden="true"></i> @L["Tool_Decode"]
                 </button>
                 <button class="tool-btn tool-btn-danger" @onclick="Clear">
-                    <i class="bi bi-trash" aria-hidden="true"></i> Clear
+                    <i class="bi bi-trash" aria-hidden="true"></i> @L["Tool_Clear"]
                 </button>
             </div>
         </div>
         <div class="tool-field">
-            <label class="tool-label" for="output">Plain text output</label>
+            <label class="tool-label" for="output">@L["Tool_Output"]</label>
             <textarea id="output" class="tool-textarea" rows="4" @bind="Output" placeholder="String"></textarea>
             <div class="tool-actions">
                 <button class="tool-btn tool-btn-success" @onclick="Encode">
-                    <i class="bi bi-arrow-up" aria-hidden="true"></i> Encode
+                    <i class="bi bi-arrow-up" aria-hidden="true"></i> @L["Tool_Encode"]
                 </button>
                 <button class="tool-btn" @onclick="Copy">
-                    <i class="bi bi-clipboard" aria-hidden="true"></i> Copy
+                    <i class="bi bi-clipboard" aria-hidden="true"></i> @L["Tool_Copy"]
                 </button>
             </div>
         </div>

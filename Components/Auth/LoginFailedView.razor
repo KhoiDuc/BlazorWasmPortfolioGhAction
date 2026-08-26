@@ -1,4 +1,6 @@
+@inherits CultureAwareComponent
 @inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResources> L
 
 <section class="login-failed-page" aria-labelledby="login-failed-title">
     <div class="login-failed-card tool-card">
@@ -6,14 +8,14 @@
             <i class="bi bi-shield-exclamation"></i>
         </div>
 
-        <p class="login-failed-eyebrow">AUTHENTICATION</p>
-        <h1 id="login-failed-title">Sign in failed</h1>
-        <p class="login-failed-lead">We couldn’t complete Microsoft sign-in for this portfolio session.</p>
+        <p class="login-failed-eyebrow">@L["LoginFailed_Eyebrow"]</p>
+        <h1 id="login-failed-title">@L["LoginFailed_Title"]</h1>
+        <p class="login-failed-lead">@L["LoginFailed_Lead"]</p>
 
         @if (!string.IsNullOrWhiteSpace(ErrorMessage))
         {
             <div class="tool-alert tool-alert-danger login-failed-error">
-                <strong>Error details</strong>
+                <strong>@L["LoginFailed_ErrorDetails"]</strong>
                 <p>@ErrorMessage</p>
             </div>
         }
@@ -33,9 +35,9 @@
 
         <div class="login-failed-actions tool-actions">
             <a href="authentication/login" class="tool-btn tool-btn-primary">
-                <i class="bi bi-microsoft" aria-hidden="true"></i> Try again
+                <i class="bi bi-microsoft" aria-hidden="true"></i> @L["LoginFailed_TryAgain"]
             </a>
-            <a href="/" class="tool-btn tool-btn-secondary">Back to home</a>
+            <a href="/" class="tool-btn tool-btn-secondary">@L["LoginFailed_BackHome"]</a>
             <a href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade"
                target="_blank"
                rel="noopener noreferrer"

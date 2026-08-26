@@ -1,15 +1,16 @@
+@inherits CultureAwareComponent
 @using System.ComponentModel.DataAnnotations
 @inject NavigationManager NavigationManager
+@inject IStringLocalizer<SharedResources> L
 
 <section class="resume-contact">
     <div class="container">
         <div class="contact-layout">
             <div class="contact-heading">
-                <p class="section-label">CONTACT</p>
-                <h2>Let's build something together.</h2>
+                <p class="section-label">@L["Contact_Label"]</p>
+                <h2>@L["Contact_Heading"]</h2>
                 <p class="contact-description">
-                    I'm open to remote opportunities and interesting projects.
-                    Send me a message and I'll get back to you.
+                    @L["Contact_Description"]
                 </p>
                 <ul class="contact-quick-links">
                     <li>
@@ -39,27 +40,28 @@
                 </ul>
             </div>
             <div class="contact-form-wrapper">
-                <EditForm Model="@model" OnValidSubmit="Submit" class="contact-form">
+                <div class="contact-form">
+                <EditForm Model="@model" OnValidSubmit="Submit">
                     <DataAnnotationsValidator />
                     <div class="contact-form-row">
                         <div class="tool-field">
-                            <label class="tool-label" for="contact-name">Name</label>
-                            <InputText id="contact-name" class="tool-input" @bind-Value="model.Name" placeholder="Your name" />
+                            <label class="tool-label" for="contact-name">@L["Contact_Name"]</label>
+                            <InputText id="contact-name" class="tool-input" @bind-Value="model.Name" placeholder="@L["Contact_NamePlaceholder"]" />
                             <ValidationMessage For="@(() => model.Name)" class="contact-error" />
                         </div>
                         <div class="tool-field">
-                            <label class="tool-label" for="contact-email">Email</label>
-                            <InputText id="contact-email" class="tool-input" @bind-Value="model.Email" placeholder="your@email.com" />
+                            <label class="tool-label" for="contact-email">@L["Contact_Email"]</label>
+                            <InputText id="contact-email" class="tool-input" @bind-Value="model.Email" placeholder="@L["Contact_EmailPlaceholder"]" />
                             <ValidationMessage For="@(() => model.Email)" class="contact-error" />
                         </div>
                     </div>
                     <div class="tool-field">
-                        <label class="tool-label" for="contact-subject">Subject</label>
-                        <InputText id="contact-subject" class="tool-input" @bind-Value="model.Subject" placeholder="Subject (optional)" />
+                        <label class="tool-label" for="contact-subject">@L["Contact_Subject"]</label>
+                        <InputText id="contact-subject" class="tool-input" @bind-Value="model.Subject" placeholder="@L["Contact_SubjectPlaceholder"]" />
                     </div>
                     <div class="tool-field">
-                        <label class="tool-label" for="contact-message">Message</label>
-                        <InputTextArea id="contact-message" class="tool-textarea" @bind-Value="model.Message" placeholder="Your message..." rows="5" />
+                        <label class="tool-label" for="contact-message">@L["Contact_Message"]</label>
+                        <InputTextArea id="contact-message" class="tool-textarea" @bind-Value="model.Message" placeholder="@L["Contact_MessagePlaceholder"]" rows="5" />
                         <ValidationMessage For="@(() => model.Message)" class="contact-error" />
                     </div>
                     <div class="contact-honeypot" aria-hidden="true">
@@ -69,7 +71,7 @@
                     {
                         <div class="tool-alert tool-alert-success">
                             <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
-                            Message ready! Your email client should open.
+                            @L["Contact_Sent"]
                         </div>
                     }
                     <div class="tool-actions">
@@ -82,10 +84,11 @@
                             {
                                 <i class="bi bi-send" aria-hidden="true"></i>
                             }
-                            Compose Email
+                            @L["Contact_Compose"]
                         </button>
                     </div>
                 </EditForm>
+                </div>
             </div>
         </div>
     </div>

@@ -1,33 +1,35 @@
 @page "/trading/real-estate"
 @layout TradingLayout
+@inherits CultureAwareComponent
 @using BlazorWasmPortfolioGhAction.Models.Trading
 @inject ITradingApiClient Api
+@inject IStringLocalizer<SharedResources> L
 
 <div class="ts-page">
     <div class="ts-panel">
         <div class="ts-header">
             <div>
-                <h2>Real Estate Market Intelligence</h2>
-                <p>Track regional property prices in Vietnam</p>
+                <h2>@L["Trading_RealEstateTitle"]</h2>
+                <p>@L["Trading_RealEstateLead"]</p>
             </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
             <div class="ts-field">
-                <label class="ts-label">Region</label>
+                <label class="ts-label">@L["Trading_Region"]</label>
                 <select class="ts-select" @bind="_region">
-                    <option value="">All</option>
+                    <option value="">@L["Trading_All"]</option>
                     @foreach (var r in _regions) { <option value="@r">@r</option> }
                 </select>
             </div>
             <div class="ts-field">
-                <label class="ts-label">Type</label>
+                <label class="ts-label">@L["Trading_Type"]</label>
                 <select class="ts-select" @bind="_type">
-                    <option value="">All</option>
+                    <option value="">@L["Trading_All"]</option>
                     @foreach (var t in _types) { <option value="@t">@t</option> }
                 </select>
             </div>
             <div class="ts-field">
-                <label class="ts-label">Location</label>
+                <label class="ts-label">@L["Trading_Location"]</label>
                 <input class="ts-input" @bind="_location" placeholder="Search..." />
             </div>
             <div class="ts-field" style="display:flex;align-items:flex-end">

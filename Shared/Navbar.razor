@@ -1,19 +1,27 @@
+@inherits CultureAwareComponent
+@inject IStringLocalizer<SharedResources> L
+
 <header class="navbar">
     <div class="navbar-container">
-        <a href="" class="navbar-brand" @onclick="CloseMenu" aria-label="Go to homepage">
+        <a href="" class="navbar-brand" @onclick="CloseMenu" aria-label="@L["Nav_GoHome"]">
             <span class="brand-symbol">&lt;/</span>
             <span class="brand-initials">khoi</span>
             <span class="brand-symbol">&gt;</span>
         </a>
         <div class="navbar-right">
+            <button type="button" class="lang-toggle" @onclick="ToggleLanguageAsync"
+                    aria-label="@L["Nav_Language"]"
+                    title="@L["Nav_Language"]">
+                @(CultureService.IsEnglish ? L["Nav_SwitchToVi"] : L["Nav_SwitchToEn"])
+            </button>
             <button type="button" class="theme-toggle" @onclick="ToggleTheme"
-                    aria-label="@(_isDark ? "Switch to light mode" : "Switch to dark mode")"
-                    title="@(_isDark ? "Light mode" : "Dark mode")">
+                    aria-label="@(_isDark ? L["Nav_SwitchLight"] : L["Nav_SwitchDark"])"
+                    title="@(_isDark ? L["Nav_LightMode"] : L["Nav_DarkMode"])">
                 <i class="bi @(_isDark ? "bi-sun-fill" : "bi-moon-stars-fill")" aria-hidden="true"></i>
             </button>
             <button type="button" class="menu-toggle @(_isMenuOpen ? "open" : "")"
                     @onclick="ToggleMenu"
-                    aria-label="@(_isMenuOpen ? "Close navigation menu" : "Open navigation menu")"
+                    aria-label="@(_isMenuOpen ? L["Nav_CloseMenu"] : L["Nav_OpenMenu"])"
                     aria-expanded="@(_isMenuOpen.ToString().ToLowerInvariant())"
                     aria-controls="main-navigation">
                 <span aria-hidden="true"></span>
@@ -21,11 +29,11 @@
                 <span aria-hidden="true"></span>
             </button>
             <nav id="main-navigation" class="navbar-links @(_isMenuOpen ? "open" : "")">
-                <NavLink href="" Match="NavLinkMatch.All" @onclick="CloseMenu">Home</NavLink>
-                <NavLink href="resume" @onclick="CloseMenu">Resume</NavLink>
-                <NavLink href="Utility" @onclick="CloseMenu">Tools</NavLink>
-                <NavLink href="wiki" @onclick="CloseMenu">Wiki</NavLink>
-                <NavLink href="trading/vndesk" @onclick="CloseMenu">Trading</NavLink>
+                <NavLink href="" Match="NavLinkMatch.All" @onclick="CloseMenu">@L["Nav_Home"]</NavLink>
+                <NavLink href="resume" @onclick="CloseMenu">@L["Nav_Resume"]</NavLink>
+                <NavLink href="Utility" @onclick="CloseMenu">@L["Nav_Tools"]</NavLink>
+                <NavLink href="wiki" @onclick="CloseMenu">@L["Nav_Wiki"]</NavLink>
+                <NavLink href="trading/vndesk" @onclick="CloseMenu">@L["Nav_Trading"]</NavLink>
             </nav>
         </div>
     </div>
@@ -36,6 +44,7 @@
     private bool _isDark;
 
     [Inject] IJSRuntime JS { get; set; } = default!;
+    [Inject] NavigationManager Navigation { get; set; } = default!;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -58,6 +67,22 @@
             _isDark = !_isDark;
         }
         catch { }
+    }
+
+    private async Task ToggleLanguageAsync()
+    {
+        await CultureService.ToggleAsync();
+
+        // Keep resume deep-link URL in sync when on a resume route
+        var relative = Navigation.ToBaseRelativePath(Navigation.Uri).Trim('/');
+        if (relative.Equals("resume", StringComparison.OrdinalIgnoreCase)
+            || relative.Equals("MyResume", StringComparison.OrdinalIgnoreCase)
+            || relative.EndsWith("/resume", StringComparison.OrdinalIgnoreCase)
+            || relative.StartsWith("en/resume", StringComparison.OrdinalIgnoreCase)
+            || relative.StartsWith("vn/resume", StringComparison.OrdinalIgnoreCase))
+        {
+            Navigation.NavigateTo($"{CultureService.UrlLang}/resume");
+        }
     }
 
     private void ToggleMenu() => _isMenuOpen = !_isMenuOpen;

@@ -1,15 +1,17 @@
 @page "/404"
+@inherits CultureAwareComponent
+@inject IStringLocalizer<SharedResources> L
 
 <section class="notfound-page">
     <div class="notfound-content">
-        <p class="notfound-eyebrow">Error 404</p>
-        <h1 class="notfound-title">Page not found.</h1>
+        <p class="notfound-eyebrow">@L["NotFound_Eyebrow"]</p>
+        <h1 class="notfound-title">@L["NotFound_Title"]</h1>
         <p class="notfound-lead">
-            The page you're looking for doesn't exist or has been moved.
+            @L["NotFound_Lead"]
         </p>
         <a href="" class="notfound-back">
             <i class="bi bi-arrow-left" aria-hidden="true"></i>
-            Back to home
+            @L["NotFound_Back"]
         </a>
     </div>
 </section>

@@ -1,16 +1,18 @@
 @page "/trading/stock"
 @layout TradingLayout
+@inherits CultureAwareComponent
 @using BlazorWasmPortfolioGhAction.Models.Trading
 @using BlazorWasmPortfolioGhAction.Services.Trading
 @using System.Text.Json
 @inject ITradingApiClient Api
+@inject IStringLocalizer<SharedResources> L
 
 <div class="ts-page">
     <div class="ts-panel">
         <div class="ts-header">
             <div>
-                <h2>VN Stock Tools</h2>
-                <p>Scanner tín hiệu & biểu đồ RRG — công cụ bổ trợ.</p>
+                <h2>@L["Trading_StockTitle"]</h2>
+                <p>@L["Trading_StockLead"]</p>
             </div>
         </div>
         <div class="ts-tabs">

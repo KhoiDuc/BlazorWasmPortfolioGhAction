@@ -1,21 +1,23 @@
 @page "/trading/vndesk"
 @layout TradingLayout
+@inherits CultureAwareComponent
 @using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@inject IStringLocalizer<SharedResources> L
 
 <div class="ts-page ts-desk-page">
     <div class="ts-panel ts-desk-hero">
         <div class="ts-header">
             <div>
                 <h2>VnDesk</h2>
-                <p class="ts-muted">Bàn làm việc đầu tư VN — từng bước, không tự đặt lệnh.</p>
+                <p class="ts-muted">@L["Trading_VnDeskLead"]</p>
             </div>
             <button class="ts-btn ts-btn-outline" @onclick="RunGuidedFlow" disabled="@_guidedBusy">
-                @(_guidedBusy ? "Đang chuyển bước..." : "Hướng dẫn từng bước")
+                @(_guidedBusy ? L["Trading_GuidedBusy"] : L["Trading_Guided"])
             </button>
         </div>
 
         <div class="ts-desk-symbol-bar">
-            <label class="ts-label" for="desk-symbol">Mã đang xem</label>
+            <label class="ts-label" for="desk-symbol">@L["Trading_SymbolLabel"]</label>
             <div class="ts-desk-symbol-row">
                 <input id="desk-symbol" class="ts-input ts-desk-symbol-input" @bind="_symbol" @bind:event="oninput"
                        placeholder="VNM, FPT, HPG..." @onkeydown="OnSymbolKey" />
@@ -30,11 +32,11 @@
                 }
             </div>
             <div class="ts-desk-quick-actions">
-                <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick='() => GoStep("screen")'>Chưa biết mua gì? Lọc CP</button>
-                <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick='() => GoStep("ai")'>Hỏi AI</button>
+                <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick='() => GoStep("screen")'>@L["Trading_FilterStocks"]</button>
+                <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick='() => GoStep("ai")'>@L["Trading_AskAi"]</button>
                 @if (_step is "decide" or "journal" && HasTaData)
                 {
-                    <span class="ts-muted ts-desk-hint">Đã có số phân tích từ bước Phân tích</span>
+                    <span class="ts-muted ts-desk-hint">@L["Trading_HasTaHint"]</span>
                 }
             </div>
         </div>
@@ -43,20 +45,20 @@
     @if (_step is "screen" or "ai")
     {
         <div class="ts-desk-secondary">
-            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick='() => GoStep("overview")'>← Quay lại luồng chính</button>
+            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick='() => GoStep("overview")'>@L["Trading_BackMain"]</button>
         </div>
     }
 
     @if (_step is not ("screen" or "ai"))
     {
-        <nav class="ts-desk-flow" aria-label="Luồng VnDesk">
-            @RenderStepButton("overview", 1, "Thị trường", "Xem bối cảnh hôm nay")
+        <nav class="ts-desk-flow" aria-label="@L["Trading_FlowAria"]">
+            @RenderStepButton("overview", 1, L["Trading_StepMarket"], L["Trading_StepMarketDesc"])
             <span class="ts-desk-flow-line" aria-hidden="true"></span>
-            @RenderStepButton("analyze", 2, "Phân tích", "Xem chart & chỉ báo")
+            @RenderStepButton("analyze", 2, L["Trading_StepAnalyze"], L["Trading_StepAnalyzeDesc"])
             <span class="ts-desk-flow-line" aria-hidden="true"></span>
-            @RenderStepButton("decide", 3, "Có nên mua?", "Tính rủi ro & quyết định")
+            @RenderStepButton("decide", 3, L["Trading_StepDecide"], L["Trading_StepDecideDesc"])
             <span class="ts-desk-flow-line" aria-hidden="true"></span>
-            @RenderStepButton("journal", 4, "Nhật ký", "Ghi lại sau phiên")
+            @RenderStepButton("journal", 4, L["Trading_StepJournal"], L["Trading_StepJournalDesc"])
         </nav>
     }
 
@@ -64,30 +66,30 @@
         @if (_step == "overview")
         {
             <div class="ts-desk-step-intro">
-                <strong>Bước 1 — Thị trường:</strong> Xem chỉ số và ngành đang mạnh/yếu. Chọn mã ở trên hoặc bấm mã trong bảng.
+                <strong>@L["Trading_Step1Intro"]</strong>
             </div>
             <VnMarketPanel OnSymbolSelected="OnSymbolFromMarket" />
             <div class="ts-desk-nav-footer">
-                <button type="button" class="ts-btn ts-btn-primary" @onclick='() => GoStep("analyze")'>Tiếp: Phân tích @_symbol →</button>
+                <button type="button" class="ts-btn ts-btn-primary" @onclick='() => GoStep("analyze")'>@string.Format(L["Trading_NextAnalyze"], _symbol)</button>
             </div>
         }
         else if (_step == "analyze")
         {
             <div class="ts-desk-step-intro">
-                <strong>Bước 2 — Phân tích @_symbol:</strong> Bấm "Phân tích" để lấy TA. Xong thì sang bước Quyết định.
+                <strong>@string.Format(L["Trading_Step2Intro"], _symbol)</strong>
             </div>
             <VnAnalysisPanel @ref="_analysis" Symbol="@_symbol" />
             <div class="ts-desk-nav-footer">
-                <button type="button" class="ts-btn ts-btn-outline" @onclick='() => GoStep("overview")'>← Thị trường</button>
+                <button type="button" class="ts-btn ts-btn-outline" @onclick='() => GoStep("overview")'>@L["Trading_BackMarket"]</button>
                 <button type="button" class="ts-btn ts-btn-primary" @onclick='() => GoStep("decide")' disabled="@(!HasTaData)">
-                    @(HasTaData ? "Tiếp: Có nên mua? →" : "Phân tích trước đã")
+                    @(HasTaData ? L["Trading_NextDecide"] : L["Trading_AnalyzeFirst"])
                 </button>
             </div>
         }
         else if (_step == "decide")
         {
             <div class="ts-desk-step-intro">
-                <strong>Bước 3 — Quyết định @_symbol:</strong> 3 bước ngắn — mất bao nhiêu nếu sai → 5 câu hỏi → lưu quyết định.
+                <strong>@string.Format(L["Trading_Step3Intro"], _symbol)</strong>
             </div>
             <VnWorkflowPanel Symbol="@_symbol"
                              Mode="decide"

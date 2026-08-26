@@ -1,15 +1,18 @@
+@inherits CultureAwareComponent
+@inject IStringLocalizer<SharedResources> L
+
 <footer class="footer">
     <div class="footer-container">
         <div class="footer-main">
             <div class="footer-identity">
                 <p class="footer-name">Khoi Nguyen Minh Duc</p>
-                <p class="footer-role">.NET Developer</p>
+                <p class="footer-role">@L["Footer_Role"]</p>
             </div>
-            <a href="/#home" class="back-to-top">Back to top <i class="bi bi-arrow-up" aria-hidden="true"></i></a>
+            <a href="/#home" class="back-to-top">@L["Footer_BackToTop"] <i class="bi bi-arrow-up" aria-hidden="true"></i></a>
         </div>
         <div class="footer-bottom">
             <p>© @_currentYear Khoi Nguyen Minh Duc</p>
-            <p>Built with Blazor WebAssembly and .NET 9</p>
+            <p>@L["Footer_BuiltWith"]</p>
         </div>
     </div>
 </footer>

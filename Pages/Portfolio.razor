@@ -1,25 +1,20 @@
 @page "/MyResume"
 @page "/resume"
 @page "/{lang}/resume"
+@inherits CultureAwareComponent
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
-@using BlazorWasmPortfolioGhAction.Data
+@inject IStringLocalizer<SharedResources> L
 @implements IAsyncDisposable
-
-<div class="language-toggle">
-    <button @onclick="ToggleLanguage" class="btn-lang">
-        @(IsEn ? "🇻🇳 Tiếng Việt" : "🇺🇸 English")
-    </button>
-</div>
 
 <section class="resume-hero">
     <div class="container">
         <div class="resume-hero-layout">
             <div class="resume-hero-content">
                 <p class="section-label">RESUME</p>
-                <h1>@Resume.Profile.NameEn</h1>
+                <h1>@Resume.Profile.Name.Get(CultureService.Current)</h1>
                 <p class="resume-fullname-name">@Resume.Profile.FullName</p>
-                <p class="resume-hero-role">@(IsEn ? Resume.Profile.RoleEn : Resume.Profile.RoleVn)</p>
+                <p class="resume-hero-role">@Resume.Profile.Role.Get(CultureService.Current)</p>
                 <ul class="resume-contact-info">
                     @foreach (var phone in Resume.Profile.PhoneNumbers)
                     {
@@ -49,10 +44,10 @@
                     </li>
                 </ul>
                 <div class="resume-hero-links">
-                    <a href="@Resume.Profile.PdfResumeUrl" target="_blank" class="resume-btn resume-btn-primary">@(IsEn ? "PDF Resume" : "CV PDF")</a>
+                    <a href="@Resume.Profile.PdfResumeUrl" target="_blank" class="resume-btn resume-btn-primary">@L["Resume_Pdf"]</a>
                     <a href="@Resume.Profile.GitHubUrl" target="_blank" rel="noopener noreferrer" class="resume-btn resume-btn-ghost">GitHub</a>
-                    <a href="@Resume.Profile.CertificateUrl" target="_blank" rel="noopener noreferrer" class="resume-btn resume-btn-ghost">@(IsEn ? "Certificate" : "Chứng chỉ")</a>
-                    <a href="@Resume.Profile.TranscriptUrl" target="_blank" class="resume-btn resume-btn-ghost">@(IsEn ? "Transcript" : "Bảng điểm")</a>
+                    <a href="@Resume.Profile.CertificateUrl" target="_blank" rel="noopener noreferrer" class="resume-btn resume-btn-ghost">@L["Resume_Certificate"]</a>
+                    <a href="@Resume.Profile.TranscriptUrl" target="_blank" class="resume-btn resume-btn-ghost">@L["Resume_Transcript"]</a>
                 </div>
             </div>
             <div class="carousel-container">
@@ -70,10 +65,10 @@
     <div class="container">
         <div class="section-heading">
             <p class="section-label">ABOUT</p>
-            <h2>@(IsEn ? "Profile" : "Hồ sơ")</h2>
+            <h2>@L["Resume_Profile"]</h2>
         </div>
         <div class="about-content">
-            @foreach (var para in IsEn ? Resume.Profile.AboutEn : Resume.Profile.AboutVn)
+            @foreach (var para in Resume.Profile.About.Get(CultureService.Current))
             {
                 <p>@para</p>
             }
@@ -85,7 +80,7 @@
     <div class="container">
         <div class="section-heading">
             <p class="section-label">EDUCATION</p>
-            <h2>@(IsEn ? "Academic background" : "Học vấn")</h2>
+            <h2>@L["Resume_Academic"]</h2>
         </div>
         <div class="experience-list">
             @foreach (var edu in Resume.Education)
@@ -93,13 +88,13 @@
                 <div class="experience-item">
                     <div class="experience-meta">@edu.Period</div>
                     <div class="experience-content">
-                        <h3>@(IsEn ? edu.NameEn : edu.NameVn)</h3>
-                        <p class="experience-company">@(IsEn ? edu.ProgramEn : edu.ProgramVn)</p>
+                        <h3>@edu.Name.Get(CultureService.Current)</h3>
+                        <p class="experience-company">@edu.Program.Get(CultureService.Current)</p>
                         <p class="experience-description">
                             <a href="@edu.Url" target="_blank">@edu.Gpa</a>
                         </p>
                         <div class="technology-list">
-                            <a target="_blank" href="@edu.DocumentUrl" class="resume-btn">@(IsEn ? edu.DocumentLabelEn : edu.DocumentLabelVn)</a>
+                            <a target="_blank" href="@edu.DocumentUrl" class="resume-btn">@edu.DocumentLabel.Get(CultureService.Current)</a>
                         </div>
                     </div>
                 </div>
@@ -112,24 +107,24 @@
     <div class="container">
         <div class="section-heading">
             <p class="section-label">EXPERIENCE</p>
-            <h2>@(IsEn ? "Work projects" : "Dự án làm việc")</h2>
+            <h2>@L["Resume_WorkProjects"]</h2>
         </div>
         <div class="experience-list">
             @foreach (var exp in Resume.Experience)
             {
                 <div class="experience-item">
-                    <div class="experience-meta">@(IsEn ? exp.PeriodEn : exp.PeriodVn)</div>
+                    <div class="experience-meta">@exp.Period.Get(CultureService.Current)</div>
                     <div class="experience-content">
                         <h3>@exp.Title</h3>
                         <p class="experience-company">@exp.Company · @exp.Role</p>
-                        <p class="experience-description">@(IsEn ? exp.DescriptionEn : exp.DescriptionVn)</p>
+                        <p class="experience-description">@exp.Description.Get(CultureService.Current)</p>
                         <div class="technology-list">
                             @foreach (var tech in exp.TechStack) { <span>@tech</span> }
                         </div>
                         @if (!string.IsNullOrEmpty(exp.DetailLink))
                         {
                             <div class="project-links">
-                                <a href="@exp.DetailLink" class="resume-btn">@(IsEn ? "View Details" : "Xem chi tiết")</a>
+                                <a href="@exp.DetailLink" class="resume-btn">@L["Resume_ViewDetails"]</a>
                             </div>
                         }
                     </div>
@@ -143,28 +138,28 @@
     <div class="container">
         <div class="section-heading">
             <p class="section-label">PROJECTS</p>
-            <h2>@(IsEn ? "Personal & school projects" : "Dự án cá nhân & học tập")</h2>
+            <h2>@L["Resume_PersonalProjects"]</h2>
         </div>
         <div class="projects-grid">
             @foreach (var proj in Resume.Projects)
             {
                 <article class="project-card">
                     <div class="project-header">
-                        <span class="project-type">@proj.Type</span>
+                        <span class="project-type">@LocalizeProjectType(proj.Type)</span>
                         <span class="project-number">@proj.Number.ToString("00")</span>
                     </div>
                     <div class="project-content">
                         <h3>@proj.Name</h3>
-                        <p>@(IsEn ? proj.DescriptionEn : proj.DescriptionVn)</p>
+                        <p>@proj.Description.Get(CultureService.Current)</p>
                     </div>
                     <div class="project-links">
                         <a href="@proj.RepoUrl" target="_blank" rel="noopener noreferrer">
-                            <i class="bi bi-github" aria-hidden="true"></i> Repository
+                            <i class="bi bi-github" aria-hidden="true"></i> @L["Resume_Repository"]
                         </a>
                         @if (!string.IsNullOrEmpty(proj.DetailLink))
                         {
                             <a href="@proj.DetailLink">
-                                <i class="bi bi-info-circle" aria-hidden="true"></i> @(IsEn ? "Details" : "Chi tiết")
+                                <i class="bi bi-info-circle" aria-hidden="true"></i> @L["Resume_Details"]
                             </a>
                         }
                     </div>
@@ -181,14 +176,14 @@
     <div class="container">
         <div class="section-heading">
             <p class="section-label">TECHNOLOGIES</p>
-            <h2>@(IsEn ? "Skills" : "Kỹ năng")</h2>
+            <h2>@L["Resume_Skills"]</h2>
         </div>
         <div class="technology-grid">
             @{ var i = 0; }
             @foreach (var cat in Resume.Skills)
             {
                 <div class="technology-group" style="--reveal-delay: @(i * 90)ms">
-                    <p class="technology-category">@(IsEn ? cat.NameEn : cat.NameVn)</p>
+                    <p class="technology-category">@cat.Name.Get(CultureService.Current)</p>
                     @if (cat.UseMeters && cat.Skills != null)
                     {
                         <div class="skill-meter-list">
@@ -223,7 +218,7 @@
     <div class="container">
         <div class="section-heading">
             <p class="section-label">CERTIFICATIONS</p>
-            <h2>@(IsEn ? "TOEIC & Courses" : "TOEIC & Khóa học")</h2>
+            <h2>@L["Resume_ToeicCourses"]</h2>
         </div>
         <div class="education-grid">
             <div class="education-column">
@@ -240,12 +235,12 @@
                 }
             </div>
             <div class="education-column">
-                <p class="column-title">@(IsEn ? "RELEVANT COURSES" : "KHÓA HỌC LIÊN QUAN")</p>
+                <p class="column-title">@L["Resume_RelevantCourses"]</p>
                 @foreach (var course in Resume.Courses)
                 {
                     <div class="education-item">
                         <div class="education-header">
-                            <div><h3>@course.Code @(IsEn ? course.TitleEn : course.TitleVn)</h3></div>
+                            <div><h3>@course.Code @course.Title.Get(CultureService.Current)</h3></div>
                         </div>
                     </div>
                 }
@@ -259,42 +254,45 @@
 <footer class="resume-footer">
     <div class="container">
         <p>
-            &copy; @DateTime.Now.Year @Resume.Profile.NameEn. @(IsEn ? "All rights reserved." : "Mọi quyền được bảo lưu.")
-            <a href="https://github.com/KhoiDuc/BlazorWasmPortfolioGhAction" target="_blank">@(IsEn ? "Repository" : "Kho lưu trữ")</a>
+            &copy; @DateTime.Now.Year @Resume.Profile.Name.Get(CultureService.Current). @L["Resume_AllRights"]
+            <a href="https://github.com/KhoiDuc/BlazorWasmPortfolioGhAction" target="_blank">@L["Resume_Repository"]</a>
         </p>
     </div>
 </footer>
 
 @code {
     private IJSObjectReference? carouselInstance;
-    private string currentLanguage = "en";
     private Resume Resume => ResumeData.Current;
-    private bool IsEn => currentLanguage == "en";
 
     [Parameter]
     public string? Lang { get; set; }
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        if (string.IsNullOrEmpty(Lang))
+        // /resume and /MyResume (no lang) => Vietnamese, no redirect
+        // /vn/resume => Vietnamese
+        // /en/resume => English
+        // invalid lang => treat as Vietnamese without forcing navigation away from /resume
+        if (string.IsNullOrEmpty(Lang) || Lang.Equals("vn", StringComparison.OrdinalIgnoreCase))
         {
-            NavigationManager.NavigateTo("en/resume");
+            await CultureService.SetCultureAsync("vi");
         }
-        else if (Lang != "en" && Lang != "vn")
+        else if (Lang.Equals("en", StringComparison.OrdinalIgnoreCase))
         {
-            NavigationManager.NavigateTo("en/resume");
+            await CultureService.SetCultureAsync("en");
         }
         else
         {
-            currentLanguage = Lang;
+            await CultureService.SetCultureAsync("vi");
         }
     }
 
-    private void ToggleLanguage()
-    {
-        var newLang = currentLanguage == "en" ? "vn" : "en";
-        NavigationManager.NavigateTo($"{newLang}/resume");
-    }
+    private string LocalizeProjectType(string type) =>
+        type.Equals("Personal", StringComparison.OrdinalIgnoreCase)
+            ? L["Home_ProjectTypePersonal"]
+            : type.Equals("School", StringComparison.OrdinalIgnoreCase)
+                ? L["Home_ProjectTypeSchool"]
+                : type;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -310,7 +308,7 @@
     {
         if (carouselInstance != null)
         {
-            await carouselInstance.InvokeVoidAsync("changeSlide", direction);
+            await carouselInstance.InvokeAsync<object>("changeSlide", direction);
         }
     }
 

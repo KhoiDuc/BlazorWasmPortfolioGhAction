@@ -1,8 +1,11 @@
-<nav class="trading-subnav" aria-label="Trading navigation">
+@inherits CultureAwareComponent
+@inject IStringLocalizer<SharedResources> L
+
+<nav class="trading-subnav" aria-label="@L["TradingNav_Label"]">
     <div class="trading-subnav-inner">
         <button type="button" class="trading-subnav-toggle @(_menuOpen ? "open" : "")"
                 @onclick="ToggleMenu"
-                aria-label="@(_menuOpen ? "Close trading menu" : "Open trading menu")"
+                aria-label="@(_menuOpen ? L["TradingNav_Close"] : L["TradingNav_Open"])"
                 aria-expanded="@_menuOpen.ToString().ToLowerInvariant()">
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
@@ -10,10 +13,10 @@
         </button>
 
         <div class="trading-subnav-links @(_menuOpen ? "open" : "")">
-            <NavLink href="trading/vndesk" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">VnDesk</NavLink>
-            <NavLink href="trading/stock" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">Stock</NavLink>
-            <NavLink href="trading/broker" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">Broker</NavLink>
-            <NavLink href="trading/real-estate" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">Real Estate</NavLink>
+            <NavLink href="trading/vndesk" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_VnDesk"]</NavLink>
+            <NavLink href="trading/stock" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_Stock"]</NavLink>
+            <NavLink href="trading/broker" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_Broker"]</NavLink>
+            <NavLink href="trading/real-estate" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_RealEstate"]</NavLink>
         </div>
     </div>
 </nav>
