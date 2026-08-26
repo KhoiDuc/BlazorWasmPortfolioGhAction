@@ -56,7 +56,7 @@ public class BrokerPosition
         {
             var withQty = Buys.Where(b => b.Price > 0 && b.Quantity is > 0).ToList();
             if (withQty.Count == 0) return null;
-            return withQty.Sum(b => b.Price * b.Quantity!.Value);
+            return withQty.Sum(b => BrokerMoney.PositionValueVnd(b.Price, b.Quantity!.Value));
         }
     }
 
@@ -89,7 +89,14 @@ public class BrokerPosition
         var qty = TotalQuantity;
         var cost = CostBasis;
         if (qty is null or 0 || cost is null || current is null or 0) return null;
-        return current.Value * qty.Value - cost.Value;
+        return BrokerMoney.PositionValueVnd(current.Value, qty.Value) - cost.Value;
+    }
+
+    public decimal? MarketValueVnd(decimal? current)
+    {
+        var qty = TotalQuantity;
+        if (qty is null or 0 || current is null or 0) return null;
+        return BrokerMoney.PositionValueVnd(current.Value, qty.Value);
     }
 
     public BrokerNote? LatestNote =>
@@ -136,22 +143,47 @@ public static class BrokerStatusLabels
     public static string Vi(BrokerNoteKind kind) => kind == BrokerNoteKind.Self ? "Của tôi" : "Broker";
 }
 
+public static class BrokerMoney
+{
+    /// <summary>Giá CP VN trong app là nghìn đồng (VD: 28.12 = 28.120đ/CP).</summary>
+    public const decimal PriceUnitVnd = 1000m;
+
+    public static decimal PositionValueVnd(decimal priceInThousands, decimal quantity) =>
+        priceInThousands * quantity * PriceUnitVnd;
+}
+
 public static class BrokerFormat
 {
     public static string Quantity(decimal? qty) =>
         qty is null or 0 ? "—" : qty.Value.ToString("0.##");
 
-    public static string VndPlain(decimal amount) => $"{amount:N0} đ";
+    public static string VndPlain(decimal amountVnd) => FormatVnd(amountVnd);
 
-    public static string Vnd(decimal? amount)
+    public static string Vnd(decimal? amountVnd)
     {
-        if (amount is null) return "—";
-        var sign = amount.Value > 0 ? "+" : amount.Value < 0 ? "−" : "";
-        return $"{sign}{Math.Abs(amount.Value):N0} đ";
+        if (amountVnd is null) return "—";
+        return FormatVndSigned(amountVnd.Value);
     }
 
     public static string Pct(decimal? pct) =>
         pct is null ? "—" : $"{pct.Value:N2}%";
+
+    private static string FormatVndSigned(decimal amountVnd)
+    {
+        var sign = amountVnd > 0 ? "+" : amountVnd < 0 ? "−" : "";
+        return $"{sign}{FormatVnd(Math.Abs(amountVnd))}";
+    }
+
+    private static string FormatVnd(decimal amountVnd)
+    {
+        if (amountVnd >= 1_000_000_000m)
+            return $"{amountVnd / 1_000_000_000m:N2} tỷ đ";
+        if (amountVnd >= 1_000_000m)
+            return $"{amountVnd / 1_000_000m:N2} triệu đ";
+        if (amountVnd >= 1_000m)
+            return $"{amountVnd / 1_000m:N1} nghìn đ";
+        return $"{amountVnd:N0} đ";
+    }
 }
 
 public sealed class BrokerPortfolioStats
@@ -201,9 +233,10 @@ public static class BrokerPortfolioStatsCalculator
             }
 
             var pnl = p.PnlAmount(current) ?? 0m;
+            var mkt = p.MarketValueVnd(current) ?? 0m;
             tracked++;
             totalCost += cost.Value;
-            totalMkt += current * qty.Value;
+            totalMkt += mkt;
             totalPnl += pnl;
             totalQty += qty.Value;
 

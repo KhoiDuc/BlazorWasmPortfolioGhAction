@@ -42,7 +42,7 @@ public partial class JWTDebugger
 
     protected override void OnInitialized()
     {
-        LoadExampleForAlgorithm();
+        ApplyExample(Codec.CreateExample(_algorithm));
         _initialized = true;
     }
 
@@ -105,19 +105,6 @@ public partial class JWTDebugger
 
         if (IsEncoder || HasSigningMaterial())
             SyncFromJson();
-    }
-
-    private void OnAlgorithmChanged(ChangeEventArgs e)
-    {
-        var newAlg = e.Value?.ToString();
-        if (string.IsNullOrWhiteSpace(newAlg) || !JwtAlgorithm.IsSupported(newAlg))
-            return;
-
-        _algorithm = newAlg;
-        if (!_initialized || _syncing)
-            return;
-
-        LoadExampleForAlgorithm();
     }
 
     private void OnHmacSecretInput(ChangeEventArgs e)
@@ -289,6 +276,9 @@ public partial class JWTDebugger
 
     private void LoadExampleForAlgorithm()
     {
+        if (_syncing)
+            return;
+
         ApplyExample(Codec.CreateExample(_algorithm));
     }
 

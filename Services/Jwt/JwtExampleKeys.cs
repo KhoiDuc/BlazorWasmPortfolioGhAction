@@ -4,6 +4,17 @@ public static class JwtExampleKeys
 {
     public const string HmacSecret = "a-string-secret-at-least-256-bits-long";
 
+    public const string HmacSecret384 = "a-string-secret-at-least-384-bits-long-for-hmac-sha384-example-key!!";
+
+    public const string HmacSecret512 = "a-string-secret-at-least-512-bits-long-for-hmac-sha512-example-key-value!!!!!!";
+
+    public static string GetHmacSecret(string algorithm) => algorithm switch
+    {
+        "HS384" => HmacSecret384,
+        "HS512" => HmacSecret512,
+        _ => HmacSecret
+    };
+
     public const string RsaPrivateKeyPem =
         """
         -----BEGIN RSA PRIVATE KEY-----

@@ -18,7 +18,8 @@
             <div class="jwt-global-actions">
                 <div class="jwt-action-group">
                     <button type="button" class="jwt-link-btn" @onclick="LoadExample">Generate example</button>
-                    <select id="jwt-algorithm" class="tool-select jwt-alg-select" value="@_algorithm" @onchange="OnAlgorithmChanged" aria-label="Select signing algorithm">
+                    <label class="jwt-alg-label" for="jwt-algorithm">Select signing algorithm</label>
+                    <select id="jwt-algorithm" class="tool-select jwt-alg-select" @bind="_algorithm" @bind:after="LoadExampleForAlgorithm" aria-label="Select signing algorithm">
                         @foreach (var alg in JwtAlgorithm.All)
                         {
                             <option value="@alg">@alg</option>

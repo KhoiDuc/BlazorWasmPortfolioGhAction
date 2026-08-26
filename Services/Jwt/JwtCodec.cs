@@ -187,7 +187,7 @@ public class JwtCodec
         switch (JwtAlgorithm.GetKeyKind(algorithm))
         {
             case JwtKeyKind.Hmac:
-                secret = JwtExampleKeys.HmacSecret;
+                secret = JwtExampleKeys.GetHmacSecret(algorithm);
                 break;
             case JwtKeyKind.Rsa:
                 publicKey = JwtExampleKeys.RsaPublicKeyPem;
@@ -198,9 +198,12 @@ public class JwtCodec
                 break;
         }
 
-        var result = Encode(headerJson, payloadJson, algorithm, secret, false, privateKey);
+        var token = JwtPrebuiltExamples.Tokens.TryGetValue(algorithm, out var prebuilt)
+            ? prebuilt
+            : string.Empty;
+
         return new JwtExample(
-            result.Token ?? string.Empty,
+            token,
             algorithm,
             PrettyPrintJson(headerJson),
             PrettyPrintJson(payloadJson),
