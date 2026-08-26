@@ -1805,3 +1805,193 @@
         font-size: 0.78rem;
     }
 }
+
+/* =============================================================================
+   VnDesk — guided flow layout
+   ============================================================================= */
+
+.ts-desk-page .ts-desk-hero {
+    margin-bottom: 0.75rem;
+}
+
+.ts-desk-symbol-bar {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.ts-desk-symbol-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 0.35rem;
+}
+
+.ts-desk-symbol-input {
+    max-width: 140px;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.ts-desk-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.ts-chip {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-glass);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+}
+
+.ts-chip:hover,
+.ts-chip.active {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background: var(--color-bg-glass-hover);
+}
+
+.ts-desk-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.65rem;
+}
+
+.ts-desk-hint {
+    font-size: 0.78rem;
+}
+
+.ts-btn-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+}
+
+.ts-desk-secondary {
+    margin-bottom: 0.5rem;
+}
+
+.ts-desk-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 0.75rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 0.25rem 0;
+}
+
+.ts-desk-flow::-webkit-scrollbar { display: none; }
+
+.ts-desk-flow-line {
+    flex: 0 0 1.5rem;
+    align-self: center;
+    height: 2px;
+    background: var(--color-border);
+    margin: 0 -0.25rem;
+}
+
+.ts-desk-flow-step {
+    flex: 1 1 0;
+    min-width: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.65rem 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md, 10px);
+    background: var(--color-bg-glass);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+    text-align: center;
+}
+
+.ts-desk-flow-step:hover {
+    border-color: var(--color-border-accent);
+    background: var(--color-bg-glass-hover);
+}
+
+.ts-desk-flow-step.active {
+    border-color: var(--color-accent);
+    background: var(--color-bg-glass-heavy);
+    box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+.ts-desk-flow-step.done:not(.active) .ts-desk-flow-num {
+    background: var(--color-accent);
+    color: var(--color-bg, #0a0a0a);
+}
+
+.ts-desk-flow-num {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.ts-desk-flow-step.active .ts-desk-flow-num {
+    background: var(--color-accent);
+    color: var(--color-bg, #0a0a0a);
+}
+
+.ts-desk-flow-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    line-height: 1.2;
+}
+
+.ts-desk-step-intro {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border-left: 3px solid var(--color-accent);
+    background: var(--color-bg-glass);
+    border-radius: 0 var(--radius-sm, 6px) var(--radius-sm, 6px) 0;
+}
+
+.ts-desk-nav-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.ts-desk-chart-block {
+    margin-top: 1rem;
+}
+
+@media (max-width: 640px) {
+    .ts-desk-flow-step {
+        min-width: 88px;
+        padding: 0.5rem 0.35rem;
+    }
+
+    .ts-desk-flow-label {
+        font-size: 0.7rem;
+    }
+
+    .ts-desk-flow-line {
+        flex-basis: 0.75rem;
+    }
+}
