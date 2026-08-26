@@ -79,16 +79,12 @@
                                    required
                                    @bind="_newPrice"
                                    @bind:after='() => ClearFieldError("price")' />
-                            <div class="broker-field-footer">
-                                @if (_fieldErrors.TryGetValue("price", out var errPrice))
-                                {
+                            @if (_fieldErrors.TryGetValue("price", out var errPrice))
+                            {
+                                <div class="broker-field-footer">
                                     <p class="ts-field-error">@errPrice</p>
-                                }
-                                else
-                                {
-                                    <span class="broker-field-slot-spacer" aria-hidden="true"></span>
-                                }
-                            </div>
+                                </div>
+                            }
                         </div>
                         <div class="broker-field">
                             <label class="broker-field-label" for="broker-qty">
@@ -103,16 +99,12 @@
                                    step="any"
                                    @bind="_newQty"
                                    @bind:after='() => ClearFieldError("qty")' />
-                            <div class="broker-field-footer">
-                                @if (_fieldErrors.TryGetValue("qty", out var errQty))
-                                {
+                            @if (_fieldErrors.TryGetValue("qty", out var errQty))
+                            {
+                                <div class="broker-field-footer">
                                     <p class="ts-field-error">@errQty</p>
-                                }
-                                else
-                                {
-                                    <span class="broker-field-slot-spacer" aria-hidden="true"></span>
-                                }
-                            </div>
+                                </div>
+                            }
                         </div>
                     </div>
                 </section>
