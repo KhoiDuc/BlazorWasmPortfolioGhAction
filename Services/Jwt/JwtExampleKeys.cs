@@ -2,6 +2,8 @@ namespace BlazorWasmPortfolioGhAction.Services.Jwt;
 
 public static class JwtExampleKeys
 {
+    public const string HmacSecret = "a-string-secret-at-least-256-bits-long";
+
     public const string RsaPrivateKeyPem =
         """
         -----BEGIN RSA PRIVATE KEY-----
@@ -43,5 +45,69 @@ public static class JwtExampleKeys
         Y7vavn0WUw1egjmy4FbchUeHIc/KHqKPM5d3Kb8Fft4VPsaf5s+vapw2Rx99nOKE
         cUaaa/yw6M2kRCGkpexjB3N4JDiXOK+1cQIDAQAB
         -----END RSA PUBLIC KEY-----
+        """;
+
+    public static (string Public, string Private) GetEcKeys(string algorithm) => algorithm switch
+    {
+        "ES384" => (Es384PublicKeyPem, Es384PrivateKeyPem),
+        "ES512" => (Es512PublicKeyPem, Es512PrivateKeyPem),
+        _ => (Es256PublicKeyPem, Es256PrivateKeyPem)
+    };
+
+    public const string Es256PublicKeyPem =
+        """
+        -----BEGIN PUBLIC KEY-----
+        MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEu7U4pkTIVNbKwbXYZNUkoDNxl1WI
+        02vqikFH4enJrLHuGYgBY3uYLydC/iMVNb9JMjnFL+9WHxDnd1/KciP6Uw==
+        -----END PUBLIC KEY-----
+        """;
+
+    public const string Es256PrivateKeyPem =
+        """
+        -----BEGIN EC PRIVATE KEY-----
+        MHcCAQEEINHq0XMjkrQkukDn7vhF3hdBE2SY5gizICByD0INh+AqoAoGCCqGSM49
+        AwEHoUQDQgAEu7U4pkTIVNbKwbXYZNUkoDNxl1WI02vqikFH4enJrLHuGYgBY3uY
+        LydC/iMVNb9JMjnFL+9WHxDnd1/KciP6Uw==
+        -----END EC PRIVATE KEY-----
+        """;
+
+    public const string Es384PublicKeyPem =
+        """
+        -----BEGIN PUBLIC KEY-----
+        MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEomFFPr6i8F3V16C+rcZ7xDudjbAExU3w
+        gNvZp3i5RtnnJMP8+ZTRi8L3aLxhN2Qx0TkZKZdtV64EF9gs5XhHutpdIFSXNp1W
+        LBTYXwM0l5PtLM2DzD+kZainyOmElylp
+        -----END PUBLIC KEY-----
+        """;
+
+    public const string Es384PrivateKeyPem =
+        """
+        -----BEGIN EC PRIVATE KEY-----
+        MIGkAgEBBDBB/6Xn/tUNX7Fh9dsBdGMgSfGcXyeFJLCEzRCs0XKm9fzNnfcInuat
+        L7e43d+VH2agBwYFK4EEACKhZANiAASiYUU+vqLwXdXXoL6txnvEO52NsATFTfCA
+        29mneLlG2eckw/z5lNGLwvdovGE3ZDHRORkpl21XrgQX2CzleEe62l0gVJc2nVYs
+        FNhfAzSXk+0szYPMP6RlqKfI6YSXKWk=
+        -----END EC PRIVATE KEY-----
+        """;
+
+    public const string Es512PublicKeyPem =
+        """
+        -----BEGIN PUBLIC KEY-----
+        MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAFgd6eY3ib0/+LLvlcb9868uF7oFU
+        9qqMS8SsomnoRwrYvIT7/FG8oszanctwfF5/7i6RqC8BVrD5rU32aaIGHSYAhEvV
+        A/9CDIv8/UBhhT0jUmv85oq++fL9mYeqkSoNDdttH0YYt/DJctjCQvJa+/Mb0ziT
+        8xf4a4oVH96Fii8XkgI=
+        -----END PUBLIC KEY-----
+        """;
+
+    public const string Es512PrivateKeyPem =
+        """
+        -----BEGIN EC PRIVATE KEY-----
+        MIHcAgEBBEIAKhbBKISlktNOIJjF3GbLPMOgArJk8CdtrAErMZfncB1dnIpee4ld
+        ufSr9Q6tyba8gbg4i9QzTdmhGSApIFUT4GigBwYFK4EEACOhgYkDgYYABAAWB3p5
+        jeJvT/4su+Vxv3zry4XugVT2qoxLxKyiaehHCti8hPv8UbyizNqdy3B8Xn/uLpGo
+        LwFWsPmtTfZpogYdJgCES9UD/0IMi/z9QGGFPSNSa/zmir758v2Zh6qRKg0N220f
+        Rhi38Mly2MJC8lr78xvTOJPzF/hrihUf3oWKLxeSAg==
+        -----END EC PRIVATE KEY-----
         """;
 }

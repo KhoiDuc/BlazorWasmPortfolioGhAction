@@ -42,7 +42,7 @@ public partial class JWTDebugger
 
     protected override void OnInitialized()
     {
-        LoadDecoderExample();
+        LoadExampleForAlgorithm();
         _initialized = true;
     }
 
@@ -72,10 +72,7 @@ public partial class JWTDebugger
         _structureMessage = null;
         _verifyMessage = null;
 
-        if (mode == JwtMode.Decoder)
-            LoadDecoderExample();
-        else
-            LoadEncoderExample();
+        LoadExampleForAlgorithm();
     }
 
     private void SetHeaderView(JsonView view) => _headerView = view;
@@ -112,60 +109,15 @@ public partial class JWTDebugger
 
     private void OnAlgorithmChanged(ChangeEventArgs e)
     {
-        _algorithm = e.Value?.ToString() ?? "HS256";
+        var newAlg = e.Value?.ToString();
+        if (string.IsNullOrWhiteSpace(newAlg) || !JwtAlgorithm.IsSupported(newAlg))
+            return;
+
+        _algorithm = newAlg;
         if (!_initialized || _syncing)
             return;
 
-        if (IsEncoder)
-        {
-            ApplyAlgorithmToHeaderJson();
-            EnsureEncoderKeysForAlgorithm();
-            SyncFromJson();
-        }
-        else
-        {
-            VerifyCurrent();
-        }
-    }
-
-    private void ApplyAlgorithmToHeaderJson()
-    {
-        if (!Codec.IsValidJson(_headerJson))
-            return;
-
-        try
-        {
-            using var doc = System.Text.Json.JsonDocument.Parse(_headerJson);
-            var dict = new Dictionary<string, object?>(StringComparer.Ordinal);
-            foreach (var prop in doc.RootElement.EnumerateObject())
-                dict[prop.Name] = prop.Value.ValueKind == System.Text.Json.JsonValueKind.String
-                    ? prop.Value.GetString()
-                    : System.Text.Json.JsonSerializer.Deserialize<object>(prop.Value.GetRawText());
-
-            dict["typ"] = "JWT";
-            dict["alg"] = _algorithm;
-            _headerJson = System.Text.Json.JsonSerializer.Serialize(
-                dict,
-                new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-        }
-        catch
-        {
-            // keep existing header text if update fails
-        }
-    }
-
-    private void EnsureEncoderKeysForAlgorithm()
-    {
-        if (KeyKind is JwtKeyKind.Rsa or JwtKeyKind.Ecdsa && string.IsNullOrWhiteSpace(_privateKeyPem))
-        {
-            var example = Codec.CreateRs256Example();
-            _publicKeyPem = example.PublicKeyPem ?? string.Empty;
-            _privateKeyPem = example.PrivateKeyPem ?? string.Empty;
-        }
-        else if (KeyKind == JwtKeyKind.Hmac && string.IsNullOrWhiteSpace(_hmacSecret))
-        {
-            _hmacSecret = "a-string-secret-at-least-256-bits-long";
-        }
+        LoadExampleForAlgorithm();
     }
 
     private void OnHmacSecretInput(ChangeEventArgs e)
@@ -320,9 +272,10 @@ public partial class JWTDebugger
             return;
         }
 
+        var verifyAlgorithm = decode.Algorithm ?? _algorithm;
         var verify = Codec.Verify(
             _encoded,
-            _algorithm,
+            verifyAlgorithm,
             _hmacSecret,
             _secretIsBase64Url,
             _publicKeyPem);
@@ -332,59 +285,11 @@ public partial class JWTDebugger
         _verifyMessage = verify.Message;
     }
 
-    private void LoadExample()
+    private void LoadExample() => LoadExampleForAlgorithm();
+
+    private void LoadExampleForAlgorithm()
     {
-        if (_mode == JwtMode.Decoder)
-            LoadDecoderExample();
-        else
-            LoadEncoderExample();
-    }
-
-    private void LoadDecoderExample()
-    {
-        ApplyExample(Codec.CreateHs256Example());
-    }
-
-    private void LoadEncoderExample()
-    {
-        _syncing = true;
-        try
-        {
-            if (KeyKind is JwtKeyKind.Rsa or JwtKeyKind.Ecdsa)
-            {
-                var rsaExample = Codec.CreateRs256Example();
-                _algorithm = rsaExample.Algorithm;
-                _headerJson = rsaExample.HeaderJson;
-                _payloadJson = rsaExample.PayloadJson;
-                _hmacSecret = string.Empty;
-                _publicKeyPem = rsaExample.PublicKeyPem ?? string.Empty;
-                _privateKeyPem = rsaExample.PrivateKeyPem ?? string.Empty;
-            }
-            else
-            {
-                var example = Codec.CreateHs256Example();
-                _algorithm = example.Algorithm;
-                _headerJson = example.HeaderJson;
-                _payloadJson = example.PayloadJson;
-                _hmacSecret = example.HmacSecret ?? string.Empty;
-                _publicKeyPem = string.Empty;
-                _privateKeyPem = string.Empty;
-            }
-
-            _secretIsBase64Url = false;
-            _encoded = string.Empty;
-            _headerError = null;
-            _payloadError = null;
-            _encodeError = null;
-            _structureMessage = null;
-            _verifyMessage = null;
-
-            SyncFromJson();
-        }
-        finally
-        {
-            _syncing = false;
-        }
+        ApplyExample(Codec.CreateExample(_algorithm));
     }
 
     private void ApplyExample(JwtExample example)
@@ -409,6 +314,16 @@ public partial class JWTDebugger
         {
             _syncing = false;
         }
+    }
+
+    private void ClearEncoded()
+    {
+        _encoded = string.Empty;
+        _structureMessage = null;
+        _verifyMessage = null;
+        _isValidStructure = false;
+        _isSignatureVerified = false;
+        _canVerify = false;
     }
 
     private void ClearAll()

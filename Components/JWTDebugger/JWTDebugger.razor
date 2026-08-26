@@ -16,9 +16,8 @@
                     : "Fill in the fields below to generate a signed JWT.")
             </p>
             <div class="jwt-global-actions">
-                <button type="button" class="jwt-link-btn" @onclick="LoadExample">Generate example</button>
-                <div class="jwt-alg-picker">
-                    <label class="visually-hidden" for="jwt-algorithm">Select signing algorithm</label>
+                <div class="jwt-action-group">
+                    <button type="button" class="jwt-link-btn" @onclick="LoadExample">Generate example</button>
                     <select id="jwt-algorithm" class="tool-select jwt-alg-select" value="@_algorithm" @onchange="OnAlgorithmChanged" aria-label="Select signing algorithm">
                         @foreach (var alg in JwtAlgorithm.All)
                         {
@@ -37,10 +36,18 @@
             <div class="jwt-layout jwt-layout-decoder">
                 <section class="jwt-pane jwt-pane-encoded">
                     <h4 class="jwt-section-title">Encoded Token</h4>
-                    <label class="tool-label" for="jwt-encoded">JSON Web Token (JWT)</label>
-                    <div class="jwt-editor">
-                        <pre class="jwt-highlight jwt-highlight-token" aria-hidden="true">@((MarkupString)JwtCodec.HighlightToken(_encoded))</pre>
-                        <textarea id="jwt-encoded" class="jwt-textarea jwt-textarea-overlay" rows="8" value="@_encoded" @oninput="OnEncodedInput" placeholder="eyJhbGciOiJIUzI1NiIs..."></textarea>
+                    <div class="jwt-card jwt-card-editor">
+                        <div class="jwt-editor-chrome">
+                            <span class="jwt-editor-chrome-label"><i class="bi bi-chevron-right" aria-hidden="true"></i> JSON Web Token (JWT)</span>
+                            <div class="jwt-editor-chrome-actions">
+                                <button type="button" class="jwt-icon-btn" @onclick="CopyEncoded" title="Copy token" disabled="@string.IsNullOrWhiteSpace(_encoded)"><i class="bi bi-clipboard" aria-hidden="true"></i></button>
+                                <button type="button" class="jwt-icon-btn" @onclick="ClearEncoded" title="Clear token"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+                            </div>
+                        </div>
+                        <div class="jwt-editor jwt-editor-inset">
+                            <pre class="jwt-highlight jwt-highlight-token" aria-hidden="true">@((MarkupString)JwtCodec.HighlightToken(_encoded))</pre>
+                            <textarea id="jwt-encoded" class="jwt-textarea jwt-textarea-overlay" rows="8" value="@_encoded" @oninput="OnEncodedInput" placeholder="eyJhbGciOiJIUzI1NiIs..."></textarea>
+                        </div>
                     </div>
                     <div class="jwt-status-row">
                         @if (!string.IsNullOrWhiteSpace(_encoded))
@@ -60,61 +67,63 @@
                     </div>
                     @if (!string.IsNullOrEmpty(_structureMessage)) { <p class="jwt-error">@_structureMessage</p> }
                     @if (_canVerify && !string.IsNullOrEmpty(_verifyMessage) && !_isSignatureVerified) { <p class="jwt-error">@_verifyMessage</p> }
-                    <div class="tool-actions">
-                        <button type="button" class="tool-btn" @onclick="CopyEncoded" disabled="@string.IsNullOrWhiteSpace(_encoded)"><i class="bi bi-clipboard" aria-hidden="true"></i> Copy token</button>
-                    </div>
                 </section>
 
                 <section class="jwt-pane jwt-pane-decoded">
-                    <h4 class="jwt-section-title">Decoded Token</h4>
+                    <h4 class="jwt-section-title">Decoded Header</h4>
 
                     @if (string.Equals(_algorithm, "none", StringComparison.OrdinalIgnoreCase))
                     {
                         <div class="tool-alert tool-alert-warning jwt-none-warning"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> The <strong>none</strong> algorithm produces unsigned tokens.</div>
                     }
 
-                    <div class="jwt-decoded-block">
-                        <div class="jwt-block-header">
-                            <span class="tool-result-label">Decoded Header</span>
-                            <div class="jwt-view-tabs">
-                                <button type="button" class="jwt-view-tab @(_headerView == JsonView.Json ? "is-active" : "")" @onclick="() => SetHeaderView(JsonView.Json)">JSON</button>
-                                <button type="button" class="jwt-view-tab @(_headerView == JsonView.Claims ? "is-active" : "")" @onclick="() => SetHeaderView(JsonView.Claims)">Claims Breakdown</button>
+                    <div class="jwt-card jwt-card-editor">
+                        <div class="jwt-editor-chrome">
+                            <span class="jwt-editor-chrome-label"><i class="bi bi-chevron-right" aria-hidden="true"></i> JSON</span>
+                            <div class="jwt-editor-chrome-actions">
+                                <div class="jwt-view-tabs">
+                                    <button type="button" class="jwt-view-tab @(_headerView == JsonView.Json ? "is-active" : "")" @onclick="() => SetHeaderView(JsonView.Json)">JSON</button>
+                                    <button type="button" class="jwt-view-tab @(_headerView == JsonView.Claims ? "is-active" : "")" @onclick="() => SetHeaderView(JsonView.Claims)">Claims Breakdown</button>
+                                </div>
                             </div>
                         </div>
                         @if (_headerView == JsonView.Json)
                         {
-                            <div class="jwt-editor"><pre class="jwt-highlight jwt-highlight-json" aria-hidden="true">@((MarkupString)JwtCodec.HighlightJson(_headerJson))</pre><textarea class="jwt-textarea jwt-textarea-overlay jwt-textarea-sm" rows="4" value="@_headerJson" @oninput="OnHeaderInput"></textarea></div>
-                            @if (_headerError is not null) { <p class="jwt-error">@_headerError</p> }
+                            <div class="jwt-editor jwt-editor-inset"><pre class="jwt-highlight jwt-highlight-json" aria-hidden="true">@((MarkupString)JwtCodec.HighlightJson(_headerJson))</pre><textarea class="jwt-textarea jwt-textarea-overlay jwt-textarea-sm" rows="4" value="@_headerJson" @oninput="OnHeaderInput"></textarea></div>
+                            @if (_headerError is not null) { <p class="jwt-error jwt-card-error">@_headerError</p> }
                         }
                         else
                         {
-                            <div class="jwt-claims-table-wrap"><table class="jwt-claims-table"><thead><tr><th>Claim</th><th>Value</th><th>Description</th></tr></thead><tbody>@foreach (var claim in JwtClaimCatalog.Breakdown(_headerJson)) { <tr><td><code>@claim.Name</code></td><td>@claim.Value</td><td>@claim.Description</td></tr> }</tbody></table></div>
+                            <div class="jwt-claims-table-wrap jwt-card-body"><table class="jwt-claims-table"><thead><tr><th>Claim</th><th>Value</th><th>Description</th></tr></thead><tbody>@foreach (var claim in JwtClaimCatalog.Breakdown(_headerJson)) { <tr><td><code>@claim.Name</code></td><td>@claim.Value</td><td>@claim.Description</td></tr> }</tbody></table></div>
                         }
                     </div>
 
-                    <div class="jwt-decoded-block">
-                        <div class="jwt-block-header">
-                            <span class="tool-result-label">Decoded Payload</span>
-                            <div class="jwt-view-tabs">
-                                <button type="button" class="jwt-view-tab @(_payloadView == JsonView.Json ? "is-active" : "")" @onclick="() => SetPayloadView(JsonView.Json)">JSON</button>
-                                <button type="button" class="jwt-view-tab @(_payloadView == JsonView.Claims ? "is-active" : "")" @onclick="() => SetPayloadView(JsonView.Claims)">Claims Breakdown</button>
+                    <h4 class="jwt-section-title">Decoded Payload</h4>
+                    <div class="jwt-card jwt-card-editor">
+                        <div class="jwt-editor-chrome">
+                            <span class="jwt-editor-chrome-label"><i class="bi bi-chevron-right" aria-hidden="true"></i> JSON</span>
+                            <div class="jwt-editor-chrome-actions">
+                                <div class="jwt-view-tabs">
+                                    <button type="button" class="jwt-view-tab @(_payloadView == JsonView.Json ? "is-active" : "")" @onclick="() => SetPayloadView(JsonView.Json)">JSON</button>
+                                    <button type="button" class="jwt-view-tab @(_payloadView == JsonView.Claims ? "is-active" : "")" @onclick="() => SetPayloadView(JsonView.Claims)">Claims Breakdown</button>
+                                </div>
                             </div>
                         </div>
                         @if (_payloadView == JsonView.Json)
                         {
-                            <div class="jwt-editor"><pre class="jwt-highlight jwt-highlight-json" aria-hidden="true">@((MarkupString)JwtCodec.HighlightJson(_payloadJson))</pre><textarea class="jwt-textarea jwt-textarea-overlay jwt-textarea-md" rows="6" value="@_payloadJson" @oninput="OnPayloadInput"></textarea></div>
-                            @if (_payloadError is not null) { <p class="jwt-error">@_payloadError</p> }
+                            <div class="jwt-editor jwt-editor-inset"><pre class="jwt-highlight jwt-highlight-json" aria-hidden="true">@((MarkupString)JwtCodec.HighlightJson(_payloadJson))</pre><textarea class="jwt-textarea jwt-textarea-overlay jwt-textarea-md" rows="6" value="@_payloadJson" @oninput="OnPayloadInput"></textarea></div>
+                            @if (_payloadError is not null) { <p class="jwt-error jwt-card-error">@_payloadError</p> }
                         }
                         else
                         {
-                            <div class="jwt-claims-table-wrap"><table class="jwt-claims-table"><thead><tr><th>Claim</th><th>Value</th><th>Description</th></tr></thead><tbody>@foreach (var claim in JwtClaimCatalog.Breakdown(_payloadJson)) { <tr><td><code>@claim.Name</code></td><td>@claim.Value</td><td>@claim.Description</td></tr> }</tbody></table></div>
+                            <div class="jwt-claims-table-wrap jwt-card-body"><table class="jwt-claims-table"><thead><tr><th>Claim</th><th>Value</th><th>Description</th></tr></thead><tbody>@foreach (var claim in JwtClaimCatalog.Breakdown(_payloadJson)) { <tr><td><code>@claim.Name</code></td><td>@claim.Value</td><td>@claim.Description</td></tr> }</tbody></table></div>
                         }
                     </div>
 
                     @if (_encodeError is not null) { <p class="jwt-error">@_encodeError</p> }
 
                     <div class="jwt-key-section">
-                        <h4 class="jwt-key-title">JWT Signature Verification</h4>
+                        <h4 class="jwt-key-title">JWT Signature Verification @(KeyKind == JwtKeyKind.None ? string.Empty : "(Optional)")</h4>
                         @if (KeyKind == JwtKeyKind.Hmac)
                         {
                             <p class="jwt-key-hint">Enter the secret used to verify the JWT.</p>

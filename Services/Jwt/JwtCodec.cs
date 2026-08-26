@@ -159,15 +159,11 @@ public class JwtCodec
         }
     }
 
-    public JwtExample CreateHs256Example()
+    public JwtExample CreateExample(string algorithm)
     {
-        const string secret = "a-string-secret-at-least-256-bits-long";
-        const string headerJson = """
-            {
-              "alg": "HS256",
-              "typ": "JWT"
-            }
-            """;
+        if (!JwtAlgorithm.IsSupported(algorithm))
+            algorithm = "HS256";
+
         const string payloadJson = """
             {
               "sub": "1234567890",
@@ -177,46 +173,45 @@ public class JwtCodec
             }
             """;
 
-        var result = Encode(headerJson, payloadJson, "HS256", secret, false, null);
+        var headerJson = $$"""
+            {
+              "alg": "{{algorithm}}",
+              "typ": "JWT"
+            }
+            """;
+
+        string? secret = null;
+        string? publicKey = null;
+        string? privateKey = null;
+
+        switch (JwtAlgorithm.GetKeyKind(algorithm))
+        {
+            case JwtKeyKind.Hmac:
+                secret = JwtExampleKeys.HmacSecret;
+                break;
+            case JwtKeyKind.Rsa:
+                publicKey = JwtExampleKeys.RsaPublicKeyPem;
+                privateKey = JwtExampleKeys.RsaPrivateKeyPem;
+                break;
+            case JwtKeyKind.Ecdsa:
+                (publicKey, privateKey) = JwtExampleKeys.GetEcKeys(algorithm);
+                break;
+        }
+
+        var result = Encode(headerJson, payloadJson, algorithm, secret, false, privateKey);
         return new JwtExample(
             result.Token ?? string.Empty,
-            "HS256",
+            algorithm,
             PrettyPrintJson(headerJson),
             PrettyPrintJson(payloadJson),
             secret,
-            null,
-            null);
-    }
-
-    public JwtExample CreateRs256Example()
-    {
-        var privateKey = JwtExampleKeys.RsaPrivateKeyPem;
-        var publicKey = JwtExampleKeys.RsaPublicKeyPem;
-        const string headerJson = """
-            {
-              "alg": "RS256",
-              "typ": "JWT"
-            }
-            """;
-        const string payloadJson = """
-            {
-              "sub": "1234567890",
-              "name": "John Doe",
-              "admin": true,
-              "iat": 1516239022
-            }
-            """;
-
-        var result = Encode(headerJson, payloadJson, "RS256", null, false, privateKey);
-        return new JwtExample(
-            result.Token ?? string.Empty,
-            "RS256",
-            PrettyPrintJson(headerJson),
-            PrettyPrintJson(payloadJson),
-            null,
             publicKey,
             privateKey);
     }
+
+    public JwtExample CreateHs256Example() => CreateExample("HS256");
+
+    public JwtExample CreateRs256Example() => CreateExample("RS256");
 
     public static string Base64UrlEncode(byte[] input) =>
         Convert.ToBase64String(input).TrimEnd('=').Replace('+', '-').Replace('/', '_');
