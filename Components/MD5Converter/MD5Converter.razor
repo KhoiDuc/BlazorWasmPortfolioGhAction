@@ -1,6 +1,12 @@
-@using BlazorWasmPortfolioGhAction.Services.Crypto
+@using System.Security.Cryptography
 
 <ToolShell Title="MD5 Converter" Icon="bi-fingerprint" Description="Generate MD5 hash from a string.">
+    <div class="tool-alert tool-alert-warning">
+        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+        <a href="https://learn.microsoft.com/en-us/dotnet/core/compatibility/cryptography/5.0/cryptography-apis-not-supported-on-blazor-webassembly" target="_blank">
+            System.Security.Cryptography APIs not supported on Blazor WebAssembly
+        </a>
+    </div>
     <div class="tool-form">
         <div class="tool-field">
             <label class="tool-label" for="md5input">Input string</label>
@@ -20,5 +26,15 @@
     string md5 = "";
     string Output = string.Empty;
 
-    void ConvertString() => Output = Md5Helper.ComputeHash(md5);
+    void ConvertString() { Output = CreateMD5(md5); }
+
+    public static string CreateMD5(string input)
+    {
+        using (MD5 md5 = MD5.Create())
+        {
+            byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+            byte[] hashBytes = md5.ComputeHash(inputBytes);
+            return Convert.ToHexString(hashBytes);
+        }
+    }
 }
