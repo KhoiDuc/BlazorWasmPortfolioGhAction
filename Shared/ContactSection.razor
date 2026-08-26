@@ -3,29 +3,55 @@
 
 <section class="resume-contact">
     <div class="container">
-        <div class="section-heading">
-            <p class="section-label">CONTACT</p>
-            <h2>Let's build something together.</h2>
-        </div>
         <div class="contact-layout">
             <div class="contact-heading">
+                <p class="section-label">CONTACT</p>
+                <h2>Let's build something together.</h2>
                 <p class="contact-description">
                     I'm open to remote opportunities and interesting projects.
                     Send me a message and I'll get back to you.
                 </p>
+                <ul class="contact-quick-links">
+                    <li>
+                        <a href="mailto:khoi.duc.dev@gmail.com">
+                            <i class="bi bi-envelope" aria-hidden="true"></i>
+                            <span>khoi.duc.dev@gmail.com</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://t.me/warman99" target="_blank" rel="noopener noreferrer">
+                            <i class="bi bi-telegram" aria-hidden="true"></i>
+                            <span>@@warman99</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/KhoiDuc" target="_blank" rel="noopener noreferrer">
+                            <i class="bi bi-github" aria-hidden="true"></i>
+                            <span>GitHub</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.linkedin.com/in/%C4%91%E1%BB%A9c-kh%C3%B4i-354b77269/" target="_blank" rel="noopener noreferrer">
+                            <i class="bi bi-linkedin" aria-hidden="true"></i>
+                            <span>LinkedIn</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
             <div class="contact-form-wrapper">
                 <EditForm Model="@model" OnValidSubmit="Submit" class="contact-form">
                     <DataAnnotationsValidator />
-                    <div class="tool-field">
-                        <label class="tool-label" for="contact-name">Name</label>
-                        <InputText id="contact-name" class="tool-input" @bind-Value="model.Name" placeholder="Your name" />
-                        <ValidationMessage For="@(() => model.Name)" class="contact-error" />
-                    </div>
-                    <div class="tool-field">
-                        <label class="tool-label" for="contact-email">Email</label>
-                        <InputText id="contact-email" class="tool-input" @bind-Value="model.Email" placeholder="your@email.com" />
-                        <ValidationMessage For="@(() => model.Email)" class="contact-error" />
+                    <div class="contact-form-row">
+                        <div class="tool-field">
+                            <label class="tool-label" for="contact-name">Name</label>
+                            <InputText id="contact-name" class="tool-input" @bind-Value="model.Name" placeholder="Your name" />
+                            <ValidationMessage For="@(() => model.Name)" class="contact-error" />
+                        </div>
+                        <div class="tool-field">
+                            <label class="tool-label" for="contact-email">Email</label>
+                            <InputText id="contact-email" class="tool-input" @bind-Value="model.Email" placeholder="your@email.com" />
+                            <ValidationMessage For="@(() => model.Email)" class="contact-error" />
+                        </div>
                     </div>
                     <div class="tool-field">
                         <label class="tool-label" for="contact-subject">Subject</label>
@@ -47,7 +73,7 @@
                         </div>
                     }
                     <div class="tool-actions">
-                        <button type="submit" class="tool-btn tool-btn-primary" disabled="@sending">
+                        <button type="submit" class="tool-btn tool-btn-primary contact-submit" disabled="@sending">
                             @if (sending)
                             {
                                 <i class="bi bi-arrow-clockwise contact-spinner" aria-hidden="true"></i>

@@ -127,34 +127,36 @@
 }
 
 .utility-launch-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-}
-
-.utility-launch-grid > * {
-    flex: 1 1 calc(33.333% - 0.5rem);
-    min-width: min(100%, 240px);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
 }
 
 .utility-launch-card {
     display: flex;
     align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.95rem 1rem;
-    border: 1px solid var(--color-border);
+    gap: 0.85rem;
+    height: 100%;
+    min-height: 6.5rem;
+    padding: 1.05rem 1.1rem;
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 14%, transparent);
     border-radius: var(--radius-md);
     background: var(--color-bg-surface);
     text-decoration: none;
     color: inherit;
-    box-shadow: var(--shadow-sm);
+    box-shadow:
+        0 1px 2px color-mix(in srgb, var(--color-text-primary) 6%, transparent),
+        0 8px 20px color-mix(in srgb, var(--color-text-primary) 8%, transparent);
     transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 
 .utility-launch-card:hover {
     transform: translateY(-2px);
-    border-color: var(--color-border-accent);
-    box-shadow: var(--shadow-md), var(--shadow-glow-accent);
+    border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border));
+    box-shadow:
+        0 2px 4px color-mix(in srgb, var(--color-text-primary) 8%, transparent),
+        0 14px 28px color-mix(in srgb, var(--color-text-primary) 12%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent);
 }
 
 .utility-launch-icon {
@@ -174,7 +176,7 @@
     display: flex;
     flex-direction: column;
     flex: 1 1 0;
-    gap: 0.2rem;
+    gap: 0.25rem;
     min-width: 0;
 }
 
@@ -329,6 +331,12 @@
     border: 0;
 }
 
+@media (max-width: 1000px) {
+    .utility-launch-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
     .utility-deck section { padding: 2rem 0 3.5rem; }
 
@@ -344,7 +352,7 @@
         width: 100%;
     }
 
-    .utility-launch-grid > * {
-        flex: 1 1 100%;
+    .utility-launch-grid {
+        grid-template-columns: 1fr;
     }
 }

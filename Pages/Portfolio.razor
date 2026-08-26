@@ -17,26 +17,42 @@
         <div class="resume-hero-layout">
             <div class="resume-hero-content">
                 <p class="section-label">RESUME</p>
-                <h1>@Resume.Profile.NameEn <span class="chinese-name">(@Resume.Profile.FullName)</span></h1>
+                <h1>@Resume.Profile.NameEn</h1>
+                <p class="resume-fullname-name">@Resume.Profile.FullName</p>
                 <p class="resume-hero-role">@(IsEn ? Resume.Profile.RoleEn : Resume.Profile.RoleVn)</p>
-                <div class="resume-contact-info">
+                <ul class="resume-contact-info">
                     @foreach (var phone in Resume.Profile.PhoneNumbers)
                     {
-                        <p><span class="icon">📞</span> <a href="tel:@phone.Replace(" ", "")">(+84) @phone</a></p>
+                        <li>
+                            <i class="bi bi-telephone" aria-hidden="true"></i>
+                            <a href="tel:@phone.Replace(" ", "")">@FormatPhone(phone)</a>
+                        </li>
                     }
                     @foreach (var email in Resume.Profile.Emails)
                     {
-                        <p><span class="icon">✉️</span> <a href="mailto:@email">@email</a></p>
+                        <li>
+                            <i class="bi bi-envelope" aria-hidden="true"></i>
+                            <a href="mailto:@email">@email</a>
+                        </li>
                     }
-                    <p><span class="icon">💬</span> <a href="@Resume.Profile.FacebookUrl" target="_blank">Facebook</a></p>
-                    <p><span class="icon">🔗</span> <a href="@Resume.Profile.LinkedInUrl" target="_blank">LinkedIn</a></p>
-                    <p><span class="icon">📬</span> <a href="https://t.me/@Resume.Profile.TelegramHandle" target="_blank">Telegram @@@Resume.Profile.TelegramHandle</a></p>
-                </div>
+                    <li>
+                        <i class="bi bi-facebook" aria-hidden="true"></i>
+                        <a href="@Resume.Profile.FacebookUrl" target="_blank" rel="noopener noreferrer">Facebook</a>
+                    </li>
+                    <li>
+                        <i class="bi bi-linkedin" aria-hidden="true"></i>
+                        <a href="@Resume.Profile.LinkedInUrl" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                    </li>
+                    <li>
+                        <i class="bi bi-telegram" aria-hidden="true"></i>
+                        <a href="https://t.me/@Resume.Profile.TelegramHandle" target="_blank" rel="noopener noreferrer">Telegram @@@Resume.Profile.TelegramHandle</a>
+                    </li>
+                </ul>
                 <div class="resume-hero-links">
-                    <a href="@Resume.Profile.GitHubUrl" target="_blank" class="resume-btn">GitHub</a>
-                    <a href="@Resume.Profile.PdfResumeUrl" target="_blank" class="resume-btn">@(IsEn ? "PDF Resume" : "CV PDF")</a>
-                    <a href="@Resume.Profile.CertificateUrl" target="_blank" class="resume-btn">@(IsEn ? "Certificate" : "Chứng chỉ")</a>
-                    <a href="@Resume.Profile.TranscriptUrl" target="_blank" class="resume-btn">@(IsEn ? "Transcript" : "Bảng điểm")</a>
+                    <a href="@Resume.Profile.PdfResumeUrl" target="_blank" class="resume-btn resume-btn-primary">@(IsEn ? "PDF Resume" : "CV PDF")</a>
+                    <a href="@Resume.Profile.GitHubUrl" target="_blank" rel="noopener noreferrer" class="resume-btn resume-btn-ghost">GitHub</a>
+                    <a href="@Resume.Profile.CertificateUrl" target="_blank" rel="noopener noreferrer" class="resume-btn resume-btn-ghost">@(IsEn ? "Certificate" : "Chứng chỉ")</a>
+                    <a href="@Resume.Profile.TranscriptUrl" target="_blank" class="resume-btn resume-btn-ghost">@(IsEn ? "Transcript" : "Bảng điểm")</a>
                 </div>
             </div>
             <div class="carousel-container">
@@ -296,6 +312,16 @@
         {
             await carouselInstance.InvokeVoidAsync("changeSlide", direction);
         }
+    }
+
+    private static string FormatPhone(string phone)
+    {
+        var digits = new string(phone.Where(char.IsDigit).ToArray());
+        if (digits.StartsWith("84") && digits.Length >= 11)
+            return $"(+84) {digits[2..]}";
+        if (digits.StartsWith("0") && digits.Length >= 10)
+            return $"(+84) {digits[1..]}";
+        return phone;
     }
 
     public async ValueTask DisposeAsync()
