@@ -1,0 +1,240 @@
+@page "/trading/vndesk"
+@layout TradingLayout
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+
+<div class="ts-page ts-desk-page">
+    <div class="ts-panel ts-desk-hero">
+        <div class="ts-header">
+            <div>
+                <h2>VnDesk</h2>
+                <p class="ts-muted">Bàn làm việc đầu tư VN — từng bước, không tự đặt lệnh.</p>
+            </div>
+            <button class="ts-btn ts-btn-outline" @onclick="RunGuidedFlow" disabled="@_guidedBusy">
+                @(_guidedBusy ? "Đang chuyển bước..." : "Hướng dẫn từng bước")
+            </button>
+        </div>
+
+        <div class="ts-desk-symbol-bar">
+            <label class="ts-label" for="desk-symbol">Mã đang xem</label>
+            <div class="ts-desk-symbol-row">
+                <input id="desk-symbol" class="ts-input ts-desk-symbol-input" @bind="_symbol" @bind:event="oninput"
+                       placeholder="VNM, FPT, HPG..." @onkeydown="OnSymbolKey" />
+                @if (_popular.Length > 0)
+                {
+                    <div class="ts-desk-chips">
+                        @foreach (var p in _popular)
+                        {
+                            <button type="button" class="ts-chip @(_symbol == p ? "active" : "")" @onclick='() => PickSymbol(p)'>@p</button>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="ts-desk-quick-actions">
+                <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick='() => GoStep("screen")'>Chưa biết mua gì? Lọc CP</button>
+                <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick='() => GoStep("ai")'>Hỏi AI</button>
+                @if (_step is "decide" or "journal" && HasTaData)
+                {
+                    <span class="ts-muted ts-desk-hint">Đã có số phân tích từ bước Phân tích</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (_step is "screen" or "ai")
+    {
+        <div class="ts-desk-secondary">
+            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick='() => GoStep("overview")'>← Quay lại luồng chính</button>
+        </div>
+    }
+
+    @if (_step is not ("screen" or "ai"))
+    {
+        <nav class="ts-desk-flow" aria-label="Luồng VnDesk">
+            @RenderStepButton("overview", 1, "Thị trường", "Xem bối cảnh hôm nay")
+            <span class="ts-desk-flow-line" aria-hidden="true"></span>
+            @RenderStepButton("analyze", 2, "Phân tích", "Xem chart & chỉ báo")
+            <span class="ts-desk-flow-line" aria-hidden="true"></span>
+            @RenderStepButton("decide", 3, "Có nên mua?", "Tính rủi ro & quyết định")
+            <span class="ts-desk-flow-line" aria-hidden="true"></span>
+            @RenderStepButton("journal", 4, "Nhật ký", "Ghi lại sau phiên")
+        </nav>
+    }
+
+    <div class="ts-desk-content">
+        @if (_step == "overview")
+        {
+            <div class="ts-desk-step-intro">
+                <strong>Bước 1 — Thị trường:</strong> Xem chỉ số và ngành đang mạnh/yếu. Chọn mã ở trên hoặc bấm mã trong bảng.
+            </div>
+            <VnMarketPanel OnSymbolSelected="OnSymbolFromMarket" />
+            <div class="ts-desk-nav-footer">
+                <button type="button" class="ts-btn ts-btn-primary" @onclick='() => GoStep("analyze")'>Tiếp: Phân tích @_symbol →</button>
+            </div>
+        }
+        else if (_step == "analyze")
+        {
+            <div class="ts-desk-step-intro">
+                <strong>Bước 2 — Phân tích @_symbol:</strong> Bấm "Phân tích" để lấy TA. Xong thì sang bước Quyết định.
+            </div>
+            <VnAnalysisPanel @ref="_analysis" Symbol="@_symbol" />
+            <div class="ts-desk-nav-footer">
+                <button type="button" class="ts-btn ts-btn-outline" @onclick='() => GoStep("overview")'>← Thị trường</button>
+                <button type="button" class="ts-btn ts-btn-primary" @onclick='() => GoStep("decide")' disabled="@(!HasTaData)">
+                    @(HasTaData ? "Tiếp: Có nên mua? →" : "Phân tích trước đã")
+                </button>
+            </div>
+        }
+        else if (_step == "decide")
+        {
+            <div class="ts-desk-step-intro">
+                <strong>Bước 3 — Quyết định @_symbol:</strong> 3 bước ngắn — mất bao nhiêu nếu sai → 5 câu hỏi → lưu quyết định.
+            </div>
+            <VnWorkflowPanel Symbol="@_symbol"
+                             Mode="decide"
+                             HasTaData="@HasTaData"
+                             AlertSignal="@_alertSignal"
+                             TaPrice="@TaPrice"
+                             TaStop="@TaStop"
+                             TaTarget="@TaTarget"
+                             OnGoToAnalysis="GoAnalysis"
+                             OnSizeCalculated="OnSizeCalculated" />
+            <div class="ts-desk-nav-footer">
+                <button type="button" class="ts-btn ts-btn-outline" @onclick='() => GoStep("analyze")'>← Phân tích</button>
+                <button type="button" class="ts-btn ts-btn-primary" @onclick='() => GoStep("journal")'>Tiếp: Nhật ký →</button>
+            </div>
+        }
+        else if (_step == "journal")
+        {
+            <div class="ts-desk-step-intro">
+                <strong>Bước 4 — Nhật ký:</strong> Ghi nhanh trước/sau phiên. Không cần viết dài.
+            </div>
+            <VnWorkflowPanel Symbol="@_symbol" Mode="journal" />
+            <div class="ts-desk-nav-footer">
+                <button type="button" class="ts-btn ts-btn-outline" @onclick='() => GoStep("decide")'>← Quyết định</button>
+                <button type="button" class="ts-btn ts-btn-outline" @onclick='() => GoStep("overview")'>Bắt đầu phiên mới</button>
+            </div>
+        }
+        else if (_step == "screen")
+        {
+            <div class="ts-desk-step-intro">
+                <strong>Lọc cổ phiếu:</strong> Chọn mã trong bảng — app tự chuyển sang Phân tích.
+            </div>
+            <VnScreenerPanel OnSymbolSelected="OnSymbolFromScreener" />
+        }
+        else if (_step == "ai")
+        {
+            <div class="ts-desk-step-intro">
+                <strong>Hỏi AI:</strong> Tin tức & luận điểm tham khảo. Quyết định cuối vẫn ở bước 3.
+            </div>
+            <VnAiPanel Symbol="@_symbol" OnThesisReady="OnThesisReady" />
+        }
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_symbol) && _step is not ("screen" or "ai"))
+    {
+        <div class="ts-desk-chart-block">
+            <div class="ts-chart-wrap">
+                <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={_symbol}")"
+                        width="100%" height="360" frameborder="0" title="Vietstock chart"></iframe>
+            </div>
+            <PriceAlertWidget Symbol="@_symbol" AssetType="stock" />
+        </div>
+    }
+</div>
+
+@code {
+    private string _step = "overview";
+    private string _symbol = "VNM";
+    private string? _alertSignal;
+    private bool _guidedBusy;
+    private VnAnalysisPanel? _analysis;
+
+    private readonly string[] _popular = ["VNM", "FPT", "HPG", "VCB", "MWG"];
+
+    private decimal? TaPrice => _analysis?.LastTa?.LatestClose;
+    private decimal? TaStop => _analysis?.LastTa?.TradingSignal.StopLoss;
+    private decimal? TaTarget => _analysis?.LastTa?.TradingSignal.TakeProfit;
+    private bool HasTaData => TaPrice is > 0;
+
+    private RenderFragment RenderStepButton(string id, int num, string title, string hint) => builder =>
+    {
+        var active = _step == id;
+        builder.OpenElement(0, "button");
+        builder.AddAttribute(1, "type", "button");
+        builder.AddAttribute(2, "class", $"ts-desk-flow-step {(active ? "active" : "")} {(IsStepDone(id) ? "done" : "")}");
+        builder.AddAttribute(3, "onclick", EventCallback.Factory.Create(this, () => GoStep(id)));
+        builder.AddAttribute(4, "title", hint);
+        builder.OpenElement(5, "span");
+        builder.AddAttribute(6, "class", "ts-desk-flow-num");
+        builder.AddContent(7, num.ToString());
+        builder.CloseElement();
+        builder.OpenElement(8, "span");
+        builder.AddAttribute(9, "class", "ts-desk-flow-label");
+        builder.AddContent(10, title);
+        builder.CloseElement();
+        builder.CloseElement();
+    };
+
+    private bool IsStepDone(string id) => id switch
+    {
+        "overview" => _step is "analyze" or "decide" or "journal",
+        "analyze" => HasTaData || _step is "decide" or "journal",
+        "decide" => _step == "journal",
+        _ => false
+    };
+
+    private void GoStep(string step)
+    {
+        _step = step;
+        if (step == "decide")
+            _alertSignal = $"{_symbol} — chuẩn bị quyết định";
+    }
+
+    private void GoAnalysis() => GoStep("analyze");
+
+    private void PickSymbol(string sym)
+    {
+        _symbol = sym.Trim().ToUpperInvariant();
+        _alertSignal = $"{_symbol} được chọn";
+    }
+
+    private void OnSymbolFromMarket(string sym)
+    {
+        PickSymbol(sym);
+        GoStep("analyze");
+    }
+
+    private void OnSymbolFromScreener(string sym)
+    {
+        PickSymbol(sym);
+        _alertSignal = $"{_symbol} từ bộ lọc";
+        GoStep("analyze");
+    }
+
+    private void OnSymbolKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_symbol))
+            _symbol = _symbol.Trim().ToUpperInvariant();
+    }
+
+    private void OnSizeCalculated(SizeResult? size) { }
+
+    private Task OnThesisReady(string thesis)
+    {
+        GoStep("decide");
+        return Task.CompletedTask;
+    }
+
+    private async Task RunGuidedFlow()
+    {
+        _guidedBusy = true;
+        GoStep("overview");
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(500);
+        GoStep("analyze");
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(500);
+        _guidedBusy = false;
+        GoStep("decide");
+    }
+}
