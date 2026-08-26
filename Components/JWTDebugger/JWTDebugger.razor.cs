@@ -46,6 +46,16 @@ public partial class JWTDebugger
         _initialized = true;
     }
 
+    private bool IsHeaderValid =>
+        !string.IsNullOrWhiteSpace(_headerJson)
+        && _headerError is null
+        && Codec.IsValidJson(_headerJson);
+
+    private bool IsPayloadValid =>
+        !string.IsNullOrWhiteSpace(_payloadJson)
+        && _payloadError is null
+        && Codec.IsValidJson(_payloadJson);
+
     private JwtKeyKind KeyKind => JwtAlgorithm.GetKeyKind(_algorithm);
 
     private void SetMode(JwtMode mode)
@@ -107,9 +117,55 @@ public partial class JWTDebugger
             return;
 
         if (IsEncoder)
+        {
+            ApplyAlgorithmToHeaderJson();
+            EnsureEncoderKeysForAlgorithm();
             SyncFromJson();
+        }
         else
+        {
             VerifyCurrent();
+        }
+    }
+
+    private void ApplyAlgorithmToHeaderJson()
+    {
+        if (!Codec.IsValidJson(_headerJson))
+            return;
+
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(_headerJson);
+            var dict = new Dictionary<string, object?>(StringComparer.Ordinal);
+            foreach (var prop in doc.RootElement.EnumerateObject())
+                dict[prop.Name] = prop.Value.ValueKind == System.Text.Json.JsonValueKind.String
+                    ? prop.Value.GetString()
+                    : System.Text.Json.JsonSerializer.Deserialize<object>(prop.Value.GetRawText());
+
+            dict["typ"] = "JWT";
+            dict["alg"] = _algorithm;
+            _headerJson = System.Text.Json.JsonSerializer.Serialize(
+                dict,
+                new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            // keep existing header text if update fails
+        }
+    }
+
+    private void EnsureEncoderKeysForAlgorithm()
+    {
+        if (KeyKind is JwtKeyKind.Rsa or JwtKeyKind.Ecdsa && string.IsNullOrWhiteSpace(_privateKeyPem))
+        {
+            var example = Codec.CreateRs256Example();
+            _publicKeyPem = example.PublicKeyPem ?? string.Empty;
+            _privateKeyPem = example.PrivateKeyPem ?? string.Empty;
+        }
+        else if (KeyKind == JwtKeyKind.Hmac && string.IsNullOrWhiteSpace(_hmacSecret))
+        {
+            _hmacSecret = "a-string-secret-at-least-256-bits-long";
+        }
     }
 
     private void OnHmacSecretInput(ChangeEventArgs e)
@@ -291,17 +347,30 @@ public partial class JWTDebugger
 
     private void LoadEncoderExample()
     {
-        var example = Codec.CreateHs256Example();
-
         _syncing = true;
         try
         {
-            _algorithm = example.Algorithm;
-            _headerJson = example.HeaderJson;
-            _payloadJson = example.PayloadJson;
-            _hmacSecret = example.HmacSecret ?? string.Empty;
-            _publicKeyPem = string.Empty;
-            _privateKeyPem = string.Empty;
+            if (KeyKind is JwtKeyKind.Rsa or JwtKeyKind.Ecdsa)
+            {
+                var rsaExample = Codec.CreateRs256Example();
+                _algorithm = rsaExample.Algorithm;
+                _headerJson = rsaExample.HeaderJson;
+                _payloadJson = rsaExample.PayloadJson;
+                _hmacSecret = string.Empty;
+                _publicKeyPem = rsaExample.PublicKeyPem ?? string.Empty;
+                _privateKeyPem = rsaExample.PrivateKeyPem ?? string.Empty;
+            }
+            else
+            {
+                var example = Codec.CreateHs256Example();
+                _algorithm = example.Algorithm;
+                _headerJson = example.HeaderJson;
+                _payloadJson = example.PayloadJson;
+                _hmacSecret = example.HmacSecret ?? string.Empty;
+                _publicKeyPem = string.Empty;
+                _privateKeyPem = string.Empty;
+            }
+
             _secretIsBase64Url = false;
             _encoded = string.Empty;
             _headerError = null;

@@ -1,310 +1,238 @@
 @using BlazorWasmPortfolioGhAction.Services.Jwt
-@using Microsoft.AspNetCore.Components
 
 <ToolShell Title="JWT Debugger" Icon="bi-shield-lock" Description="Decode and encode JWTs, verify signatures, and inspect claims — inspired by jwt.io.">
     <div class="jwt-debugger">
         <div class="jwt-toolbar">
             <div class="jwt-mode-toggle" role="tablist" aria-label="JWT mode">
-                <button type="button"
-                        class="jwt-mode-btn @(_mode == JwtMode.Decoder ? "is-active" : "")"
-                        role="tab"
-                        aria-selected="@(_mode == JwtMode.Decoder)"
-                        @onclick="() => SetMode(JwtMode.Decoder)">
-                    JWT Decoder
-                </button>
-                <button type="button"
-                        class="jwt-mode-btn @(_mode == JwtMode.Encoder ? "is-active" : "")"
-                        role="tab"
-                        aria-selected="@(_mode == JwtMode.Encoder)"
-                        @onclick="() => SetMode(JwtMode.Encoder)">
-                    JWT Encoder
-                </button>
+                <button type="button" class="jwt-mode-btn @(_mode == JwtMode.Decoder ? "is-active" : "")" @onclick="() => SetMode(JwtMode.Decoder)">JWT Decoder</button>
+                <button type="button" class="jwt-mode-btn @(_mode == JwtMode.Encoder ? "is-active" : "")" @onclick="() => SetMode(JwtMode.Encoder)">JWT Encoder</button>
             </div>
-
-            <div class="jwt-toolbar-actions">
-                <button type="button" class="tool-btn" @onclick="LoadExample">
-                    <i class="bi bi-stars" aria-hidden="true"></i> Generate example
-                </button>
-                <button type="button" class="tool-btn tool-btn-danger" @onclick="ClearAll">
-                    <i class="bi bi-trash" aria-hidden="true"></i> Clear
-                </button>
-            </div>
+            @if (IsDecoder)
+            {
+                <div class="jwt-toolbar-actions">
+                    <button type="button" class="tool-btn" @onclick="LoadExample"><i class="bi bi-stars" aria-hidden="true"></i> Generate example</button>
+                    <button type="button" class="tool-btn tool-btn-danger" @onclick="ClearAll"><i class="bi bi-trash" aria-hidden="true"></i> Clear</button>
+                </div>
+            }
         </div>
 
-        <div class="jwt-layout @(IsEncoder ? "jwt-layout-encoder" : "jwt-layout-decoder")">
-            <section class="jwt-pane jwt-pane-encoded">
-                <div class="jwt-pane-header">
-                    <h4>@(IsDecoder ? "Encoded Token" : "Generated Token")</h4>
-                    <p>
-                        @if (IsDecoder)
+        @if (IsDecoder)
+        {
+            <p class="jwt-mode-lead">Paste a JWT below that you'd like to decode, validate, and verify.</p>
+            <div class="jwt-layout jwt-layout-decoder">
+                <section class="jwt-pane jwt-pane-encoded">
+                    <h4 class="jwt-section-title">Encoded Token</h4>
+                    <label class="tool-label" for="jwt-encoded">JSON Web Token (JWT)</label>
+                    <div class="jwt-editor">
+                        <pre class="jwt-highlight jwt-highlight-token" aria-hidden="true">@((MarkupString)JwtCodec.HighlightToken(_encoded))</pre>
+                        <textarea id="jwt-encoded" class="jwt-textarea jwt-textarea-overlay" rows="8" value="@_encoded" @oninput="OnEncodedInput" placeholder="eyJhbGciOiJIUzI1NiIs..."></textarea>
+                    </div>
+                    <div class="jwt-status-row">
+                        @if (!string.IsNullOrWhiteSpace(_encoded))
                         {
-                            @:Paste a JWT below that you'd like to decode, validate, and verify.
+                            <span class="jwt-status @(_isValidStructure ? "is-valid" : "is-invalid")">
+                                <i class="bi @(_isValidStructure ? "bi-check-circle-fill" : "bi-x-circle-fill")" aria-hidden="true"></i>
+                                @(_isValidStructure ? "Valid JWT" : "Invalid JWT")
+                            </span>
+                            @if (_isValidStructure && _canVerify)
+                            {
+                                <span class="jwt-status @(_isSignatureVerified ? "is-valid" : "is-invalid")">
+                                    <i class="bi @(_isSignatureVerified ? "bi-shield-check" : "bi-shield-x")" aria-hidden="true"></i>
+                                    @(_isSignatureVerified ? "Signature Verified" : "Signature Invalid")
+                                </span>
+                            }
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(_structureMessage)) { <p class="jwt-error">@_structureMessage</p> }
+                    @if (_canVerify && !string.IsNullOrEmpty(_verifyMessage) && !_isSignatureVerified) { <p class="jwt-error">@_verifyMessage</p> }
+                    <div class="tool-actions">
+                        <button type="button" class="tool-btn" @onclick="CopyEncoded" disabled="@string.IsNullOrWhiteSpace(_encoded)"><i class="bi bi-clipboard" aria-hidden="true"></i> Copy token</button>
+                    </div>
+                </section>
+
+                <section class="jwt-pane jwt-pane-decoded">
+                    <div class="jwt-pane-header jwt-pane-header-row">
+                        <div>
+                            <h4 class="jwt-section-title">Decoded Token</h4>
+                            <p class="jwt-pane-desc">Inspect decoded header and payload. Edit JSON to re-sign when a secret/key is provided.</p>
+                        </div>
+                        <div class="tool-field jwt-alg-field">
+                            <label class="tool-label" for="jwt-algorithm-decoder">Signing algorithm</label>
+                            <select id="jwt-algorithm-decoder" class="tool-select" value="@_algorithm" @onchange="OnAlgorithmChanged">
+                                @foreach (var alg in JwtAlgorithm.All) { <option value="@alg">@alg</option> }
+                            </select>
+                        </div>
+                    </div>
+
+                    @if (string.Equals(_algorithm, "none", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <div class="tool-alert tool-alert-warning jwt-none-warning"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> The <strong>none</strong> algorithm produces unsigned tokens.</div>
+                    }
+
+                    <div class="jwt-decoded-block">
+                        <div class="jwt-block-header">
+                            <span class="tool-result-label">Decoded Header</span>
+                            <div class="jwt-view-tabs">
+                                <button type="button" class="jwt-view-tab @(_headerView == JsonView.Json ? "is-active" : "")" @onclick="() => SetHeaderView(JsonView.Json)">JSON</button>
+                                <button type="button" class="jwt-view-tab @(_headerView == JsonView.Claims ? "is-active" : "")" @onclick="() => SetHeaderView(JsonView.Claims)">Claims Breakdown</button>
+                            </div>
+                        </div>
+                        @if (_headerView == JsonView.Json)
+                        {
+                            <div class="jwt-editor"><pre class="jwt-highlight jwt-highlight-json" aria-hidden="true">@((MarkupString)JwtCodec.HighlightJson(_headerJson))</pre><textarea class="jwt-textarea jwt-textarea-overlay jwt-textarea-sm" rows="4" value="@_headerJson" @oninput="OnHeaderInput"></textarea></div>
+                            @if (_headerError is not null) { <p class="jwt-error">@_headerError</p> }
                         }
                         else
                         {
-                            @:The signed JWT appears here as you edit header, payload, and signing key.
+                            <div class="jwt-claims-table-wrap"><table class="jwt-claims-table"><thead><tr><th>Claim</th><th>Value</th><th>Description</th></tr></thead><tbody>@foreach (var claim in JwtClaimCatalog.Breakdown(_headerJson)) { <tr><td><code>@claim.Name</code></td><td>@claim.Value</td><td>@claim.Description</td></tr> }</tbody></table></div>
                         }
-                    </p>
-                </div>
+                    </div>
 
-                <label class="tool-label" for="jwt-encoded">JSON Web Token (JWT)</label>
-                <div class="jwt-editor">
-                    <pre class="jwt-highlight jwt-highlight-token" aria-hidden="true">@((MarkupString)JwtCodec.HighlightToken(_encoded))</pre>
-                    <textarea id="jwt-encoded"
-                              class="jwt-textarea jwt-textarea-overlay"
-                              rows="8"
-                              value="@_encoded"
-                              @oninput="OnEncodedInput"
-                              placeholder="eyJhbGciOiJIUzI1NiIs..."></textarea>
-                </div>
+                    <div class="jwt-decoded-block">
+                        <div class="jwt-block-header">
+                            <span class="tool-result-label">Decoded Payload</span>
+                            <div class="jwt-view-tabs">
+                                <button type="button" class="jwt-view-tab @(_payloadView == JsonView.Json ? "is-active" : "")" @onclick="() => SetPayloadView(JsonView.Json)">JSON</button>
+                                <button type="button" class="jwt-view-tab @(_payloadView == JsonView.Claims ? "is-active" : "")" @onclick="() => SetPayloadView(JsonView.Claims)">Claims Breakdown</button>
+                            </div>
+                        </div>
+                        @if (_payloadView == JsonView.Json)
+                        {
+                            <div class="jwt-editor"><pre class="jwt-highlight jwt-highlight-json" aria-hidden="true">@((MarkupString)JwtCodec.HighlightJson(_payloadJson))</pre><textarea class="jwt-textarea jwt-textarea-overlay jwt-textarea-md" rows="6" value="@_payloadJson" @oninput="OnPayloadInput"></textarea></div>
+                            @if (_payloadError is not null) { <p class="jwt-error">@_payloadError</p> }
+                        }
+                        else
+                        {
+                            <div class="jwt-claims-table-wrap"><table class="jwt-claims-table"><thead><tr><th>Claim</th><th>Value</th><th>Description</th></tr></thead><tbody>@foreach (var claim in JwtClaimCatalog.Breakdown(_payloadJson)) { <tr><td><code>@claim.Name</code></td><td>@claim.Value</td><td>@claim.Description</td></tr> }</tbody></table></div>
+                        }
+                    </div>
 
-                <div class="jwt-status-row">
-                    @if (!string.IsNullOrWhiteSpace(_encoded))
+                    @if (_encodeError is not null) { <p class="jwt-error">@_encodeError</p> }
+
+                    <div class="jwt-key-section">
+                        <h4 class="jwt-key-title">JWT Signature Verification</h4>
+                        @if (KeyKind == JwtKeyKind.Hmac)
+                        {
+                            <p class="jwt-key-hint">Enter the secret used to verify the JWT.</p>
+                            <div class="tool-field">
+                                <div class="jwt-secret-row">
+                                    <label class="tool-label" for="jwt-secret-dec">Secret</label>
+                                    <label class="jwt-toggle"><input type="checkbox" @bind="_secretIsBase64Url" @bind:after="OnSecretEncodingChanged" /> BASE64URL ENCODED</label>
+                                </div>
+                                <input id="jwt-secret-dec" class="tool-input" value="@_hmacSecret" @oninput="OnHmacSecretInput" placeholder="a-string-secret-at-least-256-bits-long" />
+                            </div>
+                        }
+                        else if (KeyKind is JwtKeyKind.Rsa or JwtKeyKind.Ecdsa)
+                        {
+                            <p class="jwt-key-hint">Paste PEM-encoded @(KeyKind == JwtKeyKind.Rsa ? "RSA" : "EC") keys.</p>
+                            <div class="tool-field"><label class="tool-label" for="jwt-public-key-dec">Public Key (verify)</label><textarea id="jwt-public-key-dec" class="tool-textarea" rows="4" value="@_publicKeyPem" @oninput="OnPublicKeyInput" placeholder="-----BEGIN PUBLIC KEY-----"></textarea></div>
+                            <div class="tool-field"><label class="tool-label" for="jwt-private-key-dec">Private Key (sign)</label><textarea id="jwt-private-key-dec" class="tool-textarea" rows="6" value="@_privateKeyPem" @oninput="OnPrivateKeyInput" placeholder="-----BEGIN PRIVATE KEY-----"></textarea></div>
+                        }
+                    </div>
+                </section>
+            </div>
+        }
+        else
+        {
+            <div class="jwt-encoder-head">
+                <p class="jwt-mode-lead">Fill in the fields below to generate a signed JWT.</p>
+                <div class="jwt-encoder-tools">
+                    <select id="jwt-algorithm" class="tool-select jwt-alg-select" value="@_algorithm" @onchange="OnAlgorithmChanged">
+                        @foreach (var alg in JwtAlgorithm.All) { <option value="@alg">@alg</option> }
+                    </select>
+                    <button type="button" class="tool-btn" @onclick="LoadExample"><i class="bi bi-stars" aria-hidden="true"></i> Generate example</button>
+                    <button type="button" class="tool-btn tool-btn-danger" @onclick="ClearAll"><i class="bi bi-trash" aria-hidden="true"></i> Clear</button>
+                </div>
+            </div>
+
+            @if (string.Equals(_algorithm, "none", StringComparison.OrdinalIgnoreCase))
+            {
+                <div class="tool-alert tool-alert-warning jwt-none-warning"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> The <strong>none</strong> algorithm produces unsigned tokens.</div>
+            }
+
+            <div class="jwt-layout jwt-layout-encoder">
+                <section class="jwt-pane jwt-pane-input">
+                    <h4 class="jwt-section-title">Header</h4>
+                    <div class="jwt-card">
+                        <div class="jwt-card-label"><i class="bi bi-chevron-right" aria-hidden="true"></i> Algorithm &amp; Token Type</div>
+                        <div class="jwt-editor jwt-editor-card">
+                            <pre class="jwt-highlight jwt-highlight-json" aria-hidden="true">@((MarkupString)JwtCodec.HighlightJson(_headerJson))</pre>
+                            <textarea class="jwt-textarea jwt-textarea-overlay jwt-textarea-sm" rows="4" value="@_headerJson" @oninput="OnHeaderInput" placeholder="{ &quot;alg&quot;: &quot;HS256&quot;, &quot;typ&quot;: &quot;JWT&quot; }"></textarea>
+                        </div>
+                        @if (IsHeaderValid) { <span class="jwt-field-status is-valid"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Valid header</span> }
+                        @if (_headerError is not null) { <p class="jwt-error">@_headerError</p> }
+                    </div>
+
+                    <h4 class="jwt-section-title">Payload</h4>
+                    <div class="jwt-card">
+                        <div class="jwt-card-label"><i class="bi bi-chevron-right" aria-hidden="true"></i> Data</div>
+                        <div class="jwt-editor jwt-editor-card">
+                            <pre class="jwt-highlight jwt-highlight-json" aria-hidden="true">@((MarkupString)JwtCodec.HighlightJson(_payloadJson))</pre>
+                            <textarea class="jwt-textarea jwt-textarea-overlay jwt-textarea-md" rows="6" value="@_payloadJson" @oninput="OnPayloadInput" placeholder="{ &quot;sub&quot;: &quot;1234567890&quot; }"></textarea>
+                        </div>
+                        @if (IsPayloadValid) { <span class="jwt-field-status is-valid"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Valid payload</span> }
+                        @if (_payloadError is not null) { <p class="jwt-error">@_payloadError</p> }
+                    </div>
+
+                    @if (KeyKind != JwtKeyKind.None)
                     {
-                        <span class="jwt-status @(_isValidStructure ? "is-valid" : "is-invalid")">
-                            <i class="bi @(_isValidStructure ? "bi-check-circle-fill" : "bi-x-circle-fill")" aria-hidden="true"></i>
-                            @(_isValidStructure ? "Valid JWT" : "Invalid JWT")
-                        </span>
-                        @if (_isValidStructure && _canVerify)
-                        {
-                            <span class="jwt-status @(_isSignatureVerified ? "is-valid" : "is-invalid")">
-                                <i class="bi @(_isSignatureVerified ? "bi-shield-check" : "bi-shield-x")" aria-hidden="true"></i>
-                                @(_isSignatureVerified ? "Signature Verified" : "Signature Invalid")
-                            </span>
-                        }
-                        else if (_isValidStructure && string.Equals(_algorithm, "none", StringComparison.OrdinalIgnoreCase))
-                        {
-                            <span class="jwt-status jwt-status-warn">
-                                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
-                                Unsigned (none)
-                            </span>
-                        }
-                    }
-                </div>
-                @if (!string.IsNullOrEmpty(_structureMessage))
-                {
-                    <p class="jwt-error">@_structureMessage</p>
-                }
-                @if (_canVerify && !string.IsNullOrEmpty(_verifyMessage) && !_isSignatureVerified)
-                {
-                    <p class="jwt-error">@_verifyMessage</p>
-                }
-
-                <div class="tool-actions">
-                    <button type="button" class="tool-btn" @onclick="CopyEncoded" disabled="@string.IsNullOrWhiteSpace(_encoded)">
-                        <i class="bi bi-clipboard" aria-hidden="true"></i> Copy token
-                    </button>
-                </div>
-            </section>
-
-            <section class="jwt-pane jwt-pane-decoded">
-                <div class="jwt-pane-header jwt-pane-header-row">
-                    <div>
-                        <h4>@(IsDecoder ? "Decoded Token" : "Token Builder")</h4>
-                        <p>
-                            @if (IsDecoder)
+                        <h4 class="jwt-section-title">Sign JWT</h4>
+                        <div class="jwt-card">
+                            @if (KeyKind == JwtKeyKind.Hmac)
                             {
-                                @:Inspect decoded header and payload. Edit JSON to re-sign when a secret/key is provided.
+                                <p class="jwt-key-hint">Enter the secret used to sign the JWT.</p>
+                                <div class="tool-field">
+                                    <div class="jwt-secret-row">
+                                        <label class="tool-label" for="jwt-secret-enc">Secret</label>
+                                        <label class="jwt-toggle"><input type="checkbox" @bind="_secretIsBase64Url" @bind:after="OnSecretEncodingChanged" /> BASE64URL ENCODED</label>
+                                    </div>
+                                    <input id="jwt-secret-enc" class="tool-input" value="@_hmacSecret" @oninput="OnHmacSecretInput" placeholder="a-string-secret-at-least-256-bits-long" />
+                                </div>
                             }
                             else
                             {
-                                @:Edit header, payload, algorithm, and signing key to build a new JWT.
+                                <p class="jwt-key-hint">Paste PEM-encoded @(KeyKind == JwtKeyKind.Rsa ? "RSA" : "EC") private key to sign.</p>
+                                <div class="tool-field"><label class="tool-label" for="jwt-private-key-enc">Private Key (sign)</label><textarea id="jwt-private-key-enc" class="tool-textarea" rows="6" value="@_privateKeyPem" @oninput="OnPrivateKeyInput" placeholder="-----BEGIN PRIVATE KEY-----"></textarea></div>
+                                <div class="tool-field"><label class="tool-label" for="jwt-public-key-enc">Public Key (verify)</label><textarea id="jwt-public-key-enc" class="tool-textarea" rows="4" value="@_publicKeyPem" @oninput="OnPublicKeyInput" placeholder="-----BEGIN PUBLIC KEY-----"></textarea></div>
                             }
-                        </p>
-                    </div>
-                    <div class="tool-field jwt-alg-field">
-                        <label class="tool-label" for="jwt-algorithm">Signing algorithm</label>
-                        <select id="jwt-algorithm" class="tool-select" value="@_algorithm" @onchange="OnAlgorithmChanged">
-                            @foreach (var alg in JwtAlgorithm.All)
+                        </div>
+                    }
+
+                    @if (_encodeError is not null) { <p class="jwt-error">@_encodeError</p> }
+                </section>
+
+                <section class="jwt-pane jwt-pane-signature">
+                    <h4 class="jwt-section-title">JWT Signature</h4>
+                    <div class="jwt-card jwt-card-output">
+                        <div class="jwt-card-label"><i class="bi bi-chevron-right" aria-hidden="true"></i> Encoded JWT</div>
+                        <div class="jwt-editor jwt-editor-readonly jwt-editor-card">
+                            <pre class="jwt-highlight jwt-highlight-token jwt-highlight-output" aria-label="Encoded JWT">@((MarkupString)JwtCodec.HighlightToken(_encoded))</pre>
+                        </div>
+                        <div class="jwt-status-row">
+                            @if (!string.IsNullOrWhiteSpace(_encoded))
                             {
-                                <option value="@alg">@alg</option>
+                                <span class="jwt-status @(_isValidStructure ? "is-valid" : "is-invalid")">
+                                    <i class="bi @(_isValidStructure ? "bi-check-circle-fill" : "bi-x-circle-fill")" aria-hidden="true"></i>
+                                    @(_isValidStructure ? "Valid JWT" : "Invalid JWT")
+                                </span>
+                                @if (_isValidStructure && _canVerify)
+                                {
+                                    <span class="jwt-status @(_isSignatureVerified ? "is-valid" : "is-invalid")">
+                                        <i class="bi @(_isSignatureVerified ? "bi-shield-check" : "bi-shield-x")" aria-hidden="true"></i>
+                                        @(_isSignatureVerified ? "Signature Verified" : "Signature Invalid")
+                                    </span>
+                                }
                             }
-                        </select>
-                    </div>
-                </div>
-
-                @if (string.Equals(_algorithm, "none", StringComparison.OrdinalIgnoreCase))
-                {
-                    <div class="tool-alert tool-alert-warning jwt-none-warning">
-                        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
-                        The <strong>none</strong> algorithm produces unsigned tokens. Do not use in production.
-                    </div>
-                }
-
-                <div class="jwt-decoded-block">
-                    <div class="jwt-block-header">
-                        <span class="tool-result-label">Decoded Header</span>
-                        <div class="jwt-view-tabs" role="tablist">
-                            <button type="button"
-                                    class="jwt-view-tab @(_headerView == JsonView.Json ? "is-active" : "")"
-                                    @onclick="() => SetHeaderView(JsonView.Json)">JSON</button>
-                            <button type="button"
-                                    class="jwt-view-tab @(_headerView == JsonView.Claims ? "is-active" : "")"
-                                    @onclick="() => SetHeaderView(JsonView.Claims)">Claims Breakdown</button>
                         </div>
-                    </div>
-
-                    @if (_headerView == JsonView.Json)
-                    {
-                        <div class="jwt-editor">
-                            <pre class="jwt-highlight jwt-highlight-json" aria-hidden="true">@((MarkupString)JwtCodec.HighlightJson(_headerJson))</pre>
-                            <textarea class="jwt-textarea jwt-textarea-overlay"
-                                      rows="4"
-                                      value="@_headerJson"
-                                      @oninput="OnHeaderInput"
-                                      placeholder="{ &quot;alg&quot;: &quot;HS256&quot;, &quot;typ&quot;: &quot;JWT&quot; }"></textarea>
-                        </div>
-                        @if (_headerError is not null)
-                        {
-                            <p class="jwt-error">@_headerError</p>
-                        }
+                        @if (_encodeError is not null && string.IsNullOrWhiteSpace(_encoded)) { <p class="jwt-error">@_encodeError</p> }
                         <div class="tool-actions">
-                            <button type="button" class="tool-btn" @onclick="CopyHeader" disabled="@string.IsNullOrWhiteSpace(_headerJson)">
-                                <i class="bi bi-clipboard" aria-hidden="true"></i> Copy header
-                            </button>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="jwt-claims-table-wrap">
-                            <table class="jwt-claims-table">
-                                <thead>
-                                    <tr>
-                                        <th>Claim</th>
-                                        <th>Value</th>
-                                        <th>Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var claim in JwtClaimCatalog.Breakdown(_headerJson))
-                                    {
-                                        <tr>
-                                            <td><code>@claim.Name</code></td>
-                                            <td>@claim.Value</td>
-                                            <td>@claim.Description</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                </div>
-
-                <div class="jwt-decoded-block">
-                    <div class="jwt-block-header">
-                        <span class="tool-result-label">Decoded Payload</span>
-                        <div class="jwt-view-tabs" role="tablist">
-                            <button type="button"
-                                    class="jwt-view-tab @(_payloadView == JsonView.Json ? "is-active" : "")"
-                                    @onclick="() => SetPayloadView(JsonView.Json)">JSON</button>
-                            <button type="button"
-                                    class="jwt-view-tab @(_payloadView == JsonView.Claims ? "is-active" : "")"
-                                    @onclick="() => SetPayloadView(JsonView.Claims)">Claims Breakdown</button>
+                            <button type="button" class="tool-btn" @onclick="CopyEncoded" disabled="@string.IsNullOrWhiteSpace(_encoded)"><i class="bi bi-clipboard" aria-hidden="true"></i> Copy token</button>
                         </div>
                     </div>
-
-                    @if (_payloadView == JsonView.Json)
-                    {
-                        <div class="jwt-editor">
-                            <pre class="jwt-highlight jwt-highlight-json" aria-hidden="true">@((MarkupString)JwtCodec.HighlightJson(_payloadJson))</pre>
-                            <textarea class="jwt-textarea jwt-textarea-overlay"
-                                      rows="6"
-                                      value="@_payloadJson"
-                                      @oninput="OnPayloadInput"
-                                      placeholder="{ &quot;sub&quot;: &quot;1234567890&quot; }"></textarea>
-                        </div>
-                        @if (_payloadError is not null)
-                        {
-                            <p class="jwt-error">@_payloadError</p>
-                        }
-                        <div class="tool-actions">
-                            <button type="button" class="tool-btn" @onclick="CopyPayload" disabled="@string.IsNullOrWhiteSpace(_payloadJson)">
-                                <i class="bi bi-clipboard" aria-hidden="true"></i> Copy payload
-                            </button>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="jwt-claims-table-wrap">
-                            <table class="jwt-claims-table">
-                                <thead>
-                                    <tr>
-                                        <th>Claim</th>
-                                        <th>Value</th>
-                                        <th>Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var claim in JwtClaimCatalog.Breakdown(_payloadJson))
-                                    {
-                                        <tr>
-                                            <td><code>@claim.Name</code></td>
-                                            <td>@claim.Value</td>
-                                            <td>@claim.Description</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                </div>
-
-                @if (_encodeError is not null)
-                {
-                    <p class="jwt-error">@_encodeError</p>
-                }
-
-                <div class="jwt-key-section">
-                    <h4 class="jwt-key-title">@(IsEncoder ? "JWT Signature Signing" : "JWT Signature Verification")</h4>
-                    @if (KeyKind == JwtKeyKind.Hmac)
-                    {
-                        <p class="jwt-key-hint">Enter the secret used to sign the JWT below.</p>
-                        <div class="tool-field">
-                            <div class="jwt-secret-row">
-                                <label class="tool-label" for="jwt-secret">Secret</label>
-                                <label class="jwt-toggle">
-                                    <input type="checkbox" @bind="_secretIsBase64Url" @bind:after="OnSecretEncodingChanged" />
-                                    BASE64URL ENCODED
-                                </label>
-                            </div>
-                            <input id="jwt-secret"
-                                   class="tool-input jwt-secret-input"
-                                   value="@_hmacSecret"
-                                   @oninput="OnHmacSecretInput"
-                                   placeholder="a-string-secret-at-least-256-bits-long" />
-                        </div>
-                    }
-                    else if (KeyKind is JwtKeyKind.Rsa or JwtKeyKind.Ecdsa)
-                    {
-                        <p class="jwt-key-hint">Paste PEM-encoded @(KeyKind == JwtKeyKind.Rsa ? "RSA" : "EC") keys for verify / sign.</p>
-                        <div class="tool-field">
-                            <label class="tool-label" for="jwt-public-key">Public Key (verify)</label>
-                            <textarea id="jwt-public-key"
-                                      class="tool-textarea"
-                                      rows="4"
-                                      value="@_publicKeyPem"
-                                      @oninput="OnPublicKeyInput"
-                                      placeholder="-----BEGIN PUBLIC KEY-----"></textarea>
-                        </div>
-                        <div class="tool-field">
-                            <label class="tool-label" for="jwt-private-key">Private Key (sign)</label>
-                            <textarea id="jwt-private-key"
-                                      class="tool-textarea"
-                                      rows="6"
-                                      value="@_privateKeyPem"
-                                      @oninput="OnPrivateKeyInput"
-                                      placeholder="-----BEGIN PRIVATE KEY-----"></textarea>
-                        </div>
-                    }
-                    else
-                    {
-                        <p class="jwt-key-hint">No signature verification for the <strong>none</strong> algorithm.</p>
-                    }
-                </div>
-            </section>
-        </div>
+                </section>
+            </div>
+        }
     </div>
-
     <hr class="tool-divider" />
     <p class="tool-hint">Inspired by <a href="https://jwt.io" target="_blank" rel="noopener">JWT.io</a>. All processing runs in your browser — secrets never leave this page.</p>
 </ToolShell>
