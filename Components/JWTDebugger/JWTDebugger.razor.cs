@@ -36,6 +36,7 @@ public partial class JWTDebugger
 
     private bool _syncing;
     private bool _initialized;
+    private bool _algMenuOpen;
 
     private bool IsDecoder => _mode == JwtMode.Decoder;
     private bool IsEncoder => _mode == JwtMode.Encoder;
@@ -77,6 +78,18 @@ public partial class JWTDebugger
 
     private void SetHeaderView(JsonView view) => _headerView = view;
     private void SetPayloadView(JsonView view) => _payloadView = view;
+
+    private void ToggleAlgMenu() => _algMenuOpen = !_algMenuOpen;
+
+    private void SelectExampleAlgorithm(string algorithm)
+    {
+        if (!JwtAlgorithm.IsSupported(algorithm))
+            return;
+
+        _algorithm = algorithm;
+        _algMenuOpen = false;
+        LoadExampleForAlgorithm();
+    }
 
     private void OnEncodedInput(ChangeEventArgs e)
     {
@@ -272,7 +285,11 @@ public partial class JWTDebugger
         _verifyMessage = verify.Message;
     }
 
-    private void LoadExample() => LoadExampleForAlgorithm();
+    private void LoadExample()
+    {
+        _algMenuOpen = false;
+        LoadExampleForAlgorithm();
+    }
 
     private void LoadExampleForAlgorithm()
     {
@@ -318,6 +335,7 @@ public partial class JWTDebugger
 
     private void ClearAll()
     {
+        _algMenuOpen = false;
         _encoded = string.Empty;
         _headerJson = string.Empty;
         _payloadJson = string.Empty;

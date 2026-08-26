@@ -18,13 +18,23 @@
             <div class="jwt-global-actions">
                 <div class="jwt-action-group">
                     <button type="button" class="jwt-link-btn" @onclick="LoadExample">Generate example</button>
-                    <label class="jwt-alg-label" for="jwt-algorithm">Select signing algorithm</label>
-                    <select id="jwt-algorithm" class="tool-select jwt-alg-select" @bind="_algorithm" @bind:after="LoadExampleForAlgorithm" aria-label="Select signing algorithm">
-                        @foreach (var alg in JwtAlgorithm.All)
+                    <div class="jwt-alg-dropdown">
+                        <button type="button" class="jwt-alg-trigger" @onclick="ToggleAlgMenu" aria-haspopup="listbox" aria-expanded="@_algMenuOpen" aria-label="Select signing algorithm">
+                            <span>Select signing algorithm</span>
+                            <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        @if (_algMenuOpen)
                         {
-                            <option value="@alg">@alg</option>
+                            <ul class="jwt-alg-menu" role="listbox" aria-label="Select signing algorithm">
+                                @foreach (var alg in JwtAlgorithm.All)
+                                {
+                                    <li role="presentation">
+                                        <button type="button" role="option" class="jwt-alg-option @(_algorithm == alg ? "is-selected" : "")" aria-selected="@(_algorithm == alg)" @onclick="() => SelectExampleAlgorithm(alg)">@alg</button>
+                                    </li>
+                                }
+                            </ul>
                         }
-                    </select>
+                    </div>
                 </div>
                 <button type="button" class="tool-btn tool-btn-danger jwt-clear-btn" @onclick="ClearAll" title="Clear">
                     <i class="bi bi-trash" aria-hidden="true"></i>
