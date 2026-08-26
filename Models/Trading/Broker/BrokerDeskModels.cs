@@ -40,6 +40,27 @@ public class BrokerPosition
     public List<BrokerNote> Notes { get; set; } = [];
 
     [JsonIgnore]
+    public decimal? TotalQuantity
+    {
+        get
+        {
+            var qty = Buys.Where(b => b.Quantity is > 0).Sum(b => b.Quantity!.Value);
+            return qty > 0 ? qty : null;
+        }
+    }
+
+    [JsonIgnore]
+    public decimal? CostBasis
+    {
+        get
+        {
+            var withQty = Buys.Where(b => b.Price > 0 && b.Quantity is > 0).ToList();
+            if (withQty.Count == 0) return null;
+            return withQty.Sum(b => b.Price * b.Quantity!.Value);
+        }
+    }
+
+    [JsonIgnore]
     public decimal? AvgBuy
     {
         get
@@ -61,6 +82,14 @@ public class BrokerPosition
         var avg = AvgBuy;
         if (avg is null or 0 || current is null or 0) return null;
         return (current.Value - avg.Value) / avg.Value * 100m;
+    }
+
+    public decimal? PnlAmount(decimal? current)
+    {
+        var qty = TotalQuantity;
+        var cost = CostBasis;
+        if (qty is null or 0 || cost is null || current is null or 0) return null;
+        return current.Value * qty.Value - cost.Value;
     }
 
     public BrokerNote? LatestNote =>
@@ -105,4 +134,96 @@ public static class BrokerStatusLabels
     };
 
     public static string Vi(BrokerNoteKind kind) => kind == BrokerNoteKind.Self ? "Của tôi" : "Broker";
+}
+
+public static class BrokerFormat
+{
+    public static string Quantity(decimal? qty) =>
+        qty is null or 0 ? "—" : qty.Value.ToString("0.##");
+
+    public static string VndPlain(decimal amount) => $"{amount:N0} đ";
+
+    public static string Vnd(decimal? amount)
+    {
+        if (amount is null) return "—";
+        var sign = amount.Value > 0 ? "+" : amount.Value < 0 ? "−" : "";
+        return $"{sign}{Math.Abs(amount.Value):N0} đ";
+    }
+
+    public static string Pct(decimal? pct) =>
+        pct is null ? "—" : $"{pct.Value:N2}%";
+}
+
+public sealed class BrokerPortfolioStats
+{
+    public int SymbolCount { get; init; }
+    public int TrackedCount { get; init; }
+    public int MissingQtyCount { get; init; }
+    public decimal TotalCost { get; init; }
+    public decimal TotalMarketValue { get; init; }
+    public decimal TotalPnl { get; init; }
+    public decimal? TotalPnlPct => TotalCost > 0 ? TotalPnl / TotalCost * 100m : null;
+    public decimal TotalQuantity { get; init; }
+    public int WinningCount { get; init; }
+    public int LosingCount { get; init; }
+    public int FlatCount { get; init; }
+    public bool HasMoneyStats => TrackedCount > 0;
+}
+
+public static class BrokerPortfolioStatsCalculator
+{
+    public static BrokerPortfolioStats Compute(
+        BrokerPortfolio portfolio,
+        IReadOnlyDictionary<string, decimal> quotes)
+    {
+        decimal totalCost = 0, totalMkt = 0, totalPnl = 0, totalQty = 0;
+        var winning = 0;
+        var losing = 0;
+        var flat = 0;
+        var tracked = 0;
+        var missingQty = 0;
+        var positions = portfolio.Positions ?? [];
+
+        foreach (var p in positions)
+        {
+            var cost = p.CostBasis;
+            var qty = p.TotalQuantity;
+            if (qty is null or 0 || cost is null or 0)
+            {
+                missingQty++;
+                continue;
+            }
+
+            if (!quotes.TryGetValue(p.Symbol, out var current) || current <= 0)
+            {
+                missingQty++;
+                continue;
+            }
+
+            var pnl = p.PnlAmount(current) ?? 0m;
+            tracked++;
+            totalCost += cost.Value;
+            totalMkt += current * qty.Value;
+            totalPnl += pnl;
+            totalQty += qty.Value;
+
+            if (pnl > 0) winning++;
+            else if (pnl < 0) losing++;
+            else flat++;
+        }
+
+        return new BrokerPortfolioStats
+        {
+            SymbolCount = positions.Count,
+            TrackedCount = tracked,
+            MissingQtyCount = missingQty,
+            TotalCost = totalCost,
+            TotalMarketValue = totalMkt,
+            TotalPnl = totalPnl,
+            TotalQuantity = totalQty,
+            WinningCount = winning,
+            LosingCount = losing,
+            FlatCount = flat
+        };
+    }
 }

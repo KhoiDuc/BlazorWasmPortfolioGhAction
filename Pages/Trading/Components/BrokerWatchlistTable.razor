@@ -17,11 +17,62 @@
     {
         <div class="broker-empty">
             <p class="broker-empty-title">Chưa có mã nào</p>
-            <p class="broker-empty-sub">Ghi khuyến nghị bên trái hoặc Import JSON — bảng sẽ hiện sau lần đầu.</p>
+            <p class="broker-empty-sub">Ghi khuyến nghị phía trên hoặc Import JSON — bảng sẽ hiện sau lần đầu.</p>
         </div>
     }
     else
     {
+        var stats = BrokerPortfolioStatsCalculator.Compute(Portfolio, Quotes);
+
+        <div class="broker-portfolio-stats">
+            @if (stats.HasMoneyStats)
+            {
+                <div class="broker-stat-card">
+                    <span class="broker-stat-card-label">Giá trị vốn</span>
+                    <span class="broker-stat-card-value">@BrokerFormat.VndPlain(stats.TotalCost)</span>
+                </div>
+                <div class="broker-stat-card broker-stat-card-primary">
+                    <span class="broker-stat-card-label">Giá trị hiện tại</span>
+                    <span class="broker-stat-card-value">@BrokerFormat.VndPlain(stats.TotalMarketValue)</span>
+                </div>
+                <div class="broker-stat-card broker-stat-card-pnl @(stats.TotalPnl > 0 ? "positive" : stats.TotalPnl < 0 ? "negative" : "")">
+                    <span class="broker-stat-card-label">Lãi/Lỗ tổng</span>
+                    <span class="broker-stat-card-value">@BrokerFormat.Vnd(stats.TotalPnl)</span>
+                    <span class="broker-stat-card-sub">@BrokerFormat.Pct(stats.TotalPnlPct) trên vốn</span>
+                </div>
+                <div class="broker-stat-card">
+                    <span class="broker-stat-card-label">KL tổng</span>
+                    <span class="broker-stat-card-value">@BrokerFormat.Quantity(stats.TotalQuantity)</span>
+                    <span class="broker-stat-card-sub">CP</span>
+                </div>
+                <div class="broker-stat-card">
+                    <span class="broker-stat-card-label">Mã lãi / lỗ / hòa</span>
+                    <span class="broker-stat-card-value">
+                        <span class="ts-positive">@stats.WinningCount</span>
+                        <span class="broker-stat-sep">/</span>
+                        <span class="ts-negative">@stats.LosingCount</span>
+                        <span class="broker-stat-sep">/</span>
+                        <span>@stats.FlatCount</span>
+                    </span>
+                    <span class="broker-stat-card-sub">trong @stats.TrackedCount mã có KL + giá</span>
+                </div>
+            }
+            else
+            {
+                <div class="broker-stat-card broker-stat-card-wide">
+                    <span class="broker-stat-card-label">Thống kê tiền</span>
+                    <span class="broker-stat-card-value broker-stat-muted">Chưa tính được — cần nhập KL và làm mới giá</span>
+                </div>
+            }
+            @if (stats.MissingQtyCount > 0)
+            {
+                <div class="broker-stat-card broker-stat-card-wide broker-stat-warn">
+                    <span class="broker-stat-card-label">Lưu ý</span>
+                    <span class="broker-stat-card-value broker-stat-muted">@stats.MissingQtyCount mã chưa có đủ KL/giá — chưa gộp vào tổng</span>
+                </div>
+            }
+        </div>
+
         <div class="broker-table-scroll">
             <table class="ts-table broker-table">
                 <thead>
@@ -29,9 +80,11 @@
                         <th>Mã</th>
                         <th>Ngành</th>
                         <th>Lần mua</th>
+                        <th>KL</th>
                         <th>Giá TB</th>
                         <th>Hiện tại</th>
-                        <th>% Lãi/Lỗ</th>
+                        <th>% L/L</th>
+                        <th>Lãi/Lỗ (đ)</th>
                         <th>Cắt lỗ</th>
                         <th>Mục tiêu</th>
                         <th>TT</th>
@@ -43,6 +96,7 @@
                     {
                         var current = Quote(p.Symbol);
                         var pnl = p.PnlPct(current);
+                        var pnlAmt = p.PnlAmount(current);
                         var selected = p.Symbol.Equals(SelectedSymbol, StringComparison.OrdinalIgnoreCase);
                         <tr class="@(selected ? "selected" : "")"
                             @onclick="() => OnSelect.InvokeAsync(p.Symbol)">
@@ -54,14 +108,18 @@
                                 <div class="broker-lots">
                                     @foreach (var (lot, idx) in p.Buys.OrderBy(b => b.BoughtAt).Select((b, idx) => (b, idx)))
                                     {
-                                        <span class="broker-lot-chip" title="@LotTitle(lot)">L@(idx + 1) @lot.Price.ToString("N2")</span>
+                                        <span class="broker-lot-chip" title="@LotTitle(lot)">@LotLabel(lot, idx + 1)</span>
                                     }
                                 </div>
                             </td>
+                            <td class="broker-num broker-qty">@BrokerFormat.Quantity(p.TotalQuantity)</td>
                             <td class="broker-num">@(p.AvgBuy?.ToString("N2") ?? "—")</td>
                             <td class="broker-num">@(current?.ToString("N2") ?? "—")</td>
                             <td class="broker-num @(pnl is > 0 ? "ts-positive" : pnl is < 0 ? "ts-negative" : "")">
                                 @(pnl is null ? "—" : $"{pnl.Value:N2}%")
+                            </td>
+                            <td class="broker-num broker-pnl-amt @(pnlAmt is > 0 ? "ts-positive" : pnlAmt is < 0 ? "ts-negative" : "")">
+                                @BrokerFormat.Vnd(pnlAmt)
                             </td>
                             <td class="broker-num broker-stop">@BrokerLevelHelper.FormatDisplay(p.StopLoss, p.StopLossMode, p.StopLossInput, isStop: true)</td>
                             <td class="broker-num broker-target">@BrokerLevelHelper.FormatDisplay(p.TargetPrice, p.TargetPriceMode, p.TargetPriceInput, isStop: false)</td>
@@ -81,7 +139,7 @@
                 </tbody>
             </table>
         </div>
-        <p class="broker-table-foot">% Lãi/Lỗ = (giá hiện tại − giá TB) / giá TB · Mỗi lần mua thêm → L2, L3… → giá TB đổi.</p>
+        <p class="broker-table-foot">Lãi/Lỗ (đ) = (giá hiện tại − giá TB) × KL tổng · Cần nhập KL mỗi lần mua để tính tiền · % L/L khi chưa có KL vẫn tính theo giá.</p>
     }
 </div>
 
@@ -98,9 +156,18 @@
     private static string DisplaySector(string sector) =>
         string.IsNullOrWhiteSpace(sector) ? "—" : sector;
 
+    private static string LotLabel(BrokerLot lot, int index)
+    {
+        var price = lot.Price.ToString("N2");
+        return lot.Quantity is > 0
+            ? $"L{index} {price} ×{BrokerFormat.Quantity(lot.Quantity)}"
+            : $"L{index} {price}";
+    }
+
     private static string LotTitle(BrokerLot lot)
     {
         var parts = new List<string> { lot.BoughtAt.ToString("d"), $"@{lot.Price:N2}" };
+        if (lot.Quantity is > 0) parts.Add($"KL {BrokerFormat.Quantity(lot.Quantity)}");
         if (lot.StopLoss is > 0) parts.Add($"SL {lot.StopLoss:N2}");
         if (lot.TargetPrice is > 0) parts.Add($"TP {lot.TargetPrice:N2}");
         if (!string.IsNullOrWhiteSpace(lot.Note)) parts.Add(lot.Note);

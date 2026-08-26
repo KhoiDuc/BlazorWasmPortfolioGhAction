@@ -993,6 +993,81 @@
 }
 
 /* Watchlist */
+/* Portfolio summary stats */
+.broker-portfolio-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+}
+
+.broker-stat-card {
+    padding: 0.75rem 0.85rem;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.broker-stat-card-wide { grid-column: 1 / -1; }
+
+.broker-stat-card-primary {
+    border-color: rgba(217, 119, 6, 0.35);
+    background: rgba(217, 119, 6, 0.06);
+}
+
+.broker-stat-card-pnl.positive {
+    border-color: rgba(16, 185, 129, 0.35);
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.broker-stat-card-pnl.negative {
+    border-color: rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.broker-stat-card-pnl .broker-stat-card-value { font-size: 1.15rem; }
+
+.broker-stat-warn {
+    border-color: rgba(217, 119, 6, 0.3);
+    background: rgba(217, 119, 6, 0.05);
+}
+
+.broker-stat-card-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.broker-stat-card-value {
+    font-size: 1rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+}
+
+.broker-stat-card-sub {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+}
+
+.broker-stat-muted {
+    font-size: 0.82rem !important;
+    font-weight: 500 !important;
+    color: var(--color-text-secondary) !important;
+}
+
+.broker-stat-sep {
+    margin: 0 0.15rem;
+    color: var(--color-text-muted);
+    font-weight: 400;
+}
+
 .broker-watchlist { padding-bottom: 0.75rem; }
 
 .broker-table-head {
@@ -1079,6 +1154,10 @@
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
+
+.broker-qty { font-weight: 600; }
+
+.broker-pnl-amt { font-weight: 700; white-space: nowrap; }
 
 .broker-lots { display: flex; flex-wrap: wrap; gap: 4px; max-width: 160px; }
 
@@ -1172,7 +1251,7 @@
 
 .broker-detail-kpis {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 0;
     border-bottom: 1px solid var(--color-border);
 }

@@ -122,7 +122,7 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
     public Task DownloadCsvAsync(BrokerPortfolio portfolio)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Nganh,Ma CP,Gia mua,Gia TB,Cat lo,Muc tieu,Ti trong,Trang thai,Note moi nhat");
+        sb.AppendLine("Nganh,Ma CP,Gia mua,KL tong,Gia TB,Cat lo,Muc tieu,Ti trong,Trang thai,Note moi nhat");
         foreach (var p in portfolio.Positions.OrderBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase))
         {
             var lots = string.Join(" | ", p.Buys.OrderBy(b => b.BoughtAt).Select((b, i) =>
@@ -135,6 +135,7 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
                 Csv(p.Sector),
                 Csv(p.Symbol),
                 Csv(lots),
+                Csv(p.TotalQuantity?.ToString("0.##", CultureInfo.InvariantCulture)),
                 Csv(p.AvgBuy?.ToString("0.##", CultureInfo.InvariantCulture)),
                 Csv(p.StopLoss?.ToString("0.##", CultureInfo.InvariantCulture)),
                 Csv(p.TargetPrice?.ToString("0.##", CultureInfo.InvariantCulture)),

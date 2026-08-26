@@ -3,6 +3,7 @@
 <div class="ts-panel broker-detail">
     @{
         var pnl = Position.PnlPct(CurrentPrice);
+        var pnlAmt = Position.PnlAmount(CurrentPrice);
     }
 
     <div class="broker-detail-header">
@@ -31,10 +32,20 @@
             <span class="broker-kpi-label">Hiện tại</span>
             <span class="broker-kpi-value">@(CurrentPrice?.ToString("N2") ?? "—")</span>
         </div>
+        <div class="broker-kpi">
+            <span class="broker-kpi-label">KL tổng</span>
+            <span class="broker-kpi-value">@BrokerFormat.Quantity(Position.TotalQuantity)</span>
+        </div>
         <div class="broker-kpi broker-kpi-pnl">
-            <span class="broker-kpi-label">% Lãi/Lỗ</span>
+            <span class="broker-kpi-label">% L/L</span>
             <span class="broker-kpi-value @(pnl is > 0 ? "ts-positive" : pnl is < 0 ? "ts-negative" : "")">
                 @(pnl is null ? "—" : $"{pnl.Value:N2}%")
+            </span>
+        </div>
+        <div class="broker-kpi broker-kpi-pnl">
+            <span class="broker-kpi-label">Lãi/Lỗ (đ)</span>
+            <span class="broker-kpi-value @(pnlAmt is > 0 ? "ts-positive" : pnlAmt is < 0 ? "ts-negative" : "")">
+                @BrokerFormat.Vnd(pnlAmt)
             </span>
         </div>
         <div class="broker-kpi">
