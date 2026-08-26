@@ -18,4 +18,9 @@ public static class JwtPrebuiltExamples
         ["PS384"] = "eyJhbGciOiJQUzM4NCIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.MZ2fuDHIzD8dPR3VzNsCb8jmHpoj_ZU6QNV3dfm0fMK563S9tsa-Xgwbt2ZSGzQ7WcTQqAwRThIFDxjoM4fikPxbLAiSgZLUFLcK3M5xHRmanqmtLiVeaWXgmczZFDZT9oMkZaZdNE0XrFVYt1IIzSx1ZD4kIvgshvNV9XBZYEMElQWiQsO4G8jv47vxr8IWmD-v7Q2UdCxGxsL1rFMiRZawHW5NicxhT3yuxR0RDWhxWQoQCN792a_AkYhTWUIcj0Kz-PvDumS7qYFWJRijNo_OEIeWZI_LF5l3m9RrwB4lI8CCh59qkGp0L8z0EQMISUpVY5szBth4-iKPyY-AFw",
         ["PS512"] = "eyJhbGciOiJQUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.Uu0ooZg5e1ru-RHt4m5sXOuYX1fFMFKHl8mOxzRLm3B7ZAF8xy53eDk_3VS0rgNsnVA4w0aboM-pgRKKLon1TNfGNftCSywLAOFr1rrlBVzTzZuCjBprsII999w3ZSYMy7hdb9qSw-GjU2mF6i1-3K0CBnYzrjqwfwueGdRIhqbWv8EftIXbyVIrPWLmSRnmYJ-e76AuIFQDP4mReJDwYhmMgSYZbkbfPWPywZD2QkNShyjIn6D5IX2ms1VMW1qFUPtZ2Ht4SJEKYuIniCiD8Gk-W8Bywpqxqgrm7_TKZgMi4obnm7WOoBIEqJyeRxYJtIq2X2tAe-vcUNhmP0ftDw",
     };
+
+    public static bool IsKnownExample(string? token, string algorithm) =>
+        !string.IsNullOrWhiteSpace(token)
+        && Tokens.TryGetValue(algorithm, out var expected)
+        && string.Equals(token.Trim(), expected, StringComparison.Ordinal);
 }

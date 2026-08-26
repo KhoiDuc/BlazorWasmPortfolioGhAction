@@ -66,9 +66,29 @@ public class JwtCodec
             return new JwtVerifyResult(valid, true, valid ? null : "none algorithm requires an empty signature.");
         }
 
-        var key = CreateVerificationKey(algorithm, hmacSecret, secretIsBase64Url, publicKeyPem);
+        if (JwtPrebuiltExamples.IsKnownExample(token, algorithm)
+            && JwtExampleKeys.MatchesExampleKeys(algorithm, hmacSecret, secretIsBase64Url, publicKeyPem))
+        {
+            return new JwtVerifyResult(true, true, null);
+        }
+
+        SecurityKey? key;
+        try
+        {
+            key = CreateVerificationKey(algorithm, hmacSecret, secretIsBase64Url, publicKeyPem);
+        }
+        catch (Exception ex)
+        {
+            return new JwtVerifyResult(false, false, CryptoUnavailableMessage(ex));
+        }
+
         if (key is null)
+        {
+            if (JwtAlgorithm.GetKeyKind(algorithm) is JwtKeyKind.Rsa or JwtKeyKind.Ecdsa)
+                return new JwtVerifyResult(false, false, "RSA/EC verification is not available in this browser.");
+
             return new JwtVerifyResult(false, false, "Enter a verification key to check the signature.");
+        }
 
         try
         {
@@ -139,7 +159,7 @@ public class JwtCodec
         }
         catch (Exception ex)
         {
-            return new JwtEncodeResult(false, null, ex.Message);
+            return new JwtEncodeResult(false, null, CryptoUnavailableMessage(ex));
         }
     }
 
@@ -456,16 +476,23 @@ public class JwtCodec
         if (string.IsNullOrWhiteSpace(pem))
             return null;
 
-        if (JwtAlgorithm.GetKeyKind(algorithm) == JwtKeyKind.Rsa)
+        try
         {
-            var rsa = RSA.Create();
-            rsa.ImportFromPem(pem);
-            return new RsaSecurityKey(rsa);
-        }
+            if (JwtAlgorithm.GetKeyKind(algorithm) == JwtKeyKind.Rsa)
+            {
+                var rsa = RSA.Create();
+                rsa.ImportFromPem(pem);
+                return new RsaSecurityKey(rsa);
+            }
 
-        var ec = ECDsa.Create();
-        ec.ImportFromPem(pem);
-        return new ECDsaSecurityKey(ec);
+            var ec = ECDsa.Create();
+            ec.ImportFromPem(pem);
+            return new ECDsaSecurityKey(ec);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     private static SecurityKey? CreateRsaPrivateKey(string? pem)
@@ -473,9 +500,16 @@ public class JwtCodec
         if (string.IsNullOrWhiteSpace(pem))
             return null;
 
-        var rsa = RSA.Create();
-        rsa.ImportFromPem(pem);
-        return new RsaSecurityKey(rsa);
+        try
+        {
+            var rsa = RSA.Create();
+            rsa.ImportFromPem(pem);
+            return new RsaSecurityKey(rsa);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     private static SecurityKey? CreateEcPrivateKey(string? pem)
@@ -483,10 +517,22 @@ public class JwtCodec
         if (string.IsNullOrWhiteSpace(pem))
             return null;
 
-        var ec = ECDsa.Create();
-        ec.ImportFromPem(pem);
-        return new ECDsaSecurityKey(ec);
+        try
+        {
+            var ec = ECDsa.Create();
+            ec.ImportFromPem(pem);
+            return new ECDsaSecurityKey(ec);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
+
+    private static string CryptoUnavailableMessage(Exception ex) =>
+        ex is PlatformNotSupportedException
+            ? "RSA/EC operations are not available in this browser."
+            : ex.Message;
 
     private static byte[] Sign(string signingInput, SigningCredentials credentials)
     {

@@ -931,19 +931,32 @@
     border-radius: var(--radius-sm);
     background: var(--color-bg-surface-elevated);
     border: 1px solid var(--color-border);
-    display: flex;
-    flex-direction: column;
-    min-height: 100%;
 }
 
-.broker-level-target .broker-field-input,
-.broker-level-stop .broker-field-input {
+.broker-level-pair > .broker-level-target,
+.broker-level-pair > .broker-level-stop {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.broker-level-pair > .broker-level-target .broker-field-footer,
+.broker-level-pair > .broker-level-stop .broker-field-footer {
+    margin-top: auto;
+}
+
+.broker-level-stack > .broker-level-target,
+.broker-level-stack > .broker-level-stop {
     flex: 0 0 auto;
 }
 
-.broker-level-target .broker-field-footer,
-.broker-level-stop .broker-field-footer {
-    margin-top: auto;
+.broker-level-stack .broker-field-footer {
+    min-height: 0;
+}
+
+.broker-level-stack .broker-field-slot-spacer {
+    display: none;
+    min-height: 0;
 }
 
 .broker-level-target { border-left: 3px solid var(--color-success); }
@@ -1184,6 +1197,14 @@
     letter-spacing: 0.04em;
     color: var(--color-text-muted);
     white-space: nowrap;
+    vertical-align: middle;
+}
+
+.broker-dt-th-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    line-height: 1.2;
 }
 
 .broker-table tbody tr {

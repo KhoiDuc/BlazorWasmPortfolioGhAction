@@ -110,7 +110,7 @@ public partial class JWTDebugger
         if (!_initialized || _syncing)
             return;
 
-        if (IsEncoder || HasSigningMaterial())
+        if (IsEncoder || ShouldSyncFromJson())
             SyncFromJson();
     }
 
@@ -120,7 +120,7 @@ public partial class JWTDebugger
         if (!_initialized || _syncing)
             return;
 
-        if (IsEncoder || HasSigningMaterial())
+        if (IsEncoder || ShouldSyncFromJson())
             SyncFromJson();
     }
 
@@ -166,6 +166,14 @@ public partial class JWTDebugger
         else
             VerifyCurrent();
     }
+
+    private bool ShouldSyncFromJson() =>
+        KeyKind switch
+        {
+            JwtKeyKind.None => true,
+            JwtKeyKind.Hmac => !string.IsNullOrWhiteSpace(_hmacSecret),
+            _ => false
+        };
 
     private bool HasSigningMaterial() =>
         KeyKind switch
@@ -241,6 +249,13 @@ public partial class JWTDebugger
                 _encoded = result.Token;
                 _isValidStructure = true;
                 _structureMessage = null;
+            }
+            else if (IsEncoder
+                && JwtAlgorithm.GetKeyKind(_algorithm) is JwtKeyKind.Rsa or JwtKeyKind.Ecdsa
+                && JwtPrebuiltExamples.IsKnownExample(_encoded, _algorithm)
+                && JwtExampleKeys.MatchesExampleKeys(_algorithm, _hmacSecret, _secretIsBase64Url, _publicKeyPem))
+            {
+                _encodeError = "RSA/EC re-signing is not available in this browser. The prebuilt example token is kept.";
             }
 
             VerifyCurrent();

@@ -15,6 +15,31 @@ public static class JwtExampleKeys
         _ => HmacSecret
     };
 
+    public static bool MatchesExampleKeys(
+        string algorithm,
+        string? hmacSecret,
+        bool secretIsBase64Url,
+        string? publicKeyPem)
+    {
+        return JwtAlgorithm.GetKeyKind(algorithm) switch
+        {
+            JwtKeyKind.None => true,
+            JwtKeyKind.Hmac => !secretIsBase64Url
+                && string.Equals(hmacSecret, GetHmacSecret(algorithm), StringComparison.Ordinal),
+            JwtKeyKind.Rsa => PemEquals(publicKeyPem, RsaPublicKeyPem),
+            JwtKeyKind.Ecdsa => PemEquals(publicKeyPem, GetEcKeys(algorithm).Public),
+            _ => false
+        };
+    }
+
+    private static bool PemEquals(string? left, string? right) =>
+        NormalizePem(left) == NormalizePem(right);
+
+    private static string NormalizePem(string? pem) =>
+        string.IsNullOrWhiteSpace(pem)
+            ? string.Empty
+            : string.Concat(pem.Where(c => !char.IsWhiteSpace(c)));
+
     public const string RsaPrivateKeyPem =
         """
         -----BEGIN RSA PRIVATE KEY-----
