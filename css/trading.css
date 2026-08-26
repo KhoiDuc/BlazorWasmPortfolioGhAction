@@ -864,9 +864,24 @@
 }
 
 .broker-field-preview {
-    margin: 0.35rem 0 0;
+    margin: 0;
     font-size: 0.72rem;
     color: var(--color-text-muted);
+}
+
+.broker-field-footer {
+    min-height: 1.35rem;
+    margin-top: 0.35rem;
+}
+
+.broker-field-footer .ts-field-error,
+.broker-field-footer .broker-field-preview {
+    margin: 0;
+}
+
+.broker-field-slot-spacer {
+    display: block;
+    min-height: 1.35rem;
 }
 
 .broker-field-top {
@@ -878,6 +893,10 @@
 }
 
 .broker-field-top .broker-field-label { margin: 0; }
+
+.broker-field-top .broker-level-mode {
+    margin-bottom: 0;
+}
 
 .broker-optional {
     font-weight: 400;
@@ -903,6 +922,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.65rem;
+    align-items: stretch;
 }
 
 .broker-level-target,
@@ -911,6 +931,19 @@
     border-radius: var(--radius-sm);
     background: var(--color-bg-surface-elevated);
     border: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+.broker-level-target .broker-field-input,
+.broker-level-stop .broker-field-input {
+    flex: 0 0 auto;
+}
+
+.broker-level-target .broker-field-footer,
+.broker-level-stop .broker-field-footer {
+    margin-top: auto;
 }
 
 .broker-level-target { border-left: 3px solid var(--color-success); }
@@ -929,6 +962,32 @@
 }
 
 .broker-form-row-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.broker-form-row-align {
+    align-items: start;
+}
+
+.broker-form-row-align > .broker-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.broker-form-row-align .broker-field-label {
+    min-height: 2.5rem;
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.35rem;
+    margin-bottom: 0.35rem;
+    line-height: 1.3;
+}
+
+.broker-form-row-align .ts-input,
+.broker-form-row-align .ts-select {
+    min-height: 38px;
+    box-sizing: border-box;
+}
 
 .broker-loading {
     min-height: 240px;
@@ -1196,13 +1255,109 @@
 }
 
 .broker-table-foot {
-    margin: 0.75rem 0 0;
-    font-size: 0.74rem;
+    margin: 0.65rem 0 0;
+    font-size: 0.72rem;
     color: var(--color-text-muted);
-    line-height: 1.45;
+    line-height: 1.4;
 }
 
-.broker-status-ChuaQuyet { background: transparent; color: var(--color-text-muted); }
+/* DataTable-style toolbar */
+.broker-dt-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem 1rem;
+    margin-bottom: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+}
+
+.broker-dt-toolbar-left,
+.broker-dt-toolbar-right {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+}
+
+.broker-dt-label {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+.broker-dt-search {
+    min-width: min(100%, 220px);
+    max-width: 320px;
+    padding: 6px 10px;
+    font-size: 0.82rem;
+}
+
+.broker-dt-length {
+    width: auto;
+    min-width: 4.5rem;
+    padding: 6px 8px;
+    font-size: 0.82rem;
+}
+
+.broker-dt-info {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+}
+
+.broker-dt-pager {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.broker-dt-page-btn {
+    min-width: 2rem;
+    padding: 4px 10px;
+    font-size: 0.78rem;
+}
+
+.broker-dt-page-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.broker-dt-empty-filter {
+    padding: 1.5rem;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-sm);
+}
+
+.broker-table thead th.broker-dt-sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: color var(--transition-fast);
+}
+
+.broker-table thead th.broker-dt-sortable:hover {
+    color: var(--color-text-primary);
+}
+
+.broker-table thead th.broker-dt-sorted {
+    color: var(--color-text-primary);
+}
+
+.broker-dt-sort-icon {
+    margin-left: 0.25rem;
+    font-size: 0.65rem;
+    opacity: 0.85;
+}
+
+.broker-dt-footer {
+    margin-top: 0.65rem;
+    margin-bottom: 0;
+}
 .broker-status-ChoMua { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
 .broker-status-NamGiu { background: rgba(16, 185, 129, 0.15); color: var(--color-success); }
 .broker-status-CatLo { background: rgba(239, 68, 68, 0.15); color: var(--color-danger); }
