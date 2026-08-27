@@ -50,34 +50,36 @@
     </div>
 
     <div class="table-section">
-        <table class="lookup-table">
-            <thead>
-                <tr>
-                    <th rowspan="2">Wind Speed (knots)</th>
-                    <th colspan="4">Cloud Cover (oktas)</th>
-                </tr>
-                <tr>
-                    <th>0 - 2</th>
-                    <th>2.01 - 4</th>
-                    <th>4.01 - 6</th>
-                    <th>6.01 - 8</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var windSpeedRange in KValues.Keys)
-                {
+        <div class="lookup-table-wrap">
+            <table class="lookup-table">
+                <thead>
                     <tr>
-                        <td class="wind-speed @(GetWindSpeedClass(windSpeedRange))">@windSpeedRange</td>
-                        @foreach (var cloudCoverRange in KValues[windSpeedRange].Keys)
-                        {
-                            <td class="k-value @(GetCellHighlightClass(windSpeedRange, cloudCoverRange))">
-                                @KValues[windSpeedRange][cloudCoverRange]
-                            </td>
-                        }
+                        <th rowspan="2">Wind Speed (knots)</th>
+                        <th colspan="4">Cloud Cover (oktas)</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                    <tr>
+                        <th>0 - 2</th>
+                        <th>2.01 - 4</th>
+                        <th>4.01 - 6</th>
+                        <th>6.01 - 8</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var windSpeedRange in KValues.Keys)
+                    {
+                        <tr>
+                            <td class="wind-speed @(GetWindSpeedClass(windSpeedRange))">@windSpeedRange</td>
+                            @foreach (var cloudCoverRange in KValues[windSpeedRange].Keys)
+                            {
+                                <td class="k-value @(GetCellHighlightClass(windSpeedRange, cloudCoverRange))">
+                                    @KValues[windSpeedRange][cloudCoverRange]
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
         <div class="result-section">
             <p>

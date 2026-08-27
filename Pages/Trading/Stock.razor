@@ -4,8 +4,10 @@
 @inherits CultureAwareComponent
 @using BlazorWasmPortfolioGhAction.Models.Trading
 @using BlazorWasmPortfolioGhAction.Services.Trading
+@using System.Text
 @using System.Text.Json
 @inject ITradingApiClient Api
+@inject IJSRuntime JS
 @inject IStringLocalizer<SharedResources> L
 
 <div class="ts-page">
@@ -17,20 +19,22 @@
             </div>
         </div>
         <div class="ts-tabs">
-            <button class="ts-tab @(_tab == "scan" ? "active" : "")" @onclick='() => SetTab("scan")'>Scan</button>
+            <button class="ts-tab @(_tab == "vn" ? "active" : "")" @onclick='() => SetTab("vn")'>VN Stock</button>
+            <button class="ts-tab @(_tab == "category" ? "active" : "")" @onclick='() => SetTab("category")'>Category</button>
+            <button class="ts-tab @(_tab == "global" ? "active" : "")" @onclick='() => SetTab("global")'>Global Stock</button>
             <button class="ts-tab @(_tab == "rrg" ? "active" : "")" @onclick='() => SetTab("rrg")'>VN RRG</button>
         </div>
     </div>
 
-    @if (_tab == "scan")
+    @if (_tab == "vn")
     {
         <div class="ts-panel">
             <div class="ts-header">
                 <div>
-                    <h2>VN Signal Scanner</h2>
-                    <p>Backend watchlist — tín hiệu kỹ thuật</p>
+                    <h2>Vietnam Stock Evaluator</h2>
+                    <p>Search, evaluate &amp; discover potential VN stocks</p>
                 </div>
-                @if (_vnData?.LatestUpdated is not null)
+                @if (_vnData?.LatestUpdated is not null && _vnData.LatestUpdated.Value.Year > 1)
                 {
                     <span class="ts-updated">Updated: @_vnData.LatestUpdated.Value.ToLocalTime():g</span>
                 }
@@ -40,15 +44,29 @@
                 <input class="ts-input" style="max-width:200px" @bind="_filter" placeholder="Filter symbol..." />
                 <select class="ts-select" style="max-width:220px" @bind="_signalFilter">
                     <option value="">All signals</option>
-                    <option value="near_52w_ath">Near 52W high</option>
-                    <option value="near_ath">Near ATH</option>
-                    <option value="ema9_above_ema21">Uptrend EMA</option>
-                    <option value="top_growth_20d">Top growth 20d</option>
+                    <option value="near_52w_ath">Highest 52W</option>
+                    <option value="ema9_above_ema21">Uptrend</option>
+                    <option value="top_growth_20d">Top Growth 20D</option>
                 </select>
                 <input class="ts-input" style="max-width:140px" @bind="_selectedStock" placeholder="VNM, FPT..." />
                 <button class="ts-btn ts-btn-outline" @onclick="LoadTcbs">TCBS Eval</button>
+                @if (GroupedStocks.Count > 0)
+                {
+                    <button class="ts-btn ts-btn-outline" @onclick="ExportCsv">Export CSV</button>
+                }
             </div>
         </div>
+
+        @if (_totalMarketStocks > 0 && _vnData?.Data is { Length: > 0 })
+        {
+            <div class="ts-panel ts-stock-summary @(_isBullish ? "ts-stock-summary--bullish" : "ts-stock-summary--bearish")">
+                <div>
+                    <span class="ts-muted">Số cổ phiếu mạnh (Uptrend):</span>
+                    <strong>@_ema9Count mã / @_totalMarketStocks tổng (@_ema9Pct.ToString("F2")%)</strong>
+                </div>
+                <span class="ts-stock-sentiment">@(_isBullish ? "Bullish" : "Bearish")</span>
+            </div>
+        }
 
         <TcbsCard Symbol="@_selectedStock" Data="@_tcbsJson" />
 
@@ -56,19 +74,24 @@
         {
             <div class="ts-panel ts-empty"><div class="ts-spinner"></div><span>Đang tải watchlist...</span></div>
         }
-        else if (FilteredStocks.Length > 0)
+        else if (FilteredStocks.Count > 0)
         {
             <div class="ts-panel ts-table-wrap">
                 <table class="ts-table">
-                    <thead><tr><th>Symbol</th><th>Volume</th><th>Score</th><th>Signal</th></tr></thead>
+                    <thead><tr><th>Symbol</th><th>Score Diff</th><th>Volume</th><th>Signal</th></tr></thead>
                     <tbody>
                         @foreach (var s in FilteredStocks)
                         {
                             <tr class="@(_selectedStock == s.Symbol ? "selected" : "")" @onclick="() => SelectSymbol(s.Symbol)">
                                 <td><strong>@s.Symbol</strong></td>
+                                <td class="@(s.ScoreDiff >= 0 ? "ts-positive" : "ts-negative")">@(s.ScoreDiff >= 0 ? "+" : "")@s.ScoreDiff.ToString("F2")%</td>
                                 <td>@s.Volume.ToString("N0")</td>
-                                <td class="@(s.ScoreDiff >= 0 ? "ts-positive" : "ts-negative")">@s.ScoreDiff.ToString("F2")%</td>
-                                <td><span class="ts-signal ts-signal-@s.SignalType">@s.SignalLabel</span></td>
+                                <td>
+                                    @for (var i = 0; i < s.SignalTypes.Count; i++)
+                                    {
+                                        <span class="ts-signal ts-signal-@s.SignalTypes[i]">@s.SignalLabels[i]</span>
+                                    }
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -81,7 +104,121 @@
             <div class="ts-chart-wrap">
                 <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={_selectedStock}")" width="100%" height="380" frameborder="0" title="Vietstock chart"></iframe>
             </div>
-            <PriceAlertWidget Symbol="@_selectedStock" AssetType="stock" />
+            <div class="ts-stock-actions">
+                <button class="ts-btn ts-btn-outline" @onclick="() => _showPriceAlert = !_showPriceAlert">
+                    <i class="bi bi-bell"></i> Price Alert
+                </button>
+                <button class="ts-btn ts-btn-outline" @onclick="ViewChart">
+                    <i class="bi bi-graph-up"></i> View Chart
+                </button>
+            </div>
+            @if (_showPriceAlert)
+            {
+                <PriceAlertWidget Symbol="@_selectedStock" AssetType="stock" />
+            }
+        }
+    }
+    else if (_tab == "category")
+    {
+        <div class="ts-panel">
+            <div class="ts-header">
+                <div>
+                    <h2>Sector Category</h2>
+                    <p>Phân tích tương quan các nhóm ngành qua chart Vietstock</p>
+                </div>
+            </div>
+            <input class="ts-input" style="max-width:280px" @bind="_categoryFilter" @bind:event="oninput" placeholder="Lọc nhóm ngành..." />
+        </div>
+
+        @if (_selectedCategory is not null)
+        {
+            <div class="ts-chart-wrap">
+                <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={_selectedCategory.Code}")" width="100%" height="380" frameborder="0" title="Category chart"></iframe>
+            </div>
+            <div class="ts-category-badge">
+                <strong>@_selectedCategory.Code</strong>
+                <span>@_selectedCategory.Name</span>
+            </div>
+        }
+
+        <div class="ts-panel ts-table-wrap">
+            <table class="ts-table">
+                <thead><tr><th>Mã</th><th>Mô tả</th><th>Sàn</th></tr></thead>
+                <tbody>
+                    @foreach (var cat in FilteredCategories)
+                    {
+                        <tr class="@(_selectedCategory?.Code == cat.Code ? "selected" : "")" @onclick="() => _selectedCategory = cat">
+                            <td><strong>@cat.Code</strong></td>
+                            <td>@cat.Name</td>
+                            <td class="ts-muted">HOSE &amp; HNX</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (_tab == "global")
+    {
+        <div class="ts-panel">
+            <div class="ts-header">
+                <div>
+                    <h2>Global Stock Scanner</h2>
+                    <p>Discover potential stocks across world markets</p>
+                </div>
+                @if (_globalUpdated is not null && _globalUpdated.Value.Year > 1)
+                {
+                    <span class="ts-updated">Updated: @_globalUpdated.Value.ToLocalTime():g</span>
+                }
+                <button class="ts-btn ts-btn-primary" @onclick="ScanGlobal" disabled="@_scanningGlobal">Scan Global</button>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <input class="ts-input" style="max-width:200px" @bind="_globalFilter" placeholder="Filter symbols..." />
+                <select class="ts-select" style="max-width:200px" @bind="_countryFilter">
+                    <option value="">All Countries</option>
+                    @foreach (var c in Countries)
+                    {
+                        <option value="@c">@c</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_selectedGlobalSymbol))
+        {
+            <TradingViewChart Symbol="@_selectedGlobalSymbol" />
+            <PriceAlertWidget Symbol="@_selectedGlobalSymbol" AssetType="stock" />
+        }
+
+        @if (_loadingGlobal)
+        {
+            <div class="ts-panel ts-empty"><div class="ts-spinner"></div><span>Đang tải global watchlist...</span></div>
+        }
+        else if (FilteredGlobal.Length > 0)
+        {
+            <div class="ts-panel ts-table-wrap">
+                <table class="ts-table">
+                    <thead><tr><th>Country</th><th>Symbol</th></tr></thead>
+                    <tbody>
+                        @foreach (var s in FilteredGlobal)
+                        {
+                            <tr class="@(_selectedGlobalSymbol == s.Symbol ? "selected" : "")" @onclick="() => _selectedGlobalSymbol = s.Symbol">
+                                <td>@s.Country</td>
+                                <td><strong>@s.Symbol</strong></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else if (_globalLoaded)
+        {
+            <div class="ts-panel ts-empty"><span>Không có dữ liệu global. Bấm Scan Global để chạy script.</span></div>
+        }
+        else
+        {
+            <div class="ts-panel ts-empty">
+                <span>Scan international exchanges for strong signals and breakout setups.</span>
+            </div>
         }
     }
     else
@@ -94,49 +231,168 @@
                 </div>
                 <button class="ts-btn ts-btn-primary" @onclick="ScanRrg">Refresh</button>
             </div>
-            <img src="@Api.ProxyUrl("vnstock_rrgchart")" alt="VN RRG" class="ts-rrg-img" loading="lazy" />
+            <img src="@($"{Api.ProxyUrl("vnstock_rrgchart")}?t={_rrgKey}")" alt="VN RRG" class="ts-rrg-img" loading="lazy" />
         </div>
     }
 </div>
 
 @code {
-    private string _tab = "scan";
+    private static readonly SectorCategory[] Categories =
+    [
+        new("VS-PLASTICS", "SX NHỰA - HÓA CHẤT"),
+        new("VS-FOOD&DRINK", "THỰC PHẨM - ĐỒ UỐNG"),
+        new("VS-SEAFOOD", "CHẾ BIẾN THỦY SẢN"),
+        new("VS-CONMATERIAL", "VẬT LIỆU XÂY DỰNG"),
+        new("VS-UTILITIES", "TIỆN ÍCH"),
+        new("VS-LOGISTICS", "VẬN TẢI - KHO BÃI"),
+        new("VS-CONSTRUCT", "XÂY DỰNG"),
+        new("VS-ACCOMMODATE", "DỊCH VỤ LƯU TRÚ, ĂN UỐNG, GIẢI TRÍ"),
+        new("VS-ANCILLARY PRODUTION", "SX PHỤ TRỢ"),
+        new("VS-E EQUIPMENT", "THIẾT BỊ ĐIỆN"),
+        new("VS-PST SERVICE", "DỊCH VỤ TƯ VẤN, HỖ TRỢ"),
+        new("VS-OTHER FINANCIAL", "TÀI CHÍNH KHÁC"),
+        new("VS-INSURANCE", "BẢO HIỂM"),
+        new("VS-REAL ESTATE", "BẤT ĐỘNG SẢN"),
+        new("VS-SECURITIES", "CHỨNG KHOÁN"),
+        new("VS-ICT", "CÔNG NGHỆ VÀ THÔNG TIN"),
+        new("VS-RETAIL", "BÁN LẺ"),
+        new("VS-HEALTHCARE", "CHĂM SÓC SỨC KHỎE"),
+        new("VS-MINING&OIL", "KHAI KHOÁNG"),
+        new("VS-BANKING", "NGÂN HÀNG"),
+        new("VS-AGRI", "NÔNG - LÂM - NGƯ"),
+        new("VS-MACHINERY", "SX THIẾT BỊ, MÁY MÓC"),
+        new("VS-HOUSEHOLD", "SX HÀNG GIA DỤNG"),
+        new("VS-RUBBER PROD", "SẢN PHẨM CAO SU"),
+        new("VS-WHOLESALES", "BÁN BUÔN"),
+    ];
+
+    private static readonly Dictionary<string, string> SignalLabelMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["near_52w_ath"] = "Highest 52W",
+        ["ema9_above_ema21"] = "Uptrend",
+        ["top_growth_20d"] = "Top Growth 20D",
+    };
+
+    private string _tab = "vn";
     private WatchlistResponse<StockSignal>? _vnData;
+    private WorldStock[] _globalData = [];
+    private DateTime? _globalUpdated;
     private string _selectedStock = "VNM";
+    private string _selectedGlobalSymbol = "SP:SPX";
+    private SectorCategory? _selectedCategory;
     private JsonElement? _tcbsJson;
     private string _filter = "";
     private string _signalFilter = "";
+    private string _categoryFilter = "";
+    private string _globalFilter = "";
+    private string _countryFilter = "";
     private bool _scanning;
+    private bool _scanningGlobal;
     private bool _loading;
+    private bool _loadingGlobal;
+    private bool _globalLoaded;
+    private bool _showPriceAlert;
+    private int _totalMarketStocks;
+    private long _rrgKey = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-    private StockSignal[] FilteredStocks => (_vnData?.Data ?? [])
+    private List<GroupedStockRow> GroupedStocks => Group(_vnData?.Data ?? []);
+
+    private List<GroupedStockRow> FilteredStocks => GroupedStocks
         .Where(s => string.IsNullOrEmpty(_filter) || s.Symbol.Contains(_filter, StringComparison.OrdinalIgnoreCase))
-        .Where(s => string.IsNullOrEmpty(_signalFilter) || s.SignalType == _signalFilter)
+        .Where(s => string.IsNullOrEmpty(_signalFilter) || s.SignalTypes.Contains(_signalFilter))
+        .OrderByDescending(s => s.SignalTypes.Count)
+        .ThenByDescending(s => s.Volume)
+        .ToList();
+
+    private SectorCategory[] FilteredCategories => Categories
+        .Where(c => string.IsNullOrEmpty(_categoryFilter)
+            || c.Code.Contains(_categoryFilter, StringComparison.OrdinalIgnoreCase)
+            || c.Name.Contains(_categoryFilter, StringComparison.OrdinalIgnoreCase))
         .ToArray();
+
+    private WorldStock[] FilteredGlobal => _globalData
+        .Where(s => string.IsNullOrEmpty(_globalFilter) || s.Symbol.Contains(_globalFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(s => string.IsNullOrEmpty(_countryFilter) || s.Country == _countryFilter)
+        .ToArray();
+
+    private string[] Countries => _globalData
+        .Select(x => x.Country)
+        .Where(c => !string.IsNullOrWhiteSpace(c))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(c => c)
+        .ToArray();
+
+    private int _ema9Count => (_vnData?.Data ?? [])
+        .Where(s => s.SignalType == "ema9_above_ema21" && !string.IsNullOrEmpty(s.Symbol))
+        .Select(s => s.Symbol)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Count();
+
+    private double _ema9Pct => _totalMarketStocks > 0 ? 100.0 * _ema9Count / _totalMarketStocks : 0;
+    private bool _isBullish => _totalMarketStocks > 0 && (double)_ema9Count / _totalMarketStocks >= 0.5;
 
     protected override void OnInitialized() => _ = LoadInBackgroundAsync();
 
     private void SetTab(string tab)
     {
         _tab = tab;
-        if (tab == "scan" && _vnData is null)
+        if (tab == "vn" && _vnData is null)
             _ = LoadScanAsync();
+        if (tab == "global" && !_globalLoaded)
+            _ = LoadGlobalAsync();
     }
 
     private async Task LoadInBackgroundAsync()
     {
-        try { _vnData = await Api.GetPotentialSymbolsAsync(); }
+        try
+        {
+            var listedTask = LoadListedCountAsync();
+            var vnTask = Api.GetPotentialSymbolsAsync();
+            await Task.WhenAll(listedTask, vnTask);
+            _vnData = await vnTask;
+        }
         catch { }
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadListedCountAsync()
+    {
+        try
+        {
+            var json = await Api.GetProxyJsonAsync("v4/stocks?q=type:STOCK~status:LISTED&fields=code&size=3000");
+            if (json is null || !json.Value.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Array)
+                return;
+            _totalMarketStocks = data.EnumerateArray()
+                .Count(el => el.TryGetProperty("code", out var code)
+                    && code.GetString() is { Length: 3 });
+        }
+        catch { }
     }
 
     private async Task LoadScanAsync()
     {
         _loading = true;
         await InvokeAsync(StateHasChanged);
-        try { _vnData = await Api.GetPotentialSymbolsAsync(string.IsNullOrEmpty(_signalFilter) ? null : _signalFilter); }
+        try { _vnData = await Api.GetPotentialSymbolsAsync(); }
         catch { }
         finally { _loading = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private async Task LoadGlobalAsync()
+    {
+        _loadingGlobal = true;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var resp = await Api.GetPotentialWorldSymbolsAsync();
+            _globalData = resp?.Data ?? [];
+            _globalUpdated = resp?.LatestUpdated;
+            _globalLoaded = true;
+            if (_globalData.Length > 0 && string.IsNullOrEmpty(_selectedGlobalSymbol))
+                _selectedGlobalSymbol = _globalData[0].Symbol;
+        }
+        catch { _globalLoaded = true; }
+        finally { _loadingGlobal = false; await InvokeAsync(StateHasChanged); }
     }
 
     private void SelectSymbol(string sym) => _selectedStock = sym.Trim().ToUpperInvariant();
@@ -155,5 +411,88 @@
         _scanning = false;
     }
 
-    private Task ScanRrg() => Api.RunSshScriptAsync("vnstock_rrg");
+    private async Task ScanGlobal()
+    {
+        _scanningGlobal = true;
+        await Api.RunSshScriptAsync("world_potential");
+        await LoadGlobalAsync();
+        _scanningGlobal = false;
+    }
+
+    private async Task ScanRrg()
+    {
+        await Api.RunSshScriptAsync("vnstock_rrg");
+        _rrgKey = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    }
+
+    private async Task ViewChart()
+    {
+        if (string.IsNullOrWhiteSpace(_selectedStock)) return;
+        await JS.InvokeVoidAsync("open", $"https://stockchart.vietstock.vn/?stockcode={_selectedStock}", "_blank");
+    }
+
+    private async Task ExportCsv()
+    {
+        if (FilteredStocks.Count == 0) return;
+        var sb = new StringBuilder();
+        sb.AppendLine("symbol,signals,volume,highest_price,lowest_price");
+        foreach (var s in FilteredStocks)
+        {
+            var signals = string.Join(" | ", s.SignalLabels);
+            sb.AppendLine($"{s.Symbol},\"{signals}\",{s.Volume},{s.HighestPrice},{s.LowestPrice}");
+        }
+        await JS.InvokeVoidAsync("tradingExport.csv", "potential_stocks.csv", sb.ToString());
+    }
+
+    private static List<GroupedStockRow> Group(StockSignal[] items)
+    {
+        var map = new Dictionary<string, GroupedStockRow>(StringComparer.OrdinalIgnoreCase);
+        foreach (var stock in items)
+        {
+            if (string.IsNullOrWhiteSpace(stock.Symbol)) continue;
+            var label = string.IsNullOrWhiteSpace(stock.SignalLabel)
+                ? (SignalLabelMap.TryGetValue(stock.SignalType, out var mapped) ? mapped : stock.SignalType)
+                : stock.SignalLabel;
+
+            if (!map.TryGetValue(stock.Symbol, out var row))
+            {
+                row = new GroupedStockRow
+                {
+                    Symbol = stock.Symbol,
+                    Volume = stock.Volume,
+                    HighestPrice = stock.HighestPrice,
+                    LowestPrice = stock.LowestPrice,
+                    ScoreDiff = stock.ScoreDiff,
+                };
+                map[stock.Symbol] = row;
+            }
+            else
+            {
+                row.Volume = Math.Max(row.Volume, stock.Volume);
+                if (stock.HighestPrice > row.HighestPrice) row.HighestPrice = stock.HighestPrice;
+                if (stock.LowestPrice < row.LowestPrice) row.LowestPrice = stock.LowestPrice;
+                row.ScoreDiff = stock.ScoreDiff;
+            }
+
+            if (!string.IsNullOrEmpty(stock.SignalType) && !row.SignalTypes.Contains(stock.SignalType))
+            {
+                row.SignalTypes.Add(stock.SignalType);
+                row.SignalLabels.Add(label ?? stock.SignalType);
+            }
+        }
+        return map.Values.ToList();
+    }
+
+    private sealed class GroupedStockRow
+    {
+        public string Symbol { get; set; } = "";
+        public long Volume { get; set; }
+        public double HighestPrice { get; set; }
+        public double LowestPrice { get; set; }
+        public double ScoreDiff { get; set; }
+        public List<string> SignalTypes { get; } = [];
+        public List<string> SignalLabels { get; } = [];
+    }
+
+    private sealed record SectorCategory(string Code, string Name);
 }

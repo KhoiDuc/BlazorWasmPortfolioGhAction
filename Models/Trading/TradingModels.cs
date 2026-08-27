@@ -2,34 +2,38 @@ using System.Text.Json.Serialization;
 
 namespace BlazorWasmPortfolioGhAction.Models.Trading;
 
-public record WatchlistResponse<T>(T[] Data, DateTime? LatestUpdated);
+public record WatchlistResponse<T>(
+    [property: JsonPropertyName("data")] T[] Data,
+    [property: JsonPropertyName("latest_updated")] DateTime? LatestUpdated);
 
 public record CryptoSignal(
-    string Crypto,
-    string? IsAth,
-    string SignalType,
-    string SignalLabel,
-    double HighestPrice,
-    double MarketCap,
-    double ScoreDiff);
+    [property: JsonPropertyName("crypto")] string Crypto,
+    [property: JsonPropertyName("is_ath")] string? IsAth,
+    [property: JsonPropertyName("signal_type")] string SignalType,
+    [property: JsonPropertyName("signal_label")] string SignalLabel,
+    [property: JsonPropertyName("highest_price")] double HighestPrice,
+    [property: JsonPropertyName("market_cap")] double MarketCap,
+    [property: JsonPropertyName("score_diff")] double ScoreDiff);
 
 public record FuturesSignal(
-    string Symbol,
-    string SignalType,
-    string SignalLabel,
-    double HighestPrice,
-    double MarketCap);
+    [property: JsonPropertyName("symbol")] string Symbol,
+    [property: JsonPropertyName("signal_type")] string SignalType,
+    [property: JsonPropertyName("signal_label")] string SignalLabel,
+    [property: JsonPropertyName("highest_price")] double HighestPrice,
+    [property: JsonPropertyName("market_cap")] double MarketCap);
 
 public record StockSignal(
-    string Symbol,
-    string SignalType,
-    string SignalLabel,
-    long Volume,
-    double HighestPrice,
-    double LowestPrice,
-    double ScoreDiff);
+    [property: JsonPropertyName("symbol")] string Symbol,
+    [property: JsonPropertyName("signal_type")] string SignalType,
+    [property: JsonPropertyName("signal_label")] string SignalLabel,
+    [property: JsonPropertyName("volume")] long Volume,
+    [property: JsonPropertyName("highest_price")] double HighestPrice,
+    [property: JsonPropertyName("lowest_price")] double LowestPrice,
+    [property: JsonPropertyName("score_diff")] double ScoreDiff);
 
-public record WorldStock(string Symbol, string Country);
+public record WorldStock(
+    [property: JsonPropertyName("symbol")] string Symbol,
+    [property: JsonPropertyName("country")] string Country);
 
 public record ForexPair(
     string Pair,

@@ -1,107 +1,138 @@
 ﻿.calculator-container {
-    display: flex;
-    gap: 5px;
-    padding: 20px;
+    display: grid;
+    grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
 }
 
 .input-section {
-    flex: 1;
     display: flex;
-    max-width: 350px;
     flex-direction: column;
-    gap: 5px;
+    gap: 1.15rem;
+    min-width: 0;
+    padding: 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface-elevated);
+    box-shadow:
+        0 1px 2px color-mix(in srgb, var(--color-text-primary) 4%, transparent),
+        0 6px 16px color-mix(in srgb, var(--color-text-primary) 6%, transparent);
 }
 
 .input-group {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 0.55rem;
 }
 
-.input-field {
-    padding: 5px;
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    width: 260px;
-    background: var(--color-bg-surface-elevated);
-    color: var(--color-text-primary);
+.input-group label {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.02em;
 }
 
-input[type="range"] {
-    width: 260px;
+.input-group .tool-input {
+    width: 100%;
+    max-width: none;
 }
 
-.calculate-button {
-    padding: 10px;
-    background-color: var(--color-primary);
-    color: var(--color-text-on-primary);
-    border: none;
-    border-radius: var(--radius-xs);
-    cursor: pointer;
-    width: 220px;
+.input-group .slider,
+.input-group input[type="range"] {
+    width: 100%;
+    max-width: none;
+    margin: 0.15rem 0 0;
+    accent-color: var(--color-accent);
 }
 
-    .calculate-button:hover {
-        background-color: var(--color-primary-dark);
-    }
+.table-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+}
 
-.result-section {
-    margin-top: 50px;
-    font-size: 24px;
+.lookup-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+    box-shadow:
+        0 1px 2px color-mix(in srgb, var(--color-text-primary) 4%, transparent),
+        0 6px 16px color-mix(in srgb, var(--color-text-primary) 6%, transparent);
 }
 
 .lookup-table {
-    width: 50vw;
+    width: 100%;
+    min-width: 420px;
+    margin: 0;
     border-collapse: collapse;
-    margin-top: 20px;
 }
 
-    .lookup-table th, .lookup-table td {
-        border: 1px solid var(--color-border);
-        padding: 8px;
-        text-align: center;
-    }
+.lookup-table th,
+.lookup-table td {
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+    padding: 0.65rem 0.75rem;
+    text-align: center;
+    font-size: 0.9rem;
+}
 
-    .lookup-table th {
-        background-color: var(--color-bg-surface-elevated);
-    }
+.lookup-table th {
+    background-color: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-surface-elevated));
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lookup-table td.wind-speed {
+    text-align: left;
+    font-weight: var(--font-weight-medium);
+    white-space: nowrap;
+    background: var(--color-bg-surface-elevated);
+}
 
 .highlight {
-    background-color: var(--color-warning);
+    background-color: color-mix(in srgb, var(--color-warning) 55%, transparent);
+    font-weight: var(--font-weight-semibold);
 }
 
 .highlight-row {
-    background-color: var(--color-warning);
-    opacity: 0.7;
+    background-color: color-mix(in srgb, var(--color-warning) 28%, transparent);
 }
 
-.modal-dialog {
-    max-width: 75vw;
+.result-section {
+    margin: 0;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-surface));
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--color-text-primary) 4%, transparent);
 }
 
-.modal {
-    background-color: var(--color-bg-glass-heavy);
+.result-section p {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--color-text-primary);
+    line-height: 1.5;
 }
 
-.calculator-container button {
-    padding: 8px 12px;
-    font-size: 14px;
-    color: var(--color-text-on-primary);
-    background-color: var(--color-primary);
-    border: none;
-    border-radius: var(--radius-xs);
-    cursor: pointer;
-    margin: 10px;
-}
-
-    .calculator-container button:hover {
-        background-color: var(--color-primary-dark);
-    }
-
-.calculator-container img {
-    background: transparent;
+.result-section strong {
+    color: var(--color-accent);
+    font-size: 1.2rem;
 }
 
 .warning-text {
-    font-size: 16px;
+    margin-top: 0.65rem !important;
+    font-size: 0.9rem !important;
+    color: var(--color-warning);
+}
+
+.modelButtons {
+    margin-top: 1.25rem;
+}
+
+@media (max-width: 900px) {
+    .calculator-container {
+        grid-template-columns: 1fr;
+    }
 }
