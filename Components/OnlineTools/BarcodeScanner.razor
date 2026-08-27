@@ -1,0 +1,197 @@
+@using ZXing
+@using BlazorWasmPortfolioGhAction.Services.OnlineTools
+@inject BarcodeZxingService BarcodeService
+@inject IJSRuntime JS
+@inject IClipboardService Clipboard
+@implements IAsyncDisposable
+
+<ToolShell ResourceKey="barcodescanner" Title="Barcode Scanner" Icon="bi-upc"
+           Description="Decode barcodes and QR codes from uploaded images (PNG, JPG, SVG).">
+    <div class="tool-form barcode-scan">
+        <div class="tool-field">
+            <label class="tool-label" for="scan-files">Images</label>
+            <InputFile id="scan-files" class="tool-input" OnChange="OnFiles" multiple accept="image/*,.svg" />
+            <p class="tool-hint">Select one or more images. Decoding runs entirely in the browser.</p>
+        </div>
+
+        @if (_loading)
+        {
+            <div class="tool-alert" role="status">@_status</div>
+        }
+
+        @if (_files.Count > 0)
+        {
+            <div class="barcode-scan-layout">
+                <div class="barcode-scan-list">
+                    @foreach (var file in _files)
+                    {
+                        <div class="barcode-scan-file">
+                            <div class="barcode-scan-file-head">
+                                <span class="tool-hint" title="@file.Name">@file.Name</span>
+                                <button type="button" class="tool-btn tool-btn-sm" @onclick="() => Remove(file)">Remove</button>
+                            </div>
+                            @if (file.Hits.Count == 0)
+                            {
+                                <p class="tool-hint">No barcodes found</p>
+                            }
+                            else
+                            {
+                                @foreach (var hit in file.Hits)
+                                {
+                                    <button type="button"
+                                            class="barcode-scan-hit @(_selected == hit ? "is-active" : "")"
+                                            @onclick="() => Select(file, hit)">
+                                        <span class="badge">@hit.Format</span>
+                                        <span class="barcode-scan-hit-text">@hit.Text</span>
+                                    </button>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="barcode-scan-detail">
+                    @if (_selected is null)
+                    {
+                        <p class="tool-hint">Select a barcode to view details.</p>
+                    }
+                    else
+                    {
+                        <div class="tool-field">
+                            <span class="tool-label">Decoded content</span>
+                            <pre class="tool-pre barcode-scan-pre">@_selected.Text</pre>
+                            <div class="tool-actions">
+                                <button type="button" class="tool-btn" @onclick="CopySelected">Copy</button>
+                            </div>
+                        </div>
+                        <dl class="barcode-scan-props">
+                            <div><dt>Type</dt><dd>@_selected.Format</dd></div>
+                            <div><dt>Length</dt><dd>@_selected.Text.Length chars</dd></div>
+                            <div><dt>Dimension</dt><dd>@_selected.Dimension</dd></div>
+                            <div><dt>GS1</dt><dd>@(_selected.IsGs1 ? "Yes" : "No")</dd></div>
+                        </dl>
+                        @if (_selected.Metadata.Count > 0)
+                        {
+                            <div class="tool-field">
+                                <span class="tool-label">Metadata</span>
+                                <table class="tool-table">
+                                    <thead><tr><th>Key</th><th>Value</th></tr></thead>
+                                    <tbody>
+                                    @foreach (var m in _selected.Metadata)
+                                    {
+                                        <tr><td>@m.Key</td><td class="barcode-scan-meta">@m.Value</td></tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(_selected.RawHex))
+                        {
+                            <div class="tool-field">
+                                <span class="tool-label">Raw bytes (hex)</span>
+                                <pre class="tool-pre barcode-scan-pre">@_selected.RawHex</pre>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private readonly List<ScannedImage> _files = [];
+    private BarcodeDecodeHit? _selected;
+    private bool _loading;
+    private string _status = "";
+    private CancellationTokenSource? _cts;
+
+    private async Task OnFiles(InputFileChangeEventArgs e)
+    {
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var ct = _cts.Token;
+
+        await EnsureJsAsync();
+        _loading = true;
+        var list = e.GetMultipleFiles(40).ToList();
+        _status = $"Loading 0/{list.Count}…";
+        StateHasChanged();
+
+        var i = 0;
+        foreach (var file in list)
+        {
+            if (ct.IsCancellationRequested) break;
+            i++;
+            _status = $"Scanning {i}/{list.Count}: {file.Name}";
+            StateHasChanged();
+            await Task.Yield();
+
+            try
+            {
+                await using var stream = file.OpenReadStream(8 * 1024 * 1024);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms, ct);
+                var bytes = ms.ToArray();
+
+                var pixels = await JS.InvokeAsync<ImagePixels?>("barcodeTools.imageToRgba", ct, bytes, file.ContentType);
+                IReadOnlyList<BarcodeDecodeHit> hits = [];
+                if (pixels is { Width: > 0, Height: > 0 } && !string.IsNullOrEmpty(pixels.RgbaBase64))
+                {
+                    var rgba = Convert.FromBase64String(pixels.RgbaBase64);
+                    hits = BarcodeService.DecodeRgba(rgba, pixels.Width, pixels.Height);
+                }
+
+                var scanned = new ScannedImage(file.Name, hits.ToList());
+                _files.Add(scanned);
+                if (_selected is null && scanned.Hits.Count > 0)
+                    _selected = scanned.Hits[0];
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch
+            {
+                _files.Add(new ScannedImage(file.Name, []));
+            }
+        }
+
+        _loading = false;
+        _status = "";
+    }
+
+    private void Remove(ScannedImage file)
+    {
+        _files.Remove(file);
+        if (_selected is not null && file.Hits.Contains(_selected))
+            _selected = _files.SelectMany(f => f.Hits).FirstOrDefault();
+    }
+
+    private void Select(ScannedImage file, BarcodeDecodeHit hit) => _selected = hit;
+
+    private async Task CopySelected()
+    {
+        if (_selected is null) return;
+        await Clipboard.CopyTextAsync(_selected.Text);
+    }
+
+    private async Task EnsureJsAsync() =>
+        await JS.InvokeVoidAsync("scriptLoader.load", "js/barcode-tools.js");
+
+    public ValueTask DisposeAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        return ValueTask.CompletedTask;
+    }
+
+    private sealed record ScannedImage(string Name, List<BarcodeDecodeHit> Hits);
+
+    private sealed class ImagePixels
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+        public string RgbaBase64 { get; set; } = "";
+    }
+}

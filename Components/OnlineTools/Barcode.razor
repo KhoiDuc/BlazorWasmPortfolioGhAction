@@ -1,149 +1,230 @@
-<ToolShell ResourceKey="barcode" Title="Barcode Generator" Icon="bi-upc-scan" Description="Generate Code 128, EAN, UPC, and other barcode formats as SVG.">
-    <div class="tool-form">
+@using ZXing
+@using BlazorWasmPortfolioGhAction.Services.OnlineTools
+@inject BarcodeZxingService BarcodeService
+@inject IJSRuntime JS
+@inject IClipboardService Clipboard
+
+<ToolShell ResourceKey="barcode" Title="Barcode Generator" Icon="bi-upc-scan"
+           Description="Generate QR, Code 128, EAN, Data Matrix, PDF417, and more as SVG/PNG.">
+    <div class="tool-form barcode-gen">
         <div class="tool-field">
-            <label class="tool-label" for="barcodeType">Barcode type</label>
-            <select id="barcodeType" class="tool-select" @onchange="OnBarcodeTypeChanged">
-                <option value="@BarcodeGenerationType.Code128">Code 128</option>
-                <option value="@BarcodeGenerationType.Code39">Code 39</option>
-                <option value="@BarcodeGenerationType.Code93">Code 93</option>
-                <option value="@BarcodeGenerationType.Ean8">EAN-8</option>
-                <option value="@BarcodeGenerationType.Ean13">EAN-13</option>
-                <option value="@BarcodeGenerationType.UpcA">UPC-A</option>
-                <option value="@BarcodeGenerationType.Codabar">Codabar</option>
-                <option value="@BarcodeGenerationType.Itf">ITF</option>
+            <label class="tool-label" for="bc-content">Content</label>
+            <textarea id="bc-content" class="tool-textarea" rows="3" @bind="_content" @bind:event="oninput" spellcheck="false"
+                      placeholder="Enter text or digits..."></textarea>
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="bc-format">Format</label>
+            <select id="bc-format" class="tool-select" @bind="_format">
+                @foreach (var f in BarcodeService.SupportedFormats)
+                {
+                    <option value="@f">@FormatLabel(f)</option>
+                }
             </select>
         </div>
 
-        <div class="tool-field">
-            <label class="tool-label" for="barcodeText">Value</label>
-            <textarea id="barcodeText" class="tool-textarea" @oninput="OnTextInput" spellcheck="false">@text</textarea>
+        <div class="tool-row">
+            <div class="tool-field">
+                <label class="tool-label" for="bc-w">Width (px)</label>
+                <input id="bc-w" type="number" class="tool-input" min="50" max="2000" @bind="_width" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label" for="bc-h">Height (px)</label>
+                <input id="bc-h" type="number" class="tool-input" min="50" max="2000" @bind="_height" />
+            </div>
         </div>
+
+        <div class="tool-field">
+            <span class="tool-label">Margins (px)</span>
+            <div class="barcode-margins">
+                <input type="number" class="tool-input" min="0" max="100" title="Top" @bind="_marginTop" placeholder="Top" />
+                <div class="barcode-margins-mid">
+                    <input type="number" class="tool-input" min="0" max="100" title="Left" @bind="_marginLeft" placeholder="Left" />
+                    <input type="number" class="tool-input" min="0" max="100" title="Right" @bind="_marginRight" placeholder="Right" />
+                </div>
+                <input type="number" class="tool-input" min="0" max="100" title="Bottom" @bind="_marginBottom" placeholder="Bottom" />
+            </div>
+        </div>
+
+        @if (BarcodeService.Is1D(_format))
+        {
+            <div class="tool-field">
+                <label class="tool-check">
+                    <input type="checkbox" @bind="_showText" /> Show text below barcode
+                </label>
+            </div>
+            @if (_showText)
+            {
+                <div class="tool-field">
+                    <label class="tool-label" for="bc-font">Font size</label>
+                    <input id="bc-font" type="number" class="tool-input" min="8" max="48" @bind="_fontSize" />
+                </div>
+            }
+        }
+
+        @if (BarcodeService.SupportsGS1(_format))
+        {
+            <div class="tool-field">
+                <label class="tool-check">
+                    <input type="checkbox" @bind="_gs1" /> GS1 mode
+                </label>
+                <p class="tool-hint">Use Application Identifiers, e.g. <code>01</code> + GTIN-14.</p>
+            </div>
+        }
+
+        @if (_format == BarcodeFormat.QR_CODE)
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="bc-qr">QR error correction</label>
+                <select id="bc-qr" class="tool-select" @bind="_qrLevel">
+                    <option value="L">L (~7%)</option>
+                    <option value="M">M (~15%)</option>
+                    <option value="Q">Q (~25%)</option>
+                    <option value="H">H (~30%)</option>
+                </select>
+            </div>
+        }
+
+        @if (_format == BarcodeFormat.PDF_417)
+        {
+            <div class="tool-row">
+                <div class="tool-field">
+                    <label class="tool-label" for="bc-pdf">PDF417 ECC (0–8)</label>
+                    <input id="bc-pdf" type="number" class="tool-input" min="0" max="8" @bind="_pdfLevel" />
+                </div>
+                <div class="tool-field">
+                    <label class="tool-check" style="margin-top:1.6rem">
+                        <input type="checkbox" @bind="_pdfCompact" /> Compact
+                    </label>
+                </div>
+            </div>
+        }
+
+        @if (_format == BarcodeFormat.AZTEC)
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="bc-az">Aztec ECC %</label>
+                <input id="bc-az" type="number" class="tool-input" min="0" max="100" @bind="_aztecPct" />
+            </div>
+        }
 
         <div class="tool-actions">
-            <button type="button" class="tool-btn tool-btn-primary" @onclick="Click">Generate</button>
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="Generate">Generate</button>
+            @if (!string.IsNullOrEmpty(_svg))
+            {
+                <button type="button" class="tool-btn" @onclick="DownloadSvg">Download SVG</button>
+                <button type="button" class="tool-btn" @onclick="DownloadPng">Download PNG</button>
+                <button type="button" class="tool-btn" @onclick="CopySvg">Copy SVG</button>
+            }
         </div>
 
-        <div class="barcode-output">
-            @(new MarkupString(barcode ?? ""))
-        </div>
-
-        @if (barcode != null)
+        @if (!string.IsNullOrEmpty(_error))
         {
-            <p class="tool-hint">
-                <strong>Type:</strong> @GetBarcodeTypeLabel(barcodeType)<br />
-                <strong>Modules:</strong> @barcodeModules
-            </p>
+            <div class="tool-alert tool-alert-warning" role="alert">@_error</div>
         }
 
-        @if (errorMessage != null)
+        @if (!string.IsNullOrEmpty(_svg))
         {
-            <div class="tool-alert tool-alert-warning" role="alert">@errorMessage</div>
+            <div class="barcode-output">
+                @(new MarkupString(_svg))
+            </div>
         }
-
-        <div class="tool-field">
-            <span class="tool-label">Examples</span>
-            <ul class="tool-link-list">
-                <li><strong>Code 128 / Code 39 / Code 93:</strong> <code>HELLO-123</code></li>
-                <li><strong>EAN-8:</strong> <code>5512345</code> (7 digits) or <code>55123457</code> (8 digits)</li>
-                <li><strong>EAN-13:</strong> <code>400638133393</code> (12 digits) or <code>4006381333931</code> (13 digits)</li>
-                <li><strong>UPC-A:</strong> <code>03600029145</code> (11 digits) or <code>036000291452</code> (12 digits)</li>
-                <li><strong>Codabar:</strong> <code>12345</code></li>
-                <li><strong>ITF:</strong> <code>123456</code> (even number of digits)</li>
-            </ul>
-        </div>
+        else
+        {
+            <p class="tool-hint">Enter content and click Generate.</p>
+        }
     </div>
 </ToolShell>
 
 @code {
-    string text = "";
-    string? barcode;
-    string? barcodeModules;
-    string? errorMessage;
-    BarcodeGenerationType barcodeType = BarcodeGenerationType.Code128;
+    private string _content = "Hello World!";
+    private BarcodeFormat _format = BarcodeFormat.QR_CODE;
+    private int _width = 300;
+    private int _height = 300;
+    private int _marginTop = 10;
+    private int _marginRight = 10;
+    private int _marginBottom = 10;
+    private int _marginLeft = 10;
+    private bool _showText = true;
+    private int _fontSize = 14;
+    private bool _gs1;
+    private string _qrLevel = "M";
+    private int _pdfLevel = 2;
+    private bool _pdfCompact;
+    private int _aztecPct = 33;
+    private string? _svg;
+    private string? _error;
 
-    protected override void OnInitialized() => GenerateBarcode();
+    protected override void OnInitialized() => Generate();
 
-    void Click()
+    private void Generate()
     {
-        GenerateBarcode();
-        StateHasChanged();
-    }
-
-    void OnTextInput(ChangeEventArgs e)
-    {
-        text = e.Value?.ToString() ?? "";
-        GenerateBarcode();
-    }
-
-    void OnBarcodeTypeChanged(ChangeEventArgs e)
-    {
-        barcodeType = Enum.Parse<BarcodeGenerationType>(e.Value?.ToString() ?? nameof(BarcodeGenerationType.Code128), ignoreCase: true);
-        GenerateBarcode();
-    }
-
-    void GenerateBarcode()
-    {
-        if (string.IsNullOrEmpty(text))
+        var result = BarcodeService.Generate(new BarcodeGenerateRequest
         {
-            barcode = null;
-            barcodeModules = null;
-            errorMessage = null;
-            return;
+            Content = _content,
+            Format = _format,
+            Width = _width,
+            Height = _height,
+            MarginTop = _marginTop,
+            MarginRight = _marginRight,
+            MarginBottom = _marginBottom,
+            MarginLeft = _marginLeft,
+            ShowTextBelow = _showText,
+            FontSize = _fontSize,
+            EnableGS1 = _gs1,
+            QrErrorCorrectionLevel = _qrLevel,
+            Pdf417ErrorLevel = _pdfLevel,
+            Pdf417Compact = _pdfCompact,
+            AztecErrorPercent = _aztecPct
+        });
+
+        if (result.Success)
+        {
+            _svg = result.Svg;
+            _error = null;
         }
-
-        try
+        else
         {
-            var generatedBarcode = barcodeType switch
-            {
-                BarcodeGenerationType.Code39 => global::Meziantou.Framework.Barcode.CreateCode39(text, includeChecksum: false),
-                BarcodeGenerationType.Code93 => global::Meziantou.Framework.Barcode.CreateCode93(text),
-                BarcodeGenerationType.Ean8 => global::Meziantou.Framework.Barcode.CreateEan8(text, extension: ""),
-                BarcodeGenerationType.Ean13 => global::Meziantou.Framework.Barcode.CreateEan13(text, extension: ""),
-                BarcodeGenerationType.UpcA => global::Meziantou.Framework.Barcode.CreateUpcA(text, extension: ""),
-                BarcodeGenerationType.Codabar => global::Meziantou.Framework.Barcode.CreateCodabar(text, startCharacter: 'A', stopCharacter: 'A'),
-                BarcodeGenerationType.Itf => global::Meziantou.Framework.Barcode.CreateItf(text),
-                _ => global::Meziantou.Framework.Barcode.CreateCode128(text),
-            };
-
-            var svg = global::Meziantou.Framework.BarcodeSvgRenderer.ToSvg(generatedBarcode, new global::Meziantou.Framework.BarcodeSvgOptions
-            {
-                ModuleWidth = 2,
-                ModuleHeight = 80,
-            });
-            barcode = svg.Replace("<svg ", "<svg style=\"max-width:100%;height:auto;\" ", StringComparison.Ordinal);
-            barcodeModules = $"{generatedBarcode.Width} × {generatedBarcode.Height} ({generatedBarcode.Width * generatedBarcode.Height} modules)";
-            errorMessage = null;
-        }
-        catch (InvalidOperationException ex)
-        {
-            barcode = null;
-            barcodeModules = null;
-            errorMessage = ex.Message;
+            _svg = null;
+            _error = result.ErrorMessage;
         }
     }
 
-    enum BarcodeGenerationType
+    private async Task DownloadSvg()
     {
-        Code39,
-        Code93,
-        Code128,
-        Ean8,
-        Ean13,
-        UpcA,
-        Codabar,
-        Itf,
+        if (string.IsNullOrEmpty(_svg)) return;
+        await EnsureJsAsync();
+        await JS.InvokeVoidAsync("barcodeTools.downloadText", $"barcode-{_format}.svg", _svg, "image/svg+xml;charset=utf-8");
     }
 
-    static string GetBarcodeTypeLabel(BarcodeGenerationType type) => type switch
+    private async Task DownloadPng()
     {
-        BarcodeGenerationType.Code39 => "Code 39",
-        BarcodeGenerationType.Code93 => "Code 93",
-        BarcodeGenerationType.Code128 => "Code 128",
-        BarcodeGenerationType.Ean8 => "EAN-8",
-        BarcodeGenerationType.Ean13 => "EAN-13",
-        BarcodeGenerationType.UpcA => "UPC-A",
-        BarcodeGenerationType.Codabar => "Codabar",
-        BarcodeGenerationType.Itf => "ITF",
-        _ => type.ToString(),
+        if (string.IsNullOrEmpty(_svg)) return;
+        await EnsureJsAsync();
+        await JS.InvokeVoidAsync("barcodeTools.downloadSvgAsPng", $"barcode-{_format}.png", _svg, 2);
+    }
+
+    private async Task CopySvg()
+    {
+        if (string.IsNullOrEmpty(_svg)) return;
+        await Clipboard.CopyTextAsync(_svg);
+    }
+
+    private async Task EnsureJsAsync() =>
+        await JS.InvokeVoidAsync("scriptLoader.load", "js/barcode-tools.js");
+
+    private static string FormatLabel(BarcodeFormat f) => f switch
+    {
+        BarcodeFormat.QR_CODE => "QR Code",
+        BarcodeFormat.DATA_MATRIX => "Data Matrix",
+        BarcodeFormat.PDF_417 => "PDF417",
+        BarcodeFormat.CODE_128 => "Code 128",
+        BarcodeFormat.CODE_39 => "Code 39",
+        BarcodeFormat.CODE_93 => "Code 93",
+        BarcodeFormat.EAN_8 => "EAN-8",
+        BarcodeFormat.EAN_13 => "EAN-13",
+        BarcodeFormat.UPC_A => "UPC-A",
+        BarcodeFormat.UPC_E => "UPC-E",
+        _ => f.ToString().Replace('_', ' ')
     };
 }

@@ -173,7 +173,6 @@
     private string LocalizeCategory(string categoryKey) => categoryKey switch
     {
         "General Tools" => L["Cat_General"],
-        "SQL Tools" => L["Cat_SQL"],
         "Cryptography Tools" => L["Cat_Crypto"],
         "Time & Calculation Tools" => L["Cat_TimeCalc"],
         "Encoding & Format Tools" => L["Cat_Encoding"],
@@ -216,7 +215,6 @@
         "ascii" => RenderComponent<BlazorWasmPortfolioGhAction.Components.Ascii.Ascii>(),
         "urls" => RenderUrlComponents(),
         "guid" => RenderComponent<BlazorWasmPortfolioGhAction.Components.GuidGenerator.GuidGenerator>(),
-        "sqlite" => RenderComponent<Sqlite>(),
         "html" => RenderComponent<BlazorWasmPortfolioGhAction.Components.HTMLEncodeDecode.HTMLEncodeDecode>(),
         "markdown" => RenderComponent<BlazorWasmPortfolioGhAction.Components.MarkdownConverter.MarkdownConverter>(),
         "timerstopwatch" => RenderTimerStopwatchComponents(),
@@ -251,6 +249,7 @@
         "argumentescape" => RenderComponent<ArgumentEscape>(),
         "hashdata" => RenderComponent<HashData>(),
         "jsonformatter" => RenderComponent<JsonFormatter>(),
+        "jsonviewer" => RenderComponent<JsonViewerTool>(),
         "xmlformatter" => RenderComponent<XmlFormatter>(),
         "yamltojson" => RenderComponent<YamlToJson>(),
         "markdowntohtml" => RenderComponent<MarkdownToHtml>(),
@@ -291,9 +290,9 @@
         "passwordgenerator" => RenderComponent<PasswordGenerator>(),
         "stringformatter" => RenderComponent<StringFormatter>(),
         "datetimeformatter" => RenderComponent<DateTimeFormatter>(),
-        "csharpcompiler" => RenderComponent<CsharpCompiler>(),
         "codediff" => RenderComponent<CodeDiff>(),
         "codepaste" => RenderComponent<CodePaste>(),
+        "barcodescanner" => RenderComponent<BarcodeScanner>(),
         _ => RenderDefaultComponent()
     };
 
@@ -366,7 +365,6 @@
     private static readonly Dictionary<string, string> CategoryIcons = new(StringComparer.OrdinalIgnoreCase)
     {
         ["General Tools"] = "bi-box-seam",
-        ["SQL Tools"] = "bi-database",
         ["Cryptography Tools"] = "bi-shield-lock",
         ["Time & Calculation Tools"] = "bi-calculator",
         ["Encoding & Format Tools"] = "bi-braces",
@@ -386,7 +384,6 @@
         new("geminispellchecker", "bi-spellcheck", "General Tools"),
         new("randomfact", "bi-lightbulb", "General Tools"),
         new("jokequotes", "bi-emoji-laughing", "General Tools"),
-        new("sqlite", "bi-database", "SQL Tools"),
         new("jwt", "bi-shield-lock", "Cryptography Tools"),
         new("luhn", "bi-credit-card", "Cryptography Tools"),
         new("cryptography", "bi-fingerprint", "Cryptography Tools"),
@@ -423,6 +420,7 @@
         new("argumentescape", "bi-terminal", "General Tools"),
         new("hashdata", "bi-fingerprint", "Cryptography Tools"),
         new("jsonformatter", "bi-braces-asterisk", "Encoding & Format Tools"),
+        new("jsonviewer", "bi-braces", "Encoding & Format Tools"),
         new("xmlformatter", "bi-filetype-xml", "Encoding & Format Tools"),
         new("yamltojson", "bi-arrow-left-right", "Encoding & Format Tools"),
         new("markdowntohtml", "bi-markdown", "General Tools"),
@@ -463,9 +461,9 @@
         new("passwordgenerator", "bi-key", "Cryptography Tools"),
         new("stringformatter", "bi-fonts", "General Tools"),
         new("datetimeformatter", "bi-calendar-week", "Time & Calculation Tools"),
-        new("csharpcompiler", "bi-filetype-cs", "Testing Library Tools"),
         new("codediff", "bi-file-earmark-diff", "Testing Library Tools"),
-        new("codepaste", "bi-clipboard2-data", "Testing Library Tools")
+        new("codepaste", "bi-clipboard2-data", "Testing Library Tools"),
+        new("barcodescanner", "bi-upc", "Testing Library Tools")
     };
 
     private record ToolDef(string Key, string Icon, string CategoryKey)

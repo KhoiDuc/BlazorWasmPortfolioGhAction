@@ -1,8 +1,50 @@
 .barcode-output {
     max-width: 36rem;
+    overflow: auto;
+    padding: 0.75rem;
+    background: #fff;
+    border-radius: 0.35rem;
 }
 
 .barcode-output :deep(svg) {
     max-width: 100%;
     height: auto;
+    display: block;
+}
+
+.barcode-gen .tool-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.barcode-margins {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 14rem;
+}
+
+.barcode-margins-mid {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.barcode-margins .tool-input {
+    width: 100%;
+}
+
+.tool-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .barcode-gen .tool-row {
+        grid-template-columns: 1fr;
+    }
 }

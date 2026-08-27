@@ -6,8 +6,6 @@ using BlazorWasmPortfolioGhAction;
 using BlazorWasmPortfolioGhAction.Store.Services;
 using BlazorComponentBus;
 using BlazorWasmPortfolioGhAction.Contexts;
-using BlazorWasmPortfolioGhAction.Data;
-using Microsoft.EntityFrameworkCore;
 using BlazorWasmPortfolioGhAction.Pages;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -61,7 +59,7 @@ public static partial class Program
         builder.Services.AddScoped<IScriptLoaderService, ScriptLoaderService>();
         builder.Services.AddScoped<IClipboardService, ClipboardService>();
         builder.Services.AddScoped<JwtCodec>();
-        builder.Services.AddScoped<BlazorWasmPortfolioGhAction.Services.OnlineTools.CsharpRoslynCompiler>();
+        builder.Services.AddScoped<BlazorWasmPortfolioGhAction.Services.OnlineTools.BarcodeZxingService>();
         builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
 
         // MSAL / Azure AD — disabled (was for learning only)
@@ -90,10 +88,6 @@ public static partial class Program
         builder.Services.AddSingleton<ApiKeyModel>();
         builder.Services.AddScoped<ISearchUsersService, SearchUsersService>();
         builder.Services.AddGitHubGraphQLQueryService();
-        builder.Services.AddDbContextFactory<ClientSideDbContext>(options =>
-              options
-                .UseSqlite($"Filename={Sqlite.SqliteDbFilename}")
-                .EnableSensitiveDataLogging());
 
         builder.Services.AddWasmBrowserStorage();
         builder.Services.AddBlazoredLocalStorage();

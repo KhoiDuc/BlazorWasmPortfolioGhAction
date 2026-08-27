@@ -1,0 +1,86 @@
+@using Component.Core
+
+<ToolShell ResourceKey="jsonviewer" Title="JSON Viewer" Icon="bi-braces"
+           Description="VS Code-style JSON viewer with search, themes, stats, and edit mode.">
+    <div class="tool-form json-viewer-tool">
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="LoadSample">Load sample</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="Clear">Clear</button>
+            <label class="tool-check">
+                <input type="checkbox" @bind="_editable" /> Editable
+            </label>
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="json-viewer-raw">Paste JSON (Apply loads it into the viewer)</label>
+            <textarea id="json-viewer-raw" class="tool-textarea" rows="6" @bind="_raw" spellcheck="false"
+                      placeholder='{"hello":"world"}'></textarea>
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="Apply">Apply to viewer</button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <div class="tool-alert tool-alert-warning" role="alert">@_error</div>
+        }
+
+        <div class="json-viewer-host">
+            <JsonViewer @key="_viewerKey" JsonData="@_json" IsEditable="_editable" />
+        </div>
+    </div>
+</ToolShell>
+
+@code {
+    private string _json = SampleJson;
+    private string _raw = SampleJson;
+    private bool _editable = true;
+    private string? _error;
+    private int _viewerKey;
+
+    private const string SampleJson =
+        """
+        {
+          "name": "Khoi Duc",
+          "role": ".NET Developer",
+          "skills": ["Blazor", "C#", "ASP.NET Core"],
+          "active": true,
+          "projects": {
+            "utilityHub": true,
+            "count": 40
+          }
+        }
+        """;
+
+    private void Apply()
+    {
+        _error = null;
+        var text = string.IsNullOrWhiteSpace(_raw) ? "{}" : _raw.Trim();
+        try
+        {
+            using var _ = System.Text.Json.JsonDocument.Parse(text);
+            _json = text;
+            _viewerKey++;
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            _error = $"Invalid JSON: {ex.Message}";
+        }
+    }
+
+    private void LoadSample()
+    {
+        _raw = SampleJson;
+        _json = SampleJson;
+        _error = null;
+        _viewerKey++;
+    }
+
+    private void Clear()
+    {
+        _raw = "{}";
+        _json = "{}";
+        _error = null;
+        _viewerKey++;
+    }
+}
