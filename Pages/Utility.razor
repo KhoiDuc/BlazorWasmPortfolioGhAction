@@ -1,4 +1,5 @@
 @page "/Utility/{Component?}"
+@page "/{lang:regex(^(en|vn)$)}/Utility/{Component?}"
 @inherits CultureAwareComponent
 @inject IStringLocalizer<SharedResources> L
 @using BlazorWasmPortfolioGhAction.Components.Ascii
@@ -64,7 +65,7 @@
                             <div class="utility-launch-grid">
                                 @foreach (var tool in group.Tools)
                                 {
-                                    <NavLink href="@tool.Link" class="utility-launch-card">
+                                    <NavLink href="@ToolHref(tool.Key)" class="utility-launch-card">
                                         <span class="utility-launch-icon" aria-hidden="true">
                                             <i class="bi @tool.Icon"></i>
                                         </span>
@@ -93,7 +94,7 @@
             {
                 <div class="utility-workspace">
                     <div class="utility-workspace-bar">
-                        <NavLink href="Utility" class="utility-back-link">
+                        <NavLink href="@UtilityHomeHref" class="utility-back-link">
                             <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
                             @L["Utility_AllTools"]
                         </NavLink>
@@ -180,20 +181,23 @@
         _ => categoryKey
     };
 
+    private string UtilityHomeHref => CulturePath.Combine(CultureService.UrlLang, "Utility");
+    private string ToolHref(string key) => CulturePath.Combine(CultureService.UrlLang, $"Utility/{key}");
+
     private void SelectAllCategories() => SelectCategory(null);
 
     private void SelectCategory(string? category)
     {
         _activeCategory = category;
         if (Component is not null)
-            Navigation.NavigateTo("Utility");
+            Navigation.NavigateTo(UtilityHomeHref);
     }
 
     private void OnToolSwitch(ChangeEventArgs e)
     {
         var key = e.Value?.ToString();
         if (!string.IsNullOrEmpty(key))
-            Navigation.NavigateTo($"Utility/{key}");
+            Navigation.NavigateTo(ToolHref(key));
     }
 
     private RenderFragment DynamicComponent => (Component?.ToLowerInvariant()) switch
@@ -364,7 +368,6 @@
 
     private record ToolDef(string Key, string Icon, string CategoryKey)
     {
-        public string Link => $"Utility/{Key}";
         public string TitleKey => $"Tool_{Key}_Title";
         public string DescKey => $"Tool_{Key}_Desc";
     }

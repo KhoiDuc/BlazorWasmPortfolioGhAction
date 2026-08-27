@@ -1,8 +1,18 @@
 @page "/trading"
 @page "/trading/home"
+@page "/{lang:regex(^(en|vn)$)}/trading"
+@page "/{lang:regex(^(en|vn)$)}/trading/home"
 @inject NavigationManager Nav
+@inject ICultureService CultureService
 
 @code {
-    protected override void OnInitialized() =>
-        Nav.NavigateTo("trading/vndesk", replace: true);
+    [Parameter] public string? Lang { get; set; }
+
+    protected override void OnInitialized()
+    {
+        var relative = Nav.ToBaseRelativePath(Nav.Uri);
+        CulturePath.Split(relative, out var lang, out _);
+        var prefix = lang ?? Lang ?? CultureService.UrlLang;
+        Nav.NavigateTo($"{prefix}/trading/vndesk", replace: true);
+    }
 }

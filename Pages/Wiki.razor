@@ -1,6 +1,9 @@
 @page "/wiki"
 @page "/wiki/{PageName}/{Section?}/{SubSection?}"
 @page "/wiki/edit/{PageName}/{Section?}/{SubSection?}"
+@page "/{lang:regex(^(en|vn)$)}/wiki"
+@page "/{lang:regex(^(en|vn)$)}/wiki/{PageName}/{Section?}/{SubSection?}"
+@page "/{lang:regex(^(en|vn)$)}/wiki/edit/{PageName}/{Section?}/{SubSection?}"
 @inherits CultureAwareComponent
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
@@ -181,7 +184,8 @@
 
     private string EditUrl => BuildWikiUrl("edit");
     private string ReadUrl => BuildWikiUrl("read");
-    private string AdminLoginUrl => $"/admin?returnUrl={Uri.EscapeDataString(Navigation.Uri)}";
+    private string AdminLoginUrl =>
+        $"/{CultureService.UrlLang}/admin?returnUrl={Uri.EscapeDataString(Navigation.Uri)}";
 
     private string EffectivePageName =>
         !string.IsNullOrEmpty(PageName) ? PageName :
@@ -211,7 +215,7 @@
 
     private string BuildWikiUrl(string mode)
     {
-        var segments = new List<string> { "wiki" };
+        var segments = new List<string> { CultureService.UrlLang, "wiki" };
         if (mode == "edit") segments.Add("edit");
         segments.Add(EffectivePageName);
         if (!string.IsNullOrEmpty(Section) && Section != "all") segments.Add(Section);
@@ -228,7 +232,7 @@
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             if (authState.User.Identity?.IsAuthenticated != true)
             {
-                Navigation.NavigateTo($"/admin?returnUrl={Uri.EscapeDataString(Navigation.Uri)}");
+                Navigation.NavigateTo($"/{CultureService.UrlLang}/admin?returnUrl={Uri.EscapeDataString(Navigation.Uri)}");
                 return;
             }
 

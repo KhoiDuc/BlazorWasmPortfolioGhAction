@@ -10,6 +10,9 @@ public abstract class CultureAwareComponent : ComponentBase, IDisposable
 {
     [Inject] protected ICultureService CultureService { get; set; } = default!;
 
+    /// <summary>Bound from routes like /{lang}/... (vn|en).</summary>
+    [Parameter] public string? Lang { get; set; }
+
     protected override void OnInitialized()
     {
         CultureService.CultureChanged += OnCultureChanged;

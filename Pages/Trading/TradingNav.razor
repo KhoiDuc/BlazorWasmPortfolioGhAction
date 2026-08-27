@@ -13,16 +13,18 @@
         </button>
 
         <div class="trading-subnav-links @(_menuOpen ? "open" : "")">
-            <NavLink href="trading/vndesk" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_VnDesk"]</NavLink>
-            <NavLink href="trading/stock" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_Stock"]</NavLink>
-            <NavLink href="trading/broker" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_Broker"]</NavLink>
-            <NavLink href="trading/real-estate" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_RealEstate"]</NavLink>
+            <NavLink href="@H("trading/vndesk")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_VnDesk"]</NavLink>
+            <NavLink href="@H("trading/stock")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_Stock"]</NavLink>
+            <NavLink href="@H("trading/broker")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_Broker"]</NavLink>
+            <NavLink href="@H("trading/real-estate")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_RealEstate"]</NavLink>
         </div>
     </div>
 </nav>
 
 @code {
     private bool _menuOpen;
+
+    private string H(string path) => CulturePath.Combine(CultureService.UrlLang, path);
 
     private void ToggleMenu() => _menuOpen = !_menuOpen;
     private void CloseMenu() => _menuOpen = false;

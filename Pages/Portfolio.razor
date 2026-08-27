@@ -1,6 +1,6 @@
 @page "/MyResume"
 @page "/resume"
-@page "/{lang}/resume"
+@page "/{lang:regex(^(en|vn)$)}/resume"
 @inherits CultureAwareComponent
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
@@ -263,9 +263,6 @@
 @code {
     private IJSObjectReference? carouselInstance;
     private Resume Resume => ResumeData.Current;
-
-    [Parameter]
-    public string? Lang { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {

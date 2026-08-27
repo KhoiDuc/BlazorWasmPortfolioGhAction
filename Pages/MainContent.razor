@@ -1,4 +1,5 @@
 @page "/"
+@page "/{lang:regex(^(en|vn)$)}"
 @inherits CultureAwareComponent
 @inject IStringLocalizer<SharedResources> L
 @using BlazorWasmPortfolioGhAction.Components.EmailComposer
@@ -24,7 +25,7 @@
                 </p>
                 <div class="hero-actions">
                     <button class="button button-primary" @onclick="ScrollToContact">@L["Home_ContactMe"]</button>
-                    <a href="/#projects" class="button button-secondary">@L["Home_ViewProjects"]</a>
+                    <a href="@($"/{CultureService.UrlLang}#projects")" class="button button-secondary">@L["Home_ViewProjects"]</a>
                 </div>
                 <div class="hero-socials">
                     <a href="https://github.com/KhoiDuc" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
@@ -33,7 +34,7 @@
                     <a href="https://www.linkedin.com/in/đức-khôi-354b77269/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
                         <i class="bi bi-linkedin" aria-hidden="true"></i> LinkedIn
                     </a>
-                    <a href="resume" aria-label="@L["Home_Resume"]">
+                    <a href="@($"{CultureService.UrlLang}/resume")" aria-label="@L["Home_Resume"]">
                         <i class="bi bi-file-text" aria-hidden="true"></i> @L["Home_Resume"]
                     </a>
                     <a href="files/resume.pdf" download>

@@ -3,7 +3,7 @@
 
 <header class="navbar">
     <div class="navbar-container">
-        <a href="" class="navbar-brand" @onclick="CloseMenu" aria-label="@L["Nav_GoHome"]">
+        <a href="@HomeHref" class="navbar-brand" @onclick="CloseMenu" aria-label="@L["Nav_GoHome"]">
             <span class="brand-symbol">&lt;/</span>
             <span class="brand-initials">khoi</span>
             <span class="brand-symbol">&gt;</span>
@@ -29,11 +29,11 @@
                 <span aria-hidden="true"></span>
             </button>
             <nav id="main-navigation" class="navbar-links @(_isMenuOpen ? "open" : "")">
-                <NavLink href="" Match="NavLinkMatch.All" @onclick="CloseMenu">@L["Nav_Home"]</NavLink>
-                <NavLink href="resume" @onclick="CloseMenu">@L["Nav_Resume"]</NavLink>
-                <NavLink href="Utility" @onclick="CloseMenu">@L["Nav_Tools"]</NavLink>
-                <NavLink href="wiki" @onclick="CloseMenu">@L["Nav_Wiki"]</NavLink>
-                <NavLink href="trading/vndesk" @onclick="CloseMenu">@L["Nav_Trading"]</NavLink>
+                <NavLink href="@HomeHref" Match="NavLinkMatch.All" @onclick="CloseMenu">@L["Nav_Home"]</NavLink>
+                <NavLink href="@LangHref("resume")" @onclick="CloseMenu">@L["Nav_Resume"]</NavLink>
+                <NavLink href="@LangHref("Utility")" @onclick="CloseMenu">@L["Nav_Tools"]</NavLink>
+                <NavLink href="@LangHref("wiki")" @onclick="CloseMenu">@L["Nav_Wiki"]</NavLink>
+                <NavLink href="@LangHref("trading/vndesk")" @onclick="CloseMenu">@L["Nav_Trading"]</NavLink>
             </nav>
         </div>
     </div>
@@ -45,6 +45,9 @@
 
     [Inject] IJSRuntime JS { get; set; } = default!;
     [Inject] NavigationManager Navigation { get; set; } = default!;
+
+    private string HomeHref => CultureService.UrlLang;
+    private string LangHref(string path) => CulturePath.Combine(CultureService.UrlLang, path);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -71,23 +74,12 @@
 
     private async Task ToggleLanguageAsync()
     {
-        await CultureService.ToggleAsync();
+        var nextLang = CultureService.IsEnglish ? "vn" : "en";
+        await CultureService.SetCultureAsync(nextLang);
 
-        // Blazor WASM loads culture satellite assemblies (en/*.resources.wasm) at boot.
-        // Changing UICulture alone does not swap .resx strings — force a reload.
-        var relative = Navigation.ToBaseRelativePath(Navigation.Uri).Trim('/');
-        if (relative.Equals("resume", StringComparison.OrdinalIgnoreCase)
-            || relative.Equals("MyResume", StringComparison.OrdinalIgnoreCase)
-            || relative.EndsWith("/resume", StringComparison.OrdinalIgnoreCase)
-            || relative.StartsWith("en/resume", StringComparison.OrdinalIgnoreCase)
-            || relative.StartsWith("vn/resume", StringComparison.OrdinalIgnoreCase))
-        {
-            Navigation.NavigateTo($"{CultureService.UrlLang}/resume", forceLoad: true);
-        }
-        else
-        {
-            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
-        }
+        var relative = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var target = CulturePath.Toggle(relative, nextLang);
+        Navigation.NavigateTo(target, forceLoad: true);
     }
 
     private void ToggleMenu() => _isMenuOpen = !_isMenuOpen;

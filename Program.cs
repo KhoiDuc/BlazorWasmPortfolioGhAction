@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Fluxor;
@@ -116,15 +117,26 @@ public static partial class Program
     {
         using var scope = services.CreateScope();
         var js = scope.ServiceProvider.GetRequiredService<IJSRuntime>();
+        var navigation = scope.ServiceProvider.GetRequiredService<NavigationManager>();
+
+        // Prefer /en|/vn from the URL so deep links load the matching satellite assembly.
+        CulturePath.Split(navigation.ToBaseRelativePath(navigation.Uri), out var urlLang, out _);
 
         string? saved = null;
-        try
+        if (urlLang is not null)
         {
-            saved = await js.InvokeAsync<string?>("cultureManager.get");
+            saved = CultureService.Normalize(urlLang);
         }
-        catch
+        else
         {
-            // JS bridge may not be ready; keep Vietnamese default
+            try
+            {
+                saved = await js.InvokeAsync<string?>("cultureManager.get");
+            }
+            catch
+            {
+                // JS bridge may not be ready; keep Vietnamese default
+            }
         }
 
         var cultureName = CultureService.Normalize(saved);
@@ -143,6 +155,7 @@ public static partial class Program
 
         try
         {
+            await js.InvokeVoidAsync("cultureManager.set", cultureName);
             await js.InvokeVoidAsync("cultureManager.setDocumentLang", culture.TwoLetterISOLanguageName);
         }
         catch

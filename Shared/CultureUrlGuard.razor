@@ -1,0 +1,71 @@
+@inject NavigationManager Navigation
+@inject ICultureService CultureService
+@implements IDisposable
+
+@code {
+    private bool _redirecting;
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+        _ = SyncFromUrlAsync();
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) =>
+        _ = SyncFromUrlAsync();
+
+    private async Task SyncFromUrlAsync()
+    {
+        if (_redirecting)
+            return;
+
+        var relative = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var pathOnly = relative.Split('#', 2)[0];
+        var queryIdx = pathOnly.IndexOf('?');
+        var query = queryIdx >= 0 ? pathOnly[queryIdx..] : "";
+        if (queryIdx >= 0)
+            pathOnly = pathOnly[..queryIdx];
+
+        CulturePath.Split(pathOnly, out var lang, out var remainder);
+
+        if (remainder.StartsWith("authentication", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        if (lang is null)
+        {
+            _redirecting = true;
+            try
+            {
+                var target = CulturePath.EnsurePrefixed(pathOnly, CultureService.UrlLang) + query;
+                if (!string.Equals(pathOnly.Trim('/'), target.TrimEnd('/').Split('?')[0], StringComparison.OrdinalIgnoreCase))
+                    Navigation.NavigateTo(target, replace: true);
+            }
+            finally
+            {
+                _redirecting = false;
+            }
+            return;
+        }
+
+        var wantEnglish = lang.Equals("en", StringComparison.OrdinalIgnoreCase);
+        if (wantEnglish != CultureService.IsEnglish)
+        {
+            await CultureService.SetCultureAsync(lang);
+            _redirecting = true;
+            try
+            {
+                // Satellite assemblies load at WASM boot — reload when URL lang disagrees with loaded culture.
+                Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+            }
+            finally
+            {
+                _redirecting = false;
+            }
+            return;
+        }
+
+        await CultureService.SetCultureAsync(lang);
+    }
+
+    public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
+}
