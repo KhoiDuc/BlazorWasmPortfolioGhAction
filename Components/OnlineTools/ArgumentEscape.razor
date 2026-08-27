@@ -1,0 +1,48 @@
+<ToolShell ResourceKey="argumentescape" Title="Argument Escape" Icon="bi-terminal">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="argument-text">Text</label>
+            <textarea id="argument-text" class="tool-textarea" rows="6" @bind="text"></textarea>
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="Encode">Escape</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="EncodeCmd">Escape Windows cmd</button>
+        </div>
+        @if (result != null)
+        {
+            <ResultValueSingle CopyLabel="@(resultLabel ?? "result")" Value="@result" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    string? text;
+    string? result;
+    string? resultLabel;
+
+    void Encode()
+    {
+        resultLabel = "Escaped argument";
+        try
+        {
+            result = Meziantou.Framework.CommandLineBuilder.WindowsQuotedArgument(text ?? "");
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+
+    void EncodeCmd()
+    {
+        resultLabel = "Escaped cmd argument";
+        try
+        {
+            result = Meziantou.Framework.CommandLineBuilder.WindowsCmdArgument(text ?? "");
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+}

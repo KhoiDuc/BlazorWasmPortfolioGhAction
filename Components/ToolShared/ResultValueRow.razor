@@ -1,0 +1,12 @@
+<div class="tool-result-block">
+    <div class="tool-result-header">
+        <span class="tool-label">@Label</span>
+        <CopyResultButton Value="@Value" Label="@Label" />
+    </div>
+    <pre class="tool-textarea tool-result-code">@Value</pre>
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter, EditorRequired] public string Value { get; set; } = "";
+}

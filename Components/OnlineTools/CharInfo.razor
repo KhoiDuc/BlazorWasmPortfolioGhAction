@@ -1,0 +1,130 @@
+@using BlazorWasmPortfolioGhAction.Utils.OnlineTools
+@inject NavigationManager NavigationManager
+
+<ToolShell ResourceKey="charinfo" Title="Character Info" Icon="bi-type" Description="Look up Unicode character properties by codepoint or name.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="charinfo-input">Enter a codepoint or search by name</label>
+            <input id="charinfo-input" class="tool-input" @oninput="onInputEvent" value="@Text" />
+        </div>
+
+        @if (result != null)
+        {
+            <div class="charinfo-grid">
+                @foreach (var item in result)
+                {
+                    <div class="charinfo-card">
+                        <div class="charinfo-card-header">
+                            <h4 class="charinfo-glyph">@item.DisplayValue</h4>
+                            <CopyResultButton Value="@item.DisplayValue" Label="character" />
+                        </div>
+                        <p class="charinfo-name">@item.Name</p>
+                        <table class="tool-table charinfo-table">
+                            <tbody>
+                                <tr>
+                                    <th>Code point</th>
+                                    <td>@item.CharInfo.Rune (@item.DisplayCodePoint)</td>
+                                </tr>
+                                <tr>
+                                    <th>Category</th>
+                                    <td>@item.Category</td>
+                                </tr>
+                                <tr>
+                                    <th>Block</th>
+                                    <td>@item.Block</td>
+                                </tr>
+                                <tr>
+                                    <th>Confusable</th>
+                                    <td>@(item.IsConfusable ? "Yes" : "No")</td>
+                                </tr>
+                                <tr>
+                                    <th>Replacement</th>
+                                    <td>
+                                        @if (item.IsConfusable)
+                                        {
+                                            @item.ConfusableReplacement
+                                        }
+                                        else
+                                        {
+                                            <span>-</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Escape</th>
+                                    <td><code>@item.Escape</code></td>
+                                </tr>
+                                <tr>
+                                    <th>UTF-8</th>
+                                    <td><code>@item.Utf8Sequence</code></td>
+                                </tr>
+                                <tr>
+                                    <th>UTF-16</th>
+                                    <td><code>@item.Utf16Sequence</code></td>
+                                </tr>
+                                <tr>
+                                    <th>UTF-32</th>
+                                    <td><code>@item.Utf32Sequence</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</ToolShell>
+
+@code {
+    [Parameter, SupplyParameterFromQuery]
+    public string? Text { get; set; }
+
+    Action<ChangeEventArgs> onInputEvent = default!;
+    ICollection<CharInfoWrapper>? result;
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.SetParametersFromQueryString(this);
+        onInputEvent = DebounceEvent<ChangeEventArgs>(e => OnChange(e), TimeSpan.FromMilliseconds(1000));
+        Compute();
+    }
+
+    void OnChange(ChangeEventArgs e)
+    {
+        Text = e.Value as string;
+        Compute();
+    }
+
+    void Compute()
+    {
+        Text ??= "";
+        NavigationManager.UpdateUrlUsingParameters(this, replaceHistory: true);
+        result = UnicodeData.GetData(Text);
+    }
+
+    Action<T> DebounceEvent<T>(Action<T> action, TimeSpan interval)
+    {
+        return Debounce<T>(arg =>
+        {
+            InvokeAsync(() =>
+            {
+                action(arg);
+                StateHasChanged();
+            });
+        }, interval);
+    }
+
+    Action<T> Debounce<T>(Action<T> action, TimeSpan interval)
+    {
+        var last = 0;
+        return arg =>
+        {
+            var current = System.Threading.Interlocked.Increment(ref last);
+            Task.Delay(interval).ContinueWith(_ =>
+            {
+                if (current == last)
+                    action(arg);
+            });
+        };
+    }
+}

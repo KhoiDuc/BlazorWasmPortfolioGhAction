@@ -1,0 +1,261 @@
+@using System.Text.Encodings.Web
+@using System.Text.RegularExpressions
+@using BlazorWasmPortfolioGhAction.Services
+@using BlazorWasmPortfolioGhAction.Utils.OnlineTools
+@inject IClipboardService Clipboard
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<ToolShell ResourceKey="regex" Title=".NET Regex Tester" Icon="bi-braces" Description="Test regular expressions with live highlighting and C# export.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="regex-pattern">Pattern</label>
+            <textarea id="regex-pattern" class="tool-textarea" @bind="Pattern" @bind:event="oninput" spellcheck="false"></textarea>
+        </div>
+
+        <div class="tool-checkbox-group regex-options">
+            @foreach (RegexOptions value in Enum.GetValues(typeof(RegexOptions)))
+            {
+                if (value != RegexOptions.None)
+                {
+                    <label class="tool-checkbox">
+                        <input type="checkbox" checked="@HasValue(value)" @onchange="(e) => SetValue(value, (bool)e.Value!)" />
+                        @value
+                    </label>
+                }
+            }
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="regex-input">Input</label>
+            <textarea id="regex-input" class="tool-textarea" @bind="Text" @bind:event="oninput" spellcheck="false"></textarea>
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="Replace" />
+                Replace
+            </label>
+            @if (Replace)
+            {
+                <textarea class="tool-textarea" @bind="Replacement" @bind:event="oninput" spellcheck="false"></textarea>
+            }
+        </div>
+
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="ExecuteRegex" title="Evaluate with options @Options">Evaluate</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="CopyAsCsharp">Copy Regex as C# code</button>
+        </div>
+
+        @if (error != null)
+        {
+            <pre class="tool-result tool-alert-danger">@error</pre>
+        }
+        else if (matches != null)
+        {
+            <p class="match-highlighted match-value tool-result">@highlightedText</p>
+
+            @if (replacedText != null)
+            {
+                <ResultValueSingle CopyLabel="Replacement" Value="@replacedText" />
+            }
+
+            @foreach (var (index, match) in EnumerateWithIndex<Match>(matches))
+            {
+                <div class="match">
+                    <h4 class="tool-label">Match @(index + 1)</h4>
+                    <table class="tool-table match-details">
+                        <tbody>
+                            <tr>
+                                <td class="match-name">Full match</td>
+                                <td class="match-index">@match.Index-@(match.Index + match.Length)</td>
+                                <td class="match-value">@match.Value</td>
+                            </tr>
+
+                            @foreach (Group group in match.Groups)
+                            {
+                                foreach (Capture capture in group.Captures)
+                                {
+                                    <tr>
+                                        <td class="match-name">Group @group.Name</td>
+                                        <td class="match-index">@capture.Index-@(capture.Index + capture.Length)</td>
+                                        <td class="match-value">@capture.Value</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </div>
+    <hr class="tool-divider" />
+    <p class="tool-hint">
+        <a href="https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference" target="_blank">Regular Expression Language - Quick Reference</a>
+    </p>
+</ToolShell>
+
+@code {
+    [Parameter, SupplyParameterFromQuery]
+    public string? Pattern { get; set; }
+
+    [Parameter, SupplyParameterFromQuery]
+    public bool Replace { get; set; }
+
+    [Parameter, SupplyParameterFromQuery]
+    public string? Replacement { get; set; }
+
+    [Parameter, SupplyParameterFromQuery]
+    public string? Text { get; set; }
+
+    [Parameter, SupplyParameterFromQuery]
+    public string? Options { get; set; }
+
+    private string? error;
+    private MatchCollection? matches;
+    private MarkupString highlightedText;
+    private string? replacedText;
+    private System.Threading.Timer? timer;
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.SetParametersFromQueryString(this);
+        timer = new System.Threading.Timer(_ => UpdateUrl(), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(500));
+        ExecuteRegex();
+    }
+
+    async Task CopyAsCsharp()
+    {
+        var context = GetContext();
+        var text = $"new Regex({WriteStringLiteral(context.Pattern)}, {WriteRegexOptions(context.Options)}, TimeSpan.FromSeconds(1))";
+        await Clipboard.CopyTextAsync(text);
+    }
+
+    private void UpdateUrl()
+    {
+        NavigationManager.UpdateUrlUsingParameters(this, replaceHistory: true);
+    }
+
+    void ExecuteRegex()
+    {
+        var currentContext = GetContext();
+
+        error = null;
+        matches = null;
+        highlightedText = default;
+        replacedText = null;
+
+        try
+        {
+            matches = Regex.Matches(currentContext.Input, currentContext.Pattern, currentContext.Options, TimeSpan.FromSeconds(5));
+
+            var sb = new System.Text.StringBuilder();
+            var previousIndex = 0;
+            var matchIndex = 0;
+            foreach (Match match in matches)
+            {
+                if (match.Length == 0)
+                    continue;
+
+                sb.Append(HtmlEncoder.Default.Encode(currentContext.Input.Substring(previousIndex, match.Index - previousIndex)));
+                sb.Append($"<span class='match-{matchIndex % 2}'>");
+                sb.Append(HtmlEncoder.Default.Encode(currentContext.Input.Substring(match.Index, match.Length)));
+                sb.Append("</span>");
+
+                previousIndex = match.Index + match.Length;
+                matchIndex++;
+            }
+
+            sb.Append(HtmlEncoder.Default.Encode(currentContext.Input[previousIndex..]));
+            highlightedText = new MarkupString(sb.ToString());
+
+            if (currentContext.Replacement != null)
+            {
+                replacedText = Regex.Replace(currentContext.Input, currentContext.Pattern, currentContext.Replacement, currentContext.Options, TimeSpan.FromSeconds(5));
+            }
+        }
+        catch (RegexParseException ex)
+        {
+            error = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            error = ex.ToString();
+        }
+    }
+
+    static IEnumerable<(int, T)> EnumerateWithIndex<T>(IEnumerable<T> enumerable)
+    {
+        var i = 0;
+        foreach (var item in enumerable)
+        {
+            yield return (i, item);
+            i++;
+        }
+    }
+
+    bool HasValue(RegexOptions flag) => GetContext().Options.HasFlag(flag);
+
+    void SetValue(RegexOptions flag, bool enable)
+    {
+        var options = GetContext().Options;
+        Options = (enable ? options | flag : options & ~flag).ToString();
+        UpdateUrl();
+        ExecuteRegex();
+    }
+
+    public void Dispose() => timer?.Dispose();
+
+    private static string WriteRegexOptions(RegexOptions options)
+    {
+        if (options == RegexOptions.None)
+            return "RegexOptions.None";
+
+        var values = new List<RegexOptions>();
+        foreach (var value in Enum.GetValues<RegexOptions>())
+        {
+            if (value == RegexOptions.None)
+                continue;
+
+            if (options.HasFlag(value))
+                values.Add(value);
+        }
+
+        return string.Join(" | ", values.Select(v => "RegexOptions." + Enum.GetName(v)));
+    }
+
+    private static string WriteStringLiteral(string value)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append('"');
+        foreach (var c in value)
+        {
+            switch (c)
+            {
+                case '"': sb.Append("\\\""); break;
+                case '\t': sb.Append(@"\t"); break;
+                case '\r': sb.Append(@"\r"); break;
+                case '\n': sb.Append(@"\n"); break;
+                case '\a': sb.Append(@"\a"); break;
+                case '\b': sb.Append(@"\b"); break;
+                case '\f': sb.Append(@"\f"); break;
+                case '\v': sb.Append(@"\v"); break;
+                case '\0': sb.Append(@"\0"); break;
+                case '\\': sb.Append(@"\\"); break;
+                default: sb.Append(c); break;
+            }
+        }
+        sb.Append('"');
+        return sb.ToString();
+    }
+
+    private RegexContext GetContext()
+    {
+        if (!Enum.TryParse<RegexOptions>(Options, ignoreCase: true, out var regexOptions))
+            regexOptions = RegexOptions.None;
+
+        return new RegexContext(Pattern ?? "", regexOptions, Text ?? "", Replace ? Replacement : null);
+    }
+
+    record RegexContext(string Pattern, RegexOptions Options, string Input, string? Replacement);
+}

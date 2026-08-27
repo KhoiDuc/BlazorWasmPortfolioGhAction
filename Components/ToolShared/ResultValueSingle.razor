@@ -1,0 +1,14 @@
+@using BlazorWasmPortfolioGhAction.Utils.OnlineTools
+
+<div class="tool-result-block">
+    <div class="tool-result-header">
+        <span class="tool-label">@CopyLabel</span>
+        <CopyResultButton Value="@Value" Label="@CopyLabel" />
+    </div>
+    <pre class="tool-textarea tool-result-code">@Value</pre>
+</div>
+
+@code {
+    [Parameter] public string CopyLabel { get; set; } = "result";
+    [Parameter, EditorRequired] public string Value { get; set; } = "";
+}

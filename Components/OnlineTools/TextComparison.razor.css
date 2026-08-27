@@ -1,0 +1,37 @@
+.diff-output {
+    margin-top: 1rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.diff-output del,
+.diff-output ins {
+    text-decoration: none;
+    border-radius: 0.2rem;
+}
+
+.diff-output del {
+    background: var(--diff-delete-bg, rgba(239, 68, 68, 0.15));
+    color: var(--diff-delete-text, #b91c1c);
+}
+
+.diff-output ins {
+    background: var(--diff-insert-bg, rgba(34, 197, 94, 0.15));
+    color: var(--diff-insert-text, #15803d);
+}
+
+.diff-output .diff-word {
+    padding: 0 0.1em;
+}
+
+.diff-output .diff-line {
+    display: block;
+}
+
+.diff-output del del,
+.diff-output del ins,
+.diff-output ins del,
+.diff-output ins ins {
+    box-shadow: inset 0 0 0 1px var(--diff-nested-border, rgba(0, 0, 0, 0.2));
+}

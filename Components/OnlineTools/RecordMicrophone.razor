@@ -1,0 +1,105 @@
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<ToolShell ResourceKey="recordmic" Title="Record Microphone" Icon="bi-mic" Description="Record audio from your microphone and save it as a WAV file in your browser.">
+    <div class="tool-form">
+        <p class="tool-hint">The recording stays in your browser and is never uploaded.</p>
+
+        <div class="tool-actions recording-controls">
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="StartAsync" disabled="@isRecording">Start</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="StopAsync" disabled="@(!isRecording)">Stop</button>
+            @if (isRecording)
+            {
+                <span class="recording-status"><i class="bi bi-record-circle"></i> Recording...</span>
+            }
+        </div>
+
+        @if (errorMessage != null)
+        {
+            <div class="tool-alert tool-alert-danger" role="alert">@errorMessage</div>
+        }
+
+        @if (recording != null)
+        {
+            <div class="recording-result">
+                <audio controls src="@recording.Url"></audio>
+                <button type="button" class="tool-btn tool-btn-primary" @onclick="DownloadAsync">Download WAV</button>
+            </div>
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private IJSObjectReference? module;
+    private bool isRecording;
+    private string? errorMessage;
+    private RecordingResult? recording;
+
+    private async Task StartAsync()
+    {
+        errorMessage = null;
+        recording = null;
+
+        try
+        {
+            await (await GetModuleAsync()).InvokeVoidAsync("start");
+            isRecording = true;
+        }
+        catch (JSException ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task StopAsync()
+    {
+        errorMessage = null;
+
+        try
+        {
+            recording = await (await GetModuleAsync()).InvokeAsync<RecordingResult>("stop");
+        }
+        catch (JSException ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isRecording = false;
+        }
+    }
+
+    private async Task DownloadAsync()
+    {
+        if (recording != null)
+            await (await GetModuleAsync()).InvokeVoidAsync("download", recording.Url, recording.FileName);
+    }
+
+    private async Task<IJSObjectReference> GetModuleAsync()
+    {
+        module ??= await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/microphone-recorder.js");
+        return module;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module != null)
+        {
+            try
+            {
+                await module.InvokeVoidAsync("dispose");
+                await module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
+
+    public sealed class RecordingResult
+    {
+        public string Url { get; set; } = "";
+        public string FileName { get; set; } = "";
+        public string MimeType { get; set; } = "";
+    }
+}

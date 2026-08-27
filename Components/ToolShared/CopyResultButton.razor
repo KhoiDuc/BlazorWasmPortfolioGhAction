@@ -1,0 +1,43 @@
+@inject IClipboardService Clipboard
+
+<button type="button" class="tool-btn @CssClass @FeedbackClass" title="@Title" aria-label="@AriaLabel" @onclick="CopyAsync">
+    <i class="bi @IconClass" aria-hidden="true"></i>
+</button>
+
+@code {
+    [Parameter, EditorRequired] public string Value { get; set; } = "";
+    [Parameter] public string Label { get; set; } = "value";
+    [Parameter] public string CssClass { get; set; } = "";
+
+    private bool _copied;
+    private bool _error;
+
+    private string IconClass => _copied ? "bi-check-lg" : _error ? "bi-x-lg" : "bi-clipboard";
+    private string FeedbackClass => _copied ? "is-copied" : _error ? "is-error" : "";
+    private string Title => _copied ? "Copied" : _error ? "Cannot copy" : "Copy";
+    private string AriaLabel => _copied ? $"Copied {Label}" : _error ? $"Cannot copy {Label}" : $"Copy {Label}";
+
+    private async Task CopyAsync()
+    {
+        try
+        {
+            await Clipboard.CopyTextAsync(Value);
+            _copied = true;
+            _error = false;
+            _ = ClearFeedbackAsync();
+        }
+        catch
+        {
+            _copied = false;
+            _error = true;
+        }
+    }
+
+    private async Task ClearFeedbackAsync()
+    {
+        await Task.Delay(1500);
+        _copied = false;
+        _error = false;
+        await InvokeAsync(StateHasChanged);
+    }
+}

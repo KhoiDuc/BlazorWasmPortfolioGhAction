@@ -1,0 +1,73 @@
+@using Meziantou.Framework
+@inject NavigationManager NavigationManager
+
+<ToolShell ResourceKey="numbers" Title="Number" Icon="bi-123">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="numbers-text">Number</label>
+            <input id="numbers-text" class="tool-textarea" style="min-height: auto;" @oninput="OnInput" value="@Text" />
+        </div>
+        @if (result != null)
+        {
+            <ResultValueList Values="GetResultValues(result.Value)" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    [Parameter, SupplyParameterFromQuery]
+    public string? Text { get; set; }
+
+    long? result;
+
+    protected override void OnParametersSet()
+    {
+        Compute();
+    }
+
+    void OnInput(ChangeEventArgs e)
+    {
+        Text = e.Value as string;
+        Compute();
+    }
+
+    void Compute()
+    {
+        NavigationManager.UpdateUrlUsingParameters(this, replaceHistory: true);
+
+        if (long.TryParse(Text, out var parsed))
+            result = parsed;
+        else
+            result = null;
+    }
+
+    static string SplitGroup(string text, int blockSize)
+    {
+        if (string.IsNullOrEmpty(text))
+            return "";
+
+        var newString = "";
+        var i = text.Length;
+        while (true)
+        {
+            if (newString != "")
+                newString = " " + newString;
+
+            newString = text.Substring(Math.Max(0, i - blockSize), Math.Min(i, blockSize)) + newString;
+
+            i -= blockSize;
+            if (i <= 0)
+                break;
+        }
+
+        return newString;
+    }
+
+    static IReadOnlyList<ResultValue> GetResultValues(long value) =>
+    [
+        new("Decimal (10)", SplitGroup(value.ToString(), 3)),
+        new("Hexadecimal (16)", SplitGroup(value.ToString("X"), 4)),
+        new("Octal (8)", SplitGroup(Convert.ToString(value, toBase: 8), 3)),
+        new("Binary (2)", SplitGroup(Convert.ToString(value, toBase: 2), 4)),
+    ];
+}

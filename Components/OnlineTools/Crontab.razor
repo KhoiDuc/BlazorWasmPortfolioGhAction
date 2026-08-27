@@ -1,0 +1,46 @@
+@using Meziantou.Framework.Scheduling
+@using System.Globalization
+
+<ToolShell ResourceKey="crontab" Title="Crontab" Icon="bi-clock-history">
+    <div class="tool-form">
+        <p class="tool-hint"><a href="https://github.com/meziantou/Meziantou.Framework/blob/main/src/Meziantou.Framework.Scheduling/readme.md" target="_blank" rel="noopener">Crontab documentation</a></p>
+        <div class="tool-field">
+            <label class="tool-label" for="crontab-expression">Expression</label>
+            <input id="crontab-expression" class="tool-textarea" list="expressions" @bind="text" />
+            <datalist id="expressions">
+                <option value="* * * * *" />
+            </datalist>
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="Compute">Get occurences</button>
+        </div>
+        @if (result != null)
+        {
+            <ResultValueList Values="result" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    string? text = "* * * * *";
+    IReadOnlyList<ResultValue>? result;
+
+    void Compute()
+    {
+        try
+        {
+            var schedule = CronExpression.Parse(text ?? "");
+#pragma warning disable RS0030 // Do not use banned APIs
+            result = schedule
+                .GetNextOccurrences(DateTime.Now)
+                .Take(50)
+                .Select((value, index) => new ResultValue($"Occurrence {index + 1}", value.ToString("o", CultureInfo.InvariantCulture)))
+                .ToArray();
+#pragma warning restore RS0030
+        }
+        catch (Exception ex)
+        {
+            result = [new ResultValue("Error", ex.Message)];
+        }
+    }
+}

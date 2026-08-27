@@ -4,6 +4,7 @@
 @inject IStringLocalizer<SharedResources> L
 @using BlazorWasmPortfolioGhAction.Components.Ascii
 @using BlazorWasmPortfolioGhAction.Components.Teams
+@using BlazorWasmPortfolioGhAction.Components.OnlineTools
 @using BlazorWasmPortfolioGhAction.Components.Github
 @inject NavigationManager Navigation
 
@@ -219,7 +220,8 @@
         "html" => RenderComponent<BlazorWasmPortfolioGhAction.Components.HTMLEncodeDecode.HTMLEncodeDecode>(),
         "markdown" => RenderComponent<BlazorWasmPortfolioGhAction.Components.MarkdownConverter.MarkdownConverter>(),
         "timerstopwatch" => RenderTimerStopwatchComponents(),
-        "colourconverter" => RenderComponent<BlazorWasmPortfolioGhAction.Components.HexToRGB.HexToRGB>(),
+        "colourconverter" => RenderComponent<ColorConverter>(),
+        "colorconverter" => RenderComponent<ColorConverter>(),
         "binary" => RenderComponent<BlazorWasmPortfolioGhAction.Components.Binary.Binary>(),
         "stringconverter" => RenderComponent<BlazorWasmPortfolioGhAction.Components.StringConverter.StringConverter>(),
         "epoch" => RenderComponent<BlazorWasmPortfolioGhAction.Components.EpochConverter.EpochConverter>(),
@@ -242,6 +244,37 @@
         "githubinspector" => RenderComponent<GitHubInspector>(),
         "githubtrending" => RenderComponent<GitHubTrending>(),
         "gist" => RenderComponent<GistCreator>(),
+        "hexaencode" => RenderComponent<HexaEncode>(),
+        "jsonstring" => RenderComponent<JsonStringEncoder>(),
+        "xmlencode" => RenderComponent<XmlEncode>(),
+        "yamlstring" => RenderComponent<YamlStringEncoder>(),
+        "argumentescape" => RenderComponent<ArgumentEscape>(),
+        "hashdata" => RenderComponent<HashData>(),
+        "jsonformatter" => RenderComponent<JsonFormatter>(),
+        "xmlformatter" => RenderComponent<XmlFormatter>(),
+        "yamltojson" => RenderComponent<YamlToJson>(),
+        "markdowntohtml" => RenderComponent<MarkdownToHtml>(),
+        "natoalphabet" => RenderComponent<NatoAlphabet>(),
+        "morsecode" => RenderComponent<MorseCode>(),
+        "loremipsum" => RenderComponent<LoremIpsum>(),
+        "crontab" => RenderComponent<Crontab>(),
+        "rrule" => RenderComponent<RRule>(),
+        "dateconverter" => RenderComponent<DateConverter>(),
+        "numbers" => RenderComponent<Numbers>(),
+        "numberbaseconverter" => RenderComponent<NumberBaseConverter>(),
+        "bytesconverter" => RenderComponent<BytesConverter>(),
+        "charinfo" => RenderComponent<CharInfo>(),
+        "stringinfo" => RenderComponent<StringInfo>(),
+        "textdiff" => RenderComponent<TextComparison>(),
+        "regex" => RenderComponent<RegexTester>(),
+        "evaluatejsonpath" => RenderComponent<EvaluateJsonPath>(),
+        "evaluatexpath" => RenderComponent<EvaluateXPath>(),
+        "barcode" => RenderComponent<Barcode>(),
+        "recordmic" => RenderComponent<RecordMicrophone>(),
+        "recordscreen" => RenderComponent<RecordScreen>(),
+        "gitlabretry" => RenderComponent<GitLabRetryJobs>(),
+        "gitlabpipeline" => RenderComponent<GitLabRunPipeline>(),
+        "microsofttenantid" => RenderComponent<MicrosoftTenantId>(),
         _ => RenderDefaultComponent()
     };
 
@@ -363,7 +396,38 @@
         new("githubsearch", "bi-search", "DevOps Tools"),
         new("githubinspector", "bi-person-badge", "DevOps Tools"),
         new("githubtrending", "bi-graph-up-arrow", "DevOps Tools"),
-        new("gist", "bi-file-earmark-code", "DevOps Tools")
+        new("gist", "bi-file-earmark-code", "DevOps Tools"),
+        new("hexaencode", "bi-123", "Encoding & Format Tools"),
+        new("jsonstring", "bi-braces", "Encoding & Format Tools"),
+        new("xmlencode", "bi-code-slash", "Encoding & Format Tools"),
+        new("yamlstring", "bi-filetype-yml", "Encoding & Format Tools"),
+        new("argumentescape", "bi-terminal", "General Tools"),
+        new("hashdata", "bi-fingerprint", "Cryptography Tools"),
+        new("jsonformatter", "bi-braces-asterisk", "Encoding & Format Tools"),
+        new("xmlformatter", "bi-filetype-xml", "Encoding & Format Tools"),
+        new("yamltojson", "bi-arrow-left-right", "Encoding & Format Tools"),
+        new("markdowntohtml", "bi-markdown", "General Tools"),
+        new("natoalphabet", "bi-alphabet", "General Tools"),
+        new("morsecode", "bi-broadcast", "General Tools"),
+        new("loremipsum", "bi-text-paragraph", "General Tools"),
+        new("crontab", "bi-clock-history", "Time & Calculation Tools"),
+        new("rrule", "bi-calendar-event", "Time & Calculation Tools"),
+        new("dateconverter", "bi-calendar3", "Time & Calculation Tools"),
+        new("numbers", "bi-123", "General Tools"),
+        new("numberbaseconverter", "bi-calculator", "General Tools"),
+        new("bytesconverter", "bi-hdd", "General Tools"),
+        new("charinfo", "bi-type", "Encoding & Format Tools"),
+        new("stringinfo", "bi-type", "Encoding & Format Tools"),
+        new("textdiff", "bi-file-diff", "Testing Library Tools"),
+        new("regex", "bi-regex", "Testing Library Tools"),
+        new("evaluatejsonpath", "bi-braces", "Testing Library Tools"),
+        new("evaluatexpath", "bi-filetype-xml", "Testing Library Tools"),
+        new("barcode", "bi-upc-scan", "Testing Library Tools"),
+        new("recordmic", "bi-mic", "Testing Library Tools"),
+        new("recordscreen", "bi-display", "Testing Library Tools"),
+        new("gitlabretry", "bi-git", "DevOps Tools"),
+        new("gitlabpipeline", "bi-git", "DevOps Tools"),
+        new("microsofttenantid", "bi-microsoft", "DevOps Tools")
     };
 
     private record ToolDef(string Key, string Icon, string CategoryKey)

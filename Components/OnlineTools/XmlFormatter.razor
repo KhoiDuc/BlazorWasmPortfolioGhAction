@@ -1,0 +1,60 @@
+@using System.IO
+@using System.Text
+@using System.Xml
+
+<ToolShell ResourceKey="xmlformatter" Title="XML Formatter" Icon="bi-filetype-xml">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="xml-format-text">XML</label>
+            <textarea id="xml-format-text" class="tool-textarea" rows="8" @bind="text"></textarea>
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="() => Format(true)">Format</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="() => Format(false)">Minify</button>
+        </div>
+        @if (result != null)
+        {
+            <ResultValueSingle CopyLabel="@(resultLabel ?? "result")" Value="@result" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    string? text;
+    string? result;
+    string? resultLabel;
+
+    void Format(bool indented)
+    {
+        resultLabel = indented ? "Formatted XML" : "Minified XML";
+        try
+        {
+            var originalXmlDocument = new XmlDocument();
+            originalXmlDocument.LoadXml(text ?? "");
+
+            if (!indented)
+            {
+                foreach (XmlNode comment in originalXmlDocument.SelectNodes("//comment()")!)
+                    comment.ParentNode?.RemoveChild(comment);
+
+                foreach (XmlElement el in originalXmlDocument.SelectNodes("descendant::*[not(*) and not(normalize-space())]")!)
+                    el.IsEmpty = true;
+            }
+
+            if (!indented)
+            {
+                result = originalXmlDocument.InnerXml;
+            }
+            else
+            {
+                var minified = new MemoryStream();
+                originalXmlDocument.Save(minified);
+                result = Encoding.UTF8.GetString(minified.ToArray());
+            }
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+}

@@ -1,0 +1,50 @@
+@using System.Text.Json
+
+<ToolShell ResourceKey="jsonformatter" Title="JSON Formatter" Icon="bi-braces-asterisk">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="json-format-text">JSON</label>
+            <textarea id="json-format-text" class="tool-textarea" rows="8" @bind="text"></textarea>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="indentSize">Spaces</label>
+            <input id="indentSize" type="number" min="1" max="8" class="tool-select" style="width: 8em;" @bind="indentSize" />
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="() => Format(true)">Format</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="() => Format(false)">Minify</button>
+        </div>
+        @if (result != null)
+        {
+            <ResultValueSingle CopyLabel="@(resultLabel ?? "result")" Value="@result" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    string? text;
+    string? result;
+    string? resultLabel;
+    int indentSize = 2;
+
+    void Format(bool indented)
+    {
+        resultLabel = indented ? "Formatted JSON" : "Minified JSON";
+        try
+        {
+            var doc = JsonDocument.Parse(text ?? "", new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip, MaxDepth = 1000 });
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = indented,
+                IndentCharacter = ' ',
+                IndentSize = Math.Clamp(indentSize, 1, 8),
+            };
+
+            result = JsonSerializer.Serialize(doc.RootElement, options);
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+}

@@ -1,0 +1,38 @@
+@using System.Text.Json
+@using YamlDotNet.Serialization
+
+<ToolShell ResourceKey="yamltojson" Title="Yaml to Json" Icon="bi-arrow-left-right">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="yaml-to-json-text">YAML</label>
+            <textarea id="yaml-to-json-text" class="tool-textarea" rows="10" @bind="text"></textarea>
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="ToJson">Convert to JSON</button>
+        </div>
+        @if (result != null)
+        {
+            <ResultValueSingle CopyLabel="JSON" Value="@result" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private static readonly IDeserializer YamlDeserializer = new DeserializerBuilder().Build();
+
+    string? text = "scalar: a scalar\nscalar: 1\nsequence:\n  - one\n  - two\n";
+    string? result;
+
+    void ToJson()
+    {
+        try
+        {
+            var yamlObject = YamlDeserializer.Deserialize<object>(text ?? "");
+            result = JsonUtils.ToDisplayJson(yamlObject);
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+}

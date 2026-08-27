@@ -1,0 +1,138 @@
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<ToolShell ResourceKey="recordscreen" Title="Record Screen" Icon="bi-display" Description="Record a screen, window, or browser tab with optional audio.">
+    <div class="tool-form">
+        <p class="tool-hint">The recording stays in your browser and is never uploaded.</p>
+
+        <div class="tool-checkbox-group recording-options">
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="includeSystemAudio" disabled="@isRecording" />
+                Include system audio
+            </label>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="includeMicrophone" disabled="@isRecording" />
+                Include microphone
+            </label>
+        </div>
+
+        <div class="tool-actions recording-controls">
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="StartAsync" disabled="@isRecording">Start</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="StopAsync" disabled="@(!isRecording)">Stop</button>
+            @if (isRecording)
+            {
+                <span class="recording-status"><i class="bi bi-record-circle"></i> Recording...</span>
+            }
+        </div>
+
+        @if (errorMessage != null)
+        {
+            <div class="tool-alert tool-alert-danger" role="alert">@errorMessage</div>
+        }
+
+        @if (recording != null)
+        {
+            <div class="recording-result">
+                <video controls src="@recording.Url"></video>
+                <button type="button" class="tool-btn tool-btn-primary" @onclick="DownloadAsync">Download video</button>
+            </div>
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private IJSObjectReference? module;
+    private DotNetObjectReference<RecordScreen>? dotNetReference;
+    private bool includeSystemAudio = true;
+    private bool includeMicrophone;
+    private bool isRecording;
+    private string? errorMessage;
+    private RecordingResult? recording;
+
+    private async Task StartAsync()
+    {
+        errorMessage = null;
+        recording = null;
+        dotNetReference ??= DotNetObjectReference.Create(this);
+
+        try
+        {
+            await (await GetModuleAsync()).InvokeVoidAsync("start", includeSystemAudio, includeMicrophone, dotNetReference);
+            isRecording = true;
+        }
+        catch (JSException ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task StopAsync()
+    {
+        errorMessage = null;
+
+        try
+        {
+            recording = await (await GetModuleAsync()).InvokeAsync<RecordingResult>("stop");
+        }
+        catch (JSException ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isRecording = false;
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnRecordingStopped(RecordingResult result)
+    {
+        recording = result;
+        isRecording = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task OnRecordingFailed(string message)
+    {
+        errorMessage = message;
+        isRecording = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task DownloadAsync()
+    {
+        if (recording != null)
+            await (await GetModuleAsync()).InvokeVoidAsync("download", recording.Url, recording.FileName);
+    }
+
+    private async Task<IJSObjectReference> GetModuleAsync()
+    {
+        module ??= await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/screen-recorder.js");
+        return module;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module != null)
+        {
+            try
+            {
+                await module.InvokeVoidAsync("dispose");
+                await module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+
+        dotNetReference?.Dispose();
+    }
+
+    public sealed class RecordingResult
+    {
+        public string Url { get; set; } = "";
+        public string FileName { get; set; } = "";
+        public string MimeType { get; set; } = "";
+    }
+}

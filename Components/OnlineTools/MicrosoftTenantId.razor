@@ -1,0 +1,102 @@
+@using System.Text.Json
+@inject HttpClient Http
+
+<ToolShell ResourceKey="microsofttenantid" Title="Microsoft Tenant ID Finder" Icon="bi-microsoft">
+    <div class="tool-form">
+        <form @onsubmit="FindTenantId" @onsubmit:preventDefault="true">
+            <div class="tool-field">
+                <label class="tool-label" for="domain">Domain Name</label>
+                <input id="domain" class="tool-textarea" style="min-height: auto;" @bind="domain" placeholder="e.g. meziantou.net" />
+            </div>
+            <div class="tool-actions">
+                <button type="submit" class="tool-btn tool-btn-success">Find Tenant ID</button>
+            </div>
+        </form>
+
+        @if (isLoading)
+        {
+            <p class="tool-hint">Loading...</p>
+        }
+
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <div class="tool-result" style="color: var(--bs-danger, #dc3545);">@error</div>
+        }
+
+        @if (tenantId != null)
+        {
+            <div class="tool-result-block">
+                <span class="tool-label">Tenant ID</span>
+                <pre class="tool-textarea tool-result-code">@tenantId</pre>
+            </div>
+
+            <ResultValueSingle CopyLabel="JSON response" Value="@jsonResponse" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private string? domain;
+    private string? tenantId;
+    private string? jsonResponse;
+    private string? error;
+    private bool isLoading;
+
+    private async Task FindTenantId()
+    {
+        isLoading = true;
+        error = null;
+        tenantId = null;
+        jsonResponse = null;
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(domain))
+            {
+                error = "Please enter a domain name.";
+                return;
+            }
+
+            var url = $"https://login.microsoftonline.com/{domain}/.well-known/openid-configuration";
+            var rawJson = await Http.GetStringAsync(url);
+
+            using var doc = JsonDocument.Parse(rawJson);
+            jsonResponse = JsonUtils.ToDisplayJson(doc.RootElement);
+
+            if (doc.RootElement.TryGetProperty("token_endpoint", out var tokenEndpoint))
+            {
+                var tokenUrl = tokenEndpoint.GetString();
+                if (!string.IsNullOrEmpty(tokenUrl))
+                    tenantId = ExtractGuidFromUrl(tokenUrl);
+            }
+
+            if (tenantId == null && doc.RootElement.TryGetProperty("issuer", out var issuer))
+            {
+                var issuerUrl = issuer.GetString();
+                if (!string.IsNullOrEmpty(issuerUrl))
+                    tenantId = ExtractGuidFromUrl(issuerUrl);
+            }
+
+            if (tenantId == null)
+                error = "Could not extract Tenant ID from the response.";
+        }
+        catch (Exception ex)
+        {
+            error = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static string? ExtractGuidFromUrl(string url)
+    {
+        foreach (var part in url.Split('/'))
+        {
+            if (Guid.TryParse(part, out var guid))
+                return guid.ToString();
+        }
+        return null;
+    }
+}

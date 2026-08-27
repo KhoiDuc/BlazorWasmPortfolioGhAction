@@ -1,0 +1,53 @@
+@using YamlDotNet.Serialization
+
+<ToolShell ResourceKey="yamlstring" Title="Yaml String Encoder" Icon="bi-filetype-yml">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="yaml-string-text">Text</label>
+            <textarea id="yaml-string-text" class="tool-textarea" rows="6" @bind="text"></textarea>
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="Encode">Encode to YAML string</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="Decode">Decode YAML string</button>
+        </div>
+        @if (result != null)
+        {
+            <ResultValueSingle CopyLabel="@(resultLabel ?? "result")" Value="@result" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private static readonly ISerializer YamlSerializer = new SerializerBuilder().Build();
+    private static readonly IDeserializer YamlDeserializer = new DeserializerBuilder().Build();
+
+    string? text = "";
+    string? result;
+    string? resultLabel;
+
+    void Encode()
+    {
+        resultLabel = "YAML string";
+        try
+        {
+            result = YamlSerializer.Serialize(text ?? "");
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+
+    void Decode()
+    {
+        resultLabel = "Decoded text";
+        try
+        {
+            result = YamlDeserializer.Deserialize<string>(text ?? "");
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+}

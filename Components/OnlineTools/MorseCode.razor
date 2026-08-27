@@ -1,0 +1,31 @@
+<ToolShell ResourceKey="morsecode" Title="String to Morse code" Icon="bi-broadcast">
+    <div class="tool-form">
+        <p class="tool-hint">Convert text to International Morse code. Spaces are represented as <code>/</code>.</p>
+        <div class="tool-field">
+            <label class="tool-label" for="morse-value">Value</label>
+            <textarea id="morse-value" class="tool-textarea" rows="4" @oninput="OnInputChanged">@value</textarea>
+        </div>
+        <ResultValueSingle CopyLabel="Morse code" Value="@result" />
+    </div>
+</ToolShell>
+
+@code {
+    private string value = string.Empty;
+    private string result = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        Compute();
+    }
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        value = e.Value?.ToString() ?? string.Empty;
+        Compute();
+    }
+
+    private void Compute()
+    {
+        result = TextEncodingUtils.ToMorseCode(value);
+    }
+}

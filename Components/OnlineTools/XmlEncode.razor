@@ -1,0 +1,66 @@
+@using System.Xml.Linq
+
+<ToolShell ResourceKey="xmlencode" Title="XML Encode / Decode" Icon="bi-code-slash">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="xml-text">Text</label>
+            <textarea id="xml-text" class="tool-textarea" rows="6" @bind="text"></textarea>
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="EncodeElement">Encode element</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="EncodeAttribute">Encode attribute</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="DecodeElement">Decode element</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="DecodeAttribute">Decode attribute</button>
+        </div>
+        @if (result != null)
+        {
+            <ResultValueSingle CopyLabel="@(resultLabel ?? "result")" Value="@result" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    string? text;
+    string? result;
+    string? resultLabel;
+
+    void EncodeElement()
+    {
+        resultLabel = "Encoded element";
+        result = new XElement("a", text ?? "").LastNode?.ToString();
+    }
+
+    void DecodeElement()
+    {
+        resultLabel = "Decoded element";
+        try
+        {
+            var element = XElement.Parse("<a>" + text + "</a>");
+            result = element.Value;
+        }
+        catch (Exception ex)
+        {
+            result = "Invalid xml: " + ex.Message;
+        }
+    }
+
+    void EncodeAttribute()
+    {
+        resultLabel = "Encoded attribute";
+        result = new XAttribute("a", text ?? "").ToString()[3..^1];
+    }
+
+    void DecodeAttribute()
+    {
+        resultLabel = "Decoded attribute";
+        try
+        {
+            var element = XElement.Parse("<a a=\"" + text + "\"></a>");
+            result = element.Attribute("a")?.Value;
+        }
+        catch (Exception ex)
+        {
+            result = "Invalid xml: " + ex.Message;
+        }
+    }
+}

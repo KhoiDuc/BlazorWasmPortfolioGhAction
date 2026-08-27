@@ -1,0 +1,50 @@
+@inject IStringLocalizer<SharedResources> L
+
+<ToolShell ResourceKey="jsonstring" Title="JSON String Encoder" Icon="bi-braces">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="json-string-text">@L["Tool_Input"]</label>
+            <textarea id="json-string-text" class="tool-textarea" rows="6" @bind="text"></textarea>
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="Encode">Encode to JSON string</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="Decode">Decode JSON string</button>
+        </div>
+        @if (result != null)
+        {
+            <ResultValueSingle CopyLabel="@(resultLabel ?? "result")" Value="@result" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    string? text = "";
+    string? result;
+    string? resultLabel;
+
+    void Encode()
+    {
+        resultLabel = "JSON string";
+        try
+        {
+            result = System.Text.Json.JsonSerializer.Serialize(text);
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+
+    void Decode()
+    {
+        resultLabel = "Decoded text";
+        try
+        {
+            result = System.Text.Json.JsonSerializer.Deserialize<object>(text ?? "")?.ToString();
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+}

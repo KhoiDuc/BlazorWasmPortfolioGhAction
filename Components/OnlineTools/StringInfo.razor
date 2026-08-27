@@ -1,0 +1,94 @@
+@inject NavigationManager NavigationManager
+
+<ToolShell ResourceKey="stringinfo" Title="String Info" Icon="bi-type">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="string-info-text">Text</label>
+            <textarea id="string-info-text" class="tool-textarea" rows="6" @bind-value="Text" @bind-value:event="oninput" @bind-value:after="Compute"></textarea>
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="NormalizeC">Normalize Form C</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="NormalizeD">Normalize Form D</button>
+        </div>
+        @if (result != null)
+        {
+            <ResultValueList Values="result" />
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Character</th>
+                        <th>Unicode scalar</th>
+                        <th>UTF-16</th>
+                        <th>UTF-8</th>
+                        <th>Category</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var rune in (Text ?? "").EnumerateRunes())
+                    {
+                        <tr>
+                            <td><code>@rune</code></td>
+                            <td><a href="char-info?Text=@(Uri.EscapeDataString($"U+{rune.Value:X4}"))">U+@rune.Value.ToString("X4")</a></td>
+                            <td>@GetUtf16(rune)</td>
+                            <td>@GetUtf8(rune)</td>
+                            <td>@Rune.GetUnicodeCategory(rune)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</ToolShell>
+
+@code {
+    [Parameter, SupplyParameterFromQuery]
+    public string? Text { get; set; }
+
+    IReadOnlyList<ResultValue>? result;
+
+    protected override void OnParametersSet()
+    {
+        Compute();
+    }
+
+    void Compute()
+    {
+        Text ??= "";
+        NavigationManager.UpdateUrlUsingParameters(this, replaceHistory: true);
+
+        var info = new System.Globalization.StringInfo(Text);
+
+        result =
+        [
+            new("Length", Text.Length.ToString()),
+            new("Runes", Text.EnumerateRunes().Count().ToString()),
+            new("Graphemes", info.LengthInTextElements.ToString()),
+        ];
+    }
+
+    static string GetUtf16(Rune rune)
+    {
+        var chars = new char[rune.Utf16SequenceLength];
+        rune.EncodeToUtf16(chars);
+        return string.Join(' ', chars.Select(c => "0x" + ((int)c).ToString("X4")));
+    }
+
+    static string GetUtf8(Rune rune)
+    {
+        var bytes = new byte[rune.Utf8SequenceLength];
+        rune.EncodeToUtf8(bytes);
+        return string.Join(' ', bytes.Select(c => "0x" + ((int)c).ToString("X")));
+    }
+
+    void NormalizeC()
+    {
+        Text = Text?.Normalize(NormalizationForm.FormC);
+        Compute();
+    }
+
+    void NormalizeD()
+    {
+        Text = Text?.Normalize(NormalizationForm.FormD);
+        Compute();
+    }
+}

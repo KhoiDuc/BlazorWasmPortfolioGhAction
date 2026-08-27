@@ -1,0 +1,15 @@
+@using BlazorWasmPortfolioGhAction.Utils.OnlineTools
+
+@if (Values is { Count: > 0 })
+{
+    <div class="tool-result-list">
+        @foreach (var item in Values)
+        {
+            <ResultValueRow Label="@item.Label" Value="@item.Value" />
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<ResultValue>? Values { get; set; }
+}

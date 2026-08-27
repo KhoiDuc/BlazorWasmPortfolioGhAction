@@ -1,0 +1,106 @@
+@using System.IO
+@using System.Text
+@inject IJSRuntime JSRuntime
+@inject IStringLocalizer<SharedResources> L
+
+<ToolShell ResourceKey="hexaencode" Title="Hexa Encode / Decode" Icon="bi-123">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="hexa-text">@L["Tool_Input"]</label>
+            <textarea id="hexa-text" class="tool-textarea" rows="6" @bind="text" @bind:event="oninput"></textarea>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="hexa-encoding">Encoding</label>
+            <select id="hexa-encoding" class="tool-select" @bind="encoding">
+                <option value="utf-8">UTF-8</option>
+                <option value="utf-16">UTF-16</option>
+                <option value="utf-32">UTF-32</option>
+                <option value="ascii">ASCII</option>
+            </select>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label">Or upload a file</label>
+            <InputFile OnChange="@OnInputFileChange" />
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="Encode">@L["Tool_Encode"]</button>
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="Decode">@L["Tool_Decode"]</button>
+            @if (decodedData != null)
+            {
+                <button type="button" class="tool-btn tool-btn-success" @onclick="DownloadDecodedDataAsync">Download decoded data</button>
+            }
+        </div>
+        @if (result != null)
+        {
+            <ResultValueSingle CopyLabel="@(resultLabel ?? "result")" Value="@result" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private string? text;
+    private string? encoding;
+    private string? result;
+    private string? resultLabel;
+    private byte[]? decodedData;
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        using var stream = e.File.OpenReadStream();
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+
+        resultLabel = "Hexa";
+        result = Convert.ToHexString(ms.ToArray());
+        decodedData = null;
+    }
+
+    private void Encode()
+    {
+        resultLabel = "Hexa";
+        decodedData = null;
+
+        try
+        {
+            result = Convert.ToHexString(GetEncoding().GetBytes(text ?? ""));
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+
+    private void Decode()
+    {
+        resultLabel = "Decoded text";
+        decodedData = null;
+
+        try
+        {
+            decodedData = Convert.FromHexString(text ?? "");
+            result = GetEncoding().GetString(decodedData);
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+
+    private async Task DownloadDecodedDataAsync()
+    {
+        if (decodedData != null)
+        {
+            using var stream = new MemoryStream(decodedData);
+            using var streamReference = new DotNetStreamReference(stream);
+            await JSRuntime.InvokeVoidAsync("downloadFileFromStream", "decoded-data.bin", streamReference);
+        }
+    }
+
+    private Encoding GetEncoding() => encoding switch
+    {
+        "ascii" => Encoding.ASCII,
+        "utf-16" => Encoding.Unicode,
+        "utf-32" => Encoding.UTF32,
+        _ => Encoding.UTF8,
+    };
+}

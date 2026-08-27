@@ -1,0 +1,85 @@
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Meziantou.Framework.Json
+
+<ToolShell ResourceKey="evaluatejsonpath" Title="JsonPath evaluator" Icon="bi-braces">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="jsonPathInputJson">JSON</label>
+            <textarea id="jsonPathInputJson" class="tool-textarea" rows="10" @bind="jsonInput" spellcheck="false"></textarea>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="jsonPathExpression">JsonPath expression</label>
+            <input id="jsonPathExpression" class="tool-textarea" style="min-height: auto;" @bind="jsonPathExpression" spellcheck="false" />
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="RunJsonPathEvaluation">Evaluate</button>
+        </div>
+        @if (errorMessage != null)
+        {
+            <div class="tool-result" style="color: var(--bs-danger, #dc3545);">@errorMessage</div>
+        }
+        @if (matches.Count > 0)
+        {
+            <h3>Matches</h3>
+            <ResultValueList Values="matches" />
+        }
+        else if (hasEvaluated && errorMessage == null)
+        {
+            <p class="tool-hint">No match found.</p>
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private string jsonInput = "{\n  \"store\": {\n    \"book\": [\n      { \"title\": \"Sayings of the Century\", \"price\": 8.95 },\n      { \"title\": \"Sword of Honour\", \"price\": 12.99 }\n    ]\n  }\n}";
+
+    private string jsonPathExpression = "$.store.book[*].title";
+    private string? errorMessage;
+    private IReadOnlyList<ResultValue> matches = [];
+    private bool hasEvaluated;
+
+    private void RunJsonPathEvaluation()
+    {
+        hasEvaluated = true;
+        errorMessage = null;
+        matches = [];
+
+        try
+        {
+            var jsonNode = JsonNode.Parse(jsonInput ?? string.Empty);
+            if (jsonNode == null)
+            {
+                errorMessage = "Cannot evaluate JsonPath on empty JSON input.";
+                return;
+            }
+
+            var path = JsonPath.Parse(jsonPathExpression ?? string.Empty);
+            var evaluationResult = path.Evaluate(jsonNode);
+
+            var values = new List<ResultValue>();
+            var index = 1;
+
+            foreach (var match in evaluationResult)
+            {
+                var label = match.Path;
+                if (string.IsNullOrWhiteSpace(label))
+                    label = $"Match {index}";
+
+                var value = match.Value?.ToJsonString(new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                }) ?? "null";
+
+                values.Add(new ResultValue(label, value));
+                index++;
+            }
+
+            matches = values;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}

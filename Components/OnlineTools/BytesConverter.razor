@@ -1,0 +1,44 @@
+@using Meziantou.Framework
+@inject IStringLocalizer<SharedResources> L
+
+<ToolShell ResourceKey="bytesconverter" Title="Bytes converter" Icon="bi-hdd">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="bytes-text">Size</label>
+            <input id="bytes-text" class="tool-textarea" style="min-height: auto;" @bind="text" />
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="Compute">@L["Tool_Convert"]</button>
+        </div>
+        @if (result != null)
+        {
+            <ResultValueList Values="result" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    string? text = "1kiB";
+    IReadOnlyList<ResultValue>? result;
+
+    void Compute()
+    {
+        try
+        {
+            var size = ByteSize.Parse(text ?? "", System.Globalization.CultureInfo.InvariantCulture);
+
+            var values = new List<ResultValue>();
+            foreach (var unit in new[] { "B", "kB", "MB", "GB", "TB", "PB" })
+                values.Add(new ResultValue($"Decimal ({unit})", size.ToString(unit, System.Globalization.CultureInfo.InvariantCulture)));
+
+            foreach (var unit in new[] { "B", "kiB", "MiB", "GiB", "TiB", "PiB" })
+                values.Add(new ResultValue($"Binary ({unit})", size.ToString(unit, System.Globalization.CultureInfo.InvariantCulture)));
+
+            result = values;
+        }
+        catch (Exception ex)
+        {
+            result = [new ResultValue("Error", ex.Message)];
+        }
+    }
+}

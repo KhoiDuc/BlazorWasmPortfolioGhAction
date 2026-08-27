@@ -1,0 +1,39 @@
+@inject IStringLocalizer<SharedResources> L
+
+<ToolShell ResourceKey="loremipsum" Title="Lorem Ipsum" Icon="bi-text-paragraph">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label">Words: @wordCount</label>
+            <input type="range" min="0" max="50" step="1" @bind="wordCount" @bind:event="oninput" class="tool-select" />
+        </div>
+        <div class="tool-field">
+            <label class="tool-label">Sentences: @sentenceCount</label>
+            <input type="range" min="0" max="50" step="1" @bind="sentenceCount" @bind:event="oninput" class="tool-select" />
+        </div>
+        <div class="tool-field">
+            <label class="tool-label">Paragraphs: @paragraphCount</label>
+            <input type="range" min="0" max="50" step="1" @bind="paragraphCount" @bind:event="oninput" class="tool-select" />
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-secondary" @onclick="Generate">@L["Tool_Generate"]</button>
+        </div>
+        <div class="tool-result">
+            @foreach (var p in result)
+            {
+                <p>@p</p>
+            }
+        </div>
+    </div>
+</ToolShell>
+
+@code {
+    int wordCount = 8;
+    int sentenceCount = 15;
+    int paragraphCount = 10;
+    IEnumerable<string> result = [];
+
+    void Generate()
+    {
+        result = LoremIpsumGenerator.Paragraphs(wordCount, sentenceCount, paragraphCount);
+    }
+}
