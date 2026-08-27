@@ -1,3 +1,5 @@
+@import '_content/JsonViewer.Blazor/JsonViewer.Blazor.vg9nk6aojm.bundle.scp.css';
+
 /* /Components/Ascii/Ascii.razor.rz.scp.css */
 .conv-row[b-4l6vi59a31] {
     display: flex;
@@ -1412,11 +1414,161 @@
 /* /Components/OnlineTools/Barcode.razor.rz.scp.css */
 .barcode-output[b-ay7nht098p] {
     max-width: 36rem;
+    overflow: auto;
+    padding: 0.75rem;
+    background: #fff;
+    border-radius: 0.35rem;
 }
 
 .barcode-output :deep(svg)[b-ay7nht098p] {
     max-width: 100%;
     height: auto;
+    display: block;
+}
+
+.barcode-gen .tool-row[b-ay7nht098p] {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.barcode-margins[b-ay7nht098p] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 14rem;
+}
+
+.barcode-margins-mid[b-ay7nht098p] {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.barcode-margins .tool-input[b-ay7nht098p] {
+    width: 100%;
+}
+
+.tool-check[b-ay7nht098p] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .barcode-gen .tool-row[b-ay7nht098p] {
+        grid-template-columns: 1fr;
+    }
+}
+/* /Components/OnlineTools/BarcodeScanner.razor.rz.scp.css */
+.barcode-scan-layout[b-g6h3b5gn11] {
+    display: grid;
+    grid-template-columns: minmax(12rem, 16rem) 1fr;
+    gap: 1rem;
+    margin-top: 0.75rem;
+}
+
+.barcode-scan-list[b-g6h3b5gn11] {
+    max-height: 28rem;
+    overflow: auto;
+    border-right: 1px solid var(--bs-border-color, #dee2e6);
+    padding-right: 0.75rem;
+}
+
+.barcode-scan-file[b-g6h3b5gn11] {
+    margin-bottom: 1rem;
+}
+
+.barcode-scan-file-head[b-g6h3b5gn11] {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+}
+
+.barcode-scan-hit[b-g6h3b5gn11] {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: 1px solid transparent;
+    background: var(--bs-tertiary-bg, #f8f9fa);
+    border-radius: 0.35rem;
+    padding: 0.45rem 0.55rem;
+    margin-bottom: 0.35rem;
+    cursor: pointer;
+}
+
+.barcode-scan-hit.is-active[b-g6h3b5gn11] {
+    border-color: var(--bs-primary, #0d6efd);
+    background: color-mix(in srgb, var(--bs-primary, #0d6efd) 12%, transparent);
+}
+
+.barcode-scan-hit .badge[b-g6h3b5gn11] {
+    font-size: 0.7rem;
+    margin-right: 0.35rem;
+}
+
+.barcode-scan-hit-text[b-g6h3b5gn11] {
+    display: block;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 0.8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.barcode-scan-pre[b-g6h3b5gn11] {
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 12rem;
+    overflow: auto;
+}
+
+.barcode-scan-props[b-g6h3b5gn11] {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0.75rem 0;
+}
+
+.barcode-scan-props > div[b-g6h3b5gn11] {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    padding-bottom: 0.25rem;
+}
+
+.barcode-scan-props dt[b-g6h3b5gn11] {
+    margin: 0;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.barcode-scan-props dd[b-g6h3b5gn11] {
+    margin: 0;
+    font-family: ui-monospace, Consolas, monospace;
+}
+
+.barcode-scan-meta[b-g6h3b5gn11] {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 0.8rem;
+    word-break: break-all;
+}
+
+@media (max-width: 768px) {
+    .barcode-scan-layout[b-g6h3b5gn11] {
+        grid-template-columns: 1fr;
+    }
+
+    .barcode-scan-list[b-g6h3b5gn11] {
+        border-right: none;
+        border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+        padding-right: 0;
+        padding-bottom: 0.75rem;
+        max-height: 14rem;
+    }
 }
 /* /Components/OnlineTools/CharInfo.razor.rz.scp.css */
 .charinfo-grid[b-9s6zqwqetp] {
@@ -1597,6 +1749,24 @@
 .gitlab-status-default[b-lyd59ehuvd] {
     background: var(--color-bg-surface-elevated);
     color: var(--color-text-secondary);
+}
+/* /Components/OnlineTools/JsonViewerTool.razor.rz.scp.css */
+.json-viewer-tool .tool-check[b-asshtuuiqp] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: 0.25rem;
+}
+
+.json-viewer-host[b-asshtuuiqp] {
+    margin-top: 0.75rem;
+    min-height: 24rem;
+    border-radius: 0.35rem;
+    overflow: hidden;
+}
+
+.json-viewer-host :deep(*)[b-asshtuuiqp] {
+    max-width: 100%;
 }
 /* /Components/OnlineTools/RecordMicrophone.razor.rz.scp.css */
 .recording-options[b-phf0n465en] {
@@ -5057,7 +5227,6 @@
 .wiki-search[b-gqmdauo2h1] {
     margin-bottom: 1rem;
 }
-/* /Pages/Sqlite.razor.rz.scp.css */
 /* /Pages/Trading/TradingLayout.razor.rz.scp.css */
 /* Trading styles live in wwwroot/css/trading.css (global — required for child components). */
 /* /Pages/Utility.razor.rz.scp.css */
