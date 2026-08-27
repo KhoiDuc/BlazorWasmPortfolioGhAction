@@ -1,0 +1,180 @@
+@using System.Text
+@using System.Text.Json.Serialization
+@using BlazorWasmPortfolioGhAction.Services
+@using Blazored.LocalStorage
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject IClipboardService Clipboard
+@inject ILocalStorageService LocalStorage
+
+<ToolShell ResourceKey="codepaste" Title="Code Paste" Icon="bi-clipboard2-data"
+           Description="Scratchpad pastebin with Monaco syntax highlighting, format, and local save.">
+    <div class="tool-form code-paste">
+        <div class="tool-actions csharp-toolbar">
+            <label class="tool-label" for="paste-lang">Language</label>
+            <select id="paste-lang" class="tool-select" @bind="_language" @bind:after="OnLanguageChanged">
+                @foreach (var lang in _languages)
+                {
+                    <option value="@lang">@lang</option>
+                }
+            </select>
+            <button type="button" class="tool-btn" @onclick="FormatAsync">Format</button>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="_wordWrap" @bind:after="OnWordWrapChanged" /> Word wrap
+            </label>
+            <button type="button" class="tool-btn" @onclick="SaveLocal">Save local</button>
+            <button type="button" class="tool-btn" @onclick="CopyAsync">Copy</button>
+            <button type="button" class="tool-btn" @onclick="Download">Download</button>
+            <button type="button" class="tool-btn tool-btn-danger" @onclick="Clear">Clear</button>
+        </div>
+
+        @if (_status is not null)
+        {
+            <div class="tool-alert tool-alert-info">@_status</div>
+        }
+        @if (_error is not null)
+        {
+            <div class="tool-alert tool-alert-danger">@_error</div>
+        }
+
+        <div id="@_containerId" class="monaco-host"></div>
+    </div>
+</ToolShell>
+
+<style>
+    .code-paste .monaco-host { height: min(70vh, 560px); border: 1px solid var(--border-color, #ccc); border-radius: 6px; }
+    .code-paste .csharp-toolbar { flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; }
+</style>
+
+@code {
+    private const string StorageKey = "utility-codepaste-v1";
+    private readonly string _containerId = "monaco-paste-" + Guid.NewGuid().ToString("N");
+    private DotNetObjectReference<CodePaste>? _dotNetRef;
+    private string _language = "csharp";
+    private string _value = "// Paste code here\n";
+    private bool _wordWrap = true;
+    private bool _ready;
+    private string? _error;
+    private string? _status;
+
+    private static readonly string[] _languages =
+    [
+        "plaintext", "csharp", "javascript", "typescript", "json", "html", "css", "xml", "sql", "markdown", "python", "java", "yaml"
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var saved = await LocalStorage.GetItemAsync<PasteState>(StorageKey);
+            if (saved is not null)
+            {
+                _value = saved.Text ?? _value;
+                _language = string.IsNullOrEmpty(saved.Language) ? _language : saved.Language;
+            }
+        }
+        catch { /* ignore */ }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _ready) return;
+        try
+        {
+            await JS.InvokeVoidAsync("scriptLoader.load", "js/monaco-tools.js");
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("monacoTools.setDotNetRef", _dotNetRef);
+            await JS.InvokeVoidAsync("monacoTools.createEditor", _containerId, _value, _language);
+            await JS.InvokeVoidAsync("monacoTools.setEditorWordWrap", _wordWrap);
+            _ready = true;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    [JSInvokable]
+    public void OnPasteContentChanged(string text) => _value = text;
+
+    private async Task OnLanguageChanged()
+    {
+        if (_ready) await JS.InvokeVoidAsync("monacoTools.setEditorLanguage", _language);
+    }
+
+    private async Task OnWordWrapChanged()
+    {
+        if (_ready) await JS.InvokeVoidAsync("monacoTools.setEditorWordWrap", _wordWrap);
+    }
+
+    private async Task FormatAsync()
+    {
+        if (!_ready) return;
+        var result = await JS.InvokeAsync<FormatResult>("monacoTools.formatEditor");
+        _error = result.Ok ? null : result.Error;
+        if (result.Ok)
+            _value = await JS.InvokeAsync<string>("monacoTools.getEditorValue");
+    }
+
+    private async Task SaveLocal()
+    {
+        if (_ready) _value = await JS.InvokeAsync<string>("monacoTools.getEditorValue");
+        await LocalStorage.SetItemAsync(StorageKey, new PasteState { Text = _value, Language = _language });
+        _status = "Saved to this browser.";
+    }
+
+    private async Task CopyAsync()
+    {
+        if (_ready) _value = await JS.InvokeAsync<string>("monacoTools.getEditorValue");
+        await Clipboard.CopyTextAsync(_value);
+        _status = "Copied.";
+    }
+
+    private async Task Download()
+    {
+        if (_ready) _value = await JS.InvokeAsync<string>("monacoTools.getEditorValue");
+        var ext = _language switch
+        {
+            "csharp" => "cs",
+            "javascript" => "js",
+            "typescript" => "ts",
+            "python" => "py",
+            "markdown" => "md",
+            "plaintext" => "txt",
+            _ => _language
+        };
+        var b64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(_value));
+        await JS.InvokeVoidAsync("eval",
+            $@"(function(){{var a=document.createElement('a');a.href='data:text/plain;base64,{b64}';a.download='paste.{ext}';a.click();}})()");
+    }
+
+    private async Task Clear()
+    {
+        _value = "";
+        _error = null;
+        _status = null;
+        if (_ready) await JS.InvokeVoidAsync("monacoTools.setEditorValue", "");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_ready) await JS.InvokeVoidAsync("monacoTools.disposeEditor");
+        }
+        catch (JSDisconnectedException) { }
+        _dotNetRef?.Dispose();
+    }
+
+    private sealed class PasteState
+    {
+        public string? Text { get; set; }
+        public string? Language { get; set; }
+    }
+
+    private sealed class FormatResult
+    {
+        [JsonPropertyName("ok")] public bool Ok { get; set; }
+        [JsonPropertyName("error")] public string? Error { get; set; }
+    }
+}

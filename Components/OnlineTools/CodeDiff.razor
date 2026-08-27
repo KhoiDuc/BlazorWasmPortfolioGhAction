@@ -1,0 +1,125 @@
+@using System.Text
+@using System.Text.Json.Serialization
+@using BlazorWasmPortfolioGhAction.Services
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject IClipboardService Clipboard
+
+<ToolShell ResourceKey="codediff" Title="Code Diff" Icon="bi-file-earmark-diff"
+           Description="Side-by-side Monaco diff with syntax highlighting and format.">
+    <div class="tool-form code-diff">
+        <div class="tool-actions csharp-toolbar">
+            <label class="tool-label" for="diff-lang">Language</label>
+            <select id="diff-lang" class="tool-select" @bind="_language" @bind:after="OnLanguageChanged">
+                @foreach (var lang in _languages)
+                {
+                    <option value="@lang">@lang</option>
+                }
+            </select>
+            <button type="button" class="tool-btn" @onclick="FormatAsync">Format</button>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="_wordWrap" @bind:after="OnWordWrapChanged" /> Word wrap
+            </label>
+            <button type="button" class="tool-btn" @onclick="SwapPanes">Swap panes</button>
+            <button type="button" class="tool-btn tool-btn-danger" @onclick="Clear">Clear</button>
+        </div>
+
+        @if (_error is not null)
+        {
+            <div class="tool-alert tool-alert-danger">@_error</div>
+        }
+
+        <div id="@_containerId" class="monaco-host"></div>
+    </div>
+</ToolShell>
+
+<style>
+    .code-diff .monaco-host { height: min(70vh, 560px); border: 1px solid var(--border-color, #ccc); border-radius: 6px; }
+    .code-diff .csharp-toolbar { flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; }
+</style>
+
+@code {
+    private readonly string _containerId = "monaco-diff-" + Guid.NewGuid().ToString("N");
+    private DotNetObjectReference<CodeDiff>? _dotNetRef;
+    private string _language = "csharp";
+    private bool _wordWrap;
+    private string? _error;
+    private bool _ready;
+    private string _original = "Console.WriteLine(\"hello\");\n";
+    private string _modified = "Console.WriteLine(\"hello world\");\n";
+    private static readonly string[] _languages =
+    [
+        "plaintext", "csharp", "javascript", "typescript", "json", "html", "css", "xml", "sql", "markdown", "python", "java"
+    ];
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _ready) return;
+        try
+        {
+            await JS.InvokeVoidAsync("scriptLoader.load", "js/monaco-tools.js");
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("monacoTools.setDotNetRef", _dotNetRef);
+            await JS.InvokeVoidAsync("monacoTools.createDiff", _containerId, _original, _modified, _language);
+            _ready = true;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    [JSInvokable]
+    public void OnDiffContentChanged(string text, bool isOriginal)
+    {
+        if (isOriginal) _original = text;
+        else _modified = text;
+    }
+
+    private async Task OnLanguageChanged()
+    {
+        if (_ready) await JS.InvokeVoidAsync("monacoTools.setDiffLanguage", _language);
+    }
+
+    private async Task OnWordWrapChanged()
+    {
+        if (_ready) await JS.InvokeVoidAsync("monacoTools.setDiffWordWrap", _wordWrap);
+    }
+
+    private async Task FormatAsync()
+    {
+        if (!_ready) return;
+        var result = await JS.InvokeAsync<FormatResult>("monacoTools.formatDiff");
+        _error = result.Ok ? null : result.Error;
+    }
+
+    private async Task SwapPanes()
+    {
+        (_original, _modified) = (_modified, _original);
+        if (_ready) await JS.InvokeVoidAsync("monacoTools.setDiffContent", _original, _modified);
+    }
+
+    private async Task Clear()
+    {
+        _original = "";
+        _modified = "";
+        _error = null;
+        if (_ready) await JS.InvokeVoidAsync("monacoTools.setDiffContent", "", "");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_ready) await JS.InvokeVoidAsync("monacoTools.disposeDiff");
+        }
+        catch (JSDisconnectedException) { }
+        _dotNetRef?.Dispose();
+    }
+
+    private sealed class FormatResult
+    {
+        [JsonPropertyName("ok")] public bool Ok { get; set; }
+        [JsonPropertyName("error")] public string? Error { get; set; }
+    }
+}

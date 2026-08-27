@@ -61,6 +61,7 @@ public static partial class Program
         builder.Services.AddScoped<IScriptLoaderService, ScriptLoaderService>();
         builder.Services.AddScoped<IClipboardService, ClipboardService>();
         builder.Services.AddScoped<JwtCodec>();
+        builder.Services.AddScoped<BlazorWasmPortfolioGhAction.Services.OnlineTools.CsharpRoslynCompiler>();
         builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
 
         // MSAL / Azure AD — disabled (was for learning only)
