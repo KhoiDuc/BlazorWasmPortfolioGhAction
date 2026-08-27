@@ -1,0 +1,213 @@
+@using System.Text.Json
+@inject IClipboardService Clipboard
+
+<ToolShell ResourceKey="jsontotypescript" Title="JSON to TypeScript" Icon="bi-filetype-tsx" Description="Generate TypeScript interface definitions from JSON.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="ts-interface-name">Interface</label>
+            <input id="ts-interface-name" type="text" class="tool-input" placeholder="RootObject"
+                   @bind="rootInterfaceName" @bind:event="oninput" @bind:after="GenerateTypeScript" />
+        </div>
+
+        <div class="tool-checkbox-group">
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="useInterface" @bind:after="GenerateTypeScript" />
+                Interface
+            </label>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="useOptional" @bind:after="GenerateTypeScript" />
+                Optional
+            </label>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="exportTypes" @bind:after="GenerateTypeScript" />
+                Export
+            </label>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="usePascalCase" @bind:after="GenerateTypeScript" />
+                PascalCase
+            </label>
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="ts-json-input">JSON Input</label>
+            <textarea id="ts-json-input" class="tool-textarea" rows="10" spellcheck="false"
+                      placeholder='{"name": "John", "age": 30, "isActive": true}'
+                      @bind="inputJson" @bind:event="oninput" @bind:after="OnInputChanged"></textarea>
+            @if (!string.IsNullOrEmpty(jsonError))
+            {
+                <div class="tool-alert tool-alert-danger">@jsonError</div>
+            }
+        </div>
+
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-primary"
+                    @onclick="GenerateTypeScript"
+                    disabled="@(string.IsNullOrWhiteSpace(inputJson) || !string.IsNullOrEmpty(jsonError))">
+                Generate TypeScript Interfaces
+            </button>
+            <button type="button" class="tool-btn tool-btn-secondary"
+                    @onclick="CopyOutput"
+                    disabled="@string.IsNullOrWhiteSpace(outputCode)">
+                Copy
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(outputCode))
+        {
+            <ResultValueSingle CopyLabel="TypeScript Code" Value="@outputCode" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private string inputJson = string.Empty;
+    private string outputCode = string.Empty;
+    private string rootInterfaceName = "RootObject";
+    private bool useInterface = true;
+    private bool useOptional;
+    private bool exportTypes = true;
+    private bool usePascalCase = true;
+    private string? jsonError;
+
+    private void OnInputChanged()
+    {
+        jsonError = null;
+        if (string.IsNullOrWhiteSpace(inputJson))
+        {
+            outputCode = string.Empty;
+            return;
+        }
+
+        try
+        {
+            using var _ = JsonDocument.Parse(inputJson);
+            GenerateTypeScript();
+        }
+        catch (JsonException ex)
+        {
+            jsonError = ex.Message;
+            outputCode = string.Empty;
+        }
+    }
+
+    private async Task CopyOutput()
+    {
+        if (!string.IsNullOrWhiteSpace(outputCode))
+            await Clipboard.CopyTextAsync(outputCode);
+    }
+
+    private void GenerateTypeScript()
+    {
+        if (string.IsNullOrWhiteSpace(inputJson))
+        {
+            outputCode = string.Empty;
+            return;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(inputJson);
+            jsonError = null;
+            var code = new System.Text.StringBuilder();
+
+            GenerateInterface(code, rootInterfaceName, doc.RootElement, 0);
+
+            outputCode = code.ToString();
+        }
+        catch (JsonException ex)
+        {
+            jsonError = ex.Message;
+            outputCode = string.Empty;
+        }
+        catch
+        {
+            outputCode = string.Empty;
+        }
+    }
+
+    private void GenerateInterface(System.Text.StringBuilder sb, string interfaceName, JsonElement element, int indent)
+    {
+        var indentStr = new string(' ', indent * 2);
+        var exportKeyword = exportTypes ? "export " : "";
+        var optional = useOptional ? "?" : "";
+
+        if (useInterface)
+        {
+            sb.AppendLine($"{indentStr}{exportKeyword}interface {interfaceName} {{");
+        }
+        else
+        {
+            sb.AppendLine($"{indentStr}{exportKeyword}type {interfaceName} = {{");
+        }
+
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            var nestedTypes = new List<(string Name, JsonElement Element)>();
+
+            foreach (var property in element.EnumerateObject())
+            {
+                var propName = usePascalCase ? property.Name : ToCamelCase(property.Name);
+                var (type, needsType) = GetTypeScriptType(property.Value, propName);
+
+                sb.AppendLine($"{indentStr}  {propName}{optional}: {type};");
+
+                if (needsType)
+                {
+                    nestedTypes.Add((type, property.Value));
+                }
+            }
+
+            sb.AppendLine($"{indentStr}}}");
+            sb.AppendLine();
+
+            foreach (var (name, nestedElement) in nestedTypes)
+            {
+                GenerateInterface(sb, name, nestedElement, indent);
+            }
+        }
+        else
+        {
+            sb.AppendLine($"{indentStr}}}");
+            sb.AppendLine();
+        }
+    }
+
+    private (string type, bool needsType) GetTypeScriptType(JsonElement element, string propName = "")
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => ("string", false),
+            JsonValueKind.Number => ("number", false),
+            JsonValueKind.True or JsonValueKind.False => ("boolean", false),
+            JsonValueKind.Array => GetArrayType(element, propName),
+            JsonValueKind.Object => (ToPascalCase(propName) + "Type", true),
+            JsonValueKind.Null => ("null", false),
+            _ => ("unknown", false)
+        };
+    }
+
+    private (string type, bool needsType) GetArrayType(JsonElement element, string propName)
+    {
+        var firstElement = element.EnumerateArray().FirstOrDefault();
+        if (firstElement.ValueKind == JsonValueKind.Undefined)
+            return ("unknown[]", false);
+
+        var (itemType, needsType) = GetTypeScriptType(firstElement, propName.TrimEnd('s') + "Item");
+        return ($"{itemType}[]", needsType);
+    }
+
+    private string ToCamelCase(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        var words = text.Split(new[] { '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (!words.Any()) return text;
+        return words.First().ToLower() + string.Concat(words.Skip(1).Select(w => char.ToUpper(w[0]) + w.Substring(1).ToLower()));
+    }
+
+    private string ToPascalCase(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        var words = text.Split(new[] { '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(words.Select(w => char.ToUpper(w[0]) + w.Substring(1).ToLower()));
+    }
+}

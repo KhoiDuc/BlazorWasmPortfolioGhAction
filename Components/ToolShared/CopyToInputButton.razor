@@ -1,0 +1,18 @@
+<button type="button"
+        class="tool-btn tool-btn-secondary"
+        title="Copy output to input"
+        disabled="@string.IsNullOrWhiteSpace(Text)"
+        @onclick="OnClick">
+    <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Output → Input
+</button>
+
+@code {
+    [Parameter] public string Text { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> OnCopy { get; set; }
+
+    private async Task OnClick()
+    {
+        if (!string.IsNullOrWhiteSpace(Text))
+            await OnCopy.InvokeAsync(Text);
+    }
+}

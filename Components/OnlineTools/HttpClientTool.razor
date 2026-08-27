@@ -1,0 +1,573 @@
+@inject HttpClient Http
+
+<ToolShell ResourceKey="httpclient" Title="HTTP Client" Icon="bi-globe2" Description="Build and send HTTP requests from the browser and inspect responses.">
+    <div class="tool-form">
+        <p class="tool-hint">Runs in your browser — subject to CORS. Use public APIs or servers that allow cross-origin requests.</p>
+
+        <div class="http-request-bar">
+            <div class="tool-field http-method-field">
+                <label class="tool-label" for="http-method">Method</label>
+                <select id="http-method" class="tool-select" @bind="method">
+                    <option>GET</option>
+                    <option>POST</option>
+                    <option>PUT</option>
+                    <option>DELETE</option>
+                    <option>PATCH</option>
+                    <option>HEAD</option>
+                    <option>OPTIONS</option>
+                </select>
+            </div>
+            <div class="tool-field http-url-field">
+                <label class="tool-label" for="http-url">URL</label>
+                <input id="http-url"
+                       type="url"
+                       class="tool-input"
+                       placeholder="https://jsonplaceholder.typicode.com/todos/1"
+                       @bind="url"
+                       @bind:event="oninput"
+                       @onkeydown="OnUrlKeyDown" />
+            </div>
+            <div class="tool-field http-timeout-field">
+                <label class="tool-label" for="http-timeout">Timeout (s)</label>
+                <input id="http-timeout" type="number" min="1" max="300" class="tool-input" @bind="timeoutSeconds" />
+            </div>
+        </div>
+
+        <div class="tool-actions">
+            @if (isLoading)
+            {
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="CancelRequest">Cancel</button>
+            }
+            else
+            {
+                <button type="button" class="tool-btn tool-btn-primary" @onclick="SendRequestAsync" disabled="@(!IsValidUrl)">Send</button>
+            }
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="http-preset">Example requests</label>
+            <select id="http-preset" class="tool-select" @bind="selectedPreset" @bind:after="LoadPreset">
+                <option value="">— Select example —</option>
+                @foreach (var preset in RequestPresets)
+                {
+                    <option value="@preset.Name">@preset.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="http-tabs">
+            <button type="button" class="http-tab @(activeRequestTab == "headers" ? "active" : "")" @onclick='() => activeRequestTab = "headers"'>Headers</button>
+            <button type="button" class="http-tab @(activeRequestTab == "query" ? "active" : "")" @onclick='() => activeRequestTab = "query"'>Query</button>
+            <button type="button" class="http-tab @(activeRequestTab == "body" ? "active" : "")" @onclick='() => activeRequestTab = "body"'>Body</button>
+        </div>
+
+        @if (activeRequestTab == "headers")
+        {
+            <div class="kv-grid">
+                @foreach (var item in headers)
+                {
+                    <div class="kv-row">
+                        <label class="tool-checkbox"><input type="checkbox" @bind="item.Enabled" /></label>
+                        <input class="tool-input" placeholder="Header name" @bind="item.Name" @bind:event="oninput" />
+                        <input class="tool-input" placeholder="Header value" @bind="item.Value" @bind:event="oninput" />
+                        <button type="button" class="tool-btn tool-btn-secondary" title="Remove" @onclick="() => RemoveHeader(item)">×</button>
+                    </div>
+                }
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="AddHeader">+ Add header</button>
+            </div>
+        }
+        else if (activeRequestTab == "query")
+        {
+            <div class="kv-grid">
+                @foreach (var item in queryParams)
+                {
+                    <div class="kv-row">
+                        <label class="tool-checkbox"><input type="checkbox" @bind="item.Enabled" /></label>
+                        <input class="tool-input" placeholder="key" @bind="item.Name" @bind:event="oninput" />
+                        <input class="tool-input" placeholder="value" @bind="item.Value" @bind:event="oninput" />
+                        <button type="button" class="tool-btn tool-btn-secondary" title="Remove" @onclick="() => RemoveQuery(item)">×</button>
+                    </div>
+                }
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="AddQuery">+ Add query parameter</button>
+            </div>
+        }
+        else
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="http-body-type">Body type</label>
+                <select id="http-body-type" class="tool-select" @bind="bodyType">
+                    <option value="none">No body</option>
+                    <option value="json">JSON</option>
+                    <option value="text">Text</option>
+                    <option value="form">Form urlencoded</option>
+                </select>
+            </div>
+            @if (bodyType != "none")
+            {
+                <div class="tool-actions">
+                    @if (bodyType == "json")
+                    {
+                        <button type="button" class="tool-btn tool-btn-secondary" @onclick="FormatJsonBody">Format JSON</button>
+                    }
+                </div>
+                <div class="tool-field">
+                    <label class="tool-label" for="http-body">Body</label>
+                    <textarea id="http-body" class="tool-textarea" rows="8" @bind="body"></textarea>
+                </div>
+            }
+        }
+
+        <div class="http-response">
+            <div class="viewer-pane-header">
+                <span>Response</span>
+                <div class="http-status-meta">
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <span class="status-badge status-error">Error</span>
+                        <span class="tool-hint">@errorMessage</span>
+                    }
+                    else if (statusCode is not null)
+                    {
+                        <span class="status-badge status-@GetStatusClass(statusCode.Value)">@statusCode @statusText</span>
+                        <span class="tool-hint">@durationMs ms</span>
+                        @if (contentLength is not null)
+                        {
+                            <span class="tool-hint">@contentLength bytes</span>
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="http-tabs">
+                <button type="button" class="http-tab @(activeResponseTab == "body" ? "active" : "")" @onclick='() => activeResponseTab = "body"'>Body</button>
+                <button type="button" class="http-tab @(activeResponseTab == "headers" ? "active" : "")" @onclick='() => activeResponseTab = "headers"'>Headers</button>
+                <button type="button" class="http-tab @(activeResponseTab == "request" ? "active" : "")" @onclick='() => activeResponseTab = "request"'>Request info</button>
+            </div>
+
+            @if (activeResponseTab == "body")
+            {
+                <div class="viewer-pane-header">
+                    <span class="tool-hint">Response body</span>
+                    <CopyResultButton Value="@(responseBody ?? "")" Label="response" />
+                </div>
+                <pre class="tool-result response-body">@(responseBody ?? "")</pre>
+            }
+            else if (activeResponseTab == "headers")
+            {
+                @if (responseHeaders.Count == 0)
+                {
+                    <p class="tool-hint">No headers received</p>
+                }
+                else
+                {
+                    <div class="headers-list">
+                        @foreach (var kv in responseHeaders)
+                        {
+                            <div class="header-row">
+                                <strong>@kv.Key:</strong>
+                                <span>@string.Join(", ", kv.Value)</span>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="request-info">
+                    <div><strong>Method:</strong> @method</div>
+                    <div><strong>URL:</strong> @BuildUrlWithQuery(url, queryParams.Where(p => p.Enabled))</div>
+                    <div style="margin-top:0.5rem;"><strong>Headers:</strong></div>
+                    @foreach (var h in headers.Where(h => h.Enabled && !string.IsNullOrWhiteSpace(h.Name)))
+                    {
+                        <div class="header-row"><strong>@h.Name:</strong> @h.Value</div>
+                    }
+                    @if (method is not ("GET" or "HEAD") && bodyType != "none" && !string.IsNullOrWhiteSpace(body))
+                    {
+                        <div style="margin-top:0.5rem;"><strong>Body:</strong></div>
+                        <pre class="tool-result">@body</pre>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</ToolShell>
+
+<style>
+    .http-request-bar {
+        display: grid;
+        grid-template-columns: 8rem 1fr 7rem;
+        gap: 0.75rem;
+        align-items: end;
+    }
+
+    .http-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+        margin: 0.75rem 0;
+    }
+
+    .http-tab {
+        padding: 0.55rem 0.9rem;
+        border: none;
+        background: transparent;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        border-bottom: 2px solid transparent;
+    }
+
+    .http-tab:hover {
+        color: var(--color-text-primary);
+    }
+
+    .http-tab.active {
+        color: var(--color-accent);
+        border-bottom-color: var(--color-accent);
+    }
+
+    .kv-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .kv-row {
+        display: grid;
+        grid-template-columns: auto 1fr 1fr auto;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .http-response {
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+    }
+
+    .viewer-pane-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .http-status-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 400;
+    }
+
+    .status-badge {
+        padding: 0.2rem 0.55rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .status-success { background: #16a34a; color: #fff; }
+    .status-redirect { background: #ca8a04; color: #fff; }
+    .status-client-error { background: #ea580c; color: #fff; }
+    .status-server-error { background: #dc2626; color: #fff; }
+    .status-neutral { background: #2563eb; color: #fff; }
+    .status-error { background: #dc2626; color: #fff; }
+
+    .response-body {
+        max-height: 28rem;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .headers-list, .request-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        font-size: 0.9rem;
+    }
+
+    .header-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    @@media (max-width: 768px) {
+        .http-request-bar {
+            grid-template-columns: 1fr;
+        }
+
+        .kv-row {
+            grid-template-columns: auto 1fr;
+        }
+    }
+</style>
+
+@code {
+    private sealed class HeaderItem
+    {
+        public bool Enabled { get; set; } = true;
+        public string Name { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+    }
+
+    private sealed class QueryParamItem
+    {
+        public bool Enabled { get; set; } = true;
+        public string Name { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+    }
+
+    private sealed record RequestPreset(string Name, string Method, string Url, string BodyType = "none", string Body = "", IReadOnlyList<HeaderItem>? Headers = null);
+
+    private static readonly List<RequestPreset> RequestPresets =
+    [
+        new("JSONPlaceholder — GET todo", "GET", "https://jsonplaceholder.typicode.com/todos/1"),
+        new("JSONPlaceholder — POST post", "POST", "https://jsonplaceholder.typicode.com/posts", "json",
+            """{"title":"foo","body":"bar","userId":1}""",
+            [new HeaderItem { Name = "Content-Type", Value = "application/json" }, new HeaderItem { Name = "Accept", Value = "application/json" }]),
+        new("httpbin — GET", "GET", "https://httpbin.org/get"),
+        new("httpbin — POST JSON", "POST", "https://httpbin.org/post", "json", """{"hello":"world"}""")
+    ];
+
+    private string method = "GET";
+    private string url = "https://jsonplaceholder.typicode.com/todos/1";
+    private string body = string.Empty;
+    private string bodyType = "json";
+    private string activeRequestTab = "headers";
+    private string activeResponseTab = "body";
+    private string selectedPreset = string.Empty;
+    private int timeoutSeconds = 30;
+    private CancellationTokenSource? cancellationTokenSource;
+    private bool userCancelled;
+
+    private readonly List<HeaderItem> headers =
+    [
+        new() { Name = "Accept", Value = "application/json" },
+        new() { Name = "User-Agent", Value = "BlazorWasmPortfolio-HTTP-Client" }
+    ];
+
+    private readonly List<QueryParamItem> queryParams = [];
+    private readonly Dictionary<string, IEnumerable<string>> responseHeaders = new(StringComparer.OrdinalIgnoreCase);
+
+    private string? responseBody;
+    private int? statusCode;
+    private string? statusText;
+    private long? durationMs;
+    private long? contentLength;
+    private bool isLoading;
+    private string? errorMessage;
+
+    private bool IsValidUrl =>
+        !string.IsNullOrWhiteSpace(url)
+        && Uri.TryCreate(url, UriKind.Absolute, out var uri)
+        && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+
+    private void AddHeader() => headers.Add(new HeaderItem());
+    private void RemoveHeader(HeaderItem item) => headers.Remove(item);
+    private void AddQuery() => queryParams.Add(new QueryParamItem());
+    private void RemoveQuery(QueryParamItem item) => queryParams.Remove(item);
+
+    private void LoadPreset()
+    {
+        if (string.IsNullOrEmpty(selectedPreset))
+            return;
+
+        var preset = RequestPresets.FirstOrDefault(p => p.Name == selectedPreset);
+        if (preset is null)
+            return;
+
+        method = preset.Method;
+        url = preset.Url;
+        bodyType = preset.BodyType;
+        body = preset.Body;
+
+        headers.Clear();
+        if (preset.Headers is { Count: > 0 })
+        {
+            foreach (var h in preset.Headers)
+                headers.Add(new HeaderItem { Name = h.Name, Value = h.Value, Enabled = h.Enabled });
+        }
+        else
+        {
+            headers.Add(new HeaderItem { Name = "Accept", Value = "application/json" });
+        }
+
+        selectedPreset = string.Empty;
+        activeRequestTab = bodyType == "none" ? "headers" : "body";
+    }
+
+    private async Task OnUrlKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !isLoading && IsValidUrl)
+            await SendRequestAsync();
+    }
+
+    private async Task SendRequestAsync()
+    {
+        errorMessage = null;
+        responseBody = null;
+        responseHeaders.Clear();
+        statusCode = null;
+        statusText = null;
+        durationMs = null;
+        contentLength = null;
+        isLoading = true;
+        userCancelled = false;
+        cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(Math.Clamp(timeoutSeconds, 1, 300)));
+        StateHasChanged();
+
+        try
+        {
+            var finalUrl = BuildUrlWithQuery(url, queryParams.Where(p => p.Enabled));
+            using var request = new HttpRequestMessage(new HttpMethod(method), finalUrl);
+
+            foreach (var h in headers.Where(h => h.Enabled && !string.IsNullOrWhiteSpace(h.Name)))
+            {
+                if (!request.Headers.TryAddWithoutValidation(h.Name, h.Value))
+                {
+                    request.Content ??= new StringContent(string.Empty);
+                    request.Content.Headers.TryAddWithoutValidation(h.Name, h.Value);
+                }
+            }
+
+            if (method is not ("GET" or "HEAD") && bodyType != "none" && !string.IsNullOrWhiteSpace(body))
+            {
+                request.Content = bodyType switch
+                {
+                    "json" => new StringContent(body, Encoding.UTF8, "application/json"),
+                    "form" => new StringContent(body, Encoding.UTF8, "application/x-www-form-urlencoded"),
+                    _ => new StringContent(body, Encoding.UTF8, "text/plain")
+                };
+            }
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            using var response = await Http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
+            sw.Stop();
+
+            statusCode = (int)response.StatusCode;
+            statusText = response.ReasonPhrase;
+            durationMs = sw.ElapsedMilliseconds;
+
+            foreach (var h in response.Headers)
+                responseHeaders[h.Key] = h.Value.ToArray();
+
+            if (response.Content is not null)
+            {
+                foreach (var h in response.Content.Headers)
+                    responseHeaders[h.Key] = h.Value.ToArray();
+
+                contentLength = response.Content.Headers.ContentLength;
+                var text = await response.Content.ReadAsStringAsync(cancellationTokenSource.Token);
+                responseBody = PrettyPrintBody(text);
+            }
+
+            activeResponseTab = "body";
+        }
+        catch (OperationCanceledException)
+        {
+            errorMessage = userCancelled
+                ? "Request was cancelled"
+                : $"Request timeout after {timeoutSeconds} seconds";
+            responseBody = errorMessage;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            responseBody = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+            cancellationTokenSource?.Dispose();
+            cancellationTokenSource = null;
+        }
+    }
+
+    private void CancelRequest()
+    {
+        userCancelled = true;
+        cancellationTokenSource?.Cancel();
+    }
+
+    private static string BuildUrlWithQuery(string baseUrl, IEnumerable<QueryParamItem> items)
+    {
+        if (string.IsNullOrWhiteSpace(baseUrl))
+            return string.Empty;
+
+        try
+        {
+            var uri = new Uri(baseUrl);
+            var query = QueryHelpers.ParseQuery(uri.Query)
+                .ToDictionary(kv => kv.Key, kv => kv.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+
+            foreach (var item in items.Where(p => !string.IsNullOrWhiteSpace(p.Name)))
+                query[item.Name] = item.Value;
+
+            return QueryHelpers.AddQueryString(uri.GetLeftPart(UriPartial.Path), query!);
+        }
+        catch
+        {
+            return baseUrl;
+        }
+    }
+
+    private static string PrettyPrintBody(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(text);
+            return JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            // not JSON
+        }
+
+        try
+        {
+            if (text.TrimStart().StartsWith('<'))
+                return System.Xml.Linq.XDocument.Parse(text).ToString();
+        }
+        catch
+        {
+            // not XML
+        }
+
+        return text;
+    }
+
+    private static string GetStatusClass(int code) => code switch
+    {
+        >= 200 and < 300 => "success",
+        >= 300 and < 400 => "redirect",
+        >= 400 and < 500 => "client-error",
+        >= 500 => "server-error",
+        _ => "neutral"
+    };
+
+    private void FormatJsonBody()
+    {
+        if (string.IsNullOrWhiteSpace(body))
+            return;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            body = JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            // ignore invalid JSON
+        }
+    }
+}

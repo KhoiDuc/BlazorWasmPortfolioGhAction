@@ -1,0 +1,243 @@
+@using System.Text.RegularExpressions
+@inject IClipboardService Clipboard
+
+<ToolShell ResourceKey="extract" Title="String Extract" Icon="bi-scissors" Description="Extract portions of text using patterns or positions.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="ex-mode">Mode</label>
+            <select id="ex-mode" class="tool-select" @bind="extractMode" @bind:after="Process">
+                <option value="substring">Substring</option>
+                <option value="between">Between Delimiters</option>
+                <option value="regex">Regex Pattern</option>
+                <option value="lines">Line Range</option>
+            </select>
+        </div>
+
+        @if (extractMode == "substring")
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="ex-start">Start</label>
+                <input id="ex-start" type="number" class="tool-input" min="0" @bind="startIndex" @bind:after="Process" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label" for="ex-length">Length</label>
+                <input id="ex-length" type="number" class="tool-input" min="0" @bind="length" @bind:after="Process" />
+            </div>
+        }
+        @if (extractMode == "between")
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="ex-delim-start">Start delimiter</label>
+                <input id="ex-delim-start" type="text" class="tool-input" placeholder="[" @bind="startDelimiter" @bind:event="oninput" @bind:after="Process" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label" for="ex-delim-end">End delimiter</label>
+                <input id="ex-delim-end" type="text" class="tool-input" placeholder="]" @bind="endDelimiter" @bind:event="oninput" @bind:after="Process" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-checkbox">
+                    <input type="checkbox" @bind="includeDelimiters" @bind:after="Process" />
+                    Include delimiters
+                </label>
+            </div>
+        }
+        @if (extractMode == "regex")
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="ex-regex">Pattern</label>
+                <input id="ex-regex" type="text" class="tool-input" placeholder="(\d+)" @bind="regexPattern" @bind:event="oninput" @bind:after="Process" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-checkbox">
+                    <input type="checkbox" @bind="regexIgnoreCase" @bind:after="Process" />
+                    Ignore case
+                </label>
+            </div>
+        }
+        @if (extractMode == "lines")
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="ex-lines">Lines</label>
+                <input id="ex-lines" type="text" class="tool-input" placeholder="1-5, 10, 15-20" @bind="lineRange" @bind:event="oninput" @bind:after="Process" />
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="tool-field">
+                <span class="tool-label" style="color: var(--color-danger, #c00);">Error: @errorMessage</span>
+            </div>
+        }
+
+        <div class="tool-field">
+            <span class="tool-label">
+                Input: @inputText.Length chars · Output: @outputText.Length chars
+                @if (matchCount > 0)
+                {
+                    <text> · @matchCount match@(matchCount > 1 ? "es" : "") found</text>
+                }
+            </span>
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="ex-input">Input</label>
+            <textarea id="ex-input" class="tool-textarea" rows="8" value="@inputText" @oninput="OnInputChanged" placeholder="Enter text..."></textarea>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="ex-output">Output</label>
+            <textarea id="ex-output" class="tool-textarea" rows="8" readonly value="@outputText"></textarea>
+            <div class="tool-actions">
+                <button type="button" class="tool-btn" @onclick="Copy" disabled="@string.IsNullOrEmpty(outputText)">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i> Copy
+                </button>
+                <CopyToInputButton Text="@outputText" OnCopy="CopyToInput" />
+                <button type="button" class="tool-btn tool-btn-danger" @onclick="Clear">
+                    <i class="bi bi-trash" aria-hidden="true"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+</ToolShell>
+
+@code {
+    private string inputText = string.Empty;
+    private string outputText = string.Empty;
+    private string extractMode = "substring";
+    private int startIndex;
+    private int length;
+    private string startDelimiter = "[";
+    private string endDelimiter = "]";
+    private bool includeDelimiters;
+    private string regexPattern = @"(\d+)";
+    private bool regexIgnoreCase;
+    private string lineRange = "1-5";
+    private string errorMessage = string.Empty;
+    private int matchCount;
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputText = e.Value?.ToString() ?? string.Empty;
+        Process();
+    }
+
+    private void Process()
+    {
+        errorMessage = string.Empty;
+        matchCount = 0;
+
+        if (string.IsNullOrEmpty(inputText))
+        {
+            outputText = string.Empty;
+            return;
+        }
+
+        try
+        {
+            outputText = extractMode switch
+            {
+                "substring" => ExtractSubstring(),
+                "between" => ExtractBetween(),
+                "regex" => ExtractRegex(),
+                "lines" => ExtractLines(),
+                _ => inputText
+            };
+
+            if (!string.IsNullOrEmpty(outputText))
+                matchCount = outputText.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            outputText = string.Empty;
+        }
+    }
+
+    private string ExtractSubstring()
+    {
+        if (startIndex >= inputText.Length) return string.Empty;
+        return length == 0
+            ? inputText.Substring(startIndex)
+            : inputText.Substring(startIndex, Math.Min(length, inputText.Length - startIndex));
+    }
+
+    private string ExtractBetween()
+    {
+        var results = new List<string>();
+        var startIdx = 0;
+
+        while (startIdx < inputText.Length)
+        {
+            var start = inputText.IndexOf(startDelimiter, startIdx);
+            if (start == -1) break;
+
+            var end = inputText.IndexOf(endDelimiter, start + startDelimiter.Length);
+            if (end == -1) break;
+
+            var extractStart = includeDelimiters ? start : start + startDelimiter.Length;
+            var extractEnd = includeDelimiters ? end + endDelimiter.Length : end;
+            results.Add(inputText.Substring(extractStart, extractEnd - extractStart));
+
+            startIdx = end + endDelimiter.Length;
+        }
+
+        return string.Join("\n", results);
+    }
+
+    private string ExtractRegex()
+    {
+        var options = regexIgnoreCase ? RegexOptions.IgnoreCase : RegexOptions.None;
+        var regex = new Regex(regexPattern, options);
+        var matches = regex.Matches(inputText);
+        return string.Join("\n", matches.Select(m => m.Value));
+    }
+
+    private string ExtractLines()
+    {
+        var lines = inputText.Split('\n');
+        var ranges = lineRange.Split(',').Select(r => r.Trim());
+        var lineNumbers = new HashSet<int>();
+
+        foreach (var range in ranges)
+        {
+            if (range.Contains('-'))
+            {
+                var parts = range.Split('-');
+                if (int.TryParse(parts[0], out var start) && int.TryParse(parts[1], out var end))
+                {
+                    for (int i = start; i <= end; i++)
+                        lineNumbers.Add(i);
+                }
+            }
+            else if (int.TryParse(range, out var lineNum))
+            {
+                lineNumbers.Add(lineNum);
+            }
+        }
+
+        var result = lineNumbers.OrderBy(n => n)
+            .Where(n => n >= 1 && n <= lines.Length)
+            .Select(n => lines[n - 1]);
+
+        return string.Join("\n", result);
+    }
+
+    private void CopyToInput(string text)
+    {
+        inputText = text;
+        Process();
+    }
+
+    private void Clear()
+    {
+        inputText = string.Empty;
+        outputText = string.Empty;
+        errorMessage = string.Empty;
+        matchCount = 0;
+    }
+
+    private async Task Copy()
+    {
+        if (!string.IsNullOrEmpty(outputText))
+            await Clipboard.CopyTextAsync(outputText);
+    }
+}

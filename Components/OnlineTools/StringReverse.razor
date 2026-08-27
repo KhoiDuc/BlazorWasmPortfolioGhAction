@@ -1,0 +1,106 @@
+@inject IClipboardService Clipboard
+
+<ToolShell ResourceKey="stringreverse" Title="String Reverse" Icon="bi-arrow-left-right" Description="Reverse strings, lines, or words in your text.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="sr-mode">Mode</label>
+            <select id="sr-mode" class="tool-select" @bind="reverseMode" @bind:after="Process">
+                <option value="full">Reverse entire text</option>
+                <option value="lines">Reverse line order</option>
+                <option value="eachline">Reverse each line</option>
+                <option value="words">Reverse word order</option>
+                <option value="eachword">Reverse each word</option>
+            </select>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="sr-input">Input</label>
+            <textarea id="sr-input" class="tool-textarea" rows="8" value="@inputText" @oninput="OnInputChanged" placeholder="Enter text to reverse..."></textarea>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="sr-output">Output</label>
+            <textarea id="sr-output" class="tool-textarea" rows="8" readonly value="@outputText"></textarea>
+            <div class="tool-actions">
+                <button type="button" class="tool-btn" @onclick="Copy" disabled="@string.IsNullOrEmpty(outputText)">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i> Copy
+                </button>
+                <CopyToInputButton Text="@outputText" OnCopy="CopyToInput" />
+                <button type="button" class="tool-btn tool-btn-danger" @onclick="Clear">
+                    <i class="bi bi-trash" aria-hidden="true"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+</ToolShell>
+
+@code {
+    private string inputText = string.Empty;
+    private string outputText = string.Empty;
+    private string reverseMode = "full";
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputText = e.Value?.ToString() ?? string.Empty;
+        Process();
+    }
+
+    private void Process()
+    {
+        if (string.IsNullOrEmpty(inputText))
+        {
+            outputText = string.Empty;
+            return;
+        }
+
+        outputText = reverseMode switch
+        {
+            "full" => new string(inputText.Reverse().ToArray()),
+            "lines" => ReverseLines(),
+            "eachline" => ReverseEachLine(),
+            "words" => ReverseWords(),
+            "eachword" => ReverseEachWord(),
+            _ => inputText
+        };
+    }
+
+    private string ReverseLines()
+    {
+        var lines = inputText.Split('\n');
+        return string.Join("\n", lines.Reverse());
+    }
+
+    private string ReverseEachLine()
+    {
+        var lines = inputText.Split('\n');
+        return string.Join("\n", lines.Select(l => new string(l.Reverse().ToArray())));
+    }
+
+    private string ReverseWords()
+    {
+        var words = inputText.Split(new[] { ' ' }, StringSplitOptions.None);
+        return string.Join(" ", words.Reverse());
+    }
+
+    private string ReverseEachWord()
+    {
+        var words = inputText.Split(new[] { ' ' }, StringSplitOptions.None);
+        return string.Join(" ", words.Select(w => new string(w.Reverse().ToArray())));
+    }
+
+    private void CopyToInput(string text)
+    {
+        inputText = text;
+        Process();
+    }
+
+    private void Clear()
+    {
+        inputText = string.Empty;
+        outputText = string.Empty;
+    }
+
+    private async Task Copy()
+    {
+        if (!string.IsNullOrEmpty(outputText))
+            await Clipboard.CopyTextAsync(outputText);
+    }
+}

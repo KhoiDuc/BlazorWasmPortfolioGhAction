@@ -1,0 +1,275 @@
+@using System.Text.Json
+@inject IClipboardService Clipboard
+
+<ToolShell ResourceKey="jsontojava" Title="JSON to Java" Icon="bi-cup-hot" Description="Generate Java class definitions (POJO) from JSON.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="java-class-name">Class</label>
+            <input id="java-class-name" type="text" class="tool-input" placeholder="RootObject"
+                   @bind="rootClassName" @bind:event="oninput" @bind:after="GenerateJava" />
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="java-package">Package</label>
+            <input id="java-package" type="text" class="tool-input" placeholder="com.example"
+                   @bind="packageName" @bind:event="oninput" @bind:after="GenerateJava" />
+        </div>
+
+        <div class="tool-checkbox-group">
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="useRecords" @bind:after="GenerateJava" />
+                Records
+            </label>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="useLombok" @bind:after="GenerateJava" />
+                Lombok
+            </label>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="useJackson" @bind:after="GenerateJava" />
+                Jackson
+            </label>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="generateGettersSetters" @bind:after="GenerateJava" />
+                Getters/Setters
+            </label>
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="java-json-input">JSON Input</label>
+            <textarea id="java-json-input" class="tool-textarea" rows="10" spellcheck="false"
+                      placeholder='{"name": "John", "age": 30, "isActive": true}'
+                      @bind="inputJson" @bind:event="oninput" @bind:after="OnInputChanged"></textarea>
+            @if (!string.IsNullOrEmpty(jsonError))
+            {
+                <div class="tool-alert tool-alert-danger">@jsonError</div>
+            }
+        </div>
+
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-primary"
+                    @onclick="GenerateJava"
+                    disabled="@(string.IsNullOrWhiteSpace(inputJson) || !string.IsNullOrEmpty(jsonError))">
+                Generate Java Classes
+            </button>
+            <button type="button" class="tool-btn tool-btn-secondary"
+                    @onclick="CopyOutput"
+                    disabled="@string.IsNullOrWhiteSpace(outputCode)">
+                Copy
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(outputCode))
+        {
+            <ResultValueSingle CopyLabel="Java Code" Value="@outputCode" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private string inputJson = string.Empty;
+    private string outputCode = string.Empty;
+    private string rootClassName = "RootObject";
+    private string packageName = "com.example.model";
+    private bool useRecords;
+    private bool useLombok = true;
+    private bool useJackson = true;
+    private bool generateGettersSetters;
+    private string? jsonError;
+
+    private void OnInputChanged()
+    {
+        jsonError = null;
+        if (string.IsNullOrWhiteSpace(inputJson))
+        {
+            outputCode = string.Empty;
+            return;
+        }
+
+        try
+        {
+            using var _ = JsonDocument.Parse(inputJson);
+            GenerateJava();
+        }
+        catch (JsonException ex)
+        {
+            jsonError = ex.Message;
+            outputCode = string.Empty;
+        }
+    }
+
+    private async Task CopyOutput()
+    {
+        if (!string.IsNullOrWhiteSpace(outputCode))
+            await Clipboard.CopyTextAsync(outputCode);
+    }
+
+    private void GenerateJava()
+    {
+        if (string.IsNullOrWhiteSpace(inputJson))
+        {
+            outputCode = string.Empty;
+            return;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(inputJson);
+            jsonError = null;
+            var code = new System.Text.StringBuilder();
+
+            if (!string.IsNullOrWhiteSpace(packageName))
+            {
+                code.AppendLine($"package {packageName};");
+                code.AppendLine();
+            }
+
+            code.AppendLine("import java.util.List;");
+            if (useJackson)
+            {
+                code.AppendLine("import com.fasterxml.jackson.annotation.JsonProperty;");
+            }
+            if (useLombok && !useRecords)
+            {
+                code.AppendLine("import lombok.Data;");
+            }
+            code.AppendLine();
+
+            GenerateClass(code, rootClassName, doc.RootElement, 0);
+
+            outputCode = code.ToString();
+        }
+        catch (JsonException ex)
+        {
+            jsonError = ex.Message;
+            outputCode = string.Empty;
+        }
+        catch
+        {
+            outputCode = string.Empty;
+        }
+    }
+
+    private void GenerateClass(System.Text.StringBuilder sb, string className, JsonElement element, int indent)
+    {
+        var indentStr = new string(' ', indent * 4);
+
+        if (useLombok && !useRecords && indent == 0)
+        {
+            sb.AppendLine($"{indentStr}@Data");
+        }
+
+        if (useRecords)
+        {
+            sb.Append($"{indentStr}public record {className}(");
+            GenerateRecordParams(sb, element);
+            sb.AppendLine(") {}");
+        }
+        else
+        {
+            sb.AppendLine($"{indentStr}public class {className} {{");
+
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var property in element.EnumerateObject())
+                {
+                    var propName = ToCamelCase(property.Name);
+                    var (type, needsClass) = GetJavaType(property.Value);
+
+                    if (useJackson && propName != property.Name)
+                    {
+                        sb.AppendLine($"{indentStr}    @JsonProperty(\"{property.Name}\")");
+                    }
+
+                    sb.AppendLine($"{indentStr}    private {type} {propName};");
+                    sb.AppendLine();
+
+                    if (generateGettersSetters && !useLombok)
+                    {
+                        var capitalizedName = char.ToUpper(propName[0]) + propName.Substring(1);
+                        sb.AppendLine($"{indentStr}    public {type} get{capitalizedName}() {{");
+                        sb.AppendLine($"{indentStr}        return {propName};");
+                        sb.AppendLine($"{indentStr}    }}");
+                        sb.AppendLine();
+                        sb.AppendLine($"{indentStr}    public void set{capitalizedName}({type} {propName}) {{");
+                        sb.AppendLine($"{indentStr}        this.{propName} = {propName};");
+                        sb.AppendLine($"{indentStr}    }}");
+                        sb.AppendLine();
+                    }
+
+                    if (needsClass)
+                    {
+                        GenerateClass(sb, type, property.Value, indent + 1);
+                    }
+                }
+            }
+
+            sb.AppendLine($"{indentStr}}}");
+        }
+
+        sb.AppendLine();
+    }
+
+    private void GenerateRecordParams(System.Text.StringBuilder sb, JsonElement element)
+    {
+        if (element.ValueKind != JsonValueKind.Object) return;
+
+        var properties = element.EnumerateObject().ToList();
+        for (int i = 0; i < properties.Count; i++)
+        {
+            var property = properties[i];
+            var propName = ToCamelCase(property.Name);
+            var (type, _) = GetJavaType(property.Value);
+
+            if (useJackson && propName != property.Name)
+            {
+                sb.Append($"@JsonProperty(\"{property.Name}\") ");
+            }
+
+            sb.Append($"{type} {propName}");
+
+            if (i < properties.Count - 1)
+            {
+                sb.Append(", ");
+            }
+        }
+    }
+
+    private (string type, bool needsClass) GetJavaType(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => ("String", false),
+            JsonValueKind.Number => element.TryGetInt32(out _) ? ("Integer", false) : ("Double", false),
+            JsonValueKind.True or JsonValueKind.False => ("Boolean", false),
+            JsonValueKind.Array => GetArrayType(element),
+            JsonValueKind.Object => (ToPascalCase("NestedObject"), true),
+            JsonValueKind.Null => ("Object", false),
+            _ => ("Object", false)
+        };
+    }
+
+    private (string type, bool needsClass) GetArrayType(JsonElement element)
+    {
+        var firstElement = element.EnumerateArray().FirstOrDefault();
+        if (firstElement.ValueKind == JsonValueKind.Undefined)
+            return ("List<Object>", false);
+
+        var (itemType, needsClass) = GetJavaType(firstElement);
+        return ($"List<{itemType}>", needsClass);
+    }
+
+    private string ToCamelCase(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        var words = text.Split(new[] { '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (!words.Any()) return text;
+        return words.First().ToLower() + string.Concat(words.Skip(1).Select(w => char.ToUpper(w[0]) + w.Substring(1).ToLower()));
+    }
+
+    private string ToPascalCase(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        var words = text.Split(new[] { '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(words.Select(w => char.ToUpper(w[0]) + w.Substring(1).ToLower()));
+    }
+}

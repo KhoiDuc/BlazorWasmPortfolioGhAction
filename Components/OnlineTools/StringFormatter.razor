@@ -1,0 +1,262 @@
+<ToolShell ResourceKey="stringformatter" Title="String Formatter" Icon="bi-type" Description="Test and explore C# string formatting, interpolation, and composite formatting.">
+    <div class="tool-form">
+        <details open>
+            <summary class="tool-label">Numeric Formatting</summary>
+            <div class="tool-field">
+                <label class="tool-label" for="sf-number">Number</label>
+                <input id="sf-number" type="number" step="any" class="tool-input" style="width: 12em;"
+                       @bind="testNumber" @bind:after="UpdateAllFormats" />
+            </div>
+            <div class="tool-table-wrapper">
+                <table class="tool-table">
+                    <thead>
+                        <tr>
+                            <th>Format</th>
+                            <th>Description</th>
+                            <th>Result</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var fmt in numericFormats)
+                        {
+                            <tr>
+                                <td><code>@fmt.Format</code></td>
+                                <td>@fmt.Description</td>
+                                <td><code>@fmt.Result</code></td>
+                                <td><CopyResultButton Value="@fmt.Result" Label="result" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+
+        <details>
+            <summary class="tool-label">String Padding &amp; Alignment</summary>
+            <div class="tool-field">
+                <label class="tool-label" for="sf-text">Text</label>
+                <input id="sf-text" type="text" class="tool-input" @bind="testString" @bind:after="UpdateAllFormats" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label" for="sf-width">Width</label>
+                <input id="sf-width" type="number" class="tool-input" style="width: 8em;" min="1" max="50"
+                       @bind="paddingWidth" @bind:after="UpdateAllFormats" />
+            </div>
+            <div class="tool-table-wrapper">
+                <table class="tool-table">
+                    <thead>
+                        <tr>
+                            <th>Format</th>
+                            <th>Description</th>
+                            <th>Result</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var fmt in stringFormats)
+                        {
+                            <tr>
+                                <td><code>@fmt.Format</code></td>
+                                <td>@fmt.Description</td>
+                                <td><code>"@fmt.Result"</code></td>
+                                <td><CopyResultButton Value="@fmt.Result" Label="result" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+
+        <details>
+            <summary class="tool-label">Composite Formatting (String.Format)</summary>
+            <div class="tool-field">
+                <label class="tool-label" for="sf-composite">Format</label>
+                <input id="sf-composite" type="text" class="tool-input"
+                       placeholder="Name: {0}, Age: {1}, Score: {2:F2}"
+                       @bind="compositeFormat" @bind:after="UpdateComposite" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label" for="sf-arg0">{0}</label>
+                <input id="sf-arg0" type="text" class="tool-input" @bind="arg0" @bind:after="UpdateComposite" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label" for="sf-arg1">{1}</label>
+                <input id="sf-arg1" type="text" class="tool-input" @bind="arg1" @bind:after="UpdateComposite" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label" for="sf-arg2">{2}</label>
+                <input id="sf-arg2" type="text" class="tool-input" @bind="arg2" @bind:after="UpdateComposite" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label">Result</label>
+                <div class="conv-row">
+                    <code class="tool-result">@compositeResult</code>
+                    <CopyResultButton Value="@compositeResult" Label="result" />
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary class="tool-label">Escape Sequences</summary>
+            <div class="tool-table-wrapper">
+                <table class="tool-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var esc in escapeSequences)
+                        {
+                            <tr>
+                                <td><code>@esc.Code</code></td>
+                                <td>@esc.Name</td>
+                                <td><code>@esc.Example</code></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+
+        <details>
+            <summary class="tool-label">Common String Methods</summary>
+            <div class="tool-field">
+                <label class="tool-label" for="sf-method-text">Test String</label>
+                <input id="sf-method-text" type="text" class="tool-input"
+                       @bind="methodTestString" @bind:after="UpdateMethods" />
+            </div>
+            <div class="tool-table-wrapper">
+                <table class="tool-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Result</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var method in stringMethods)
+                        {
+                            <tr>
+                                <td><code>@method.Method</code></td>
+                                <td><code>@method.Result</code></td>
+                                <td><CopyResultButton Value="@method.Result" Label="result" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    </div>
+</ToolShell>
+
+@code {
+    private double testNumber = 1234.5678;
+    private string testString = "Hello";
+    private int paddingWidth = 15;
+    private string compositeFormat = "Name: {0}, Age: {1}, Score: {2:F2}";
+    private string arg0 = "John";
+    private string arg1 = "30";
+    private string arg2 = "95.5";
+    private string compositeResult = string.Empty;
+    private string methodTestString = "  Hello World  ";
+
+    private List<FormatItem> numericFormats = new();
+    private List<FormatItem> stringFormats = new();
+    private List<MethodItem> stringMethods = new();
+
+    private readonly List<(string Code, string Name, string Example)> escapeSequences = new()
+    {
+        (@"\\", "Backslash", @"C:\\path"),
+        (@"\n", "New line", "Line1\\nLine2"),
+        (@"\r", "Carriage return", ""),
+        (@"\t", "Tab", "Col1\\tCol2"),
+        (@"\""", "Double quote", @"""text"""),
+        (@"\'", "Single quote", @"'text'"),
+        (@"\0", "Null", ""),
+        (@"\xNN", "Hex char", @"\x41 = A"),
+        (@"\uNNNN", "Unicode", @"\u0041 = A"),
+        (@"@""", "Verbatim", @"@""path\to\file"""),
+        (@"$""", "Interpolated", @"$""Value: {x}"""),
+    };
+
+    protected override void OnInitialized()
+    {
+        UpdateAllFormats();
+        UpdateComposite();
+        UpdateMethods();
+    }
+
+    private void UpdateAllFormats()
+    {
+        numericFormats = new List<FormatItem>
+        {
+            new("N", "Number", testNumber.ToString("N")),
+            new("N0", "Number (no decimals)", testNumber.ToString("N0")),
+            new("N4", "Number (4 decimals)", testNumber.ToString("N4")),
+            new("F2", "Fixed-point", testNumber.ToString("F2")),
+            new("C", "Currency", testNumber.ToString("C")),
+            new("C0", "Currency (no decimals)", testNumber.ToString("C0")),
+            new("P", "Percent", (testNumber / 100).ToString("P")),
+            new("P0", "Percent (no decimals)", (testNumber / 100).ToString("P0")),
+            new("E", "Scientific", testNumber.ToString("E")),
+            new("E2", "Scientific (2 digits)", testNumber.ToString("E2")),
+            new("X", "Hexadecimal", ((int)testNumber).ToString("X")),
+            new("X8", "Hex (8 digits)", ((int)testNumber).ToString("X8")),
+            new("D8", "Decimal (padded)", ((int)testNumber).ToString("D8")),
+            new("#,##0.00", "Custom pattern", testNumber.ToString("#,##0.00")),
+            new("0.###", "Custom (optional)", testNumber.ToString("0.###")),
+            new("(###) ###-####", "Phone mask", ((long)1234567890).ToString("(###) ###-####")),
+        };
+
+        stringFormats = new List<FormatItem>
+        {
+            new($"{{0,{paddingWidth}}}", "Right-align", string.Format($"{{0,{paddingWidth}}}", testString)),
+            new($"{{0,-{paddingWidth}}}", "Left-align", string.Format($"{{0,-{paddingWidth}}}", testString)),
+            new($"PadLeft({paddingWidth})", "PadLeft", testString.PadLeft(paddingWidth)),
+            new($"PadRight({paddingWidth})", "PadRight", testString.PadRight(paddingWidth)),
+            new($"PadLeft({paddingWidth}, '-')", "PadLeft with char", testString.PadLeft(paddingWidth, '-')),
+            new($"PadRight({paddingWidth}, '-')", "PadRight with char", testString.PadRight(paddingWidth, '-')),
+        };
+    }
+
+    private void UpdateComposite()
+    {
+        try
+        {
+            object[] args = { arg0, arg1, arg2 };
+            compositeResult = string.Format(compositeFormat, args);
+        }
+        catch (Exception ex)
+        {
+            compositeResult = $"Error: {ex.Message}";
+        }
+    }
+
+    private void UpdateMethods()
+    {
+        stringMethods = new List<MethodItem>
+        {
+            new(".ToUpper()", methodTestString.ToUpper()),
+            new(".ToLower()", methodTestString.ToLower()),
+            new(".Trim()", methodTestString.Trim()),
+            new(".TrimStart()", methodTestString.TrimStart()),
+            new(".TrimEnd()", methodTestString.TrimEnd()),
+            new(".Length", methodTestString.Length.ToString()),
+            new(".Replace(\" \", \"_\")", methodTestString.Replace(" ", "_")),
+            new(".Substring(0, 5)", methodTestString.Length >= 5 ? methodTestString.Substring(0, 5) : methodTestString),
+            new(".Contains(\"World\")", methodTestString.Contains("World").ToString()),
+            new(".StartsWith(\"  H\")", methodTestString.StartsWith("  H").ToString()),
+            new(".EndsWith(\"  \")", methodTestString.EndsWith("  ").ToString()),
+            new(".IndexOf(\"o\")", methodTestString.IndexOf("o").ToString()),
+            new(".Split(' ').Length", methodTestString.Split(' ').Length.ToString()),
+        };
+    }
+
+    private record FormatItem(string Format, string Description, string Result);
+    private record MethodItem(string Method, string Result);
+}

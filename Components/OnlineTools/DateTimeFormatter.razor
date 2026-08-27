@@ -1,0 +1,263 @@
+@using System.Globalization
+
+<ToolShell ResourceKey="datetimeformatter" Title="DateTime Formatter" Icon="bi-calendar3" Description="Test and explore C# DateTime format strings interactively.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="dtf-date">Date</label>
+            <input id="dtf-date" type="text" class="tool-input" placeholder="2024-01-15 14:30:00"
+                   @bind="dateInput" @bind:after="UpdateFormats" />
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="dtf-culture">Culture</label>
+            <select id="dtf-culture" class="tool-select" @bind="selectedCulture" @bind:after="UpdateFormats">
+                <option value="en-US">English (US)</option>
+                <option value="en-GB">English (UK)</option>
+                <option value="tr-TR">Turkish</option>
+                <option value="de-DE">German</option>
+                <option value="fr-FR">French</option>
+                <option value="es-ES">Spanish</option>
+                <option value="ja-JP">Japanese</option>
+                <option value="zh-CN">Chinese</option>
+                <option value="">Invariant</option>
+            </select>
+        </div>
+
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="SetNow">Use Now</button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="tool-alert tool-alert-danger">@errorMessage</div>
+        }
+
+        <div class="tool-field">
+            <label class="tool-label" for="dtf-custom">Custom Format</label>
+            <div class="conv-row">
+                <input id="dtf-custom" type="text" class="tool-input" placeholder="yyyy-MM-dd HH:mm:ss"
+                       @bind="customFormat" @bind:after="UpdateFormats" />
+                <CopyResultButton Value="@customResult" Label="result" />
+            </div>
+            <code class="tool-result">@customResult</code>
+            <p class="tool-hint">dateTime.ToString("@customFormat")</p>
+        </div>
+
+        <details open>
+            <summary class="tool-label">Standard Formats (@standardFormats.Count)</summary>
+            <div class="tool-table-wrapper">
+                <table class="tool-table">
+                    <thead>
+                        <tr>
+                            <th>Spec</th>
+                            <th>Name</th>
+                            <th>Result</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var format in standardFormats)
+                        {
+                            <tr>
+                                <td><code>"@format.Spec"</code></td>
+                                <td>@format.Name</td>
+                                <td><code>@format.Result</code></td>
+                                <td><CopyResultButton Value="@format.Result" Label="result" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+
+        <details>
+            <summary class="tool-label">Common Patterns (@commonPatterns.Count)</summary>
+            <div class="tool-table-wrapper">
+                <table class="tool-table">
+                    <thead>
+                        <tr>
+                            <th>Spec</th>
+                            <th>Result</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var format in commonPatterns)
+                        {
+                            <tr>
+                                <td><code>"@format.Spec"</code></td>
+                                <td><code>@format.Result</code></td>
+                                <td><CopyResultButton Value="@format.Result" Label="result" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+
+        <details>
+            <summary class="tool-label">Individual Components (@componentFormats.Count)</summary>
+            <div class="tool-table-wrapper">
+                <table class="tool-table">
+                    <thead>
+                        <tr>
+                            <th>Spec</th>
+                            <th>Name</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var format in componentFormats)
+                        {
+                            <tr>
+                                <td><code>"@format.Spec"</code></td>
+                                <td>@format.Name</td>
+                                <td><code>@format.Result</code></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+
+        <details>
+            <summary class="tool-label">Format Specifiers Reference (@formatSpecifiers.Count)</summary>
+            <div class="tool-table-wrapper">
+                <table class="tool-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var spec in formatSpecifiers)
+                        {
+                            <tr>
+                                <td><code>@spec.Code</code></td>
+                                <td>@spec.Description</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    </div>
+</ToolShell>
+
+@code {
+    private string dateInput = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+    private string selectedCulture = "en-US";
+    private string customFormat = "yyyy-MM-dd HH:mm:ss";
+    private string customResult = string.Empty;
+    private string errorMessage = string.Empty;
+    private DateTime currentDateTime = DateTime.Now;
+    private CultureInfo culture = CultureInfo.InvariantCulture;
+
+    private List<FormatItem> standardFormats = new();
+    private List<FormatItem> commonPatterns = new();
+    private List<FormatItem> componentFormats = new();
+
+    private readonly List<(string Code, string Description)> formatSpecifiers = new()
+    {
+        ("yyyy", "4-digit year"),
+        ("yy", "2-digit year"),
+        ("MM", "Month (01-12)"),
+        ("MMM", "Abbreviated month"),
+        ("MMMM", "Full month name"),
+        ("dd", "Day (01-31)"),
+        ("ddd", "Abbreviated day"),
+        ("dddd", "Full day name"),
+        ("HH", "Hour 24h (00-23)"),
+        ("hh", "Hour 12h (01-12)"),
+        ("mm", "Minutes (00-59)"),
+        ("ss", "Seconds (00-59)"),
+        ("fff", "Milliseconds"),
+        ("tt", "AM/PM"),
+        ("zzz", "Timezone offset"),
+        ("K", "Timezone info")
+    };
+
+    protected override void OnInitialized()
+    {
+        UpdateFormats();
+    }
+
+    private void SetNow()
+    {
+        dateInput = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        UpdateFormats();
+    }
+
+    private void UpdateFormats()
+    {
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!DateTime.TryParse(dateInput, out currentDateTime))
+            {
+                errorMessage = "Invalid date format. Use: yyyy-MM-dd HH:mm:ss";
+                return;
+            }
+
+            culture = string.IsNullOrEmpty(selectedCulture)
+                ? CultureInfo.InvariantCulture
+                : new CultureInfo(selectedCulture);
+
+            customResult = currentDateTime.ToString(customFormat, culture);
+
+            standardFormats = new List<FormatItem>
+            {
+                new FormatItem("d", "Short date", currentDateTime.ToString("d", culture)),
+                new FormatItem("D", "Long date", currentDateTime.ToString("D", culture)),
+                new FormatItem("t", "Short time", currentDateTime.ToString("t", culture)),
+                new FormatItem("T", "Long time", currentDateTime.ToString("T", culture)),
+                new FormatItem("f", "Full (short time)", currentDateTime.ToString("f", culture)),
+                new FormatItem("F", "Full (long time)", currentDateTime.ToString("F", culture)),
+                new FormatItem("g", "General (short)", currentDateTime.ToString("g", culture)),
+                new FormatItem("G", "General (long)", currentDateTime.ToString("G", culture)),
+                new FormatItem("M", "Month day", currentDateTime.ToString("M", culture)),
+                new FormatItem("Y", "Year month", currentDateTime.ToString("Y", culture)),
+                new FormatItem("o", "Round-trip", currentDateTime.ToString("o", culture)),
+                new FormatItem("r", "RFC1123", currentDateTime.ToString("r", culture)),
+                new FormatItem("s", "Sortable", currentDateTime.ToString("s", culture)),
+                new FormatItem("u", "Universal sortable", currentDateTime.ToString("u", culture)),
+            };
+
+            commonPatterns = new List<FormatItem>
+            {
+                new FormatItem("yyyy-MM-dd", "", currentDateTime.ToString("yyyy-MM-dd", culture)),
+                new FormatItem("dd/MM/yyyy", "", currentDateTime.ToString("dd/MM/yyyy", culture)),
+                new FormatItem("MM/dd/yyyy", "", currentDateTime.ToString("MM/dd/yyyy", culture)),
+                new FormatItem("yyyy-MM-dd HH:mm:ss", "", currentDateTime.ToString("yyyy-MM-dd HH:mm:ss", culture)),
+                new FormatItem("dd MMM yyyy", "", currentDateTime.ToString("dd MMM yyyy", culture)),
+                new FormatItem("MMMM dd, yyyy", "", currentDateTime.ToString("MMMM dd, yyyy", culture)),
+                new FormatItem("HH:mm:ss", "", currentDateTime.ToString("HH:mm:ss", culture)),
+                new FormatItem("hh:mm tt", "", currentDateTime.ToString("hh:mm tt", culture)),
+                new FormatItem("dddd, MMMM dd", "", currentDateTime.ToString("dddd, MMMM dd", culture)),
+            };
+
+            componentFormats = new List<FormatItem>
+            {
+                new FormatItem("yyyy", "Year", currentDateTime.ToString("yyyy", culture)),
+                new FormatItem("MM", "Month", currentDateTime.ToString("MM", culture)),
+                new FormatItem("MMMM", "Month name", currentDateTime.ToString("MMMM", culture)),
+                new FormatItem("dd", "Day", currentDateTime.ToString("dd", culture)),
+                new FormatItem("dddd", "Day name", currentDateTime.ToString("dddd", culture)),
+                new FormatItem("HH", "Hour (24h)", currentDateTime.ToString("HH", culture)),
+                new FormatItem("hh", "Hour (12h)", currentDateTime.ToString("hh", culture)),
+                new FormatItem("mm", "Minutes", currentDateTime.ToString("mm", culture)),
+                new FormatItem("ss", "Seconds", currentDateTime.ToString("ss", culture)),
+                new FormatItem("fff", "Milliseconds", currentDateTime.ToString("fff", culture)),
+                new FormatItem("tt", "AM/PM", currentDateTime.ToString("tt", culture)),
+            };
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private record FormatItem(string Spec, string Name, string Result);
+}

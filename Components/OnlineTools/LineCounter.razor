@@ -1,0 +1,106 @@
+@inject IClipboardService Clipboard
+
+<ToolShell ResourceKey="linecounter" Title="Line Counter" Icon="bi-list-ol" Description="View text statistics: lines, words, characters, and more.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="lc-input">Input</label>
+            <textarea id="lc-input" class="tool-textarea" rows="10" value="@inputText" @oninput="OnInputChanged" placeholder="Enter text to analyze..."></textarea>
+            <div class="tool-actions">
+                <button type="button" class="tool-btn" @onclick="Copy" disabled="@string.IsNullOrEmpty(inputText)">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i> Copy stats
+                </button>
+                <button type="button" class="tool-btn tool-btn-danger" @onclick="Clear">
+                    <i class="bi bi-trash" aria-hidden="true"></i> Clear
+                </button>
+            </div>
+        </div>
+        <div class="tool-field">
+            <span class="tool-label">Statistics</span>
+            <div class="tool-form" style="gap: 0.35rem;">
+                @foreach (var (label, value) in StatItems)
+                {
+                    <div style="display:flex;justify-content:space-between;gap:1rem;">
+                        <span>@label</span>
+                        <strong>@value</strong>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</ToolShell>
+
+@code {
+    private string inputText = string.Empty;
+    private TextStatistics stats = new();
+
+    private IEnumerable<(string Label, string Value)> StatItems =>
+    [
+        ("Lines", stats.Lines.ToString()),
+        ("Non-empty Lines", stats.NonEmptyLines.ToString()),
+        ("Words", stats.Words.ToString()),
+        ("Characters", stats.Characters.ToString()),
+        ("Characters (no spaces)", stats.CharactersNoSpaces.ToString()),
+        ("Bytes (UTF-8)", stats.Bytes.ToString()),
+        ("Paragraphs", stats.Paragraphs.ToString()),
+        ("Sentences", stats.Sentences.ToString()),
+        ("Avg. Word Length", stats.AvgWordLength.ToString())
+    ];
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputText = e.Value?.ToString() ?? string.Empty;
+        CalculateStats();
+    }
+
+    private void CalculateStats()
+    {
+        if (string.IsNullOrEmpty(inputText))
+        {
+            stats = new TextStatistics();
+            return;
+        }
+
+        var lines = inputText.Split('\n');
+        var words = inputText.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+        var sentences = inputText.Split(new[] { '.', '!', '?' }, StringSplitOptions.RemoveEmptyEntries);
+        var paragraphs = inputText.Split(new[] { "\n\n", "\r\n\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+        stats = new TextStatistics
+        {
+            Lines = lines.Length,
+            NonEmptyLines = lines.Count(l => !string.IsNullOrWhiteSpace(l)),
+            Words = words.Length,
+            Characters = inputText.Length,
+            CharactersNoSpaces = inputText.Count(c => !char.IsWhiteSpace(c)),
+            Bytes = System.Text.Encoding.UTF8.GetByteCount(inputText),
+            Paragraphs = paragraphs.Length,
+            Sentences = sentences.Length,
+            AvgWordLength = words.Any() ? Math.Round(words.Average(w => w.Length), 1) : 0
+        };
+    }
+
+    private void Clear()
+    {
+        inputText = string.Empty;
+        stats = new TextStatistics();
+    }
+
+    private async Task Copy()
+    {
+        var summary = string.Join('\n', StatItems.Select(s => $"{s.Label}: {s.Value}"));
+        await Clipboard.CopyTextAsync(summary);
+    }
+
+    private class TextStatistics
+    {
+        public int Lines { get; set; }
+        public int NonEmptyLines { get; set; }
+        public int Words { get; set; }
+        public int Characters { get; set; }
+        public int CharactersNoSpaces { get; set; }
+        public int Bytes { get; set; }
+        public int Paragraphs { get; set; }
+        public int Sentences { get; set; }
+        public double AvgWordLength { get; set; }
+    }
+}

@@ -1,0 +1,135 @@
+@inject IClipboardService Clipboard
+
+<ToolShell ResourceKey="trimpad" Title="Trim/Pad" Icon="bi-distribute-horizontal" Description="Trim whitespace or add padding to your text.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="tp-mode">Operation</label>
+            <select id="tp-mode" class="tool-select" @bind="operationMode" @bind:after="Process">
+                <option value="trim">Trim (both ends)</option>
+                <option value="trimstart">Trim Start</option>
+                <option value="trimend">Trim End</option>
+                <option value="padleft">Pad Left</option>
+                <option value="padright">Pad Right</option>
+            </select>
+        </div>
+        @if (operationMode.StartsWith("pad"))
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="tp-width">Width</label>
+                <input id="tp-width" type="number" class="tool-input" min="1" @bind="totalWidth" @bind:after="Process" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label" for="tp-char">Pad character</label>
+                <input id="tp-char" type="text" class="tool-input" maxlength="1" @bind="paddingChar" @bind:event="oninput" @bind:after="Process" />
+            </div>
+        }
+        @if (operationMode.StartsWith("trim"))
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="tp-trim-chars">Chars to trim</label>
+                <input id="tp-trim-chars" type="text" class="tool-input" placeholder="(whitespace)" @bind="trimChars" @bind:event="oninput" @bind:after="Process" />
+            </div>
+        }
+        <div class="tool-field">
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="applyToEachLine" @bind:after="Process" />
+                Apply to each line
+            </label>
+        </div>
+        <div class="tool-field">
+            <span class="tool-label">Input: @inputText.Length chars · Output: @outputText.Length chars
+                @if (charsDelta != 0)
+                {
+                    <text> · @(charsDelta > 0 ? $"+{charsDelta}" : charsDelta.ToString()) chars @(charsDelta > 0 ? "added" : "removed")</text>
+                }
+            </span>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="tp-input">Input</label>
+            <textarea id="tp-input" class="tool-textarea" rows="8" value="@inputText" @oninput="OnInputChanged" placeholder="Enter text..."></textarea>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="tp-output">Output</label>
+            <textarea id="tp-output" class="tool-textarea" rows="8" readonly value="@outputText"></textarea>
+            <div class="tool-actions">
+                <button type="button" class="tool-btn" @onclick="Copy" disabled="@string.IsNullOrEmpty(outputText)">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i> Copy
+                </button>
+                <CopyToInputButton Text="@outputText" OnCopy="CopyToInput" />
+                <button type="button" class="tool-btn tool-btn-danger" @onclick="Clear">
+                    <i class="bi bi-trash" aria-hidden="true"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+</ToolShell>
+
+@code {
+    private string inputText = string.Empty;
+    private string outputText = string.Empty;
+    private string operationMode = "trim";
+    private int totalWidth = 20;
+    private string paddingChar = " ";
+    private string trimChars = string.Empty;
+    private bool applyToEachLine;
+    private int charsDelta => outputText.Length - inputText.Length;
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputText = e.Value?.ToString() ?? string.Empty;
+        Process();
+    }
+
+    private void Process()
+    {
+        if (string.IsNullOrEmpty(inputText))
+        {
+            outputText = string.Empty;
+            return;
+        }
+
+        if (applyToEachLine)
+        {
+            var lines = inputText.Split('\n');
+            outputText = string.Join("\n", lines.Select(ProcessLine));
+        }
+        else
+        {
+            outputText = ProcessLine(inputText);
+        }
+    }
+
+    private string ProcessLine(string line)
+    {
+        var chars = string.IsNullOrEmpty(trimChars) ? null : trimChars.ToCharArray();
+        var padChar = string.IsNullOrEmpty(paddingChar) ? ' ' : paddingChar[0];
+
+        return operationMode switch
+        {
+            "trim" => chars == null ? line.Trim() : line.Trim(chars),
+            "trimstart" => chars == null ? line.TrimStart() : line.TrimStart(chars),
+            "trimend" => chars == null ? line.TrimEnd() : line.TrimEnd(chars),
+            "padleft" => line.PadLeft(totalWidth, padChar),
+            "padright" => line.PadRight(totalWidth, padChar),
+            _ => line
+        };
+    }
+
+    private void CopyToInput(string text)
+    {
+        inputText = text;
+        Process();
+    }
+
+    private void Clear()
+    {
+        inputText = string.Empty;
+        outputText = string.Empty;
+    }
+
+    private async Task Copy()
+    {
+        if (!string.IsNullOrEmpty(outputText))
+            await Clipboard.CopyTextAsync(outputText);
+    }
+}

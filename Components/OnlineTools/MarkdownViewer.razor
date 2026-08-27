@@ -1,0 +1,337 @@
+@using Markdig
+@inject IClipboardService Clipboard
+@inject IJSRuntime JSRuntime
+
+<ToolShell ResourceKey="markdownviewer" Title="Markdown Viewer" Icon="bi-markdown" Description="Write and preview Markdown in real-time.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="md-view-mode">Mode</label>
+            <select id="md-view-mode" class="tool-select" @bind="viewMode" @bind:after="StateHasChanged">
+                <option value="preview">Preview</option>
+                <option value="split">Split view</option>
+                <option value="markdown">Markdown only</option>
+            </select>
+        </div>
+
+        <div class="tool-checkbox-group">
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="autoRefresh" /> Auto refresh
+            </label>
+        </div>
+
+        <p class="tool-hint">@markdownContent.Length chars · @LineCount lines · ~@ReadMinutes min read</p>
+
+        <div class="viewer-layout @viewMode">
+            @if (viewMode is "markdown" or "split")
+            {
+                <div class="viewer-pane">
+                    <div class="viewer-pane-header">
+                        <span>Markdown</span>
+                        <div class="tool-actions">
+                            <CopyResultButton Value="@markdownContent" Label="Markdown" />
+                        </div>
+                    </div>
+                    <textarea class="tool-textarea viewer-editor"
+                              rows="16"
+                              spellcheck="false"
+                              placeholder="# Enter Markdown here..."
+                              @bind="markdownContent"
+                              @bind:event="oninput"
+                              @bind:after="OnMarkdownChanged"></textarea>
+                </div>
+            }
+
+            @if (viewMode is "preview" or "split")
+            {
+                <div class="viewer-pane">
+                    <div class="viewer-pane-header">
+                        <span>Preview</span>
+                        <div class="tool-actions">
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="CopyHtmlAsync">Copy HTML</button>
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="ExportMarkdownFile">Save .md</button>
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="ExportHtmlFile">Save .html</button>
+                        </div>
+                    </div>
+                    <div class="viewer-preview-frame">
+                        <iframe title="Markdown preview"
+                                srcdoc="@GetPreviewDocument()"
+                                sandbox="allow-same-origin"
+                                @key="previewKey"></iframe>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="tool-alert tool-alert-danger">@errorMessage</div>
+        }
+
+        <div class="tool-field">
+            <span class="tool-label">Templates</span>
+            <div class="tool-actions">
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("readme")'>README</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("blog")'>Blog</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("docs")'>Docs</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("todo")'>Todo</button>
+            </div>
+        </div>
+
+        <details class="tool-details">
+            <summary>Markdown cheat sheet</summary>
+            <pre class="tool-result"># H1  ## H2  ### H3
+*italic*  **bold**  ~~strike~~
+- list item
+1. numbered
+[link](url)  ![alt](image.jpg)
+`inline` and fenced ```code```
+> blockquote
+| Col1 | Col2 |
+|------|------|
+| A    | B    |</pre>
+        </details>
+    </div>
+</ToolShell>
+
+<style>
+    .viewer-layout {
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .viewer-layout.split {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .viewer-pane {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .viewer-pane-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+    }
+
+    .viewer-editor {
+        min-height: 22rem;
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: 0.85rem;
+    }
+
+    .viewer-preview-frame {
+        min-height: 22rem;
+        border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+        border-radius: var(--radius-sm, 6px);
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .viewer-preview-frame iframe {
+        width: 100%;
+        height: 100%;
+        min-height: 22rem;
+        border: 0;
+        background: #fff;
+    }
+
+    .tool-details {
+        margin-top: 0.5rem;
+        color: var(--color-text-secondary);
+    }
+
+    .tool-details summary {
+        cursor: pointer;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    @@media (max-width: 768px) {
+        .viewer-layout.split {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .UseEmojiAndSmiley(true)
+        .Build();
+
+    private string markdownContent = """
+        # Welcome to Markdown Viewer
+
+        ## Features
+        - **Real-time preview** as you type
+        - Tables, lists, and fenced code
+        - Export to HTML
+
+        ## Example
+
+        Here's some *italic* and **bold** text.
+
+        ### Code
+        ```csharp
+        public class Example
+        {
+            public string Message { get; set; } = "Hello World!";
+        }
+        ```
+
+        > Start editing to see your changes.
+        """;
+
+    private string viewMode = "split";
+    private bool autoRefresh = true;
+    private string errorMessage = string.Empty;
+    private int previewKey;
+
+    private int LineCount => markdownContent.Split('\n').Length;
+    private int ReadMinutes => Math.Max(1, markdownContent.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length / 200);
+
+    private void OnMarkdownChanged()
+    {
+        if (autoRefresh)
+            previewKey++;
+    }
+
+    private string ConvertMarkdownToHtml(string markdown)
+    {
+        if (string.IsNullOrWhiteSpace(markdown))
+            return "<p style='color:#999;'>Enter Markdown to preview...</p>";
+
+        return Markdown.ToHtml(markdown, Pipeline);
+    }
+
+    private string GetPreviewDocument()
+    {
+        var body = ConvertMarkdownToHtml(markdownContent);
+        return "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><style>"
+            + "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;line-height:1.6;color:#24292e;max-width:900px;margin:0 auto;padding:20px;}"
+            + "h1,h2{border-bottom:1px solid #eee;padding-bottom:0.3em;}"
+            + "code{padding:2px 6px;background:#f6f8fa;border-radius:3px;font-family:Consolas,monospace;}"
+            + "pre{padding:16px;background:#f6f8fa;border-radius:6px;overflow:auto;}"
+            + "pre code{background:transparent;padding:0;}"
+            + "blockquote{padding:0 1em;color:#6a737d;border-left:4px solid #dfe2e5;margin:0 0 16px;}"
+            + "table{border-collapse:collapse;width:100%;}"
+            + "th,td{padding:6px 13px;border:1px solid #dfe2e5;}"
+            + "th{background:#f6f8fa;}"
+            + "a{color:#0366d6;}"
+            + "</style></head><body>"
+            + body
+            + "</body></html>";
+    }
+
+    private async Task CopyHtmlAsync()
+    {
+        try
+        {
+            await Clipboard.CopyTextAsync(ConvertMarkdownToHtml(markdownContent));
+            errorMessage = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Copy failed: {ex.Message}";
+        }
+    }
+
+    private async Task ExportAsync(string content, string fileName, string mime)
+    {
+        try
+        {
+            errorMessage = string.Empty;
+            await JSRuntime.InvokeVoidAsync("scriptLoader.load", "js/mermaid-helper.js");
+            await JSRuntime.InvokeVoidAsync("downloadTextFile", content, fileName, mime);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Export failed: {ex.Message}";
+        }
+    }
+
+    private Task ExportMarkdownFile() => ExportAsync(markdownContent, "document.md", "text/markdown;charset=utf-8");
+    private Task ExportHtmlFile() => ExportAsync(GetPreviewDocument(), "document.html", "text/html;charset=utf-8");
+
+    private void LoadTemplate(string name)
+    {
+        markdownContent = name switch
+        {
+            "readme" => """
+                # Project Name
+
+                ## Description
+                A brief description of what this project does.
+
+                ## Features
+                - Feature 1
+                - Feature 2
+
+                ## Installation
+                ```bash
+                npm install project-name
+                ```
+
+                ## License
+                [MIT](https://choosealicense.com/licenses/mit/)
+                """,
+            "blog" => $"""
+                # Blog Post Title
+
+                **Author:** Your Name  
+                **Date:** {DateTime.Now:MMMM dd, yyyy}
+
+                ---
+
+                ## Introduction
+                Start with an engaging introduction...
+
+                ## Main Content
+                Your first main point with supporting details.
+
+                ## Conclusion
+                Wrap up with key takeaways.
+                """,
+            "docs" => """
+                # API Documentation
+
+                ## Authentication
+                ```http
+                Authorization: Bearer YOUR_API_KEY
+                ```
+
+                ## GET /api/users
+                Retrieves a list of users.
+
+                | Code | Description |
+                |------|-------------|
+                | 400  | Bad Request |
+                | 401  | Unauthorized |
+                | 404  | Not Found |
+                """,
+            "todo" => """
+                # Todo List
+
+                ## Today
+                - [ ] High priority task
+                - [ ] Review pull requests
+
+                ## This Week
+                - [ ] Complete feature X
+                - [ ] Write documentation
+
+                ## Completed
+                - [x] Yesterday's task
+                """,
+            _ => markdownContent
+        };
+
+        previewKey++;
+    }
+}

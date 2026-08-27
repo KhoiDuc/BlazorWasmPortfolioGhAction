@@ -30,5 +30,11 @@ window.scriptLoader = {
 
     loadInteractJs: function () {
         return this.load('https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js');
+    },
+
+    loadMermaid: function () {
+        var self = this;
+        return self.load('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js')
+            .then(function () { return self.load('js/mermaid-helper.js'); });
     }
 };

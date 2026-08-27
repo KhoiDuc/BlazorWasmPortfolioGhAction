@@ -1,0 +1,198 @@
+@using System.Text.Json
+@inject IClipboardService Clipboard
+
+<ToolShell ResourceKey="jsontocsharp" Title="JSON to C#" Icon="bi-filetype-cs" Description="Generate C# class definitions from JSON.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="csharp-class-name">Class name</label>
+            <input id="csharp-class-name" type="text" class="tool-input" placeholder="RootObject"
+                   @bind="rootClassName" @bind:event="oninput" @bind:after="GenerateCSharp" />
+        </div>
+
+        <div class="tool-checkbox-group">
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="useRecords" @bind:after="GenerateCSharp" />
+                Use records
+            </label>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="useNullable" @bind:after="GenerateCSharp" />
+                Nullable
+            </label>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="useJsonAttributes" @bind:after="GenerateCSharp" />
+                JsonPropertyName
+            </label>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="usePascalCase" @bind:after="GenerateCSharp" />
+                PascalCase
+            </label>
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="csharp-json-input">JSON Input</label>
+            <textarea id="csharp-json-input" class="tool-textarea" rows="10" spellcheck="false"
+                      placeholder='{"name": "John", "age": 30, "isActive": true}'
+                      @bind="inputJson" @bind:event="oninput" @bind:after="OnInputChanged"></textarea>
+            @if (!string.IsNullOrEmpty(jsonError))
+            {
+                <div class="tool-alert tool-alert-danger">@jsonError</div>
+            }
+        </div>
+
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-primary"
+                    @onclick="GenerateCSharp"
+                    disabled="@(string.IsNullOrWhiteSpace(inputJson) || !string.IsNullOrEmpty(jsonError))">
+                Generate C# Classes
+            </button>
+            <button type="button" class="tool-btn tool-btn-secondary"
+                    @onclick="CopyOutput"
+                    disabled="@string.IsNullOrWhiteSpace(outputCode)">
+                Copy
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(outputCode))
+        {
+            <ResultValueSingle CopyLabel="C# Code" Value="@outputCode" />
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private string inputJson = string.Empty;
+    private string outputCode = string.Empty;
+    private string rootClassName = "RootObject";
+    private bool useRecords = true;
+    private bool useNullable = true;
+    private bool useJsonAttributes = true;
+    private bool usePascalCase = true;
+    private string? jsonError;
+
+    private void OnInputChanged()
+    {
+        jsonError = null;
+        if (string.IsNullOrWhiteSpace(inputJson))
+        {
+            outputCode = string.Empty;
+            return;
+        }
+
+        try
+        {
+            using var _ = JsonDocument.Parse(inputJson);
+            GenerateCSharp();
+        }
+        catch (JsonException ex)
+        {
+            jsonError = ex.Message;
+            outputCode = string.Empty;
+        }
+    }
+
+    private async Task CopyOutput()
+    {
+        if (!string.IsNullOrWhiteSpace(outputCode))
+            await Clipboard.CopyTextAsync(outputCode);
+    }
+
+    private void GenerateCSharp()
+    {
+        if (string.IsNullOrWhiteSpace(inputJson))
+        {
+            outputCode = string.Empty;
+            return;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(inputJson);
+            jsonError = null;
+            var code = new System.Text.StringBuilder();
+
+            code.AppendLine("using System;");
+            if (useJsonAttributes)
+                code.AppendLine("using System.Text.Json.Serialization;");
+            code.AppendLine();
+
+            GenerateClass(code, rootClassName, doc.RootElement, 0);
+
+            outputCode = code.ToString();
+        }
+        catch (JsonException ex)
+        {
+            jsonError = ex.Message;
+            outputCode = string.Empty;
+        }
+        catch
+        {
+            outputCode = string.Empty;
+        }
+    }
+
+    private void GenerateClass(System.Text.StringBuilder sb, string className, JsonElement element, int indent)
+    {
+        var indentStr = new string(' ', indent * 4);
+        var keyword = useRecords ? "record" : "class";
+        var nullable = useNullable ? "?" : "";
+
+        sb.AppendLine($"{indentStr}public {keyword} {className}");
+        sb.AppendLine($"{indentStr}{{");
+
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in element.EnumerateObject())
+            {
+                var propName = usePascalCase ? ToPascalCase(property.Name) : property.Name;
+                var (type, needsClass) = GetCSharpType(property.Value);
+
+                if (useJsonAttributes && propName != property.Name)
+                {
+                    sb.AppendLine($"{indentStr}    [JsonPropertyName(\"{property.Name}\")]");
+                }
+
+                sb.AppendLine($"{indentStr}    public {type}{nullable} {propName} {{ get; set; }}");
+
+                if (needsClass)
+                {
+                    sb.AppendLine();
+                    GenerateClass(sb, type, property.Value, indent + 1);
+                }
+            }
+        }
+
+        sb.AppendLine($"{indentStr}}}");
+        sb.AppendLine();
+    }
+
+    private (string type, bool needsClass) GetCSharpType(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => ("string", false),
+            JsonValueKind.Number => element.TryGetInt32(out _) ? ("int", false) : ("double", false),
+            JsonValueKind.True or JsonValueKind.False => ("bool", false),
+            JsonValueKind.Array => GetArrayType(element),
+            JsonValueKind.Object => (ToPascalCase("NestedObject"), true),
+            JsonValueKind.Null => ("object", false),
+            _ => ("object", false)
+        };
+    }
+
+    private (string type, bool needsClass) GetArrayType(JsonElement element)
+    {
+        var firstElement = element.EnumerateArray().FirstOrDefault();
+        if (firstElement.ValueKind == JsonValueKind.Undefined)
+            return ("List<object>", false);
+
+        var (itemType, needsClass) = GetCSharpType(firstElement);
+        return ($"List<{itemType}>", needsClass);
+    }
+
+    private string ToPascalCase(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        var words = text.Split(new[] { '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(words.Select(w => char.ToUpper(w[0]) + w.Substring(1).ToLower()));
+    }
+}

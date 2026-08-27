@@ -1,0 +1,341 @@
+@using System.Text.RegularExpressions
+@inject IClipboardService Clipboard
+
+<ToolShell ResourceKey="lineoperations" Title="Line Operations" Icon="bi-list-task" Description="Powerful line manipulation tools inspired by Notepad++.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="lo-op">Operation</label>
+            <select id="lo-op" class="tool-select" @bind="operation" @bind:after="Process">
+                <option value="remove-empty">Remove Empty Lines</option>
+                <option value="remove-blank">Remove Blank Lines</option>
+                <option value="remove-duplicates">Remove Duplicate Lines</option>
+                <option value="remove-numbers">Remove Line Numbers</option>
+                <option value="sort-asc">Sort Lines (A-Z)</option>
+                <option value="sort-desc">Sort Lines (Z-A)</option>
+                <option value="sort-length">Sort by Line Length</option>
+                <option value="trim-lines">Trim Each Line</option>
+                <option value="trim-start">Trim Start (N chars)</option>
+                <option value="trim-end">Trim End (N chars)</option>
+                <option value="trim-prefix">Remove Prefix</option>
+                <option value="trim-suffix">Remove Suffix</option>
+                <option value="number-lines">Add Line Numbers</option>
+                <option value="prefix">Add Prefix to Lines</option>
+                <option value="suffix">Add Suffix to Lines</option>
+                <option value="reverse-order">Reverse Line Order</option>
+                <option value="shuffle">Shuffle Lines</option>
+                <option value="wrap">Wrap Lines</option>
+                <option value="join">Join Lines</option>
+                <option value="split">Split to Lines</option>
+                <option value="filter-contains">Filter: Contains</option>
+                <option value="filter-not-contains">Filter: Not Contains</option>
+                <option value="filter-regex">Filter: Regex Match</option>
+            </select>
+        </div>
+
+        @if (operation is "prefix" or "suffix" or "trim-prefix" or "trim-suffix")
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="lo-extra">Text</label>
+                <input id="lo-extra" type="text" class="tool-input" placeholder="Enter text..." @bind="extraText" @bind:event="oninput" @bind:after="Process" />
+            </div>
+        }
+        @if (operation is "trim-start" or "trim-end")
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="lo-trim-count">Chars</label>
+                <input id="lo-trim-count" type="number" class="tool-input" min="0" @bind="trimCharCount" @bind:after="Process" />
+            </div>
+        }
+        @if (operation == "wrap")
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="lo-wrap-before">Before</label>
+                <input id="lo-wrap-before" type="text" class="tool-input" placeholder="<li>" @bind="wrapBefore" @bind:event="oninput" @bind:after="Process" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label" for="lo-wrap-after">After</label>
+                <input id="lo-wrap-after" type="text" class="tool-input" placeholder="</li>" @bind="wrapAfter" @bind:event="oninput" @bind:after="Process" />
+            </div>
+        }
+        @if (operation == "join")
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="lo-join-preset">Separator</label>
+                <select id="lo-join-preset" class="tool-select" value="@joinPreset" @onchange="OnJoinPresetChanged">
+                    <option value="custom">Custom</option>
+                    <option value=",">, (comma)</option>
+                    <option value=";">; (semicolon)</option>
+                    <option value="|">| (pipe)</option>
+                    <option value="\t">\t (tab)</option>
+                    <option value="\n">\n (new line)</option>
+                    <option value="\r\n">\r\n (CRLF)</option>
+                    <option value=" ">Space</option>
+                </select>
+            </div>
+            @if (joinPreset == "custom")
+            {
+                <div class="tool-field">
+                    <label class="tool-label" for="lo-join-custom">Custom separator</label>
+                    <input id="lo-join-custom" type="text" class="tool-input" placeholder="Enter delimiter..." @bind="joinSeparator" @bind:event="oninput" @bind:after="Process" />
+                </div>
+            }
+        }
+        @if (operation == "split")
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="lo-split-preset">Delimiter</label>
+                <select id="lo-split-preset" class="tool-select" value="@splitPreset" @onchange="OnSplitPresetChanged">
+                    <option value="custom">Custom</option>
+                    <option value=",">, (comma)</option>
+                    <option value=";">; (semicolon)</option>
+                    <option value="|">| (pipe)</option>
+                    <option value="\t">\t (tab)</option>
+                    <option value="\n">\n (new line)</option>
+                    <option value="\r\n">\r\n (CRLF)</option>
+                    <option value=" ">Space</option>
+                </select>
+            </div>
+            @if (splitPreset == "custom")
+            {
+                <div class="tool-field">
+                    <label class="tool-label" for="lo-split-custom">Custom delimiter</label>
+                    <input id="lo-split-custom" type="text" class="tool-input" placeholder="Enter delimiter..." @bind="splitDelimiter" @bind:event="oninput" @bind:after="Process" />
+                </div>
+            }
+        }
+        @if (operation == "number-lines")
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="lo-num-format">Format</label>
+                <input id="lo-num-format" type="text" class="tool-input" placeholder="{0}. " @bind="numberFormat" @bind:event="oninput" @bind:after="Process" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label" for="lo-num-start">Start</label>
+                <input id="lo-num-start" type="number" class="tool-input" min="0" @bind="startNumber" @bind:after="Process" />
+            </div>
+        }
+        @if (operation.StartsWith("filter"))
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="lo-filter">Pattern</label>
+                <input id="lo-filter" type="text" class="tool-input" placeholder="search text" @bind="filterPattern" @bind:event="oninput" @bind:after="Process" />
+            </div>
+            @if (operation != "filter-regex")
+            {
+                <div class="tool-field">
+                    <label class="tool-checkbox">
+                        <input type="checkbox" @bind="filterIgnoreCase" @bind:after="Process" />
+                        Ignore case
+                    </label>
+                </div>
+            }
+        }
+        @if (operation == "remove-duplicates" || operation.StartsWith("sort"))
+        {
+            <div class="tool-field">
+                <label class="tool-checkbox">
+                    <input type="checkbox" @bind="caseSensitive" @bind:after="Process" />
+                    Case sensitive
+                </label>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="tool-field">
+                <span class="tool-label" style="color: var(--color-danger, #c00);">Error: @errorMessage</span>
+            </div>
+        }
+
+        <div class="tool-field">
+            <span class="tool-label">
+                Input: @inputLineCount lines · Output: @outputLineCount lines
+                @if (linesChanged != 0)
+                {
+                    <text> · @(linesChanged > 0 ? $"+{linesChanged}" : linesChanged.ToString()) lines</text>
+                }
+            </span>
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="lo-input">Input</label>
+            <textarea id="lo-input" class="tool-textarea" rows="8" value="@inputText" @oninput="OnInputChanged" placeholder="Enter text with multiple lines..."></textarea>
+        </div>
+        <div class="tool-field">
+            <label class="tool-label" for="lo-output">Output</label>
+            <textarea id="lo-output" class="tool-textarea" rows="8" readonly value="@outputText"></textarea>
+            <div class="tool-actions">
+                <button type="button" class="tool-btn" @onclick="Copy" disabled="@string.IsNullOrEmpty(outputText)">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i> Copy
+                </button>
+                <CopyToInputButton Text="@outputText" OnCopy="CopyToInput" />
+                <button type="button" class="tool-btn tool-btn-danger" @onclick="Clear">
+                    <i class="bi bi-trash" aria-hidden="true"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+</ToolShell>
+
+@code {
+    private string inputText = string.Empty;
+    private string outputText = string.Empty;
+    private string operation = "remove-empty";
+    private string extraText = string.Empty;
+    private string wrapBefore = "<li>";
+    private string wrapAfter = "</li>";
+    private string joinSeparator = ", ";
+    private string splitDelimiter = ",";
+    private string joinPreset = "custom";
+    private string splitPreset = ",";
+    private string numberFormat = "{0}. ";
+    private int startNumber = 1;
+    private string filterPattern = string.Empty;
+    private bool filterIgnoreCase = true;
+    private bool caseSensitive;
+    private string errorMessage = string.Empty;
+    private int trimCharCount = 1;
+
+    private int inputLineCount => string.IsNullOrEmpty(inputText) ? 0 : inputText.Split('\n').Length;
+    private int outputLineCount => string.IsNullOrEmpty(outputText) ? 0 : outputText.Split('\n').Length;
+    private int linesChanged => outputLineCount - inputLineCount;
+
+    private static readonly Random _random = new();
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputText = e.Value?.ToString() ?? string.Empty;
+        Process();
+    }
+
+    private void OnJoinPresetChanged(ChangeEventArgs e)
+    {
+        joinPreset = e.Value?.ToString() ?? "custom";
+        if (joinPreset != "custom")
+        {
+            joinSeparator = joinPreset;
+            Process();
+        }
+    }
+
+    private void OnSplitPresetChanged(ChangeEventArgs e)
+    {
+        splitPreset = e.Value?.ToString() ?? "custom";
+        if (splitPreset != "custom")
+        {
+            splitDelimiter = splitPreset;
+            Process();
+        }
+    }
+
+    private static string ParseDelimiter(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return input;
+
+        return input
+            .Replace("\\n", "\n")
+            .Replace("\\r", "\r")
+            .Replace("\\t", "\t")
+            .Replace("\\\\", "\\");
+    }
+
+    private void Process()
+    {
+        errorMessage = string.Empty;
+
+        if (string.IsNullOrEmpty(inputText))
+        {
+            outputText = string.Empty;
+            return;
+        }
+
+        try
+        {
+            var lines = inputText.Split('\n').Select(l => l.TrimEnd('\r')).ToList();
+            var actualJoinSeparator = ParseDelimiter(joinSeparator);
+            var actualSplitDelimiter = ParseDelimiter(splitDelimiter);
+
+            var result = operation switch
+            {
+                "remove-empty" => lines.Where(l => !string.IsNullOrEmpty(l)),
+                "remove-blank" => lines.Where(l => !string.IsNullOrWhiteSpace(l)),
+                "remove-duplicates" => RemoveDuplicates(lines),
+                "sort-asc" => SortLines(lines, ascending: true),
+                "sort-desc" => SortLines(lines, ascending: false),
+                "sort-length" => lines.OrderBy(l => l.Length),
+                "shuffle" => lines.OrderBy(_ => _random.Next()),
+                "reverse-order" => lines.Reverse<string>(),
+                "number-lines" => lines.Select((l, i) => string.Format(numberFormat, i + startNumber) + l),
+                "remove-numbers" => lines.Select(l => Regex.Replace(l, @"^\s*\d+[\.\)\-:\s]+", "")),
+                "trim-lines" => lines.Select(l => l.Trim()),
+                "trim-start" => lines.Select(l => l.Length > trimCharCount ? l.Substring(trimCharCount) : ""),
+                "trim-end" => lines.Select(l => l.Length > trimCharCount ? l.Substring(0, l.Length - trimCharCount) : ""),
+                "trim-prefix" => lines.Select(l => l.StartsWith(extraText) ? l.Substring(extraText.Length) : l),
+                "trim-suffix" => lines.Select(l => l.EndsWith(extraText) ? l.Substring(0, l.Length - extraText.Length) : l),
+                "prefix" => lines.Select(l => extraText + l),
+                "suffix" => lines.Select(l => l + extraText),
+                "wrap" => lines.Select(l => wrapBefore + l + wrapAfter),
+                "join" => new[] { string.Join(actualJoinSeparator, lines) },
+                "split" => inputText.Split(new[] { actualSplitDelimiter }, StringSplitOptions.None),
+                "filter-contains" => FilterContains(lines, contains: true),
+                "filter-not-contains" => FilterContains(lines, contains: false),
+                "filter-regex" => FilterRegex(lines),
+                _ => lines
+            };
+
+            outputText = string.Join("\n", result);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            outputText = inputText;
+        }
+    }
+
+    private IEnumerable<string> RemoveDuplicates(List<string> lines)
+    {
+        var seen = new HashSet<string>(caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+        foreach (var line in lines)
+        {
+            if (seen.Add(line))
+                yield return line;
+        }
+    }
+
+    private IEnumerable<string> SortLines(List<string> lines, bool ascending)
+    {
+        var comparer = caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+        return ascending ? lines.OrderBy(l => l, comparer) : lines.OrderByDescending(l => l, comparer);
+    }
+
+    private IEnumerable<string> FilterContains(List<string> lines, bool contains)
+    {
+        var comparison = filterIgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        return lines.Where(l => l.Contains(filterPattern, comparison) == contains);
+    }
+
+    private IEnumerable<string> FilterRegex(List<string> lines)
+    {
+        var regex = new Regex(filterPattern);
+        return lines.Where(l => regex.IsMatch(l));
+    }
+
+    private void CopyToInput(string text)
+    {
+        inputText = text;
+        Process();
+    }
+
+    private void Clear()
+    {
+        inputText = string.Empty;
+        outputText = string.Empty;
+        errorMessage = string.Empty;
+    }
+
+    private async Task Copy()
+    {
+        if (!string.IsNullOrEmpty(outputText))
+            await Clipboard.CopyTextAsync(outputText);
+    }
+}

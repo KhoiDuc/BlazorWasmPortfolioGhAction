@@ -1,0 +1,246 @@
+@using System.Text.Json
+
+<ToolShell ResourceKey="jsoncompare" Title="JSON Compare" Icon="bi-file-diff" Description="Compare two JSON documents and see the differences.">
+    <div class="tool-form">
+        <div class="tool-checkbox-group">
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="ignoreOrder" @bind:after="CompareJson" />
+                Ignore array order
+            </label>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="ignoreWhitespace" @bind:after="CompareJson" />
+                Ignore whitespace
+            </label>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="strictTypes" @bind:after="CompareJson" />
+                Strict types
+            </label>
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="json-compare-1">JSON 1</label>
+            <textarea id="json-compare-1" class="tool-textarea" rows="10" spellcheck="false"
+                      placeholder='{"name": "John", "age": 30}'
+                      @bind="json1" @bind:event="oninput" @bind:after="CompareJson"></textarea>
+            @if (!string.IsNullOrEmpty(error1))
+            {
+                <div class="tool-alert tool-alert-danger">@error1</div>
+            }
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="json-compare-2">JSON 2</label>
+            <textarea id="json-compare-2" class="tool-textarea" rows="10" spellcheck="false"
+                      placeholder='{"name": "Jane", "age": 25}'
+                      @bind="json2" @bind:event="oninput" @bind:after="CompareJson"></textarea>
+            @if (!string.IsNullOrEmpty(error2))
+            {
+                <div class="tool-alert tool-alert-danger">@error2</div>
+            }
+        </div>
+
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-primary"
+                    @onclick="CompareJson"
+                    disabled="@(string.IsNullOrWhiteSpace(json1) || string.IsNullOrWhiteSpace(json2))">
+                Compare JSON
+            </button>
+        </div>
+
+        @if (isValid && areEqual)
+        {
+            <div class="tool-alert tool-alert-success">The two JSON documents are identical.</div>
+        }
+        else if (isValid && !areEqual)
+        {
+            <div class="tool-alert tool-alert-danger">Found @differences.Count difference(s).</div>
+            @if (differences.Any())
+            {
+                <div class="tool-table-wrapper">
+                    <table class="tool-table">
+                        <thead>
+                            <tr>
+                                <th>Path</th>
+                                <th>JSON 1</th>
+                                <th>JSON 2</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var diff in differences)
+                            {
+                                <tr>
+                                    <td><code>@diff.Path</code></td>
+                                    <td>@diff.Value1</td>
+                                    <td>@diff.Value2</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private string json1 = string.Empty;
+    private string json2 = string.Empty;
+    private string? error1;
+    private string? error2;
+    private bool ignoreOrder;
+    private bool ignoreWhitespace = true;
+    private bool strictTypes = true;
+    private bool isValid;
+    private bool areEqual;
+    private List<JsonDifference> differences = new();
+
+    private void CompareJson()
+    {
+        error1 = null;
+        error2 = null;
+        isValid = false;
+        areEqual = false;
+        differences.Clear();
+
+        if (string.IsNullOrWhiteSpace(json1) || string.IsNullOrWhiteSpace(json2))
+            return;
+
+        try
+        {
+            using var doc1 = JsonDocument.Parse(json1);
+            using var doc2 = JsonDocument.Parse(json2);
+
+            isValid = true;
+            CompareElements(doc1.RootElement, doc2.RootElement, "$");
+            areEqual = !differences.Any();
+        }
+        catch (JsonException ex) when (json1.Contains(ex.Message) || differences.Count == 0)
+        {
+            error1 = $"JSON error: {ex.Message}";
+        }
+        catch (JsonException ex)
+        {
+            error2 = $"JSON error: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            error1 = ex.Message;
+        }
+    }
+
+    private void CompareElements(JsonElement elem1, JsonElement elem2, string path)
+    {
+        if (elem1.ValueKind != elem2.ValueKind)
+        {
+            differences.Add(new JsonDifference
+            {
+                Path = path,
+                Value1 = $"Type: {elem1.ValueKind}",
+                Value2 = $"Type: {elem2.ValueKind}"
+            });
+            return;
+        }
+
+        switch (elem1.ValueKind)
+        {
+            case JsonValueKind.Object:
+                CompareObjects(elem1, elem2, path);
+                break;
+            case JsonValueKind.Array:
+                CompareArrays(elem1, elem2, path);
+                break;
+            case JsonValueKind.String:
+            case JsonValueKind.Number:
+            case JsonValueKind.True:
+            case JsonValueKind.False:
+            case JsonValueKind.Null:
+                CompareValues(elem1, elem2, path);
+                break;
+        }
+    }
+
+    private void CompareObjects(JsonElement obj1, JsonElement obj2, string path)
+    {
+        var props1 = obj1.EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
+        var props2 = obj2.EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
+
+        foreach (var key in props1.Keys.Union(props2.Keys))
+        {
+            if (!props1.ContainsKey(key))
+            {
+                differences.Add(new JsonDifference
+                {
+                    Path = $"{path}.{key}",
+                    Value1 = "(missing)",
+                    Value2 = props2[key].ToString()
+                });
+            }
+            else if (!props2.ContainsKey(key))
+            {
+                differences.Add(new JsonDifference
+                {
+                    Path = $"{path}.{key}",
+                    Value1 = props1[key].ToString(),
+                    Value2 = "(missing)"
+                });
+            }
+            else
+            {
+                CompareElements(props1[key], props2[key], $"{path}.{key}");
+            }
+        }
+    }
+
+    private void CompareArrays(JsonElement arr1, JsonElement arr2, string path)
+    {
+        var list1 = arr1.EnumerateArray().ToList();
+        var list2 = arr2.EnumerateArray().ToList();
+
+        if (list1.Count != list2.Count)
+        {
+            differences.Add(new JsonDifference
+            {
+                Path = path,
+                Value1 = $"Array length: {list1.Count}",
+                Value2 = $"Array length: {list2.Count}"
+            });
+        }
+
+        if (!ignoreOrder)
+        {
+            for (int i = 0; i < Math.Min(list1.Count, list2.Count); i++)
+            {
+                CompareElements(list1[i], list2[i], $"{path}[{i}]");
+            }
+        }
+    }
+
+    private void CompareValues(JsonElement val1, JsonElement val2, string path)
+    {
+        var str1 = val1.ToString();
+        var str2 = val2.ToString();
+
+        if (ignoreWhitespace)
+        {
+            str1 = str1.Trim();
+            str2 = str2.Trim();
+        }
+
+        if (str1 != str2)
+        {
+            differences.Add(new JsonDifference
+            {
+                Path = path,
+                Value1 = str1,
+                Value2 = str2
+            });
+        }
+    }
+
+    private class JsonDifference
+    {
+        public string Path { get; set; } = string.Empty;
+        public string Value1 { get; set; } = string.Empty;
+        public string Value2 { get; set; } = string.Empty;
+    }
+}

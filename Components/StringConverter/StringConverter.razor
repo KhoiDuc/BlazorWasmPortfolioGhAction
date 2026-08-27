@@ -1,39 +1,45 @@
-@using System.Text
 @using System.Globalization
-@inject IJSRuntime JSRuntime
+@using System.Text
+@using BlazorWasmPortfolioGhAction.Services
+@inject IClipboardService Clipboard
 
-<ToolShell ResourceKey="stringconverter" Title="String Converter" Icon="bi-fonts" Description="Transform text between different cases.">
+<ToolShell ResourceKey="stringconverter" Title="String Converter" Icon="bi-fonts" Description="Convert text between common casing and naming conventions.">
     <div class="tool-form">
         <div class="tool-field">
-            <label class="tool-label">Conversion mode</label>
-            <div class="tool-radio-group">
-                @foreach (var option in Options)
-                {
-                    <label class="tool-radio">
-                        <input type="radio" name="caseMode" value="@option" checked="@(choice.Name == option)" @onchange="@(() => choice.Name = option)" />
-                        @option
-                    </label>
-                }
-            </div>
+            <label class="tool-label" for="case-mode">Convert to</label>
+            <select id="case-mode" class="tool-select" @bind="_mode" @bind:after="Process">
+                <option value="upper">UPPERCASE</option>
+                <option value="lower">lowercase</option>
+                <option value="title">Title Case</option>
+                <option value="sentence">Sentence case</option>
+                <option value="camel">camelCase</option>
+                <option value="pascal">PascalCase</option>
+                <option value="snake">snake_case</option>
+                <option value="kebab">kebab-case</option>
+                <option value="constant">CONSTANT_CASE</option>
+                <option value="dot">dot.case</option>
+                <option value="train">Train-Case</option>
+                <option value="toggle">tOGGLE cASE</option>
+                <option value="alternating">aLtErNaTiNg cAsE</option>
+                <option value="strip">Remove Whitespace</option>
+            </select>
         </div>
         <div class="tool-field">
-            <label class="tool-label" for="stringconverter">Input</label>
-            <textarea id="stringconverter" class="tool-textarea" rows="4" @bind="Input"></textarea>
-            <div class="tool-actions" style="margin-top: 0.6rem;">
-                <button class="tool-btn tool-btn-primary" @onclick="Convert">Convert</button>
-                <button class="tool-btn tool-btn-danger" @onclick="Clear">
-                    <i class="bi bi-trash" aria-hidden="true"></i> Clear
-                </button>
-            </div>
+            <label class="tool-label" for="case-input">Input</label>
+            <textarea id="case-input" class="tool-textarea" rows="6" value="@_input" @oninput="OnInput" placeholder="the quick brown fox jumps over the lazy dog"></textarea>
         </div>
         <div class="tool-field">
-            <label class="tool-label">Output</label>
-            <div class="conv-row">
-                <textarea class="tool-textarea" rows="4" @bind="Output" readonly></textarea>
-            </div>
-            <div class="tool-actions" style="margin-top: 0.6rem;">
-                <button class="tool-btn" @onclick="Copy">
+            <label class="tool-label" for="case-output">Output</label>
+            <textarea id="case-output" class="tool-textarea" rows="6" readonly value="@_output"></textarea>
+            <div class="tool-actions">
+                <button type="button" class="tool-btn" @onclick="Copy" disabled="@string.IsNullOrEmpty(_output)">
                     <i class="bi bi-clipboard" aria-hidden="true"></i> Copy
+                </button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="Swap" disabled="@string.IsNullOrEmpty(_output)">
+                    <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Output → Input
+                </button>
+                <button type="button" class="tool-btn tool-btn-danger" @onclick="Clear">
+                    <i class="bi bi-trash" aria-hidden="true"></i> Clear
                 </button>
             </div>
         </div>
@@ -41,33 +47,114 @@
 </ToolShell>
 
 @code {
-    string Input = "the quick brown fox jumps over the lazy dog";
-    string Output = string.Empty;
+    private string _input = "the quick brown fox jumps over the lazy dog";
+    private string _output = "";
+    private string _mode = "pascal";
 
-    Choice choice = new Choice() { Name = "Sentence case" };
-    List<string> Options = new List<string> { "Sentence case", "lower case", "UPPER CASE", "Capitalized Case", "aLtErNaTiNg cAsE", "Title Case", "InVeRsE CaSe", "Remove Whitespace" };
+    protected override void OnInitialized() => Process();
 
-    private void Convert()
+    private void OnInput(ChangeEventArgs e)
     {
-        TextInfo ti = CultureInfo.CurrentCulture.TextInfo;
-        switch (choice.Name)
+        _input = e.Value?.ToString() ?? "";
+        Process();
+    }
+
+    private void Process()
+    {
+        if (string.IsNullOrEmpty(_input))
         {
-            case "Sentence case": Output = Input.FirstCharToUpper(); break;
-            case "lower case": Output = Input.ToLower(); break;
-            case "UPPER CASE": Output = Input.ToUpper(); break;
-            case "Capitalized Case": Output = ti.ToTitleCase(Input); break;
-            case "Title Case": Output = ti.ToTitleCase(Input); break;
-            case "InVeRsE CaSe": Output = Input.Invert(); break;
-            case "Remove Whitespace": Output = String.Concat(Input.Where(c => !Char.IsWhiteSpace(c))); break;
+            _output = "";
+            return;
         }
+
+        _output = _mode switch
+        {
+            "upper" => _input.ToUpperInvariant(),
+            "lower" => _input.ToLowerInvariant(),
+            "title" => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(_input.ToLowerInvariant()),
+            "sentence" => ToSentenceCase(_input),
+            "camel" => ToCamelCase(_input),
+            "pascal" => ToPascalCase(_input),
+            "snake" => string.Join('_', SplitWords(_input).Select(w => w.ToLowerInvariant())),
+            "kebab" => string.Join('-', SplitWords(_input).Select(w => w.ToLowerInvariant())),
+            "constant" => string.Join('_', SplitWords(_input).Select(w => w.ToUpperInvariant())),
+            "dot" => string.Join('.', SplitWords(_input).Select(w => w.ToLowerInvariant())),
+            "train" => string.Join('-', SplitWords(_input).Select(w => char.ToUpperInvariant(w[0]) + w[1..].ToLowerInvariant())),
+            "toggle" => new string(_input.Select(c => char.IsUpper(c) ? char.ToLowerInvariant(c) : char.ToUpperInvariant(c)).ToArray()),
+            "alternating" => ToAlternating(_input),
+            "strip" => string.Concat(_input.Where(c => !char.IsWhiteSpace(c))),
+            _ => _input
+        };
     }
 
-    private void Clear() { Input = string.Empty; }
-
-    async Task Copy()
+    private void Clear()
     {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Output);
+        _input = "";
+        _output = "";
     }
 
-    public class Choice { public string Name { get; set; } = ""; }
+    private void Swap()
+    {
+        _input = _output;
+        Process();
+    }
+
+    private async Task Copy()
+    {
+        if (!string.IsNullOrEmpty(_output))
+            await Clipboard.CopyTextAsync(_output);
+    }
+
+    private static string ToSentenceCase(string text)
+    {
+        var parts = text.Split([". ", "! ", "? "], StringSplitOptions.None);
+        return string.Join(". ", parts.Select(s =>
+            string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s[1..].ToLowerInvariant()));
+    }
+
+    private static string ToCamelCase(string text)
+    {
+        var words = SplitWords(text);
+        if (words.Count == 0) return text;
+        return words[0].ToLowerInvariant() + string.Concat(words.Skip(1).Select(Pascalize));
+    }
+
+    private static string ToPascalCase(string text) =>
+        string.Concat(SplitWords(text).Select(Pascalize));
+
+    private static string Pascalize(string w) =>
+        string.IsNullOrEmpty(w) ? w : char.ToUpperInvariant(w[0]) + w[1..].ToLowerInvariant();
+
+    private static string ToAlternating(string text)
+    {
+        var sb = new StringBuilder(text.Length);
+        var upper = true;
+        foreach (var c in text)
+        {
+            if (char.IsLetter(c))
+            {
+                sb.Append(upper ? char.ToUpperInvariant(c) : char.ToLowerInvariant(c));
+                upper = !upper;
+            }
+            else sb.Append(c);
+        }
+        return sb.ToString();
+    }
+
+    private static List<string> SplitWords(string text)
+    {
+        var words = new List<string>();
+        var current = new StringBuilder();
+        foreach (var c in text)
+        {
+            if (char.IsLetterOrDigit(c)) current.Append(c);
+            else if (current.Length > 0)
+            {
+                words.Add(current.ToString());
+                current.Clear();
+            }
+        }
+        if (current.Length > 0) words.Add(current.ToString());
+        return words;
+    }
 }

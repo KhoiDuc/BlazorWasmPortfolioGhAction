@@ -1,0 +1,390 @@
+@inject IJSRuntime JSRuntime
+
+<ToolShell ResourceKey="diagramviewer" Title="Diagram Viewer" Icon="bi-diagram-3" Description="Create diagrams with Mermaid — flowcharts, sequence, class, and more.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="diagram-view-mode">View</label>
+            <select id="diagram-view-mode" class="tool-select" @bind="viewMode" @bind:after="OnViewModeChanged">
+                <option value="preview">Preview</option>
+                <option value="split">Split view</option>
+                <option value="code">Code only</option>
+            </select>
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="diagram-theme">Theme</label>
+            <select id="diagram-theme" class="tool-select" @bind="diagramTheme" @bind:after="RenderDiagramAsync">
+                <option value="default">Default</option>
+                <option value="dark">Dark</option>
+                <option value="forest">Forest</option>
+                <option value="neutral">Neutral</option>
+            </select>
+        </div>
+
+        <div class="tool-checkbox-group">
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="autoRender" /> Auto render
+            </label>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="tool-alert tool-alert-danger">@errorMessage</div>
+        }
+
+        <p class="tool-hint">
+            @mermaidCode.Length chars · @LineCount lines · Theme: @diagramTheme ·
+            <a href="https://mermaid.js.org/intro/" target="_blank" rel="noopener">Mermaid docs</a>
+        </p>
+
+        <div class="viewer-layout @viewMode">
+            @if (viewMode is "code" or "split")
+            {
+                <div class="viewer-pane">
+                    <div class="viewer-pane-header">
+                        <span>Mermaid code</span>
+                        <div class="tool-actions">
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="RenderDiagramAsync">Render</button>
+                            <CopyResultButton Value="@mermaidCode" Label="Mermaid" />
+                        </div>
+                    </div>
+                    <textarea class="tool-textarea viewer-editor"
+                              rows="16"
+                              spellcheck="false"
+                              placeholder="graph TD&#10;    A[Start] --> B[End]"
+                              @bind="mermaidCode"
+                              @bind:event="oninput"
+                              @bind:after="OnCodeChanged"></textarea>
+                </div>
+            }
+
+            @if (viewMode is "preview" or "split")
+            {
+                <div class="viewer-pane">
+                    <div class="viewer-pane-header">
+                        <span>Diagram preview</span>
+                        <div class="tool-actions">
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="ExportSvgAsync">SVG</button>
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="ExportPngAsync">PNG</button>
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="ExportCodeAsync">.mmd</button>
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="RenderDiagramAsync">Refresh</button>
+                        </div>
+                    </div>
+                    <div class="viewer-preview-frame diagram-frame">
+                        <div id="mermaid-diagram" class="mermaid-container">
+                            @if (string.IsNullOrWhiteSpace(renderedDiagram))
+                            {
+                                <p class="tool-hint">Enter Mermaid code to generate a diagram...</p>
+                            }
+                            else
+                            {
+                                @((MarkupString)renderedDiagram)
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="tool-field">
+            <span class="tool-label">Templates</span>
+            <div class="tool-actions">
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("flowchart")'>Flowchart</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("sequence")'>Sequence</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("class")'>Class</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("state")'>State</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("gantt")'>Gantt</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("pie")'>Pie</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("er")'>ER</button>
+            </div>
+        </div>
+    </div>
+</ToolShell>
+
+<style>
+    .viewer-layout {
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .viewer-layout.split {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .viewer-pane {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .viewer-pane-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+    }
+
+    .viewer-editor {
+        min-height: 22rem;
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: 0.85rem;
+    }
+
+    .diagram-frame {
+        min-height: 22rem;
+        border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+        border-radius: var(--radius-sm, 6px);
+        overflow: auto;
+        background: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem;
+    }
+
+    .mermaid-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .mermaid-container svg {
+        max-width: 100%;
+        height: auto;
+    }
+
+    @@media (max-width: 768px) {
+        .viewer-layout.split {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    private string mermaidCode = """
+        graph TD
+            A[Client] -->|HTTP Request| B[API Gateway]
+            B --> C{Auth Valid?}
+            C -->|Yes| D[Process Request]
+            C -->|No| E[Return 401]
+            D --> F[Database]
+            F --> G[Return Response]
+            G --> A
+            E --> A
+        """;
+
+    private string renderedDiagram = string.Empty;
+    private string viewMode = "split";
+    private string diagramTheme = "default";
+    private bool autoRender = true;
+    private string errorMessage = string.Empty;
+    private bool mermaidReady;
+
+    private int LineCount => mermaidCode.Split('\n').Length;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await RenderDiagramAsync();
+    }
+
+    private async Task OnViewModeChanged()
+    {
+        if (viewMode is "preview" or "split")
+            await RenderDiagramAsync();
+    }
+
+    private void OnCodeChanged()
+    {
+        if (autoRender)
+            _ = RenderDiagramAsync();
+    }
+
+    private async Task EnsureMermaidAsync()
+    {
+        if (mermaidReady)
+            return;
+
+        await JSRuntime.InvokeVoidAsync("scriptLoader.loadMermaid");
+        mermaidReady = true;
+    }
+
+    private async Task RenderDiagramAsync()
+    {
+        errorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(mermaidCode))
+        {
+            renderedDiagram = string.Empty;
+            return;
+        }
+
+        try
+        {
+            await EnsureMermaidAsync();
+
+            var config = JsonSerializer.Serialize(new
+            {
+                theme = diagramTheme,
+                securityLevel = "loose",
+                startOnLoad = false,
+                flowchart = new { useMaxWidth = true, htmlLabels = true },
+                sequence = new { useMaxWidth = true },
+                gantt = new { useMaxWidth = true }
+            });
+
+            renderedDiagram = await JSRuntime.InvokeAsync<string>("renderMermaid", mermaidCode, config);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            renderedDiagram = string.Empty;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ExportSvgAsync()
+    {
+        try
+        {
+            errorMessage = string.Empty;
+            await EnsureMermaidAsync();
+            await JSRuntime.InvokeVoidAsync("downloadMermaidSvg", "diagram.svg", "#mermaid-diagram");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Export failed: {ex.Message}";
+        }
+    }
+
+    private async Task ExportPngAsync()
+    {
+        try
+        {
+            errorMessage = string.Empty;
+            await EnsureMermaidAsync();
+            await JSRuntime.InvokeVoidAsync("downloadMermaidPng", "diagram.png", 2, "#mermaid-diagram");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Export failed: {ex.Message}";
+        }
+    }
+
+    private async Task ExportCodeAsync()
+    {
+        try
+        {
+            errorMessage = string.Empty;
+            await EnsureMermaidAsync();
+            await JSRuntime.InvokeVoidAsync("downloadTextFile", mermaidCode, "diagram.mmd", "text/plain;charset=utf-8");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Export failed: {ex.Message}";
+        }
+    }
+
+    private void LoadTemplate(string name)
+    {
+        mermaidCode = name switch
+        {
+            "flowchart" => """
+                graph TD
+                    Start([Start]) --> Input[/Enter Data/]
+                    Input --> Process[Process Data]
+                    Process --> Decision{Is Valid?}
+                    Decision -->|Yes| Save[(Save to DB)]
+                    Decision -->|No| Error[Show Error]
+                    Save --> Success[/Display Success/]
+                    Error --> Input
+                    Success --> End([End])
+                """,
+            "sequence" => """
+                sequenceDiagram
+                    participant U as User
+                    participant F as Frontend
+                    participant A as API
+                    participant DB as Database
+                    U->>F: Click Login
+                    F->>A: POST /auth/login
+                    A->>DB: Validate Credentials
+                    DB-->>A: User Data
+                    A-->>F: JWT Token
+                    F->>U: Show Dashboard
+                """,
+            "class" => """
+                classDiagram
+                    class User {
+                        +int Id
+                        +string Username
+                        +Login()
+                        +Logout()
+                    }
+                    class Post {
+                        +int Id
+                        +string Title
+                        +Publish()
+                    }
+                    User "1" -- "*" Post : creates
+                """,
+            "state" => """
+                stateDiagram-v2
+                    [*] --> Draft
+                    Draft --> UnderReview : Submit
+                    UnderReview --> Approved : Approve
+                    UnderReview --> Rejected : Reject
+                    Approved --> Published : Publish
+                    Published --> [*]
+                """,
+            "gantt" => """
+                gantt
+                    title Project Timeline
+                    dateFormat YYYY-MM-DD
+                    section Planning
+                    Requirements :a1, 2024-01-01, 10d
+                    Design :a2, after a1, 7d
+                    section Development
+                    Backend :b1, after a2, 20d
+                    Frontend :b2, after a2, 25d
+                """,
+            "pie" => """
+                pie title Technology Stack
+                    "JavaScript" : 35
+                    "TypeScript" : 25
+                    "C#" : 20
+                    "Python" : 12
+                    "Go" : 8
+                """,
+            "er" => """
+                erDiagram
+                    USER ||--o{ ORDER : places
+                    USER {
+                        int id PK
+                        string username
+                        string email
+                    }
+                    ORDER ||--|{ ORDER_ITEM : contains
+                    ORDER {
+                        int id PK
+                        int user_id FK
+                        string status
+                    }
+                    PRODUCT ||--o{ ORDER_ITEM : "ordered in"
+                    PRODUCT {
+                        int id PK
+                        string name
+                        decimal price
+                    }
+                """,
+            _ => mermaidCode
+        };
+
+        _ = RenderDiagramAsync();
+    }
+}

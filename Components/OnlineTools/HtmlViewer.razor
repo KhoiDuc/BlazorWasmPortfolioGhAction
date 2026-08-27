@@ -1,0 +1,320 @@
+@inject IJSRuntime JSRuntime
+@inject IHtmlSanitizerService Sanitizer
+
+<ToolShell ResourceKey="htmlviewer" Title="HTML Viewer" Icon="bi-code-slash" Description="Preview and render HTML code in real-time.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="html-view-mode">Mode</label>
+            <select id="html-view-mode" class="tool-select" @bind="viewMode" @bind:after="StateHasChanged">
+                <option value="preview">Preview</option>
+                <option value="split">Split view</option>
+                <option value="code">Code only</option>
+            </select>
+        </div>
+
+        <div class="tool-checkbox-group">
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="autoRefresh" /> Auto refresh
+            </label>
+            <label class="tool-checkbox">
+                <input type="checkbox" @bind="sanitizeHtml" @bind:after="RefreshPreview" /> Sanitize HTML
+            </label>
+        </div>
+
+        @if (sanitizeHtml)
+        {
+            <div class="tool-alert tool-alert-warning">Sanitization is on — scripts and unsafe content are stripped before preview.</div>
+        }
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="tool-alert tool-alert-danger">@errorMessage</div>
+        }
+
+        <p class="tool-hint">@htmlContent.Length chars · @LineCount lines</p>
+
+        <div class="viewer-layout @viewMode">
+            @if (viewMode is "code" or "split")
+            {
+                <div class="viewer-pane">
+                    <div class="viewer-pane-header">
+                        <span>HTML code</span>
+                        <div class="tool-actions">
+                            <CopyResultButton Value="@htmlContent" Label="HTML" />
+                        </div>
+                    </div>
+                    <textarea class="tool-textarea viewer-editor"
+                              rows="16"
+                              spellcheck="false"
+                              placeholder="Enter HTML code here..."
+                              @bind="htmlContent"
+                              @bind:event="oninput"
+                              @bind:after="OnHtmlChanged"></textarea>
+                </div>
+            }
+
+            @if (viewMode is "preview" or "split")
+            {
+                <div class="viewer-pane">
+                    <div class="viewer-pane-header">
+                        <span>Preview</span>
+                        <div class="tool-actions">
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="RefreshPreview" title="Refresh">Refresh</button>
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="ExportRenderedHtml">Save HTML</button>
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="ExportHtmlCode">Save code</button>
+                        </div>
+                    </div>
+                    <div class="viewer-preview-frame">
+                        <iframe title="HTML preview"
+                                srcdoc="@GetRenderedHtml()"
+                                sandbox="@IframeSandbox"
+                                @key="iframeKey"></iframe>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="tool-field">
+            <span class="tool-label">Templates</span>
+            <div class="tool-actions">
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("basic")'>Basic</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("form")'>Form</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("table")'>Table</button>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick='() => LoadTemplate("card")'>Card</button>
+            </div>
+        </div>
+    </div>
+</ToolShell>
+
+<style>
+    .viewer-layout {
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .viewer-layout.split {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .viewer-pane {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-height: 0;
+    }
+
+    .viewer-pane-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+    }
+
+    .viewer-editor {
+        min-height: 22rem;
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: 0.85rem;
+    }
+
+    .viewer-preview-frame {
+        flex: 1;
+        min-height: 22rem;
+        border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+        border-radius: var(--radius-sm, 6px);
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .viewer-preview-frame iframe {
+        width: 100%;
+        height: 100%;
+        min-height: 22rem;
+        border: 0;
+        background: #fff;
+    }
+
+    @@media (max-width: 768px) {
+        .viewer-layout.split {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    private string htmlContent = """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>HTML Preview</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+                h1 { color: #333; }
+            </style>
+        </head>
+        <body>
+            <h1>Welcome to HTML Viewer</h1>
+            <p>Start editing the HTML code to see a live preview.</p>
+        </body>
+        </html>
+        """;
+
+    private string viewMode = "split";
+    private bool autoRefresh = true;
+    private bool sanitizeHtml;
+    private string errorMessage = string.Empty;
+    private int iframeKey;
+
+    private int LineCount => htmlContent.Split('\n').Length;
+
+    private string IframeSandbox => sanitizeHtml
+        ? "allow-same-origin"
+        : "allow-same-origin allow-scripts allow-forms";
+
+    private void OnHtmlChanged()
+    {
+        if (autoRefresh)
+            RefreshPreview();
+    }
+
+    private void RefreshPreview()
+    {
+        iframeKey++;
+        errorMessage = string.Empty;
+    }
+
+    private string GetRenderedHtml()
+    {
+        if (string.IsNullOrWhiteSpace(htmlContent))
+            return "<html><body style='padding:20px;color:#999;'>Enter HTML code to preview...</body></html>";
+
+        return sanitizeHtml ? Sanitizer.Sanitize(htmlContent) : htmlContent;
+    }
+
+    private async Task ExportAsync(string content, string fileName)
+    {
+        try
+        {
+            errorMessage = string.Empty;
+            await EnsureDownloadHelperAsync();
+            await JSRuntime.InvokeVoidAsync("downloadTextFile", content, fileName, "text/html;charset=utf-8");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Export failed: {ex.Message}";
+        }
+    }
+
+    private Task ExportRenderedHtml() => ExportAsync(GetRenderedHtml(), "preview.html");
+    private Task ExportHtmlCode() => ExportAsync(htmlContent, "code.html");
+
+    private async Task EnsureDownloadHelperAsync()
+    {
+        await JSRuntime.InvokeVoidAsync("scriptLoader.load", "js/mermaid-helper.js");
+    }
+
+    private void LoadTemplate(string name)
+    {
+        htmlContent = name switch
+        {
+            "basic" => """
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>My Page</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+                        header { background: #007bff; color: white; padding: 20px; border-radius: 8px; }
+                        footer { text-align: center; color: #666; margin-top: 40px; }
+                    </style>
+                </head>
+                <body>
+                    <header><h1>My Website</h1></header>
+                    <main><h2>Welcome</h2><p>This is a basic HTML template.</p></main>
+                    <footer><p>&copy; 2026 My Website</p></footer>
+                </body>
+                </html>
+                """,
+            "form" => """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial; max-width: 500px; margin: 50px auto; padding: 20px; }
+                        form { background: #f9f9f9; padding: 30px; border-radius: 8px; }
+                        input, textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+                        button { background: #007bff; color: white; padding: 12px 30px; border: none; border-radius: 4px; cursor: pointer; }
+                    </style>
+                </head>
+                <body>
+                    <form>
+                        <h2>Contact Form</h2>
+                        <label>Name</label>
+                        <input type="text" placeholder="Your name" required>
+                        <label>Email</label>
+                        <input type="email" placeholder="your@email.com" required>
+                        <label>Message</label>
+                        <textarea rows="4" placeholder="Your message..."></textarea>
+                        <button type="submit">Send Message</button>
+                    </form>
+                </body>
+                </html>
+                """,
+            "table" => """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial; padding: 20px; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th { background: #007bff; color: white; padding: 12px; text-align: left; }
+                        td { padding: 10px; border-bottom: 1px solid #ddd; }
+                        tr:hover { background: #f5f5f5; }
+                    </style>
+                </head>
+                <body>
+                    <h2>Data Table</h2>
+                    <table>
+                        <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>John Doe</td><td>john@example.com</td><td>Active</td></tr>
+                            <tr><td>2</td><td>Jane Smith</td><td>jane@example.com</td><td>Active</td></tr>
+                            <tr><td>3</td><td>Bob Johnson</td><td>bob@example.com</td><td>Inactive</td></tr>
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+                """,
+            "card" => """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial; background: #f0f0f0; padding: 20px; }
+                        .card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 400px; margin: 20px auto; overflow: hidden; }
+                        .card-header { background: #007bff; color: white; padding: 20px; }
+                        .card-body { padding: 20px; }
+                        .card-footer { padding: 15px 20px; background: #f9f9f9; border-top: 1px solid #eee; }
+                        .btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+                    </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <div class="card-header"><h2 style="margin:0">Card Title</h2></div>
+                        <div class="card-body"><p>This is a card component with header, body, and footer sections.</p></div>
+                        <div class="card-footer"><button class="btn">Action Button</button></div>
+                    </div>
+                </body>
+                </html>
+                """,
+            _ => htmlContent
+        };
+
+        RefreshPreview();
+    }
+}
