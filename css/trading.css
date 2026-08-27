@@ -432,6 +432,70 @@
 .ts-negative { color: var(--color-danger); font-weight: 600; }
 .ts-updated { font-size: 0.78rem; color: var(--color-text-muted); }
 
+/* Stock page — market summary, actions, category */
+.ts-stock-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    font-size: 0.88rem;
+}
+
+.ts-stock-summary--bullish {
+    border-color: rgba(16, 185, 129, 0.35);
+    background: rgba(16, 185, 129, 0.06);
+}
+
+.ts-stock-summary--bearish {
+    border-color: rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.ts-stock-sentiment {
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+}
+
+.ts-stock-summary--bullish .ts-stock-sentiment {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--color-success);
+}
+
+.ts-stock-summary--bearish .ts-stock-sentiment {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--color-danger);
+}
+
+.ts-stock-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+}
+
+.ts-signal + .ts-signal { margin-left: 4px; }
+
+.ts-category-badge {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 1rem;
+    margin: 0 0 1rem;
+    padding: 0.65rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-surface);
+    font-size: 0.88rem;
+}
+
+.ts-category-badge strong {
+    color: var(--color-accent);
+    font-family: var(--font-mono, ui-monospace, monospace);
+}
+
 /* Charts & media */
 .ts-chart-wrap {
     border: 1px solid var(--color-border);
