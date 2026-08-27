@@ -40,21 +40,25 @@
                 }
                 <button class="ts-btn ts-btn-primary" @onclick="Scan" disabled="@_scanning">Scan VN Stocks</button>
             </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <input class="ts-input" style="max-width:200px" @bind="_filter" placeholder="Filter symbol..." />
-                <select class="ts-select" style="max-width:220px" @bind="_signalFilter">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <input class="ts-input" style="max-width:200px" @bind="_filter" @bind:event="oninput" placeholder="Filter symbol..." />
+                <select class="ts-select" style="max-width:220px" value="@_signalFilter" @onchange="OnSignalFilterChanged">
                     <option value="">All signals</option>
                     <option value="near_52w_ath">Highest 52W</option>
                     <option value="ema9_above_ema21">Uptrend</option>
                     <option value="top_growth_20d">Top Growth 20D</option>
                 </select>
-                <input class="ts-input" style="max-width:140px" @bind="_selectedStock" placeholder="VNM, FPT..." />
-                <button class="ts-btn ts-btn-outline" @onclick="LoadTcbs">TCBS Eval</button>
+                <input class="ts-input" style="max-width:140px" @bind="_selectedStock" @bind:after="NormalizeSelectedStock" placeholder="VNM, FPT..." />
+                <button class="ts-btn ts-btn-outline" @onclick="LoadTcbs" disabled="@(_tcbsBusy || string.IsNullOrWhiteSpace(_selectedStock))">TCBS Eval</button>
                 @if (GroupedStocks.Count > 0)
                 {
                     <button class="ts-btn ts-btn-outline" @onclick="ExportCsv">Export CSV</button>
                 }
             </div>
+            @if (!string.IsNullOrEmpty(_statusMessage))
+            {
+                <p class="ts-muted" style="margin:0.75rem 0 0;font-size:0.85rem">@_statusMessage</p>
+            }
         </div>
 
         @if (_totalMarketStocks > 0 && _vnData?.Data is { Length: > 0 })
@@ -68,7 +72,7 @@
             </div>
         }
 
-        <TcbsCard Symbol="@_selectedStock" Data="@_tcbsJson" />
+        <TcbsCard Symbol="@_selectedStock" Data="@_tcbsJson" Busy="@_tcbsBusy" Error="@_tcbsError" />
 
         @if (_loading)
         {
@@ -96,6 +100,21 @@
                         }
                     </tbody>
                 </table>
+            </div>
+        }
+        else if (_vnLoaded)
+        {
+            <div class="ts-panel ts-empty">
+                <span>
+                    @if (GroupedStocks.Count == 0)
+                    {
+                        @:Chưa có dữ liệu watchlist. Bấm <strong>Scan VN Stocks</strong> để chạy scanner trên VPS (có thể mất vài phút).
+                    }
+                    else
+                    {
+                        @:Không có mã khớp filter hiện tại — thử <strong>All signals</strong> hoặc xóa ô Filter.
+                    }
+                </span>
             </div>
         }
 
@@ -281,15 +300,19 @@
     private string _selectedGlobalSymbol = "SP:SPX";
     private SectorCategory? _selectedCategory;
     private JsonElement? _tcbsJson;
+    private string? _tcbsError;
+    private bool _tcbsBusy;
     private string _filter = "";
     private string _signalFilter = "";
     private string _categoryFilter = "";
     private string _globalFilter = "";
     private string _countryFilter = "";
+    private string? _statusMessage;
     private bool _scanning;
     private bool _scanningGlobal;
     private bool _loading;
     private bool _loadingGlobal;
+    private bool _vnLoaded;
     private bool _globalLoaded;
     private bool _showPriceAlert;
     private int _totalMarketStocks;
@@ -299,7 +322,7 @@
 
     private List<GroupedStockRow> FilteredStocks => GroupedStocks
         .Where(s => string.IsNullOrEmpty(_filter) || s.Symbol.Contains(_filter, StringComparison.OrdinalIgnoreCase))
-        .Where(s => string.IsNullOrEmpty(_signalFilter) || s.SignalTypes.Contains(_signalFilter))
+        .Where(s => string.IsNullOrEmpty(_signalFilter) || s.SignalTypes.Contains(_signalFilter, StringComparer.OrdinalIgnoreCase))
         .OrderByDescending(s => s.SignalTypes.Count)
         .ThenByDescending(s => s.Volume)
         .ToList();
@@ -344,15 +367,26 @@
 
     private async Task LoadInBackgroundAsync()
     {
+        _loading = true;
         try
         {
             var listedTask = LoadListedCountAsync();
             var vnTask = Api.GetPotentialSymbolsAsync();
             await Task.WhenAll(listedTask, vnTask);
             _vnData = await vnTask;
+            _vnLoaded = true;
+            UpdateStatusFromVnData();
         }
-        catch { }
-        await InvokeAsync(StateHasChanged);
+        catch
+        {
+            _vnLoaded = true;
+            _statusMessage = "Không tải được watchlist từ API.";
+        }
+        finally
+        {
+            _loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task LoadListedCountAsync()
@@ -373,9 +407,39 @@
     {
         _loading = true;
         await InvokeAsync(StateHasChanged);
-        try { _vnData = await Api.GetPotentialSymbolsAsync(); }
-        catch { }
+        try
+        {
+            _vnData = await Api.GetPotentialSymbolsAsync();
+            _vnLoaded = true;
+            UpdateStatusFromVnData();
+        }
+        catch
+        {
+            _vnLoaded = true;
+            _statusMessage = "Không tải được watchlist từ API.";
+        }
         finally { _loading = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private void UpdateStatusFromVnData()
+    {
+        var n = _vnData?.Data?.Length ?? 0;
+        _statusMessage = n == 0
+            ? "Watchlist trống — scanner VPS chưa có dữ liệu hoặc chưa chạy."
+            : $"Có {n} dòng tín hiệu ({GroupedStocks.Count} mã sau khi gộp).";
+    }
+
+    private void OnSignalFilterChanged(ChangeEventArgs e)
+    {
+        _signalFilter = e.Value?.ToString() ?? "";
+    }
+
+    private void NormalizeSelectedStock()
+    {
+        if (!string.IsNullOrWhiteSpace(_selectedStock))
+            _selectedStock = _selectedStock.Trim().ToUpperInvariant();
+        _tcbsJson = null;
+        _tcbsError = null;
     }
 
     private async Task LoadGlobalAsync()
@@ -395,17 +459,45 @@
         finally { _loadingGlobal = false; await InvokeAsync(StateHasChanged); }
     }
 
-    private void SelectSymbol(string sym) => _selectedStock = sym.Trim().ToUpperInvariant();
+    private void SelectSymbol(string sym)
+    {
+        _selectedStock = sym.Trim().ToUpperInvariant();
+        _tcbsJson = null;
+        _tcbsError = null;
+    }
 
     private async Task LoadTcbs()
     {
         if (string.IsNullOrWhiteSpace(_selectedStock)) return;
-        _tcbsJson = await Api.GetTcbsStockInfoAsync(_selectedStock.Trim().ToUpperInvariant());
+        var sym = _selectedStock.Trim().ToUpperInvariant();
+        _selectedStock = sym;
+        _tcbsBusy = true;
+        _tcbsError = null;
+        _tcbsJson = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var data = await Api.GetTcbsStockInfoAsync(sym);
+            if (data is null)
+                _tcbsError = $"TCBS không trả dữ liệu cho {sym}. Kiểm tra mã hoặc proxy tcanalysis.";
+            else
+                _tcbsJson = data;
+        }
+        catch (Exception ex)
+        {
+            _tcbsError = $"Lỗi TCBS Eval: {ex.Message}";
+        }
+        finally
+        {
+            _tcbsBusy = false;
+        }
     }
 
     private async Task Scan()
     {
         _scanning = true;
+        _statusMessage = "Đang trigger scanner VPS (vnstock_potential)...";
+        await InvokeAsync(StateHasChanged);
         await Api.RunSshScriptAsync("vnstock_potential");
         await LoadScanAsync();
         _scanning = false;

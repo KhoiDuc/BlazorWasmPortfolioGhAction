@@ -273,8 +273,12 @@ public class TradingApiClient : ITradingApiClient
     public Task<JsonElement?> ConfirmDnseOtpAsync(string otp, string? sessionId = null, CancellationToken ct = default) =>
         PostJsonAsync("dnse-order-service/orders/confirm", new { otp, session_id = sessionId }, ct);
 
-    public Task<JsonElement?> GetTcbsStockInfoAsync(string symbol, CancellationToken ct = default) =>
-        GetJsonAsync($"tcanalysis/{Uri.EscapeDataString(symbol)}", ct);
+    public Task<JsonElement?> GetTcbsStockInfoAsync(string symbol, CancellationToken ct = default)
+    {
+        var sym = Uri.EscapeDataString(symbol.Trim().ToUpperInvariant());
+        // Same path as Trading-Signals Stock.vue evaluatePrice()
+        return GetJsonAsync($"tcanalysis/v1/evaluation/{sym}/evaluation", ct);
+    }
 
     public Task<JsonElement?> GetProxyJsonAsync(string path, CancellationToken ct = default) =>
         GetJsonAsync(path, ct);

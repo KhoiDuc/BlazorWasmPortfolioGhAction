@@ -1,11 +1,19 @@
 @using System.Text.Json
 
-@if (Data.HasValue)
+@if (_busy)
+{
+    <div class="ts-panel ts-empty"><div class="ts-spinner"></div><span>Đang tải TCBS eval — @Symbol...</span></div>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="ts-panel"><p class="ts-alert ts-alert-info mb-0">@_error</p></div>
+}
+else if (Data.HasValue)
 {
     <div class="ts-panel">
-        <h4 style="margin:0 0 0.75rem">TCBS — @Symbol</h4>
+        <h4 style="margin:0 0 0.75rem">TCBS Eval — @Symbol</h4>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;font-size:0.85rem">
-            @foreach (var row in ExtractFields(Data.Value))
+            @foreach (var row in _rows)
             {
                 <div>
                     <span class="ts-muted">@row.Label</span><br/>
@@ -13,7 +21,7 @@
                 </div>
             }
         </div>
-        @if (ExtractFields(Data.Value).Count == 0)
+        @if (_rows.Count == 0)
         {
             <pre style="font-size:0.78rem;overflow:auto;max-height:200px;margin-top:0.75rem">@Data.Value.ToString()</pre>
         }
@@ -23,16 +31,54 @@
 @code {
     [Parameter] public string Symbol { get; set; } = "";
     [Parameter] public JsonElement? Data { get; set; }
+    [Parameter] public bool Busy { get; set; }
+    [Parameter] public string? Error { get; set; }
+
+    private bool _busy;
+    private string? _error;
+    private List<(string Label, string Value)> _rows = [];
+
+    protected override void OnParametersSet()
+    {
+        _busy = Busy;
+        _error = Error;
+        _rows = Data.HasValue ? ExtractFields(Data.Value) : [];
+    }
 
     private static List<(string Label, string Value)> ExtractFields(JsonElement root)
     {
         var rows = new List<(string, string)>();
+
+        // Evaluation API (tcanalysis/v1/evaluation/{sym}/evaluation) — same fields Vue uses
+        TryAdd(root, rows, "eps", "EPS");
+        TryAdd(root, rows, "bvps", "BVPS");
+        TryAdd(root, rows, "ebitda", "EBITDA");
+        TryAdd(root, rows, "shareOutstanding", "Số CP lưu hành");
+        TryAdd(root, rows, "enterpriseValue", "Enterprise Value");
+        TryAdd(root, rows, "cash", "Cash");
+        TryAdd(root, rows, "shortTermDebt", "Nợ ngắn hạn");
+        TryAdd(root, rows, "longTermDebt", "Nợ dài hạn");
+
+        if (root.TryGetProperty("industry", out var industry))
+        {
+            TryAdd(industry, rows, "pe", "Industry P/E");
+            TryAdd(industry, rows, "pb", "Industry P/B");
+            TryAdd(industry, rows, "evebitda", "Industry EV/EBITDA");
+        }
+
+        var fi = TryComputeFi(root);
+        var dcf = TryComputeDcf(root);
+        if (fi.HasValue) rows.Insert(0, ("Giá FI (ước tính)", fi.Value.ToString("N0")));
+        if (dcf.HasValue) rows.Insert(fi.HasValue ? 1 : 0, ("Giá DCF (ước tính)", dcf.Value.ToString("N0")));
+        if (fi.HasValue && dcf.HasValue)
+            rows.Insert(0, ("Giá TB (FI+DCF)", Math.Round((fi.Value + dcf.Value) / 2).ToString("N0")));
+
+        // Overview / legacy shapes
         TryAdd(root, rows, "price", "Giá");
         TryAdd(root, rows, "targetPrice", "Target");
         TryAdd(root, rows, "recommendation", "Khuyến nghị");
         TryAdd(root, rows, "pe", "P/E");
         TryAdd(root, rows, "pb", "P/B");
-        TryAdd(root, rows, "eps", "EPS");
         TryAdd(root, rows, "roe", "ROE");
         TryAdd(root, rows, "marketCap", "Vốn hóa");
         if (root.TryGetProperty("financialRatio", out var fr))
@@ -44,7 +90,37 @@
         }
         if (root.TryGetProperty("company", out var co) && co.TryGetProperty("shortName", out var sn))
             rows.Insert(0, ("Tên", sn.GetString() ?? ""));
+
         return rows.Where(r => !string.IsNullOrWhiteSpace(r.Item2)).DistinctBy(r => r.Item1).ToList();
+    }
+
+    private static double? TryComputeFi(JsonElement root)
+    {
+        if (!root.TryGetProperty("industry", out var ind)) return null;
+        if (!TryNum(ind, "pe", out var pe) || !TryNum(root, "eps", out var eps)) return null;
+        if (!TryNum(ind, "pb", out var pb) || !TryNum(root, "bvps", out var bvps)) return null;
+        if (!TryNum(ind, "evebitda", out var eve) || !TryNum(root, "ebitda", out var ebitda)) return null;
+        return Math.Round(((pe * eps) + (pb * bvps) + (eve * ebitda)) / 3);
+    }
+
+    private static double? TryComputeDcf(JsonElement root)
+    {
+        if (!TryNum(root, "enterpriseValue", out var ev)) return null;
+        TryNum(root, "cash", out var cash);
+        TryNum(root, "shortTermDebt", out var std);
+        TryNum(root, "longTermDebt", out var ltd);
+        TryNum(root, "minorityInterest", out var mi);
+        if (!TryNum(root, "shareOutstanding", out var shares) || shares == 0) return null;
+        return Math.Round((ev + cash + std + ltd + mi) / shares);
+    }
+
+    private static bool TryNum(JsonElement el, string prop, out double value)
+    {
+        value = 0;
+        if (!el.TryGetProperty(prop, out var p)) return false;
+        if (p.ValueKind == JsonValueKind.Number && p.TryGetDouble(out value)) return true;
+        if (p.ValueKind == JsonValueKind.String && double.TryParse(p.GetString(), out value)) return true;
+        return false;
     }
 
     private static void TryAdd(JsonElement el, List<(string, string)> rows, string prop, string label)
