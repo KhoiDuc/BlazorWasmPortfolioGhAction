@@ -121,12 +121,6 @@
                         <div class="technology-list">
                             @foreach (var tech in exp.TechStack) { <span>@tech</span> }
                         </div>
-                        @if (!string.IsNullOrEmpty(exp.DetailLink))
-                        {
-                            <div class="resume-action-row">
-                                <a href="@exp.DetailLink" class="resume-btn">@L["Resume_ViewDetails"]</a>
-                            </div>
-                        }
                     </div>
                 </div>
             }
@@ -156,12 +150,6 @@
                         <a href="@proj.RepoUrl" target="_blank" rel="noopener noreferrer">
                             <i class="bi bi-github" aria-hidden="true"></i> @L["Resume_Repository"]
                         </a>
-                        @if (!string.IsNullOrEmpty(proj.DetailLink))
-                        {
-                            <a href="@proj.DetailLink">
-                                <i class="bi bi-info-circle" aria-hidden="true"></i> @L["Resume_Details"]
-                            </a>
-                        }
                     </div>
                     <div class="technology-list">
                         @foreach (var tech in proj.TechStack) { <span>@tech</span> }
