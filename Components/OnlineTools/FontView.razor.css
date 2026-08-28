@@ -25,14 +25,9 @@
     background: var(--color-bg-surface-elevated);
 }
 
-.fontview-dropzone:hover,
-.fontview-dropzone.is-dragover {
+.fontview-dropzone:hover {
     border-color: var(--color-accent);
     background: var(--color-accent-glow);
-}
-
-.fontview-dropzone.is-dragover {
-    transform: scale(1.02);
 }
 
 .fontview-dropzone .bi {
@@ -87,27 +82,6 @@
     align-items: center;
 }
 
-.fontview-search-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-    flex: 1;
-    min-width: 16rem;
-}
-
-.fontview-search-wrap .bi-search {
-    position: absolute;
-    left: 0.6rem;
-    color: var(--color-text-muted);
-    font-size: 0.85rem;
-    pointer-events: none;
-}
-
-.fontview-search {
-    padding-left: 1.85rem;
-    width: 100%;
-}
-
 .fontview-control {
     display: inline-flex;
     align-items: center;
@@ -134,11 +108,6 @@
     border-radius: var(--radius-sm, 0.25rem);
     background: transparent;
     cursor: pointer;
-}
-
-.fontview-control select {
-    width: auto;
-    min-width: 7rem;
 }
 
 .fontview-size-value {
@@ -169,27 +138,67 @@
     color: var(--color-text-secondary);
 }
 
-/* Preview */
-.fontview-preview {
+/* Text tester */
+.fontview-tester {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.fontview-textarea {
+    resize: vertical;
+    min-height: 4rem;
+    line-height: 1.4;
+}
+
+.fontview-tester-output {
     background: var(--color-bg-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm, 0.35rem);
     padding: 1.25rem;
+    min-height: 5rem;
+    overflow: auto;
+}
+
+.fontview-tester-text {
+    margin: 0;
     font-family: var(--fv-font);
     color: var(--fv-color);
+    font-size: var(--fv-size);
+    line-height: 1.4;
+    word-break: break-word;
 }
 
-.fontview-preview-lg {
-    margin: 0 0 0.5rem;
-    font-size: 1.75rem;
-    line-height: 1.3;
+/* Sample cards */
+.fontview-samples {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    gap: 0.75rem;
 }
 
-.fontview-preview-sm {
+.fontview-sample {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm, 0.35rem);
+    padding: 0.75rem 1rem;
+}
+
+.fontview-sample-label {
+    margin: 0 0 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.fontview-sample-text {
     margin: 0;
-    font-size: 1.2rem;
-    line-height: 1.3;
+    font-family: var(--fv-font);
+    color: var(--fv-color);
+    line-height: 1.35;
 }
+
+.fontview-xl { font-size: 2.5rem; }
+.fontview-lg { font-size: 1.5rem; }
+.fontview-md { font-size: 1.1rem; }
 
 /* Toast */
 .fontview-toast {
@@ -211,67 +220,6 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Empty */
-.fontview-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 2rem 0;
-    color: var(--color-text-muted);
-}
-
-.fontview-empty .bi {
-    font-size: 1.75rem;
-}
-
-.fontview-empty p {
-    margin: 0;
-}
-
-/* Category pills */
-.fontview-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    background: var(--color-bg-surface);
-    padding: 0.5rem 0;
-    margin: 0 -0.25rem;
-}
-
-.fontview-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.25rem 0.7rem;
-    border: 1px solid var(--color-border);
-    border-radius: 1rem;
-    background: var(--color-bg-surface);
-    color: var(--color-text-secondary);
-    font-size: 0.78rem;
-    cursor: pointer;
-    transition: all 0.15s;
-}
-
-.fontview-pill:hover {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
-}
-
-.fontview-pill.is-active {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: var(--color-text-on-accent, #fff);
-}
-
-.fontview-pill-count {
-    font-size: 0.7rem;
-    opacity: 0.75;
-}
-
 /* Grid */
 .fontview-grid {
     display: flex;
@@ -283,7 +231,6 @@
     border: 1px solid var(--color-border-subtle);
     border-radius: var(--radius-sm, 0.35rem);
     overflow: hidden;
-    scroll-margin-top: 3.5rem;
 }
 
 .fontview-section-head {
@@ -324,7 +271,7 @@
 /* Cells */
 .fontview-cells {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(calc(var(--fv-cell-size) + 1rem), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
     gap: 0.2rem;
     padding: 0.5rem;
 }
@@ -341,7 +288,7 @@
     overflow: hidden;
     font-family: var(--fv-font);
     color: var(--fv-color);
-    font-size: calc(var(--fv-cell-size) * 0.55);
+    font-size: 1.5rem;
     line-height: 1;
     transition: all 0.12s;
 }
@@ -360,7 +307,7 @@
 /* Responsive */
 @media (max-width: 768px) {
     .fontview-cells {
-        grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr));
     }
 
     .fontview-toolbar {
@@ -375,11 +322,7 @@
         width: 5rem;
     }
 
-    .fontview-preview-lg {
-        font-size: 1.3rem;
-    }
-
-    .fontview-preview-sm {
-        font-size: 0.95rem;
-    }
+    .fontview-xl { font-size: 1.75rem; }
+    .fontview-lg { font-size: 1.2rem; }
+    .fontview-md { font-size: 1rem; }
 }

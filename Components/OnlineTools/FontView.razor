@@ -7,7 +7,7 @@
 @implements IAsyncDisposable
 
 <ToolShell ResourceKey="fontview" Title="FontView" Icon="bi-file-font"
-           Description="Load a font file and browse every glyph it contains.">
+           Description="Load a font file and preview text in it.">
     <div class="tool-form fontview-tool">
         @if (_error is not null)
         {
@@ -38,30 +38,14 @@
         @if (_font is not null)
         {
             <div class="tool-actions fontview-toolbar">
-                <div class="fontview-search-wrap">
-                    <i class="bi bi-search" aria-hidden="true"></i>
-                    <input type="search" class="tool-input fontview-search"
-                           placeholder="@L["FontView_SearchPlaceholder"]"
-                           @bind="_filter" @bind:event="oninput" @bind:after="OnFilterChanged" />
-                </div>
-                <label class="fontview-control">
-                    <span class="fontview-control-label">@L["FontView_Size"]</span>
-                    <input type="range" min="18" max="120" @bind="_size" @bind:event="oninput" />
-                    <span class="fontview-size-value">@_size<span>px</span></span>
-                </label>
                 <label class="fontview-control">
                     <span class="fontview-control-label">@L["FontView_Color"]</span>
                     <input type="color" @bind="_color" @bind:event="oninput" />
                 </label>
                 <label class="fontview-control">
-                    <span class="fontview-control-label">@L["FontView_Sort"]</span>
-                    <select class="tool-select" @bind="_sort">
-                        <option value="category">@L["FontView_SortCategory"]</option>
-                        <option value="az">A→Z</option>
-                        <option value="za">Z→A</option>
-                        <option value="ua">U+</option>
-                        <option value="ud">U+ ↓</option>
-                    </select>
+                    <span class="fontview-control-label">@L["FontView_FontSize"]</span>
+                    <input type="range" min="12" max="96" @bind="_fontSize" @bind:event="oninput" />
+                    <span class="fontview-size-value">@_fontSize<span>px</span></span>
                 </label>
                 <button type="button" class="tool-btn" @onclick="Reset">
                     <i class="bi bi-arrow-repeat" aria-hidden="true"></i> @L["FontView_NewFont"]
@@ -81,9 +65,35 @@
                 </span>
             </div>
 
-            <div class="fontview-preview" style="--fv-font:'@_fontFaceId'; --fv-color:@_color">
-                <p class="fontview-preview-lg">The quick brown fox jumps over the lazy dog</p>
-                <p class="fontview-preview-sm">0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz</p>
+            <div class="fontview-tester" style="--fv-font:'@_fontFaceId'; --fv-color:@_color; --fv-size:@(_fontSize)px">
+                <div class="fontview-tester-input">
+                    <textarea class="tool-input fontview-textarea"
+                              placeholder="@L["FontView_TextPlaceholder"]"
+                              rows="3"
+                              @bind="_testText" @bind:event="oninput"></textarea>
+                </div>
+                <div class="fontview-tester-output">
+                    <p class="fontview-tester-text">@(_testText)</p>
+                </div>
+            </div>
+
+            <div class="fontview-samples" style="--fv-font:'@_fontFaceId'; --fv-color:@_color">
+                <div class="fontview-sample">
+                    <p class="fontview-sample-label tool-hint">Aa</p>
+                    <p class="fontview-sample-text fontview-xl">Aa Bb Cc Dd Ee</p>
+                </div>
+                <div class="fontview-sample">
+                    <p class="fontview-sample-label tool-hint">Alphabet</p>
+                    <p class="fontview-sample-text fontview-md">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />abcdefghijklmnopqrstuvwxyz</p>
+                </div>
+                <div class="fontview-sample">
+                    <p class="fontview-sample-label tool-hint">Numbers</p>
+                    <p class="fontview-sample-text fontview-md">0123456789</p>
+                </div>
+                <div class="fontview-sample">
+                    <p class="fontview-sample-label tool-hint">Pangram</p>
+                    <p class="fontview-sample-text fontview-lg">The quick brown fox jumps over the lazy dog</p>
+                </div>
             </div>
 
             @if (_copied)
@@ -94,59 +104,34 @@
                 </div>
             }
 
-            @if (!string.IsNullOrWhiteSpace(_filter) && FilteredGlyphs.Count == 0)
-            {
-                <div class="fontview-empty">
-                    <i class="bi bi-search" aria-hidden="true"></i>
-                    <p>@L["FontView_NoResults"]</p>
-                </div>
-            }
-            else if (FilteredGlyphs.Count > 0)
-            {
-                @if (_sort == "category" && CategoryCounts.Count > 1)
+            <div class="fontview-grid">
+                @foreach (var grp in GroupedGlyphs)
                 {
-                    <div class="fontview-pills">
-                        @foreach (var pill in CategoryCounts)
+                    <section class="fontview-section" id="@SectionId(grp.Key)">
+                        <button type="button" class="fontview-section-head"
+                                @onclick="() => ToggleSection(grp.Key)">
+                            <i class="bi @(IsSectionExpanded(grp.Key) ? "bi-chevron-down" : "bi-chevron-right")" aria-hidden="true"></i>
+                            <span>@LocalizeCategory(grp.Key)</span>
+                            <span class="fontview-count">@grp.Count()</span>
+                        </button>
+                        @if (IsSectionExpanded(grp.Key))
                         {
-                            <button type="button"
-                                    class="fontview-pill @(_activePill == pill.Key ? "is-active" : "")"
-                                    @onclick="() => ScrollToSection(pill.Key)">
-                                @LocalizeCategory(pill.Key)
-                                <span class="fontview-pill-count">@pill.Value</span>
-                            </button>
+                            <div class="fontview-cells">
+                                @foreach (var g in grp)
+                                {
+                                    var ch = char.ConvertFromUtf32(g.Unicode);
+                                    <button type="button" class="fontview-cell"
+                                            style="--fv-font:'@_fontFaceId'; --fv-color:@_color"
+                                            title="@($"{g.Name} · U+{g.Hex}")"
+                                            @onclick="() => CopyGlyph(ch)">
+                                        @ch
+                                    </button>
+                                }
+                            </div>
                         }
-                    </div>
+                    </section>
                 }
-
-                <div class="fontview-grid">
-                    @foreach (var grp in GroupedGlyphs)
-                    {
-                        <section class="fontview-section" id="@SectionId(grp.Key)">
-                            <button type="button" class="fontview-section-head"
-                                    @onclick="() => ToggleSection(grp.Key)">
-                                <i class="bi @(IsSectionExpanded(grp.Key) ? "bi-chevron-down" : "bi-chevron-right")" aria-hidden="true"></i>
-                                <span>@LocalizeCategory(grp.Key)</span>
-                                <span class="fontview-count">@grp.Count()</span>
-                            </button>
-                            @if (IsSectionExpanded(grp.Key))
-                            {
-                                <div class="fontview-cells" style="--fv-cell-size:@(_size)px">
-                                    @foreach (var g in grp)
-                                    {
-                                        var ch = char.ConvertFromUtf32(g.Unicode);
-                                        <button type="button" class="fontview-cell"
-                                                style="--fv-font:'@_fontFaceId'; --fv-color:@_color"
-                                                title="@($"{g.Name} · U+{g.Hex}")"
-                                                @onclick="() => CopyGlyph(ch, g)">
-                                            @ch
-                                        </button>
-                                    }
-                                </div>
-                            }
-                        </section>
-                    }
-                </div>
-            }
+            </div>
         }
     </div>
 </ToolShell>
@@ -155,70 +140,30 @@
     private FontViewFont? _font;
     private byte[]? _loadedBytes;
     private string? _fontFaceId;
-    private string _filter = "";
-    private int _size = 48;
     private string _color = "#111111";
-    private string _sort = "category";
+    private int _fontSize = 32;
+    private string _testText = "The quick brown fox jumps over the lazy dog";
     private string? _error;
     private bool _loading;
     private bool _copied;
     private bool _jsLoaded;
-    private string? _activePill;
     private CancellationTokenSource? _copyCts;
 
     private readonly HashSet<string> ExpandedSections = new(StringComparer.OrdinalIgnoreCase);
-
-    private List<FontViewGlyph> FilteredGlyphs
-    {
-        get
-        {
-            var term = _filter.Trim();
-            if (string.IsNullOrEmpty(term) || _font is null) return _font?.Glyphs ?? new();
-
-            var hexQuery = term.Replace("U+", "", StringComparison.OrdinalIgnoreCase).Trim();
-            return _font.Glyphs.Where(g =>
-                g.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                g.Hex.Contains(hexQuery, StringComparison.OrdinalIgnoreCase) ||
-                g.Unicode.ToString().Contains(hexQuery, StringComparison.OrdinalIgnoreCase) ||
-                char.ConvertFromUtf32(g.Unicode).Equals(term, StringComparison.OrdinalIgnoreCase)).ToList();
-        }
-    }
-
-    private List<KeyValuePair<string, int>> CategoryCounts
-    {
-        get
-        {
-            return FilteredGlyphs
-                .GroupBy(Categorize)
-                .OrderBy(g => CategoryOrder.IndexOf(g.Key))
-                .Select(g => new KeyValuePair<string, int>(g.Key, g.Count()))
-                .ToList();
-        }
-    }
 
     private IEnumerable<IGrouping<string, FontViewGlyph>> GroupedGlyphs
     {
         get
         {
-            var list = FilteredGlyphs;
-            var sorted = (IEnumerable<FontViewGlyph>)(_sort switch
-            {
-                "az" => list.OrderBy(g => g.Name),
-                "za" => list.OrderByDescending(g => g.Name),
-                "ua" => list.OrderBy(g => g.Unicode),
-                "ud" => list.OrderByDescending(g => g.Unicode),
-                _ => list
-            });
-
-            if (_sort == "category")
-                return sorted.GroupBy(Categorize).OrderBy(g => CategoryOrder.IndexOf(g.Key));
-
-            return sorted.GroupBy(_ => "All");
+            if (_font is null) return Enumerable.Empty<IGrouping<string, FontViewGlyph>>();
+            return _font.Glyphs
+                .GroupBy(Categorize)
+                .OrderBy(g => CategoryOrder.IndexOf(g.Key));
         }
     }
 
     private static readonly List<string> CategoryOrder =
-        ["Uppercase", "Lowercase", "Number", "Punctuation", "Symbol", "Other", "All"];
+        ["Uppercase", "Lowercase", "Number", "Punctuation", "Symbol", "Other"];
 
     private static string Categorize(FontViewGlyph g)
     {
@@ -227,9 +172,9 @@
         var cat = char.GetUnicodeCategory(ch);
         return cat switch
         {
-            System.Globalization.UnicodeCategory.UppercaseLetter => "Uppercase",
-            System.Globalization.UnicodeCategory.LowercaseLetter => "Lowercase",
+            System.Globalization.UnicodeCategory.UppercaseLetter or
             System.Globalization.UnicodeCategory.TitlecaseLetter => "Uppercase",
+            System.Globalization.UnicodeCategory.LowercaseLetter => "Lowercase",
             System.Globalization.UnicodeCategory.DecimalDigitNumber or
             System.Globalization.UnicodeCategory.OtherNumber or
             System.Globalization.UnicodeCategory.LetterNumber => "Number",
@@ -255,16 +200,12 @@
         "Number" => L["FontView_Cat_Number"],
         "Punctuation" => L["FontView_Cat_Punctuation"],
         "Symbol" => L["FontView_Cat_Symbol"],
-        "All" => L["FontView_Cat_All"],
         _ => L["FontView_Cat_Other"]
     };
 
-    private bool IsSectionExpanded(string key) =>
-        ExpandedSections.Contains(key) || !string.IsNullOrWhiteSpace(_filter);
+    private bool IsSectionExpanded(string key) => ExpandedSections.Contains(key);
 
     private static string SectionId(string key) => $"fv-section-{key.ToLowerInvariant()}";
-
-    private void OnFilterChanged() => _activePill = null;
 
     private async Task EnsureJsAsync()
     {
@@ -314,7 +255,7 @@
         await LoadFontBytes(ms.ToArray());
     }
 
-    private async Task CopyGlyph(string ch, FontViewGlyph g)
+    private async Task CopyGlyph(string ch)
     {
         await Clipboard.CopyTextAsync(ch);
         _copied = true;
@@ -328,17 +269,6 @@
         catch (TaskCanceledException) { }
     }
 
-    private async Task ScrollToSection(string key)
-    {
-        _activePill = key;
-        if (!ExpandedSections.Contains(key))
-        {
-            ExpandedSections.Add(key);
-            await Task.Delay(50);
-        }
-        await JS.InvokeVoidAsync("fontViewScrollTo", SectionId(key));
-    }
-
     private void ToggleSection(string key)
     {
         if (!ExpandedSections.Add(key))
@@ -350,10 +280,8 @@
         _font = null;
         _loadedBytes = null;
         _fontFaceId = null;
-        _filter = "";
         _error = null;
         _copied = false;
-        _activePill = null;
         ExpandedSections.Clear();
     }
 
