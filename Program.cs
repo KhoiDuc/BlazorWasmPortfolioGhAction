@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using Blazored.LocalStorage;
 using Soenneker.Blazor.CreditCards.Registrars;
+using Soenneker.Blazor.Turnstile.Registrars;
 // using Microsoft.Authentication.WebAssembly.Msal; // MSAL — disabled (learning/demo only)
 
 public static partial class Program
@@ -63,6 +64,7 @@ public static partial class Program
         builder.Services.AddScoped<BlazorWasmPortfolioGhAction.Services.OnlineTools.BarcodeZxingService>();
         builder.Services.AddScoped<BlazorWasmPortfolioGhAction.Services.OnlineTools.LocalFontService>();
         builder.Services.AddScoped<BlazorWasmPortfolioGhAction.Services.OnlineTools.FontViewService>();
+        builder.Services.AddTurnstileInteropAsScoped();
         builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
         builder.Services.AddCreditCardsInteropAsScoped();
 

@@ -1,0 +1,142 @@
+@using Soenneker.Blazor.Turnstile
+@using Soenneker.Blazor.Turnstile.Options
+@using Soenneker.Blazor.Turnstile.Enums
+@inject IConfiguration Config
+
+<ToolShell ResourceKey="turnstile" Title="Turnstile Demo" Icon="bi-shield-check"
+           Description="Cloudflare Turnstile widget — verify human visitors without a puzzle. Token + callbacks live.">
+    <div class="tool-form turnstile-tool">
+        <div class="tool-field">
+            <label class="tool-label" for="ts-sitekey">Site key</label>
+            <input id="ts-sitekey" class="tool-input" @bind="_siteKey" />
+            <p class="tool-hint">Testing key <code>1x00000000000000000000AA</code> always passes.</p>
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="ts-theme">Theme</label>
+            <select id="ts-theme" class="tool-select" @bind="_theme">
+                <option value="auto">auto</option>
+                <option value="light">light</option>
+                <option value="dark">dark</option>
+            </select>
+        </div>
+
+        <div class="tool-field">
+            <label class="tool-label" for="ts-size">Size</label>
+            <select id="ts-size" class="tool-select" @bind="_size">
+                <option value="normal">normal</option>
+                <option value="flexible">flexible</option>
+                <option value="compact">compact</option>
+            </select>
+        </div>
+
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="Render">Render widget</button>
+            <button type="button" class="tool-btn" @onclick="Reset" disabled="@string.IsNullOrEmpty(_token)">Reset</button>
+        </div>
+
+        <div class="turnstile-host">
+            @if (_render)
+            {
+                <Turnstile @ref="_turnstile" OnCallback="OnCallback" OnError="OnError" OnExpired="OnExpired"
+                           Options="_options" />
+            }
+        </div>
+
+        @if (_token is not null)
+        {
+            <div class="tool-field">
+                <span class="tool-label">Token</span>
+                <pre class="tool-pre turnstile-token">@_token</pre>
+            </div>
+        }
+
+        @if (_error is not null)
+        {
+            <div class="tool-alert tool-alert-warning" role="alert">@_error</div>
+        }
+
+        <dl class="turnstile-status">
+            <div><dt>State</dt><dd>@_state</dd></div>
+            <div><dt>Expired</dt><dd>@(_expired ? "Yes" : "No")</dd></div>
+        </dl>
+    </div>
+</ToolShell>
+
+@code {
+    private Turnstile? _turnstile;
+    private string _siteKey = "1x00000000000000000000AA";
+    private string _theme = "auto";
+    private string _size = "normal";
+    private TurnstileOptions? _options;
+    private bool _render;
+    private string? _token;
+    private string? _error;
+    private string _state = "Idle";
+    private bool _expired;
+
+    protected override void OnInitialized()
+    {
+        var cfg = Config["Turnstile:SiteKey"];
+        if (!string.IsNullOrWhiteSpace(cfg))
+            _siteKey = cfg;
+        BuildOptions();
+    }
+
+    private void BuildOptions()
+    {
+        _options = new TurnstileOptions
+        {
+            SiteKey = _siteKey,
+            Theme = TurnstileTheme.FromValue(_theme),
+            Size = TurnstileSize.FromValue(_size)
+        };
+    }
+
+    private void Render()
+    {
+        _token = null;
+        _error = null;
+        _expired = false;
+        _state = "Rendering…";
+        BuildOptions();
+        _render = false;
+        _ = Task.Run(async () =>
+        {
+            await Task.Yield();
+            _render = true;
+            await InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private void OnCallback(string token)
+    {
+        _token = token;
+        _state = "Verified";
+        _expired = false;
+        StateHasChanged();
+    }
+
+    private void OnError(string code)
+    {
+        _error = $"Error: {code}";
+        _state = "Error";
+        StateHasChanged();
+    }
+
+    private void OnExpired()
+    {
+        _expired = true;
+        _state = "Token expired";
+        StateHasChanged();
+    }
+
+    private void Reset()
+    {
+        _token = null;
+        _expired = false;
+        _state = "Reset";
+        _turnstile?.Reset();
+        StateHasChanged();
+    }
+}

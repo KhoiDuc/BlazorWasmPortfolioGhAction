@@ -1,7 +1,10 @@
 @inherits CultureAwareComponent
 @using System.ComponentModel.DataAnnotations
+@using Soenneker.Blazor.Turnstile
+@using Soenneker.Blazor.Turnstile.Options
 @inject NavigationManager NavigationManager
 @inject IStringLocalizer<SharedResources> L
+@inject IConfiguration Config
 
 <section class="resume-contact">
     <div class="container">
@@ -68,6 +71,12 @@
                         <div class="contact-honeypot" aria-hidden="true">
                             <label>Website <InputText @bind-Value="model.Website" /></label>
                         </div>
+                        @if (_showTurnstile)
+                        {
+                            <div class="contact-turnstile">
+                                <Turnstile @ref="_turnstile" OnCallback="OnTurnstileCallback" Options="_turnstileOptions" />
+                            </div>
+                        }
                         @if (sent)
                         {
                             <div class="tool-alert tool-alert-success">
@@ -100,10 +109,30 @@
     private ContactModel model = new();
     private bool sending = false;
     private bool sent = false;
+    private Turnstile? _turnstile;
+    private string? _turnstileToken;
+    private bool _showTurnstile;
+    private TurnstileOptions _turnstileOptions = new();
+
+    protected override void OnInitialized()
+    {
+        var key = Config["Turnstile:SiteKey"];
+        _showTurnstile = !string.IsNullOrWhiteSpace(key);
+        _turnstileOptions = new TurnstileOptions
+        {
+            SiteKey = key ?? "1x00000000000000000000AA"
+        };
+    }
+
+    private void OnTurnstileCallback(string token)
+    {
+        _turnstileToken = token;
+    }
 
     private async Task Submit()
     {
         if (!string.IsNullOrEmpty(model.Website)) return;
+        if (_showTurnstile && string.IsNullOrEmpty(_turnstileToken)) return;
 
         sending = true;
         await Task.Delay(300);
@@ -117,6 +146,8 @@
         sending = false;
         sent = true;
         model = new ContactModel();
+        _turnstileToken = null;
+        _turnstile?.Reset();
     }
 
     public class ContactModel
