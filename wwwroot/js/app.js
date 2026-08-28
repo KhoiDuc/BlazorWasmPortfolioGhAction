@@ -1,4 +1,4 @@
-﻿window.app = {
+window.app = {
     page: null,
 
     createObjectUrl: function (fileInput) {
@@ -159,4 +159,8 @@ window.scrollToSection = function (sectionId) {
     if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+};
+
+window.scrollToTop = function () {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 };

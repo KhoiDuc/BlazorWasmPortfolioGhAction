@@ -1,5 +1,6 @@
 @inherits CultureAwareComponent
 @inject IStringLocalizer<SharedResources> L
+@inject IJSRuntime JS
 
 <footer class="footer">
     <div class="footer-container">
@@ -8,7 +9,9 @@
                 <p class="footer-name">Khoi Nguyen Minh Duc</p>
                 <p class="footer-role">@L["Footer_Role"]</p>
             </div>
-            <a href="@($"/{CultureService.UrlLang}#home")" class="back-to-top">@L["Footer_BackToTop"] <i class="bi bi-arrow-up" aria-hidden="true"></i></a>
+            <button type="button" class="back-to-top" @onclick="ScrollToTopAsync" aria-label="@L["Footer_BackToTop"]">
+                @L["Footer_BackToTop"] <i class="bi bi-arrow-up" aria-hidden="true"></i>
+            </button>
         </div>
         <div class="footer-bottom">
             <p>© @_currentYear Khoi Nguyen Minh Duc</p>
@@ -19,4 +22,16 @@
 
 @code {
     private readonly int _currentYear = DateTime.Now.Year;
+
+    private async Task ScrollToTopAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("scrollToTop");
+        }
+        catch
+        {
+            // Ignore error if JS interop fails
+        }
+    }
 }
