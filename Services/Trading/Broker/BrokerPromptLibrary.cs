@@ -62,6 +62,13 @@ public static class BrokerPromptLibrary
             ## Muc gia
             Vung mua, cat lo, muc tieu (neu co). Trinh bay bang bullet, gia tri so ro rang.
 
+            ## Thoi diem mua
+            Dua tren chu noi cua broker, nen:
+            - MUA LIEN — neu broker noi "mua ngay", "mua nhuong gia hien tai", "mua o kha nang ky" hoac tuong tu.
+            - DOI — neu broker noi "mua quanh", "mua vung", "canh mua o", "cho lui ve" hoac co vung gia muc tieu.
+            Neu khong ro: "Broker khong noi ro thoi diem — can hoi lai."
+            Chi trich dan tu goc, KHONG them y kien cua ban than.
+
             ## Rui ro
             Nhung rui ro broker de cap hoac ngam hieu. Neu khong co thi "Khong de cap rui ro ro".
 
