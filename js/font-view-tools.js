@@ -56,3 +56,10 @@ window.fontViewTools = {
         return id;
     }
 };
+
+window.fontViewScrollTo = function (elementId) {
+    var el = document.getElementById(elementId);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+};
