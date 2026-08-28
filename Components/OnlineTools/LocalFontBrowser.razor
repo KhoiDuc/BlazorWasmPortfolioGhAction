@@ -1,0 +1,282 @@
+@using BlazorWasmPortfolioGhAction.Services.OnlineTools
+@inject LocalFontService LFonts
+@inject IClipboardService Clipboard
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<ToolShell ResourceKey="localfont" Title="Local Font Browser" Icon="bi-fonts"
+           Description="Browse, preview, inspect, and download fonts installed on your device via the Local Font Access API.">
+    <div class="tool-form localfont-tool">
+        @if (!_supported)
+        {
+            <div class="tool-alert tool-alert-warning" role="alert">
+                @_status
+            </div>
+        }
+        else
+        {
+            <div class="tool-actions">
+                <button type="button" class="tool-btn tool-btn-primary" @onclick="QueryFonts" disabled="@_loading">
+                    @if (_loading) { <span>Loading…</span> } else { <span>Query local fonts</span> }
+                </button>
+                @if (_fonts.Count > 0)
+                {
+                    <span class="tool-hint">@_fonts.Count fonts</span>
+                    <input type="search" class="tool-input localfont-search" placeholder="Filter by family or PostScript name…"
+                           @bind="_filter" @bind:event="oninput" />
+                    <label class="tool-check">
+                        <input type="checkbox" @bind="_groupByFamily" /> Group by family
+                    </label>
+                }
+            </div>
+
+            @if (_permission is not null)
+            {
+                <p class="tool-hint">Permission: @_permission</p>
+            }
+
+            @if (_error is not null)
+            {
+                <div class="tool-alert tool-alert-warning" role="alert">@_error</div>
+            }
+
+            @if (_fonts.Count > 0)
+            {
+                <div class="localfont-layout">
+                    <div class="localfont-list">
+                        @if (_groupByFamily)
+                        {
+                            @foreach (var grp in FilteredFonts.GroupBy(f => f.Family, StringComparer.OrdinalIgnoreCase).OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase))
+                            {
+                                <div class="localfont-family-group">
+                                    <div class="localfont-family-head" @onclick="() => ToggleFamily(grp.Key)">
+                                        <i class="bi @(ExpandedFamilies.Contains(grp.Key) ? "bi-chevron-down" : "bi-chevron-right")" aria-hidden="true"></i>
+                                        <span style="font-family:'@(grp.Key)'">@grp.Key</span>
+                                        <span class="tool-hint">@grp.Count()</span>
+                                    </div>
+                                    @if (ExpandedFamilies.Contains(grp.Key))
+                                    {
+                                        @foreach (var font in grp.OrderBy(f => f.Style, StringComparer.OrdinalIgnoreCase))
+                                        {
+                                            <button type="button"
+                                                    class="localfont-item @(_selected?.PostscriptName == font.PostscriptName ? "is-active" : "")"
+                                                    @onclick="() => Select(font)">
+                                                <span class="localfont-item-family" style="font-family:'@(font.Family)'">@font.PostscriptName</span>
+                                                <span class="localfont-item-style">@font.Style</span>
+                                            </button>
+                                        }
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            @foreach (var font in FilteredFonts)
+                            {
+                                <button type="button"
+                                        class="localfont-item @(_selected?.PostscriptName == font.PostscriptName ? "is-active" : "")"
+                                        @onclick="() => Select(font)">
+                                    <span class="localfont-item-family" style="font-family:'@(font.Family)'">@font.Family</span>
+                                    <span class="localfont-item-style">@font.Style</span>
+                                </button>
+                            }
+                        }
+                    </div>
+
+                    <div class="localfont-detail">
+                        @if (_selected is null)
+                        {
+                            <p class="tool-hint">Select a font to preview and inspect.</p>
+                        }
+                        else
+                        {
+                            <div class="localfont-preview" style="font-family:'@(_selected.Family)'">
+                                <p class="localfont-preview-sample">The quick brown fox jumps over the lazy dog</p>
+                                <p class="localfont-preview-sample localfont-small">0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</p>
+                                <p class="localfont-preview-sample localfont-custom">@(_previewText ?? "Type custom text below…")</p>
+                            </div>
+
+                            <dl class="localfont-props">
+                                <div><dt>PostScript name</dt><dd><code>@_selected.PostscriptName</code></dd></div>
+                                <div><dt>Full name</dt><dd>@_selected.FullName</dd></div>
+                                <div><dt>Family</dt><dd>@_selected.Family</dd></div>
+                                <div><dt>Style</dt><dd>@_selected.Style</dd></div>
+                            </dl>
+
+                            <div class="tool-actions">
+                                <input type="text" class="tool-input localfont-custom-input" placeholder="Custom preview text"
+                                       @bind="_previewText" @bind:event="oninput" />
+                                <button type="button" class="tool-btn" @onclick="CopyFamily">Copy font-family</button>
+                                <button type="button" class="tool-btn" @onclick="InspectFont" disabled="@_inspecting">
+                                    @if (_inspecting) { <span>Inspecting…</span> } else { <span>Inspect file</span> }
+                                </button>
+                            </div>
+
+                            @if (_fontType is not null)
+                            {
+                                <div class="tool-field">
+                                    <span class="tool-label">Detected type</span>
+                                    <p><span class="badge">@_fontType</span></p>
+                                </div>
+                            }
+
+                            @if (_fontDownload is not null)
+                            {
+                                <div class="tool-field">
+                                    <span class="tool-label">Font file</span>
+                                    <p class="tool-hint">@(_fontDownload.Length / 1024) KB</p>
+                                    <button type="button" class="tool-btn tool-btn-primary" @onclick="DownloadFont">Download .bin</button>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private bool _supported = true;
+    private string _status = "";
+    private string? _permission;
+    private string? _error;
+    private bool _loading;
+    private List<LocalFontInfo> _fonts = [];
+    private LocalFontInfo? _selected;
+    private string _filter = "";
+    private bool _groupByFamily;
+    private readonly HashSet<string> ExpandedFamilies = new(StringComparer.OrdinalIgnoreCase);
+    private string? _previewText;
+    private bool _inspecting;
+    private string? _fontType;
+    private byte[]? _fontDownload;
+    private bool _jsLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await EnsureJsAsync();
+            _supported = await LFonts.IsSupportedAsync();
+            if (!_supported)
+            {
+                _status = "Your browser does not support the Local Font Access API. Try Chrome/Edge 103+ on desktop.";
+                return;
+            }
+
+            _permission = await LFonts.GetPermissionAsync();
+        }
+        catch (Exception ex)
+        {
+            _supported = false;
+            _status = $"Error checking support: {ex.Message}";
+        }
+    }
+
+    private async Task EnsureJsAsync()
+    {
+        if (_jsLoaded) return;
+        await JS.InvokeVoidAsync("scriptLoader.load", "js/local-font-tools.js");
+        _jsLoaded = true;
+    }
+
+    private IEnumerable<LocalFontInfo> FilteredFonts
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_filter))
+                return _fonts;
+
+            var term = _filter.Trim();
+            return _fonts.Where(f =>
+                f.Family.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                f.PostscriptName.Contains(term, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    private async Task QueryFonts()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            var fonts = await LFonts.QueryAsync();
+            _fonts = fonts.OrderBy(f => f.Family, StringComparer.OrdinalIgnoreCase)
+                          .ThenBy(f => f.Style, StringComparer.OrdinalIgnoreCase)
+                          .ToList();
+            _permission = await LFonts.GetPermissionAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            _fonts.Clear();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void Select(LocalFontInfo font)
+    {
+        _selected = font;
+        _fontType = null;
+        _fontDownload = null;
+    }
+
+    private void ToggleFamily(string family)
+    {
+        if (!ExpandedFamilies.Add(family))
+            ExpandedFamilies.Remove(family);
+    }
+
+    private async Task CopyFamily()
+    {
+        if (_selected is null) return;
+        await Clipboard.CopyTextAsync($"font-family: '{_selected.Family}';");
+    }
+
+    private async Task InspectFont()
+    {
+        if (_selected is null) return;
+        _inspecting = true;
+        _fontType = null;
+        _fontDownload = null;
+        try
+        {
+            var (bytes, type) = await LFonts.GetFontFileAsync(_selected.PostscriptName);
+            if (bytes is null)
+            {
+                _error = "Could not read font file.";
+                return;
+            }
+
+            _fontDownload = bytes;
+            _fontType = type;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _inspecting = false;
+        }
+    }
+
+    private async Task DownloadFont()
+    {
+        if (_fontDownload is null || _selected is null) return;
+        var name = $"{_selected.PostscriptName}.bin";
+        using var stream = new MemoryStream(_fontDownload);
+        using var streamRef = new DotNetStreamReference(stream);
+        await JS.InvokeVoidAsync("downloadFileFromStream", name, streamRef);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _fontDownload = null;
+        return ValueTask.CompletedTask;
+    }
+}

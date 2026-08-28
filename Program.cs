@@ -61,6 +61,7 @@ public static partial class Program
         builder.Services.AddScoped<IClipboardService, ClipboardService>();
         builder.Services.AddScoped<JwtCodec>();
         builder.Services.AddScoped<BlazorWasmPortfolioGhAction.Services.OnlineTools.BarcodeZxingService>();
+        builder.Services.AddScoped<BlazorWasmPortfolioGhAction.Services.OnlineTools.LocalFontService>();
         builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
         builder.Services.AddCreditCardsInteropAsScoped();
 
