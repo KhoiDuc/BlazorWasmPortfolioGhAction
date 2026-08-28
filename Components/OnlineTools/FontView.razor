@@ -50,6 +50,9 @@
                 <button type="button" class="tool-btn" @onclick="Reset">
                     <i class="bi bi-arrow-repeat" aria-hidden="true"></i> @L["FontView_NewFont"]
                 </button>
+                <button type="button" class="tool-btn" @onclick="CopyCss" disabled="@_cssCopied">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i> @L["FontView_ExportCss"]
+                </button>
             </div>
 
             <div class="fontview-info">
@@ -146,7 +149,9 @@
     private string? _error;
     private bool _loading;
     private bool _copied;
+    private bool _cssCopied;
     private bool _jsLoaded;
+    private string _fileName = "font";
     private CancellationTokenSource? _copyCts;
 
     private readonly HashSet<string> ExpandedSections = new(StringComparer.OrdinalIgnoreCase);
@@ -249,6 +254,7 @@
     {
         var file = e.File;
         if (file is null) return;
+        _fileName = Path.GetFileNameWithoutExtension(file.Name);
         using var stream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
         using var ms = new MemoryStream();
         await stream.CopyToAsync(ms);
@@ -269,6 +275,42 @@
         catch (TaskCanceledException) { }
     }
 
+    private async Task CopyCss()
+    {
+        if (_loadedBytes is null || _font is null) return;
+        var mime = FontMime(_fileName);
+        var b64 = Convert.ToBase64String(_loadedBytes);
+        var family = _font.Family.Replace("'", "\\'");
+        var css = $@"@font-face {{
+  font-family: '{family}';
+  src: url('data:{mime};base64,{b64}') format('{mime.Split('/')[1]}');
+  font-weight: normal;
+  font-style: normal;
+}}
+
+.preview {{
+  font-family: '{family}', sans-serif;
+  font-size: {_fontSize}px;
+  color: {_color};
+}}";
+        await Clipboard.CopyTextAsync(css);
+        _cssCopied = true;
+        await Task.Delay(1500);
+        _cssCopied = false;
+    }
+
+    private static string FontMime(string fileName)
+    {
+        var ext = Path.GetExtension(fileName).ToLowerInvariant();
+        return ext switch
+        {
+            ".woff2" => "font/woff2",
+            ".woff" => "font/woff",
+            ".otf" => "font/otf",
+            _ => "font/ttf"
+        };
+    }
+
     private void ToggleSection(string key)
     {
         if (!ExpandedSections.Add(key))
@@ -282,6 +324,7 @@
         _fontFaceId = null;
         _error = null;
         _copied = false;
+        _cssCopied = false;
         ExpandedSections.Clear();
     }
 
