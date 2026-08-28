@@ -37,4 +37,38 @@ public static class BrokerPromptLibrary
             Verification: Khong them tin hieu mua/ban. Khong du doan chac chan. Neu note qua ngan thi noi thieu thong tin.
             """;
     }
+
+    public static string ExplainRecommendation(string rawText)
+    {
+        return $"""
+            Role: Tro ly phan tich khuyen nghi broker chung khoan Viet Nam. KHONG khuyen mua/ban. Chi phan tich y broker.
+            Task: Nguoi dung paste nguyen van khuyen nghi cua broker. Giai thich bang tieng Viet de hieu.
+
+            Khuyen nghi (raw):
+            {rawText}
+
+            Output format (tieng Viet, ro rang, ngan gon):
+            ## Ma CP
+            Ma broker de cap (neu co). Neu nhieu ma thi liet ke.
+
+            ## Jargon
+            Giai thich cac tu/cum tu chuyen nganh: tich luy, breakout, hap thu, cung cau, MA, volume, ...
+            Dinh dang: <tu> — <giai thich ngan 1-2 dong>
+
+            ## Y nghia
+            Broker muon noi gi? Phan tich logic: vi sao mua, vi sao cat lo o muc do, muc tieu nao.
+            KHONG suy dien tin khong co trong text. Neu broker khong noi ro thi noi "Broker khong de cap".
+
+            ## Muc gia
+            Vung mua, cat lo, muc tieu (neu co). Trinh bay bang bullet, gia tri so ro rang.
+
+            ## Rui ro
+            Nhung rui ro broker de cap hoac ngam hieu. Neu khong co thi "Khong de cap rui ro ro".
+
+            ## Cau hoi
+            2-4 cau nguoi dung nen hoi lai broker truoc khi quyet dinh.
+
+            Verification: KHONG them loi khuyen mua/ban cua ban than. KHONG du doan gia tuong lai. Neu text qua ngan thi noi thieu thong tin.
+            """;
+    }
 }

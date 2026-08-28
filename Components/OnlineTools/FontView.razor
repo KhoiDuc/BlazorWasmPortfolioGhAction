@@ -31,10 +31,10 @@
             <div class="fontview-toolbar">
                 <input type="search" class="tool-input fontview-search"
                        placeholder="@L["FontView_SearchPlaceholder"]"
-                       @bind="_filter" @bind:event="oninput" />
+                       @bind="_filter" @bind:event="oninput" @bind:delay="300" />
                 <label class="fontview-control">
                     <span>@L["FontView_Size"]</span>
-                    <input type="range" min="18" max="120" value="@_size" @oninput="OnSizeChange" />
+                    <input type="range" min="18" max="120" @bind="_size" @bind:event="oninput" @bind:delay="150" />
                     <span class="fontview-size-value">@_size<span>px</span></span>
                 </label>
                 <label class="fontview-control">
@@ -80,7 +80,7 @@
                             <span>@LocalizeCategory(grp.Key)</span>
                             <span class="fontview-count">@grp.Count()</span>
                         </button>
-                        @if (ExpandedSections.Contains(grp.Key))
+                        @if (ExpandedSections.Contains(grp.Key) || !string.IsNullOrWhiteSpace(_filter))
                         {
                             <div class="fontview-cells">
                                 @foreach (var g in grp)
@@ -121,11 +121,12 @@
             var term = _filter.Trim();
             if (string.IsNullOrEmpty(term)) return _font!.Glyphs;
 
-            var q = term.Replace("U+", "", StringComparison.OrdinalIgnoreCase).Trim();
+            var hexQuery = term.Replace("U+", "", StringComparison.OrdinalIgnoreCase).Trim();
             return _font!.Glyphs.Where(g =>
                 g.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                g.Hex.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                char.ConvertFromUtf32(g.Unicode).Contains(term)).ToList();
+                g.Hex.Contains(hexQuery, StringComparison.OrdinalIgnoreCase) ||
+                g.Unicode.ToString().Contains(hexQuery, StringComparison.OrdinalIgnoreCase) ||
+                char.ConvertFromUtf32(g.Unicode) == term).ToList();
         }
     }
 
@@ -223,12 +224,6 @@
         {
             _error = ex.Message;
         }
-    }
-
-    private void OnSizeChange(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out var v))
-            _size = Math.Clamp(v, 18, 120);
     }
 
     private void OnColorChange(ChangeEventArgs e) => _color = e.Value?.ToString() ?? _color;

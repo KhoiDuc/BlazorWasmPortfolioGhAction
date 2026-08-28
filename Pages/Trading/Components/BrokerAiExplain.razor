@@ -1,0 +1,114 @@
+@inject IBrokerGeminiClient Gemini
+@inject IJSRuntime JS
+
+<div class="ts-panel broker-ai-card">
+    <div class="broker-ai-head">
+        <span class="broker-ai-icon" aria-hidden="true">✦</span>
+        <div class="broker-ai-head-text">
+            <h3 class="ts-panel-title broker-ai-title">Giải thích khuyến nghị</h3>
+            <span class="broker-ai-sub">Dán nguyên văn khuyến nghị broker → AI phân tích ý, jargon, mức giá, rủi ro.</span>
+        </div>
+        @if (Gemini.HasDirectKey)
+        {
+            <span class="broker-ai-badge">Gemini</span>
+        }
+    </div>
+
+    <div class="broker-ai-body">
+        <div class="broker-ai-input-wrap">
+            <textarea class="ts-input ts-textarea broker-ai-input @(_aiErr is not null ? "ts-input-invalid" : "")"
+                      placeholder="Dán full khuyến nghị của broker vào đây…&#10;VD: #SHS @@All — Mua quanh 15.5–15.6, SL 14.9, TP 17.1 / 18.2…"
+                      rows="6"
+                      @bind="_raw"
+                      @bind:event="oninput"
+                      @bind:after="ClearErr"></textarea>
+            <div class="broker-ai-actions">
+                <button class="ts-btn ts-btn-primary ts-btn-sm"
+                        type="button"
+                        disabled="@(_aiBusy || string.IsNullOrWhiteSpace(_raw))"
+                        @onclick="Explain">
+                    @(_aiBusy ? "Đang phân tích…" : "✦ AI giải thích")
+                </button>
+                @if (!string.IsNullOrWhiteSpace(_raw) && !_aiBusy)
+                {
+                    <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Clear">Xóa</button>
+                }
+            </div>
+        </div>
+
+        @if (_aiBusy)
+        {
+            <div class="broker-ai-result broker-ai-loading">
+                <div class="ts-spinner"></div>
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(_aiResult))
+        {
+            <div class="broker-ai-result">
+                <div class="broker-ai-result-bar">
+                    <span class="broker-ai-result-label">Phân tích AI</span>
+                    <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="CopyResult">Sao chép</button>
+                </div>
+                <pre class="broker-ai-out-pre">@_aiResult</pre>
+            </div>
+        }
+        @if (_aiErr is not null)
+        {
+            <div class="ts-alert ts-alert-error broker-ai-err">@_aiErr</div>
+        }
+    </div>
+</div>
+
+@code {
+    private string _raw = "";
+    private string? _aiResult;
+    private string? _aiErr;
+    private bool _aiBusy;
+
+    private async Task Explain()
+    {
+        if (string.IsNullOrWhiteSpace(_raw)) return;
+
+        _aiBusy = true;
+        _aiErr = null;
+        try
+        {
+            var prompt = BrokerPromptLibrary.ExplainRecommendation(_raw.Trim());
+            var reply = await Gemini.ExplainAsync(prompt);
+            if (string.IsNullOrWhiteSpace(reply))
+            {
+                _aiErr = "AI không trả lời. Kiểm tra Gemini:ApiKey trong appsettings hoặc thử lại.";
+                return;
+            }
+
+            _aiResult = reply;
+        }
+        catch (Exception ex)
+        {
+            _aiErr = ex.Message;
+        }
+        finally
+        {
+            _aiBusy = false;
+        }
+    }
+
+    private void Clear()
+    {
+        _raw = "";
+        _aiResult = null;
+        _aiErr = null;
+    }
+
+    private void ClearErr() => _aiErr = null;
+
+    private async Task CopyResult()
+    {
+        if (string.IsNullOrWhiteSpace(_aiResult)) return;
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _aiResult);
+        }
+        catch { }
+    }
+}
