@@ -1,0 +1,91 @@
+---
+description: WCAG 2.2 Level AA accessibility standards for Blazor components
+globs: **/*.razor, **/*.razor.css
+alwaysApply: false
+---
+
+# WCAG 2.2 Level AA Accessibility
+
+Apply when creating or editing any `.razor` component or scoped CSS.
+
+## Required Patterns
+
+### Buttons & Links
+- Icon-only buttons MUST have `aria-label` (localized via `@L["..."]`).
+- Toggle buttons MUST have `aria-expanded` and `aria-controls`.
+- Use `<button type="button">` for non-submit actions.
+
+```razor
+<!-- BAD -->
+<button @onclick="Toggle"><i class="bi bi-list"></i></button>
+
+<!-- GOOD -->
+<button type="button" @onclick="Toggle"
+        aria-label="@L["Nav_OpenMenu"]"
+        aria-expanded="@(_isOpen.ToString().ToLowerInvariant())"
+        aria-controls="nav-panel">
+    <i class="bi bi-list" aria-hidden="true"></i>
+</button>
+```
+
+### Decorative Icons
+- Always `aria-hidden="true"` on `<i>` and `<svg>` that are purely visual.
+- Meaningful icons need `role="img"` + `aria-label`.
+
+### Images
+- Decorative: `alt=""`
+- Meaningful: descriptive `alt`, never omit the attribute.
+
+### Forms (SC 1.3.1, 3.3.2, 4.1.3)
+- Every input MUST have a `<label for="...">` or `<InputText id="...">` with associated label.
+- Error messages: `aria-describedby` pointing to error text, `aria-invalid="true"` on field.
+- Hint text: also linked via `aria-describedby`.
+
+```razor
+<label for="email">@L["Contact_Email"]</label>
+<InputText id="email" @bind-Value="Model.Email"
+           aria-required="true"
+           aria-describedby="email-err email-hint" />
+<span id="email-err" role="alert">@L["Contact_EmailInvalid"]</span>
+<span id="email-hint" class="form-text">@L["Contact_EmailPlaceholder"]</span>
+```
+
+### Dynamic Content (SC 4.1.3)
+- Loading states: `role="status"` + `aria-live="polite"`.
+- Errors: `role="alert"` (assertive by default).
+- Chat/streaming: wrap output region in `aria-live="polite"` `aria-relevant="additions text"`.
+
+### Heading Hierarchy (SC 1.3.1)
+- Each page exactly ONE `<h1>`.
+- Never skip levels (h1 → h3 is invalid).
+- `FocusOnNavigate` already targets `h1` — keep h1 on every page.
+
+### Focus Management (SC 2.4.3, 2.4.7)
+- Global `:focus-visible` outline is defined in `app.css` — do NOT remove with `outline: none`.
+- Modals/dialogs: trap focus, return focus to trigger on close.
+- Skip-link: already in `MainLayout.razor` — keep `#main-content` id on `<main>`.
+
+### Touch Targets (SC 2.5.8 — WCAG 2.2)
+- Interactive elements minimum 44x44 CSS pixels.
+- Use `min-height: 44px; min-width: 44px;` on icon buttons.
+
+### Motion (SC 2.3.3)
+- Wrap non-essential animation in `@media (prefers-reduced-motion: no-preference)`.
+- Existing `@media (prefers-reduced-motion: reduce)` block in `app.css` — add overrides there.
+
+### sr-only
+- Use `.sr-only` utility (defined in `app.css`) for text only screen readers should announce.
+
+```razor
+<button @onclick="Save"><i class="bi bi-save" aria-hidden="true"></i><span class="sr-only">@L["Tool_Save"]</span></button>
+```
+
+### Language
+- `<html lang>` is set in `index.html` and toggled by `culture.js`.
+- Foreign-language inline content: wrap in `<span lang="en">...</span>`.
+
+## Things to Avoid
+- `tabindex` > 0 (positive tabindex breaks DOM order).
+- `display: none` on live regions (use `sr-only` instead so AT still announces).
+- Relying on color alone to convey state (add icon/text + `aria-*`).
+- `outline: none` without a replacement `:focus-visible` style.

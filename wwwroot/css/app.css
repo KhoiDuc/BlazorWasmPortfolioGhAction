@@ -34,8 +34,10 @@ body {
 /* 1. DESIGN TOKENS — Light theme (default) + Dark theme override               */
 /* --------------------------------------------------------------------------- */
 :root {
+    --bp-sm: 576px;
     --bp-md: 768px;
-    --bp-lg: 1000px;
+    --bp-lg: 1024px;
+    --bp-xl: 1280px;
 
     /* Backgrounds */
     --color-bg-app: #f8fafc;
@@ -1799,12 +1801,14 @@ html.motion-ready .motion-reveal.is-visible .skill-meter-fill,
     overflow: auto;
 }
 
-@media (max-width: 1000px) {
+/* 1024px = --bp-lg */
+@media (max-width: 1024px) {
     .tool-grid-3 {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
+/* 900px — narrow tablet fallback */
 @media (max-width: 900px) {
     .tool-grid-2,
     .tool-grid-3 {
@@ -2006,4 +2010,51 @@ html.motion-ready .motion-reveal.is-visible .skill-meter-fill,
     .tool-inspect-card { grid-area: profile; }
     .tool-user-stats { grid-area: stats; }
     .tool-user-repos { grid-area: repos; }
+}
+
+/* =============================================================================
+   WCAG 2.2 AA — Skip link, sr-only, global focus-visible
+   ============================================================================= */
+
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    z-index: 10000;
+    padding: 0.75rem 1rem;
+    background: var(--color-accent-primary, #ca8a04);
+    color: var(--color-bg-app, #f8fafc);
+    font-weight: 600;
+    border-radius: 0 0 0.5rem 0;
+    transition: top 0.15s ease-in;
+}
+.skip-link:focus {
+    top: 0;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-accent-primary, #ca8a04);
+    outline-offset: 2px;
+}
+
+/* Ensure touch targets meet 44x44 (WCAG 2.2 SC 2.5.8) */
+.navbar-links a,
+.navbar-right button,
+.menu-toggle,
+.lang-toggle,
+.theme-toggle {
+    min-height: 44px;
+    min-width: 44px;
 }

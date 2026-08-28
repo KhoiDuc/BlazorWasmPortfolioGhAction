@@ -1,0 +1,88 @@
+---
+description: Responsive design standards — mobile/tablet/desktop breakpoints and fluid layout
+globs: **/*.razor, **/*.razor.css, wwwroot/css/*.css
+alwaysApply: false
+---
+
+# Responsive Design
+
+Apply when creating or editing any `.razor`, `.razor.css`, or global CSS.
+
+## Breakpoint Tokens (defined in `app.css` `:root`)
+
+| Token | Value | Target |
+|------|-------|--------|
+| `--bp-sm` | 576px | Mobile landscape |
+| `--bp-md` | 768px | Tablet |
+| `--bp-lg` | 1024px | Desktop |
+| `--bp-xl` | 1280px | Large desktop |
+
+Base (mobile) styles apply below `--bp-sm`. Use `@media (min-width: ...)` to scale up.
+
+## Mobile-First
+
+Write base styles for the smallest viewport, then enhance upward.
+
+```css
+/* BAD: desktop-first, override down */
+.card { display: grid; grid-template-columns: 1fr 1fr; }
+@media (max-width: 768px) { .card { grid-template-columns: 1fr; } }
+
+/* GOOD: mobile-first */
+.card { display: grid; grid-template-columns: 1fr; }
+@media (min-width: 768px) { .card { grid-template-columns: 1fr 1fr; }
+```
+
+## Use Tokens, Not Raw Pixels
+
+Never hardcode `768px`/`1024px` in `@media` — use the token so breakpoints stay consistent.
+
+```css
+/* BAD */
+@media (min-width: 768px) { ... }
+
+/* GOOD */
+@media (min-width: 48rem) { ... }  /* if not using var() in media query */
+```
+
+Note: CSS custom properties cannot be used directly in `@media` queries. Use the equivalent `rem`/`em` value or raw pixel matching the token. Keep a comment mapping to the token:
+
+```css
+/* 768px = --bp-md */
+@media (min-width: 48rem) { ... }
+
+/* 1024px = --bp-lg */
+@media (min-width: 64rem) { ... }
+```
+
+## Fluid Typography & Spacing
+
+Prefer `clamp()` and `min()` over fixed sizes for fluid scaling.
+
+```css
+.section {
+  padding: clamp(1rem, 4vw, 2.5rem);
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+}
+```
+
+## Container Queries
+
+For component-level responsiveness (when the component's container, not the viewport, drives layout), use `@container`:
+
+```css
+.parent { container-type: inline-size; }
+@container (min-width: 30rem) {
+  .child { flex-direction: row; }
+}
+```
+
+## Test Viewports
+
+Verify layout at: 375px (mobile), 768px (tablet), 1024px (desktop), 1280px (large).
+
+## Things to Avoid
+- `max-width: 100vw` (causes horizontal scroll with scrollbar).
+- Fixed `width` without `max-width: 100%` fallback.
+- `position: absolute` for layout flow.
+- Hidden content on mobile via `display: none` without an equivalent alternative.
