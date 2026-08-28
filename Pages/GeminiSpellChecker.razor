@@ -1,5 +1,6 @@
 ﻿@using System.Text.Json
 @using BlazorWasmPortfolioGhAction.Components.ToolShell
+@using BlazorWasmPortfolioGhAction.Services.Trading.Broker
 @inject ApiKeyModel ApiKeyService
 @inject HttpClient Http
 
@@ -11,10 +12,19 @@
                 <label class="tool-label" for="api-key-input">Gemini API key</label>
                 <input type="password" @bind="ApiKey" id="api-key-input" class="tool-input" placeholder="Enter API key" autocomplete="off" />
             </div>
+            <div class="tool-field">
+                <label class="tool-label" for="model-select">Model</label>
+                <select @bind="SelectedModel" id="model-select" class="tool-input">
+                    @foreach (var m in GeminiModels.All)
+                    {
+                        <option value="@m.Id">@m.Label</option>
+                    }
+                </select>
+            </div>
             <div class="tool-actions">
                 <button type="button" @onclick="SaveApiKey" class="tool-btn tool-btn-primary">Continue</button>
             </div>
-            <p class="tool-hint">Your key is stored in memory for this session only.</p>
+            <p class="tool-hint">Your key and model are stored in memory for this session only.</p>
         </div>
     }
     else
@@ -55,6 +65,7 @@
     private string CorrectedText { get; set; } = string.Empty;
     private string Corrections { get; set; } = string.Empty;
     private string ApiKey { get; set; } = string.Empty;
+    private string SelectedModel { get; set; } = GeminiModels.DefaultId;
 
     private EnumPage enumPage = EnumPage.FirstPage;
 
@@ -64,6 +75,7 @@
     {
         if (string.IsNullOrEmpty(ApiKey)) return;
         ApiKeyService.ApiKey = ApiKey;
+        ApiKeyService.Model = SelectedModel;
         enumPage = EnumPage.SecondPage;
     }
 
@@ -88,7 +100,7 @@
                 return;
             }
 
-            var requestUri = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={apiKey}";
+            var requestUri = $"https://generativelanguage.googleapis.com/v1beta/models/{ApiKeyService.Model ?? GeminiModels.DefaultId}:generateContent?key={apiKey}";
             var prompt = $"Correct the spelling of the following Vietnamese text. Return the result in this format:\n" +
                          $"Corrected: [corrected text here]\n" +
                          $"Fixes: [list each correction as 'original -> corrected', separated by commas, or 'None' if no changes]\n\n" +

@@ -8,6 +8,9 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
 public interface IBrokerGeminiClient
 {
     bool HasDirectKey { get; }
+    string? UserKey { get; set; }
+    bool HasUserKey { get; }
+    string? UserModel { get; set; }
     Task<string?> ExplainAsync(string prompt, CancellationToken ct = default);
 }
 
@@ -30,12 +33,22 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
     }
 
     public bool HasDirectKey => !string.IsNullOrWhiteSpace(_options.ApiKey);
+    public string? UserKey { get; set; }
+    public bool HasUserKey => !string.IsNullOrWhiteSpace(UserKey);
+    public string? UserModel { get; set; }
 
     public async Task<string?> ExplainAsync(string prompt, CancellationToken ct = default)
     {
+        if (HasUserKey)
+        {
+            var direct = await CallGeminiAsync(prompt, UserKey!.Trim(), UserModel, ct);
+            if (!string.IsNullOrWhiteSpace(direct))
+                return direct;
+        }
+
         if (HasDirectKey)
         {
-            var direct = await CallGeminiAsync(prompt, ct);
+            var direct = await CallGeminiAsync(prompt, _options.ApiKey.Trim(), _options.Model, ct);
             if (!string.IsNullOrWhiteSpace(direct))
                 return direct;
         }
@@ -43,10 +56,10 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
         return await _api.ChatAsync(prompt, context: "broker-desk", ct);
     }
 
-    private async Task<string?> CallGeminiAsync(string prompt, CancellationToken ct)
+    private async Task<string?> CallGeminiAsync(string prompt, string apiKey, string? model, CancellationToken ct)
     {
-        var model = string.IsNullOrWhiteSpace(_options.Model) ? "gemini-2.0-flash" : _options.Model.Trim();
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={_options.ApiKey.Trim()}";
+        var m = string.IsNullOrWhiteSpace(model) ? "gemini-2.0-flash" : model.Trim();
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={apiKey}";
         var body = new
         {
             contents = new[] { new { parts = new[] { new { text = prompt } } } },

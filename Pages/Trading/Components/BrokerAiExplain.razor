@@ -8,13 +8,63 @@
             <h3 class="ts-panel-title broker-ai-title">Giải thích khuyến nghị</h3>
             <span class="broker-ai-sub">Dán nguyên văn khuyến nghị broker → AI phân tích ý, jargon, mức giá, rủi ro.</span>
         </div>
-        @if (Gemini.HasDirectKey)
-        {
-            <span class="broker-ai-badge">Gemini</span>
-        }
+        <span class="broker-ai-badge @(_keyStatus.CssClass)">@_keyStatus.Label</span>
     </div>
 
     <div class="broker-ai-body">
+        @if (_showKeyInput)
+        {
+            <div class="broker-ai-key-box">
+                <div class="broker-ai-key-fields">
+                    <div class="broker-ai-key-field">
+                        <label class="broker-field-label" for="broker-ai-key">Gemini API key</label>
+                        <div class="broker-ai-key-row">
+                            <input id="broker-ai-key"
+                                   class="ts-input broker-ai-key-input"
+                                   type="@(_showKey ? "text" : "password")"
+                                   placeholder="AIza…"
+                                   @bind="_keyInput"
+                                   @bind:event="oninput"
+                                   autocomplete="off" />
+                            <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" title="@(_showKey ? "Ẩn" : "Hiện")" @onclick="ToggleKeyVisibility">
+                                @(_showKey ? "🙈" : "👁")
+                            </button>
+                        </div>
+                    </div>
+                    <div class="broker-ai-model-field">
+                        <label class="broker-field-label" for="broker-ai-model">Model</label>
+                        <select id="broker-ai-model" class="ts-select broker-ai-model-select" @bind="_modelInput">
+                            @foreach (var m in GeminiModels.All)
+                            {
+                                <option value="@m.Id">@m.Label</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="broker-ai-key-actions">
+                    <button class="ts-btn ts-btn-primary ts-btn-sm" type="button" disabled="@string.IsNullOrWhiteSpace(_keyInput)" @onclick="SaveKey">
+                        Lưu
+                    </button>
+                    @if (Gemini.HasUserKey)
+                    {
+                        <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="ClearKey">Xóa key</button>
+                    }
+                </div>
+                <p class="broker-ai-key-hint">
+                    Key + model lưu trong localStorage — không ghi vào appsettings.
+                    Lấy key tại <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="broker-ai-key-toggle">
+                <button class="ts-btn ts-btn-link ts-btn-sm" type="button" @onclick="ToggleKeyInput">
+                    @(Gemini.HasUserKey ? "Đổi Gemini API key" : "Nhập Gemini API key riêng (tùy chọn)")
+                </button>
+            </div>
+        }
+
         <div class="broker-ai-input-wrap">
             <textarea class="ts-input ts-textarea broker-ai-input @(_aiErr is not null ? "ts-input-invalid" : "")"
                       placeholder="Dán full khuyến nghị của broker vào đây…&#10;VD: #SHS @@All — Mua quanh 15.5–15.6, SL 14.9, TP 17.1 / 18.2…"
@@ -60,10 +110,84 @@
 </div>
 
 @code {
+    private const string KeyStorage = "broker.gemini.key";
+    private const string ModelStorage = "broker.gemini.model";
+
     private string _raw = "";
     private string? _aiResult;
     private string? _aiErr;
     private bool _aiBusy;
+
+    private bool _showKeyInput;
+    private string _keyInput = "";
+    private string _modelInput = GeminiModels.DefaultId;
+    private bool _showKey;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var savedKey = await JS.InvokeAsync<string?>("localStorage.getItem", KeyStorage);
+            if (!string.IsNullOrWhiteSpace(savedKey))
+                Gemini.UserKey = savedKey;
+
+            var savedModel = await JS.InvokeAsync<string?>("localStorage.getItem", ModelStorage);
+            if (!string.IsNullOrWhiteSpace(savedModel))
+            {
+                Gemini.UserModel = savedModel;
+                _modelInput = savedModel;
+            }
+        }
+        catch { }
+    }
+
+    private (string Label, string CssClass) _keyStatus =>
+        Gemini.HasUserKey
+            ? ("Key của bạn", "broker-ai-badge-user")
+            : Gemini.HasDirectKey
+                ? ("Gemini", "")
+                : ("Proxy", "broker-ai-badge-proxy");
+
+    private void ToggleKeyInput()
+    {
+        _showKeyInput = !_showKeyInput;
+        if (_showKeyInput)
+        {
+            _keyInput = Gemini.UserKey ?? "";
+            _modelInput = Gemini.UserModel ?? GeminiModels.DefaultId;
+        }
+    }
+
+    private void ToggleKeyVisibility() => _showKey = !_showKey;
+
+    private async Task SaveKey()
+    {
+        var key = _keyInput?.Trim() ?? "";
+        Gemini.UserKey = string.IsNullOrEmpty(key) ? null : key;
+        Gemini.UserModel = _modelInput;
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", KeyStorage, key);
+            await JS.InvokeVoidAsync("localStorage.setItem", ModelStorage, _modelInput);
+        }
+        catch { }
+        _showKeyInput = false;
+    }
+
+    private async Task ClearKey()
+    {
+        Gemini.UserKey = null;
+        Gemini.UserModel = null;
+        _keyInput = "";
+        _modelInput = GeminiModels.DefaultId;
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.removeItem", KeyStorage);
+            await JS.InvokeVoidAsync("localStorage.removeItem", ModelStorage);
+        }
+        catch { }
+        _showKeyInput = false;
+    }
 
     private async Task Explain()
     {
@@ -77,7 +201,7 @@
             var reply = await Gemini.ExplainAsync(prompt);
             if (string.IsNullOrWhiteSpace(reply))
             {
-                _aiErr = "AI không trả lời. Kiểm tra Gemini:ApiKey trong appsettings hoặc thử lại.";
+                _aiErr = "AI không trả lời. Kiểm tra API key hoặc thử lại.";
                 return;
             }
 
@@ -105,10 +229,7 @@
     private async Task CopyResult()
     {
         if (string.IsNullOrWhiteSpace(_aiResult)) return;
-        try
-        {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _aiResult);
-        }
+        try { await JS.InvokeVoidAsync("navigator.clipboard.writeText", _aiResult); }
         catch { }
     }
 }
