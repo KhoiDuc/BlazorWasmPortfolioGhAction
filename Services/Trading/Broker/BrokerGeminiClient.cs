@@ -41,16 +41,30 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
     {
         if (HasUserKey)
         {
-            var direct = await CallGeminiAsync(prompt, UserKey!.Trim(), UserModel, ct);
-            if (!string.IsNullOrWhiteSpace(direct))
-                return direct;
+            try
+            {
+                var direct = await CallGeminiAsync(prompt, UserKey!.Trim(), UserModel, ct);
+                if (!string.IsNullOrWhiteSpace(direct))
+                    return direct;
+            }
+            catch (Exception ex)
+            {
+                return $"[Lỗi Gemini] {ex.Message}";
+            }
         }
 
         if (HasDirectKey)
         {
-            var direct = await CallGeminiAsync(prompt, _options.ApiKey.Trim(), _options.Model, ct);
-            if (!string.IsNullOrWhiteSpace(direct))
-                return direct;
+            try
+            {
+                var direct = await CallGeminiAsync(prompt, _options.ApiKey.Trim(), _options.Model, ct);
+                if (!string.IsNullOrWhiteSpace(direct))
+                    return direct;
+            }
+            catch (Exception ex)
+            {
+                return $"[Lỗi Gemini] {ex.Message}";
+            }
         }
 
         return await _api.ChatAsync(prompt, context: "broker-desk", ct);
@@ -58,7 +72,7 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
 
     private async Task<string?> CallGeminiAsync(string prompt, string apiKey, string? model, CancellationToken ct)
     {
-        var m = string.IsNullOrWhiteSpace(model) ? "gemini-2.0-flash" : model.Trim();
+        var m = string.IsNullOrWhiteSpace(model) ? GeminiModels.DefaultId : model.Trim();
         var url = $"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={apiKey}";
         var body = new
         {
@@ -68,7 +82,13 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
 
         using var resp = await _http.PostAsJsonAsync(url, body, ct);
         if (!resp.IsSuccessStatusCode)
-            return null;
+        {
+            var errBody = await resp.Content.ReadAsStringAsync(ct);
+            var shortErr = string.IsNullOrWhiteSpace(errBody)
+                ? resp.StatusCode.ToString()
+                : errBody.Length > 300 ? errBody[..300] + "…" : errBody;
+            throw new HttpRequestException($"HTTP {(int)resp.StatusCode} {resp.StatusCode} — {shortErr}");
+        }
 
         var parsed = await resp.Content.ReadFromJsonAsync<GeminiResponse>(JsonOpts, ct);
         return parsed?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text?.Trim();
