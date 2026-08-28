@@ -6,6 +6,7 @@
 @using BlazorWasmPortfolioGhAction.Components.Teams
 @using BlazorWasmPortfolioGhAction.Components.OnlineTools
 @using BlazorWasmPortfolioGhAction.Components.Github
+@using BlazorWasmPortfolioGhAction.Components.CreditCardDemo
 @inject NavigationManager Navigation
 
 <div class="page-section utility-deck">
@@ -293,6 +294,7 @@
         "codediff" => RenderComponent<CodeDiff>(),
         "codepaste" => RenderComponent<CodePaste>(),
         "barcodescanner" => RenderComponent<BarcodeScanner>(),
+        "creditcarddemo" => RenderComponent<CreditCardDemo>(),
         _ => RenderDefaultComponent()
     };
 
@@ -463,7 +465,8 @@
         new("datetimeformatter", "bi-calendar-week", "Time & Calculation Tools"),
         new("codediff", "bi-file-earmark-diff", "Testing Library Tools"),
         new("codepaste", "bi-clipboard2-data", "Testing Library Tools"),
-        new("barcodescanner", "bi-upc", "Testing Library Tools")
+        new("barcodescanner", "bi-upc", "Testing Library Tools"),
+        new("creditcarddemo", "bi-credit-card-2-front", "Testing Library Tools")
     };
 
     private record ToolDef(string Key, string Icon, string CategoryKey)

@@ -1,0 +1,293 @@
+@using Soenneker.Blazor.CreditCards
+@using Microsoft.AspNetCore.Components.Web
+
+<ToolShell ResourceKey="creditcarddemo"
+           Title="Credit Card Demo"
+           Icon="bi-credit-card-2-front"
+           Description="Interactive animated credit card preview with real-time brand detection, flip animation, and programmatic control.">
+
+    <div class="creditcard-demo-container">
+        <!-- Live Card Preview -->
+        <div class="card-preview-section">
+            <CreditCard CardNumber="@CardNumber"
+                        CardHolderName="@CardHolderName"
+                        ExpiryDate="@ExpiryDate"
+                        Cvc="@Cvc"
+                        FlipEnabled="@FlipEnabled"
+                        OnClick="HandleCardClick"
+                        @ref="_creditCard" />
+
+            <div class="preview-hint">
+                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                @if (FlipEnabled)
+                {
+                    <span>Click on the card or use buttons below to flip front/back.</span>
+                }
+                else
+                {
+                    <span>Card flip interaction is currently disabled.</span>
+                }
+            </div>
+        </div>
+
+        <!-- Controls & Inputs -->
+        <div class="card-form-section">
+            <div class="section-heading">
+                <h4><i class="bi bi-sliders2" aria-hidden="true"></i> Card Details</h4>
+                <button type="button" class="tool-btn tool-btn-secondary btn-sm" @onclick="ResetCard">
+                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Reset Form
+                </button>
+            </div>
+
+            <!-- Form inputs -->
+            <div class="form-grid">
+                <div class="tool-field form-field-full">
+                    <label class="tool-label" for="card-number-input">Card Number</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-credit-card" aria-hidden="true"></i>
+                        <input id="card-number-input"
+                               type="text"
+                               class="tool-input"
+                               placeholder="4532 •••• •••• ••••"
+                               maxlength="19"
+                               @bind="CardNumber"
+                               @bind:event="oninput" />
+                    </div>
+                </div>
+
+                <div class="tool-field form-field-full">
+                    <label class="tool-label" for="card-holder-input">Cardholder Name</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-person" aria-hidden="true"></i>
+                        <input id="card-holder-input"
+                               type="text"
+                               class="tool-input"
+                               placeholder="NGUYEN VAN A"
+                               maxlength="30"
+                               @bind="CardHolderName"
+                               @bind:event="oninput" />
+                    </div>
+                </div>
+
+                <div class="tool-field">
+                    <label class="tool-label" for="card-expiry-input">Expiry Date (MM/YY)</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                        <input id="card-expiry-input"
+                               type="text"
+                               class="tool-input"
+                               placeholder="12/28"
+                               maxlength="5"
+                               @bind="ExpiryDate"
+                               @bind:event="oninput" />
+                    </div>
+                </div>
+
+                <div class="tool-field">
+                    <label class="tool-label" for="card-cvc-input">CVC / CVV</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                        <input id="card-cvc-input"
+                               type="password"
+                               class="tool-input"
+                               placeholder="123"
+                               maxlength="4"
+                               @bind="Cvc"
+                               @bind:event="oninput"
+                               @onfocus="OnCvcFocus"
+                               @onblur="OnCvcBlur" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Presets -->
+            <div class="preset-section">
+                <label class="tool-label">Quick Test Presets (Brand Detection):</label>
+                <div class="preset-buttons">
+                    <button type="button" class="preset-btn" @onclick="() => LoadPreset(PresetType.Visa)">
+                        <span class="badge-brand visa">Visa</span> 4532...
+                    </button>
+                    <button type="button" class="preset-btn" @onclick="() => LoadPreset(PresetType.Mastercard)">
+                        <span class="badge-brand mastercard">MC</span> 5555...
+                    </button>
+                    <button type="button" class="preset-btn" @onclick="() => LoadPreset(PresetType.Amex)">
+                        <span class="badge-brand amex">Amex</span> 3782...
+                    </button>
+                    <button type="button" class="preset-btn" @onclick="() => LoadPreset(PresetType.Discover)">
+                        <span class="badge-brand discover">Discover</span> 6011...
+                    </button>
+                    <button type="button" class="preset-btn" @onclick="() => LoadPreset(PresetType.Jcb)">
+                        <span class="badge-brand jcb">JCB</span> 3528...
+                    </button>
+                </div>
+            </div>
+
+            <!-- Interactive Actions -->
+            <div class="actions-section">
+                <label class="tool-label">Programmatic Actions & Flip Control:</label>
+                <div class="action-buttons">
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="FlipCard">
+                        <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Flip Card
+                    </button>
+
+                    <button type="button" class="tool-btn @(FlipEnabled ? "tool-btn-secondary" : "tool-btn-warning")" @onclick="ToggleFlipEnabled">
+                        <i class="bi @(FlipEnabled ? "bi-toggle-on" : "bi-toggle-off")" aria-hidden="true"></i>
+                        Flip on Click: @(FlipEnabled ? "Enabled" : "Disabled")
+                    </button>
+
+                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="SetSavedCardDemo">
+                        <i class="bi bi-bookmark-check" aria-hidden="true"></i> Demo SetLast4 (•••• 8888)
+                    </button>
+
+                    <button type="button" class="tool-btn tool-btn-secondary" @onclick="ResetCardDetection">
+                        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Reset Detection
+                    </button>
+                </div>
+            </div>
+
+            <!-- Library & Owner Attribution -->
+            <div class="library-attribution-card">
+                <div class="attribution-header">
+                    <i class="bi bi-github" aria-hidden="true"></i>
+                    <strong>Library Attribution & Credits</strong>
+                </div>
+                <p class="attribution-text">
+                    This component is powered by <code>Soenneker.Blazor.CreditCards</code>, an open-source library created and maintained by <strong>soenneker</strong>.
+                </p>
+                <div class="attribution-links">
+                    <a href="https://github.com/soenneker/soenneker.blazor.creditcards"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="attribution-link">
+                        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> GitHub: soenneker/soenneker.blazor.creditcards
+                    </a>
+                    <a href="https://www.nuget.org/packages/Soenneker.Blazor.CreditCards"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="attribution-link">
+                        <i class="bi bi-box" aria-hidden="true"></i> NuGet: Soenneker.Blazor.CreditCards
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</ToolShell>
+
+@code {
+    private CreditCard? _creditCard;
+
+    public string CardNumber { get; set; } = "4532752012345678";
+    public string CardHolderName { get; set; } = "NGUYEN VAN A";
+    public string ExpiryDate { get; set; } = "08/29";
+    public string Cvc { get; set; } = "888";
+    public bool FlipEnabled { get; set; } = true;
+
+    private async Task HandleCardClick(MouseEventArgs args)
+    {
+        if (FlipEnabled)
+        {
+            _creditCard?.Flip();
+        }
+        await Task.CompletedTask;
+    }
+
+    private void FlipCard()
+    {
+        _creditCard?.Flip();
+    }
+
+    private void ToggleFlipEnabled()
+    {
+        FlipEnabled = !FlipEnabled;
+    }
+
+    private async Task SetSavedCardDemo()
+    {
+        CardNumber = "";
+        CardHolderName = "NGUYEN VAN A";
+        ExpiryDate = "10/30";
+        Cvc = "999";
+        if (_creditCard is not null)
+        {
+            await _creditCard.SetLast4("8888", "visa");
+        }
+    }
+
+    private void ResetCardDetection()
+    {
+        _creditCard?.ResetCardDetection();
+    }
+
+    private void ResetForm()
+    {
+        CardNumber = "";
+        CardHolderName = "";
+        ExpiryDate = "";
+        Cvc = "";
+        FlipEnabled = true;
+        _creditCard?.ResetCardDetection();
+    }
+
+    private void ResetCard()
+    {
+        ResetForm();
+    }
+
+    private void OnCvcFocus()
+    {
+        // Automatically flip to back when focusing CVC if not already
+        FlipCard();
+    }
+
+    private void OnCvcBlur()
+    {
+        // Flip back to front when leaving CVC field
+        FlipCard();
+    }
+
+    private enum PresetType
+    {
+        Visa,
+        Mastercard,
+        Amex,
+        Discover,
+        Jcb
+    }
+
+    private void LoadPreset(PresetType type)
+    {
+        switch (type)
+        {
+            case PresetType.Visa:
+                CardNumber = "4532752012345678";
+                CardHolderName = "ALEXANDER SMITH";
+                ExpiryDate = "05/28";
+                Cvc = "345";
+                break;
+            case PresetType.Mastercard:
+                CardNumber = "5555444433332222";
+                CardHolderName = "MARIA GARCIA";
+                ExpiryDate = "11/27";
+                Cvc = "821";
+                break;
+            case PresetType.Amex:
+                CardNumber = "378282246310005";
+                CardHolderName = "JOHNATHAN DOE";
+                ExpiryDate = "09/29";
+                Cvc = "1005";
+                break;
+            case PresetType.Discover:
+                CardNumber = "6011111111111117";
+                CardHolderName = "EMILY WATSON";
+                ExpiryDate = "03/30";
+                Cvc = "482";
+                break;
+            case PresetType.Jcb:
+                CardNumber = "3528123456789012";
+                CardHolderName = "KENJI SATO";
+                ExpiryDate = "07/28";
+                Cvc = "619";
+                break;
+        }
+    }
+}
