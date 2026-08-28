@@ -14,36 +14,48 @@
             <div class="tool-alert tool-alert-warning" role="alert">@_error</div>
         }
 
-        @if (_font is null)
+        @if (_loading)
+        {
+            <div class="fontview-loading">
+                <div class="fontview-spinner" aria-hidden="true"></div>
+                <span class="tool-hint">@L["FontView_Loading"]</span>
+            </div>
+        }
+
+        @if (_font is null && !_loading)
         {
             <div class="fontview-upload">
                 <label class="fontview-dropzone">
                     <InputFile Accept=".ttf,.otf,.woff,.woff2"
                                OnChange="OnFileChange" class="fontview-file-input" />
-                    <i class="bi bi-file-earmark-font" aria-hidden="true"></i>
+                    <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
                     <span>@L["FontView_DropHint"]</span>
                     <small>TTF · OTF · WOFF · WOFF2</small>
                 </label>
             </div>
         }
-        else
+
+        @if (_font is not null)
         {
-            <div class="fontview-toolbar">
-                <input type="search" class="tool-input fontview-search"
-                       placeholder="@L["FontView_SearchPlaceholder"]"
-                       @bind="_filter" @bind:event="oninput" @bind:delay="300" />
+            <div class="tool-actions fontview-toolbar">
+                <div class="fontview-search-wrap">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input type="search" class="tool-input fontview-search"
+                           placeholder="@L["FontView_SearchPlaceholder"]"
+                           @bind="_filter" @bind:event="oninput" @bind:after="OnFilterChanged" />
+                </div>
                 <label class="fontview-control">
-                    <span>@L["FontView_Size"]</span>
-                    <input type="range" min="18" max="120" @bind="_size" @bind:event="oninput" @bind:delay="150" />
+                    <span class="fontview-control-label">@L["FontView_Size"]</span>
+                    <input type="range" min="18" max="120" @bind="_size" @bind:event="oninput" />
                     <span class="fontview-size-value">@_size<span>px</span></span>
                 </label>
                 <label class="fontview-control">
-                    <span>@L["FontView_Color"]</span>
-                    <input type="color" value="@_color" @oninput="OnColorChange" />
+                    <span class="fontview-control-label">@L["FontView_Color"]</span>
+                    <input type="color" @bind="_color" @bind:event="oninput" />
                 </label>
                 <label class="fontview-control">
-                    <span>@L["FontView_Sort"]</span>
-                    <select @bind="_sort">
+                    <span class="fontview-control-label">@L["FontView_Sort"]</span>
+                    <select class="tool-select" @bind="_sort">
                         <option value="category">@L["FontView_SortCategory"]</option>
                         <option value="az">A→Z</option>
                         <option value="za">Z→A</option>
@@ -51,53 +63,90 @@
                         <option value="ud">U+ ↓</option>
                     </select>
                 </label>
-                <button type="button" class="tool-btn" @onclick="Reset">@L["FontView_NewFont"]</button>
+                <button type="button" class="tool-btn" @onclick="Reset">
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i> @L["FontView_NewFont"]
+                </button>
             </div>
 
             <div class="fontview-info">
-                <div><strong>@_font.Family</strong> <span class="fontview-sub">@_font.Subfamily</span></div>
-                <div class="tool-hint">
-                    @_font.NumGlyphs glyphs · @_loadedBytes!.Length / 1024 KB
+                <div class="fontview-info-name">
+                    <strong>@_font.Family</strong>
+                    @if (!string.IsNullOrWhiteSpace(_font.Subfamily))
+                    {
+                        <span class="badge fontview-sub">@_font.Subfamily</span>
+                    }
                 </div>
+                <span class="tool-hint">
+                    @_font.NumGlyphs glyphs · @(Math.Max(1, _loadedBytes!.Length / 1024)) KB
+                </span>
             </div>
 
-            <div class="fontview-preview" style="font-family:'@_fontFaceId'; color:@_color">
-                <p style="font-size:1.75rem">The quick brown fox jumps over the lazy dog</p>
-                <p style="font-size:1.25rem">0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz</p>
+            <div class="fontview-preview" style="--fv-font:'@_fontFaceId'; --fv-color:@_color">
+                <p class="fontview-preview-lg">The quick brown fox jumps over the lazy dog</p>
+                <p class="fontview-preview-sm">0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz</p>
             </div>
+
+            @if (_copied)
+            {
+                <div class="fontview-toast" role="status">
+                    <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                    @L["FontView_Copied"]
+                </div>
+            }
 
             @if (!string.IsNullOrWhiteSpace(_filter) && FilteredGlyphs.Count == 0)
             {
-                <p class="tool-hint">@L["FontView_NoResults"]</p>
+                <div class="fontview-empty">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <p>@L["FontView_NoResults"]</p>
+                </div>
             }
-
-            <div class="fontview-grid">
-                @foreach (var grp in GroupedGlyphs)
+            else if (FilteredGlyphs.Count > 0)
+            {
+                @if (_sort == "category" && CategoryCounts.Count > 1)
                 {
-                    <section class="fontview-section">
-                        <button type="button" class="fontview-section-head" @onclick="() => ToggleSection(grp.Key)">
-                            <i class="bi @(ExpandedSections.Contains(grp.Key) ? "bi-chevron-down" : "bi-chevron-right")" aria-hidden="true"></i>
-                            <span>@LocalizeCategory(grp.Key)</span>
-                            <span class="fontview-count">@grp.Count()</span>
-                        </button>
-                        @if (ExpandedSections.Contains(grp.Key) || !string.IsNullOrWhiteSpace(_filter))
+                    <div class="fontview-pills">
+                        @foreach (var pill in CategoryCounts)
                         {
-                            <div class="fontview-cells">
-                                @foreach (var g in grp)
-                                {
-                                    var ch = char.ConvertFromUtf32(g.Unicode);
-                                    <button type="button" class="fontview-cell"
-                                            style="font-family:'@_fontFaceId'; color:@_color; font-size:@(_size)px"
-                                            title="@($"{g.Name} · U+{g.Hex}")"
-                                            @onclick="() => CopyGlyph(ch)">
-                                        @ch
-                                    </button>
-                                }
-                            </div>
+                            <button type="button"
+                                    class="fontview-pill @(_activePill == pill.Key ? "is-active" : "")"
+                                    @onclick="() => ScrollToSection(pill.Key)">
+                                @LocalizeCategory(pill.Key)
+                                <span class="fontview-pill-count">@pill.Value</span>
+                            </button>
                         }
-                    </section>
+                    </div>
                 }
-            </div>
+
+                <div class="fontview-grid">
+                    @foreach (var grp in GroupedGlyphs)
+                    {
+                        <section class="fontview-section" id="@SectionId(grp.Key)">
+                            <button type="button" class="fontview-section-head"
+                                    @onclick="() => ToggleSection(grp.Key)">
+                                <i class="bi @(IsSectionExpanded(grp.Key) ? "bi-chevron-down" : "bi-chevron-right")" aria-hidden="true"></i>
+                                <span>@LocalizeCategory(grp.Key)</span>
+                                <span class="fontview-count">@grp.Count()</span>
+                            </button>
+                            @if (IsSectionExpanded(grp.Key))
+                            {
+                                <div class="fontview-cells" style="--fv-cell-size:@(_size)px">
+                                    @foreach (var g in grp)
+                                    {
+                                        var ch = char.ConvertFromUtf32(g.Unicode);
+                                        <button type="button" class="fontview-cell"
+                                                style="--fv-font:'@_fontFaceId'; --fv-color:@_color"
+                                                title="@($"{g.Name} · U+{g.Hex}")"
+                                                @onclick="() => CopyGlyph(ch, g)">
+                                            @ch
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </section>
+                    }
+                </div>
+            }
         }
     </div>
 </ToolShell>
@@ -111,22 +160,39 @@
     private string _color = "#111111";
     private string _sort = "category";
     private string? _error;
-    private readonly HashSet<string> ExpandedSections = new(StringComparer.OrdinalIgnoreCase);
+    private bool _loading;
+    private bool _copied;
     private bool _jsLoaded;
+    private string? _activePill;
+    private CancellationTokenSource? _copyCts;
+
+    private readonly HashSet<string> ExpandedSections = new(StringComparer.OrdinalIgnoreCase);
 
     private List<FontViewGlyph> FilteredGlyphs
     {
         get
         {
             var term = _filter.Trim();
-            if (string.IsNullOrEmpty(term)) return _font!.Glyphs;
+            if (string.IsNullOrEmpty(term) || _font is null) return _font?.Glyphs ?? new();
 
             var hexQuery = term.Replace("U+", "", StringComparison.OrdinalIgnoreCase).Trim();
-            return _font!.Glyphs.Where(g =>
+            return _font.Glyphs.Where(g =>
                 g.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                 g.Hex.Contains(hexQuery, StringComparison.OrdinalIgnoreCase) ||
                 g.Unicode.ToString().Contains(hexQuery, StringComparison.OrdinalIgnoreCase) ||
-                char.ConvertFromUtf32(g.Unicode) == term).ToList();
+                char.ConvertFromUtf32(g.Unicode).Equals(term, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+    }
+
+    private List<KeyValuePair<string, int>> CategoryCounts
+    {
+        get
+        {
+            return FilteredGlyphs
+                .GroupBy(Categorize)
+                .OrderBy(g => CategoryOrder.IndexOf(g.Key))
+                .Select(g => new KeyValuePair<string, int>(g.Key, g.Count()))
+                .ToList();
         }
     }
 
@@ -145,20 +211,25 @@
             });
 
             if (_sort == "category")
-                return sorted.GroupBy(Categorize);
+                return sorted.GroupBy(Categorize).OrderBy(g => CategoryOrder.IndexOf(g.Key));
 
             return sorted.GroupBy(_ => "All");
         }
     }
 
+    private static readonly List<string> CategoryOrder =
+        ["Uppercase", "Lowercase", "Number", "Punctuation", "Symbol", "Other", "All"];
+
     private static string Categorize(FontViewGlyph g)
     {
+        if (g.Unicode > 0xFFFF) return "Other";
         var ch = (char)g.Unicode;
         var cat = char.GetUnicodeCategory(ch);
         return cat switch
         {
             System.Globalization.UnicodeCategory.UppercaseLetter => "Uppercase",
             System.Globalization.UnicodeCategory.LowercaseLetter => "Lowercase",
+            System.Globalization.UnicodeCategory.TitlecaseLetter => "Uppercase",
             System.Globalization.UnicodeCategory.DecimalDigitNumber or
             System.Globalization.UnicodeCategory.OtherNumber or
             System.Globalization.UnicodeCategory.LetterNumber => "Number",
@@ -188,6 +259,13 @@
         _ => L["FontView_Cat_Other"]
     };
 
+    private bool IsSectionExpanded(string key) =>
+        ExpandedSections.Contains(key) || !string.IsNullOrWhiteSpace(_filter);
+
+    private static string SectionId(string key) => $"fv-section-{key.ToLowerInvariant()}";
+
+    private void OnFilterChanged() => _activePill = null;
+
     private async Task EnsureJsAsync()
     {
         if (_jsLoaded) return;
@@ -195,26 +273,22 @@
         _jsLoaded = true;
     }
 
-    private async Task OnFileChange(Microsoft.AspNetCore.Components.Forms.InputFileChangeEventArgs e)
+    private async Task LoadFontBytes(byte[] bytes)
     {
+        _loading = true;
         _error = null;
-        var file = e.File;
-        using var stream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
-        using var ms = new MemoryStream();
-        await stream.CopyToAsync(ms);
-        _loadedBytes = ms.ToArray();
-
+        _loadedBytes = bytes;
         try
         {
             await EnsureJsAsync();
-            _font = await FontViewSvc.LoadFontAsync(_loadedBytes);
+            _font = await FontViewSvc.LoadFontAsync(bytes);
             if (_font is null)
             {
-                _error = "Could not parse this font file.";
+                _error = L["FontView_ParseError"];
                 return;
             }
 
-            _fontFaceId = await FontViewSvc.RegisterFontFaceAsync(_loadedBytes, _font.Family);
+            _fontFaceId = await FontViewSvc.RegisterFontFaceAsync(bytes, _font.Family);
 
             var cats = _font.Glyphs.GroupBy(Categorize).Select(g => g.Key).ToList();
             ExpandedSections.Clear();
@@ -224,19 +298,51 @@
         {
             _error = ex.Message;
         }
+        finally
+        {
+            _loading = false;
+        }
     }
 
-    private void OnColorChange(ChangeEventArgs e) => _color = e.Value?.ToString() ?? _color;
+    private async Task OnFileChange(Microsoft.AspNetCore.Components.Forms.InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file is null) return;
+        using var stream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        await LoadFontBytes(ms.ToArray());
+    }
+
+    private async Task CopyGlyph(string ch, FontViewGlyph g)
+    {
+        await Clipboard.CopyTextAsync(ch);
+        _copied = true;
+        _copyCts?.Cancel();
+        _copyCts = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(1500, _copyCts.Token);
+            _copied = false;
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private async Task ScrollToSection(string key)
+    {
+        _activePill = key;
+        if (!ExpandedSections.Contains(key))
+        {
+            ExpandedSections.Add(key);
+            await Task.Delay(50);
+        }
+        await JS.InvokeVoidAsync("fontViewScrollTo", SectionId(key));
+    }
 
     private void ToggleSection(string key)
     {
         if (!ExpandedSections.Add(key))
             ExpandedSections.Remove(key);
-    }
-
-    private async Task CopyGlyph(string ch)
-    {
-        await Clipboard.CopyTextAsync(ch);
     }
 
     private void Reset()
@@ -246,8 +352,14 @@
         _fontFaceId = null;
         _filter = "";
         _error = null;
+        _copied = false;
+        _activePill = null;
         ExpandedSections.Clear();
     }
 
-    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    public ValueTask DisposeAsync()
+    {
+        _copyCts?.Cancel();
+        return ValueTask.CompletedTask;
+    }
 }
