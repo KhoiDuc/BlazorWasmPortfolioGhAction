@@ -1,0 +1,188 @@
+.fontview-tool {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.fontview-upload {
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem 0;
+}
+
+.fontview-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 2rem 3rem;
+    border: 2px dashed var(--bs-border-color, #dee2e6);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.fontview-dropzone:hover {
+    border-color: var(--bs-primary, #0d6efd);
+    background: var(--bs-tertiary-bg, #f8f9fa);
+}
+
+.fontview-dropzone .bi {
+    font-size: 2rem;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.fontview-dropzone small {
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.fontview-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+.fontview-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.fontview-search {
+    flex: 1;
+    min-width: 14rem;
+}
+
+.fontview-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+}
+
+.fontview-control input[type="range"] {
+    width: 8rem;
+}
+
+.fontview-control input[type="color"] {
+    width: 2rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 0.25rem;
+    background: transparent;
+    cursor: pointer;
+}
+
+.fontview-size-value {
+    min-width: 3rem;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.fontview-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.fontview-sub {
+    color: var(--bs-secondary-color, #6c757d);
+    font-weight: 400;
+}
+
+.fontview-preview {
+    background: #fff;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 0.35rem;
+    padding: 1rem;
+}
+
+.fontview-preview p {
+    margin: 0 0 0.5rem;
+}
+
+.fontview-preview p:last-child {
+    margin-bottom: 0;
+}
+
+.fontview-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.fontview-section {
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 0.35rem;
+    overflow: hidden;
+}
+
+.fontview-section-head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--bs-tertiary-bg, #f8f9fa);
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.fontview-section-head .bi {
+    font-size: 0.8rem;
+}
+
+.fontview-count {
+    margin-left: auto;
+    background: var(--bs-border-color, #dee2e6);
+    color: var(--bs-body-color, #000);
+    border-radius: 1rem;
+    padding: 0.05rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.fontview-cells {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(3.5rem, 1fr));
+    gap: 0.25rem;
+    padding: 0.5rem;
+}
+
+.fontview-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 0.25rem;
+    background: transparent;
+    cursor: pointer;
+    overflow: hidden;
+    transition: background 0.1s, border-color 0.1s;
+}
+
+.fontview-cell:hover {
+    background: var(--bs-tertiary-bg, #f8f9fa);
+    border-color: var(--bs-primary, #0d6efd);
+}
+
+@media (max-width: 768px) {
+    .fontview-cells {
+        grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr));
+    }
+
+    .fontview-toolbar {
+        gap: 0.5rem;
+    }
+}
