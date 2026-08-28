@@ -23,6 +23,14 @@ window.app = {
     }
 };
 
+window.skipToContent = function () {
+    var main = document.getElementById('main-content');
+    if (main) {
+        main.focus();
+        main.scrollIntoView();
+    }
+};
+
 function getUserAgent() {
     return navigator.userAgent;
 }

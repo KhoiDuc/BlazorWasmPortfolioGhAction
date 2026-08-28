@@ -1,12 +1,21 @@
 @inherits CultureAwareLayout
 @inject IStringLocalizer<SharedResources> L
+@inject IJSRuntime JS
 
 <CultureUrlGuard />
-<a href="#main-content" class="skip-link">@L["SkipToContent"]</a>
+<button type="button" class="skip-link" @onclick="SkipToContent">@L["SkipToContent"]</button>
 <Navbar />
 
-<main id="main-content">
+<main id="main-content" tabindex="-1">
     @Body
 </main>
 
 <Footer />
+
+@code {
+    private async Task SkipToContent()
+    {
+        try { await JS.InvokeVoidAsync("skipToContent"); }
+        catch { }
+    }
+}
