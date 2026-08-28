@@ -1,0 +1,95 @@
+/* Stock AI chat — reuses broker-ai-* base styles, adds template grid + history */
+
+.stockai-card { padding: 1rem 1.15rem; }
+
+.stockai-templates {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.stockai-template-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.stockai-template-btn {
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-surface);
+    color: var(--color-text);
+    border-radius: var(--radius-full);
+    padding: 4px 12px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.stockai-template-btn:hover {
+    border-color: var(--color-accent);
+}
+
+.stockai-template-btn.is-active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+}
+
+.stockai-template-hint {
+    margin: 0;
+    font-size: 0.74rem;
+    color: var(--color-text-muted);
+}
+
+.stockai-history {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+.stockai-turn {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface-elevated);
+    overflow: hidden;
+}
+
+.stockai-turn-q,
+.stockai-turn-a {
+    padding: 0.6rem 0.8rem;
+}
+
+.stockai-turn-q {
+    border-bottom: 1px solid var(--color-border);
+    background: rgba(148, 163, 184, 0.08);
+}
+
+.stockai-turn-a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.stockai-turn-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.stockai-turn-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+}
+
+.stockai-turn-tag-a { color: var(--color-accent); }
+
+.stockai-turn-pre {
+    margin: 0.35rem 0 0;
+    white-space: pre-wrap;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--color-text);
+}

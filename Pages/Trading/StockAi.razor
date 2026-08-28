@@ -1,0 +1,18 @@
+@page "/trading/stock-ai"
+@page "/{lang:regex(^(en|vn)$)}/trading/stock-ai"
+@layout TradingLayout
+@inherits CultureAwareComponent
+@inject IStringLocalizer<SharedResources> L
+
+<div class="ts-page">
+    <div class="ts-panel">
+        <div class="ts-header">
+            <div>
+                <h2>@L["Trading_StockAiTitle"]</h2>
+                <p>@L["Trading_StockAiLead"]</p>
+            </div>
+        </div>
+    </div>
+
+    <StockAiChat />
+</div>
