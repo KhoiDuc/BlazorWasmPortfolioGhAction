@@ -1082,7 +1082,7 @@ a:hover {
     transition: background-color var(--transition), border-color var(--transition), color var(--transition), opacity var(--transition);
 }
 
-.tool-btn:hover {
+.tool-btn:hover:not(.tool-btn-primary):not(.tool-btn-danger):not(.tool-btn-success) {
     border-color: var(--color-accent);
     color: var(--color-accent);
 }
@@ -1094,7 +1094,8 @@ a:hover {
 }
 
 .tool-btn-primary:hover {
-    opacity: 0.88;
+    background-color: var(--color-accent-hover);
+    opacity: 1;
     color: var(--color-text-on-accent);
     border-color: var(--color-accent-hover);
 }
@@ -1157,9 +1158,59 @@ a:hover {
 }
 
 .button-primary:hover {
-    opacity: 0.88;
+    background-color: var(--color-accent-hover);
+    opacity: 1;
     color: var(--color-text-on-accent);
     border-color: var(--color-accent-hover);
+}
+
+/* Resume / portfolio CTA links — shared across pages */
+a.resume-btn,
+button.resume-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.4rem;
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-primary);
+    color: var(--color-text-on-primary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: var(--font-weight-medium);
+    line-height: 1.2;
+    cursor: pointer;
+    transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+}
+
+a.resume-btn:hover,
+button.resume-btn:hover {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: var(--color-text-on-primary);
+    text-decoration: none;
+}
+
+a.resume-btn-primary,
+button.resume-btn-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-text-on-primary);
+}
+
+a.resume-btn-ghost,
+button.resume-btn-ghost {
+    background-color: transparent;
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+}
+
+a.resume-btn-ghost:hover,
+button.resume-btn-ghost:hover {
+    background-color: var(--color-bg-glass-hover);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
 }
 
 .button-secondary {

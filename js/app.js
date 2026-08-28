@@ -162,5 +162,15 @@ window.scrollToSection = function (sectionId) {
 };
 
 window.scrollToTop = function () {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    const home = document.getElementById('home');
+
+    if (home) {
+        home.scrollIntoView({ behavior, block: 'start' });
+        return;
+    }
+
+    window.scrollTo({ top: 0, left: 0, behavior });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
 };
