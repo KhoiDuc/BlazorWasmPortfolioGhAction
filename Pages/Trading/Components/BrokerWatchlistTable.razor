@@ -1,15 +1,17 @@
+@inject IStringLocalizer<SharedResources> L
+
 <div class="ts-panel ts-table-wrap broker-watchlist">
     <div class="broker-table-head">
         <div>
-            <h3 class="ts-panel-title broker-table-title">Danh mục khuyến nghị</h3>
+            <h3 class="ts-panel-title broker-table-title">@L["Trading_BrokerWatchlistTitle"]</h3>
             @if ((Portfolio.Positions?.Count ?? 0) > 0)
             {
-                <span class="broker-table-count">@Portfolio.Positions!.Count mã · bấm dòng để xem chi tiết</span>
+                <span class="broker-table-count">@L["Trading_BrokerWatchlistCount", Portfolio.Positions!.Count]</span>
             }
         </div>
         @if (PriceBusy)
         {
-            <span class="broker-table-sync">Đang lấy giá…</span>
+            <span class="broker-table-sync" role="status">@L["Trading_BrokerSyncingPrices"]</span>
         }
     </div>
 
@@ -117,34 +119,74 @@
                 <table class="ts-table broker-table">
                     <thead>
                         <tr>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.Symbol)" @onclick='() => ToggleSort(SortColumn.Symbol)' @onclick:stopPropagation="true">
-                                <span class="broker-dt-th-inner">Mã @SortIcon(SortColumn.Symbol)</span>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.Symbol)"
+                                tabindex="0"
+                                aria-sort="@SortAria(SortColumn.Symbol)"
+                                @onclick='() => ToggleSort(SortColumn.Symbol)'
+                                @onkeydown='(e) => OnSortKeydown(e, SortColumn.Symbol)'
+                                @onclick:stopPropagation="true">
+                                <span class="broker-dt-th-inner">@L["Trading_BrokerColSymbol"] @SortIcon(SortColumn.Symbol)</span>
                             </th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.Sector)" @onclick='() => ToggleSort(SortColumn.Sector)' @onclick:stopPropagation="true">
-                                <span class="broker-dt-th-inner">Ngành @SortIcon(SortColumn.Sector)</span>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.Sector)"
+                                tabindex="0"
+                                aria-sort="@SortAria(SortColumn.Sector)"
+                                @onclick='() => ToggleSort(SortColumn.Sector)'
+                                @onkeydown='(e) => OnSortKeydown(e, SortColumn.Sector)'
+                                @onclick:stopPropagation="true">
+                                <span class="broker-dt-th-inner">@L["Trading_BrokerColSector"] @SortIcon(SortColumn.Sector)</span>
                             </th>
-                            <th><span class="broker-dt-th-inner">Lần mua</span></th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.Quantity)" @onclick='() => ToggleSort(SortColumn.Quantity)' @onclick:stopPropagation="true">
-                                <span class="broker-dt-th-inner">KL @SortIcon(SortColumn.Quantity)</span>
+                            <th><span class="broker-dt-th-inner">@L["Trading_BrokerColBuys"]</span></th>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.Quantity)"
+                                tabindex="0"
+                                aria-sort="@SortAria(SortColumn.Quantity)"
+                                @onclick='() => ToggleSort(SortColumn.Quantity)'
+                                @onkeydown='(e) => OnSortKeydown(e, SortColumn.Quantity)'
+                                @onclick:stopPropagation="true">
+                                <span class="broker-dt-th-inner">@L["Trading_BrokerColQty"] @SortIcon(SortColumn.Quantity)</span>
                             </th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.AvgBuy)" @onclick='() => ToggleSort(SortColumn.AvgBuy)' @onclick:stopPropagation="true">
-                                <span class="broker-dt-th-inner">Giá TB @SortIcon(SortColumn.AvgBuy)</span>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.AvgBuy)"
+                                tabindex="0"
+                                aria-sort="@SortAria(SortColumn.AvgBuy)"
+                                @onclick='() => ToggleSort(SortColumn.AvgBuy)'
+                                @onkeydown='(e) => OnSortKeydown(e, SortColumn.AvgBuy)'
+                                @onclick:stopPropagation="true">
+                                <span class="broker-dt-th-inner">@L["Trading_BrokerColAvgBuy"] @SortIcon(SortColumn.AvgBuy)</span>
                             </th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.Current)" @onclick='() => ToggleSort(SortColumn.Current)' @onclick:stopPropagation="true">
-                                <span class="broker-dt-th-inner">Hiện tại @SortIcon(SortColumn.Current)</span>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.Current)"
+                                tabindex="0"
+                                aria-sort="@SortAria(SortColumn.Current)"
+                                @onclick='() => ToggleSort(SortColumn.Current)'
+                                @onkeydown='(e) => OnSortKeydown(e, SortColumn.Current)'
+                                @onclick:stopPropagation="true">
+                                <span class="broker-dt-th-inner">@L["Trading_BrokerColCurrent"] @SortIcon(SortColumn.Current)</span>
                             </th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.PnlPct)" @onclick='() => ToggleSort(SortColumn.PnlPct)' @onclick:stopPropagation="true">
-                                <span class="broker-dt-th-inner">% L/L @SortIcon(SortColumn.PnlPct)</span>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.PnlPct)"
+                                tabindex="0"
+                                aria-sort="@SortAria(SortColumn.PnlPct)"
+                                @onclick='() => ToggleSort(SortColumn.PnlPct)'
+                                @onkeydown='(e) => OnSortKeydown(e, SortColumn.PnlPct)'
+                                @onclick:stopPropagation="true">
+                                <span class="broker-dt-th-inner">@L["Trading_BrokerColPnlPct"] @SortIcon(SortColumn.PnlPct)</span>
                             </th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.PnlAmount)" @onclick='() => ToggleSort(SortColumn.PnlAmount)' @onclick:stopPropagation="true">
-                                <span class="broker-dt-th-inner">Lãi/Lỗ (đ) @SortIcon(SortColumn.PnlAmount)</span>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.PnlAmount)"
+                                tabindex="0"
+                                aria-sort="@SortAria(SortColumn.PnlAmount)"
+                                @onclick='() => ToggleSort(SortColumn.PnlAmount)'
+                                @onkeydown='(e) => OnSortKeydown(e, SortColumn.PnlAmount)'
+                                @onclick:stopPropagation="true">
+                                <span class="broker-dt-th-inner">@L["Trading_BrokerColPnlAmt"] @SortIcon(SortColumn.PnlAmount)</span>
                             </th>
-                            <th><span class="broker-dt-th-inner">Cắt lỗ</span></th>
-                            <th><span class="broker-dt-th-inner">Mục tiêu</span></th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.Status)" @onclick='() => ToggleSort(SortColumn.Status)' @onclick:stopPropagation="true">
-                                <span class="broker-dt-th-inner">TT @SortIcon(SortColumn.Status)</span>
+                            <th><span class="broker-dt-th-inner">@L["Trading_BrokerStop"]</span></th>
+                            <th><span class="broker-dt-th-inner">@L["Trading_BrokerTarget"]</span></th>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.Status)"
+                                tabindex="0"
+                                aria-sort="@SortAria(SortColumn.Status)"
+                                @onclick='() => ToggleSort(SortColumn.Status)'
+                                @onkeydown='(e) => OnSortKeydown(e, SortColumn.Status)'
+                                @onclick:stopPropagation="true">
+                                <span class="broker-dt-th-inner">@L["Trading_BrokerColStatus"] @SortIcon(SortColumn.Status)</span>
                             </th>
-                            <th><span class="broker-dt-th-inner">Note</span></th>
+                            <th><span class="broker-dt-th-inner">@L["Trading_BrokerNote"]</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -155,9 +197,16 @@
                             var pnlAmt = p.PnlAmount(current);
                             var selected = p.Symbol.Equals(SelectedSymbol, StringComparison.OrdinalIgnoreCase);
                             <tr class="@(selected ? "selected" : "")"
-                                @onclick="() => OnSelect.InvokeAsync(p.Symbol)">
+                                role="button"
+                                tabindex="0"
+                                @onclick="() => OnSelect.InvokeAsync(p.Symbol)"
+                                @onkeydown='(e) => OnRowKeydown(e, p.Symbol)'>
                                 <td>
                                     <span class="broker-symbol">@p.Symbol</span>
+                                    @if (p.HasPartialQtyLots)
+                                    {
+                                        <span class="broker-partial-qty-warn" title="@L["Trading_BrokerPartialQtyHint"]">⚠</span>
+                                    }
                                 </td>
                                 <td class="broker-sector">@DisplaySector(p.Sector)</td>
                                 <td>
@@ -318,6 +367,24 @@
 
         var skip = Math.Max(0, (page - 1) * pageSize);
         return list.Skip(skip).Take(pageSize).ToList();
+    }
+
+    private string SortAria(SortColumn column)
+    {
+        if (_sortColumn != column) return "none";
+        return _sortDesc ? "descending" : "ascending";
+    }
+
+    private void OnSortKeydown(KeyboardEventArgs e, SortColumn column)
+    {
+        if (e.Key is "Enter" or " ")
+            ToggleSort(column);
+    }
+
+    private void OnRowKeydown(KeyboardEventArgs e, string symbol)
+    {
+        if (e.Key is "Enter" or " ")
+            _ = OnSelect.InvokeAsync(symbol);
     }
 
     private void ToggleSort(SortColumn column)

@@ -1,211 +1,110 @@
 @inject IBrokerGeminiClient Gemini
 @inject IJSRuntime JS
+@inject IStringLocalizer<SharedResources> L
 
 <div class="ts-panel broker-ai-card">
     <div class="broker-ai-head">
         <span class="broker-ai-icon" aria-hidden="true">✦</span>
         <div class="broker-ai-head-text">
-            <h3 class="ts-panel-title broker-ai-title">Giải thích khuyến nghị</h3>
-            <span class="broker-ai-sub">Dán nguyên văn khuyến nghị broker → AI phân tích ý, jargon, mức giá, rủi ro.</span>
+            <h3 class="ts-panel-title broker-ai-title">@L["Trading_BrokerAiTitle"]</h3>
+            <span class="broker-ai-sub">@L["Trading_BrokerAiSub"]</span>
         </div>
-        <span class="broker-ai-badge @(_keyStatus.CssClass)">@_keyStatus.Label</span>
     </div>
 
     <div class="broker-ai-body">
-        @if (_showKeyInput)
-        {
-            <div class="broker-ai-key-box">
-                <div class="broker-ai-key-fields">
-                    <div class="broker-ai-key-field">
-                        <label class="broker-field-label" for="broker-ai-key">Gemini API key</label>
-                        <div class="broker-ai-key-row">
-                            <input id="broker-ai-key"
-                                   class="ts-input broker-ai-key-input"
-                                   type="@(_showKey ? "text" : "password")"
-                                   placeholder="AIza…"
-                                   @bind="_keyInput"
-                                   @bind:event="oninput"
-                                   autocomplete="off" />
-                            <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" title="@(_showKey ? "Ẩn" : "Hiện")" @onclick="ToggleKeyVisibility">
-                                @(_showKey ? "🙈" : "👁")
-                            </button>
-                        </div>
-                    </div>
-                    <div class="broker-ai-model-field">
-                        <label class="broker-field-label" for="broker-ai-model">Model</label>
-                        <select id="broker-ai-model" class="ts-select broker-ai-model-select" @bind="_modelInput">
-                            @foreach (var m in GeminiModels.All)
-                            {
-                                <option value="@m.Id">@m.Label</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="broker-ai-key-actions">
-                    <button class="ts-btn ts-btn-primary ts-btn-sm" type="button" disabled="@string.IsNullOrWhiteSpace(_keyInput)" @onclick="SaveKey">
-                        Lưu
-                    </button>
-                    @if (Gemini.HasUserKey)
-                    {
-                        <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="ClearKey">Xóa key</button>
-                    }
-                </div>
-                <p class="broker-ai-key-hint">
-                    Key + model lưu trong localStorage — không ghi vào appsettings.
-                    Lấy key tại <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
-                </p>
-            </div>
-        }
-        else
-        {
-            <div class="broker-ai-key-toggle">
-                <button class="ts-btn ts-btn-link ts-btn-sm" type="button" @onclick="ToggleKeyInput">
-                    @(Gemini.HasUserKey ? "Đổi Gemini API key" : "Nhập Gemini API key riêng (tùy chọn)")
-                </button>
-            </div>
-        }
+        <GeminiKeyBox IdPrefix="broker-ai" />
 
         <div class="broker-ai-input-wrap">
-            <textarea class="ts-input ts-textarea broker-ai-input @(_aiErr is not null ? "ts-input-invalid" : "")"
-                      placeholder="Dán full khuyến nghị của broker vào đây…&#10;VD: #SHS @@All — Mua quanh 15.5–15.6, SL 14.9, TP 17.1 / 18.2…"
+            <label class="broker-field-label" for="broker-ai-input">@L["Trading_BrokerAiInputLabel"]</label>
+            <textarea id="broker-ai-input"
+                      class="ts-input ts-textarea broker-ai-input @(_aiErr is not null ? "ts-input-invalid" : "")"
+                      placeholder="@L["Trading_BrokerAiPlaceholder"]"
                       rows="6"
+                      aria-invalid="@(_aiErr is not null)"
+                      aria-describedby="@(_aiErr is not null ? "broker-ai-error" : null)"
                       @bind="_raw"
                       @bind:event="oninput"
-                      @bind:after="ClearErr"></textarea>
+                      @bind:after="ClearErr"
+                      @onkeydown="OnInputKeydown"></textarea>
             <div class="broker-ai-actions">
                 <button class="ts-btn ts-btn-primary ts-btn-sm"
                         type="button"
                         disabled="@(_aiBusy || string.IsNullOrWhiteSpace(_raw))"
                         @onclick="Explain">
-                    @(_aiBusy ? "Đang phân tích…" : "✦ AI giải thích")
+                    @(_aiBusy ? L["Trading_BrokerAiAnalyzing"] : L["Trading_BrokerAiExplain"])
                 </button>
+                @if (_aiBusy)
+                {
+                    <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="CancelExplain">@L["Trading_StockAiCancel"]</button>
+                }
                 @if (!string.IsNullOrWhiteSpace(_raw) && !_aiBusy)
                 {
-                    <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Clear">Xóa</button>
+                    <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Clear">@L["Trading_StockAiClearInput"]</button>
                 }
             </div>
         </div>
 
         @if (_aiBusy)
         {
-            <div class="broker-ai-result broker-ai-loading">
+            <div class="broker-ai-result broker-ai-loading" role="status" aria-live="polite">
                 <div class="ts-spinner"></div>
             </div>
         }
         else if (!string.IsNullOrWhiteSpace(_aiResult))
         {
-            <div class="broker-ai-result">
+            <div class="broker-ai-result" aria-live="polite">
                 <div class="broker-ai-result-bar">
-                    <span class="broker-ai-result-label">Phân tích AI</span>
-                    <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="CopyResult">Sao chép</button>
+                    <span class="broker-ai-result-label">@L["Trading_BrokerAiResultLabel"]</span>
+                    <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="CopyResult">@L["Trading_StockAiCopy"]</button>
                 </div>
-                <pre class="broker-ai-out-pre">@_aiResult</pre>
+                <AiMarkdown Markdown="@_aiResult" />
             </div>
         }
         @if (_aiErr is not null)
         {
-            <div class="ts-alert ts-alert-error broker-ai-err">@_aiErr</div>
+            <div id="broker-ai-error" class="ts-alert ts-alert-error broker-ai-err" role="alert">@_aiErr</div>
         }
     </div>
 </div>
 
 @code {
-    private const string KeyStorage = "broker.gemini.key";
-    private const string ModelStorage = "broker.gemini.model";
-
     private string _raw = "";
     private string? _aiResult;
     private string? _aiErr;
     private bool _aiBusy;
-
-    private bool _showKeyInput;
-    private string _keyInput = "";
-    private string _modelInput = GeminiModels.DefaultId;
-    private bool _showKey;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            var savedKey = await JS.InvokeAsync<string?>("localStorage.getItem", KeyStorage);
-            if (!string.IsNullOrWhiteSpace(savedKey))
-                Gemini.UserKey = savedKey;
-
-            var savedModel = await JS.InvokeAsync<string?>("localStorage.getItem", ModelStorage);
-            if (!string.IsNullOrWhiteSpace(savedModel))
-            {
-                Gemini.UserModel = savedModel;
-                _modelInput = savedModel;
-            }
-        }
-        catch { }
-    }
-
-    private (string Label, string CssClass) _keyStatus =>
-        Gemini.HasUserKey
-            ? ("Key của bạn", "broker-ai-badge-user")
-            : Gemini.HasDirectKey
-                ? ("Gemini", "")
-                : ("Proxy", "broker-ai-badge-proxy");
-
-    private void ToggleKeyInput()
-    {
-        _showKeyInput = !_showKeyInput;
-        if (_showKeyInput)
-        {
-            _keyInput = Gemini.UserKey ?? "";
-            _modelInput = Gemini.UserModel ?? GeminiModels.DefaultId;
-        }
-    }
-
-    private void ToggleKeyVisibility() => _showKey = !_showKey;
-
-    private async Task SaveKey()
-    {
-        var key = _keyInput?.Trim() ?? "";
-        Gemini.UserKey = string.IsNullOrEmpty(key) ? null : key;
-        Gemini.UserModel = _modelInput;
-        try
-        {
-            await JS.InvokeVoidAsync("localStorage.setItem", KeyStorage, key);
-            await JS.InvokeVoidAsync("localStorage.setItem", ModelStorage, _modelInput);
-        }
-        catch { }
-        _showKeyInput = false;
-    }
-
-    private async Task ClearKey()
-    {
-        Gemini.UserKey = null;
-        Gemini.UserModel = null;
-        _keyInput = "";
-        _modelInput = GeminiModels.DefaultId;
-        try
-        {
-            await JS.InvokeVoidAsync("localStorage.removeItem", KeyStorage);
-            await JS.InvokeVoidAsync("localStorage.removeItem", ModelStorage);
-        }
-        catch { }
-        _showKeyInput = false;
-    }
+    private CancellationTokenSource? _explainCts;
 
     private async Task Explain()
     {
         if (string.IsNullOrWhiteSpace(_raw)) return;
+
+        _explainCts?.Cancel();
+        _explainCts = new CancellationTokenSource();
+        var ct = _explainCts.Token;
 
         _aiBusy = true;
         _aiErr = null;
         try
         {
             var prompt = BrokerPromptLibrary.ExplainRecommendation(_raw.Trim());
-            var reply = await Gemini.ExplainAsync(prompt);
-            if (string.IsNullOrWhiteSpace(reply))
+            var result = await Gemini.ExplainAsync(prompt, ct);
+            if (!string.IsNullOrEmpty(result.Error))
             {
-                _aiErr = "AI không trả lời. Kiểm tra API key hoặc thử lại.";
+                _aiErr = result.Error;
                 return;
             }
 
-            _aiResult = reply;
+            if (string.IsNullOrWhiteSpace(result.Text))
+            {
+                _aiErr = L["Trading_StockAiNoReply"];
+                return;
+            }
+
+            _aiResult = result.Text;
+        }
+        catch (OperationCanceledException)
+        {
+            _aiErr = L["Trading_StockAiCancelled"];
         }
         catch (Exception ex)
         {
@@ -215,6 +114,18 @@
         {
             _aiBusy = false;
         }
+    }
+
+    private void CancelExplain()
+    {
+        _explainCts?.Cancel();
+        _aiBusy = false;
+    }
+
+    private async Task OnInputKeydown(KeyboardEventArgs e)
+    {
+        if (e.CtrlKey && e.Key == "Enter" && !_aiBusy && !string.IsNullOrWhiteSpace(_raw))
+            await Explain();
     }
 
     private void Clear()

@@ -10,7 +10,9 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
 public interface IBrokerDeskStore
 {
     Task<BrokerPortfolio> LoadAsync(CancellationToken ct = default);
+    Task<BrokerPortfolio> LoadFromFileAsync(CancellationToken ct = default);
     Task SaveDraftAsync(BrokerPortfolio portfolio, CancellationToken ct = default);
+    Task ClearDraftAsync(CancellationToken ct = default);
     Task DownloadJsonAsync(BrokerPortfolio portfolio);
     Task DownloadCsvAsync(BrokerPortfolio portfolio);
     BrokerPortfolio ParseJson(string json);
@@ -71,11 +73,41 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
         }
     }
 
+    public async Task<BrokerPortfolio> LoadFromFileAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var url = $"{PortfolioPath}?v={DateTime.UtcNow.Ticks}";
+            using var resp = await _http.GetAsync(url, ct);
+            if (!resp.IsSuccessStatusCode)
+                return new BrokerPortfolio();
+
+            var json = await resp.Content.ReadAsStringAsync(ct);
+            return NormalizePortfolio(ParseJson(json));
+        }
+        catch
+        {
+            return new BrokerPortfolio();
+        }
+    }
+
     public async Task SaveDraftAsync(BrokerPortfolio portfolio, CancellationToken ct = default)
     {
         portfolio.UpdatedAt = DateTime.Now;
         var json = JsonSerializer.Serialize(NormalizePortfolio(portfolio), JsonOpts);
         await _js.InvokeVoidAsync("tradingAuth.setItem", DraftKey, json);
+    }
+
+    public async Task ClearDraftAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            await _js.InvokeVoidAsync("tradingAuth.removeItem", DraftKey);
+        }
+        catch
+        {
+            // Ignore localStorage failures.
+        }
     }
 
     public BrokerPortfolio ParseJson(string json)

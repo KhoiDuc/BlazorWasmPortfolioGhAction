@@ -11,7 +11,7 @@ public interface IBrokerGeminiClient
     string? UserKey { get; set; }
     bool HasUserKey { get; }
     string? UserModel { get; set; }
-    Task<string?> ExplainAsync(string prompt, CancellationToken ct = default);
+    Task<GeminiExplainResult> ExplainAsync(string prompt, CancellationToken ct = default);
 }
 
 public sealed class BrokerGeminiClient : IBrokerGeminiClient
@@ -37,37 +37,54 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
     public bool HasUserKey => !string.IsNullOrWhiteSpace(UserKey);
     public string? UserModel { get; set; }
 
-    public async Task<string?> ExplainAsync(string prompt, CancellationToken ct = default)
+    public async Task<GeminiExplainResult> ExplainAsync(string prompt, CancellationToken ct = default)
     {
         if (HasUserKey)
         {
-            try
-            {
-                var direct = await CallGeminiAsync(prompt, UserKey!.Trim(), UserModel, ct);
-                if (!string.IsNullOrWhiteSpace(direct))
-                    return direct;
-            }
-            catch (Exception ex)
-            {
-                return $"[Lỗi Gemini] {ex.Message}";
-            }
+            var userResult = await TryDirectAsync(prompt, UserKey!.Trim(), UserModel, ct);
+            if (userResult is not null)
+                return userResult;
         }
 
         if (HasDirectKey)
         {
-            try
-            {
-                var direct = await CallGeminiAsync(prompt, _options.ApiKey.Trim(), _options.Model, ct);
-                if (!string.IsNullOrWhiteSpace(direct))
-                    return direct;
-            }
-            catch (Exception ex)
-            {
-                return $"[Lỗi Gemini] {ex.Message}";
-            }
+            var configResult = await TryDirectAsync(prompt, _options.ApiKey.Trim(), _options.Model, ct);
+            if (configResult is not null)
+                return configResult;
         }
 
-        return await _api.ChatAsync(prompt, context: "broker-desk", ct);
+        try
+        {
+            var proxy = await _api.ChatAsync(prompt, context: "broker-desk", ct);
+            return string.IsNullOrWhiteSpace(proxy)
+                ? new GeminiExplainResult(null, "AI không trả lời. Kiểm tra API key hoặc thử lại.")
+                : new GeminiExplainResult(proxy, null);
+        }
+        catch (Exception ex)
+        {
+            return new GeminiExplainResult(null, ex.Message);
+        }
+    }
+
+    private async Task<GeminiExplainResult?> TryDirectAsync(
+        string prompt,
+        string apiKey,
+        string? model,
+        CancellationToken ct)
+    {
+        try
+        {
+            var direct = await CallGeminiAsync(prompt, apiKey, model, ct);
+            if (!string.IsNullOrWhiteSpace(direct))
+                return new GeminiExplainResult(direct, null);
+        }
+        catch (Exception ex)
+        {
+            // Fall through to proxy when direct call fails.
+            _ = ex;
+        }
+
+        return null;
     }
 
     private async Task<string?> CallGeminiAsync(string prompt, string apiKey, string? model, CancellationToken ct)
@@ -77,7 +94,7 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
         var body = new
         {
             contents = new[] { new { parts = new[] { new { text = prompt } } } },
-            generationConfig = new { temperature = 0.2, maxOutputTokens = 1200 }
+            generationConfig = new { temperature = 0.2, maxOutputTokens = 2048 }
         };
 
         using var resp = await _http.PostAsJsonAsync(url, body, ct);

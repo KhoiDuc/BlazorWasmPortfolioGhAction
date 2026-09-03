@@ -1,0 +1,18 @@
+@using Markdig
+
+@if (!string.IsNullOrWhiteSpace(Html))
+{
+    <div class="broker-ai-markdown">@((MarkupString)Html)</div>
+}
+
+@code {
+    [Parameter] public string? Markdown { get; set; }
+
+    private string? Html =>
+        string.IsNullOrWhiteSpace(Markdown)
+            ? null
+            : Markdig.Markdown.ToHtml(Markdown, _pipeline);
+
+    private static readonly MarkdownPipeline _pipeline =
+        new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+}

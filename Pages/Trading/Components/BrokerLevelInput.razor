@@ -6,9 +6,11 @@
         <div class="broker-level-mode" role="group" aria-label="@Label mode">
             <button type="button"
                     class="broker-mode-btn @(Mode == BrokerLevelInputMode.Price ? "active" : "")"
+                    aria-pressed="@(Mode == BrokerLevelInputMode.Price)"
                     @onclick='() => SetMode(BrokerLevelInputMode.Price)'>Giá</button>
             <button type="button"
                     class="broker-mode-btn @(Mode == BrokerLevelInputMode.Percent ? "active" : "")"
+                    aria-pressed="@(Mode == BrokerLevelInputMode.Percent)"
                     @onclick='() => SetMode(BrokerLevelInputMode.Percent)'>%</button>
         </div>
     </div>
@@ -33,7 +35,7 @@
             }
             else
             {
-                <p class="broker-field-preview">≈ @ResolvedPrice:N2 từ giá @BuyPrice:N2</p>
+                <p class="broker-field-preview">≈ @ResolvedPrice?.ToString("N2") từ giá @BuyPrice?.ToString("N2")</p>
             }
         </div>
     }
@@ -72,6 +74,8 @@
 
     private async Task SetMode(BrokerLevelInputMode mode)
     {
+        if (Mode != mode)
+            Input = null;
         await ModeChanged.InvokeAsync(mode);
         await NotifyChanged();
     }

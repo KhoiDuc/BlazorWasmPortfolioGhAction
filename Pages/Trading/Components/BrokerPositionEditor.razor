@@ -1,4 +1,6 @@
 @inject IBrokerGeminiClient Gemini
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResources> L
 
 <div class="ts-panel broker-detail">
     @{
@@ -18,9 +20,13 @@
                 {
                     <span class="broker-status-pill broker-status-@Position.Status">@BrokerStatusLabels.Vi(Position.Status)</span>
                 }
+                @if (Position.HasPartialQtyLots)
+                {
+                    <span class="broker-partial-qty-warn" title="@L["Trading_BrokerPartialQtyHint"]">⚠</span>
+                }
             </div>
         </div>
-        <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Delete">Xóa mã</button>
+        <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Delete">@L["Trading_BrokerDeleteSymbol"]</button>
     </div>
 
     <div class="broker-detail-kpis">
@@ -212,7 +218,7 @@
                         {
                             <div class="broker-ai-out">
                                 <span class="broker-ai-label">AI</span>
-                                @note.AiExplain
+                                <AiMarkdown Markdown="@note.AiExplain" />
                             </div>
                         }
                     </article>
@@ -354,6 +360,9 @@
 
     private async Task RemoveLot(BrokerLot lot)
     {
+        if (!await JS.InvokeAsync<bool>("confirm", L["Trading_BrokerConfirmDeleteLot"]))
+            return;
+
         Position.Buys.Remove(lot);
         _lotErrors.Remove(lot.Id);
         await Changed();
@@ -422,14 +431,20 @@
                 note.Text,
                 string.IsNullOrWhiteSpace(prior) ? "(chưa có note cũ)" : prior);
 
-            var reply = await Gemini.ExplainAsync(prompt);
-            if (string.IsNullOrWhiteSpace(reply))
+            var result = await Gemini.ExplainAsync(prompt);
+            if (!string.IsNullOrEmpty(result.Error))
             {
-                _error = "AI không trả lời. Kiểm tra Gemini:ApiKey trong appsettings.";
+                _error = result.Error;
                 return;
             }
 
-            note.AiExplain = reply;
+            if (string.IsNullOrWhiteSpace(result.Text))
+            {
+                _error = L["Trading_StockAiNoReply"];
+                return;
+            }
+
+            note.AiExplain = result.Text;
             await Changed();
         }
         catch (Exception ex)

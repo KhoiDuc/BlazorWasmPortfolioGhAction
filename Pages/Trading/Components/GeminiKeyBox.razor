@@ -1,0 +1,171 @@
+@inject IBrokerGeminiClient Gemini
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResources> L
+
+<div class="broker-ai-key-section">
+    <span class="broker-ai-badge @KeyStatusCss">@KeyStatusLabel</span>
+
+    @if (_showKeyInput)
+    {
+        <div class="broker-ai-key-box">
+            <div class="broker-ai-key-fields">
+                <div class="broker-ai-key-field">
+                    <label class="broker-field-label" for="@($"{IdPrefix}-key")">@L["Trading_GeminiApiKey"]</label>
+                    <div class="broker-ai-key-row">
+                        <input id="@($"{IdPrefix}-key")"
+                               class="ts-input broker-ai-key-input"
+                               type="@(_showKey ? "text" : "password")"
+                               placeholder="AIza…"
+                               @bind="_keyInput"
+                               @bind:event="oninput"
+                               autocomplete="off" />
+                        <button class="ts-btn ts-btn-outline ts-btn-sm"
+                                type="button"
+                                aria-label="@(_showKey ? L["Trading_GeminiHideKey"] : L["Trading_GeminiShowKey"])"
+                                @onclick="ToggleKeyVisibility">
+                            @(_showKey ? "🙈" : "👁")
+                        </button>
+                    </div>
+                </div>
+                <div class="broker-ai-model-field">
+                    <label class="broker-field-label" for="@($"{IdPrefix}-model")">@L["Trading_GeminiModel"]</label>
+                    <select id="@($"{IdPrefix}-model")" class="ts-select broker-ai-model-select" @bind="_modelInput">
+                        @foreach (var m in GeminiModels.All)
+                        {
+                            <option value="@m.Id">@m.Label</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="broker-ai-key-actions">
+                <button class="ts-btn ts-btn-primary ts-btn-sm" type="button" disabled="@string.IsNullOrWhiteSpace(_keyInput)" @onclick="SaveKey">
+                    @L["Trading_GeminiSaveKey"]
+                </button>
+                @if (Gemini.HasUserKey)
+                {
+                    <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="ClearKey">@L["Trading_GeminiClearKey"]</button>
+                }
+            </div>
+            <p class="broker-ai-key-hint">
+                @L["Trading_GeminiKeyHint"]
+                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="broker-ai-key-toggle">
+            <button class="ts-btn ts-btn-link ts-btn-sm" type="button" @onclick="ToggleKeyInput">
+                @(Gemini.HasUserKey ? L["Trading_GeminiChangeKey"] : L["Trading_GeminiEnterKey"])
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string IdPrefix { get; set; } = "gemini";
+
+    private bool _showKeyInput;
+    private string _keyInput = "";
+    private string _modelInput = GeminiModels.DefaultId;
+    private bool _showKey;
+    private bool _loaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_loaded) return;
+        _loaded = true;
+        await LoadStoredKeyAsync();
+    }
+
+    private string KeyStatusLabel =>
+        Gemini.HasUserKey ? L["Trading_GeminiKeyUser"]
+        : Gemini.HasDirectKey ? L["Trading_GeminiKeyServer"]
+        : L["Trading_GeminiKeyProxy"];
+
+    private string KeyStatusCss =>
+        Gemini.HasUserKey ? "broker-ai-badge-user"
+        : Gemini.HasDirectKey ? ""
+        : "broker-ai-badge-proxy";
+
+    private async Task LoadStoredKeyAsync()
+    {
+        try
+        {
+            var savedKey = await JS.InvokeAsync<string?>("localStorage.getItem", GeminiKeyStorage.KeyStorage);
+            if (string.IsNullOrWhiteSpace(savedKey))
+            {
+                foreach (var legacy in GeminiKeyStorage.LegacyKeyStorages)
+                {
+                    savedKey = await JS.InvokeAsync<string?>("localStorage.getItem", legacy);
+                    if (!string.IsNullOrWhiteSpace(savedKey)) break;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(savedKey))
+                Gemini.UserKey = savedKey;
+
+            var savedModel = await JS.InvokeAsync<string?>("localStorage.getItem", GeminiKeyStorage.ModelStorage);
+            if (string.IsNullOrWhiteSpace(savedModel))
+            {
+                foreach (var legacy in GeminiKeyStorage.LegacyModelStorages)
+                {
+                    savedModel = await JS.InvokeAsync<string?>("localStorage.getItem", legacy);
+                    if (!string.IsNullOrWhiteSpace(savedModel)) break;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(savedModel))
+            {
+                Gemini.UserModel = savedModel;
+                _modelInput = savedModel;
+            }
+        }
+        catch { }
+    }
+
+    private void ToggleKeyInput()
+    {
+        _showKeyInput = !_showKeyInput;
+        if (_showKeyInput)
+        {
+            _keyInput = Gemini.UserKey ?? "";
+            _modelInput = Gemini.UserModel ?? GeminiModels.DefaultId;
+        }
+    }
+
+    private void ToggleKeyVisibility() => _showKey = !_showKey;
+
+    private async Task SaveKey()
+    {
+        var key = _keyInput?.Trim() ?? "";
+        Gemini.UserKey = string.IsNullOrEmpty(key) ? null : key;
+        Gemini.UserModel = _modelInput;
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", GeminiKeyStorage.KeyStorage, key);
+            await JS.InvokeVoidAsync("localStorage.setItem", GeminiKeyStorage.ModelStorage, _modelInput);
+        }
+        catch { }
+        _showKeyInput = false;
+    }
+
+    private async Task ClearKey()
+    {
+        Gemini.UserKey = null;
+        Gemini.UserModel = null;
+        _keyInput = "";
+        _modelInput = GeminiModels.DefaultId;
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.removeItem", GeminiKeyStorage.KeyStorage);
+            await JS.InvokeVoidAsync("localStorage.removeItem", GeminiKeyStorage.ModelStorage);
+            foreach (var legacy in GeminiKeyStorage.LegacyKeyStorages)
+                await JS.InvokeVoidAsync("localStorage.removeItem", legacy);
+            foreach (var legacy in GeminiKeyStorage.LegacyModelStorages)
+                await JS.InvokeVoidAsync("localStorage.removeItem", legacy);
+        }
+        catch { }
+        _showKeyInput = false;
+    }
+}

@@ -6,6 +6,7 @@ public sealed class VnSectorService
 {
     private readonly VnDeskDataService _data;
     private Dictionary<string, List<string>>? _map;
+    private Dictionary<string, string>? _symbolIndex;
 
     public VnSectorService(VnDeskDataService data) => _data = data;
 
@@ -15,6 +16,18 @@ public sealed class VnSectorService
         return _map;
     }
 
+    private async Task EnsureIndexAsync()
+    {
+        if (_symbolIndex is not null) return;
+        var index = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var kv in await MapAsync())
+        {
+            foreach (var sym in kv.Value)
+                index.TryAdd(sym, kv.Key);
+        }
+        _symbolIndex = index;
+    }
+
     public async Task<IReadOnlyDictionary<string, List<string>>> GetMapAsync() => await MapAsync();
 
     public async Task<IReadOnlyList<string>> GetAllSymbolsAsync() =>
@@ -22,13 +35,8 @@ public sealed class VnSectorService
 
     public async Task<string> FindSectorAsync(string symbol)
     {
-        symbol = symbol.ToUpperInvariant();
-        foreach (var kv in await MapAsync())
-        {
-            if (kv.Value.Contains(symbol))
-                return kv.Key;
-        }
-        return "";
+        await EnsureIndexAsync();
+        return _symbolIndex!.TryGetValue(symbol.ToUpperInvariant(), out var sector) ? sector : "";
     }
 
     public async Task<Dictionary<string, SectorAnalysis>> AnalyzeAsync(List<StockData> stocks)

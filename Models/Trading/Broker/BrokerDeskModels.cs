@@ -61,6 +61,18 @@ public class BrokerPosition
     }
 
     [JsonIgnore]
+    public bool HasPartialQtyLots
+    {
+        get
+        {
+            var lots = Buys.Where(b => b.Price > 0).ToList();
+            if (lots.Count == 0) return false;
+            var withQty = lots.Count(b => b.Quantity is > 0);
+            return withQty > 0 && withQty < lots.Count;
+        }
+    }
+
+    [JsonIgnore]
     public decimal? AvgBuy
     {
         get
@@ -68,7 +80,7 @@ public class BrokerPosition
             var lots = Buys.Where(b => b.Price > 0).ToList();
             if (lots.Count == 0) return null;
             var withQty = lots.Where(b => b.Quantity is > 0).ToList();
-            if (withQty.Count == lots.Count)
+            if (withQty.Count > 0)
             {
                 var qty = withQty.Sum(b => b.Quantity!.Value);
                 return qty <= 0 ? null : withQty.Sum(b => b.Price * b.Quantity!.Value) / qty;

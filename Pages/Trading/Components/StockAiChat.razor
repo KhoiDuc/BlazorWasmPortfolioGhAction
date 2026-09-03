@@ -1,80 +1,33 @@
 @inject IBrokerGeminiClient Gemini
+@inject IBrokerDeskStore BrokerStore
+@inject IVnMarketClient Market
 @inject IJSRuntime JS
+@inject IStringLocalizer<SharedResources> L
+@implements IDisposable
 
 <div class="ts-panel broker-ai-card stockai-card">
     <div class="broker-ai-head">
         <span class="broker-ai-icon" aria-hidden="true">✦</span>
         <div class="broker-ai-head-text">
-            <h3 class="ts-panel-title broker-ai-title">Hỏi đáp chứng khoán bằng AI</h3>
-            <span class="broker-ai-sub">Chọn mẫu prompt → nhập câu hỏi/note broker → AI trả lời tiếng Việt.</span>
+            <h3 class="ts-panel-title broker-ai-title">@L["Trading_StockAiChatTitle"]</h3>
+            <span class="broker-ai-sub">@L["Trading_StockAiChatSub"]</span>
         </div>
-        <span class="broker-ai-badge @(_keyStatus.CssClass)">@_keyStatus.Label</span>
     </div>
 
     <div class="broker-ai-body">
-        @if (_showKeyInput)
-        {
-            <div class="broker-ai-key-box">
-                <div class="broker-ai-key-fields">
-                    <div class="broker-ai-key-field">
-                        <label class="broker-field-label" for="stockai-key">Gemini API key</label>
-                        <div class="broker-ai-key-row">
-                            <input id="stockai-key"
-                                   class="ts-input broker-ai-key-input"
-                                   type="@(_showKey ? "text" : "password")"
-                                   placeholder="AIza…"
-                                   @bind="_keyInput"
-                                   @bind:event="oninput"
-                                   autocomplete="off" />
-                            <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" title="@(_showKey ? "Ẩn" : "Hiện")" @onclick="ToggleKeyVisibility">
-                                @(_showKey ? "🙈" : "👁")
-                            </button>
-                        </div>
-                    </div>
-                    <div class="broker-ai-model-field">
-                        <label class="broker-field-label" for="stockai-model">Model</label>
-                        <select id="stockai-model" class="ts-select broker-ai-model-select" @bind="_modelInput">
-                            @foreach (var m in GeminiModels.All)
-                            {
-                                <option value="@m.Id">@m.Label</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="broker-ai-key-actions">
-                    <button class="ts-btn ts-btn-primary ts-btn-sm" type="button" disabled="@string.IsNullOrWhiteSpace(_keyInput)" @onclick="SaveKey">
-                        Lưu
-                    </button>
-                    @if (Gemini.HasUserKey)
-                    {
-                        <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="ClearKey">Xóa key</button>
-                    }
-                </div>
-                <p class="broker-ai-key-hint">
-                    Key + model lưu trong localStorage — không ghi vào appsettings.
-                    Lấy key tại <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
-                </p>
-            </div>
-        }
-        else
-        {
-            <div class="broker-ai-key-toggle">
-                <button class="ts-btn ts-btn-link ts-btn-sm" type="button" @onclick="ToggleKeyInput">
-                    @(Gemini.HasUserKey ? "Đổi Gemini API key" : "Nhập Gemini API key riêng (tùy chọn)")
-                </button>
-            </div>
-        }
+        <GeminiKeyBox IdPrefix="stockai" />
 
         <div class="stockai-templates">
-            <label class="broker-field-label">Mẫu prompt</label>
-            <div class="stockai-template-grid">
+            <label class="broker-field-label" id="stockai-template-label">@L["Trading_StockAiTemplates"]</label>
+            <div class="stockai-template-grid" role="group" aria-labelledby="stockai-template-label">
                 @foreach (var t in StockAiPromptLibrary.Templates)
                 {
                     <button type="button"
                             class="ts-btn ts-btn-sm stockai-template-btn @(_selectedTemplate == t.Key ? "is-active" : "")"
+                            aria-pressed="@(_selectedTemplate == t.Key)"
                             @onclick='() => SelectTemplate(t.Key)'
-                            title="@t.Description">
-                        @t.Title
+                            title="@GetTemplateDescription(t.Key)">
+                        @GetTemplateTitle(t.Key)
                     </button>
                 }
             </div>
@@ -84,59 +37,107 @@
             }
         </div>
 
+        @if (_selectedTemplate is "portfolio-review" or "analyze-stock")
+        {
+            <div class="stockai-data-tools">
+                @if (_selectedTemplate == "portfolio-review")
+                {
+                    <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" disabled="@_dataBusy" @onclick="LoadBrokerPortfolio">
+                        @(_dataBusy ? L["Trading_StockAiLoadingPortfolio"] : L["Trading_StockAiLoadPortfolio"])
+                    </button>
+                }
+                @if (_selectedTemplate == "analyze-stock")
+                {
+                    <div class="stockai-symbol-row">
+                        <label class="broker-field-label" for="stockai-symbol">@L["Trading_StockAiSymbol"]</label>
+                        <div class="ts-stock-select stockai-symbol-select">
+                            <input id="stockai-symbol" class="ts-input ts-stock-select__input"
+                                   @bind="_symbolSearch" @bind:event="oninput" @bind:after="FilterSymbols"
+                                   @onfocus="OpenSymbolDropdown"
+                                   @onblur="CloseSymbolDropdownDelayed"
+                                   placeholder="VNM, HPG…" autocomplete="off"
+                                   role="combobox" aria-expanded="@_symbolDropdownOpen.ToString().ToLowerInvariant()"
+                                   aria-controls="stockai-symbol-list" aria-autocomplete="list" />
+                            @if (_symbolDropdownOpen && _filteredSymbols.Count > 0)
+                            {
+                                <ul id="stockai-symbol-list" class="ts-stock-dropdown" role="listbox">
+                                    @foreach (var sym in _filteredSymbols.Take(80))
+                                    {
+                                        <li role="option" @onmousedown="() => SelectSymbol(sym)">@sym</li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" disabled="@_dataBusy || string.IsNullOrWhiteSpace(_symbolSearch)" @onclick="LoadSymbolWithPrice">
+                            @L["Trading_StockAiLoadSymbol"]
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+
         <div class="broker-ai-input-wrap">
-            <textarea class="ts-input ts-textarea broker-ai-input @(_aiErr is not null ? "ts-input-invalid" : "")"
+            <label class="broker-field-label" for="stockai-input">@L["Trading_StockAiInputLabel"]</label>
+            <textarea id="stockai-input"
+                      class="ts-input ts-textarea broker-ai-input @(_aiErr is not null ? "ts-input-invalid" : "")"
                       placeholder="@_placeholder"
                       rows="6"
+                      aria-invalid="@(_aiErr is not null)"
+                      aria-describedby="@(_aiErr is not null ? "stockai-error" : null)"
                       @bind="_raw"
                       @bind:event="oninput"
-                      @bind:after="ClearErr"></textarea>
+                      @bind:after="ClearErr"
+                      @onkeydown="OnInputKeydown"></textarea>
             <div class="broker-ai-actions">
                 <button class="ts-btn ts-btn-primary ts-btn-sm"
                         type="button"
                         disabled="@(_aiBusy || string.IsNullOrWhiteSpace(_raw))"
                         @onclick="Ask">
-                    @(_aiBusy ? "Đang trả lời…" : "✦ Hỏi AI")
+                    @(_aiBusy ? L["Trading_StockAiAnswering"] : L["Trading_StockAiAsk"])
                 </button>
+                @if (_aiBusy)
+                {
+                    <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="CancelAsk">@L["Trading_StockAiCancel"]</button>
+                }
                 @if (!string.IsNullOrWhiteSpace(_raw) && !_aiBusy)
                 {
-                    <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="ClearInput">Xóa</button>
+                    <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="ClearInput">@L["Trading_StockAiClearInput"]</button>
                 }
                 @if (_history.Count > 0)
                 {
-                    <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="ClearHistory">Xóa lịch sử</button>
+                    <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="ClearHistory">@L["Trading_StockAiClearHistory"]</button>
                 }
             </div>
         </div>
 
         @if (_aiBusy)
         {
-            <div class="broker-ai-result broker-ai-loading">
+            <div class="broker-ai-result broker-ai-loading" role="status" aria-live="polite">
                 <div class="ts-spinner"></div>
             </div>
         }
 
         @if (_aiErr is not null)
         {
-            <div class="ts-alert ts-alert-error broker-ai-err">@_aiErr</div>
+            <div id="stockai-error" class="ts-alert ts-alert-error broker-ai-err" role="alert">@_aiErr</div>
         }
 
         @if (_history.Count > 0)
         {
-            <div class="stockai-history">
+            <div class="stockai-history" aria-live="polite">
                 @foreach (var item in _history)
                 {
                     <div class="stockai-turn">
                         <div class="stockai-turn-q">
-                            <span class="stockai-turn-tag">❓ @_templateTitle(item.TemplateKey)</span>
+                            <span class="stockai-turn-tag">❓ @GetTemplateTitle(item.TemplateKey)</span>
                             <pre class="stockai-turn-pre">@item.Question</pre>
                         </div>
                         <div class="stockai-turn-a">
                             <div class="stockai-turn-bar">
                                 <span class="stockai-turn-tag stockai-turn-tag-a">✦ AI</span>
-                                <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick='() => Copy(item.Answer)'>Sao chép</button>
+                                <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick='() => Copy(item.Answer)'>@L["Trading_StockAiCopy"]</button>
                             </div>
-                            <pre class="broker-ai-out-pre">@item.Answer</pre>
+                            <AiMarkdown Markdown="@item.Answer" />
                         </div>
                     </div>
                 }
@@ -146,124 +147,177 @@
 </div>
 
 @code {
-    private const string KeyStorage = "stockai.gemini.key";
-    private const string ModelStorage = "stockai.gemini.model";
+    private const string HistoryStorage = "stockai.chat.history";
+    private const int MaxHistoryTurns = 30;
 
     private string _raw = "";
     private string? _aiErr;
     private bool _aiBusy;
-
-    private bool _showKeyInput;
-    private string _keyInput = "";
-    private string _modelInput = GeminiModels.DefaultId;
-    private bool _showKey;
-
+    private bool _dataBusy;
     private string _selectedTemplate = "general";
     private string _templateHint = "";
-    private string _placeholder = "Nhập câu hỏi chứng khoán…";
+    private string _placeholder = "";
+    private string _symbolSearch = "";
+    private bool _symbolDropdownOpen;
+    private List<string> _brokerSymbols = [];
+    private List<string> _filteredSymbols = [];
+    private CancellationTokenSource? _askCts;
 
     private record Turn(string TemplateKey, string Question, string Answer);
     private readonly List<Turn> _history = [];
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            var savedKey = await JS.InvokeAsync<string?>("localStorage.getItem", KeyStorage);
-            if (!string.IsNullOrWhiteSpace(savedKey))
-                Gemini.UserKey = savedKey;
-
-            var savedModel = await JS.InvokeAsync<string?>("localStorage.getItem", ModelStorage);
-            if (!string.IsNullOrWhiteSpace(savedModel))
-            {
-                Gemini.UserModel = savedModel;
-                _modelInput = savedModel;
-            }
-        }
-        catch { }
         SelectTemplate(_selectedTemplate);
+        await LoadHistoryAsync();
+        await LoadBrokerSymbolsAsync();
     }
 
-    private (string Label, string CssClass) _keyStatus =>
-        Gemini.HasUserKey
-            ? ("Key của bạn", "broker-ai-badge-user")
-            : Gemini.HasDirectKey
-                ? ("Gemini", "")
-                : ("Proxy", "broker-ai-badge-proxy");
+    private string GetTemplateTitle(string key) =>
+        L[$"Trading_StockAiTpl_{key}_Title"].Value is { Length: > 0 } t && t != $"Trading_StockAiTpl_{key}_Title"
+            ? t
+            : Array.Find(StockAiPromptLibrary.Templates, x => x.Key == key)?.Title ?? L["Trading_StockAiAsk"];
 
-    private void ToggleKeyInput()
-    {
-        _showKeyInput = !_showKeyInput;
-        if (_showKeyInput)
-        {
-            _keyInput = Gemini.UserKey ?? "";
-            _modelInput = Gemini.UserModel ?? GeminiModels.DefaultId;
-        }
-    }
-
-    private void ToggleKeyVisibility() => _showKey = !_showKey;
-
-    private async Task SaveKey()
-    {
-        var key = _keyInput?.Trim() ?? "";
-        Gemini.UserKey = string.IsNullOrEmpty(key) ? null : key;
-        Gemini.UserModel = _modelInput;
-        try
-        {
-            await JS.InvokeVoidAsync("localStorage.setItem", KeyStorage, key);
-            await JS.InvokeVoidAsync("localStorage.setItem", ModelStorage, _modelInput);
-        }
-        catch { }
-        _showKeyInput = false;
-    }
-
-    private async Task ClearKey()
-    {
-        Gemini.UserKey = null;
-        Gemini.UserModel = null;
-        _keyInput = "";
-        _modelInput = GeminiModels.DefaultId;
-        try
-        {
-            await JS.InvokeVoidAsync("localStorage.removeItem", KeyStorage);
-            await JS.InvokeVoidAsync("localStorage.removeItem", ModelStorage);
-        }
-        catch { }
-        _showKeyInput = false;
-    }
+    private string GetTemplateDescription(string key) =>
+        L[$"Trading_StockAiTpl_{key}_Desc"].Value is { Length: > 0 } d && d != $"Trading_StockAiTpl_{key}_Desc"
+            ? d
+            : Array.Find(StockAiPromptLibrary.Templates, x => x.Key == key)?.Description ?? "";
 
     private void SelectTemplate(string key)
     {
         _selectedTemplate = key;
-        var tpl = Array.Find(StockAiPromptLibrary.Templates, t => t.Key == key);
-        if (tpl is null) return;
-        _templateHint = tpl.Description;
-        _placeholder = tpl.Key == "general"
-            ? "Nhập câu hỏi chứng khoán…"
-            : $"Nhập nội dung cho mẫu \"{tpl.Title}\"… (VD: mã CP, note broker, danh mục…)";
+        _templateHint = GetTemplateDescription(key);
+        _placeholder = key == "general"
+            ? L["Trading_StockAiPlaceholderGeneral"]
+            : L["Trading_StockAiPlaceholderTemplate", GetTemplateTitle(key)];
     }
 
-    private string _templateTitle(string key) =>
-        Array.Find(StockAiPromptLibrary.Templates, t => t.Key == key)?.Title ?? "Hỏi đáp";
+    private async Task LoadBrokerSymbolsAsync()
+    {
+        try
+        {
+            var portfolio = await BrokerStore.LoadAsync();
+            _brokerSymbols = portfolio.Positions.Select(p => p.Symbol).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(s => s).ToList();
+        }
+        catch { }
+    }
+
+    private async Task LoadBrokerPortfolio()
+    {
+        _dataBusy = true;
+        try
+        {
+            var portfolio = await BrokerStore.LoadAsync();
+            if (portfolio.Positions.Count == 0)
+            {
+                _aiErr = L["Trading_StockAiNoPortfolio"];
+                return;
+            }
+
+            var symbols = portfolio.Positions.Select(p => p.Symbol).Distinct().ToList();
+            var quotes = (await Market.GetLatestManyAsync(symbols))
+                .GroupBy(s => s.Symbol, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First().Close, StringComparer.OrdinalIgnoreCase);
+            _raw = StockAiPortfolioFormatter.Format(portfolio, quotes);
+            _aiErr = null;
+        }
+        catch (Exception ex)
+        {
+            _aiErr = ex.Message;
+        }
+        finally
+        {
+            _dataBusy = false;
+        }
+    }
+
+    private void OpenSymbolDropdown()
+    {
+        _symbolDropdownOpen = true;
+        FilterSymbols();
+    }
+
+    private async Task CloseSymbolDropdownDelayed()
+    {
+        await Task.Delay(150);
+        _symbolDropdownOpen = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void FilterSymbols()
+    {
+        var q = _symbolSearch.Trim();
+        _filteredSymbols = string.IsNullOrWhiteSpace(q)
+            ? _brokerSymbols
+            : _brokerSymbols.Where(s => s.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    private void SelectSymbol(string symbol)
+    {
+        _symbolSearch = symbol;
+        _symbolDropdownOpen = false;
+    }
+
+    private async Task LoadSymbolWithPrice()
+    {
+        var symbol = _symbolSearch.Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(symbol)) return;
+
+        _dataBusy = true;
+        try
+        {
+            var rows = await Market.GetLatestManyAsync([symbol]);
+            var current = rows.FirstOrDefault()?.Close;
+            _raw = current is > 0
+                ? $"{symbol} — giá hiện tại {current:N2} (nghìn đồng/CP). Phân tích mã này."
+                : symbol;
+            _aiErr = null;
+        }
+        catch (Exception ex)
+        {
+            _aiErr = ex.Message;
+        }
+        finally
+        {
+            _dataBusy = false;
+        }
+    }
 
     private async Task Ask()
     {
         if (string.IsNullOrWhiteSpace(_raw)) return;
+
+        _askCts?.Cancel();
+        _askCts = new CancellationTokenSource();
+        var ct = _askCts.Token;
 
         _aiBusy = true;
         _aiErr = null;
         try
         {
             var prompt = StockAiPromptLibrary.Build(_selectedTemplate, _raw);
-            var reply = await Gemini.ExplainAsync(prompt);
-            if (string.IsNullOrWhiteSpace(reply))
+            var result = await Gemini.ExplainAsync(prompt, ct);
+            if (!string.IsNullOrEmpty(result.Error))
             {
-                _aiErr = "AI không trả lời. Kiểm tra API key hoặc thử lại.";
+                _aiErr = result.Error;
                 return;
             }
 
-            _history.Insert(0, new Turn(_selectedTemplate, _raw.Trim(), reply));
+            if (string.IsNullOrWhiteSpace(result.Text))
+            {
+                _aiErr = L["Trading_StockAiNoReply"];
+                return;
+            }
+
+            _history.Insert(0, new Turn(_selectedTemplate, _raw.Trim(), result.Text));
+            if (_history.Count > MaxHistoryTurns)
+                _history.RemoveAt(_history.Count - 1);
             _raw = "";
+            await SaveHistoryAsync();
+        }
+        catch (OperationCanceledException)
+        {
+            _aiErr = L["Trading_StockAiCancelled"];
         }
         catch (Exception ex)
         {
@@ -275,20 +329,67 @@
         }
     }
 
+    private void CancelAsk()
+    {
+        _askCts?.Cancel();
+        _aiBusy = false;
+    }
+
+    private async Task OnInputKeydown(KeyboardEventArgs e)
+    {
+        if (e.CtrlKey && e.Key == "Enter" && !_aiBusy && !string.IsNullOrWhiteSpace(_raw))
+            await Ask();
+    }
+
     private void ClearInput()
     {
         _raw = "";
         _aiErr = null;
     }
 
-    private void ClearHistory() => _history.Clear();
+    private async Task ClearHistory()
+    {
+        if (!await JS.InvokeAsync<bool>("confirm", L["Trading_StockAiConfirmClearHistory"]))
+            return;
+        _history.Clear();
+        await SaveHistoryAsync();
+    }
 
     private void ClearErr() => _aiErr = null;
 
     private async Task Copy(string? text)
     {
         if (string.IsNullOrWhiteSpace(text)) return;
-        try { await JS.InvokeVoidAsync("navigator.clipboard.writeText", text); }
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        }
         catch { }
     }
+
+    private async Task LoadHistoryAsync()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string?>("localStorage.getItem", HistoryStorage);
+            if (string.IsNullOrWhiteSpace(json)) return;
+            var turns = System.Text.Json.JsonSerializer.Deserialize<List<Turn>>(json);
+            if (turns is null) return;
+            _history.Clear();
+            _history.AddRange(turns.Take(MaxHistoryTurns));
+        }
+        catch { }
+    }
+
+    private async Task SaveHistoryAsync()
+    {
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(_history);
+            await JS.InvokeVoidAsync("localStorage.setItem", HistoryStorage, json);
+        }
+        catch { }
+    }
+
+    public void Dispose() => _askCts?.Cancel();
 }
