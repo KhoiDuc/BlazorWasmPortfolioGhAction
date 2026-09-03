@@ -1,0 +1,182 @@
+@page "/trading/forex-sessions"
+@page "/{lang:regex(^(en|vn)$)}/trading/forex-sessions"
+@layout TradingLayout
+@inherits CultureAwareComponent
+@implements IDisposable
+@inject IStringLocalizer<SharedResources> L
+
+<div class="ts-page">
+    <div class="ts-panel">
+        <div class="ts-header">
+            <div>
+                <h2>@L["Trading_ForexSessionsTitle"]</h2>
+                <p>@L["Trading_ForexSessionsLead"]</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="ts-panel ts-forex-top">
+        <div class="ts-forex-clock">
+            <span class="ts-muted">@L["Trading_ForexSessions_ClockLabel"]</span>
+            <strong class="ts-forex-clock-time">@_formattedTime</strong>
+            <span class="ts-muted">@_formattedDate</span>
+        </div>
+        <div class="ts-forex-volatility">
+            <div class="ts-forex-volatility-head">
+                <span>@L["Trading_ForexSessions_Volatility"]</span>
+                <strong style="color:@_volatility.Color">@_volatility.Level</strong>
+            </div>
+            <div class="ts-forex-volatility-bar" role="meter" aria-valuenow="@_volatility.Score" aria-valuemin="0" aria-valuemax="100">
+                <div class="ts-forex-volatility-fill" style="width:@($"{_volatility.Score}%");background:@_volatility.Color"></div>
+            </div>
+            <p class="ts-muted" style="margin:0.5rem 0 0;font-size:0.85rem">@_volatility.Desc</p>
+        </div>
+        <div class="ts-forex-season">
+            <span class="ts-label">@L["Trading_ForexSessions_Season"]</span>
+            <div class="ts-tabs" style="margin:0">
+                <button type="button" class="ts-tab @(_season == "summer" ? "active" : "")" @onclick='() => _season = "summer"'>☀️ @L["Trading_ForexSessions_Summer"]</button>
+                <button type="button" class="ts-tab @(_season == "winter" ? "active" : "")" @onclick='() => _season = "winter"'>❄️ @L["Trading_ForexSessions_Winter"]</button>
+            </div>
+        </div>
+    </div>
+
+    @if (_isRollover)
+    {
+        <div class="ts-panel ts-alert ts-alert-error" role="alert">
+            <strong>@L["Trading_ForexSessions_RolloverTitle"]</strong>
+            <p style="margin:0.35rem 0 0">@L["Trading_ForexSessions_RolloverDesc"]</p>
+        </div>
+    }
+
+    <div class="ts-forex-sessions-grid">
+        @foreach (var s in Sessions)
+        {
+            <div class="ts-panel ts-forex-session @(s.IsOpen ? "ts-forex-session--open" : "")">
+                <div class="ts-forex-session-head">
+                    <span>@s.Flag @s.Name</span>
+                    <span class="ts-forex-session-status @(s.IsOpen ? "open" : "closed")">
+                        @(s.IsOpen ? L["Trading_ForexSessions_Open"] : L["Trading_ForexSessions_Closed"])
+                    </span>
+                </div>
+                <p class="ts-muted" style="font-size:0.85rem;margin:0.5rem 0">@s.Description</p>
+                <p style="margin:0;font-size:0.82rem"><strong>@s.Hours</strong> · @s.Countdown</p>
+            </div>
+        }
+    </div>
+
+    <div class="ts-panel">
+        <h3 style="margin:0 0 0.75rem;font-size:1rem">@L["Trading_ForexSessions_TipsTitle"]</h3>
+        <ul class="ts-forex-tips">
+            <li>@L["Trading_ForexSessions_Tip1"]</li>
+            <li>@L["Trading_ForexSessions_Tip2"]</li>
+            <li>@L["Trading_ForexSessions_Tip3"]</li>
+            <li>@L["Trading_ForexSessions_Tip4"]</li>
+        </ul>
+    </div>
+</div>
+
+@code {
+    private DateTime _vnNow = GetVnNow();
+    private string _season = "summer";
+    private System.Threading.Timer? _timer;
+
+    private string _formattedTime => $"{_vnNow:HH:mm:ss}";
+    private string _formattedDate => _vnNow.ToString("dddd, dd/MM/yyyy", System.Globalization.CultureInfo.GetCultureInfo("vi-VN"));
+    private bool _isRollover => IsRolloverHour(_vnNow.Hour, _season == "summer");
+    private VolatilityInfo _volatility => GetVolatility(_vnNow.Hour, _season == "summer");
+    private IReadOnlyList<SessionInfo> Sessions => BuildSessions(_vnNow, _season == "summer");
+
+    protected override void OnInitialized()
+    {
+        DetectSeason();
+        _timer = new System.Threading.Timer(_ =>
+        {
+            _vnNow = GetVnNow();
+            InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    }
+
+    private void DetectSeason()
+    {
+        _season = IsUsDst(_vnNow) ? "summer" : "winter";
+    }
+
+    public override void Dispose()
+    {
+        _timer?.Dispose();
+        base.Dispose();
+    }
+
+    private static DateTime GetVnNow() => DateTime.UtcNow.AddHours(7);
+
+    private static bool IsUsDst(DateTime vnDate)
+    {
+        var year = vnDate.Year;
+        var march = new DateTime(year, 3, 1);
+        var startDst = new DateTime(year, 3, 14 - (int)march.DayOfWeek);
+        var november = new DateTime(year, 11, 1);
+        var endDst = new DateTime(year, 11, 7 - (int)november.DayOfWeek);
+        return vnDate >= startDst && vnDate < endDst;
+    }
+
+    private static bool IsSessionOpen(int open, int close, int hour) =>
+        open < close ? hour >= open && hour < close : hour >= open || hour < close;
+
+    private static string GetCountdown(int open, int close, DateTime now)
+    {
+        var hour = now.Hour;
+        var minute = now.Minute;
+        var openNow = IsSessionOpen(open, close, hour);
+        var targetHour = openNow ? close : open;
+        var diffMin = (targetHour * 60) - (hour * 60 + minute);
+        if (diffMin < 0) diffMin += 24 * 60;
+        var h = diffMin / 60;
+        var m = diffMin % 60;
+        return openNow ? $"Đóng cửa sau {h}h {m}m" : $"Mở cửa sau {h}h {m}m";
+    }
+
+    private static bool IsRolloverHour(int hour, bool summer) => summer ? hour == 4 : hour == 5;
+
+    private static VolatilityInfo GetVolatility(int hour, bool summer)
+    {
+        if (summer)
+        {
+            if (hour is >= 19 and < 23) return new("Cực cao", 95, "Giao thoa Âu-Mỹ (Golden Hours). Thanh khoản lớn nhất.", "#dc2626");
+            if (hour is >= 14 and < 19) return new("Cao", 75, "Phiên Âu mở cửa. Sóng chạy sôi nổi.", "#ea580c");
+            if (hour is >= 23 or < 4) return new("Trung bình - Cao", 60, "Phiên Mỹ hoạt động độc lập.", "#eab308");
+            if (hour == 4) return new("Rủi ro giãn Spread", 15, "Khung giờ Rollover — hạn chế vào lệnh.", "#a855f7");
+            return new("Thấp - Trung bình", 35, "Phiên Á — biến động chậm hơn.", "#10b981");
+        }
+
+        if (hour is >= 20 and < 24) return new("Cực cao", 95, "Giao thoa Âu-Mỹ (Golden Hours).", "#dc2626");
+        if (hour is >= 15 and < 20) return new("Cao", 75, "Phiên Âu mở cửa.", "#ea580c");
+        if (hour is >= 0 and < 5) return new("Trung bình - Cao", 60, "Phiên Mỹ hoạt động độc lập.", "#eab308");
+        if (hour == 5) return new("Rủi ro giãn Spread", 15, "Khung giờ Rollover.", "#a855f7");
+        return new("Thấp - Trung bình", 35, "Phiên Á — biến động chậm hơn.", "#10b981");
+    }
+
+    private static IReadOnlyList<SessionInfo> BuildSessions(DateTime now, bool summer)
+    {
+        var configs = new[]
+        {
+            new SessionConfig("🇦🇺", "Sydney (Úc)", 5, 14, "Khởi động ngày mới. Phù hợp AUD, NZD."),
+            new SessionConfig("🇯🇵", "Tokyo (Châu Á)", 6, 15, "Phiên Châu Á, tập trung JPY."),
+            new SessionConfig("🇬🇧", "London (Châu Âu)", summer ? 14 : 15, summer ? 23 : 24, "Phiên Âu sôi động. Trọng tâm EUR, GBP."),
+            new SessionConfig("🇺🇸", "New York (Mỹ)", summer ? 19 : 20, summer ? 4 : 5, "Phiên Mỹ — biến động mạnh khi giao thoa Âu."),
+        };
+
+        return configs.Select(c =>
+        {
+            var hours = c.Close < c.Open
+                ? $"{c.Open:D2}:00 – {c.Close:D2}:00 (+1)"
+                : $"{c.Open:D2}:00 – {c.Close:D2}:00";
+            return new SessionInfo(c.Flag, c.Name, c.Description, hours,
+                IsSessionOpen(c.Open, c.Close, now.Hour),
+                GetCountdown(c.Open, c.Close, now));
+        }).ToList();
+    }
+
+    private sealed record VolatilityInfo(string Level, int Score, string Desc, string Color);
+    private sealed record SessionConfig(string Flag, string Name, int Open, int Close, string Description);
+    private sealed record SessionInfo(string Flag, string Name, string Description, string Hours, bool IsOpen, string Countdown);
+}

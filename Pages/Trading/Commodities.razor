@@ -1,0 +1,257 @@
+@page "/trading/commodities"
+@page "/{lang:regex(^(en|vn)$)}/trading/commodities"
+@layout TradingLayout
+@inherits CultureAwareComponent
+@using System.Text.Json
+@inject ITradingApiClient Api
+@inject HttpClient Http
+@inject IStringLocalizer<SharedResources> L
+
+<div class="ts-page">
+    <div class="ts-panel">
+        <div class="ts-header">
+            <div>
+                <h2>@L["Trading_CommoditiesTitle"]</h2>
+                <p>@L["Trading_CommoditiesLead"]</p>
+            </div>
+        </div>
+        <div class="ts-tabs">
+            <button class="ts-tab @(_tab == "gold" ? "active" : "")" @onclick='() => SetTab("gold")'>Gold</button>
+            <button class="ts-tab @(_tab == "silver" ? "active" : "")" @onclick='() => SetTab("silver")'>Silver</button>
+            <button class="ts-tab @(_tab == "oil" ? "active" : "")" @onclick='() => SetTab("oil")'>Oil</button>
+        </div>
+    </div>
+
+    @if (_tab == "gold")
+    {
+        <TradingViewChart Symbol="OANDA:XAUUSD" />
+        <PriceAlertWidget Symbol="XAUUSD" AssetType="gold" />
+
+        <div class="ts-panel">
+            <div class="ts-header">
+                <div>
+                    <h3>Vietnam Gold Price (SJC)</h3>
+                    <p class="ts-muted">@_goldUpdated</p>
+                </div>
+                <button class="ts-btn ts-btn-outline" @onclick="LoadGold" disabled="@_goldLoading">
+                    @(_goldLoading ? "..." : "Refresh")
+                </button>
+            </div>
+            @if (_goldError is not null)
+            {
+                <p class="ts-alert ts-alert-error">@_goldError</p>
+            }
+            else if (_goldRows.Count > 0)
+            {
+                <div class="ts-table-wrap">
+                    <table class="ts-table">
+                        <thead><tr><th>Type</th><th>Branch</th><th>Buy</th><th>Sell</th><th>Spread</th></tr></thead>
+                        <tbody>
+                            @foreach (var r in _goldRows)
+                            {
+                                <tr>
+                                    <td><strong>@r.Type</strong></td>
+                                    <td>@r.Branch</td>
+                                    <td class="ts-positive">@r.BuyDisplay</td>
+                                    <td class="ts-negative">@r.SellDisplay</td>
+                                    <td>@r.Spread</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+    else if (_tab == "silver")
+    {
+        <TradingViewChart Symbol="OANDA:XAGUSD" />
+        <PriceAlertWidget Symbol="XAGUSD" AssetType="silver" />
+
+        <div class="ts-panel">
+            <div class="ts-header">
+                <div>
+                    <h3>Vietnam Silver Price (Phu Quy)</h3>
+                    <p class="ts-muted">@_silverUpdated</p>
+                </div>
+                <button class="ts-btn ts-btn-outline" @onclick="LoadSilver" disabled="@_silverLoading">
+                    @(_silverLoading ? "..." : "Refresh")
+                </button>
+            </div>
+            @if (_silverError is not null)
+            {
+                <p class="ts-alert ts-alert-error">@_silverError</p>
+            }
+            else if (_silverHtml is not null)
+            {
+                <div class="ts-silver-html">@((MarkupString)_silverHtml)</div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="ts-tabs" style="margin-bottom:0.5rem">
+            <button class="ts-tab @(_oilChart == "wti" ? "active" : "")" @onclick='() => _oilChart = "wti"'>WTI</button>
+            <button class="ts-tab @(_oilChart == "brent" ? "active" : "")" @onclick='() => _oilChart = "brent"'>Brent</button>
+        </div>
+        @if (_oilChart == "wti")
+        {
+            <TradingViewChart Symbol="TVC:USOIL" />
+            <PriceAlertWidget Symbol="USOIL" AssetType="oil" />
+        }
+        else
+        {
+            <TradingViewChart Symbol="TVC:UKOIL" />
+            <PriceAlertWidget Symbol="UKOIL" AssetType="oil" />
+        }
+
+        <div class="ts-panel">
+            <div class="ts-header">
+                <div>
+                    <h3>Vietnam Petrolimex Prices</h3>
+                    <p class="ts-muted">@_oilUpdated</p>
+                </div>
+                <button class="ts-btn ts-btn-outline" @onclick="LoadOil" disabled="@_oilLoading">
+                    @(_oilLoading ? "..." : "Refresh")
+                </button>
+            </div>
+            @if (_oilError is not null)
+            {
+                <p class="ts-alert ts-alert-error">@_oilError</p>
+            }
+            else if (_oilRows.Count > 0)
+            {
+                <div class="ts-table-wrap">
+                    <table class="ts-table">
+                        <thead><tr><th>Product</th><th>Zone 1 (VND/L)</th><th>Zone 2 (VND/L)</th></tr></thead>
+                        <tbody>
+                            @foreach (var r in _oilRows)
+                            {
+                                <tr>
+                                    <td><strong>@r.Title</strong></td>
+                                    <td class="ts-positive">@r.Zone1Display</td>
+                                    <td class="ts-negative">@r.Zone2Display</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private string _tab = "gold";
+    private string _oilChart = "wti";
+
+    // Gold
+    private List<GoldRow> _goldRows = [];
+    private string? _goldUpdated;
+    private string? _goldError;
+    private bool _goldLoading;
+
+    // Silver
+    private string? _silverHtml;
+    private string? _silverUpdated;
+    private string? _silverError;
+    private bool _silverLoading;
+
+    // Oil
+    private List<OilRow> _oilRows = [];
+    private string? _oilUpdated;
+    private string? _oilError;
+    private bool _oilLoading;
+
+    private void SetTab(string tab)
+    {
+        _tab = tab;
+        if (tab == "silver" && _silverHtml is null && !_silverLoading)
+            _ = LoadSilver();
+        if (tab == "oil" && _oilRows.Count == 0 && !_oilLoading)
+            _ = LoadOil();
+    }
+
+    protected override void OnInitialized() => _ = LoadGold();
+
+    private async Task LoadGold()
+    {
+        _goldLoading = true;
+        _goldError = null;
+        try
+        {
+            var json = await Api.GetProxyJsonAsync("goldprice/services/priceservice.ashx");
+            if (json is not null && json.Value.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array)
+            {
+                _goldRows.Clear();
+                foreach (var item in data.EnumerateArray())
+                {
+                    _goldRows.Add(new GoldRow(
+                        item.GetProperty("TypeName").GetString() ?? "",
+                        item.GetProperty("BranchName").GetString() ?? "",
+                        item.GetProperty("BuyValue").GetDouble(),
+                        item.GetProperty("SellValue").GetDouble()));
+                }
+                _goldUpdated = json.Value.TryGetProperty("latestDate", out var d) ? d.GetString() : DateTime.Now.ToString("g");
+            }
+        }
+        catch (Exception ex) { _goldError = ex.Message; }
+        finally { _goldLoading = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private async Task LoadSilver()
+    {
+        _silverLoading = true;
+        _silverError = null;
+        try
+        {
+            var url = Api.ProxyUrl("silverprice/silverpricePartial");
+            var resp = await Http.GetAsync(url);
+            if (resp.IsSuccessStatusCode)
+            {
+                _silverHtml = await resp.Content.ReadAsStringAsync();
+                _silverUpdated = DateTime.Now.ToString("g");
+            }
+            else _silverError = "Unable to load silver prices.";
+        }
+        catch (Exception ex) { _silverError = ex.Message; }
+        finally { _silverLoading = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private async Task LoadOil()
+    {
+        _oilLoading = true;
+        _oilError = null;
+        try
+        {
+            var json = await Api.GetProxyJsonAsync("petrolimex/search");
+            if (json is not null && json.Value.TryGetProperty("Objects", out var objs) && objs.ValueKind == JsonValueKind.Array)
+            {
+                _oilRows.Clear();
+                foreach (var item in objs.EnumerateArray())
+                {
+                    _oilRows.Add(new OilRow(
+                        item.GetProperty("Title").GetString() ?? "",
+                        item.GetProperty("Zone1Price").GetDouble(),
+                        item.GetProperty("Zone2Price").GetDouble()));
+                }
+                _oilUpdated = DateTime.Now.ToString("g");
+            }
+        }
+        catch (Exception ex) { _oilError = ex.Message; }
+        finally { _oilLoading = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private record GoldRow(string Type, string Branch, double Buy, double Sell)
+    {
+        public string BuyDisplay => Buy.ToString("N0");
+        public string SellDisplay => Sell.ToString("N0");
+        public string Spread => (Sell - Buy).ToString("N0");
+    }
+
+    private record OilRow(string Title, double Zone1, double Zone2)
+    {
+        public string Zone1Display => Zone1.ToString("N0");
+        public string Zone2Display => Zone2.ToString("N0");
+    }
+}

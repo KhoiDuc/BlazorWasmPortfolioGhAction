@@ -1,0 +1,117 @@
+@page "/trading/central-banks"
+@page "/{lang:regex(^(en|vn)$)}/trading/central-banks"
+@layout TradingLayout
+@inherits CultureAwareComponent
+@inject IStringLocalizer<SharedResources> L
+
+<div class="ts-page">
+    <div class="ts-panel">
+        <div class="ts-header">
+            <div>
+                <h2>@L["Trading_CentralBanksTitle"]</h2>
+                <p>@L["Trading_CentralBanksLead"]</p>
+            </div>
+        </div>
+        <div class="ts-tabs">
+            <button type="button" class="ts-tab @(_tab == "bonds" ? "active" : "")" @onclick='() => _tab = "bonds"'>
+                @L["Trading_CentralBanks_Bonds"]
+            </button>
+            <button type="button" class="ts-tab @(_tab == "rates" ? "active" : "")" @onclick='() => _tab = "rates"'>
+                @L["Trading_CentralBanks_Rates"]
+            </button>
+        </div>
+    </div>
+
+    @if (_tab == "bonds")
+    {
+        <div class="ts-tabs" style="margin-bottom:0.75rem;flex-wrap:wrap">
+            @foreach (var c in BondCountries)
+            {
+                <button type="button" class="ts-tab @(_bondCountry == c.Id ? "active" : "")" @onclick="() => _bondCountry = c.Id">
+                    @c.Flag @c.Name
+                </button>
+            }
+        </div>
+
+        <div class="ts-bond-grid">
+            <div class="ts-panel">
+                <div class="ts-header"><h3>2-Year Bond Yield</h3></div>
+                <TradingViewChart Symbol="@CurrentBondCountry.Sym2Y" Height="360" />
+                <p class="ts-muted" style="padding:0 1rem 1rem;font-size:0.8rem">@CurrentBondCountry.Sym2Y</p>
+            </div>
+            <div class="ts-panel">
+                <div class="ts-header"><h3>10-Year Bond Yield</h3></div>
+                <TradingViewChart Symbol="@CurrentBondCountry.Sym10Y" Height="360" />
+                <p class="ts-muted" style="padding:0 1rem 1rem;font-size:0.8rem">@CurrentBondCountry.Sym10Y</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="ts-tabs" style="margin-bottom:0.75rem;flex-wrap:wrap">
+            @foreach (var t in RateTabs)
+            {
+                <button type="button" class="ts-tab @(_rateTab == t.Id ? "active" : "")" @onclick="() => _rateTab = t.Id">
+                    @t.Flag @t.Name
+                </button>
+            }
+        </div>
+
+        <div class="ts-panel">
+            <div class="ts-header">
+                <div>
+                    <h3>@CurrentRateTab.Title</h3>
+                </div>
+                <a class="ts-btn ts-btn-outline" href="@CurrentRateTab.Url" target="_blank" rel="noopener noreferrer">
+                    @L["Trading_CentralBanks_OpenSite"]
+                </a>
+            </div>
+            <iframe src="@CurrentRateTab.EmbedUrl" width="100%" height="450" frameborder="0" title="@CurrentRateTab.Title" loading="lazy"
+                    style="border:none;display:block"></iframe>
+        </div>
+    }
+</div>
+
+@code {
+    private string _tab = "bonds";
+    private string _bondCountry = "us";
+    private string _rateTab = "fed";
+
+    private BondCountry CurrentBondCountry => BondCountries.First(c => c.Id == _bondCountry);
+    private RateTab CurrentRateTab => RateTabs.First(t => t.Id == _rateTab);
+
+    private static readonly BondCountry[] BondCountries =
+    [
+        new("us", "US", "🇺🇸", "FRED:DGS2", "FRED:DGS10"),
+        new("uk", "UK", "🇬🇧", "TVC:GB02Y", "TVC:GB10Y"),
+        new("eu", "Europe", "🇪🇺", "TVC:DE02Y", "TVC:DE10Y"),
+        new("jp", "Japan", "🇯🇵", "TVC:JP02Y", "TVC:JP10Y"),
+        new("au", "Australia", "🇦🇺", "TVC:AU02Y", "TVC:AU10Y"),
+        new("ca", "Canada", "🇨🇦", "TVC:CA02Y", "TVC:CA10Y"),
+        new("kr", "South Korea", "🇰🇷", "TVC:KR02Y", "TVC:KR10Y"),
+        new("cn", "China", "🇨🇳", "TVC:CN02Y", "TVC:CN10Y"),
+        new("vn", "Vietnam", "🇻🇳", "VN02Y", "VN10Y"),
+    ];
+
+    private static readonly RateTab[] RateTabs =
+    [
+        new("fed", "FED", "🇺🇸", "Federal Reserve Rate Probability (US)",
+            "https://centralbank.watch/charts/federal-reserve-rate-probability-chart/",
+            "https://centralbank.watch/charts/federal-reserve-rate-probability-chart/?embed=true"),
+        new("boe", "BOE", "🇬🇧", "Bank of England Rate Probability (UK)",
+            "https://centralbank.watch/charts/bank-of-england-rate-probability-chart/",
+            "https://centralbank.watch/charts/bank-of-england-rate-probability-chart/?embed=true"),
+        new("ecb", "ECB", "🇪🇺", "European Central Bank Rate Probability (EU)",
+            "https://centralbank.watch/charts/ecb-rate-probability-chart/",
+            "https://centralbank.watch/charts/ecb-rate-probability-chart/?embed=true"),
+        new("rba", "RBA", "🇦🇺", "Reserve Bank of Australia Rate Probability",
+            "https://centralbank.watch/charts/reserve-bank-of-australia-rate-probability-chart/",
+            "https://centralbank.watch/charts/reserve-bank-of-australia-rate-probability-chart/?embed=true"),
+        new("boc", "BOC", "🇨🇦", "Bank of Canada Rate Probability",
+            "https://centralbank.watch/charts/bank-of-canada-rate-probability-chart/",
+            "https://centralbank.watch/charts/bank-of-canada-rate-probability-chart/?embed=true"),
+    ];
+
+    private sealed record BondCountry(string Id, string Name, string Flag, string Sym2Y, string Sym10Y);
+    private sealed record RateTab(string Id, string Name, string Flag, string Title, string Url, string EmbedUrl);
+}

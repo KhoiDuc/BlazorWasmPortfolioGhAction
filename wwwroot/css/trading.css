@@ -2280,3 +2280,119 @@
     gap: 0.4rem;
     margin-top: 0.5rem;
 }
+
+/* Bond yields grid */
+.ts-bond-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 64rem) {
+    .ts-bond-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* Forex sessions */
+.ts-forex-top {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+}
+
+@media (min-width: 48rem) {
+    .ts-forex-top { grid-template-columns: 1fr 1.2fr 1fr; align-items: start; }
+}
+
+.ts-forex-clock {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.ts-forex-clock-time {
+    font-size: 1.75rem;
+    font-family: ui-monospace, monospace;
+    letter-spacing: 0.04em;
+}
+
+.ts-forex-volatility-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.85rem;
+}
+
+.ts-forex-volatility-bar {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--color-border);
+    overflow: hidden;
+}
+
+.ts-forex-volatility-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+.ts-forex-sessions-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin: 0.75rem 0;
+}
+
+@media (min-width: 48rem) {
+    .ts-forex-sessions-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.ts-forex-session-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.ts-forex-session--open {
+    border-color: rgba(16, 185, 129, 0.35);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.12);
+}
+
+.ts-forex-session-status {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.ts-forex-session-status.open {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--color-success);
+}
+
+.ts-forex-session-status.closed {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--color-text-secondary);
+}
+
+.ts-forex-tips {
+    margin: 0;
+    padding-left: 1.2rem;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: var(--color-text-secondary);
+}
+
+.ts-forex-tips li + li { margin-top: 0.5rem; }
+
+.ts-silver-html {
+    padding: 0 1rem 1rem;
+    overflow-x: auto;
+    font-size: 0.88rem;
+}
