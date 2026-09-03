@@ -97,11 +97,11 @@ public static class ResumeData
             About: new LocalizedParagraphs(
                 Vi: new[] {
                     "Tôi là Nguyễn Minh Đức Khôi, một lập trình viên phần mềm đam mê và tận tâm, chuyên về các công nghệ .NET, với trọng tâm xây dựng các giải pháp có khả năng mở rộng, dễ bảo trì và giải quyết các vấn đề thực tế thông qua mã lệnh.",
-                    "Là một Lập trình viên Backend có kinh nghiệm 3 năm với C# và JavaScript, thành thạo trong việc xây dựng các ứng dụng ASP.NET Core hiệu suất cao, có khả năng mở rộng và tối ưu hóa truy vấn cơ sở dữ liệu (MySQL, PostgreSQL, Elasticsearch, SQL Server). Với kỹ năng phân tích mạnh mẽ và kiến thức thực tiễn về các mẫu thiết kế kiến trúc, tôi có kinh nghiệm thiết kế và phát triển các ứng dụng web/API tuân thủ WCAG 2.1 sử dụng .NET MVC và .NET Core."
+                    "Là một Lập trình viên Backend có kinh nghiệm 5 năm với C# và JavaScript, thành thạo trong việc xây dựng các ứng dụng ASP.NET Core hiệu suất cao, có khả năng mở rộng và tối ưu hóa truy vấn cơ sở dữ liệu (MySQL, PostgreSQL, Elasticsearch, SQL Server). Với kỹ năng phân tích mạnh mẽ và kiến thức thực tiễn về các mẫu thiết kế kiến trúc, tôi có kinh nghiệm thiết kế và phát triển các ứng dụng web/API tuân thủ WCAG 2.1 sử dụng .NET MVC và .NET Core."
                 },
                 En: new[] {
                     "I am Nguyen Minh Duc Khoi, a passionate and dedicated software developer specializing in .NET technologies, with a strong focus on building scalable, maintainable solutions and solving real-world problems through code.",
-                    "A highly skilled Backend Developer with 3 years of experience in C# and JavaScript, proficient in building high-performance, scalable ASP.NET Core applications and optimizing database queries (MySQL, PostgreSQL, Elasticsearch, SQL Server). Possessing strong analytical skills and practical knowledge of architecture design patterns, this developer has experience designing and developing WCAG 2.1 compliant web/API applications using .NET MVC and .NET Core, with domain expertise in Data Security, E-Commerce & Retail, and Human Resource Management."
+                    "A highly skilled Backend Developer with 5 years of experience in C# and JavaScript, proficient in building high-performance, scalable ASP.NET Core applications and optimizing database queries (MySQL, PostgreSQL, Elasticsearch, SQL Server). Possessing strong analytical skills and practical knowledge of architecture design patterns, this developer has experience designing and developing WCAG 2.1 compliant web/API applications using .NET MVC and .NET Core, with domain expertise in Data Security, E-Commerce & Retail, and Human Resource Management."
                 }
             )
         ),
@@ -125,10 +125,10 @@ public static class ResumeData
                 Role: "Full Stack Developer",
                 Period: new LocalizedText(Vi: "2023 — Hiện tại", En: "2023 — Now"),
                 Description: new LocalizedText(
-                    Vi: "Phiên bản nâng cấp của Site Manager chạy trên .NET 8. Nền tảng thiết lập và quản lý trang web nhanh chóng với kiến trúc trang mô-đun. Hỗ trợ tích hợp SSO với các nhà cung cấp danh tính bên thứ ba bao gồm Citi và Wells Fargo.",
-                    En: "Upgraded version of Site Manager running on .NET 8. Platform for rapid website setup and management with modular page architecture. Supports SSO integration with third-party identity providers including Citi and Wells Fargo."
+                    Vi: "Phiên bản nâng cấp của Site Manager chạy trên .NET 10. Nền tảng thiết lập và quản lý trang web nhanh chóng với kiến trúc trang mô-đun. Hỗ trợ tích hợp SSO với các nhà cung cấp danh tính bên thứ ba bao gồm Citi và Wells Fargo.",
+                    En: "Upgraded version of Site Manager running on .NET 10. Platform for rapid website setup and management with modular page architecture. Supports SSO integration with third-party identity providers including Citi and Wells Fargo."
                 ),
-                TechStack: new[] { ".NET 8 MVC", "jQuery", "EF", "SQL Server", "Redis", "Azure CDN", "Kontent.AI", "WCAG 2.2" },
+                TechStack: new[] { ".NET 10 MVC", "jQuery", "EF", "SQL Server", "Redis", "Azure CDN", "Kontent.AI", "WCAG 2.2" },
                 DetailLink: "/project/smpp"
             ),
             new ExperienceEntry(
@@ -149,8 +149,8 @@ public static class ResumeData
                 Role: "Full Stack Developer",
                 Period: new LocalizedText(Vi: "2022 — Hiện tại", En: "2022 — Now"),
                 Description: new LocalizedText(
-                    Vi: "Quản lý giao dịch quốc tế thông qua tích hợp hệ thống thanh toán Adyen. Đang nâng cấp từ .NET MVC lên .NET 8.",
-                    En: "Manages international transactions through Adyen payment system integration. Currently upgrading from .NET MVC to .NET 8."
+                    Vi: "Quản lý giao dịch quốc tế thông qua tích hợp hệ thống thanh toán Adyen. Đang nâng cấp từ .NET MVC lên .NET 10.",
+                    En: "Manages international transactions through Adyen payment system integration. Currently upgrading from .NET MVC to .NET 10."
                 ),
                 TechStack: new[] { ".NET MVC 4", "EF", "SQL Server", "JavaScript", "Webhook" },
                 DetailLink: "/project/payment-portal"
@@ -180,7 +180,7 @@ public static class ResumeData
                 ),
                 RepoUrl: "https://github.com/KhoiDuc/BlazorWasmPortfolioGhAction",
                 DetailLink: null,
-                TechStack: new[] { "Blazor WASM", ".NET 9", "Fluxor", "GitHub Actions" }
+                TechStack: new[] { "Blazor WASM", ".NET 10", "Fluxor", "GitHub Actions" }
             ),
             new ProjectEntry(
                 Type: "School",
@@ -255,7 +255,7 @@ public static class ResumeData
                 Name: new LocalizedText(Vi: "Framework", En: "Frameworks"),
                 UseMeters: false,
                 Skills: null,
-                Tags: new[] { ".NET Core 6/8/9", ".NET Framework 4.8", ".NET MVC", "WPF", "Web API", "WinForms" }
+                Tags: new[] { ".NET Core 6/8/9/10", ".NET Framework 4.8", ".NET MVC", "WPF", "Web API", "WinForms" }
             ),
             new SkillCategory(
                 Name: new LocalizedText(Vi: "Công cụ & DevOps", En: "Tools & DevOps"),
@@ -292,5 +292,5 @@ public static class ResumeData
         }
     );
 
-    public static int YearsShipping => DateTime.Now.Year - 2022;
+    public static int YearsShipping => DateTime.Now.Year - 2021;
 }
