@@ -57,6 +57,18 @@ window.downloadFileFromStream = async (fileName, contentStreamReference) => {
     anchorElement.remove();
     URL.revokeObjectURL(url);
 }
+
+// Route navigation progress bar
+window.routeProgress = {
+    show() {
+        const bar = document.getElementById('route-progress');
+        if (bar) bar.classList.add('is-loading');
+    },
+    hide() {
+        const bar = document.getElementById('route-progress');
+        if (bar) { bar.classList.remove('is-loading'); }
+    }
+};
 function initializeScrollProgress() {
     const $ = document.querySelector.bind(document);
     const scroll = $('.progress');

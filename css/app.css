@@ -934,6 +934,44 @@ a:hover {
 }
 
 /* --------------------------------------------------------------------------- */
+/* 8b. ROUTE NAVIGATION PROGRESS BAR                                           */
+/* --------------------------------------------------------------------------- */
+.route-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    z-index: 1100;
+    display: none;
+    pointer-events: none;
+}
+
+.route-progress.is-loading {
+    display: block;
+}
+
+.route-progress-bar {
+    height: 100%;
+    width: 0;
+    background: var(--gradient-brand);
+    border-radius: 0 2px 2px 0;
+    transition: width 0.3s ease;
+    animation: route-progress-indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes route-progress-indeterminate {
+    0% { width: 0; margin-left: 0; }
+    50% { width: 60%; margin-left: 20%; }
+    100% { width: 100%; margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .route-progress-bar { animation: none; width: 100%; transition: none; }
+    .skeleton { animation: none; }
+}
+
+/* --------------------------------------------------------------------------- */
 /* 9. SCROLL-TO-TOP BUTTON                                                     */
 /* --------------------------------------------------------------------------- */
 .progress {
