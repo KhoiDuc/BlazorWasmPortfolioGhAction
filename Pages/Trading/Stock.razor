@@ -19,15 +19,29 @@
         </div>
         <div class="ts-field">
             <label for="stock-symbol" class="ts-label">@L["Trading_StockChooseSymbol"]</label>
-            <input id="stock-symbol" class="ts-input" list="stock-code-list" style="max-width:320px"
-                   @bind="_selectedStock" @bind:after="OnStockInputChanged"
-                   placeholder="VNM, FPT, VNINDEX..." autocomplete="off" />
-            <datalist id="stock-code-list">
-                @foreach (var sym in FilteredStockCodes)
+            <div class="ts-stock-select" style="max-width:320px">
+                <input id="stock-symbol" class="ts-input ts-stock-select__input"
+                       @bind="_searchText" @bind:event="oninput"
+                       @onfocus="OpenDropdown"
+                       @onblur="CloseDropdownDelayed"
+                       @onkeydown="OnKeydown"
+                       placeholder="VNM, FPT, VNINDEX..." autocomplete="off"
+                       role="combobox" aria-expanded="@_dropdownOpen.ToString().ToLowerInvariant()"
+                       aria-controls="stock-select-list" aria-autocomplete="list" />
+                @if (_dropdownOpen && _filteredCodes.Count > 0)
                 {
-                    <option value="@sym"></option>
+                    <ul id="stock-select-list" class="ts-stock-dropdown" role="listbox">
+                        @foreach (var pair in _filteredCodes.Select((c, i) => (Symbol: c, Index: i)))
+                        {
+                            <li role="option" aria-selected="@(_highlightIndex == pair.Index)"
+                               class="@(_highlightIndex == pair.Index ? "ts-stock-dropdown__item--active" : "")"
+                               @onmousedown="() => SelectCode(pair.Symbol)">
+                                @pair.Symbol
+                            </li>
+                        }
+                    </ul>
                 }
-            </datalist>
+            </div>
             @if (_loadingCodes)
             {
                 <p class="ts-muted" style="margin:0.35rem 0 0;font-size:0.82rem" role="status">@L["Trading_StockLoadingCodes"]</p>
@@ -58,31 +72,78 @@
 
 @code {
     private string _selectedStock = "VNM";
+    private string _searchText = "VNM";
     private List<string> _stockCodes = [];
+    private List<string> _filteredCodes = [];
     private bool _loadingCodes;
     private bool _showPriceAlert;
-
-    private IEnumerable<string> FilteredStockCodes
-    {
-        get
-        {
-            if (_stockCodes.Count == 0) return [];
-            if (string.IsNullOrWhiteSpace(_selectedStock))
-                return _stockCodes.Take(80);
-            return _stockCodes
-                .Where(c => c.Contains(_selectedStock.Trim(), StringComparison.OrdinalIgnoreCase))
-                .Take(80);
-        }
-    }
+    private bool _dropdownOpen;
+    private int _highlightIndex = -1;
 
     protected override void OnInitialized() => _ = LoadStockCodesAsync();
 
-    private void OnStockInputChanged() => NormalizeSelectedStock();
-
-    private void NormalizeSelectedStock()
+    private void OpenDropdown()
     {
-        if (!string.IsNullOrWhiteSpace(_selectedStock))
-            _selectedStock = _selectedStock.Trim().ToUpperInvariant();
+        _dropdownOpen = true;
+        FilterCodes();
+    }
+
+    private async Task CloseDropdownDelayed()
+    {
+        await Task.Delay(150);
+        _dropdownOpen = false;
+        if (!string.IsNullOrWhiteSpace(_searchText))
+        {
+            var upper = _searchText.Trim().ToUpperInvariant();
+            if (_stockCodes.Contains(upper, StringComparer.OrdinalIgnoreCase))
+            {
+                _selectedStock = upper;
+                _searchText = upper;
+            }
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void FilterCodes()
+    {
+        if (_stockCodes.Count == 0) { _filteredCodes = []; return; }
+        var q = _searchText.Trim();
+        _filteredCodes = (string.IsNullOrWhiteSpace(q)
+            ? _stockCodes
+            : _stockCodes.Where(c => c.Contains(q, StringComparison.OrdinalIgnoreCase)))
+            .Take(100)
+            .ToList();
+        _highlightIndex = -1;
+    }
+
+    private void SelectCode(string code)
+    {
+        _selectedStock = code.ToUpperInvariant();
+        _searchText = _selectedStock;
+        _dropdownOpen = false;
+    }
+
+    private void OnKeydown(KeyboardEventArgs e)
+    {
+        if (!_dropdownOpen || _filteredCodes.Count == 0) return;
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                _highlightIndex = Math.Min(_highlightIndex + 1, _filteredCodes.Count - 1);
+                break;
+            case "ArrowUp":
+                _highlightIndex = Math.Max(_highlightIndex - 1, 0);
+                break;
+            case "Enter":
+                if (_highlightIndex >= 0 && _highlightIndex < _filteredCodes.Count)
+                    SelectCode(_filteredCodes[_highlightIndex]);
+                else if (_filteredCodes.Count > 0)
+                    SelectCode(_filteredCodes[0]);
+                break;
+            case "Escape":
+                _dropdownOpen = false;
+                break;
+        }
     }
 
     private async Task LoadStockCodesAsync()
@@ -106,6 +167,7 @@
         finally
         {
             _loadingCodes = false;
+            FilterCodes();
             await InvokeAsync(StateHasChanged);
         }
     }
