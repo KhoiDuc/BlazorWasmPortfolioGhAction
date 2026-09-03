@@ -1,6 +1,6 @@
 # Khoi Duc - Blazor WebAssembly Portfolio
 
-A feature-rich personal portfolio and developer utility suite built with **Blazor WebAssembly** (.NET 9), Fluxor state management, and modern Web APIs.
+A feature-rich personal portfolio and developer utility suite built with **Blazor WebAssembly** (.NET 10), Fluxor state management, and modern Web APIs.
 
 ## Key Features
 
@@ -12,7 +12,7 @@ A feature-rich personal portfolio and developer utility suite built with **Blazo
 
 ## Tech Stack
 
-- **Framework**: Blazor WebAssembly (.NET 9)
+- **Framework**: Blazor WebAssembly (.NET 10)
 - **State**: [Fluxor](https://github.com/mrpmorris/Fluxor)
 - **Database**: EF Core + SQLite Wasm
 - **UI**: Bootstrap 5 + Bootstrap Icons + CSS isolation (`.tool-*` design system)
@@ -23,7 +23,7 @@ A feature-rich personal portfolio and developer utility suite built with **Blazo
 
 ### Prerequisites
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
 
 ### Run locally
 
