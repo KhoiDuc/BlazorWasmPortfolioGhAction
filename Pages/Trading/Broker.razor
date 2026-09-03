@@ -283,9 +283,16 @@
     private void SchedulePersistDraft()
     {
         _persistTimer?.Dispose();
-        _persistTimer = new Timer(async _ =>
+        _persistTimer = new Timer(_ =>
         {
-            await InvokeAsync(PersistDraftAsync);
+            try
+            {
+                _ = InvokeAsync(PersistDraftAsync);
+            }
+            catch
+            {
+                // Component may be disposed.
+            }
         }, null, 500, Timeout.Infinite);
     }
 
@@ -440,7 +447,7 @@
     private async Task DeleteSelected()
     {
         if (Selected is null) return;
-        if (!await JS.InvokeAsync<bool>("confirm", L["Trading_BrokerConfirmDeleteSymbol", Selected.Symbol]))
+        if (!await JS.InvokeAsync<bool>("tradingAuth.confirm", L["Trading_BrokerConfirmDeleteSymbol", Selected.Symbol].Value))
             return;
 
         _portfolio.Positions.Remove(Selected);
@@ -459,19 +466,35 @@
 
     private async Task ReloadFromFile()
     {
-        if (!await JS.InvokeAsync<bool>("confirm", L["Trading_BrokerConfirmReload"]))
-            return;
+        try
+        {
+            if (!await JS.InvokeAsync<bool>("tradingAuth.confirm", L["Trading_BrokerConfirmReload"].Value))
+                return;
 
-        await Store.ClearDraftAsync();
-        _portfolio = await Store.LoadFromFileAsync();
-        foreach (var p in _portfolio.Positions.Where(x => string.IsNullOrWhiteSpace(x.Sector)))
-            p.Sector = await Sectors.FindSectorAsync(p.Symbol);
-        _selected = null;
-        _dirty = false;
-        _quotes.Clear();
-        Flash(L["Trading_BrokerReloadedFile", _portfolio.Positions.Count]);
-        if (_portfolio.Positions.Count > 0)
-            await RefreshPrices();
+            _persistTimer?.Dispose();
+            _persistTimer = null;
+            _priceCts?.Cancel();
+
+            _selected = null;
+            await InvokeAsync(StateHasChanged);
+
+            await Store.ClearDraftAsync();
+            _portfolio = await Store.LoadFromFileAsync();
+
+            foreach (var p in _portfolio.Positions.Where(x => string.IsNullOrWhiteSpace(x.Sector)))
+                p.Sector = await Sectors.FindSectorAsync(p.Symbol);
+
+            _dirty = false;
+            _quotes.Clear();
+            Flash(L["Trading_BrokerReloadedFile", _portfolio.Positions.Count]);
+
+            if (_portfolio.Positions.Count > 0)
+                await RefreshPrices();
+        }
+        catch (Exception ex)
+        {
+            Flash(L["Trading_BrokerImportError", ex.Message], error: true);
+        }
     }
 
     private async Task ImportJson(InputFileChangeEventArgs e)
@@ -544,7 +567,14 @@
             var progress = new Progress<int>(done =>
             {
                 _priceProgressDone = done;
-                _ = InvokeAsync(StateHasChanged);
+                try
+                {
+                    _ = InvokeAsync(StateHasChanged);
+                }
+                catch
+                {
+                    // Component may be disposed.
+                }
             });
             var rows = await Market.GetLatestManyAsync(symbols, progress, ct: ct);
             foreach (var row in rows.GroupBy(s => s.Symbol, StringComparer.OrdinalIgnoreCase))
@@ -574,11 +604,22 @@
         _messageError = error;
         if (!error)
         {
-            _flashTimer = new Timer(_ => _ = InvokeAsync(() =>
+            _flashTimer = new Timer(_ =>
             {
-                _message = null;
-                StateHasChanged();
-            }), null, 5000, Timeout.Infinite);
+                try
+                {
+                    _ = InvokeAsync(() =>
+                    {
+                        _message = null;
+                        StateHasChanged();
+                        return Task.CompletedTask;
+                    });
+                }
+                catch
+                {
+                    // Component may be disposed.
+                }
+            }, null, 5000, Timeout.Infinite);
         }
     }
 

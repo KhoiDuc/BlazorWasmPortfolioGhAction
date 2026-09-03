@@ -83,7 +83,14 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
                 return new BrokerPortfolio();
 
             var json = await resp.Content.ReadAsStringAsync(ct);
-            return NormalizePortfolio(ParseJson(json));
+            try
+            {
+                return NormalizePortfolio(ParseJson(json));
+            }
+            catch (InvalidOperationException)
+            {
+                return new BrokerPortfolio();
+            }
         }
         catch
         {

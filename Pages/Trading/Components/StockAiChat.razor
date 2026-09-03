@@ -349,7 +349,7 @@
 
     private async Task ClearHistory()
     {
-        if (!await JS.InvokeAsync<bool>("confirm", L["Trading_StockAiConfirmClearHistory"]))
+        if (!await JS.InvokeAsync<bool>("tradingAuth.confirm", L["Trading_StockAiConfirmClearHistory"].Value))
             return;
         _history.Clear();
         await SaveHistoryAsync();

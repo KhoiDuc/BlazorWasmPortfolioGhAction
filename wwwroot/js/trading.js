@@ -7,6 +7,9 @@ window.tradingAuth = {
     },
     removeItem: function (key) {
         try { localStorage.removeItem(key); } catch { }
+    },
+    confirm: function (message) {
+        return confirm(message);
     }
 };
 

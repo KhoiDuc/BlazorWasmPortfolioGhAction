@@ -360,7 +360,7 @@
 
     private async Task RemoveLot(BrokerLot lot)
     {
-        if (!await JS.InvokeAsync<bool>("confirm", L["Trading_BrokerConfirmDeleteLot"]))
+        if (!await JS.InvokeAsync<bool>("tradingAuth.confirm", L["Trading_BrokerConfirmDeleteLot"].Value))
             return;
 
         Position.Buys.Remove(lot);
