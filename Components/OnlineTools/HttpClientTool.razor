@@ -1,4 +1,6 @@
+@using BlazorWasmPortfolioGhAction.Shared
 @inject HttpClient Http
+@inject IStringLocalizer<SharedResources> L
 
 <ToolShell ResourceKey="httpclient" Title="HTTP Client" Icon="bi-globe2" Description="Build and send HTTP requests from the browser and inspect responses.">
     <div class="tool-form">
@@ -36,6 +38,7 @@
         <div class="tool-actions">
             @if (isLoading)
             {
+                <LoadingSpinner LabelKey="Common_LoadingData" />
                 <button type="button" class="tool-btn tool-btn-secondary" @onclick="CancelRequest">Cancel</button>
             }
             else

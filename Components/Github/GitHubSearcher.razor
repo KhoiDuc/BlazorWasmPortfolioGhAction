@@ -1,6 +1,8 @@
 @using BlazorWasmPortfolioGhAction.Models.GitHub
 @using BlazorWasmPortfolioGhAction.Services
+@using BlazorWasmPortfolioGhAction.Shared
 @inject IDevOpsService DevOpsService
+@inject IStringLocalizer<SharedResources> L
 
 <ToolShell ResourceKey="githubsearch" Title="GitHub Repo Search" Icon="bi-search" Description="Search public repositories via the GitHub REST API.">
 
@@ -23,10 +25,15 @@
         </div>
         <div class="tool-actions">
             <button type="button" @onclick="Search" class="tool-btn tool-btn-primary" disabled="@isLoading">
-                @if (isLoading) { <span>Searching...</span> } else { <span>Search</span> }
+                @if (isLoading) { <span>@L["Common_Searching"]</span> } else { <span>Search</span> }
             </button>
         </div>
     </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner LabelKey="Common_Searching" />
+    }
 
     @if (results != null && results.Count > 0)
     {

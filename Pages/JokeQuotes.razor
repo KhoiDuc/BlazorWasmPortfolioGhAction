@@ -1,6 +1,8 @@
 @using System.Text.Json
 @using BlazorWasmPortfolioGhAction.Components.ToolShell
+@using BlazorWasmPortfolioGhAction.Shared
 @inject HttpClient Http
+@inject IStringLocalizer<SharedResources> L
 
 <ToolShell Title="Joke Quotes" Icon="bi-emoji-laughing" Description="Random jokes from JokeAPI with category blacklist filters.">
     <div class="tool-form">
@@ -20,7 +22,7 @@
     <div class="tool-card tool-card-nested joke-panel">
         @if (IsLoading)
         {
-            <div class="tool-spinner" role="status" aria-label="Loading joke"></div>
+            <LoadingSpinner LabelKey="Common_LoadingData" ShowLabel="false" />
         }
         else if (!string.IsNullOrEmpty(JokeText))
         {

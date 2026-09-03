@@ -1,0 +1,15 @@
+@inject IStringLocalizer<SharedResources> L
+
+<div class="loading-spinner-overlay" role="status" aria-live="polite" aria-label="@L["Common_LoadingAria"]">
+    <div class="tool-spinner" aria-hidden="true"></div>
+    @if (ShowLabel)
+    {
+        <span class="loading-spinner-label">@L[LabelKey]</span>
+    }
+    <span class="visually-hidden">@L["Common_LoadingAria"]</span>
+</div>
+
+@code {
+    [Parameter] public string LabelKey { get; set; } = "Common_Loading";
+    [Parameter] public bool ShowLabel { get; set; } = true;
+}

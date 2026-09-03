@@ -1,6 +1,8 @@
 @using BlazorWasmPortfolioGhAction.Models.GitHub
 @using BlazorWasmPortfolioGhAction.Services
+@using BlazorWasmPortfolioGhAction.Shared
 @inject IDevOpsService DevOpsService
+@inject IStringLocalizer<SharedResources> L
 
 <ToolShell ResourceKey="githubinspector" Title="GitHub User/Repo Inspector" Icon="bi-person-badge" Description="Look up GitHub users or repositories by name.">
 
@@ -20,7 +22,7 @@
                 <input id="gh-username" type="text" @bind="username" class="tool-input" placeholder="e.g. torvalds, octocat" />
             </div>
             <div class="tool-actions">
-                <button type="button" @onclick="InspectUser" class="tool-btn tool-btn-primary" disabled="@isLoading">Inspect user</button>
+                <button type="button" @onclick="InspectUser" class="tool-btn tool-btn-primary" disabled="@isLoading">@L["Common_Searching"]</button>
             </div>
         }
         else
@@ -34,10 +36,15 @@
                 <input id="gh-repo" type="text" @bind="repo" class="tool-input" placeholder="e.g. runtime" />
             </div>
             <div class="tool-actions">
-                <button type="button" @onclick="InspectRepo" class="tool-btn tool-btn-primary" disabled="@isLoading">Inspect repo</button>
+                <button type="button" @onclick="InspectRepo" class="tool-btn tool-btn-primary" disabled="@isLoading">@L["Common_Searching"]</button>
             </div>
         }
     </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner LabelKey="Common_Searching" />
+    }
 
     @if (user != null)
     {

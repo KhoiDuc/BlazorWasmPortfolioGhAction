@@ -1,8 +1,10 @@
 ﻿@using System.Text.Json
 @using BlazorWasmPortfolioGhAction.Components.ToolShell
 @using BlazorWasmPortfolioGhAction.Services.Trading.Broker
+@using BlazorWasmPortfolioGhAction.Shared
 @inject ApiKeyModel ApiKeyService
 @inject HttpClient Http
+@inject IStringLocalizer<SharedResources> L
 
 <ToolShell Title="Gemini Spell Checker" Icon="bi-spellcheck" Description="Vietnamese spelling correction powered by Google Gemini API.">
     @if (enumPage == EnumPage.FirstPage)
@@ -36,9 +38,16 @@
             </div>
             <div class="tool-actions">
                 <button type="button" @onclick="GoBack" class="tool-btn tool-btn-secondary">Back</button>
-                <button type="button" @onclick="CheckSpelling" class="tool-btn tool-btn-primary">Check spelling</button>
+                <button type="button" @onclick="CheckSpelling" class="tool-btn tool-btn-primary" disabled="@_isLoading">
+                    @if (_isLoading) { <span>@L["Common_Loading"]</span> } else { <span>Check spelling</span> }
+                </button>
             </div>
         </div>
+
+        @if (_isLoading)
+        {
+            <LoadingSpinner LabelKey="Common_LoadingData" />
+        }
 
         @if (!string.IsNullOrEmpty(CorrectedText))
         {
@@ -68,6 +77,7 @@
     private string SelectedModel { get; set; } = GeminiModels.DefaultId;
 
     private EnumPage enumPage = EnumPage.FirstPage;
+    private bool _isLoading;
 
     public enum EnumPage { FirstPage, SecondPage }
 
@@ -90,6 +100,7 @@
             return;
         }
 
+        _isLoading = true;
         try
         {
             var apiKey = ApiKeyService.ApiKey;
@@ -134,6 +145,10 @@
         {
             CorrectedText = $"Error: {ex.Message}";
             Corrections = string.Empty;
+        }
+        finally
+        {
+            _isLoading = false;
         }
     }
 

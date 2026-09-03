@@ -1,11 +1,13 @@
 ﻿@inject RandomFactsService RandomFactsService
+@inject IStringLocalizer<SharedResources> L
 @using BlazorWasmPortfolioGhAction.Store.Services
+@using BlazorWasmPortfolioGhAction.Shared
 
 <ToolShell Title="Random Facts" Icon="bi-lightbulb" Description="Fetch a random fact from uselessfacts.jsph.pl.">
 
     @if (isLoading)
     {
-        <div class="tool-alert tool-alert-info">Loading fact...</div>
+        <LoadingSpinner LabelKey="Common_LoadingData" />
     }
     else if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -24,7 +26,7 @@
 
     <div class="tool-actions">
         <button type="button" class="tool-btn tool-btn-primary" @onclick="ShowRandomFact" disabled="@isLoading">
-            @(isLoading ? "Loading..." : "Show me a random fact")
+            @(isLoading ? L["Common_Loading"].Value : "Show me a random fact")
         </button>
     </div>
 </ToolShell>

@@ -1,5 +1,7 @@
 @using System.Text.Json
+@using BlazorWasmPortfolioGhAction.Shared
 @inject HttpClient Http
+@inject IStringLocalizer<SharedResources> L
 
 <ToolShell ResourceKey="microsofttenantid" Title="Microsoft Tenant ID Finder" Icon="bi-microsoft">
     <div class="tool-form">
@@ -15,7 +17,7 @@
 
         @if (isLoading)
         {
-            <p class="tool-hint">Loading...</p>
+            <LoadingSpinner LabelKey="Common_LoadingData" ShowLabel="true" />
         }
 
         @if (!string.IsNullOrEmpty(error))

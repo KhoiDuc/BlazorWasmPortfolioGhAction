@@ -1,6 +1,8 @@
 @using BlazorWasmPortfolioGhAction.Models.GitHub
 @using BlazorWasmPortfolioGhAction.Services
+@using BlazorWasmPortfolioGhAction.Shared
 @inject IDevOpsService DevOpsService
+@inject IStringLocalizer<SharedResources> L
 
 <ToolShell ResourceKey="githubtrending" Title="GitHub Trending Repos" Icon="bi-graph-up-arrow" Description="Discover recently popular repositories on GitHub.">
 
@@ -19,10 +21,15 @@
         </div>
         <div class="tool-actions">
             <button type="button" @onclick="LoadTrending" class="tool-btn tool-btn-primary" disabled="@isLoading">
-                @if (isLoading) { <span>Loading...</span> } else { <span>Load trending</span> }
+                @if (isLoading) { <span>@L["Common_Loading"]</span> } else { <span>Load trending</span> }
             </button>
         </div>
     </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner LabelKey="Common_LoadingData" />
+    }
 
     @if (results != null && results.Count > 0)
     {

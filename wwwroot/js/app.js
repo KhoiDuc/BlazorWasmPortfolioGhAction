@@ -71,7 +71,7 @@ function initializeScrollProgress() {
         const scrollHeight = height > 0 ? Math.round((scrollTop * 100) / height) : 0;
 
         scroll.style.display = scrollTop > 0 ? 'flex' : 'none';
-        scroll.style.background = `conic-gradient(var(--color-brand-primary, #3498db) ${scrollHeight}%, var(--color-bg-surface, #d9534f) ${scrollHeight}%)`;
+        scroll.style.background = `conic-gradient(var(--progress-ring-active) ${scrollHeight}%, var(--progress-ring-track) ${scrollHeight}%)`;
     }
 
     scroll.addEventListener('click', () => {

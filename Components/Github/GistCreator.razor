@@ -1,5 +1,7 @@
 @using BlazorWasmPortfolioGhAction.Services
+@using BlazorWasmPortfolioGhAction.Shared
 @inject IDevOpsService DevOpsService
+@inject IStringLocalizer<SharedResources> L
 
 <ToolShell ResourceKey="gist" Title="Create GitHub Gist" Icon="bi-file-earmark-code" Description="Create a public or secret gist via the GitHub API (requires token in appsettings).">
 
@@ -37,10 +39,15 @@
         </div>
         <div class="tool-actions">
             <button type="button" @onclick="CreateGist" class="tool-btn tool-btn-primary" disabled="@isLoading">
-                @if (isLoading) { <span>Creating...</span> } else { <span>Create gist</span> }
+                @if (isLoading) { <span>@L["Common_Saving"]</span> } else { <span>Create gist</span> }
             </button>
         </div>
     </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner LabelKey="Common_Saving" />
+    }
 </ToolShell>
 
 @code {
