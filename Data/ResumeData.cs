@@ -84,7 +84,7 @@ public static class ResumeData
         Profile: new Profile(
             Name: new LocalizedText(Vi: "Khoi Duc", En: "Khoi Duc"),
             FullName: "Nguyen Minh Duc Khoi",
-            Role: new LocalizedText(Vi: "Lập trình viên", En: "Junior Developer"),
+            Role: new LocalizedText(Vi: "Lập trình viên", En: "Developer"),
             PhoneNumbers: new[] { "+84938751116", "+84384223897" },
             Emails: new[] { "khoi.duc.dev@gmail.com", "khoimessi99@gmail.com" },
             FacebookUrl: "https://www.facebook.com/messi.khoi.9",
