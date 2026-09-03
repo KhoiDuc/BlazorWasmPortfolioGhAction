@@ -71,6 +71,10 @@ body {
     --shadow-glow-accent: 0 0 20px rgba(234, 179, 8, 0.22);
     --shadow-content: 0 10px 30px rgba(0, 0, 0, 0.1);
 
+    /* Progress ring */
+    --progress-ring-active: #ca8a04;
+    --progress-ring-track: #e2e8f0;
+
     /* Gradients */
     --gradient-brand: linear-gradient(135deg, #854d0e 0%, #ca8a04 50%, #eab308 100%);
     --gradient-brand-subtle: linear-gradient(135deg, rgba(133, 77, 14, 0.1) 0%, rgba(202, 138, 4, 0.08) 50%, rgba(234, 179, 8, 0.1) 100%);
@@ -113,6 +117,10 @@ body {
     --shadow-glow-primary: 0 0 24px rgba(234, 179, 8, 0.42);
     --shadow-glow-accent: 0 0 20px rgba(250, 204, 21, 0.32);
     --shadow-content: 0 10px 30px rgba(0, 0, 0, 0.7);
+
+    /* Progress ring */
+    --progress-ring-active: #eab308;
+    --progress-ring-track: #2a2a38;
 
     --gradient-brand: linear-gradient(135deg, #854d0e 0%, #ca8a04 50%, #eab308 100%);
     --gradient-brand-subtle: linear-gradient(135deg, rgba(133, 77, 14, 0.2) 0%, rgba(202, 138, 4, 0.16) 50%, rgba(234, 179, 8, 0.18) 100%);
@@ -930,7 +938,6 @@ a:hover {
 /* --------------------------------------------------------------------------- */
 .progress {
     position: fixed;
-    background: var(--gradient-brand);
     bottom: 24px;
     right: 24px;
     width: 44px;
@@ -939,7 +946,7 @@ a:hover {
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-full);
-    color: #fff;
+    border: none;
     z-index: 90;
     cursor: pointer;
     box-shadow: var(--shadow-glow-primary);
@@ -950,7 +957,7 @@ a:hover {
     transform: scale(1.08);
 }
 
-#progress_value {
+.progress > i {
     background-color: var(--color-bg-surface);
     width: calc(100% - 6px);
     height: calc(100% - 6px);
@@ -1885,6 +1892,43 @@ html.motion-ready .motion-reveal.is-visible .skill-meter-fill,
 
 @keyframes tool-spin {
     to { transform: rotate(360deg); }
+}
+
+/* --------------------------------------------------------------------------- */
+/* Shared loading spinner                                                       */
+/* --------------------------------------------------------------------------- */
+.loading-spinner-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 2rem 1rem;
+    min-height: 120px;
+}
+
+.loading-spinner-label {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+/* Skeleton shimmer */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--color-bg-surface-elevated) 25%,
+        color-mix(in srgb, var(--color-bg-surface) 50%, var(--color-bg-surface-elevated)) 50%,
+        var(--color-bg-surface-elevated) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm, 0.375rem);
+}
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 .tool-modal-lg {
