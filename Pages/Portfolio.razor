@@ -51,9 +51,10 @@
                 </div>
             </div>
             <div class="carousel-container">
-                <img src="images/photo2.jpg" class="carousel-image active" alt="Khoi Duc Photo 1" loading="lazy" decoding="async">
-                <img src="images/photo3.jpg" class="carousel-image" alt="Khoi Duc Photo 2" loading="lazy" decoding="async">
-                <img src="images/photo1.jpg" class="carousel-image" alt="Khoi Duc Photo 3" loading="lazy" decoding="async">
+                <div class="carousel-skeleton skeleton" aria-hidden="true"></div>
+                <img src="images/photo2.jpg" class="carousel-image active" alt="Khoi Duc Photo 1" loading="lazy" decoding="async" @onload="OnImageLoaded" @onerror="OnImageError">
+                <img src="images/photo3.jpg" class="carousel-image" alt="Khoi Duc Photo 2" loading="lazy" decoding="async" @onload="OnImageLoaded" @onerror="OnImageError">
+                <img src="images/photo1.jpg" class="carousel-image" alt="Khoi Duc Photo 3" loading="lazy" decoding="async" @onload="OnImageLoaded" @onerror="OnImageError">
                 <button type="button" class="carousel-nav prev" @onclick="() => ChangeSlide(-1)" aria-label="Previous slide">&#10094;</button>
                 <button type="button" class="carousel-nav next" @onclick="() => ChangeSlide(1)" aria-label="Next slide">&#10095;</button>
             </div>
@@ -251,6 +252,8 @@
 @code {
     private IJSObjectReference? carouselInstance;
     private Resume Resume => ResumeData.Current;
+    private int _imagesLoaded;
+    private bool _imagesReady => _imagesLoaded >= 3;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -305,6 +308,9 @@
             return $"(+84) {digits[1..]}";
         return phone;
     }
+
+    private void OnImageLoaded() => _imagesLoaded++;
+    private void OnImageError() => _imagesLoaded++;
 
     public async ValueTask DisposeAsync()
     {

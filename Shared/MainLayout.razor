@@ -1,8 +1,14 @@
 @inherits CultureAwareLayout
+@using System
 @inject IStringLocalizer<SharedResources> L
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
+@implements IDisposable
 
 <CultureUrlGuard />
+<div id="route-progress" class="route-progress" role="status" aria-live="polite" aria-label="@L["Nav_LoadingPage"]">
+    <div class="route-progress-bar"></div>
+</div>
 <button type="button" class="skip-link" @onclick="SkipToContent">@L["SkipToContent"]</button>
 <Navbar />
 
@@ -36,5 +42,33 @@
             try { await JS.InvokeVoidAsync("initializeScrollProgress"); }
             catch { }
         }
+    }
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("routeProgress.show");
+            await Task.Delay(300);
+            await JS.InvokeVoidAsync("routeProgress.hide");
+        }
+        catch { }
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+            Navigation.LocationChanged -= OnLocationChanged;
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }
