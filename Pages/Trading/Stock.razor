@@ -4,6 +4,9 @@
 @inherits CultureAwareComponent
 @using BlazorWasmPortfolioGhAction.Models.Trading
 @using BlazorWasmPortfolioGhAction.Services.Trading
+@using System.Text.Json
+@inject ITradingApiClient Api
+@inject IJSRuntime JS
 @inject IStringLocalizer<SharedResources> L
 
 <div class="ts-page">
@@ -14,26 +17,102 @@
                 <p>@L["Trading_StockLead"]</p>
             </div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <label for="stock-symbol" class="ts-label sr-only">Symbol</label>
-            <input id="stock-symbol" class="ts-input" style="max-width:200px"
-                   @bind="_selectedStock" @bind:after="NormalizeSelectedStock" placeholder="VNM, FPT, AAPL..." />
+        <div class="ts-field">
+            <label for="stock-symbol" class="ts-label">@L["Trading_StockChooseSymbol"]</label>
+            <input id="stock-symbol" class="ts-input" list="stock-code-list" style="max-width:320px"
+                   @bind="_selectedStock" @bind:after="OnStockInputChanged"
+                   placeholder="VNM, FPT, VNINDEX..." autocomplete="off" />
+            <datalist id="stock-code-list">
+                @foreach (var sym in FilteredStockCodes)
+                {
+                    <option value="@sym"></option>
+                }
+            </datalist>
+            @if (_loadingCodes)
+            {
+                <p class="ts-muted" style="margin:0.35rem 0 0;font-size:0.82rem" role="status">@L["Trading_StockLoadingCodes"]</p>
+            }
         </div>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(_selectedStock))
     {
         <TradingViewChart Symbol="@_selectedStock" />
-        <PriceAlertWidget Symbol="@_selectedStock" AssetType="stock" />
+        <div class="ts-stock-actions">
+            <button type="button" class="ts-btn ts-btn-outline" @onclick="() => _showPriceAlert = !_showPriceAlert"
+                    aria-expanded="@_showPriceAlert.ToString().ToLowerInvariant()" aria-controls="stock-price-alert">
+                <i class="bi bi-bell" aria-hidden="true"></i> @L["Trading_StockPriceAlert"]
+            </button>
+            <button type="button" class="ts-btn ts-btn-outline" @onclick="ViewChart">
+                <i class="bi bi-graph-up" aria-hidden="true"></i> @L["Trading_StockViewChart"]
+            </button>
+        </div>
+        @if (_showPriceAlert)
+        {
+            <div id="stock-price-alert">
+                <PriceAlertWidget Symbol="@_selectedStock" AssetType="stock" />
+            </div>
+        }
     }
 </div>
 
 @code {
     private string _selectedStock = "VNM";
+    private List<string> _stockCodes = [];
+    private bool _loadingCodes;
+    private bool _showPriceAlert;
+
+    private IEnumerable<string> FilteredStockCodes
+    {
+        get
+        {
+            if (_stockCodes.Count == 0) return [];
+            if (string.IsNullOrWhiteSpace(_selectedStock))
+                return _stockCodes.Take(80);
+            return _stockCodes
+                .Where(c => c.Contains(_selectedStock.Trim(), StringComparison.OrdinalIgnoreCase))
+                .Take(80);
+        }
+    }
+
+    protected override void OnInitialized() => _ = LoadStockCodesAsync();
+
+    private void OnStockInputChanged() => NormalizeSelectedStock();
 
     private void NormalizeSelectedStock()
     {
         if (!string.IsNullOrWhiteSpace(_selectedStock))
             _selectedStock = _selectedStock.Trim().ToUpperInvariant();
+    }
+
+    private async Task LoadStockCodesAsync()
+    {
+        _loadingCodes = true;
+        try
+        {
+            var json = await Api.GetProxyJsonAsync("v4/stocks?q=type:STOCK~status:LISTED&fields=code&size=3000");
+            if (json is not null && json.Value.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array)
+            {
+                _stockCodes = data.EnumerateArray()
+                    .Select(e => e.TryGetProperty("code", out var c) ? c.GetString() : null)
+                    .Where(c => !string.IsNullOrWhiteSpace(c))
+                    .Select(c => c!)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(c => c, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+            }
+        }
+        catch { }
+        finally
+        {
+            _loadingCodes = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ViewChart()
+    {
+        if (string.IsNullOrWhiteSpace(_selectedStock)) return;
+        await JS.InvokeVoidAsync("open", $"https://stockchart.vietstock.vn/?stockcode={_selectedStock}", "_blank");
     }
 }

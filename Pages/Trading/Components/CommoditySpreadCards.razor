@@ -1,0 +1,84 @@
+@if (Loading)
+{
+    <div class="ts-panel ts-empty" role="status">
+        <div class="ts-spinner"></div>
+        <span>@L["Trading_Commodities_SpreadLoading"]</span>
+    </div>
+}
+else if (Data is not null)
+{
+    <div class="ts-panel ts-spread-panel">
+        <div class="ts-spread-head">
+            <h3>@Title</h3>
+            <span class="ts-muted">@Data.UpdatedAt</span>
+        </div>
+        <div class="ts-spread-grid">
+            <div class="ts-spread-card ts-spread-card--vn">
+                <span class="ts-spread-card__label">@Data.VnLabel</span>
+                <strong class="ts-spread-card__value">@FormatVnValue(Data.VnPrimary, Data.Unit) <span class="ts-spread-card__unit">/ @Data.Unit</span></strong>
+                @if (Data.VnSecondary is not null && Data.Unit != "lít")
+                {
+                    <div class="ts-spread-card__footer">
+                        <span>Mua: @FormatVnValue(Data.VnBuy, Data.Unit)</span>
+                        <span>Bán: @FormatVnValue(Data.VnSell, Data.Unit)</span>
+                    </div>
+                }
+                else if (Data.Unit == "lít")
+                {
+                    <div class="ts-spread-card__footer">
+                        <span>Vùng 1: @FormatVnValue(Data.VnBuy, Data.Unit)</span>
+                        <span>Vùng 2: @FormatVnValue(Data.VnSell, Data.Unit)</span>
+                    </div>
+                }
+            </div>
+            <div class="ts-spread-card ts-spread-card--world">
+                <span class="ts-spread-card__label">@L["Trading_Commodities_WorldConverted"]</span>
+                <strong class="ts-spread-card__value">@FormatVnValue(Data.WorldVnd, Data.Unit) <span class="ts-spread-card__unit">/ @Data.Unit</span></strong>
+                <div class="ts-spread-card__footer">
+                    <span>@L["Trading_Commodities_World"]: $@Data.WorldUsd.ToString("F2") / @Data.WorldUnit</span>
+                    <span>@L["Trading_Commodities_Rate"]: @Data.UsdVndRate.ToString("N0")</span>
+                </div>
+            </div>
+            <div class="ts-spread-card ts-spread-card--spread">
+                <span class="ts-spread-card__label">@L["Trading_Commodities_Spread"]</span>
+                <strong class="ts-spread-card__value @(Data.SpreadVnd >= 0 ? "ts-negative" : "ts-positive")">
+                    @(Data.SpreadVnd >= 0 ? "+" : "")@FormatVnValue(Math.Abs(Data.SpreadVnd), Data.Unit)
+                </strong>
+                <span class="ts-spread-badge @(Data.SpreadVnd >= 0 ? "ts-spread-badge--high" : "ts-spread-badge--low")">
+                    @(Data.SpreadVnd >= 0 ? L["Trading_Commodities_HigherThanWorld"] : L["Trading_Commodities_LowerThanWorld"])
+                    @Math.Abs(Data.SpreadPercent).ToString("F1")%
+                </span>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public SpreadSnapshot? Data { get; set; }
+    [Parameter] public bool Loading { get; set; }
+    [Inject] private IStringLocalizer<SharedResources> L { get; set; } = default!;
+
+    private static string FormatVnValue(double val, string unit) =>
+        unit == "lít"
+            ? val.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("vi-VN")) + " đ"
+            : FormatMillions(val);
+
+    private static string FormatMillions(double val) =>
+        (val / 1_000_000).ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("vi-VN")) + " triệu";
+
+    public record SpreadSnapshot(
+        string VnLabel,
+        double VnPrimary,
+        double VnBuy,
+        double VnSell,
+        double? VnSecondary,
+        double WorldUsd,
+        double WorldVnd,
+        double SpreadVnd,
+        double SpreadPercent,
+        double UsdVndRate,
+        string Unit,
+        string WorldUnit,
+        string UpdatedAt);
+}

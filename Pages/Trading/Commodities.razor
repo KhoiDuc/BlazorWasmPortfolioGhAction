@@ -3,6 +3,8 @@
 @layout TradingLayout
 @inherits CultureAwareComponent
 @using System.Text.Json
+@using System.Text.RegularExpressions
+@using BlazorWasmPortfolioGhAction.Pages.Trading.Components
 @inject ITradingApiClient Api
 @inject HttpClient Http
 @inject IStringLocalizer<SharedResources> L
@@ -16,14 +18,16 @@
             </div>
         </div>
         <div class="ts-tabs">
-            <button class="ts-tab @(_tab == "gold" ? "active" : "")" @onclick='() => SetTab("gold")'>Gold</button>
-            <button class="ts-tab @(_tab == "silver" ? "active" : "")" @onclick='() => SetTab("silver")'>Silver</button>
-            <button class="ts-tab @(_tab == "oil" ? "active" : "")" @onclick='() => SetTab("oil")'>Oil</button>
+            <button type="button" class="ts-tab @(_tab == "gold" ? "active" : "")" @onclick='() => SetTab("gold")'>Gold</button>
+            <button type="button" class="ts-tab @(_tab == "silver" ? "active" : "")" @onclick='() => SetTab("silver")'>Silver</button>
+            <button type="button" class="ts-tab @(_tab == "oil" ? "active" : "")" @onclick='() => SetTab("oil")'>Oil</button>
         </div>
     </div>
 
     @if (_tab == "gold")
     {
+        <CommoditySpreadCards Title="@L["Trading_Commodities_GoldSpread"]" Data="@_goldSpread" Loading="@_goldSpreadLoading" />
+
         <TradingViewChart Symbol="OANDA:XAUUSD" />
         <PriceAlertWidget Symbol="XAUUSD" AssetType="gold" />
 
@@ -33,7 +37,7 @@
                     <h3>Vietnam Gold Price (SJC)</h3>
                     <p class="ts-muted">@_goldUpdated</p>
                 </div>
-                <button class="ts-btn ts-btn-outline" @onclick="LoadGold" disabled="@_goldLoading">
+                <button type="button" class="ts-btn ts-btn-outline" @onclick="RefreshGold" disabled="@_goldLoading">
                     @(_goldLoading ? "..." : "Refresh")
                 </button>
             </div>
@@ -65,6 +69,8 @@
     }
     else if (_tab == "silver")
     {
+        <CommoditySpreadCards Title="@L["Trading_Commodities_SilverSpread"]" Data="@_silverSpread" Loading="@_silverSpreadLoading" />
+
         <TradingViewChart Symbol="OANDA:XAGUSD" />
         <PriceAlertWidget Symbol="XAGUSD" AssetType="silver" />
 
@@ -74,7 +80,7 @@
                     <h3>Vietnam Silver Price (Phu Quy)</h3>
                     <p class="ts-muted">@_silverUpdated</p>
                 </div>
-                <button class="ts-btn ts-btn-outline" @onclick="LoadSilver" disabled="@_silverLoading">
+                <button type="button" class="ts-btn ts-btn-outline" @onclick="RefreshSilver" disabled="@_silverLoading">
                     @(_silverLoading ? "..." : "Refresh")
                 </button>
             </div>
@@ -90,9 +96,11 @@
     }
     else
     {
+        <CommoditySpreadCards Title="@L["Trading_Commodities_OilSpread"]" Data="@_oilSpread" Loading="@_oilSpreadLoading" />
+
         <div class="ts-tabs" style="margin-bottom:0.5rem">
-            <button class="ts-tab @(_oilChart == "wti" ? "active" : "")" @onclick='() => _oilChart = "wti"'>WTI</button>
-            <button class="ts-tab @(_oilChart == "brent" ? "active" : "")" @onclick='() => _oilChart = "brent"'>Brent</button>
+            <button type="button" class="ts-tab @(_oilChart == "wti" ? "active" : "")" @onclick='() => SetOilChart("wti")'>WTI</button>
+            <button type="button" class="ts-tab @(_oilChart == "brent" ? "active" : "")" @onclick='() => SetOilChart("brent")'>Brent</button>
         </div>
         @if (_oilChart == "wti")
         {
@@ -111,10 +119,22 @@
                     <h3>Vietnam Petrolimex Prices</h3>
                     <p class="ts-muted">@_oilUpdated</p>
                 </div>
-                <button class="ts-btn ts-btn-outline" @onclick="LoadOil" disabled="@_oilLoading">
+                <button type="button" class="ts-btn ts-btn-outline" @onclick="RefreshOil" disabled="@_oilLoading">
                     @(_oilLoading ? "..." : "Refresh")
                 </button>
             </div>
+            @if (_oilRows.Count > 0)
+            {
+                <div class="ts-field" style="padding:0 1rem">
+                    <label for="oil-product" class="ts-label">@L["Trading_Commodities_OilProduct"]</label>
+                    <select id="oil-product" class="ts-select" style="max-width:280px" @bind="_selectedOilProduct" @bind:after="LoadOilSpread">
+                        @foreach (var r in _oilRows)
+                        {
+                            <option value="@r.Title">@r.Title</option>
+                        }
+                    </select>
+                </div>
+            }
             @if (_oilError is not null)
             {
                 <p class="ts-alert ts-alert-error">@_oilError</p>
@@ -127,7 +147,7 @@
                         <tbody>
                             @foreach (var r in _oilRows)
                             {
-                                <tr>
+                                <tr class="@(_selectedOilProduct == r.Title ? "selected" : "")">
                                     <td><strong>@r.Title</strong></td>
                                     <td class="ts-positive">@r.Zone1Display</td>
                                     <td class="ts-negative">@r.Zone2Display</td>
@@ -142,37 +162,68 @@
 </div>
 
 @code {
+    private const double TaelOzFactor = 1.20565;
+    private const double LitersPerBarrel = 158.987;
+
     private string _tab = "gold";
     private string _oilChart = "wti";
+    private string _selectedOilProduct = "";
 
-    // Gold
     private List<GoldRow> _goldRows = [];
     private string? _goldUpdated;
     private string? _goldError;
     private bool _goldLoading;
+    private CommoditySpreadCards.SpreadSnapshot? _goldSpread;
+    private bool _goldSpreadLoading;
 
-    // Silver
     private string? _silverHtml;
     private string? _silverUpdated;
     private string? _silverError;
     private bool _silverLoading;
+    private CommoditySpreadCards.SpreadSnapshot? _silverSpread;
+    private bool _silverSpreadLoading;
 
-    // Oil
     private List<OilRow> _oilRows = [];
     private string? _oilUpdated;
     private string? _oilError;
     private bool _oilLoading;
+    private CommoditySpreadCards.SpreadSnapshot? _oilSpread;
+    private bool _oilSpreadLoading;
 
     private void SetTab(string tab)
     {
         _tab = tab;
         if (tab == "silver" && _silverHtml is null && !_silverLoading)
-            _ = LoadSilver();
+            _ = RefreshSilver();
         if (tab == "oil" && _oilRows.Count == 0 && !_oilLoading)
-            _ = LoadOil();
+            _ = RefreshOil();
     }
 
-    protected override void OnInitialized() => _ = LoadGold();
+    private void SetOilChart(string chart)
+    {
+        _oilChart = chart;
+        _ = LoadOilSpread();
+    }
+
+    protected override void OnInitialized() => _ = RefreshGold();
+
+    private async Task RefreshGold()
+    {
+        await LoadGold();
+        await LoadGoldSpread();
+    }
+
+    private async Task RefreshSilver()
+    {
+        await LoadSilver();
+        await LoadSilverSpread();
+    }
+
+    private async Task RefreshOil()
+    {
+        await LoadOil();
+        await LoadOilSpread();
+    }
 
     private async Task LoadGold()
     {
@@ -199,6 +250,24 @@
         finally { _goldLoading = false; await InvokeAsync(StateHasChanged); }
     }
 
+    private async Task LoadGoldSpread()
+    {
+        _goldSpreadLoading = true;
+        try
+        {
+            var usdVnd = await GetUsdVndRateAsync();
+            var worldUsd = await GetRateOrYahooAsync("XAUUSD", "GC=F") ?? await FetchYahooPriceAsync("GC=F") ?? 2350;
+            var sjc = _goldRows.FirstOrDefault(r => r.Type.Contains("SJC", StringComparison.OrdinalIgnoreCase) && r.Branch.Contains("HCM", StringComparison.OrdinalIgnoreCase))
+                ?? _goldRows.FirstOrDefault(r => r.Type.Contains("SJC", StringComparison.OrdinalIgnoreCase));
+            if (sjc is null) { _goldSpread = null; return; }
+
+            var worldVnd = worldUsd * TaelOzFactor * usdVnd;
+            var spread = sjc.Sell - worldVnd;
+            _goldSpread = BuildSpread("Vàng SJC", sjc.Buy, sjc.Sell, worldUsd, worldVnd, spread, usdVnd, "lượng", "oz");
+        }
+        finally { _goldSpreadLoading = false; await InvokeAsync(StateHasChanged); }
+    }
+
     private async Task LoadSilver()
     {
         _silverLoading = true;
@@ -218,6 +287,23 @@
         finally { _silverLoading = false; await InvokeAsync(StateHasChanged); }
     }
 
+    private async Task LoadSilverSpread()
+    {
+        _silverSpreadLoading = true;
+        try
+        {
+            var (buy, sell) = ParseSilverPrices(_silverHtml);
+            if (buy is null || sell is null) { _silverSpread = null; return; }
+
+            var usdVnd = await GetUsdVndRateAsync();
+            var worldUsd = await GetRateOrYahooAsync("XAGUSD", "SI=F") ?? await FetchYahooPriceAsync("SI=F") ?? 30.5;
+            var worldVnd = worldUsd * TaelOzFactor * usdVnd;
+            var spread = sell.Value - worldVnd;
+            _silverSpread = BuildSpread("Bạc Phú Quý", buy.Value, sell.Value, worldUsd, worldVnd, spread, usdVnd, "lượng", "oz");
+        }
+        finally { _silverSpreadLoading = false; await InvokeAsync(StateHasChanged); }
+    }
+
     private async Task LoadOil()
     {
         _oilLoading = true;
@@ -235,12 +321,122 @@
                         item.GetProperty("Zone1Price").GetDouble(),
                         item.GetProperty("Zone2Price").GetDouble()));
                 }
+                if (string.IsNullOrEmpty(_selectedOilProduct))
+                    _selectedOilProduct = _oilRows.FirstOrDefault(r => r.Title.Contains("RON 95", StringComparison.OrdinalIgnoreCase))?.Title
+                        ?? _oilRows.FirstOrDefault()?.Title ?? "";
                 _oilUpdated = DateTime.Now.ToString("g");
             }
         }
         catch (Exception ex) { _oilError = ex.Message; }
         finally { _oilLoading = false; await InvokeAsync(StateHasChanged); }
     }
+
+    private async Task LoadOilSpread()
+    {
+        _oilSpreadLoading = true;
+        try
+        {
+            var item = _oilRows.FirstOrDefault(r => r.Title == _selectedOilProduct) ?? _oilRows.FirstOrDefault();
+            if (item is null) { _oilSpread = null; return; }
+
+            var symbol = _oilChart == "wti" ? "CL=F" : "BZ=F";
+            var usdVnd = await GetUsdVndRateAsync();
+            var worldUsd = await FetchYahooPriceAsync(symbol)
+                ?? await GetRateOrYahooAsync(_oilChart == "wti" ? "USOIL" : "UKOIL", symbol)
+                ?? (_oilChart == "wti" ? 72.5 : 76.5);
+
+            var worldVndPerLiter = worldUsd / LitersPerBarrel * usdVnd;
+            var spread = item.Zone1 - worldVndPerLiter;
+            var pct = worldVndPerLiter > 0 ? spread / worldVndPerLiter * 100 : 0;
+
+            _oilSpread = new CommoditySpreadCards.SpreadSnapshot(
+                item.Title,
+                item.Zone1,
+                item.Zone1,
+                item.Zone2,
+                item.Zone2,
+                worldUsd,
+                worldVndPerLiter,
+                spread,
+                pct,
+                usdVnd,
+                "lít",
+                "bbl",
+                SpreadUpdatedAt());
+        }
+        finally { _oilSpreadLoading = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private CommoditySpreadCards.SpreadSnapshot BuildSpread(
+        string vnLabel, double buy, double sell, double worldUsd, double worldVnd, double spread, double usdVnd, string unit, string worldUnit) =>
+        new(vnLabel, sell, buy, sell, sell, worldUsd, worldVnd, spread,
+            worldVnd > 0 ? spread / worldVnd * 100 : 0, usdVnd, unit, worldUnit, SpreadUpdatedAt());
+
+    private static (double? Buy, double? Sell) ParseSilverPrices(string? html)
+    {
+        if (string.IsNullOrWhiteSpace(html)) return (null, null);
+        var match = Regex.Match(html, @"BẠC MIẾNG[\s\S]*?<td[^>]*>([\d,\.]+)</td>\s*<td[^>]*>([\d,\.]+)</td>", RegexOptions.IgnoreCase);
+        if (!match.Success) return (null, null);
+        static double? Parse(string s) => double.TryParse(s.Replace(",", ""), out var v) ? v : null;
+        return (Parse(match.Groups[1].Value), Parse(match.Groups[2].Value));
+    }
+
+    private async Task<double> GetUsdVndRateAsync()
+    {
+        var fromRates = await GetRateFromLiveRatesAsync("USDVND");
+        if (fromRates > 0) return fromRates;
+        return await FetchYahooPriceAsync("VND=X") ?? 25450;
+    }
+
+    private async Task<double?> GetRateOrYahooAsync(string rateCode, string yahooSymbol)
+    {
+        var fromRates = await GetRateFromLiveRatesAsync(rateCode);
+        if (fromRates > 0) return fromRates;
+        return await FetchYahooPriceAsync(yahooSymbol);
+    }
+
+    private async Task<double> GetRateFromLiveRatesAsync(string code)
+    {
+        try
+        {
+            var json = await Api.GetFxRatesAsync();
+            if (json is null || json.Value.ValueKind != JsonValueKind.Array) return 0;
+            foreach (var item in json.Value.EnumerateArray())
+            {
+                var cur = (item.TryGetProperty("currency", out var c) ? c.GetString()
+                    : item.TryGetProperty("symbol", out var s) ? s.GetString()
+                    : item.TryGetProperty("pair", out var p) ? p.GetString() : "") ?? "";
+                var normalized = Regex.Replace(cur.ToUpperInvariant(), "[^A-Z]", "");
+                if (normalized != code) continue;
+                foreach (var prop in new[] { "rate", "close", "bid", "ask" })
+                {
+                    if (item.TryGetProperty(prop, out var val) && val.TryGetDouble(out var d) && d > 0)
+                        return d;
+                }
+            }
+        }
+        catch { }
+        return 0;
+    }
+
+    private async Task<double?> FetchYahooPriceAsync(string symbol)
+    {
+        try
+        {
+            var json = await Api.GetProxyJsonAsync($"yahoo-finance/v8/finance/chart/{Uri.EscapeDataString(symbol)}?interval=1d&range=1d");
+            if (json is null) return null;
+            if (!json.Value.TryGetProperty("chart", out var chart)) return null;
+            if (!chart.TryGetProperty("result", out var results) || results.GetArrayLength() == 0) return null;
+            if (!results[0].TryGetProperty("meta", out var meta)) return null;
+            if (meta.TryGetProperty("regularMarketPrice", out var price) && price.TryGetDouble(out var d) && d > 0)
+                return d;
+        }
+        catch { }
+        return null;
+    }
+
+    private static string SpreadUpdatedAt() =>
+        DateTime.Now.ToString("HH:mm:ss", System.Globalization.CultureInfo.GetCultureInfo("vi-VN")) + " (UTC+7)";
 
     private record GoldRow(string Type, string Branch, double Buy, double Sell)
     {
