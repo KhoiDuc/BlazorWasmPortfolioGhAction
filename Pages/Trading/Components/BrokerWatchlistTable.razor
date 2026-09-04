@@ -279,67 +279,63 @@
 
         @if ((Portfolio.ClosedPositions?.Count ?? 0) > 0)
         {
-            <div class="broker-closed-section">
-                <button type="button" class="broker-closed-toggle ts-btn ts-btn-outline ts-btn-sm"
-                        aria-expanded="@(_showClosed.ToString().ToLowerInvariant())"
-                        aria-controls="broker-closed-table"
-                        @onclick="ToggleClosed">
-                    <span class="broker-closed-toggle-text">
-                        Vị thế đã đóng (@Portfolio.ClosedPositions!.Count)
-                        <span class="broker-closed-toggle-realized @(_closedRealized >= 0 ? "ts-positive" : "ts-negative")">
-                            @BrokerFormat.Vnd(_closedRealized)
-                        </span>
-                    </span>
-                    <span class="broker-closed-toggle-icon" aria-hidden="true">@( _showClosed ? "▼" : "▶" )</span>
-                </button>
-
-                @if (_showClosed)
-                {
-                    <div id="broker-closed-table" class="broker-table-scroll broker-closed-table">
-                        <table class="ts-table broker-table">
-                            <thead>
-                                <tr>
-                                    <th><span class="broker-dt-th-inner">Mã</span></th>
-                                    <th><span class="broker-dt-th-inner">Ngành</span></th>
-                                    <th><span class="broker-dt-th-inner">Lần mua</span></th>
-                                    <th><span class="broker-dt-th-inner">Lần bán</span></th>
-                                    <th><span class="broker-dt-th-inner">KL bán</span></th>
-                                    <th><span class="broker-dt-th-inner">Giá TB</span></th>
-                                    <th><span class="broker-dt-th-inner">Ngày đóng</span></th>
-                                    <th><span class="broker-dt-th-inner">Realized</span></th>
-                                    <th><span class="broker-dt-th-inner">%</span></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var p in Portfolio.ClosedPositions!
-                                                                .OrderByDescending(x => x.ClosedAt ?? DateTime.MinValue)
-                                                                .ThenBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase))
-                                {
-                                    var selected = p.Symbol.Equals(SelectedSymbol, StringComparison.OrdinalIgnoreCase);
-                                    <tr class="@(selected ? "selected" : "")"
-                                        role="button"
-                                        tabindex="0"
-                                        @onclick="() => OnSelectClosed.InvokeAsync(p.Symbol)"
-                                        @onkeydown='(e) => OnRowKeydownClosed(e, p.Symbol)'>
-                                        <td><span class="broker-symbol">@p.Symbol</span></td>
-                                        <td class="broker-sector">@DisplaySector(p.Sector)</td>
-                                        <td>@p.Buys.Count</td>
-                                        <td>@p.Sells.Count</td>
-                                        <td class="broker-num">@BrokerFormat.Quantity(p.SoldQuantity)</td>
-                                        <td class="broker-num">@(p.AvgBuy?.ToString("N2") ?? "—")</td>
-                                        <td class="broker-num">@(p.ClosedAt?.ToString("dd/MM/yyyy") ?? "—")</td>
-                                        <td class="broker-num @(p.RealizedPnl is > 0 ? "ts-positive" : p.RealizedPnl is < 0 ? "ts-negative" : "")">
-                                            @BrokerFormat.Vnd(p.RealizedPnl)
-                                        </td>
-                                        <td class="broker-num @(p.RealizedPnlPct is > 0 ? "ts-positive" : p.RealizedPnlPct is < 0 ? "ts-negative" : "")">
-                                            @BrokerFormat.Pct(p.RealizedPnlPct)
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+            <div class="broker-sold-panel ts-panel">
+                <div class="broker-sold-panel-head">
+                    <div class="broker-sold-panel-title">
+                        <h3 class="ts-panel-title">Danh mục đã bán</h3>
+                        <span class="broker-sold-panel-count">@Portfolio.ClosedPositions!.Count vị thế · lịch sử giao dịch đã chốt</span>
                     </div>
-                }
+                    <div class="broker-sold-panel-realized @(_closedRealized >= 0 ? "ts-positive" : "ts-negative")">
+                        <span class="broker-sold-panel-realized-label">Tổng realized</span>
+                        <span class="broker-sold-panel-realized-value">@BrokerFormat.Vnd(_closedRealized)</span>
+                    </div>
+                </div>
+
+                <div id="broker-closed-table" class="broker-table-scroll broker-closed-table">
+                    <table class="ts-table broker-table">
+                        <thead>
+                            <tr>
+                                <th><span class="broker-dt-th-inner">Mã</span></th>
+                                <th><span class="broker-dt-th-inner">Ngành</span></th>
+                                <th><span class="broker-dt-th-inner">Lần mua</span></th>
+                                <th><span class="broker-dt-th-inner">Lần bán</span></th>
+                                <th><span class="broker-dt-th-inner">KL bán</span></th>
+                                <th><span class="broker-dt-th-inner">Giá TB</span></th>
+                                <th><span class="broker-dt-th-inner">Ngày đóng</span></th>
+                                <th><span class="broker-dt-th-inner">Realized</span></th>
+                                <th><span class="broker-dt-th-inner">%</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Portfolio.ClosedPositions!
+                                                            .OrderByDescending(x => x.ClosedAt ?? DateTime.MinValue)
+                                                            .ThenBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase))
+                            {
+                                var selected = p.Symbol.Equals(SelectedSymbol, StringComparison.OrdinalIgnoreCase);
+                                <tr class="@(selected ? "selected" : "")"
+                                    role="button"
+                                    tabindex="0"
+                                    @onclick="() => OnSelectClosed.InvokeAsync(p.Symbol)"
+                                    @onkeydown='(e) => OnRowKeydownClosed(e, p.Symbol)'>
+                                    <td><span class="broker-symbol">@p.Symbol</span></td>
+                                    <td class="broker-sector">@DisplaySector(p.Sector)</td>
+                                    <td>@p.Buys.Count</td>
+                                    <td>@p.Sells.Count</td>
+                                    <td class="broker-num">@BrokerFormat.Quantity(p.SoldQuantity)</td>
+                                    <td class="broker-num">@(p.AvgBuy?.ToString("N2") ?? "—")</td>
+                                    <td class="broker-num">@(p.ClosedAt?.ToString("dd/MM/yyyy") ?? "—")</td>
+                                    <td class="broker-num @(p.RealizedPnl is > 0 ? "ts-positive" : p.RealizedPnl is < 0 ? "ts-negative" : "")">
+                                        @BrokerFormat.Vnd(p.RealizedPnl)
+                                    </td>
+                                    <td class="broker-num @(p.RealizedPnlPct is > 0 ? "ts-positive" : p.RealizedPnlPct is < 0 ? "ts-negative" : "")">
+                                        @BrokerFormat.Pct(p.RealizedPnlPct)
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <p class="broker-sold-panel-foot">Bấm dòng để xem chi tiết vị thế đã đóng (chỉ đọc). Mua lại cùng mã sẽ tạo position mới trong danh mục khuyến nghị.</p>
             </div>
         }
     }
@@ -370,7 +366,6 @@
     private bool _sortDesc;
     private int _page = 1;
     private int _pageSize = 10;
-    private bool _showClosed;
 
     private decimal _closedRealized =>
         (Portfolio.ClosedPositions ?? []).Sum(p => p.RealizedPnl ?? 0m);
@@ -472,7 +467,6 @@
             _ = OnSelectClosed.InvokeAsync(symbol);
     }
 
-    private void ToggleClosed() => _showClosed = !_showClosed;
 
     private void ToggleSort(SortColumn column)
     {
