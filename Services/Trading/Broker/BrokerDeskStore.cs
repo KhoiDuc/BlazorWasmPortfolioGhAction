@@ -135,7 +135,12 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
     private static BrokerPortfolio NormalizePortfolio(BrokerPortfolio portfolio)
     {
         portfolio.Positions ??= [];
+        portfolio.ClosedPositions ??= [];
         portfolio.Positions = portfolio.Positions
+            .Where(p => !string.IsNullOrWhiteSpace(p.Symbol))
+            .Select(NormalizePosition)
+            .ToList();
+        portfolio.ClosedPositions = portfolio.ClosedPositions
             .Where(p => !string.IsNullOrWhiteSpace(p.Symbol))
             .Select(NormalizePosition)
             .ToList();
@@ -146,8 +151,10 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
     {
         position.Symbol = position.Symbol.Trim().ToUpperInvariant();
         position.Buys ??= [];
+        position.Sells ??= [];
         position.Notes ??= [];
         position.Buys = position.Buys.Where(b => b.Price > 0).ToList();
+        position.Sells = position.Sells.Where(s => s.Price > 0).ToList();
         return position;
     }
 
@@ -161,7 +168,7 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
     public Task DownloadCsvAsync(BrokerPortfolio portfolio)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Nganh,Ma CP,Gia mua,KL tong,Gia TB,Cat lo,Muc tieu,Ti trong,Trang thai,Note moi nhat");
+        sb.AppendLine("Nganh,Ma CP,Gia mua,KL tong,KL con lai,Gia TB,Cat lo,Muc tieu,Ti trong,Trang thai,Realized P&L (đ),Note moi nhat");
         foreach (var p in portfolio.Positions.OrderBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase))
         {
             var lots = string.Join(" | ", p.Buys.OrderBy(b => b.BoughtAt).Select((b, i) =>
@@ -175,12 +182,30 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
                 Csv(p.Symbol),
                 Csv(lots),
                 Csv(p.TotalQuantity?.ToString("0.##", CultureInfo.InvariantCulture)),
+                Csv(p.RemainingQuantity?.ToString("0.##", CultureInfo.InvariantCulture)),
                 Csv(p.AvgBuy?.ToString("0.##", CultureInfo.InvariantCulture)),
                 Csv(p.StopLoss?.ToString("0.##", CultureInfo.InvariantCulture)),
                 Csv(p.TargetPrice?.ToString("0.##", CultureInfo.InvariantCulture)),
                 Csv(p.WeightPct?.ToString("0.##", CultureInfo.InvariantCulture)),
                 Csv(BrokerStatusLabels.Vi(p.Status)),
+                Csv(p.RealizedPnl?.ToString("N0", CultureInfo.InvariantCulture)),
                 Csv(note)));
+        }
+
+        if ((portfolio.ClosedPositions?.Count ?? 0) > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("# Vi the da dong");
+            sb.AppendLine("Ma CP,Ngay dong,KL ban,Realized P&L (đ),Realized %");
+            foreach (var p in portfolio.ClosedPositions!.OrderBy(x => x.ClosedAt ?? DateTime.MinValue))
+            {
+                sb.AppendLine(string.Join(',',
+                    Csv(p.Symbol),
+                    Csv(p.ClosedAt?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
+                    Csv(p.SoldQuantity?.ToString("0.##", CultureInfo.InvariantCulture)),
+                    Csv(p.RealizedPnl?.ToString("N0", CultureInfo.InvariantCulture)),
+                    Csv(p.RealizedPnlPct?.ToString("N2", CultureInfo.InvariantCulture))));
+            }
         }
 
         return DownloadAsync("broker-portfolio.csv", sb.ToString());

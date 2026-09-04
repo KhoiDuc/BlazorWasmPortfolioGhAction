@@ -82,6 +82,14 @@
                     <span class="broker-stat-card-value broker-stat-muted">@stats.MissingQtyCount mã chưa có đủ KL/giá — chưa gộp vào tổng</span>
                 </div>
             }
+            @if (stats.HasRealized)
+            {
+                <div class="broker-stat-card broker-stat-card-realized @(stats.TotalRealized > 0 ? "positive" : stats.TotalRealized < 0 ? "negative" : "")">
+                    <span class="broker-stat-card-label">Realized tổng</span>
+                    <span class="broker-stat-card-value">@BrokerFormat.Vnd(stats.TotalRealized)</span>
+                    <span class="broker-stat-card-sub">@stats.ClosedCount vị thế đã đóng</span>
+                </div>
+            }
         </div>
 
         <div class="broker-dt-toolbar">
@@ -268,6 +276,72 @@
         }
 
         <p class="broker-table-foot">Giá CP theo nghìn đồng (×1.000 đ) · Lãi/Lỗ (đ) = (giá hiện tại − giá TB) × KL × 1.000 · Cần KL để tính tiền.</p>
+
+        @if ((Portfolio.ClosedPositions?.Count ?? 0) > 0)
+        {
+            <div class="broker-closed-section">
+                <button type="button" class="broker-closed-toggle ts-btn ts-btn-outline ts-btn-sm"
+                        aria-expanded="@(_showClosed.ToString().ToLowerInvariant())"
+                        aria-controls="broker-closed-table"
+                        @onclick="ToggleClosed">
+                    <span class="broker-closed-toggle-text">
+                        Vị thế đã đóng (@Portfolio.ClosedPositions!.Count)
+                        <span class="broker-closed-toggle-realized @(_closedRealized >= 0 ? "ts-positive" : "ts-negative")">
+                            @BrokerFormat.Vnd(_closedRealized)
+                        </span>
+                    </span>
+                    <span class="broker-closed-toggle-icon" aria-hidden="true">@( _showClosed ? "▼" : "▶" )</span>
+                </button>
+
+                @if (_showClosed)
+                {
+                    <div id="broker-closed-table" class="broker-table-scroll broker-closed-table">
+                        <table class="ts-table broker-table">
+                            <thead>
+                                <tr>
+                                    <th><span class="broker-dt-th-inner">Mã</span></th>
+                                    <th><span class="broker-dt-th-inner">Ngành</span></th>
+                                    <th><span class="broker-dt-th-inner">Lần mua</span></th>
+                                    <th><span class="broker-dt-th-inner">Lần bán</span></th>
+                                    <th><span class="broker-dt-th-inner">KL bán</span></th>
+                                    <th><span class="broker-dt-th-inner">Giá TB</span></th>
+                                    <th><span class="broker-dt-th-inner">Ngày đóng</span></th>
+                                    <th><span class="broker-dt-th-inner">Realized</span></th>
+                                    <th><span class="broker-dt-th-inner">%</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Portfolio.ClosedPositions!
+                                                                .OrderByDescending(x => x.ClosedAt ?? DateTime.MinValue)
+                                                                .ThenBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase))
+                                {
+                                    var selected = p.Symbol.Equals(SelectedSymbol, StringComparison.OrdinalIgnoreCase);
+                                    <tr class="@(selected ? "selected" : "")"
+                                        role="button"
+                                        tabindex="0"
+                                        @onclick="() => OnSelectClosed.InvokeAsync(p.Symbol)"
+                                        @onkeydown='(e) => OnRowKeydownClosed(e, p.Symbol)'>
+                                        <td><span class="broker-symbol">@p.Symbol</span></td>
+                                        <td class="broker-sector">@DisplaySector(p.Sector)</td>
+                                        <td>@p.Buys.Count</td>
+                                        <td>@p.Sells.Count</td>
+                                        <td class="broker-num">@BrokerFormat.Quantity(p.SoldQuantity)</td>
+                                        <td class="broker-num">@(p.AvgBuy?.ToString("N2") ?? "—")</td>
+                                        <td class="broker-num">@(p.ClosedAt?.ToString("dd/MM/yyyy") ?? "—")</td>
+                                        <td class="broker-num @(p.RealizedPnl is > 0 ? "ts-positive" : p.RealizedPnl is < 0 ? "ts-negative" : "")">
+                                            @BrokerFormat.Vnd(p.RealizedPnl)
+                                        </td>
+                                        <td class="broker-num @(p.RealizedPnlPct is > 0 ? "ts-positive" : p.RealizedPnlPct is < 0 ? "ts-negative" : "")">
+                                            @BrokerFormat.Pct(p.RealizedPnlPct)
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
     }
 </div>
 
@@ -289,12 +363,17 @@
     [Parameter] public string? SelectedSymbol { get; set; }
     [Parameter] public bool PriceBusy { get; set; }
     [Parameter] public EventCallback<string> OnSelect { get; set; }
+    [Parameter] public EventCallback<string> OnSelectClosed { get; set; }
 
     private string _search = "";
     private SortColumn _sortColumn = SortColumn.Symbol;
     private bool _sortDesc;
     private int _page = 1;
     private int _pageSize = 10;
+    private bool _showClosed;
+
+    private decimal _closedRealized =>
+        (Portfolio.ClosedPositions ?? []).Sum(p => p.RealizedPnl ?? 0m);
 
     private decimal? Quote(string symbol) =>
         Quotes.TryGetValue(symbol, out var v) ? v : null;
@@ -386,6 +465,14 @@
         if (e.Key is "Enter" or " ")
             _ = OnSelect.InvokeAsync(symbol);
     }
+
+    private void OnRowKeydownClosed(KeyboardEventArgs e, string symbol)
+    {
+        if (e.Key is "Enter" or " ")
+            _ = OnSelectClosed.InvokeAsync(symbol);
+    }
+
+    private void ToggleClosed() => _showClosed = !_showClosed;
 
     private void ToggleSort(SortColumn column)
     {

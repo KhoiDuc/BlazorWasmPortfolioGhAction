@@ -196,7 +196,8 @@
                                   Quotes="_quotes"
                                   SelectedSymbol="@_selected"
                                   PriceBusy="_priceBusy"
-                                  OnSelect="SelectSymbol" />
+                                  OnSelect="SelectSymbol"
+                                  OnSelectClosed="SelectClosed" />
         }
 
         <BrokerAiExplain />
@@ -209,7 +210,8 @@
                                   Position="Selected"
                                   CurrentPrice="@Quote(Selected.Symbol)"
                                   OnChanged="MarkDirty"
-                                  OnDeleted="DeleteSelected" />
+                                  OnDeleted="DeleteSelected"
+                                  OnClosed="OnPositionClosed" />
 
             <div class="ts-chart-wrap">
                 <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={Selected.Symbol}")"
@@ -252,7 +254,11 @@
     private BrokerPosition? Selected =>
         string.IsNullOrEmpty(_selected)
             ? null
-            : _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(_selected, StringComparison.OrdinalIgnoreCase));
+            : _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(_selected, StringComparison.OrdinalIgnoreCase))
+              ?? _portfolio.ClosedPositions.FirstOrDefault(p => p.Symbol.Equals(_selected, StringComparison.OrdinalIgnoreCase));
+
+    private bool SelectedIsClosed =>
+        Selected is not null && _portfolio.ClosedPositions.Contains(Selected);
 
     private decimal? Quote(string symbol) =>
         _quotes.TryGetValue(symbol, out var v) ? v : null;
@@ -271,6 +277,28 @@
     {
         _selected = symbol;
         await JS.InvokeVoidAsync("eval", "document.getElementById('broker-detail-panel')?.scrollIntoView({behavior:'smooth',block:'start'})");
+    }
+
+    private async Task SelectClosed(string symbol)
+    {
+        _selected = symbol;
+        await JS.InvokeVoidAsync("eval", "document.getElementById('broker-detail-panel')?.scrollIntoView({behavior:'smooth',block:'start'})");
+    }
+
+    private async Task OnPositionClosed()
+    {
+        if (Selected is null) return;
+        var pos = Selected;
+        _portfolio.Positions.Remove(pos);
+        _portfolio.ClosedPositions ??= [];
+        _portfolio.ClosedPositions.Add(pos);
+        _selected = null;
+        MarkDirty();
+        var realized = pos.RealizedPnl ?? 0m;
+        Flash(realized >= 0
+            ? $"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}"
+            : $"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}");
+        await Task.CompletedTask;
     }
 
     private void MarkDirty()

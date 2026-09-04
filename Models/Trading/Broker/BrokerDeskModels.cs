@@ -22,6 +22,7 @@ public class BrokerPortfolio
 {
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
     public List<BrokerPosition> Positions { get; set; } = [];
+    public List<BrokerPosition> ClosedPositions { get; set; } = [];
 }
 
 public class BrokerPosition
@@ -37,6 +38,7 @@ public class BrokerPosition
     public decimal? TargetPriceInput { get; set; }
     public decimal? WeightPct { get; set; }
     public List<BrokerLot> Buys { get; set; } = [];
+    public List<BrokerSell> Sells { get; set; } = [];
     public List<BrokerNote> Notes { get; set; } = [];
 
     [JsonIgnore]
@@ -46,6 +48,26 @@ public class BrokerPosition
         {
             var qty = Buys.Where(b => b.Quantity is > 0).Sum(b => b.Quantity!.Value);
             return qty > 0 ? qty : null;
+        }
+    }
+
+    [JsonIgnore]
+    public decimal? SoldQuantity
+    {
+        get
+        {
+            var qty = Sells.Where(s => s.Quantity is > 0).Sum(s => s.Quantity!.Value);
+            return qty > 0 ? qty : null;
+        }
+    }
+
+    [JsonIgnore]
+    public decimal? RemainingQuantity
+    {
+        get
+        {
+            var rem = (TotalQuantity ?? 0m) - (SoldQuantity ?? 0m);
+            return rem > 0 ? rem : 0m;
         }
     }
 
@@ -89,6 +111,70 @@ public class BrokerPosition
         }
     }
 
+    /// <summary>Realized P&L (VND) using FIFO matching of sells against buy lots.</summary>
+    [JsonIgnore]
+    public decimal? RealizedPnl
+    {
+        get
+        {
+            if (Sells.Count == 0) return null;
+            var lots = Buys.Where(b => b.Price > 0 && b.Quantity is > 0)
+                          .OrderBy(b => b.BoughtAt)
+                          .ThenBy(b => b.Id)
+                          .Select(b => (Price: b.Price, Qty: b.Quantity!.Value))
+                          .ToList();
+            if (lots.Count == 0) return null;
+
+            var lotIdx = 0;
+            var lotRemaining = lots[0].Qty;
+            decimal realized = 0m;
+
+            foreach (var sell in Sells.Where(s => s.Quantity is > 0 && s.Price > 0)
+                                       .OrderBy(s => s.SoldAt)
+                                       .ThenBy(s => s.Id))
+            {
+                var toMatch = sell.Quantity!.Value;
+                while (toMatch > 0 && lotIdx < lots.Count)
+                {
+                    var take = Math.Min(toMatch, lotRemaining);
+                    realized += BrokerMoney.PositionValueVnd(sell.Price - lots[lotIdx].Price, take);
+                    lotRemaining -= take;
+                    toMatch -= take;
+                    if (lotRemaining <= 0)
+                    {
+                        lotIdx++;
+                        if (lotIdx < lots.Count) lotRemaining = lots[lotIdx].Qty;
+                    }
+                }
+            }
+
+            return realized;
+        }
+    }
+
+    [JsonIgnore]
+    public decimal? RealizedPnlPct
+    {
+        get
+        {
+            var pnl = RealizedPnl;
+            if (pnl is null) return null;
+            var avg = AvgBuy;
+            var sold = SoldQuantity;
+            if (avg is null or 0 || sold is null or 0) return null;
+            var costSold = BrokerMoney.PositionValueVnd(avg.Value, sold.Value);
+            if (costSold == 0) return null;
+            return pnl.Value / costSold * 100m;
+        }
+    }
+
+    [JsonIgnore]
+    public bool IsClosed => Sells.Count > 0 && (RemainingQuantity is null or 0);
+
+    [JsonIgnore]
+    public DateTime? ClosedAt =>
+        IsClosed ? Sells.Where(s => s.SoldAt != default).MaxBy(s => s.SoldAt)?.SoldAt : null;
+
     public decimal? PnlPct(decimal? current)
     {
         var avg = AvgBuy;
@@ -96,17 +182,19 @@ public class BrokerPosition
         return (current.Value - avg.Value) / avg.Value * 100m;
     }
 
+    /// <summary>Unrealized P&L on remaining (unsold) shares.</summary>
     public decimal? PnlAmount(decimal? current)
     {
-        var qty = TotalQuantity;
-        var cost = CostBasis;
-        if (qty is null or 0 || cost is null || current is null or 0) return null;
-        return BrokerMoney.PositionValueVnd(current.Value, qty.Value) - cost.Value;
+        var qty = RemainingQuantity;
+        if (qty is null or 0) return null;
+        var avg = AvgBuy;
+        if (avg is null or 0 || current is null or 0) return null;
+        return BrokerMoney.PositionValueVnd(current.Value, qty.Value) - BrokerMoney.PositionValueVnd(avg.Value, qty.Value);
     }
 
     public decimal? MarketValueVnd(decimal? current)
     {
-        var qty = TotalQuantity;
+        var qty = RemainingQuantity;
         if (qty is null or 0 || current is null or 0) return null;
         return BrokerMoney.PositionValueVnd(current.Value, qty.Value);
     }
@@ -127,6 +215,15 @@ public class BrokerLot
     public decimal? TargetPrice { get; set; }
     public BrokerLevelInputMode? TargetPriceMode { get; set; }
     public decimal? TargetPriceInput { get; set; }
+    public string? Note { get; set; }
+}
+
+public class BrokerSell
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N")[..8];
+    public DateTime SoldAt { get; set; } = DateTime.Today;
+    public decimal Price { get; set; }
+    public decimal? Quantity { get; set; }
     public string? Note { get; set; }
 }
 
@@ -212,6 +309,10 @@ public sealed class BrokerPortfolioStats
     public int LosingCount { get; init; }
     public int FlatCount { get; init; }
     public bool HasMoneyStats => TrackedCount > 0;
+
+    public decimal TotalRealized { get; init; }
+    public int ClosedCount { get; init; }
+    public bool HasRealized => ClosedCount > 0;
 }
 
 public static class BrokerPortfolioStatsCalculator
@@ -230,6 +331,8 @@ public static class BrokerPortfolioStatsCalculator
 
         foreach (var p in positions)
         {
+            if (p.IsClosed) continue;
+
             var cost = p.CostBasis;
             var qty = p.TotalQuantity;
             if (qty is null or 0 || cost is null or 0)
@@ -268,7 +371,17 @@ public static class BrokerPortfolioStatsCalculator
             TotalQuantity = totalQty,
             WinningCount = winning,
             LosingCount = losing,
-            FlatCount = flat
+            FlatCount = flat,
+            TotalRealized = ComputeRealized(portfolio),
+            ClosedCount = (portfolio.ClosedPositions?.Count ?? 0)
         };
+    }
+
+    public static decimal ComputeRealized(BrokerPortfolio portfolio)
+    {
+        var closed = portfolio.ClosedPositions ?? [];
+        var openWithSells = (portfolio.Positions ?? []).Where(p => p.Sells.Count > 0);
+        return closed.Sum(p => p.RealizedPnl ?? 0m)
+             + openWithSells.Sum(p => p.RealizedPnl ?? 0m);
     }
 }

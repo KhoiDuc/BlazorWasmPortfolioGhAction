@@ -24,6 +24,10 @@
                 {
                     <span class="broker-partial-qty-warn" title="@L["Trading_BrokerPartialQtyHint"]">⚠</span>
                 }
+                @if (Position.IsClosed && Position.ClosedAt is not null)
+                {
+                    <span class="broker-status-pill broker-status-DaDong" title="Đã đóng position">Đã đóng @Position.ClosedAt.Value.ToString("dd/MM/yyyy")</span>
+                }
             </div>
         </div>
         <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Delete">@L["Trading_BrokerDeleteSymbol"]</button>
@@ -42,6 +46,23 @@
             <span class="broker-kpi-label">KL tổng</span>
             <span class="broker-kpi-value">@BrokerFormat.Quantity(Position.TotalQuantity)</span>
         </div>
+        @if (Position.Sells.Count > 0)
+        {
+            <div class="broker-kpi">
+                <span class="broker-kpi-label">Còn lại</span>
+                <span class="broker-kpi-value">@BrokerFormat.Quantity(Position.RemainingQuantity)</span>
+            </div>
+            <div class="broker-kpi">
+                <span class="broker-kpi-label">Đã bán</span>
+                <span class="broker-kpi-value">@BrokerFormat.Quantity(Position.SoldQuantity)</span>
+            </div>
+            <div class="broker-kpi broker-kpi-pnl broker-kpi-realized">
+                <span class="broker-kpi-label">Realized</span>
+                <span class="broker-kpi-value @(Position.RealizedPnl is > 0 ? "ts-positive" : Position.RealizedPnl is < 0 ? "ts-negative" : "")">
+                    @BrokerFormat.Vnd(Position.RealizedPnl)
+                </span>
+            </div>
+        }
         <div class="broker-kpi broker-kpi-pnl">
             <span class="broker-kpi-label">% L/L</span>
             <span class="broker-kpi-value @(pnl is > 0 ? "ts-positive" : pnl is < 0 ? "ts-negative" : "")">
@@ -67,6 +88,7 @@
     <div class="broker-detail-tabs" role="tablist">
         <button type="button" role="tab" class="broker-tab @(_tab == "info" ? "active" : "")" @onclick='() => _tab = "info"'>Tổng quan</button>
         <button type="button" role="tab" class="broker-tab @(_tab == "lots" ? "active" : "")" @onclick='() => _tab = "lots"'>Lần mua (@Position.Buys.Count)</button>
+        <button type="button" role="tab" class="broker-tab @(_tab == "sells" ? "active" : "")" @onclick='() => _tab = "sells"'>Lần bán (@Position.Sells.Count)</button>
         <button type="button" role="tab" class="broker-tab @(_tab == "notes" ? "active" : "")" @onclick='() => _tab = "notes"'>Note (@Position.Notes.Count)</button>
     </div>
 
@@ -188,6 +210,79 @@
                 </article>
             }
         }
+        else if (_tab == "sells")
+        {
+            @if (!Position.IsClosed && Position.RemainingQuantity is > 0)
+            {
+                <section class="broker-block broker-sell-form">
+                    <h4 class="broker-block-title">Ghi lệnh bán</h4>
+                    <div class="broker-form-row broker-form-row-3 broker-form-row-align">
+                        <div class="broker-field">
+                            <label class="broker-field-label" for="sell-price">Giá bán</label>
+                            <input id="sell-price" class="ts-input @(_sellErr is not null ? "ts-input-invalid" : "")"
+                                   type="number" min="0.0001" step="any" placeholder="60.5"
+                                   @bind="_sellPrice" @bind:after='() => _sellErr = null' />
+                        </div>
+                        <div class="broker-field">
+                            <label class="broker-field-label" for="sell-qty">KL bán</label>
+                            <input id="sell-qty" class="ts-input @(_sellErr is not null ? "ts-input-invalid" : "")"
+                                   type="number" min="0.0001" step="any" placeholder="@BrokerFormat.Quantity(Position.RemainingQuantity)"
+                                   @bind="_sellQty" @bind:after='() => _sellErr = null' />
+                        </div>
+                        <div class="broker-field">
+                            <label class="broker-field-label" for="sell-date">Ngày bán</label>
+                            <input id="sell-date" class="ts-input" type="date" @bind="_sellDate" @bind:format="yyyy-MM-dd" />
+                        </div>
+                    </div>
+                    <div class="broker-field broker-lot-note-field">
+                        <label class="broker-field-label" for="sell-note">Note lệnh bán</label>
+                        <input id="sell-note" class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen"
+                               placeholder="Cắt lỗ / chốt lời / bán một phần…" @bind="_sellNote" />
+                    </div>
+                    @if (!string.IsNullOrEmpty(_sellErr))
+                    {
+                        <p class="ts-field-error">@_sellErr</p>
+                    }
+                    <button class="ts-btn ts-btn-primary ts-btn-sm" type="button" @onclick="AddSell">Ghi lệnh bán</button>
+                </section>
+            }
+
+            @if (Position.Sells.Count == 0)
+            {
+                <p class="broker-empty-inline">Chưa có lệnh bán nào.</p>
+            }
+            @foreach (var sell in Position.Sells.OrderBy(s => s.SoldAt).Select((s, idx) => (Sell: s, Index: idx + 1)))
+            {
+                <article class="broker-lot-card broker-sell-card">
+                    <header class="broker-lot-card-head">
+                        <span class="broker-lot-badge broker-sell-badge">B@(sell.Index)</span>
+                        <span class="broker-lot-date">@sell.Sell.SoldAt.ToString("dd/MM/yyyy")</span>
+                        @if (!Position.IsClosed)
+                        {
+                            <button class="broker-lot-remove" type="button" title="Xóa lệnh bán" @onclick="() => RemoveSell(sell.Sell)">×</button>
+                        }
+                    </header>
+                    <div class="broker-lot-fields">
+                        <div class="broker-field">
+                            <label class="broker-field-label">Ngày</label>
+                            <input class="ts-input" type="date" @bind="sell.Sell.SoldAt" @bind:format="yyyy-MM-dd" @bind:after="Changed" />
+                        </div>
+                        <div class="broker-field">
+                            <label class="broker-field-label">Giá bán</label>
+                            <input class="ts-input" type="number" min="0.0001" step="any" @bind="sell.Sell.Price" @bind:after="Changed" />
+                        </div>
+                        <div class="broker-field">
+                            <label class="broker-field-label">KL</label>
+                            <input class="ts-input" type="number" min="0.0001" step="any" placeholder="—" @bind="sell.Sell.Quantity" @bind:after="Changed" />
+                        </div>
+                    </div>
+                    <div class="broker-field broker-lot-note-field">
+                        <label class="broker-field-label">Note lệnh bán</label>
+                        <input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" placeholder="Ghi chú riêng cho lệnh bán này…" @bind="sell.Sell.Note" @bind:after="Changed" />
+                    </div>
+                </article>
+            }
+        }
         else
         {
             @if (Position.Notes.Count == 0)
@@ -253,6 +348,7 @@
     [Parameter] public decimal? CurrentPrice { get; set; }
     [Parameter] public EventCallback OnChanged { get; set; }
     [Parameter] public EventCallback OnDeleted { get; set; }
+    [Parameter] public EventCallback OnClosed { get; set; }
 
     private string _tab = "info";
     private string _noteText = "";
@@ -262,6 +358,13 @@
     private bool _explainBusy;
     private string? _error;
     private readonly Dictionary<string, string> _lotErrors = new();
+
+    // Sell form state
+    private decimal? _sellPrice;
+    private decimal? _sellQty;
+    private DateTime _sellDate = DateTime.Today;
+    private string _sellNote = "";
+    private string? _sellErr;
 
     private decimal? PositionRefPrice =>
         Position.AvgBuy ?? Position.Buys.FirstOrDefault(b => b.Price > 0)?.Price;
@@ -365,6 +468,59 @@
 
         Position.Buys.Remove(lot);
         _lotErrors.Remove(lot.Id);
+        await Changed();
+    }
+
+    private async Task AddSell()
+    {
+        _sellErr = null;
+
+        if (_sellPrice is not > 0)
+        {
+            _sellErr = "Giá bán phải > 0.";
+            return;
+        }
+        if (_sellQty is not > 0)
+        {
+            _sellErr = "KL bán phải > 0.";
+            return;
+        }
+
+        var remaining = Position.RemainingQuantity ?? 0m;
+        if (_sellQty.Value > remaining)
+        {
+            _sellErr = $"KL bán vượt quá KL còn lại ({BrokerFormat.Quantity(remaining)}).";
+            return;
+        }
+
+        Position.Sells.Add(new BrokerSell
+        {
+            SoldAt = _sellDate,
+            Price = _sellPrice!.Value,
+            Quantity = _sellQty,
+            Note = string.IsNullOrWhiteSpace(_sellNote) ? null : _sellNote.Trim()
+        });
+
+        _sellPrice = _sellQty = null;
+        _sellNote = "";
+        _sellDate = DateTime.Today;
+
+        // Auto-close if no remaining quantity
+        if (Position.RemainingQuantity is null or 0)
+        {
+            await OnClosed.InvokeAsync();
+            return;
+        }
+
+        await Changed();
+    }
+
+    private async Task RemoveSell(BrokerSell sell)
+    {
+        if (!await JS.InvokeAsync<bool>("tradingAuth.confirm", "Xóa lệnh bán này?"))
+            return;
+
+        Position.Sells.Remove(sell);
         await Changed();
     }
 
