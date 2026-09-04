@@ -1,0 +1,123 @@
+@inject IStringLocalizer<SharedResources> L
+
+@if (_show)
+{
+    <div class="broker-qs-overlay" @onclick="Close" role="dialog" aria-modal="true" aria-labelledby="broker-qs-title">
+        <div class="broker-qs-modal" @onclick:stopPropagation="true">
+            <div class="broker-qs-head">
+                <h3 id="broker-qs-title" class="ts-panel-title">Bán nhanh @Position?.Symbol</h3>
+                <button type="button" class="broker-lot-remove broker-qs-close" aria-label="Đóng" @onclick="Close">×</button>
+            </div>
+
+            @if (Position is not null)
+            {
+                <div class="broker-qs-summary">
+                    <span>KL còn lại: <strong>@BrokerFormat.Quantity(Position.RemainingQuantity)</strong></span>
+                    @if (CurrentPrice is not null)
+                    {
+                        <span>Giá hiện tại: <strong>@CurrentPrice.Value.ToString("N2")</strong></span>
+                    }
+                </div>
+
+                <div class="broker-qs-form">
+                    <div class="broker-form-row broker-form-row-2 broker-form-row-align">
+                        <div class="broker-field">
+                            <label class="broker-field-label" for="qs-price">Giá bán</label>
+                            <input id="qs-price" class="ts-input @(_err is not null ? "ts-input-invalid" : "")"
+                                   type="number" min="0.0001" step="any" placeholder="60.5"
+                                   @bind="_price" @bind:after='() => _err = null' />
+                        </div>
+                        <div class="broker-field">
+                            <label class="broker-field-label" for="qs-qty">KL bán</label>
+                            <input id="qs-qty" class="ts-input @(_err is not null ? "ts-input-invalid" : "")"
+                                   type="number" min="0.0001" step="any"
+                                   placeholder="@BrokerFormat.Quantity(Position.RemainingQuantity)"
+                                   @bind="_qty" @bind:after='() => _err = null' />
+                        </div>
+                    </div>
+                    <div class="broker-form-row broker-form-row-2 broker-form-row-align">
+                        <div class="broker-field">
+                            <label class="broker-field-label" for="qs-date">Ngày bán</label>
+                            <input id="qs-date" class="ts-input" type="date" @bind="_date" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="broker-field">
+                            <label class="broker-field-label" for="qs-note">Note</label>
+                            <input id="qs-note" class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen"
+                                   placeholder="Chốt lời / cắt lỗ…" @bind="_note" />
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(_err))
+                    {
+                        <p class="ts-field-error">@_err</p>
+                    }
+                    <div class="broker-qs-actions">
+                        <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Close">Hủy</button>
+                        <button class="ts-btn ts-btn-primary ts-btn-sm" type="button" @onclick="Submit">Ghi lệnh bán</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public BrokerPosition? Position { get; set; }
+    [Parameter] public decimal? CurrentPrice { get; set; }
+    [Parameter] public EventCallback<BrokerSell> OnSubmitSell { get; set; }
+
+    private bool _show;
+    private decimal? _price;
+    private decimal? _qty;
+    private DateTime _date = DateTime.Today;
+    private string _note = "";
+    private string? _err;
+
+    public void Open(BrokerPosition position, decimal? currentPrice)
+    {
+        Position = position;
+        CurrentPrice = currentPrice;
+        _price = currentPrice;
+        _qty = position.RemainingQuantity;
+        _date = DateTime.Today;
+        _note = "";
+        _err = null;
+        _show = true;
+    }
+
+    public void Close() => _show = false;
+
+    private async Task Submit()
+    {
+        _err = null;
+
+        if (Position is null) return;
+        if (_price is not > 0)
+        {
+            _err = "Giá bán phải > 0.";
+            return;
+        }
+        if (_qty is not > 0)
+        {
+            _err = "KL bán phải > 0.";
+            return;
+        }
+
+        var remaining = Position.RemainingQuantity ?? 0m;
+        if (_qty.Value > remaining)
+        {
+            _err = $"KL bán vượt quá KL còn lại ({BrokerFormat.Quantity(remaining)}).";
+            return;
+        }
+
+        var sell = new BrokerSell
+        {
+            SoldAt = _date,
+            Price = _price!.Value,
+            Quantity = _qty,
+            Note = string.IsNullOrWhiteSpace(_note) ? null : _note.Trim()
+        };
+
+        _show = false;
+        await OnSubmitSell.InvokeAsync(sell);
+    }
+}

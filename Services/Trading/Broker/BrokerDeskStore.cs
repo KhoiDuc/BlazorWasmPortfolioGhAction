@@ -153,8 +153,11 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
         position.Buys ??= [];
         position.Sells ??= [];
         position.Notes ??= [];
+        position.Tags ??= [];
         position.Buys = position.Buys.Where(b => b.Price > 0).ToList();
         position.Sells = position.Sells.Where(s => s.Price > 0).ToList();
+        foreach (var lot in position.Buys)
+            lot.Tags ??= [];
         return position;
     }
 

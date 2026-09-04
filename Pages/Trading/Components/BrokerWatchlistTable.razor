@@ -104,6 +104,14 @@
                        @bind:after="ResetPage" />
             </div>
             <div class="broker-dt-toolbar-right">
+                <label class="broker-dt-label" for="broker-dt-tag">Tag</label>
+                <select id="broker-dt-tag" class="ts-select broker-dt-tag-filter" @bind="_tagFilter" @bind:after="ResetPage">
+                    <option value="">Tất cả</option>
+                    @foreach (var t in AllTags)
+                    {
+                        <option value="@t">@t</option>
+                    }
+                </select>
                 <label class="broker-dt-label" for="broker-dt-length">Hiển thị</label>
                 <select id="broker-dt-length" class="ts-select broker-dt-length" @bind="_pageSize" @bind:after="ResetPage">
                     <option value="10">10</option>
@@ -186,6 +194,7 @@
                             </th>
                             <th><span class="broker-dt-th-inner">@L["Trading_BrokerStop"]</span></th>
                             <th><span class="broker-dt-th-inner">@L["Trading_BrokerTarget"]</span></th>
+                            <th><span class="broker-dt-th-inner">Tag</span></th>
                             <th class="broker-dt-sortable @SortClass(SortColumn.Status)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.Status)"
@@ -195,6 +204,7 @@
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColStatus"] @SortIcon(SortColumn.Status)</span>
                             </th>
                             <th><span class="broker-dt-th-inner">@L["Trading_BrokerNote"]</span></th>
+                            <th><span class="broker-dt-th-inner">Thao tác</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -204,7 +214,13 @@
                             var pnl = p.PnlPct(current);
                             var pnlAmt = p.PnlAmount(current);
                             var selected = p.Symbol.Equals(SelectedSymbol, StringComparison.OrdinalIgnoreCase);
-                            <tr class="@(selected ? "selected" : "")"
+                            var hitSl = !p.IsClosed && p.StopLoss is > 0 && current is > 0 && current <= p.StopLoss.Value;
+                            var hitTp = !p.IsClosed && p.TargetPrice is > 0 && current is > 0 && current >= p.TargetPrice.Value;
+                            var rowClass = new List<string>();
+                            if (selected) rowClass.Add("selected");
+                            if (hitSl) rowClass.Add("broker-row-alert-sl");
+                            if (hitTp) rowClass.Add("broker-row-alert-tp");
+                            <tr class="@(string.Join(" ", rowClass))"
                                 role="button"
                                 tabindex="0"
                                 @onclick="() => OnSelect.InvokeAsync(p.Symbol)"
@@ -214,6 +230,14 @@
                                     @if (p.HasPartialQtyLots)
                                     {
                                         <span class="broker-partial-qty-warn" title="@L["Trading_BrokerPartialQtyHint"]">⚠</span>
+                                    }
+                                    @if (hitSl)
+                                    {
+                                        <span class="broker-alert-icon" title="Chạm cắt lỗ" aria-label="Chạm cắt lỗ">🔴</span>
+                                    }
+                                    @if (hitTp)
+                                    {
+                                        <span class="broker-alert-icon" title="Chạm mục tiêu" aria-label="Chạm mục tiêu">🟢</span>
                                     }
                                 </td>
                                 <td class="broker-sector">@DisplaySector(p.Sector)</td>
@@ -236,6 +260,19 @@
                                 </td>
                                 <td class="broker-num broker-stop">@BrokerLevelHelper.FormatDisplay(p.StopLoss, p.StopLossMode, p.StopLossInput, isStop: true)</td>
                                 <td class="broker-num broker-target">@BrokerLevelHelper.FormatDisplay(p.TargetPrice, p.TargetPriceMode, p.TargetPriceInput, isStop: false)</td>
+                                <td class="broker-tag-cell">
+                                    @if (p.Tags is { Count: > 0 })
+                                    {
+                                        @foreach (var t in p.Tags)
+                                        {
+                                            <span class="broker-tag-chip-sm">@t</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="broker-status-muted">—</span>
+                                    }
+                                </td>
                                 <td>
                                     @if (p.Status == BrokerPositionStatus.ChuaQuyet)
                                     {
@@ -247,6 +284,15 @@
                                     }
                                 </td>
                                 <td class="broker-note-cell">@DisplayLatestNote(p)</td>
+                                <td class="broker-row-action">
+                                    @if (!p.IsClosed && p.RemainingQuantity is > 0)
+                                    {
+                                        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm broker-quick-sell-btn"
+                                                aria-label="Bán nhanh @p.Symbol"
+                                                @onclick="() => OnQuickSell.InvokeAsync(p.Symbol)"
+                                                @onclick:stopPropagation="true">Bán</button>
+                                    }
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -360,8 +406,10 @@
     [Parameter] public bool PriceBusy { get; set; }
     [Parameter] public EventCallback<string> OnSelect { get; set; }
     [Parameter] public EventCallback<string> OnSelectClosed { get; set; }
+    [Parameter] public EventCallback<string> OnQuickSell { get; set; }
 
     private string _search = "";
+    private string _tagFilter = "";
     private SortColumn _sortColumn = SortColumn.Symbol;
     private bool _sortDesc;
     private int _page = 1;
@@ -370,17 +418,34 @@
     private decimal _closedRealized =>
         (Portfolio.ClosedPositions ?? []).Sum(p => p.RealizedPnl ?? 0m);
 
+    private IReadOnlyList<string> AllTags =>
+        (Portfolio.Positions ?? [])
+            .SelectMany(p => p.Tags ?? [])
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
     private decimal? Quote(string symbol) =>
         Quotes.TryGetValue(symbol, out var v) ? v : null;
 
     private IEnumerable<BrokerPosition> GetFilteredPositions()
     {
         var positions = Portfolio.Positions ?? [];
-        if (string.IsNullOrWhiteSpace(_search))
-            return positions;
+        IEnumerable<BrokerPosition> result = positions;
 
-        var q = _search.Trim();
-        return positions.Where(p => MatchesSearch(p, q));
+        if (!string.IsNullOrWhiteSpace(_search))
+        {
+            var q = _search.Trim();
+            result = result.Where(p => MatchesSearch(p, q));
+        }
+
+        if (!string.IsNullOrWhiteSpace(_tagFilter))
+        {
+            var tf = _tagFilter.Trim();
+            result = result.Where(p => p.Tags is not null && p.Tags.Contains(tf, StringComparer.OrdinalIgnoreCase));
+        }
+
+        return result;
     }
 
     private bool MatchesSearch(BrokerPosition p, string q)

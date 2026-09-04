@@ -30,7 +30,14 @@
                 }
             </div>
         </div>
-        <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Delete">@L["Trading_BrokerDeleteSymbol"]</button>
+        <div class="broker-detail-header-actions">
+            @if (Position.IsClosed)
+            {
+                <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Reopen" aria-label="Mở lại vị thế đã đóng">Mở lại</button>
+                <button class="ts-btn ts-btn-outline ts-btn-sm broker-btn-danger" type="button" @onclick="DeleteClosed" aria-label="Xóa vị thế đã đóng">Xóa đã đóng</button>
+            }
+            <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Delete">@L["Trading_BrokerDeleteSymbol"]</button>
+        </div>
     </div>
 
     <div class="broker-detail-kpis">
@@ -89,6 +96,7 @@
         <button type="button" role="tab" class="broker-tab @(_tab == "info" ? "active" : "")" @onclick='() => _tab = "info"'>Tổng quan</button>
         <button type="button" role="tab" class="broker-tab @(_tab == "lots" ? "active" : "")" @onclick='() => _tab = "lots"'>Lần mua (@Position.Buys.Count)</button>
         <button type="button" role="tab" class="broker-tab @(_tab == "sells" ? "active" : "")" @onclick='() => _tab = "sells"'>Lần bán (@Position.Sells.Count)</button>
+        <button type="button" role="tab" class="broker-tab @(_tab == "timeline" ? "active" : "")" @onclick='() => _tab = "timeline"'>Timeline</button>
         <button type="button" role="tab" class="broker-tab @(_tab == "notes" ? "active" : "")" @onclick='() => _tab = "notes"'>Note (@Position.Notes.Count)</button>
     </div>
 
@@ -111,6 +119,23 @@
                             }
                         </select>
                     </div>
+                </div>
+                <div class="broker-field">
+                    <label class="broker-field-label" for="pos-tags">Tag chiến lược</label>
+                    <div class="broker-tag-input-wrap">
+                        @foreach (var tag in Position.Tags.ToList())
+                        {
+                            <span class="broker-tag-chip">
+                                @tag
+                                <button type="button" class="broker-tag-remove" aria-label="Xóa tag @tag" @onclick="() => RemoveTag(tag)">×</button>
+                            </span>
+                        }
+                        <input id="pos-tags" class="ts-input broker-tag-input"
+                               placeholder="Swing, dài hạn, lướt sóng… (Enter để thêm)"
+                               @bind="_newTag" @bind:event="oninput"
+                               @onkeydown="OnTagKeydown" />
+                    </div>
+                    <p class="broker-block-desc">Phân loại vị thế để lọc và báo cáo theo chiến lược.</p>
                 </div>
             </section>
 
@@ -203,6 +228,23 @@
                         <label class="broker-field-label">Note lần mua</label>
                         <input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" placeholder="Ghi chú riêng cho lần mua này…" @bind="lot.Lot.Note" @bind:after="Changed" />
                     </div>
+                    <div class="broker-field broker-lot-tags-field">
+                        <label class="broker-field-label">Tag lần mua</label>
+                        <div class="broker-tag-input-wrap">
+                            @foreach (var tag in lot.Lot.Tags.ToList())
+                            {
+                                <span class="broker-tag-chip">
+                                    @tag
+                                    <button type="button" class="broker-tag-remove" aria-label="Xóa tag @tag" @onclick="() => RemoveLotTag(lot.Lot, tag)">×</button>
+                                </span>
+                            }
+                            <input class="ts-input broker-tag-input"
+                                   placeholder="Swing, lướt sóng… (Enter để thêm)"
+                                   value="@GetLotTagInput(lot.Lot.Id)"
+                                   @oninput="@((ChangeEventArgs e) => SetLotTagInput(lot.Lot.Id, (string?)e.Value ?? ""))"
+                                   @onkeydown="@((KeyboardEventArgs e) => OnLotTagKeydown(e, lot.Lot))" />
+                        </div>
+                    </div>
                     @if (_lotErrors.TryGetValue(lot.Lot.Id, out var lotErr))
                     {
                         <p class="ts-field-error broker-lot-error">@lotErr</p>
@@ -232,6 +274,18 @@
                         <div class="broker-field">
                             <label class="broker-field-label" for="sell-date">Ngày bán</label>
                             <input id="sell-date" class="ts-input" type="date" @bind="_sellDate" @bind:format="yyyy-MM-dd" />
+                        </div>
+                    </div>
+                    <div class="broker-form-row broker-form-row-2 broker-form-row-align">
+                        <div class="broker-field">
+                            <label class="broker-field-label" for="sell-fee">Phí (đ) <span class="broker-optional">(tùy chọn)</span></label>
+                            <input id="sell-fee" class="ts-input" type="number" min="0" step="any" placeholder="0"
+                                   @bind="_sellFee" />
+                        </div>
+                        <div class="broker-field">
+                            <label class="broker-field-label" for="sell-tax">Thuế (đ) <span class="broker-optional">(tùy chọn)</span></label>
+                            <input id="sell-tax" class="ts-input" type="number" min="0" step="any" placeholder="0"
+                                   @bind="_sellTax" />
                         </div>
                     </div>
                     <div class="broker-field broker-lot-note-field">
@@ -276,11 +330,59 @@
                             <input class="ts-input" type="number" min="0.0001" step="any" placeholder="—" @bind="sell.Sell.Quantity" @bind:after="Changed" />
                         </div>
                     </div>
+                    <div class="broker-form-row broker-form-row-2 broker-form-row-align">
+                        <div class="broker-field">
+                            <label class="broker-field-label">Phí (đ)</label>
+                            <input class="ts-input" type="number" min="0" step="any" placeholder="0" @bind="sell.Sell.Fee" @bind:after="Changed" />
+                        </div>
+                        <div class="broker-field">
+                            <label class="broker-field-label">Thuế (đ)</label>
+                            <input class="ts-input" type="number" min="0" step="any" placeholder="0" @bind="sell.Sell.Tax" @bind:after="Changed" />
+                        </div>
+                    </div>
                     <div class="broker-field broker-lot-note-field">
                         <label class="broker-field-label">Note lệnh bán</label>
                         <input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" placeholder="Ghi chú riêng cho lệnh bán này…" @bind="sell.Sell.Note" @bind:after="Changed" />
                     </div>
                 </article>
+            }
+        }
+        else if (_tab == "timeline")
+        {
+            @if (Position.Buys.Count == 0 && Position.Sells.Count == 0 && Position.Notes.Count == 0)
+            {
+                <p class="broker-empty-inline">Chưa có giao dịch nào.</p>
+            }
+            else
+            {
+                <div class="broker-timeline-merged">
+                    @{
+                        var entries = new List<(DateTime Date, string Icon, string Kind, string Text)>();
+                        foreach (var b in Position.Buys.OrderBy(b => b.BoughtAt))
+                            entries.Add((b.BoughtAt, "▲", "buy",
+                                $"Mua {(b.Quantity is > 0 ? $"{b.Quantity} CP " : "")}@ {b.Price:N2}"
+                                + (!string.IsNullOrWhiteSpace(b.Note) ? $" · {b.Note}" : "")));
+                        foreach (var s in Position.Sells.OrderBy(s => s.SoldAt))
+                            entries.Add((s.SoldAt, "▼", "sell",
+                                $"Bán {(s.Quantity is > 0 ? $"{s.Quantity} CP " : "")}@ {s.Price:N2}"
+                                + (s.Fee is > 0 ? $" · phí {s.Fee:N0}đ" : "")
+                                + (s.Tax is > 0 ? $" · thuế {s.Tax:N0}đ" : "")
+                                + (!string.IsNullOrWhiteSpace(s.Note) ? $" · {s.Note}" : "")));
+                        foreach (var n in Position.Notes.OrderBy(n => n.At))
+                            entries.Add((n.At, "◆", "note",
+                                $"{(n.Kind == BrokerNoteKind.Self ? "Của tôi" : "Broker")}: {n.Text}"));
+                        entries = entries.OrderByDescending(e => e.Date).ThenByDescending(e => e.Kind).ToList();
+                    }
+
+                    @foreach (var e in entries)
+                    {
+                        <div class="broker-tl-entry broker-tl-@e.Kind">
+                            <span class="broker-tl-icon" aria-hidden="true">@e.Icon</span>
+                            <span class="broker-tl-date">@e.Date.ToString("dd/MM/yyyy")</span>
+                            <span class="broker-tl-text">@e.Text</span>
+                        </div>
+                    }
+                </div>
             }
         }
         else
@@ -349,6 +451,8 @@
     [Parameter] public EventCallback OnChanged { get; set; }
     [Parameter] public EventCallback OnDeleted { get; set; }
     [Parameter] public EventCallback OnClosed { get; set; }
+    [Parameter] public EventCallback OnReopen { get; set; }
+    [Parameter] public EventCallback OnDeleteClosed { get; set; }
 
     private string _tab = "info";
     private string _noteText = "";
@@ -362,9 +466,13 @@
     // Sell form state
     private decimal? _sellPrice;
     private decimal? _sellQty;
+    private decimal? _sellFee;
+    private decimal? _sellTax;
     private DateTime _sellDate = DateTime.Today;
     private string _sellNote = "";
     private string? _sellErr;
+    private string _newTag = "";
+    private readonly Dictionary<string, string> _lotTagInput = new(StringComparer.OrdinalIgnoreCase);
 
     private decimal? PositionRefPrice =>
         Position.AvgBuy ?? Position.Buys.FirstOrDefault(b => b.Price > 0)?.Price;
@@ -498,10 +606,12 @@
             SoldAt = _sellDate,
             Price = _sellPrice!.Value,
             Quantity = _sellQty,
+            Fee = _sellFee is > 0 ? _sellFee : null,
+            Tax = _sellTax is > 0 ? _sellTax : null,
             Note = string.IsNullOrWhiteSpace(_sellNote) ? null : _sellNote.Trim()
         });
 
-        _sellPrice = _sellQty = null;
+        _sellPrice = _sellQty = _sellFee = _sellTax = null;
         _sellNote = "";
         _sellDate = DateTime.Today;
 
@@ -522,6 +632,60 @@
 
         Position.Sells.Remove(sell);
         await Changed();
+    }
+
+    private void OnTagKeydown(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or ",")
+            AddTag();
+    }
+
+    private void AddTag()
+    {
+        var tag = _newTag.Trim();
+        if (string.IsNullOrEmpty(tag)) return;
+        if (tag.Length > 30) tag = tag[..30];
+        Position.Tags ??= [];
+        if (!Position.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase))
+            Position.Tags.Add(tag);
+        _newTag = "";
+        _ = Changed();
+    }
+
+    private void RemoveTag(string tag)
+    {
+        Position.Tags?.Remove(tag);
+        _ = Changed();
+    }
+
+    private void SetLotTagInput(string lotId, string value) => _lotTagInput[lotId] = value;
+
+    private string GetLotTagInput(string lotId) => _lotTagInput.TryGetValue(lotId, out var v) ? v : "";
+
+    private void OnLotTagKeydown(KeyboardEventArgs e, BrokerLot lot)
+    {
+        if (e.Key is "Enter" or ",")
+            AddLotTag(lot);
+    }
+
+    private void AddLotTag(BrokerLot lot)
+    {
+        var lotId = lot.Id;
+        if (!_lotTagInput.TryGetValue(lotId, out var raw)) return;
+        var tag = raw.Trim();
+        if (string.IsNullOrEmpty(tag)) return;
+        if (tag.Length > 30) tag = tag[..30];
+        lot.Tags ??= [];
+        if (!lot.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase))
+            lot.Tags.Add(tag);
+        _lotTagInput[lotId] = "";
+        _ = Changed();
+    }
+
+    private void RemoveLotTag(BrokerLot lot, string tag)
+    {
+        lot.Tags?.Remove(tag);
+        _ = Changed();
     }
 
     private async Task AddNote()
@@ -558,6 +722,10 @@
     }
 
     private async Task Delete() => await OnDeleted.InvokeAsync();
+
+    private async Task Reopen() => await OnReopen.InvokeAsync();
+
+    private async Task DeleteClosed() => await OnDeleteClosed.InvokeAsync();
 
     private async Task Explain(BrokerNote note)
     {

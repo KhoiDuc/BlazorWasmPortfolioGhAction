@@ -197,11 +197,72 @@
                                   SelectedSymbol="@_selected"
                                   PriceBusy="_priceBusy"
                                   OnSelect="SelectSymbol"
-                                  OnSelectClosed="SelectClosed" />
+                                  OnSelectClosed="SelectClosed"
+                                  OnQuickSell="OpenQuickSell" />
+        }
+
+        @{
+            var perf = BrokerPortfolioStatsCalculator.ComputePerformance(_portfolio);
+        }
+        @if (perf.HasData)
+        {
+            <div class="broker-perf-panel ts-panel">
+                <div class="broker-perf-head">
+                    <h3 class="ts-panel-title">Hiệu suất theo tháng</h3>
+                    <div class="broker-perf-summary">
+                        <span class="broker-perf-stat @(perf.TotalRealized >= 0 ? "ts-positive" : "ts-negative")">
+                            Tổng realized: @BrokerFormat.Vnd(perf.TotalRealized)
+                        </span>
+                        <span class="broker-perf-stat">Win rate: @perf.WinRate.ToString("N1")%</span>
+                        <span class="broker-perf-stat">@perf.TotalTrades lệnh · @perf.TotalWins thắng / @perf.TotalLosses thua</span>
+                    </div>
+                </div>
+
+                <div class="broker-table-scroll">
+                    <table class="ts-table broker-perf-table">
+                        <thead>
+                            <tr>
+                                <th><span class="broker-dt-th-inner">Kỳ</span></th>
+                                <th><span class="broker-dt-th-inner">Lệnh</span></th>
+                                <th><span class="broker-dt-th-inner">Thắng</span></th>
+                                <th><span class="broker-dt-th-inner">Thua</span></th>
+                                <th><span class="broker-dt-th-inner">Realized</span></th>
+                                <th><span class="broker-dt-th-inner">Avg thắng</span></th>
+                                <th><span class="broker-dt-th-inner">Avg thua</span></th>
+                                <th><span class="broker-dt-th-inner">Tốt nhất</span></th>
+                                <th><span class="broker-dt-th-inner">Tệ nhất</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var m in perf.Months)
+                            {
+                                <tr>
+                                    <td>@m.Period</td>
+                                    <td class="broker-num">@m.TradeCount</td>
+                                    <td class="broker-num ts-positive">@m.WinCount</td>
+                                    <td class="broker-num ts-negative">@m.LossCount</td>
+                                    <td class="broker-num @(m.Realized > 0 ? "ts-positive" : m.Realized < 0 ? "ts-negative" : "")">
+                                        @BrokerFormat.Vnd(m.Realized)
+                                    </td>
+                                    <td class="broker-num ts-positive">@(m.WinCount > 0 ? BrokerFormat.Vnd(m.AvgWin) : "—")</td>
+                                    <td class="broker-num ts-negative">@(m.LossCount > 0 ? BrokerFormat.Vnd(m.AvgLoss) : "—")</td>
+                                    <td>@(string.IsNullOrEmpty(m.BestSymbol) ? "—" : m.BestSymbol)</td>
+                                    <td>@(string.IsNullOrEmpty(m.WorstSymbol) ? "—" : m.WorstSymbol)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         }
 
         <BrokerAiExplain />
     </div>
+
+    <BrokerQuickSellModal @ref="_quickSellModal"
+                          Position="@(_quickSellPosition)"
+                          CurrentPrice="@(_quickSellPosition is not null ? Quote(_quickSellPosition.Symbol) : null)"
+                          OnSubmitSell="SubmitQuickSell" />
 
     @if (Selected is not null)
     {
@@ -211,7 +272,9 @@
                                   CurrentPrice="@Quote(Selected.Symbol)"
                                   OnChanged="MarkDirty"
                                   OnDeleted="DeleteSelected"
-                                  OnClosed="OnPositionClosed" />
+                                  OnClosed="OnPositionClosed"
+                                  OnReopen="OnPositionReopened"
+                                  OnDeleteClosed="DeleteClosedSelected" />
 
             <div class="ts-chart-wrap">
                 <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={Selected.Symbol}")"
@@ -227,6 +290,8 @@
     private BrokerPortfolio _portfolio = new();
     private Dictionary<string, decimal> _quotes = new(StringComparer.OrdinalIgnoreCase);
     private string? _selected;
+    private BrokerQuickSellModal? _quickSellModal;
+    private BrokerPosition? _quickSellPosition;
     private bool _loading = true;
     private bool _busy;
     private bool _priceBusy;
@@ -298,6 +363,69 @@
         Flash(realized >= 0
             ? $"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}"
             : $"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}");
+        await Task.CompletedTask;
+    }
+
+    private async Task OnPositionReopened()
+    {
+        if (Selected is null) return;
+        var pos = Selected;
+        if (_portfolio.ClosedPositions?.Contains(pos) != true) return;
+        _portfolio.ClosedPositions.Remove(pos);
+        _portfolio.Positions.Add(pos);
+        MarkDirty();
+        Flash($"Đã mở lại {pos.Symbol} — có thể sửa lệnh bán rồi đóng lại.");
+        await Task.CompletedTask;
+    }
+
+    private async Task DeleteClosedSelected()
+    {
+        if (Selected is null) return;
+        if (!await JS.InvokeAsync<bool>("tradingAuth.confirm", $"Xóa vĩnh viễn vị thế đã đóng {Selected.Symbol}? Hành động này không thể hoàn tác."))
+            return;
+        _portfolio.ClosedPositions?.Remove(Selected);
+        _selected = null;
+        MarkDirty();
+    }
+
+    private void OpenQuickSell(string symbol)
+    {
+        var pos = _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
+        if (pos is null || pos.IsClosed || pos.RemainingQuantity is null or 0) return;
+        _quickSellPosition = pos;
+        _quickSellModal?.Open(pos, Quote(symbol));
+    }
+
+    private async Task SubmitQuickSell(BrokerSell sell)
+    {
+        if (_quickSellPosition is null) return;
+        var pos = _quickSellPosition;
+        pos.Sells.Add(sell);
+        MarkDirty();
+
+        if (pos.RemainingQuantity is null or 0)
+        {
+            await OnPositionClosedCore(pos);
+        }
+        else
+        {
+            var realized = pos.RealizedPnl ?? 0m;
+            Flash($"Đã ghi lệnh bán {pos.Symbol} @ {sell.Price:N2} ×{sell.Quantity}. Realized: {BrokerFormat.Vnd(realized)}");
+        }
+        _quickSellPosition = null;
+        await Task.CompletedTask;
+    }
+
+    private async Task OnPositionClosedCore(BrokerPosition pos)
+    {
+        _portfolio.Positions.Remove(pos);
+        _portfolio.ClosedPositions ??= [];
+        _portfolio.ClosedPositions.Add(pos);
+        if (_selected?.Equals(pos.Symbol, StringComparison.OrdinalIgnoreCase) == true)
+            _selected = null;
+        MarkDirty();
+        var realized = pos.RealizedPnl ?? 0m;
+        Flash($"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}");
         await Task.CompletedTask;
     }
 
@@ -622,7 +750,26 @@
             _priceBusy = false;
             _priceProgressDone = 0;
             _priceProgressTotal = 0;
+            CheckAlerts();
         }
+    }
+
+    private void CheckAlerts()
+    {
+        var alerts = new List<string>();
+        foreach (var p in _portfolio.Positions)
+        {
+            if (p.IsClosed) continue;
+            if (!_quotes.TryGetValue(p.Symbol, out var current) || current <= 0) continue;
+
+            if (p.StopLoss is > 0 && current <= p.StopLoss.Value)
+                alerts.Add($"{p.Symbol} chạm cắt lỗ @ {current:N2} (SL {p.StopLoss.Value:N2})");
+            if (p.TargetPrice is > 0 && current >= p.TargetPrice.Value)
+                alerts.Add($"{p.Symbol} chạm mục tiêu @ {current:N2} (TP {p.TargetPrice.Value:N2})");
+        }
+
+        if (alerts.Count > 0)
+            Flash(string.Join(" · ", alerts), error: alerts.Count > 0 && !alerts.All(a => a.Contains("mục tiêu")));
     }
 
     private void Flash(string text, bool error = false)

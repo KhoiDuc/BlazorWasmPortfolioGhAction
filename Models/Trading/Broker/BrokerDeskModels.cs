@@ -40,6 +40,7 @@ public class BrokerPosition
     public List<BrokerLot> Buys { get; set; } = [];
     public List<BrokerSell> Sells { get; set; } = [];
     public List<BrokerNote> Notes { get; set; } = [];
+    public List<string> Tags { get; set; } = [];
 
     [JsonIgnore]
     public decimal? TotalQuantity
@@ -146,6 +147,9 @@ public class BrokerPosition
                         if (lotIdx < lots.Count) lotRemaining = lots[lotIdx].Qty;
                     }
                 }
+                // Subtract trading fee + tax for this sell
+                realized -= sell.Fee ?? 0m;
+                realized -= sell.Tax ?? 0m;
             }
 
             return realized;
@@ -216,6 +220,7 @@ public class BrokerLot
     public BrokerLevelInputMode? TargetPriceMode { get; set; }
     public decimal? TargetPriceInput { get; set; }
     public string? Note { get; set; }
+    public List<string> Tags { get; set; } = [];
 }
 
 public class BrokerSell
@@ -224,6 +229,8 @@ public class BrokerSell
     public DateTime SoldAt { get; set; } = DateTime.Today;
     public decimal Price { get; set; }
     public decimal? Quantity { get; set; }
+    public decimal? Fee { get; set; }
+    public decimal? Tax { get; set; }
     public string? Note { get; set; }
 }
 
@@ -384,4 +391,87 @@ public static class BrokerPortfolioStatsCalculator
         return closed.Sum(p => p.RealizedPnl ?? 0m)
              + openWithSells.Sum(p => p.RealizedPnl ?? 0m);
     }
+
+    public static BrokerPerformanceReport ComputePerformance(BrokerPortfolio portfolio)
+    {
+        var closed = portfolio.ClosedPositions ?? [];
+        var openWithSells = (portfolio.Positions ?? []).Where(p => p.Sells.Count > 0);
+
+        var allSells = closed.SelectMany(p => p.Sells, (p, s) => (Position: p, Sell: s))
+            .Concat(openWithSells.SelectMany(p => p.Sells, (p, s) => (Position: p, Sell: s)))
+            .Where(x => x.Sell.Quantity is > 0 && x.Sell.Price > 0)
+            .ToList();
+
+        if (allSells.Count == 0)
+            return new BrokerPerformanceReport();
+
+        var byMonth = allSells
+            .GroupBy(x => new { x.Sell.SoldAt.Year, x.Sell.SoldAt.Month })
+            .OrderByDescending(g => g.Key.Year * 100 + g.Key.Month)
+            .Select(g =>
+            {
+                var trades = g.Select(x =>
+                {
+                    var pnl = x.Position.RealizedPnl ?? 0m;
+                    return (Symbol: x.Position.Symbol, Pnl: pnl);
+                }).ToList();
+                var wins = trades.Where(t => t.Pnl > 0).ToList();
+                var losses = trades.Where(t => t.Pnl < 0).ToList();
+                return new BrokerPerformanceMonth
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    Realized = trades.Sum(t => t.Pnl),
+                    TradeCount = trades.Count,
+                    WinCount = wins.Count,
+                    LossCount = losses.Count,
+                    AvgWin = wins.Count > 0 ? wins.Average(t => t.Pnl) : 0m,
+                    AvgLoss = losses.Count > 0 ? losses.Average(t => t.Pnl) : 0m,
+                    BestSymbol = trades.MaxBy(t => t.Pnl).Symbol,
+                    WorstSymbol = trades.MinBy(t => t.Pnl).Symbol
+                };
+            })
+            .ToList();
+
+        var totalRealized = byMonth.Sum(m => m.Realized);
+        var totalTrades = byMonth.Sum(m => m.TradeCount);
+        var totalWins = byMonth.Sum(m => m.WinCount);
+        var totalLosses = byMonth.Sum(m => m.LossCount);
+
+        return new BrokerPerformanceReport
+        {
+            Months = byMonth,
+            TotalRealized = totalRealized,
+            TotalTrades = totalTrades,
+            TotalWins = totalWins,
+            TotalLosses = totalLosses,
+            WinRate = totalTrades > 0 ? (decimal)totalWins / totalTrades * 100m : 0m
+        };
+    }
+}
+
+public sealed class BrokerPerformanceReport
+{
+    public List<BrokerPerformanceMonth> Months { get; init; } = [];
+    public decimal TotalRealized { get; init; }
+    public int TotalTrades { get; init; }
+    public int TotalWins { get; init; }
+    public int TotalLosses { get; init; }
+    public decimal WinRate { get; init; }
+    public bool HasData => TotalTrades > 0;
+}
+
+public sealed class BrokerPerformanceMonth
+{
+    public int Year { get; init; }
+    public int Month { get; init; }
+    public string Period => $"{Year}-{Month:D2}";
+    public decimal Realized { get; init; }
+    public int TradeCount { get; init; }
+    public int WinCount { get; init; }
+    public int LossCount { get; init; }
+    public decimal AvgWin { get; init; }
+    public decimal AvgLoss { get; init; }
+    public string BestSymbol { get; init; } = "";
+    public string WorstSymbol { get; init; } = "";
 }
