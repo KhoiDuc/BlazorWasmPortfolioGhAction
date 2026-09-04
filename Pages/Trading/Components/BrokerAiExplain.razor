@@ -14,11 +14,24 @@
     <div class="broker-ai-body">
         <GeminiKeyBox IdPrefix="broker-ai" />
 
+        <div class="broker-ai-mode-row">
+            <label class="broker-ai-toggle">
+                <input type="checkbox" class="ts-checkbox" @bind="_usePortfolioContext" />
+                <span>@L["Trading_BrokerAiUsePortfolio"]</span>
+            </label>
+            @if (_usePortfolioContext && (Portfolio?.Positions.Count ?? 0) > 0)
+            {
+                <span class="broker-ai-mode-count">@Portfolio!.Positions.Count mã</span>
+            }
+        </div>
+
         <div class="broker-ai-input-wrap">
-            <label class="broker-field-label" for="broker-ai-input">@L["Trading_BrokerAiInputLabel"]</label>
+            <label class="broker-field-label" for="broker-ai-input">
+                @(_usePortfolioContext ? L["Trading_BrokerAiQuestionLabel"] : L["Trading_BrokerAiInputLabel"])
+            </label>
             <textarea id="broker-ai-input"
                       class="ts-input ts-textarea broker-ai-input @(_aiErr is not null ? "ts-input-invalid" : "")"
-                      placeholder="@L["Trading_BrokerAiPlaceholder"]"
+                      placeholder="@(_usePortfolioContext ? L["Trading_BrokerAiQuestionPlaceholder"] : L["Trading_BrokerAiPlaceholder"])"
                       rows="6"
                       aria-invalid="@(_aiErr is not null)"
                       aria-describedby="@(_aiErr is not null ? "broker-ai-error" : null)"
@@ -68,10 +81,13 @@
 </div>
 
 @code {
+    [Parameter] public BrokerPortfolio? Portfolio { get; set; }
+
     private string _raw = "";
     private string? _aiResult;
     private string? _aiErr;
     private bool _aiBusy;
+    private bool _usePortfolioContext;
     private CancellationTokenSource? _explainCts;
 
     private async Task Explain()
@@ -86,7 +102,11 @@
         _aiErr = null;
         try
         {
-            var prompt = BrokerPromptLibrary.ExplainRecommendation(_raw.Trim());
+            var prompt = _usePortfolioContext
+                ? BrokerPromptLibrary.ExplainWithPortfolioContext(
+                      _raw.Trim(),
+                      BrokerPromptLibrary.BuildPortfolioContext(Portfolio))
+                : BrokerPromptLibrary.ExplainRecommendation(_raw.Trim());
             var result = await Gemini.ExplainAsync(prompt, ct);
             if (!string.IsNullOrEmpty(result.Error))
             {
