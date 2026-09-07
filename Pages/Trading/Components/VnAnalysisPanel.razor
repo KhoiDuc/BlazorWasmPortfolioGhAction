@@ -49,6 +49,83 @@
             <p class="ts-alert ts-alert-info mt-2 mb-0">@_ta.IntradayNote</p>
         }
     </div>
+
+    <div class="ts-panel mt-2">
+        <h4 style="margin:0 0 0.5rem">Xu hướng nâng cao</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;font-size:0.85rem">
+            @if (_ta.SuperTrend is not null && _ta.SuperTrend.IsUptrend.Length > 0)
+            {
+                var up = _ta.SuperTrend.IsUptrend[^1];
+                var line = _ta.SuperTrend.SuperTrendLine[^1];
+                <div><span class="ts-muted">SuperTrend</span><br/><strong class="@(up ? "ts-positive" : "ts-negative")">@(up ? "Uptrend" : "Downtrend")</strong></div>
+                <div><span class="ts-muted">ST line</span><br/><strong>@line.ToString("N2")</strong></div>
+                <div><span class="ts-muted">Upper / Lower</span><br/><strong>@_ta.SuperTrend.UpperBand[^1].ToString("N2") / @_ta.SuperTrend.LowerBand[^1].ToString("N2")</strong></div>
+            }
+            else
+            {
+                <div class="ts-muted">SuperTrend — chưa đủ dữ liệu</div>
+            }
+            @if (_ta.T3.Length > 0)
+            {
+                var t3 = _ta.T3[^1];
+                var bullish = _ta.LatestClose > t3;
+                <div><span class="ts-muted">T3 Tilson</span><br/><strong>@t3.ToString("N2")</strong> <span class="@(bullish ? "ts-positive" : "ts-negative")">(@(bullish ? "close > T3" : "close < T3"))</span></div>
+            }
+        </div>
+    </div>
+
+    @if (_ta.AdvancedPatterns.Count > 0)
+    {
+        <div class="ts-panel mt-2">
+            <h4 style="margin:0 0 0.5rem">Chart patterns</h4>
+            <table class="ts-table" style="font-size:0.82rem;width:100%">
+                <thead><tr><th>Pattern</th><th>Ngày</th><th>Entry</th><th>SL</th><th>TP</th><th>Reliability</th></tr></thead>
+                <tbody>
+                    @foreach (var p in _ta.AdvancedPatterns)
+                    {
+                        <tr>
+                            <td>@p.Name</td>
+                            <td>@p.Date.ToString("dd/MM")</td>
+                            <td>@p.Entry.ToString("N2")</td>
+                            <td>@p.StopLoss.ToString("N2")</td>
+                            <td>@string.Join(" / ", p.TakeProfits.Select(tp => tp.ToString("N2")))</td>
+                            <td>@p.Reliability.ToString("F1")%</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (_ta.OrderBlock is not null)
+    {
+        var ob = _ta.OrderBlock;
+        var bullish = ob.Mode.StartsWith("Bot");
+        <div class="ts-panel mt-2">
+            <h4 style="margin:0 0 0.5rem">OrderBlock <span class="ts-badge @(bullish ? "ts-positive" : "ts-negative")">@ob.Mode</span></h4>
+            <div style="font-size:0.85rem">
+                <p class="mb-0"><strong>Ngày:</strong> @ob.Date.ToString("dd/MM/yyyy") | <strong>Entry:</strong> @ob.Entry.ToString("N2") | <strong>SL:</strong> @ob.StopLoss.ToString("N2") | <strong>TP:</strong> @string.Join(" / ", ob.TakeProfits.Select(tp => tp.ToString("N2")))</p>
+                <p class="ts-muted mt-1 mb-0">@ob.Note</p>
+            </div>
+        </div>
+    }
+
+    @if (_ta.Elliott is not null)
+    {
+        var el = _ta.Elliott;
+        var bullish = el.Direction.Contains("Bullish");
+        <div class="ts-panel mt-2">
+            <h4 style="margin:0 0 0.5rem">Elliott <span class="ts-badge @(bullish ? "ts-positive" : "ts-negative")">@el.Direction</span></h4>
+            <div style="font-size:0.85rem">
+                <p class="mb-0"><strong>Wave:</strong> @el.Wave | <strong>Level:</strong> @el.Level.ToString("N2") | <strong>Ngày:</strong> @el.Date.ToString("dd/MM/yyyy")</p>
+                <p class="ts-muted mt-1 mb-0">@el.Note</p>
+            </div>
+        </div>
+    }
+
+    <div class="ts-panel mt-2">
+        <a class="ts-btn ts-btn-outline" href="@($"/trading/backtest?symbol={_symbol}")" target="_blank">Backtest indicator này →</a>
+    </div>
 }
 else if (_checklist is not null && _sub == "check")
 {

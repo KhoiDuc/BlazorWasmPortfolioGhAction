@@ -1,0 +1,178 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@inject IVnMarketClient Market
+@inject IndicatorService Indicators
+@inject VnScreenerService Screener
+
+<div class="ts-panel">
+    <div class="ts-field">
+        <label class="ts-label">Danh sách</label>
+        <select class="ts-select" @bind="_listKey" disabled="@_busy">
+            <option value="">- Nhap tay -</option>
+            @foreach (var k in _listKeys)
+            {
+                <option value="@k">@k</option>
+            }
+        </select>
+    </div>
+    @if (string.IsNullOrEmpty(_listKey))
+    {
+        <div class="ts-field">
+            <label class="ts-label">Ma (phay)</label>
+            <input class="ts-input" @bind="_symbolsInput" placeholder="VNM,FPT,HPG..." disabled="@_busy" />
+        </div>
+    }
+    <div class="ts-field">
+        <span class="ts-label">Bo loc</span>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:0.85rem">
+            <label><input type="checkbox" @bind="_fSuperTrendUp" disabled="@_busy" /> SuperTrend Up</label>
+            <label><input type="checkbox" @bind="_fVcp" disabled="@_busy" /> VCP</label>
+            <label><input type="checkbox" @bind="_fHs" disabled="@_busy" /> Head &amp; Shoulders</label>
+            <label><input type="checkbox" @bind="_fDoubleBot" disabled="@_busy" /> Double Bottom</label>
+            <label><input type="checkbox" @bind="_fOrderBlock" disabled="@_busy" /> OrderBlock (Bot)</label>
+            <label><input type="checkbox" @bind="_fElliottBull" disabled="@_busy" /> Elliott Bullish</label>
+        </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+        <button class="ts-btn ts-btn-primary" @onclick="Scan" disabled="@_busy">Quet</button>
+        @if (_busy) { <span class="ts-muted">@_progress</span> }
+    </div>
+    @if (!string.IsNullOrEmpty(_error)) { <div class="ts-alert ts-alert-error mt-2">@_error</div> }
+</div>
+
+@if (_results.Count > 0)
+{
+    <div class="ts-panel mt-2">
+        <h4 style="margin:0 0 0.5rem">Ket qua (@_results.Count)</h4>
+        <table class="ts-table" style="font-size:0.82rem;width:100%">
+            <thead><tr><th>Ma</th><th>SuperTrend</th><th>Patterns</th><th>OrderBlock</th><th>Elliott</th><th>Close</th></tr></thead>
+            <tbody>
+                @foreach (var r in _results)
+                {
+                    <tr style="cursor:pointer" @onclick="() => Select(r.Symbol)">
+                        <td><strong>@r.Symbol</strong></td>
+                        <td class="@r.SuperClass">@r.SuperLabel</td>
+                        <td>@r.PatternsText</td>
+                        <td>@r.OrderBlockText</td>
+                        <td class="@r.ElliottClass">@r.ElliottLabel</td>
+                        <td>@r.Close.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else if (!_busy && _scanned)
+{
+    <div class="ts-panel mt-2"><p class="ts-muted">Khong co ma khop bo loc.</p></div>
+}
+
+@code {
+    [Parameter] public EventCallback<string> OnSymbolSelected { get; set; }
+
+    private string _listKey = "";
+    private string _symbolsInput = "VNM,FPT,HPG,VCB,MWG,GAS,VIC,FRT,DHG,DBD";
+    private List<string> _listKeys = [];
+
+    private bool _fSuperTrendUp = true;
+    private bool _fVcp;
+    private bool _fHs;
+    private bool _fDoubleBot;
+    private bool _fOrderBlock;
+    private bool _fElliottBull;
+
+    private bool _busy;
+    private bool _scanned;
+    private string _progress = "";
+    private string? _error;
+
+    private readonly List<ScreenerRow> _results = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var lists = await Screener.GetListsAsync();
+            _listKeys = lists.Keys.ToList();
+        }
+        catch { _listKeys = []; }
+    }
+
+    private async Task Scan()
+    {
+        _busy = true;
+        _scanned = false;
+        _error = null;
+        _results.Clear();
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var symbols = await ResolveSymbols();
+            var done = 0;
+            foreach (var sym in symbols)
+            {
+                done++;
+                _progress = $"{done}/{symbols.Count} - {sym}";
+                await InvokeAsync(StateHasChanged);
+                try
+                {
+                    var hist = await Market.GetHistoricalAsync(sym, 250);
+                    var ta = Indicators.Calculate(sym, hist);
+                    if (ta is null) continue;
+
+                    var row = new ScreenerRow(sym, ta.LatestClose);
+                    if (ta.SuperTrend is not null && ta.SuperTrend.IsUptrend.Length > 0)
+                        row.SuperTrendUp = ta.SuperTrend.IsUptrend[^1];
+
+                    row.Patterns = ta.AdvancedPatterns.Select(p => p.Name).ToList();
+                    if (ta.OrderBlock is not null) row.OrderBlockMode = ta.OrderBlock.Mode;
+                    if (ta.Elliott is not null) row.ElliottDir = ta.Elliott.Direction;
+
+                    var match = true;
+                    if (_fSuperTrendUp && !row.SuperTrendUp) match = false;
+                    if (_fVcp && !row.Patterns.Contains("VCP")) match = false;
+                    if (_fHs && !row.Patterns.Contains("Head & Shoulders")) match = false;
+                    if (_fDoubleBot && !row.Patterns.Contains("Double Bottom")) match = false;
+                    if (_fOrderBlock && !row.OrderBlockMode?.StartsWith("Bot") == true) match = false;
+                    if (_fElliottBull && !(row.ElliottDir?.Contains("Bullish") ?? false)) match = false;
+
+                    if (match) _results.Add(row);
+                }
+                catch { /* skip single symbol */ }
+            }
+            _scanned = true;
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; _progress = ""; await InvokeAsync(StateHasChanged); }
+    }
+
+    private async Task<List<string>> ResolveSymbols()
+    {
+        if (!string.IsNullOrEmpty(_listKey))
+        {
+            var lists = await Screener.GetListsAsync();
+            return lists.TryGetValue(_listKey, out var syms) ? syms : [];
+        }
+        return _symbolsInput.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(s => s.ToUpperInvariant()).Distinct().ToList();
+    }
+
+    private async Task Select(string sym) => await OnSymbolSelected.InvokeAsync(sym);
+
+    private sealed class ScreenerRow(string symbol, decimal close)
+    {
+        public string Symbol { get; } = symbol;
+        public decimal Close { get; } = close;
+        public bool SuperTrendUp { get; set; }
+        public List<string> Patterns { get; set; } = [];
+        public string? OrderBlockMode { get; set; }
+        public string? ElliottDir { get; set; }
+
+        public string SuperClass => SuperTrendUp ? "ts-positive" : "ts-muted";
+        public string SuperLabel => SuperTrendUp ? "Up" : "-";
+        public string PatternsText => string.Join(", ", Patterns);
+        public string OrderBlockText => OrderBlockMode ?? "-";
+        public string ElliottClass => (ElliottDir?.Contains("Bullish") ?? false) ? "ts-positive" : "ts-muted";
+        public string ElliottLabel => ElliottDir ?? "-";
+    }
+}

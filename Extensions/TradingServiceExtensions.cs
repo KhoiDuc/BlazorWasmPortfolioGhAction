@@ -57,7 +57,6 @@ public static class TradingServiceExtensions
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.VnSectorService>();
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.WatchlistScorer>();
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.PositionService>();
-        services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.ChecklistService>();
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.BacktestService>();
 
         var brokerOptions = new BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerOptions();

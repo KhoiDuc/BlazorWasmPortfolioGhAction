@@ -32,18 +32,4 @@ public static class PromptLibrary
         $"{numbers}\n{notes}",
         "CONTEXT / CONFIRM-INVALIDATE / RISK / VERIFY",
         "Khong hype, khong chac chan, khong ra lenh.");
-
-    public static string StructurePlan(string symbol, string draft) => Wrap(
-        "Bien tap ke hoach giao dich",
-        $"Cau truc lai chu cho {symbol} thanh Entry / Exit / Risk / Thesis / Invalidation. Khong them tin hieu moi.",
-        draft,
-        "ENTRY LOGIC / EXIT CRITERIA / RISK PARAMETERS / THESIS SUMMARY / INVALIDATION CONDITIONS",
-        "Chi sap xep lai. Khong them muc tieu gia khong co trong input.");
-
-    public static string Journal(string symbol, string notes) => Wrap(
-        "Tro ly journal",
-        $"Soan nhap post-trade review cho {symbol}",
-        notes,
-        "FACTS / JUDGMENT / NEXT PROCESS",
-        "Nguoi dung se sua truoc khi luu. Khong khen/che cam xuc.");
 }
