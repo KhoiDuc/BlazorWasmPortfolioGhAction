@@ -16,18 +16,18 @@
     <div class="vd-symbol-bar">
         <div class="vd-symbol-row">
             <label class="ts-label" for="desk-symbol">@L["Trading_SymbolLabel"]</label>
-            <input id="desk-symbol" class="vd-symbol-input" @bind="_symbol" @bind:event="oninput"
+            <input id="desk-symbol" class="vd-symbol-input" @bind="_symbolInput" @bind:event="oninput"
                    placeholder="VNM, FPT, HPG..." @onkeydown="OnSymbolKey" />
             @if (_popular.Length > 0)
             {
                 <div class="vd-chips">
                     @foreach (var p in _popular)
                     {
-                        <button type="button" class="vd-chip @(_symbol == p ? "active" : "")" @onclick='() => PickSymbol(p)'>@p</button>
+                        <button type="button" class="vd-chip @(_activeSymbol == p ? "active" : "")" @onclick='() => PickSymbol(p)'>@p</button>
                     }
                 </div>
             }
-            <button type="button" class="vd-btn vd-btn-primary vd-btn-sm" @onclick='() => GoTab("analyze")'>Phân tích</button>
+            <button type="button" class="vd-btn vd-btn-primary vd-btn-sm" @onclick="CommitAndAnalyze">Phân tích</button>
         </div>
     </div>
 
@@ -45,38 +45,27 @@
         }
         else if (_tab == "analyze")
         {
-            <div class="vd-split">
-                <div>
-                    <VnAnalysisPanel @ref="_analysis" Symbol="@_symbol" />
+            <div class="vd-analyze-layout">
+                <div class="vd-analyze-main">
+                    <VnAnalysisPanel @ref="_analysis" Symbol="@_activeSymbol" />
                 </div>
-                <div class="vd-split-aside">
-                    @if (_chartCollapsed == false)
-                    {
-                        <div class="vd-chart-dock">
-                            <div class="vd-chart-dock-head">
-                                <span class="vd-chart-dock-title">@_symbol</span>
-                                <div class="vd-controls">
-                                    <a class="vd-btn vd-btn-sm" href="@($"/trading/backtest?symbol={_symbol}")" target="_blank">Backtest</a>
-                                    <button class="vd-btn vd-btn-sm" @onclick="ToggleChart" aria-label="Thu gọn">@(_chartCollapsed ? "▸" : "▾")</button>
-                                </div>
-                            </div>
-                            <div class="vd-chart-dock-body">
-                                <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={_symbol}")"
-                                        width="100%" height="320" frameborder="0" title="Vietstock chart"></iframe>
-                                <PriceAlertWidget Symbol="@_symbol" AssetType="stock" />
-                            </div>
+                <div class="vd-chart-dock @(_chartCollapsed ? "collapsed" : "")">
+                    <div class="vd-chart-dock-head">
+                        <span class="vd-chart-dock-title">@_activeSymbol</span>
+                        <div class="vd-controls">
+                            <a class="vd-btn vd-btn-sm" href="@($"/trading/backtest?symbol={_activeSymbol}")" target="_blank">Backtest</a>
+                            <button class="vd-btn vd-btn-sm" @onclick="ToggleChart" aria-label="@(_chartCollapsed ? "Mở rộng" : "Thu gọn")">@(_chartCollapsed ? "▸ Biểu đồ" : "▾ Thu gọn")</button>
                         </div>
-                    }
-                    else
+                    </div>
+                    @if (!_chartCollapsed)
                     {
-                        <div class="vd-chart-dock collapsed">
-                            <div class="vd-chart-dock-head">
-                                <span class="vd-chart-dock-title">@_symbol</span>
-                                <div class="vd-controls">
-                                    <a class="vd-btn vd-btn-sm" href="@($"/trading/backtest?symbol={_symbol}")" target="_blank">Backtest</a>
-                                    <button class="vd-btn vd-btn-sm" @onclick="ToggleChart" aria-label="Mở rộng">▸</button>
-                                </div>
-                            </div>
+                        <div class="vd-chart-dock-body">
+                            <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={_activeSymbol}")"
+                                    width="100%" height="420" frameborder="0" title="Vietstock chart"></iframe>
+                            <details class="vd-alert-collapse">
+                                <summary>Cảnh báo giá — @_activeSymbol</summary>
+                                <PriceAlertWidget Symbol="@_activeSymbol" AssetType="stock" />
+                            </details>
                         </div>
                     }
                 </div>
@@ -99,14 +88,15 @@
         }
         else if (_tab == "ai")
         {
-            <VnAiPanel Symbol="@_symbol" OnThesisReady="OnThesisReady" />
+            <VnAiPanel Symbol="@_activeSymbol" OnThesisReady="OnThesisReady" />
         }
     </div>
 </div>
 
 @code {
     private string _tab = "market";
-    private string _symbol = "VNM";
+    private string _symbolInput = "VNM";
+    private string _activeSymbol = "VNM";
     private string _screenSub = "basic";
     private bool _chartCollapsed = false;
     private VnAnalysisPanel? _analysis;
@@ -117,7 +107,19 @@
 
     private void ToggleChart() => _chartCollapsed = !_chartCollapsed;
 
-    private void PickSymbol(string sym) => _symbol = sym.Trim().ToUpperInvariant();
+    private void PickSymbol(string sym)
+    {
+        _symbolInput = sym.Trim().ToUpperInvariant();
+        _activeSymbol = _symbolInput;
+    }
+
+    private void CommitAndAnalyze()
+    {
+        if (string.IsNullOrWhiteSpace(_symbolInput)) return;
+        _activeSymbol = _symbolInput.Trim().ToUpperInvariant();
+        _symbolInput = _activeSymbol;
+        GoTab("analyze");
+    }
 
     private void OnSymbolFromMarket(string sym)
     {
@@ -133,8 +135,8 @@
 
     private void OnSymbolKey(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_symbol))
-            _symbol = _symbol.Trim().ToUpperInvariant();
+        if (e.Key == "Enter")
+            CommitAndAnalyze();
     }
 
     private Task OnThesisReady(string _)

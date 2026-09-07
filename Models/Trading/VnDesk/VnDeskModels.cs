@@ -118,6 +118,8 @@ public class SectorRankCard
     public decimal TotalVolume { get; set; }
     public string? TopGainerSymbol { get; set; }
     public double? TopGainerPct { get; set; }
+    /// <summary>Top 3 symbols by % change — for sector picker UI.</summary>
+    public List<string> TopSymbols { get; set; } = [];
     public bool VolRLoaded { get; set; }
 }
 

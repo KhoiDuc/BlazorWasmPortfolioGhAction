@@ -9,83 +9,118 @@
 @inject VnDeskOptions Options
 @inject IStringLocalizer<SharedResources> L
 
-<div class="ts-page">
-    <div class="ts-panel">
-        <div class="ts-header">
+<div class="vd-page">
+    <div class="vd-header">
+        <div>
+            <h2>Backtest chỉ báo</h2>
+            <p>Kiểm tra tín hiệu mua/bán trên dữ liệu lịch sử — win-rate, lãi/lỗ trung bình, số ngày giữ.</p>
+        </div>
+        <a class="vd-btn" href="/trading/vndesk">← VnDesk</a>
+    </div>
+
+    <div class="vd-panel">
+        <div class="vd-alert vd-alert-info" style="font-size:0.85rem">
+            <strong>Cách dùng:</strong>
+            <ol style="margin:0.4rem 0 0 1.1rem;padding:0">
+                <li>Chọn <em>chỉ báo</em> (SuperTrend, T3, VCP…)</li>
+                <li>Nhập danh sách mã, cách nhau bằng dấu phẩy (VD: VNM,FPT,MWG)</li>
+                <li>Đặt <em>Take Profit %</em> và <em>Stop Loss %</em> — hệ thống giả lập thoát lệnh khi đạt TP/SL</li>
+                <li>Bấm <strong>Chạy backtest</strong> — kết quả hiện bên dưới (tối đa 100 lệnh)</li>
+            </ol>
+        </div>
+
+        <div class="vd-controls mt-2" style="flex-direction:column;align-items:stretch;gap:0.75rem">
             <div>
-                <h2>Backtest</h2>
-                <p class="ts-muted">Test indicator signals over historical data — win-rate, avg TP, hold-days.</p>
+                <label class="ts-label" for="bt-indicator">Chỉ báo</label>
+                <select id="bt-indicator" class="vd-select" style="width:100%;max-width:320px" @bind="_indicator">
+                    <option value="SuperTrend">SuperTrend — đổi xu hướng</option>
+                    <option value="T3">T3 Tilson — xu hướng mượt</option>
+                    <option value="VCP">VCP — co biên độ + breakout</option>
+                    <option value="PinBar">PinBar — nến rút chân</option>
+                    <option value="OrderBlock">OrderBlock — vùng cung/cầu</option>
+                    <option value="Elliott">Elliott — sóng Elliott</option>
+                </select>
+            </div>
+            <div>
+                <label class="ts-label" for="bt-symbols">Mã cổ phiếu (cách nhau bằng dấu phẩy)</label>
+                <input id="bt-symbols" class="vd-input" style="width:100%;max-width:480px" @bind="_symbols" placeholder="VNM,FPT,MWG..." />
+            </div>
+            <div class="vd-controls">
+                <div>
+                    <label class="ts-label" for="bt-tp">Take Profit %</label>
+                    <input id="bt-tp" type="number" class="vd-input" @bind="_tpPct" style="max-width:120px" />
+                </div>
+                <div>
+                    <label class="ts-label" for="bt-sl">Stop Loss %</label>
+                    <input id="bt-sl" type="number" class="vd-input" @bind="_slPct" style="max-width:120px" />
+                </div>
+            </div>
+            <div>
+                <button class="vd-btn vd-btn-primary" @onclick="RunBacktest" disabled="@_busy">Chạy backtest</button>
+                @if (_busy) { <span class="vd-spinner"></span> }
             </div>
         </div>
-        <div class="ts-field mt-2">
-            <label class="ts-label" for="bt-indicator">Indicator</label>
-            <select id="bt-indicator" class="ts-select" @bind="_indicator">
-                <option value="SuperTrend">SuperTrend</option>
-                <option value="T3">T3</option>
-                <option value="VCP">VCP</option>
-                <option value="PinBar">PinBar</option>
-                <option value="OrderBlock">OrderBlock</option>
-                <option value="Elliott">Elliott</option>
-            </select>
-        </div>
-        <div class="ts-field mt-2">
-            <label class="ts-label" for="bt-symbols">Symbols (comma-separated)</label>
-            <input id="bt-symbols" class="ts-input" @bind="_symbols" placeholder="VNM,FPT,MWG..." />
-        </div>
-        <div class="ts-field mt-2">
-            <label class="ts-label" for="bt-tp">Take Profit %</label>
-            <input id="bt-tp" type="number" class="ts-input" @bind="_tpPct" style="max-width:120px" />
-        </div>
-        <div class="ts-field mt-2">
-            <label class="ts-label" for="bt-sl">Stop Loss %</label>
-            <input id="bt-sl" type="number" class="ts-input" @bind="_slPct" style="max-width:120px" />
-        </div>
-        <button class="ts-btn ts-btn-primary mt-2" @onclick="RunBacktest" disabled="@_busy">Run backtest</button>
-        @if (_busy) { <div class="ts-spinner mt-2"></div> }
-        @if (!string.IsNullOrEmpty(_error)) { <div class="ts-alert ts-alert-error mt-2">@_error</div> }
+        @if (!string.IsNullOrEmpty(_error)) { <div class="vd-alert vd-alert-error mt-2">@_error</div> }
     </div>
+
+    @if (_result is not null)
+    {
+        <div class="vd-panel">
+            <h4 class="vd-section-title">@_result.Indicator — @_result.TotalTrades lệnh</h4>
+            <div class="vd-metric-grid">
+                <div class="vd-metric-card">
+                    <div class="vd-metric-label">Win-rate</div>
+                    <div class="vd-metric-value @(_result.WinRate >= 50 ? "vd-pos" : "vd-neg")">@_result.WinRate.ToString("F1")%</div>
+                </div>
+                <div class="vd-metric-card">
+                    <div class="vd-metric-label">Thắng / Thua</div>
+                    <div class="vd-metric-value">@_result.Wins / @_result.Losses</div>
+                </div>
+                <div class="vd-metric-card">
+                    <div class="vd-metric-label">PnL TB / lệnh</div>
+                    <div class="vd-metric-value @(_result.AvgTakeProfitPct >= 0 ? "vd-pos" : "vd-neg")">@_result.AvgTakeProfitPct.ToString("F2")%</div>
+                </div>
+                <div class="vd-metric-card">
+                    <div class="vd-metric-label">Giữ TB</div>
+                    <div class="vd-metric-value">@_result.AvgHoldDays.ToString("F0") ngày</div>
+                </div>
+                <div class="vd-metric-card">
+                    <div class="vd-metric-label">Tổng PnL</div>
+                    <div class="vd-metric-value @(_result.TotalPnl >= 0 ? "vd-pos" : "vd-neg")">@(_result.TotalPnl > 0 ? "+" : "")@_result.TotalPnl.ToString("N2")</div>
+                </div>
+            </div>
+        </div>
+
+        @if (_result.Trades.Count > 0)
+        {
+            <div class="vd-panel">
+                <table class="vd-grid">
+                    <thead><tr><th>Mã</th><th>Vào lệnh</th><th>Giá vào</th><th>Thoát</th><th>Giá thoát</th><th>Giữ</th><th>PnL%</th><th>KQ</th></tr></thead>
+                    <tbody>
+                        @foreach (var t in _result.Trades.Take(100))
+                        {
+                            <tr>
+                                <td><strong>@t.Symbol</strong></td>
+                                <td>@t.Entry.ToString("dd/MM/yyyy")</td>
+                                <td>@t.EntryPrice.ToString("N2")</td>
+                                <td>@(t.Exit?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td>@(t.ExitPrice?.ToString("N2") ?? "-")</td>
+                                <td>@t.HoldDays ngày</td>
+                                <td class="@(t.PnlPct >= 0 ? "vd-pos" : "vd-neg")">@t.PnlPct.ToString("F2")%</td>
+                                <td>@(t.IsWin ? "✓" : "✗")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
 </div>
 
-@if (_result is not null)
-{
-    <div class="ts-panel">
-        <div class="ts-header">
-            <h3>@_result.Indicator — @(_result.TotalTrades) trades</h3>
-            <p class="ts-muted" style="font-size:0.82rem">
-                Win-rate: <strong>@_result.WinRate.ToString("F1")%</strong> |
-                Wins: @_result.Wins / Losses: @_result.Losses |
-                Avg TP: @_result.AvgTakeProfitPct.ToString("F2")% |
-                Avg hold: @_result.AvgHoldDays.ToString("F1") days |
-                Total PnL: @(_result.TotalPnl > 0 ? "+" : "")@_result.TotalPnl.ToString("N2")
-            </p>
-        </div>
-    </div>
-    @if (_result.Trades.Count > 0)
-    {
-        <div class="ts-panel ts-table-wrap">
-            <table class="ts-table">
-                <thead><tr><th>Mã</th><th>Entry</th><th>Price</th><th>Exit</th><th>Price</th><th>Hold</th><th>PnL%</th><th>Win</th></tr></thead>
-                <tbody>
-                    @foreach (var t in _result.Trades.Take(100))
-                    {
-                        <tr>
-                            <td><strong>@t.Symbol</strong></td>
-                            <td>@t.Entry.ToString("dd/MM/yyyy")</td>
-                            <td>@t.EntryPrice.ToString("N2")</td>
-                            <td>@(t.Exit?.ToString("dd/MM/yyyy") ?? "-")</td>
-                            <td>@(t.ExitPrice?.ToString("N2") ?? "-")</td>
-                            <td>@t.HoldDays</td>
-                            <td class="@(t.PnlPct >= 0 ? "ts-positive" : "ts-negative")">@t.PnlPct.ToString("F2")%</td>
-                            <td>@(t.IsWin ? "✓" : "✗")</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-}
-
 @code {
+    [SupplyParameterFromQuery(Name = "symbol")]
+    public string? QuerySymbol { get; set; }
+
     private string _indicator = "SuperTrend";
     private string _symbols = "VNM,FPT,MWG";
     private decimal _tpPct = 10m;
@@ -93,6 +128,12 @@
     private BacktestResult? _result;
     private string? _error;
     private bool _busy;
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrWhiteSpace(QuerySymbol))
+            _symbols = QuerySymbol.Trim().ToUpperInvariant();
+    }
 
     private async Task RunBacktest()
     {
@@ -103,12 +144,17 @@
         try
         {
             var symbols = _symbols.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(s => s.ToUpperInvariant()).ToList();
+                .Select(s => s.ToUpperInvariant()).Where(s => s.Length >= 3).ToList();
+            if (symbols.Count == 0)
+            {
+                _error = "Cần ít nhất 1 mã hợp lệ (3 ký tự trở lên).";
+                return;
+            }
             var req = new BacktestRequest(_indicator, symbols,
                 DateTime.Today.AddYears(-2), DateTime.Today, _tpPct, _slPct);
             _result = await BacktestSvc.BacktestAsync(req);
             if (_result.TotalTrades == 0)
-                _error = "Không có trade nào — thử indicator/symbol khác.";
+                _error = "Không có lệnh nào — thử chỉ báo hoặc mã khác.";
         }
         catch (Exception ex) { _error = ex.Message; }
         finally { _busy = false; await InvokeAsync(StateHasChanged); }

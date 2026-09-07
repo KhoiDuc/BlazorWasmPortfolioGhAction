@@ -8,11 +8,42 @@
             @(_board is null ? "Tải định lượng ngành" : "Làm mới")
         </button>
         @if (_busy) { <span class="vd-spinner"></span> }
-        @if (_phase2Progress is not null) { <span class="ts-muted" style="font-size:0.82rem">@_phase2Progress</span> }
-        @if (_board is not null) { <span class="ts-muted" style="font-size:0.82rem">Cập nhật: @_board.UpdatedAt.ToLocalTime():HH:mm:ss</span> }
+        @if (_phase2Done is not null && _phase2Total > 0)
+        {
+            <span class="ts-muted" style="font-size:0.82rem">Đang tính VolR: @_phase2Done/@_phase2Total (30–90 giây)…</span>
+        }
+        else if (_board?.Phase2Complete == true)
+        {
+            <span class="ts-muted" style="font-size:0.82rem">VolR đã cập nhật</span>
+        }
+        @if (_board is not null)
+        {
+            <span class="ts-muted" style="font-size:0.82rem">Cập nhật: @_board.UpdatedAt.ToLocalTime().ToString("HH:mm:ss dd/MM/yyyy")</span>
+        }
     </div>
     @if (!string.IsNullOrEmpty(_error)) { <div class="vd-alert vd-alert-error">@_error</div> }
 </div>
+
+@if (_pickedSector is not null)
+{
+    <div class="vd-sector-picker">
+        <div class="vd-sector-picker-head">
+            <strong>@_pickedSector.Name</strong>
+            <span class="ts-muted">Chọn mã để phân tích</span>
+            <button type="button" class="vd-btn vd-btn-sm" @onclick="ClosePicker">✕</button>
+        </div>
+        <div class="vd-sector-picker-list">
+            @foreach (var sym in _pickedSector.TopSymbols)
+            {
+                <button type="button" class="vd-chip" @onclick="() => PickSymbol(sym)">@sym</button>
+            }
+            @if (_pickedSector.TopSymbols.Count == 0 && !string.IsNullOrEmpty(_pickedSector.TopGainerSymbol))
+            {
+                <button type="button" class="vd-chip" @onclick="() => PickSymbol(_pickedSector.TopGainerSymbol!)">@_pickedSector.TopGainerSymbol</button>
+            }
+        </div>
+    </div>
+}
 
 @if (_board is not null)
 {
@@ -55,13 +86,13 @@
         </div>
 
         <div class="vd-panel">
-            <h4 class="vd-section-title">Top 10 ngành</h4>
+            <h4 class="vd-section-title">Top 10 ngành <span class="ts-muted" style="font-weight:400;font-size:0.78rem">— bấm để chọn mã</span></h4>
             <div class="vd-rank-grid">
                 @foreach (var c in top10)
                 {
                     var deltaClass = c.DeltaRank > 0 ? "vd-delta-up" : c.DeltaRank < 0 ? "vd-delta-down" : "vd-delta-flat";
                     var deltaText = c.DeltaRank > 0 ? $"▲{c.DeltaRank}" : c.DeltaRank < 0 ? $"▼{Math.Abs(c.DeltaRank)}" : "—";
-                    <div class="vd-rank-card" @onclick="() => SelectSector(c)">
+                    <div class="vd-rank-card" @onclick="() => OpenPicker(c)">
                         <div class="vd-rank-head">
                             <span class="vd-rank-num">#@c.Rank</span>
                             <span class="vd-rank-name">@c.Name</span>
@@ -72,6 +103,10 @@
                             <span class="@deltaClass">@deltaText</span>
                             <span>Breadth: @c.Breadth.ToString("F0")%</span>
                             <span>VolR: @c.VolR.ToString("F2")@(c.VolRLoaded ? "" : "*")</span>
+                            @if (!string.IsNullOrEmpty(c.TopGainerSymbol))
+                            {
+                                <span>@c.TopGainerSymbol @(c.TopGainerPct?.ToString("F1") + "%")</span>
+                            }
                         </div>
                     </div>
                 }
@@ -88,7 +123,7 @@
                     @foreach (var c in _board.Sectors.OrderByDescending(x => x.DeltaRank).ThenByDescending(x => x.Score))
                     {
                         var deltaClass = c.DeltaRank > 0 ? "vd-delta-up" : c.DeltaRank < 0 ? "vd-delta-down" : "vd-delta-flat";
-                        <tr @onclick="() => SelectSector(c)">
+                        <tr @onclick="() => OpenPicker(c)">
                             <td>@c.Rank</td>
                             <td><strong>@c.Name</strong></td>
                             <td>@c.Score.ToString("F1")</td>
@@ -144,7 +179,7 @@
                     @foreach (var c in _board.Sectors.OrderByDescending(x => x.VolR))
                     {
                         var liqClass = c.VolR >= 1.0 ? "vd-bull" : "vd-bear";
-                        <tr @onclick="() => SelectSector(c)">
+                        <tr @onclick="() => OpenPicker(c)">
                             <td>@c.Rank</td>
                             <td><strong>@c.Name</strong></td>
                             <td>@c.VolR.ToString("F2")</td>
@@ -160,7 +195,7 @@
 }
 else if (!_busy)
 {
-    <div class="vd-panel"><p class="ts-muted">Bấm "Tải định lượng ngành" để bắt đầu.</p></div>
+    <div class="vd-panel"><p class="ts-muted">Bấm "Tải định lượng ngành" để bắt đầu. VolR sẽ được tính nền sau khi tải xong (số tăng dần là bình thường).</p></div>
 }
 
 @code {
@@ -168,29 +203,33 @@ else if (!_busy)
 
     private string _tab = "overview";
     private SectorQuantBoard? _board;
+    private SectorRankCard? _pickedSector;
     private bool _busy;
     private string? _error;
-    private string? _phase2Progress;
+    private int? _phase2Done;
+    private int _phase2Total;
     private readonly HashSet<string> _compareSelected = [];
 
     private async Task Load()
     {
         _busy = true;
         _error = null;
+        _phase2Done = null;
+        _phase2Total = 0;
         await InvokeAsync(StateHasChanged);
         try
         {
             _board = await Quant.BuildPhase1Async(new Progress<int>(_ => { }));
             await InvokeAsync(StateHasChanged);
 
-            // Phase 2: background VolR
+            _phase2Total = _board.Sectors.Sum(s => s.StockCount);
             var progress = new Progress<int>(n =>
             {
-                _phase2Progress = $"VolR: {n}";
+                _phase2Done = n;
                 _ = InvokeAsync(StateHasChanged);
             });
             await Quant.LoadPhase2VolRAsync(_board, progress);
-            _phase2Progress = null;
+            _phase2Done = null;
             await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex) { _error = ex.Message; }
@@ -203,9 +242,15 @@ else if (!_busy)
         else _compareSelected.Remove(name);
     }
 
-    private async Task SelectSector(SectorRankCard c)
+    private void OpenPicker(SectorRankCard c) => _pickedSector = c;
+
+    private void ClosePicker() => _pickedSector = null;
+
+    private async Task PickSymbol(string sym)
     {
-        if (!string.IsNullOrEmpty(c.TopGainerSymbol))
-            await OnSymbolSelected.InvokeAsync(c.TopGainerSymbol);
+        sym = sym.Trim().ToUpperInvariant();
+        if (sym.Length < 3) return;
+        _pickedSector = null;
+        await OnSymbolSelected.InvokeAsync(sym);
     }
 }

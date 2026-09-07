@@ -11,7 +11,7 @@ public static class ChartPatterns
 {
     /// <summary>
     /// VCP (Volatility Contraction Pattern): 252-day base, price 60-100% of 252-day high,
-    /// 50-day volume slope decreasing, last 5-bar pivot width < 10%, volume dry-up below 50-day avg.
+    /// 50-day volume slope decreasing, last 5-bar pivot width &lt; 10%, volume dry-up below 50-day avg.
     /// </summary>
     public static PatternMatch? DetectVCP(List<StockData> data)
     {
@@ -25,6 +25,7 @@ public static class ChartPatterns
         var ordered = data.OrderBy(d => d.Date).ToList();
         var i = ordered.Count - 1;
         var cur = ordered[i];
+        if (cur.Close <= 0) return null;
 
         var yearData = ordered.Skip(i + 1 - timeframe).Take(timeframe).ToList();
         var highPrice = yearData.MaxBy(d => d.Close)!;
@@ -67,7 +68,7 @@ public static class ChartPatterns
         return null;
     }
 
-    /// <summary>Head & Shoulders: 3 peaks, middle highest, shoulders ~equal. Uses HL pivots.</summary>
+    /// <summary>Head &amp; Shoulders: 3 peaks, middle highest, shoulders ~equal. Uses HL pivots.</summary>
     public static PatternMatch? DetectHeadAndShoulders(List<StockData> data)
     {
         var pivots = PatternPivots.GetTopBottomCleanHL(data, 5);
@@ -78,6 +79,7 @@ public static class ChartPatterns
         var r = tops[^3..];
         var left = r[0]; var head = r[1]; var right = r[2];
         if (head.Value <= left.Value || head.Value <= right.Value) return null;
+        if (left.Value == 0) return null;
 
         // shoulders within 5% of each other
         var shoulderDiff = Math.Abs((double)(left.Value - right.Value) / (double)left.Value);
@@ -114,17 +116,20 @@ public static class ChartPatterns
         if (tops.Count >= 2)
         {
             var t1 = tops[^2]; var t2 = tops[^1];
-            var diff = Math.Abs((double)(t1.Value / t2.Value) - 1);
-            var barsBetween = data.FindIndex(d => d.Date == t2.Date) - data.FindIndex(d => d.Date == t1.Date);
-            if (diff < (double)validdiff && barsBetween > minDistance)
+            if (t2.Value != 0)
             {
-                var cur = data[^1];
-                if (cur.Close < Math.Min(t1.Value, t2.Value))
+                var diff = Math.Abs((double)(t1.Value / t2.Value) - 1);
+                var barsBetween = data.FindIndex(d => d.Date == t2.Date) - data.FindIndex(d => d.Date == t1.Date);
+                if (diff < (double)validdiff && barsBetween > minDistance)
                 {
-                    var entry = cur.Close;
-                    var stop = Math.Max(t1.Value, t2.Value);
-                    var height = stop - entry;
-                    result.Add(new PatternMatch("Double Top", cur.Date, entry, stop, [entry - height, entry - height * 1.5m], 0.65));
+                    var cur = data[^1];
+                    if (cur.Close < Math.Min(t1.Value, t2.Value))
+                    {
+                        var entry = cur.Close;
+                        var stop = Math.Max(t1.Value, t2.Value);
+                        var height = stop - entry;
+                        result.Add(new PatternMatch("Double Top", cur.Date, entry, stop, [entry - height, entry - height * 1.5m], 0.65));
+                    }
                 }
             }
         }
@@ -134,17 +139,20 @@ public static class ChartPatterns
         if (bots.Count >= 2)
         {
             var b1 = bots[^2]; var b2 = bots[^1];
-            var diff = Math.Abs((double)(b1.Value / b2.Value) - 1);
-            var barsBetween = data.FindIndex(d => d.Date == b2.Date) - data.FindIndex(d => d.Date == b1.Date);
-            if (diff < (double)validdiff && barsBetween > minDistance)
+            if (b2.Value != 0)
             {
-                var cur = data[^1];
-                if (cur.Close > Math.Max(b1.Value, b2.Value))
+                var diff = Math.Abs((double)(b1.Value / b2.Value) - 1);
+                var barsBetween = data.FindIndex(d => d.Date == b2.Date) - data.FindIndex(d => d.Date == b1.Date);
+                if (diff < (double)validdiff && barsBetween > minDistance)
                 {
-                    var entry = cur.Close;
-                    var stop = Math.Min(b1.Value, b2.Value);
-                    var height = entry - stop;
-                    result.Add(new PatternMatch("Double Bottom", cur.Date, entry, stop, [entry + height, entry + height * 1.5m], 0.65));
+                    var cur = data[^1];
+                    if (cur.Close > Math.Max(b1.Value, b2.Value))
+                    {
+                        var entry = cur.Close;
+                        var stop = Math.Min(b1.Value, b2.Value);
+                        var height = entry - stop;
+                        result.Add(new PatternMatch("Double Bottom", cur.Date, entry, stop, [entry + height, entry + height * 1.5m], 0.65));
+                    }
                 }
             }
         }

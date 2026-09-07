@@ -182,11 +182,10 @@ else if (_sub == "pnl")
 
     protected override void OnParametersSet()
     {
-        if (_symbol != Symbol)
-        {
-            _symbol = Symbol;
-            _ = Analyze();
-        }
+        var sym = (Symbol ?? "").Trim().ToUpperInvariant();
+        if (sym.Length < 3 || sym == _symbol) return;
+        _symbol = sym;
+        _ = Analyze();
     }
 
     public TechnicalIndicators? LastTa => _ta;
@@ -195,6 +194,11 @@ else if (_sub == "pnl")
     {
         if (string.IsNullOrWhiteSpace(_symbol)) return;
         _symbol = _symbol.Trim().ToUpperInvariant();
+        if (_symbol.Length < 3)
+        {
+            _error = "Mã cổ phiếu cần ít nhất 3 ký tự (VD: VNM, FPT).";
+            return;
+        }
         _busy = true;
         _error = null;
         await InvokeAsync(StateHasChanged);
@@ -216,7 +220,12 @@ else if (_sub == "pnl")
             }
             _checklist = Indicators.BuildTechnicalChecklist(_ta, _notes);
         }
-        catch (Exception ex) { _error = ex.Message; }
+        catch (Exception ex)
+        {
+            _error = ex.Message.Contains("DivideByZero", StringComparison.OrdinalIgnoreCase)
+                ? $"Không thể phân tích {_symbol} — dữ liệu giá không hợp lệ hoặc quá ít phiên."
+                : ex.Message;
+        }
         finally { _busy = false; await InvokeAsync(StateHasChanged); }
     }
 
