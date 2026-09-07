@@ -26,20 +26,28 @@
 
 @if (_pickedSector is not null)
 {
+    var filtered = FilteredSymbols(_pickedSector).ToList();
     <div class="vd-sector-picker">
         <div class="vd-sector-picker-head">
             <strong>@_pickedSector.Name</strong>
-            <span class="ts-muted">Chọn mã để phân tích</span>
+            <span class="ts-muted">@_pickedSector.Symbols.Count mã — chọn để phân tích</span>
             <button type="button" class="vd-btn vd-btn-sm" @onclick="ClosePicker">✕</button>
         </div>
+        @if (_pickedSector.Symbols.Count > 8)
+        {
+            <input class="vd-input vd-sector-picker-search" placeholder="Lọc mã..." @bind="_sectorFilter" @bind:event="oninput" />
+        }
         <div class="vd-sector-picker-list">
-            @foreach (var sym in _pickedSector.TopSymbols)
+            @foreach (var item in filtered)
             {
-                <button type="button" class="vd-chip" @onclick="() => PickSymbol(sym)">@sym</button>
+                <button type="button" class="vd-chip vd-sector-symbol" @onclick="() => PickSymbol(item.Symbol)">
+                    <span>@item.Symbol</span>
+                    <span class="@(item.PercentChange >= 0 ? "vd-pos" : "vd-neg")">@item.PercentChange.ToString("F1")%</span>
+                </button>
             }
-            @if (_pickedSector.TopSymbols.Count == 0 && !string.IsNullOrEmpty(_pickedSector.TopGainerSymbol))
+            @if (filtered.Count == 0)
             {
-                <button type="button" class="vd-chip" @onclick="() => PickSymbol(_pickedSector.TopGainerSymbol!)">@_pickedSector.TopGainerSymbol</button>
+                <span class="ts-muted">Không có mã khớp "@_sectorFilter"</span>
             }
         </div>
     </div>
@@ -208,6 +216,7 @@ else if (!_busy)
     private string? _error;
     private int? _phase2Done;
     private int _phase2Total;
+    private string _sectorFilter = "";
     private readonly HashSet<string> _compareSelected = [];
 
     private async Task Load()
@@ -242,9 +251,25 @@ else if (!_busy)
         else _compareSelected.Remove(name);
     }
 
-    private void OpenPicker(SectorRankCard c) => _pickedSector = c;
+    private void OpenPicker(SectorRankCard c)
+    {
+        _pickedSector = c;
+        _sectorFilter = "";
+    }
 
-    private void ClosePicker() => _pickedSector = null;
+    private void ClosePicker()
+    {
+        _pickedSector = null;
+        _sectorFilter = "";
+    }
+
+    private IEnumerable<SectorSymbolPick> FilteredSymbols(SectorRankCard c)
+    {
+        if (string.IsNullOrWhiteSpace(_sectorFilter))
+            return c.Symbols;
+        var q = _sectorFilter.Trim().ToUpperInvariant();
+        return c.Symbols.Where(s => s.Symbol.Contains(q, StringComparison.OrdinalIgnoreCase));
+    }
 
     private async Task PickSymbol(string sym)
     {

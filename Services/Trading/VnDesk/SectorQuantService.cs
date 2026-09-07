@@ -42,13 +42,15 @@ public sealed class SectorQuantService
             card.VolRLoaded = false;
             card.Score = CalcScore(card.Breadth, card.VolR, card.AvgChange, card.Maker);
 
-            var topList = list.OrderByDescending(s => s.PercentChange).Take(3).ToList();
-            if (topList.Count > 0)
+            var ordered = list.OrderByDescending(s => s.PercentChange).ToList();
+            if (ordered.Count > 0)
             {
-                card.TopGainerSymbol = topList[0].Symbol;
-                card.TopGainerPct = (double)topList[0].PercentChange;
-                card.TopSymbols = topList.Select(s => s.Symbol).ToList();
+                card.TopGainerSymbol = ordered[0].Symbol;
+                card.TopGainerPct = (double)ordered[0].PercentChange;
             }
+            card.Symbols = ordered
+                .Select(s => new SectorSymbolPick(s.Symbol, (double)s.PercentChange))
+                .ToList();
 
             card.PrevRank = prevRanks.GetValueOrDefault(kv.Key);
             sectors.Add(card);

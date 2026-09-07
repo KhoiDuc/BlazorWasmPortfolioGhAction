@@ -101,6 +101,8 @@ public record BacktestResult(string Indicator, int TotalTrades, int Wins, int Lo
 public record BacktestRequest(string Indicator, List<string> Symbols, DateTime From, DateTime To, decimal TakeProfitPct = 10, decimal StopLossPct = 7);
 
 // --- Sector Quant DTOs ---
+public record SectorSymbolPick(string Symbol, double PercentChange);
+
 public class SectorRankCard
 {
     public string Name { get; set; } = "";
@@ -118,8 +120,8 @@ public class SectorRankCard
     public decimal TotalVolume { get; set; }
     public string? TopGainerSymbol { get; set; }
     public double? TopGainerPct { get; set; }
-    /// <summary>Top 3 symbols by % change — for sector picker UI.</summary>
-    public List<string> TopSymbols { get; set; } = [];
+    /// <summary>All symbols in sector, sorted by % change desc — for sector picker UI.</summary>
+    public List<SectorSymbolPick> Symbols { get; set; } = [];
     public bool VolRLoaded { get; set; }
 }
 
