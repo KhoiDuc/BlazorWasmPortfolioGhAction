@@ -91,6 +91,15 @@ public record MACDResult(decimal MacdLine, decimal SignalLine, decimal Histogram
 public record BollingerBandsResult(decimal Upper, decimal Middle, decimal Lower);
 public record StochasticResult(decimal k, decimal d);
 
+// --- Advanced indicator/pattern DTOs (ported from Survey/StockLib) ---
+public record SuperTrendResult(decimal[] UpperBand, decimal[] LowerBand, decimal[] SuperTrendLine, bool[] IsUptrend);
+public record OrderBlockSignal(string Mode, DateTime Date, decimal Entry, decimal StopLoss, decimal[] TakeProfits, string Note);
+public record ElliottSignal(int Wave, string Direction, DateTime Date, decimal Level, string Note);
+public record PatternMatch(string Name, DateTime Date, decimal Entry, decimal StopLoss, decimal[] TakeProfits, double Reliability);
+public record BacktestTrade(string Symbol, DateTime Entry, decimal EntryPrice, DateTime? Exit, decimal? ExitPrice, decimal? TakeProfit, decimal? StopLoss, int HoldDays, decimal Pnl, double PnlPct, bool IsWin);
+public record BacktestResult(string Indicator, int TotalTrades, int Wins, int Losses, double WinRate, double AvgTakeProfitPct, double AvgHoldDays, decimal TotalPnl, List<BacktestTrade> Trades);
+public record BacktestRequest(string Indicator, List<string> Symbols, DateTime From, DateTime To, decimal TakeProfitPct = 10, decimal StopLossPct = 7);
+
 public class IchimokuResult
 {
     public decimal TenkanSen { get; set; }
@@ -170,6 +179,13 @@ public class TechnicalIndicators
     public List<decimal> Last3Rsi { get; set; } = [];
     public decimal IntradayMomentum { get; set; }
     public string? IntradayNote { get; set; }
+
+    // Advanced indicators (Todo 2+)
+    public SuperTrendResult? SuperTrend { get; set; }
+    public decimal[] T3 { get; set; } = [];
+    public List<PatternMatch> AdvancedPatterns { get; set; } = [];
+    public OrderBlockSignal? OrderBlock { get; set; }
+    public ElliottSignal? Elliott { get; set; }
 }
 
 public class MarketIndex

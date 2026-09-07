@@ -42,7 +42,7 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk {
             return data.Close < data.Open;
         }
     }
-    public class CandlestickPatternDetector
+    public partial class CandlestickPatternDetector
     {
         // Các ngưỡng được định nghĩa như hằng số để dễ điều chỉnh
         private const decimal DOJI_THRESHOLD = 0.1m;        // Thân nến < 10% tổng phạm vi được coi là Doji

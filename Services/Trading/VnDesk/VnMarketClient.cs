@@ -22,7 +22,6 @@ public sealed class VnMarketClient : IVnMarketClient
 {
     private readonly HttpClient _vndHttp;
     private readonly HttpClient _cafefHttp;
-    private readonly HttpClient _proxyHttp;
     private readonly TradingEndpointResolver _endpoints;
     private readonly VnDeskOptions _options;
     private readonly ConcurrentDictionary<string, List<StockData>> _cache = new();
@@ -37,7 +36,6 @@ public sealed class VnMarketClient : IVnMarketClient
         _options = options;
         _vndHttp = factory.CreateClient(TradingServiceExtensions.VnMarketClientName);
         _cafefHttp = factory.CreateClient(TradingServiceExtensions.VnCafeFClientName);
-        _proxyHttp = factory.CreateClient(TradingServiceExtensions.TradingApiClientName);
     }
 
     public void ClearCache() => _cache.Clear();
@@ -151,7 +149,7 @@ public sealed class VnMarketClient : IVnMarketClient
         try
         {
             var url = _endpoints.ResolveFetchUrl($"stock-insight/v1/stock/bars/{Uri.EscapeDataString(symbol.ToUpperInvariant())}?timeframe=1&count=200");
-            var resp = await _proxyHttp.GetAsync(url, ct);
+            var resp = await _vndHttp.GetAsync(url, ct);
             if (!resp.IsSuccessStatusCode) return [];
 
             using var doc = await JsonDocument.ParseAsync(await resp.Content.ReadAsStreamAsync(ct), cancellationToken: ct);

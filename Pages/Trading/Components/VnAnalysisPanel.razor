@@ -1,9 +1,10 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
 @using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.Broker
 @inject IVnMarketClient Market
 @inject IndicatorService Indicators
 @inject PositionService Positions
-@inject ITradingApiClient Api
+@inject IBrokerGeminiClient Gemini
 
 <div class="ts-panel">
     <div class="ts-tabs">
@@ -147,7 +148,8 @@ else if (_sub == "pnl")
         if (_ta is null) return;
         _aiBusy = true;
         var numbers = $"{_ta.Symbol} close={_ta.LatestClose:N2} trend={_ta.Trend} RSI={_ta.RSI:N1} signal={_ta.TradingSignal.Action}";
-        _aiText = await Api.ChatAsync(PromptLibrary.NeutralChecklist(_ta.Symbol, numbers, _notes)) ?? "AI không khả dụng.";
+        var result = await Gemini.ExplainAsync(PromptLibrary.NeutralChecklist(_ta.Symbol, numbers, _notes));
+        _aiText = result.Text ?? (result.Error ?? "AI không khả dụng.");
         _aiBusy = false;
     }
 

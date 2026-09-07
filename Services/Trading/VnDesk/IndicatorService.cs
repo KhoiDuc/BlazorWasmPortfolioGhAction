@@ -2,7 +2,7 @@ using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk;
 
-public sealed class IndicatorService
+public sealed partial class IndicatorService
 {
     public TechnicalIndicators? Calculate(string symbol, List<StockData> historyData)
     {
@@ -35,7 +35,18 @@ public sealed class IndicatorService
         var liquidity = AnalyzeLiquidity(volumes.Last(), vol20.Average, vol50);
         var trend = DetermineTrend(closes, sma20, sma50, sma200, volumes.Last(), vol20.Average, rsi, atr, bb.Upper, bb.Lower, bb.Middle);
         var patterns = CandlestickPatternDetector.DetectPatterns(historyData.TakeLast(50).ToList());
-        var charts = DetectChartPatterns(historyData.TakeLast(50).ToList());
+        patterns.AddRange(CandlestickPatternDetector.DetectPinBar(historyData));
+        var advancedCharts = new List<PatternMatch>();
+        var vcp = ChartPatterns.DetectVCP(historyData);
+        if (vcp is not null) advancedCharts.Add(vcp);
+        var hs = ChartPatterns.DetectHeadAndShoulders(historyData);
+        if (hs is not null) advancedCharts.Add(hs);
+        advancedCharts.AddRange(ChartPatterns.DetectDoubleTopBottom(historyData));
+        var charts = advancedCharts.Select(p => p.Name).ToList();
+        var elliott = CandlestickPatternDetector.DetectElliottWave(historyData, rsiHistory);
+        var orderBlock = OrderBlockDetector.Detect(historyData);
+        var superTrend = CalculateSuperTrend(historyData);
+        var t3 = CalculateT3(historyData);
         var signal = GenerateTradingSignals(rsi, macd, stoch, trend, vol20, atr, sr, closes.Last());
         signal.Symbol = symbol;
         signal.SignalTime = DateTime.Now;
@@ -83,7 +94,12 @@ public sealed class IndicatorService
             PreviousHigh = highs.Length >= 2 ? highs[^2] : 0,
             PreviousLow = lows.Length >= 2 ? lows[^2] : 0,
             RsiHistory = rsiHistory,
-            Last3Rsi = rsiHistory.TakeLast(3).ToList()
+            Last3Rsi = rsiHistory.TakeLast(3).ToList(),
+            SuperTrend = superTrend,
+            T3 = t3,
+            AdvancedPatterns = advancedCharts,
+            Elliott = elliott,
+            OrderBlock = orderBlock
         };
     }
 

@@ -1,6 +1,7 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
 @using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
-@inject ITradingApiClient Api
+@using BlazorWasmPortfolioGhAction.Services.Trading.Broker
+@inject IBrokerGeminiClient Gemini
 @inject IVnMarketClient Market
 @inject IndicatorService Indicators
 
@@ -65,12 +66,13 @@ else
         if (string.IsNullOrWhiteSpace(_newsRaw)) return;
         _busy = true;
         _error = null;
-        var text = await Api.ChatAsync(PromptLibrary.News(_newsRaw));
+        var result = await Gemini.ExplainAsync(PromptLibrary.News(_newsRaw));
+        var text = result.Text;
         _brief = new NewsBrief { Raw = _newsRaw };
         if (string.IsNullOrWhiteSpace(text))
         {
             _brief.Facts = _newsRaw;
-            _brief.Sources = "(AI không khả dụng)";
+            _brief.Sources = result.Error ?? "(AI không khả dụng)";
             _error = "AI skip — hiển thị raw.";
         }
         else ParseNews(text, _brief);
@@ -86,7 +88,8 @@ else
         var numbers = ta is null
             ? "(không có chỉ báo)"
             : $"{ta.Symbol} close={ta.LatestClose:N2} trend={ta.Trend} RSI={ta.RSI:N1} signal={ta.TradingSignal.Action}";
-        _thesisText = await Api.ChatAsync(PromptLibrary.Thesis(_symbol, numbers, _notes)) ?? "AI không khả dụng.";
+        var result = await Gemini.ExplainAsync(PromptLibrary.Thesis(_symbol, numbers, _notes));
+        _thesisText = result.Text ?? (result.Error ?? "AI không khả dụng.");
         _busy = false;
     }
 

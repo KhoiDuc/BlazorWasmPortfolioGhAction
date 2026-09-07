@@ -1,9 +1,10 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
 @using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.Broker
 @inject IVnDeskStore Store
 @inject ChecklistService Checklist
 @inject PositionService Positions
-@inject ITradingApiClient Api
+@inject IBrokerGeminiClient Gemini
 @inject IJSRuntime JS
 
 <div class="ts-panel">
@@ -717,7 +718,8 @@ else if (_sub == "review" && _mode == "journal" && _advanced)
     {
         _aiBusy = true;
         var notes = $"{_jAction} {_symbol} @ {_jPrice:N2}, kết quả {_jOutcome}, cảm xúc {_jMood}. Lần sau: {_jNextTime}";
-        _aiText = await Api.ChatAsync(PromptLibrary.Journal(_symbol, notes)) ?? "AI không khả dụng.";
+        var r = await Gemini.ExplainAsync(PromptLibrary.Journal(_symbol, notes));
+        _aiText = r.Text ?? (r.Error ?? "AI không khả dụng.");
         _aiBusy = false;
         _msg = "Gợi ý AI — tham khảo, không bắt buộc.";
     }
@@ -779,7 +781,8 @@ else if (_sub == "review" && _mode == "journal" && _advanced)
     {
         _aiBusy = true;
         var draft = $"{_planEntry}\n{_planExit}\n{_planRisk}\n{_planThesis}\n{_planInvalid}";
-        _aiText = await Api.ChatAsync(PromptLibrary.StructurePlan(_symbol, draft)) ?? "AI không khả dụng.";
+        var r = await Gemini.ExplainAsync(PromptLibrary.StructurePlan(_symbol, draft));
+        _aiText = r.Text ?? (r.Error ?? "AI không khả dụng.");
         _aiBusy = false;
     }
 
@@ -808,7 +811,8 @@ else if (_sub == "review" && _mode == "journal" && _advanced)
     {
         _aiBusy = true;
         var notes = $"{_revHappened}\n{_revLearned}\n{_revProcess}";
-        var draft = await Api.ChatAsync(PromptLibrary.Journal(_symbol, notes));
+        var r = await Gemini.ExplainAsync(PromptLibrary.Journal(_symbol, notes));
+        var draft = r.Text;
         if (!string.IsNullOrWhiteSpace(draft)) _revProcess = draft;
         _aiBusy = false;
         _msg = "AI nháp — sửa trước khi lưu.";

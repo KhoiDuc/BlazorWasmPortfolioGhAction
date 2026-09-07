@@ -23,13 +23,11 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
 
     private readonly HttpClient _http;
     private readonly BrokerOptions _options;
-    private readonly ITradingApiClient _api;
 
-    public BrokerGeminiClient(HttpClient http, BrokerOptions options, ITradingApiClient api)
+    public BrokerGeminiClient(HttpClient http, BrokerOptions options)
     {
         _http = http;
         _options = options;
-        _api = api;
     }
 
     public bool HasDirectKey => !string.IsNullOrWhiteSpace(_options.ApiKey);
@@ -53,17 +51,9 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
                 return configResult;
         }
 
-        try
-        {
-            var proxy = await _api.ChatAsync(prompt, context: "broker-desk", ct);
-            return string.IsNullOrWhiteSpace(proxy)
-                ? new GeminiExplainResult(null, "AI không trả lời. Kiểm tra API key hoặc thử lại.")
-                : new GeminiExplainResult(proxy, null);
-        }
-        catch (Exception ex)
-        {
-            return new GeminiExplainResult(null, ex.Message);
-        }
+        // ponytail: no internal proxy fallback anymore — require a key.
+        return new GeminiExplainResult(null,
+            "Không có Gemini API key. Nhập key (nút khóa trên Broker desk) hoặc cấu hình Gemini:ApiKey.");
     }
 
     private async Task<GeminiExplainResult?> TryDirectAsync(
@@ -80,8 +70,7 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
         }
         catch (Exception ex)
         {
-            // Fall through to proxy when direct call fails.
-            _ = ex;
+            return new GeminiExplainResult(null, ex.Message);
         }
 
         return null;

@@ -1,0 +1,116 @@
+@page "/trading/backtest"
+@page "/{lang:regex(^(en|vn)$)}/trading/backtest"
+@layout TradingLayout
+@inherits CultureAwareComponent
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@inject IVnMarketClient Market
+@inject BacktestService BacktestSvc
+@inject VnDeskOptions Options
+@inject IStringLocalizer<SharedResources> L
+
+<div class="ts-page">
+    <div class="ts-panel">
+        <div class="ts-header">
+            <div>
+                <h2>Backtest</h2>
+                <p class="ts-muted">Test indicator signals over historical data — win-rate, avg TP, hold-days.</p>
+            </div>
+        </div>
+        <div class="ts-field mt-2">
+            <label class="ts-label" for="bt-indicator">Indicator</label>
+            <select id="bt-indicator" class="ts-select" @bind="_indicator">
+                <option value="SuperTrend">SuperTrend</option>
+                <option value="T3">T3</option>
+                <option value="VCP">VCP</option>
+                <option value="PinBar">PinBar</option>
+                <option value="OrderBlock">OrderBlock</option>
+                <option value="Elliott">Elliott</option>
+            </select>
+        </div>
+        <div class="ts-field mt-2">
+            <label class="ts-label" for="bt-symbols">Symbols (comma-separated)</label>
+            <input id="bt-symbols" class="ts-input" @bind="_symbols" placeholder="VNM,FPT,MWG..." />
+        </div>
+        <div class="ts-field mt-2">
+            <label class="ts-label" for="bt-tp">Take Profit %</label>
+            <input id="bt-tp" type="number" class="ts-input" @bind="_tpPct" style="max-width:120px" />
+        </div>
+        <div class="ts-field mt-2">
+            <label class="ts-label" for="bt-sl">Stop Loss %</label>
+            <input id="bt-sl" type="number" class="ts-input" @bind="_slPct" style="max-width:120px" />
+        </div>
+        <button class="ts-btn ts-btn-primary mt-2" @onclick="RunBacktest" disabled="@_busy">Run backtest</button>
+        @if (_busy) { <div class="ts-spinner mt-2"></div> }
+        @if (!string.IsNullOrEmpty(_error)) { <div class="ts-alert ts-alert-error mt-2">@_error</div> }
+    </div>
+</div>
+
+@if (_result is not null)
+{
+    <div class="ts-panel">
+        <div class="ts-header">
+            <h3>@_result.Indicator — @(_result.TotalTrades) trades</h3>
+            <p class="ts-muted" style="font-size:0.82rem">
+                Win-rate: <strong>@_result.WinRate.ToString("F1")%</strong> |
+                Wins: @_result.Wins / Losses: @_result.Losses |
+                Avg TP: @_result.AvgTakeProfitPct.ToString("F2")% |
+                Avg hold: @_result.AvgHoldDays.ToString("F1") days |
+                Total PnL: @(_result.TotalPnl > 0 ? "+" : "")@_result.TotalPnl.ToString("N2")
+            </p>
+        </div>
+    </div>
+    @if (_result.Trades.Count > 0)
+    {
+        <div class="ts-panel ts-table-wrap">
+            <table class="ts-table">
+                <thead><tr><th>Mã</th><th>Entry</th><th>Price</th><th>Exit</th><th>Price</th><th>Hold</th><th>PnL%</th><th>Win</th></tr></thead>
+                <tbody>
+                    @foreach (var t in _result.Trades.Take(100))
+                    {
+                        <tr>
+                            <td><strong>@t.Symbol</strong></td>
+                            <td>@t.Entry.ToString("dd/MM/yyyy")</td>
+                            <td>@t.EntryPrice.ToString("N2")</td>
+                            <td>@(t.Exit?.ToString("dd/MM/yyyy") ?? "-")</td>
+                            <td>@(t.ExitPrice?.ToString("N2") ?? "-")</td>
+                            <td>@t.HoldDays</td>
+                            <td class="@(t.PnlPct >= 0 ? "ts-positive" : "ts-negative")">@t.PnlPct.ToString("F2")%</td>
+                            <td>@(t.IsWin ? "✓" : "✗")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@code {
+    private string _indicator = "SuperTrend";
+    private string _symbols = "VNM,FPT,MWG";
+    private decimal _tpPct = 10m;
+    private decimal _slPct = 7m;
+    private BacktestResult? _result;
+    private string? _error;
+    private bool _busy;
+
+    private async Task RunBacktest()
+    {
+        _busy = true;
+        _error = null;
+        _result = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var symbols = _symbols.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(s => s.ToUpperInvariant()).ToList();
+            var req = new BacktestRequest(_indicator, symbols,
+                DateTime.Today.AddYears(-2), DateTime.Today, _tpPct, _slPct);
+            _result = await BacktestSvc.BacktestAsync(req);
+            if (_result.TotalTrades == 0)
+                _error = "Không có trade nào — thử indicator/symbol khác.";
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; await InvokeAsync(StateHasChanged); }
+    }
+}
