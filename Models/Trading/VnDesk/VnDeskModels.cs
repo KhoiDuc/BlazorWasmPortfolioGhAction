@@ -100,6 +100,52 @@ public record BacktestTrade(string Symbol, DateTime Entry, decimal EntryPrice, D
 public record BacktestResult(string Indicator, int TotalTrades, int Wins, int Losses, double WinRate, double AvgTakeProfitPct, double AvgHoldDays, decimal TotalPnl, List<BacktestTrade> Trades);
 public record BacktestRequest(string Indicator, List<string> Symbols, DateTime From, DateTime To, decimal TakeProfitPct = 10, decimal StopLossPct = 7);
 
+// --- Sector Quant DTOs ---
+public class SectorRankCard
+{
+    public string Name { get; set; } = "";
+    public int Rank { get; set; }
+    public int PrevRank { get; set; }
+    public int DeltaRank => PrevRank == 0 ? 0 : PrevRank - Rank;
+    public double Breadth { get; set; }
+    public double VolR { get; set; }
+    public double Maker { get; set; }
+    public double AvgChange { get; set; }
+    public double Score { get; set; }
+    public int StockCount { get; set; }
+    public int UpCount { get; set; }
+    public int DownCount { get; set; }
+    public decimal TotalVolume { get; set; }
+    public string? TopGainerSymbol { get; set; }
+    public double? TopGainerPct { get; set; }
+    public bool VolRLoaded { get; set; }
+}
+
+public class MarketQuantSummary
+{
+    public double AvgScore { get; set; }
+    public double AvgMaker { get; set; }
+    public double AvgVolR { get; set; }
+    public double MarketBreadth { get; set; }
+    public int TotalUp { get; set; }
+    public int TotalDown { get; set; }
+    public int TotalUnchanged { get; set; }
+    public decimal TotalVolume { get; set; }
+    public string MarketState { get; set; } = "CO HẸP";
+    public double ProbUp { get; set; }
+    public double ProbDown { get; set; }
+    public double ProbFlat { get; set; }
+    public double HighLiquidityRatio { get; set; }
+}
+
+public class SectorQuantBoard
+{
+    public MarketQuantSummary Summary { get; set; } = new();
+    public List<SectorRankCard> Sectors { get; set; } = [];
+    public DateTime UpdatedAt { get; set; }
+    public bool Phase2Complete { get; set; }
+}
+
 public class IchimokuResult
 {
     public decimal TenkanSen { get; set; }

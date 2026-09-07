@@ -5,163 +5,130 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
 @inject IStringLocalizer<SharedResources> L
 
-<div class="ts-page ts-desk-page">
-    <div class="ts-panel ts-desk-hero">
-        <div class="ts-header">
-            <div>
-                <h2>VnDesk</h2>
-                <p class="ts-muted">@L["Trading_VnDeskLead"]</p>
-            </div>
-            <button class="ts-btn ts-btn-outline" @onclick="RunGuidedFlow" disabled="@_guidedBusy">
-                @(_guidedBusy ? L["Trading_GuidedBusy"] : L["Trading_Guided"])
-            </button>
-        </div>
-
-        <div class="ts-desk-symbol-bar">
-            <label class="ts-label" for="desk-symbol">@L["Trading_SymbolLabel"]</label>
-            <div class="ts-desk-symbol-row">
-                <input id="desk-symbol" class="ts-input ts-desk-symbol-input" @bind="_symbol" @bind:event="oninput"
-                       placeholder="VNM, FPT, HPG..." @onkeydown="OnSymbolKey" />
-                @if (_popular.Length > 0)
-                {
-                    <div class="ts-desk-chips">
-                        @foreach (var p in _popular)
-                        {
-                            <button type="button" class="ts-chip @(_symbol == p ? "active" : "")" @onclick='() => PickSymbol(p)'>@p</button>
-                        }
-                    </div>
-                }
-            </div>
-            <div class="ts-desk-quick-actions">
-                <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick='() => GoStep("screen")'>@L["Trading_FilterStocks"]</button>
-                <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick='() => GoStep("multiscreen")'>Quét đa chỉ báo</button>
-                <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick='() => GoStep("ai")'>@L["Trading_AskAi"]</button>
-            </div>
+<div class="vd-page">
+    <div class="vd-header">
+        <div>
+            <h2>VnDesk</h2>
+            <p>@L["Trading_VnDeskLead"]</p>
         </div>
     </div>
 
-    @if (_step is "screen" or "ai" or "multiscreen")
-    {
-        <div class="ts-desk-secondary">
-            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick='() => GoStep("overview")'>@L["Trading_BackMain"]</button>
+    <div class="vd-symbol-bar">
+        <div class="vd-symbol-row">
+            <label class="ts-label" for="desk-symbol">@L["Trading_SymbolLabel"]</label>
+            <input id="desk-symbol" class="vd-symbol-input" @bind="_symbol" @bind:event="oninput"
+                   placeholder="VNM, FPT, HPG..." @onkeydown="OnSymbolKey" />
+            @if (_popular.Length > 0)
+            {
+                <div class="vd-chips">
+                    @foreach (var p in _popular)
+                    {
+                        <button type="button" class="vd-chip @(_symbol == p ? "active" : "")" @onclick='() => PickSymbol(p)'>@p</button>
+                    }
+                </div>
+            }
+            <button type="button" class="vd-btn vd-btn-primary vd-btn-sm" @onclick='() => GoTab("analyze")'>Phân tích</button>
         </div>
-    }
+    </div>
 
-    @if (_step is not ("screen" or "ai" or "multiscreen"))
-    {
-        <nav class="ts-desk-flow" aria-label="@L["Trading_FlowAria"]">
-            @RenderStepButton("overview", 1, L["Trading_StepMarket"], L["Trading_StepMarketDesc"])
-            <span class="ts-desk-flow-line" aria-hidden="true"></span>
-            @RenderStepButton("analyze", 2, L["Trading_StepAnalyze"], L["Trading_StepAnalyzeDesc"])
-        </nav>
-    }
+    <nav class="vd-nav" aria-label="VnDesk navigation">
+        <button class="vd-nav-item @(_tab == "market" ? "active" : "")" @onclick='() => GoTab("market")'>Thị trường</button>
+        <button class="vd-nav-item @(_tab == "analyze" ? "active" : "")" @onclick='() => GoTab("analyze")'>Phân tích</button>
+        <button class="vd-nav-item @(_tab == "screen" ? "active" : "")" @onclick='() => GoTab("screen")'>Lọc</button>
+        <button class="vd-nav-item @(_tab == "ai" ? "active" : "")" @onclick='() => GoTab("ai")'>AI</button>
+    </nav>
 
-    <div class="ts-desk-content">
-        @if (_step == "overview")
+    <div class="vd-content">
+        @if (_tab == "market")
         {
-            <div class="ts-desk-step-intro">
-                <strong>@L["Trading_Step1Intro"]</strong>
-            </div>
             <VnMarketPanel OnSymbolSelected="OnSymbolFromMarket" />
-            <div class="ts-desk-nav-footer">
-                <button type="button" class="ts-btn ts-btn-primary" @onclick='() => GoStep("analyze")'>@string.Format(L["Trading_NextAnalyze"], _symbol)</button>
+        }
+        else if (_tab == "analyze")
+        {
+            <div class="vd-split">
+                <div>
+                    <VnAnalysisPanel @ref="_analysis" Symbol="@_symbol" />
+                </div>
+                <div class="vd-split-aside">
+                    @if (_chartCollapsed == false)
+                    {
+                        <div class="vd-chart-dock">
+                            <div class="vd-chart-dock-head">
+                                <span class="vd-chart-dock-title">@_symbol</span>
+                                <div class="vd-controls">
+                                    <a class="vd-btn vd-btn-sm" href="@($"/trading/backtest?symbol={_symbol}")" target="_blank">Backtest</a>
+                                    <button class="vd-btn vd-btn-sm" @onclick="ToggleChart" aria-label="Thu gọn">@(_chartCollapsed ? "▸" : "▾")</button>
+                                </div>
+                            </div>
+                            <div class="vd-chart-dock-body">
+                                <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={_symbol}")"
+                                        width="100%" height="320" frameborder="0" title="Vietstock chart"></iframe>
+                                <PriceAlertWidget Symbol="@_symbol" AssetType="stock" />
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="vd-chart-dock collapsed">
+                            <div class="vd-chart-dock-head">
+                                <span class="vd-chart-dock-title">@_symbol</span>
+                                <div class="vd-controls">
+                                    <a class="vd-btn vd-btn-sm" href="@($"/trading/backtest?symbol={_symbol}")" target="_blank">Backtest</a>
+                                    <button class="vd-btn vd-btn-sm" @onclick="ToggleChart" aria-label="Mở rộng">▸</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
         }
-        else if (_step == "analyze")
+        else if (_tab == "screen")
         {
-            <div class="ts-desk-step-intro">
-                <strong>@string.Format(L["Trading_Step2Intro"], _symbol)</strong>
+            <div class="vd-subtabs">
+                <button class="vd-subtab @(_screenSub == "basic" ? "active" : "")" @onclick='() => _screenSub = "basic"'>Screener cơ bản</button>
+                <button class="vd-subtab @(_screenSub == "multi" ? "active" : "")" @onclick='() => _screenSub = "multi"'>Đa chỉ báo</button>
             </div>
-            <VnAnalysisPanel @ref="_analysis" Symbol="@_symbol" />
-            <div class="ts-desk-nav-footer">
-                <button type="button" class="ts-btn ts-btn-outline" @onclick='() => GoStep("overview")'>@L["Trading_BackMarket"]</button>
-            </div>
+            @if (_screenSub == "basic")
+            {
+                <VnScreenerPanel OnSymbolSelected="OnSymbolFromScreener" />
+            }
+            else
+            {
+                <VnMultiScreenerPanel OnSymbolSelected="OnSymbolFromScreener" />
+            }
         }
-        else if (_step == "screen")
+        else if (_tab == "ai")
         {
-            <div class="ts-desk-step-intro">
-                <strong>Lọc cổ phiếu:</strong> Chọn mã trong bảng — app tự chuyển sang Phân tích.
-            </div>
-            <VnScreenerPanel OnSymbolSelected="OnSymbolFromScreener" />
-        }
-        else if (_step == "multiscreen")
-        {
-            <div class="ts-desk-step-intro">
-                <strong>Quét đa chỉ báo:</strong> Lọc cổ phiếu theo SuperTrend, VCP, OrderBlock, Elliott cùng lúc.
-            </div>
-            <VnMultiScreenerPanel OnSymbolSelected="OnSymbolFromScreener" />
-        }
-        else if (_step == "ai")
-        {
-            <div class="ts-desk-step-intro">
-                <strong>Hỏi AI:</strong> Tin tức &amp; luận điểm tham khảo.
-            </div>
             <VnAiPanel Symbol="@_symbol" OnThesisReady="OnThesisReady" />
         }
     </div>
-
-    @if (!string.IsNullOrWhiteSpace(_symbol) && _step is not ("screen" or "ai" or "multiscreen"))
-    {
-        <div class="ts-desk-chart-block">
-            <div class="ts-chart-wrap">
-                <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={_symbol}")"
-                        width="100%" height="360" frameborder="0" title="Vietstock chart"></iframe>
-            </div>
-            <PriceAlertWidget Symbol="@_symbol" AssetType="stock" />
-        </div>
-    }
 </div>
 
 @code {
-    private string _step = "overview";
+    private string _tab = "market";
     private string _symbol = "VNM";
-    private bool _guidedBusy;
+    private string _screenSub = "basic";
+    private bool _chartCollapsed = false;
     private VnAnalysisPanel? _analysis;
 
     private readonly string[] _popular = ["VNM", "FPT", "HPG", "VCB", "MWG"];
 
-    private bool HasTaData => _analysis?.LastTa?.LatestClose is > 0;
+    private void GoTab(string tab) => _tab = tab;
 
-    private RenderFragment RenderStepButton(string id, int num, string title, string hint) => builder =>
-    {
-        var active = _step == id;
-        builder.OpenElement(0, "button");
-        builder.AddAttribute(1, "type", "button");
-        builder.AddAttribute(2, "class", $"ts-desk-flow-step {(active ? "active" : "")} {(IsStepDone(id) ? "done" : "")}");
-        builder.AddAttribute(3, "onclick", EventCallback.Factory.Create(this, () => GoStep(id)));
-        builder.AddAttribute(4, "title", hint);
-        builder.OpenElement(5, "span");
-        builder.AddAttribute(6, "class", "ts-desk-flow-num");
-        builder.AddContent(7, num.ToString());
-        builder.CloseElement();
-        builder.OpenElement(8, "span");
-        builder.AddAttribute(9, "class", "ts-desk-flow-label");
-        builder.AddContent(10, title);
-        builder.CloseElement();
-        builder.CloseElement();
-    };
-
-    private bool IsStepDone(string id) => id switch
-    {
-        "overview" => _step == "analyze",
-        "analyze" => HasTaData,
-        _ => false
-    };
-
-    private void GoStep(string step) => _step = step;
+    private void ToggleChart() => _chartCollapsed = !_chartCollapsed;
 
     private void PickSymbol(string sym) => _symbol = sym.Trim().ToUpperInvariant();
 
     private void OnSymbolFromMarket(string sym)
     {
         PickSymbol(sym);
-        GoStep("analyze");
+        GoTab("analyze");
     }
 
     private void OnSymbolFromScreener(string sym)
     {
         PickSymbol(sym);
-        GoStep("analyze");
+        GoTab("analyze");
     }
 
     private void OnSymbolKey(KeyboardEventArgs e)
@@ -172,19 +139,7 @@
 
     private Task OnThesisReady(string _)
     {
-        GoStep("analyze");
+        GoTab("analyze");
         return Task.CompletedTask;
-    }
-
-    private async Task RunGuidedFlow()
-    {
-        _guidedBusy = true;
-        GoStep("overview");
-        await InvokeAsync(StateHasChanged);
-        await Task.Delay(500);
-        GoStep("analyze");
-        await InvokeAsync(StateHasChanged);
-        await Task.Delay(500);
-        _guidedBusy = false;
     }
 }

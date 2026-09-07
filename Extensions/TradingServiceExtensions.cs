@@ -58,6 +58,7 @@ public static class TradingServiceExtensions
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.WatchlistScorer>();
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.PositionService>();
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.BacktestService>();
+        services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.SectorQuantService>();
 
         var brokerOptions = new BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerOptions();
         configuration.GetSection("Gemini").Bind(brokerOptions);

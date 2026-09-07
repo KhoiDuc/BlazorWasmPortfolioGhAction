@@ -1,0 +1,211 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@inject SectorQuantService Quant
+
+<div class="vd-panel">
+    <div class="vd-controls">
+        <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="Load" disabled="@_busy">
+            @(_board is null ? "Tải định lượng ngành" : "Làm mới")
+        </button>
+        @if (_busy) { <span class="vd-spinner"></span> }
+        @if (_phase2Progress is not null) { <span class="ts-muted" style="font-size:0.82rem">@_phase2Progress</span> }
+        @if (_board is not null) { <span class="ts-muted" style="font-size:0.82rem">Cập nhật: @_board.UpdatedAt.ToLocalTime():HH:mm:ss</span> }
+    </div>
+    @if (!string.IsNullOrEmpty(_error)) { <div class="vd-alert vd-alert-error">@_error</div> }
+</div>
+
+@if (_board is not null)
+{
+    var s = _board.Summary;
+    var top10 = _board.Sectors.Take(10).ToList();
+    var stateClass = s.MarketState == "MỞ RỘNG" ? "vd-bull" : "vd-bear";
+
+    <div class="vd-subtabs">
+        <button class="vd-subtab @(_tab == "overview" ? "active" : "")" @onclick='() => _tab = "overview"'>Overview</button>
+        <button class="vd-subtab @(_tab == "momentum" ? "active" : "")" @onclick='() => _tab = "momentum"'>Momentum/Breadth</button>
+        <button class="vd-subtab @(_tab == "comparison" ? "active" : "")" @onclick='() => _tab = "comparison"'>Comparison</button>
+        <button class="vd-subtab @(_tab == "liquidity" ? "active" : "")" @onclick='() => _tab = "liquidity"'>Liquidity</button>
+    </div>
+
+    @if (_tab == "overview")
+    {
+        <div class="vd-panel">
+            <div class="vd-section-title">Định lượng ngành — Sector Board</div>
+            <p class="ts-muted mb-0" style="font-size:0.82rem">@_board.Sectors.Count nhóm • @s.TotalUp tăng / @s.TotalDown giảm</p>
+            <div class="vd-metric-grid mt-2">
+                <div class="vd-metric-card"><div class="vd-metric-label">Điểm TB</div><div class="vd-metric-value">@s.AvgScore.ToString("F1")</div></div>
+                <div class="vd-metric-card"><div class="vd-metric-label">Maker TB*</div><div class="vd-metric-value">@s.AvgMaker.ToString("F2")</div></div>
+                <div class="vd-metric-card"><div class="vd-metric-label">Thanh khoản TB</div><div class="vd-metric-value">@s.AvgVolR.ToString("F2")</div></div>
+                <div class="vd-metric-card"><div class="vd-metric-label">Độ rộng TT</div><div class="vd-metric-value">@s.MarketBreadth.ToString("F1")%</div></div>
+                <div class="vd-metric-card"><div class="vd-metric-label">Tăng</div><div class="vd-metric-value vd-pos">@s.TotalUp</div></div>
+                <div class="vd-metric-card"><div class="vd-metric-label">Giảm</div><div class="vd-metric-value vd-neg">@s.TotalDown</div></div>
+                <div class="vd-metric-card"><div class="vd-metric-label">Đi ngang</div><div class="vd-metric-value">@s.TotalUnchanged</div></div>
+                <div class="vd-metric-card"><div class="vd-metric-label">Tổng KL</div><div class="vd-metric-value" style="font-size:0.95rem">@s.TotalVolume.ToString("N0")</div></div>
+            </div>
+            <div class="vd-badge-row">
+                <span class="vd-badge @stateClass">@s.MarketState</span>
+                <span class="vd-badge vd-bull">Tăng: @s.ProbUp.ToString("F0")%</span>
+                <span class="vd-badge vd-neutral">Ngang: @s.ProbFlat.ToString("F0")%</span>
+                <span class="vd-badge vd-bear">Giảm: @s.ProbDown.ToString("F0")%</span>
+                <span class="vd-badge">Nhóm TK cao: @s.HighLiquidityRatio.ToString("F0")%</span>
+                <span class="vd-badge">Độ rộng TB: @s.MarketBreadth.ToString("F0")%</span>
+                <span class="vd-badge">TK TB: @s.AvgVolR.ToString("F2")</span>
+            </div>
+            <p class="vd-disclaimer">* Maker &amp; xác suất là ước lượng từ dữ liệu công khai (VNDirect + sectors.json).</p>
+        </div>
+
+        <div class="vd-panel">
+            <h4 class="vd-section-title">Top 10 ngành</h4>
+            <div class="vd-rank-grid">
+                @foreach (var c in top10)
+                {
+                    var deltaClass = c.DeltaRank > 0 ? "vd-delta-up" : c.DeltaRank < 0 ? "vd-delta-down" : "vd-delta-flat";
+                    var deltaText = c.DeltaRank > 0 ? $"▲{c.DeltaRank}" : c.DeltaRank < 0 ? $"▼{Math.Abs(c.DeltaRank)}" : "—";
+                    <div class="vd-rank-card" @onclick="() => SelectSector(c)">
+                        <div class="vd-rank-head">
+                            <span class="vd-rank-num">#@c.Rank</span>
+                            <span class="vd-rank-name">@c.Name</span>
+                            <span class="vd-rank-score">@c.Score.ToString("F0")</span>
+                        </div>
+                        <div class="vd-progress"><div class="vd-progress-bar" style="width:@(c.Score)%"></div></div>
+                        <div class="vd-rank-meta">
+                            <span class="@deltaClass">@deltaText</span>
+                            <span>Breadth: @c.Breadth.ToString("F0")%</span>
+                            <span>VolR: @c.VolR.ToString("F2")@(c.VolRLoaded ? "" : "*")</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else if (_tab == "momentum")
+    {
+        <div class="vd-panel">
+            <h4 class="vd-section-title">Momentum / Breadth — xếp theo ΔRank</h4>
+            <table class="vd-grid">
+                <thead><tr><th>#</th><th>Ngành</th><th>Score</th><th>ΔRank</th><th>Breadth</th><th>Avg %</th><th>VolR</th><th>Maker</th></tr></thead>
+                <tbody>
+                    @foreach (var c in _board.Sectors.OrderByDescending(x => x.DeltaRank).ThenByDescending(x => x.Score))
+                    {
+                        var deltaClass = c.DeltaRank > 0 ? "vd-delta-up" : c.DeltaRank < 0 ? "vd-delta-down" : "vd-delta-flat";
+                        <tr @onclick="() => SelectSector(c)">
+                            <td>@c.Rank</td>
+                            <td><strong>@c.Name</strong></td>
+                            <td>@c.Score.ToString("F1")</td>
+                            <td class="@deltaClass">@(c.DeltaRank > 0 ? $"▲{c.DeltaRank}" : c.DeltaRank < 0 ? $"▼{Math.Abs(c.DeltaRank)}" : "—")</td>
+                            <td>@c.Breadth.ToString("F0")%</td>
+                            <td class="@(c.AvgChange >= 0 ? "vd-pos" : "vd-neg")">@c.AvgChange.ToString("F2")%</td>
+                            <td>@c.VolR.ToString("F2")</td>
+                            <td>@c.Maker.ToString("F2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (_tab == "comparison")
+    {
+        <div class="vd-panel">
+            <h4 class="vd-section-title">Comparison — chọn 2-3 ngành</h4>
+            <div class="vd-checks">
+                @foreach (var c in _board.Sectors)
+                {
+                    <label><input type="checkbox" checked="@_compareSelected.Contains(c.Name)" @onchange='(e) => ToggleCompare(c.Name, (bool?)e.Value)' /> @c.Name</label>
+                }
+            </div>
+        </div>
+        @if (_compareSelected.Count > 0)
+        {
+            var selected = _board.Sectors.Where(x => _compareSelected.Contains(x.Name)).ToList();
+            <div class="vd-panel">
+                <table class="vd-grid">
+                    <thead><tr><th>Metric</th>@foreach (var c in selected) { <th>@c.Name</th> }</tr></thead>
+                    <tbody>
+                        <tr><td>Score</td>@foreach (var c in selected) { <td>@c.Score.ToString("F1")</td> }</tr>
+                        <tr><td>Breadth</td>@foreach (var c in selected) { <td>@c.Breadth.ToString("F0")%</td> }</tr>
+                        <tr><td>VolR</td>@foreach (var c in selected) { <td>@c.VolR.ToString("F2")</td> }</tr>
+                        <tr><td>Maker</td>@foreach (var c in selected) { <td>@c.Maker.ToString("F2")</td> }</tr>
+                        <tr><td>Avg %</td>@foreach (var c in selected) { <td class="@(c.AvgChange >= 0 ? "vd-pos" : "vd-neg")">@c.AvgChange.ToString("F2")%</td> }</tr>
+                        <tr><td>Tăng/Giảm</td>@foreach (var c in selected) { <td><span class="vd-pos">@c.UpCount</span> / <span class="vd-neg">@c.DownCount</span></td> }</tr>
+                        <tr><td>Tổng KL</td>@foreach (var c in selected) { <td>@c.TotalVolume.ToString("N0")</td> }</tr>
+                        <tr><td>Top mã</td>@foreach (var c in selected) { <td>@(c.TopGainerSymbol ?? "-") @(c.TopGainerPct is null ? "" : c.TopGainerPct.Value.ToString("F1") + "%")</td> }</tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+    else if (_tab == "liquidity")
+    {
+        <div class="vd-panel">
+            <h4 class="vd-section-title">Liquidity — ranking theo VolR</h4>
+            <table class="vd-grid">
+                <thead><tr><th>#</th><th>Ngành</th><th>VolR</th><th>Thanh khoản</th><th>Tổng KL</th><th>Score</th></tr></thead>
+                <tbody>
+                    @foreach (var c in _board.Sectors.OrderByDescending(x => x.VolR))
+                    {
+                        var liqClass = c.VolR >= 1.0 ? "vd-bull" : "vd-bear";
+                        <tr @onclick="() => SelectSector(c)">
+                            <td>@c.Rank</td>
+                            <td><strong>@c.Name</strong></td>
+                            <td>@c.VolR.ToString("F2")</td>
+                            <td><span class="vd-badge @liqClass">@(c.VolR >= 1.0 ? "Cao" : "Thấp")</span></td>
+                            <td>@c.TotalVolume.ToString("N0")</td>
+                            <td>@c.Score.ToString("F1")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+else if (!_busy)
+{
+    <div class="vd-panel"><p class="ts-muted">Bấm "Tải định lượng ngành" để bắt đầu.</p></div>
+}
+
+@code {
+    [Parameter] public EventCallback<string> OnSymbolSelected { get; set; }
+
+    private string _tab = "overview";
+    private SectorQuantBoard? _board;
+    private bool _busy;
+    private string? _error;
+    private string? _phase2Progress;
+    private readonly HashSet<string> _compareSelected = [];
+
+    private async Task Load()
+    {
+        _busy = true;
+        _error = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            _board = await Quant.BuildPhase1Async(new Progress<int>(_ => { }));
+            await InvokeAsync(StateHasChanged);
+
+            // Phase 2: background VolR
+            var progress = new Progress<int>(n =>
+            {
+                _phase2Progress = $"VolR: {n}";
+                _ = InvokeAsync(StateHasChanged);
+            });
+            await Quant.LoadPhase2VolRAsync(_board, progress);
+            _phase2Progress = null;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private void ToggleCompare(string name, bool? value)
+    {
+        if (value == true) _compareSelected.Add(name);
+        else _compareSelected.Remove(name);
+    }
+
+    private async Task SelectSector(SectorRankCard c)
+    {
+        if (!string.IsNullOrEmpty(c.TopGainerSymbol))
+            await OnSymbolSelected.InvokeAsync(c.TopGainerSymbol);
+    }
+}
