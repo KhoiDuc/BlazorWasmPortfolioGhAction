@@ -1,10 +1,12 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
 @using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
 @using BlazorWasmPortfolioGhAction.Services.Trading.Broker
+@using BlazorWasmPortfolioGhAction.Services.Localization
 @inject IVnMarketClient Market
 @inject IndicatorService Indicators
 @inject PositionService Positions
 @inject IBrokerGeminiClient Gemini
+@inject ICultureService CultureService
 
 <div class="vd-panel">
     <div class="vd-subtabs">
@@ -116,7 +118,7 @@
     }
 
     <div class="vd-panel">
-        <a class="vd-btn" href="@($"/trading/backtest?symbol={_symbol}")" target="_blank">Backtest indicator này →</a>
+        <a class="vd-btn" href="@($"/{CultureService.UrlLang}/trading/backtest?symbol={_symbol}")" target="_blank">Backtest indicator này →</a>
     </div>
 }
 else if (_checklist is not null && _sub == "check")

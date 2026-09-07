@@ -3,6 +3,7 @@
 @layout TradingLayout
 @inherits CultureAwareComponent
 @using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Localization
 @inject IStringLocalizer<SharedResources> L
 
 <div class="vd-page">
@@ -53,7 +54,7 @@
                     <div class="vd-chart-dock-head">
                         <span class="vd-chart-dock-title">@_activeSymbol</span>
                         <div class="vd-controls">
-                            <a class="vd-btn vd-btn-sm" href="@($"/trading/backtest?symbol={_activeSymbol}")" target="_blank">Backtest</a>
+                            <a class="vd-btn vd-btn-sm" href="@BacktestHref" target="_blank">Backtest</a>
                             <button class="vd-btn vd-btn-sm" @onclick="ToggleChart" aria-label="@(_chartCollapsed ? "Mở rộng" : "Thu gọn")">@(_chartCollapsed ? "▸ Biểu đồ" : "▾ Thu gọn")</button>
                         </div>
                     </div>
@@ -102,6 +103,8 @@
     private VnAnalysisPanel? _analysis;
 
     private readonly string[] _popular = ["VNM", "FPT", "HPG", "VCB", "MWG"];
+
+    private string BacktestHref => $"/{CultureService.UrlLang}/trading/backtest?symbol={_activeSymbol}";
 
     private void GoTab(string tab) => _tab = tab;
 

@@ -4,6 +4,7 @@
 @inherits CultureAwareComponent
 @using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
 @using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Localization
 @inject IVnMarketClient Market
 @inject BacktestService BacktestSvc
 @inject VnDeskOptions Options
@@ -15,7 +16,7 @@
             <h2>Backtest chỉ báo</h2>
             <p>Kiểm tra tín hiệu mua/bán trên dữ liệu lịch sử — win-rate, lãi/lỗ trung bình, số ngày giữ.</p>
         </div>
-        <a class="vd-btn" href="/trading/vndesk">← VnDesk</a>
+        <a class="vd-btn" href="@($"/{CultureService.UrlLang}/trading/vndesk")">← VnDesk</a>
     </div>
 
     <div class="vd-panel">
