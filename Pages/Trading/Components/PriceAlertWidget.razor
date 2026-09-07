@@ -1,30 +1,87 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading
-@inject ITradingApiClient Api
+@inject IPriceAlertService AlertSvc
+@implements IDisposable
 
 <div class="ts-panel">
-    <h4 style="margin:0 0 0.75rem;font-size:0.95rem;"><i class="bi bi-bell"></i> Price Alert — @Symbol</h4>
+    <h4 style="margin:0 0 0.75rem;font-size:0.95rem;">
+        <i class="bi bi-bell"></i> Price Alert — @Symbol
+        @if (_triggeredCount > 0)
+        {
+            <span class="badge bg-danger ms-1">@_triggeredCount</span>
+        }
+    </h4>
+
+    @if (!AlertSvc.IsDiscordConfigured)
+    {
+        <p class="ts-alert ts-alert-warning" style="font-size:0.8rem;">
+            <i class="bi bi-exclamation-triangle"></i>
+            Discord webhook not configured — alerts will only be stored locally.
+            Set <code>DevOps:DiscordWebhookUrl</code> in appsettings.json.
+        </p>
+    }
+
     <div class="ts-field">
         <label class="ts-label">Alert price</label>
-        <input type="number" class="ts-input" @bind="_price" step="any" />
+        <input type="number" class="ts-input" @bind="_threshold" step="any" min="0" />
     </div>
     <div class="ts-field">
         <label class="ts-label">Condition</label>
         <select class="ts-select" @bind="_operator">
-            <option value="above">Price above</option>
-            <option value="below">Price below</option>
+            <option value="@AlertOperator.Above">Price above</option>
+            <option value="@AlertOperator.Below">Price below</option>
         </select>
     </div>
-    <button class="ts-btn ts-btn-primary" @onclick="CreateAlert" disabled="@_busy">Set Alert</button>
+    <div class="ts-field">
+        <label class="ts-label">Current price (for test)</label>
+        <input type="number" class="ts-input" @bind="_currentPrice" step="any" min="0" placeholder="Optional — enter to test trigger" />
+    </div>
+
+    <div class="d-flex gap-2 mt-2">
+        <button class="ts-btn ts-btn-primary" @onclick="CreateAlert" disabled="@(_busy || _threshold <= 0)">
+            <i class="bi bi-plus-circle"></i> Set Alert
+        </button>
+        @if (_currentPrice > 0)
+        {
+            <button class="ts-btn ts-btn-outline" @onclick="CheckNow" disabled="@_busy">
+                <i class="bi bi-lightning"></i> Test
+            </button>
+        }
+    </div>
+
     @if (!string.IsNullOrEmpty(_message))
     {
         <p class="ts-alert ts-alert-info mt-2 mb-0">@_message</p>
     }
-    @if (_alerts?.Length > 0)
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <p class="ts-alert ts-alert-danger mt-2 mb-0">@_error</p>
+    }
+
+    @if (_alerts.Count > 0)
     {
         <ul style="margin-top:1rem;padding-left:1.2rem;font-size:0.85rem;">
-            @foreach (var a in _alerts.Where(x => x.Symbol == Symbol && x.AssetType == AssetType))
+            @foreach (var a in _alerts.Where(x => x.Symbol == Symbol && x.AssetType == AssetType && x.Status != AlertStatus.Dismissed))
             {
-                <li>@a.Operator @a.AlertPrice — <button class="ts-btn ts-btn-outline" style="padding:2px 8px;font-size:0.75rem" @onclick="() => DeleteAlert(a)">Remove</button></li>
+                <li style="@(a.IsTriggered ? "opacity:0.6;text-decoration:line-through;" : "")">
+                    @if (a.Operator == AlertOperator.Above)
+                    {
+                        <i class="bi bi-arrow-up text-success"></i>
+                    }
+                    else
+                    {
+                        <i class="bi bi-arrow-down text-danger"></i>
+                    }
+                    @a.Threshold:N2
+                    @if (a.IsTriggered && a.TriggeredPrice.HasValue)
+                    {
+                        <span class="text-muted"> → hit @a.TriggeredPrice:N2</span>
+                    }
+                    —
+                    <button class="ts-btn ts-btn-outline" style="padding:2px 8px;font-size:0.75rem"
+                            @onclick="() => RemoveAlert(a.Id)">
+                        Remove
+                    </button>
+                </li>
             }
         </ul>
     }
@@ -34,34 +91,102 @@
     [Parameter] public string Symbol { get; set; } = "";
     [Parameter] public string AssetType { get; set; } = "crypto";
 
-    private double _price;
-    private string _operator = "above";
+    private double _threshold;
+    private AlertOperator _operator = AlertOperator.Above;
+    private double _currentPrice;
     private string? _message;
+    private string? _error;
     private bool _busy;
-    private PriceAlert[]? _alerts;
+    private List<PriceAlert> _alerts = new();
+    private int _triggeredCount;
+    private Timer? _timer;
 
-    protected override void OnInitialized() => _ = LoadAlertsAsync();
-
-    private async Task LoadAlertsAsync()
+    protected override async Task OnInitializedAsync()
     {
-        try { _alerts = await Api.GetPriceAlertsAsync(); }
-        catch { }
-        await InvokeAsync(StateHasChanged);
+        _alerts = await AlertSvc.LoadAsync();
+        UpdateTriggeredCount();
+        // ponytail: poll every 30s only if current price is set. Upgrade: subscribe to live ticker.
+        _timer = new Timer(async _ => await TimerTick(), null, 30000, 30000);
+    }
+
+    private async Task TimerTick()
+    {
+        if (_currentPrice <= 0) return;
+        var fired = await AlertSvc.CheckAlertsAsync(Symbol, _currentPrice);
+        if (fired > 0)
+        {
+            _alerts = await AlertSvc.LoadAsync();
+            UpdateTriggeredCount();
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task CreateAlert()
     {
         _busy = true;
         _message = null;
-        await Api.CreatePriceAlertAsync(new CreateAlertRequest(Symbol, AssetType, _price, _operator));
-        _message = "Alert created.";
-        await LoadAlertsAsync();
-        _busy = false;
+        _error = null;
+        try
+        {
+            if (_threshold <= 0)
+            {
+                _error = "Price must be positive.";
+                return;
+            }
+            await AlertSvc.AddAsync(Symbol, AssetType, _threshold, _operator);
+            _alerts = await AlertSvc.LoadAsync();
+            _message = "Alert created — will notify via Discord when triggered.";
+            _threshold = 0;
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed: {ex.Message}";
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 
-    private async Task DeleteAlert(PriceAlert a)
+    private async Task CheckNow()
     {
-        await Api.DeletePriceAlertAsync(a.Symbol, a.AssetType);
-        await LoadAlertsAsync();
+        if (_currentPrice <= 0) return;
+        _busy = true;
+        try
+        {
+            var fired = await AlertSvc.CheckAlertsAsync(Symbol, _currentPrice);
+            _alerts = await AlertSvc.LoadAsync();
+            UpdateTriggeredCount();
+            _message = fired > 0
+                ? $"{fired} alert(s) triggered — Discord notified."
+                : "No alerts triggered at current price.";
+        }
+        catch (Exception ex)
+        {
+            _error = $"Check failed: {ex.Message}";
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
+
+    private async Task RemoveAlert(Guid id)
+    {
+        try
+        {
+            await AlertSvc.RemoveAsync(id);
+            _alerts = await AlertSvc.LoadAsync();
+            UpdateTriggeredCount();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Remove failed: {ex.Message}";
+        }
+    }
+
+    private void UpdateTriggeredCount() =>
+        _triggeredCount = _alerts.Count(a => a.Symbol == Symbol && a.AssetType == AssetType && a.IsTriggered);
+
+    public void Dispose() => _timer?.Dispose();
 }

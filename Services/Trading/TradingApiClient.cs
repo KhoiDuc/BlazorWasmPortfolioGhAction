@@ -14,14 +14,9 @@ public interface ITradingApiClient
     Task<WatchlistResponse<WorldStock>?> GetPotentialWorldSymbolsAsync(CancellationToken ct = default);
     Task<WatchlistResponse<ForexPair>?> GetPotentialForexPairsAsync(CancellationToken ct = default);
     Task<RealEstatePrice[]?> GetRealEstateAsync(string? region = null, string? type = null, string? location = null, CancellationToken ct = default);
-    Task<TriggeredAlert[]?> GetTriggeredAlertsAsync(int limit = 50, CancellationToken ct = default);
-    Task MarkAlertsReadAsync(CancellationToken ct = default);
     Task<ScriptStatusResponse?> GetScriptStatusAsync(CancellationToken ct = default);
     Task RunSshScriptAsync(string scriptType, CancellationToken ct = default);
     Task RestartScriptAsync(CancellationToken ct = default);
-    Task<PriceAlert[]?> GetPriceAlertsAsync(CancellationToken ct = default);
-    Task CreatePriceAlertAsync(CreateAlertRequest request, CancellationToken ct = default);
-    Task DeletePriceAlertAsync(string symbol, string assetType, CancellationToken ct = default);
     Task<JournalEntry[]?> GetJournalAsync(string userId, CancellationToken ct = default);
     Task CreateJournalEntryAsync(string userId, object entry, CancellationToken ct = default);
     Task DeleteJournalEntryAsync(string userId, int id, CancellationToken ct = default);
@@ -145,12 +140,6 @@ public class TradingApiClient : ITradingApiClient
         return await GetAsync<RealEstatePrice[]>($"getRealEstate{qs}", ct);
     }
 
-    public Task<TriggeredAlert[]?> GetTriggeredAlertsAsync(int limit = 50, CancellationToken ct = default) =>
-        GetAsync<TriggeredAlert[]>($"triggeredAlerts?limit={limit}", ct);
-
-    public Task MarkAlertsReadAsync(CancellationToken ct = default) =>
-        PostAsync("triggeredAlerts/read", new { }, ct);
-
     public Task<ScriptStatusResponse?> GetScriptStatusAsync(CancellationToken ct = default) =>
         GetAsync<ScriptStatusResponse>("scriptStatus", ct);
 
@@ -159,15 +148,6 @@ public class TradingApiClient : ITradingApiClient
 
     public Task RestartScriptAsync(CancellationToken ct = default) =>
         PostAsync("restartScript", new { }, ct);
-
-    public Task<PriceAlert[]?> GetPriceAlertsAsync(CancellationToken ct = default) =>
-        GetAsync<PriceAlert[]>("priceAlerts", ct);
-
-    public Task CreatePriceAlertAsync(CreateAlertRequest request, CancellationToken ct = default) =>
-        PostAsync("priceAlerts", request, ct);
-
-    public Task DeletePriceAlertAsync(string symbol, string assetType, CancellationToken ct = default) =>
-        DeleteAsync($"priceAlerts/?symbol={Uri.EscapeDataString(symbol)}&asset_type={Uri.EscapeDataString(assetType)}", ct);
 
     public Task<JournalEntry[]?> GetJournalAsync(string userId, CancellationToken ct = default) =>
         GetAsync<JournalEntry[]>($"journal?user_id={Uri.EscapeDataString(userId)}", ct);

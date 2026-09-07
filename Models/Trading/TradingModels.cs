@@ -42,30 +42,6 @@ public record ForexPair(
     string? Note,
     DateTime? UpdatedAt);
 
-public record TriggeredAlert(
-    int Id,
-    string AssetType,
-    string Symbol,
-    double Price,
-    string Message,
-    bool IsRead,
-    DateTime CreatedAt);
-
-public record PriceAlert(
-    string Symbol,
-    string AssetType,
-    double AlertPrice,
-    string Operator,
-    bool IsActive,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
-
-public record CreateAlertRequest(
-    string Symbol,
-    string AssetType,
-    double AlertPrice,
-    string Operator);
-
 public record JournalEntry(
     int Id,
     string UserId,

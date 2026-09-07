@@ -1,3 +1,5 @@
+using Microsoft.JSInterop;
+
 namespace BlazorWasmPortfolioGhAction.Extensions;
 
 public static class TradingServiceExtensions
@@ -90,6 +92,18 @@ public static class TradingServiceExtensions
             var auth = sp.GetRequiredService<BlazorWasmPortfolioGhAction.Services.Trading.ITradingAuthService>();
             return new BlazorWasmPortfolioGhAction.Services.Trading.TradingApiClient(http, osint, endpoints, auth);
         });
+
+        services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.IPriceAlertService,
+            BlazorWasmPortfolioGhAction.Services.Trading.PriceAlertService>(sp =>
+        {
+            var factory = sp.GetRequiredService<IHttpClientFactory>();
+            var http = factory.CreateClient(nameof(BlazorWasmPortfolioGhAction.Services.Trading.PriceAlertService));
+            return new BlazorWasmPortfolioGhAction.Services.Trading.PriceAlertService(
+                sp.GetRequiredService<IJSRuntime>(),
+                http,
+                sp.GetRequiredService<IConfiguration>());
+        });
+        services.AddHttpClient(nameof(BlazorWasmPortfolioGhAction.Services.Trading.PriceAlertService));
 
         return services;
     }
