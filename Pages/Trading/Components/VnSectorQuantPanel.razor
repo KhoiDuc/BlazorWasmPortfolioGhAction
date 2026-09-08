@@ -1,24 +1,23 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
 @using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
 @inject SectorQuantService Quant
+@inject IStringLocalizer<SharedResources> L
 
 <div class="vd-panel">
     <div class="vd-controls">
-        <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="Load" disabled="@_busy">
-            @(_board is null ? "Tải định lượng ngành" : "Làm mới")
-        </button>
+        <button class="vd-btn vd-btn-sm" @onclick="Load" disabled="@_busy" title="@L["Trading_Market_Refresh"]">@(_board is null ? L["Trading_SQ_Load"] : $"↻ {L["Trading_Market_Refresh"]}")</button>
         @if (_busy) { <span class="vd-spinner"></span> }
         @if (_phase2Done is not null && _phase2Total > 0)
         {
-            <span class="ts-muted" style="font-size:0.82rem">Đang tính VolR: @_phase2Done/@_phase2Total (30–90 giây)…</span>
+            <span class="ts-muted" style="font-size:0.78rem">@L["Trading_SQ_VolRProgress", _phase2Done, _phase2Total]</span>
         }
         else if (_board?.Phase2Complete == true)
         {
-            <span class="ts-muted" style="font-size:0.82rem">VolR đã cập nhật</span>
+            <span class="ts-muted" style="font-size:0.78rem">@L["Trading_SQ_VolRReady"]</span>
         }
         @if (_board is not null)
         {
-            <span class="ts-muted" style="font-size:0.82rem">Cập nhật: @_board.UpdatedAt.ToLocalTime().ToString("HH:mm:ss dd/MM/yyyy")</span>
+            <span class="ts-muted" style="font-size:0.78rem">@_board.UpdatedAt.ToLocalTime().ToString("HH:mm:ss")</span>
         }
     </div>
     @if (!string.IsNullOrEmpty(_error)) { <div class="vd-alert vd-alert-error">@_error</div> }
@@ -30,12 +29,12 @@
     <div class="vd-sector-picker">
         <div class="vd-sector-picker-head">
             <strong>@_pickedSector.Name</strong>
-            <span class="ts-muted">@_pickedSector.Symbols.Count mã — chọn để phân tích</span>
+            <span class="ts-muted">@_pickedSector.Symbols.Count @L["Trading_SQ_PickSymbol"]</span>
             <button type="button" class="vd-btn vd-btn-sm" @onclick="ClosePicker">✕</button>
         </div>
         @if (_pickedSector.Symbols.Count > 8)
         {
-            <input class="vd-input vd-sector-picker-search" placeholder="Lọc mã..." @bind="_sectorFilter" @bind:event="oninput" />
+            <input class="vd-input vd-sector-picker-search" placeholder="@L["Trading_SQ_FilterPlaceholder"]" @bind="_sectorFilter" @bind:event="oninput" />
         }
         <div class="vd-sector-picker-list">
             @foreach (var item in filtered)
@@ -47,29 +46,33 @@
             }
             @if (filtered.Count == 0)
             {
-                <span class="ts-muted">Không có mã khớp "@_sectorFilter"</span>
+                <span class="ts-muted">@L["Trading_SQ_NoMatch"] "@_sectorFilter"</span>
             }
         </div>
     </div>
 }
 
-@if (_board is not null)
+@if (_busy && _board is null)
+{
+    <VdLoading Label="@L["Trading_SQ_Loading"]" Sub="@L["Trading_SQ_LoadingSub"]" />
+}
+else if (_board is not null)
 {
     var s = _board.Summary;
     var top10 = _board.Sectors.Take(10).ToList();
     var stateClass = s.MarketState == "MỞ RỘNG" ? "vd-bull" : "vd-bear";
 
     <div class="vd-subtabs">
-        <button class="vd-subtab @(_tab == "overview" ? "active" : "")" @onclick='() => _tab = "overview"'>Overview</button>
-        <button class="vd-subtab @(_tab == "momentum" ? "active" : "")" @onclick='() => _tab = "momentum"'>Momentum/Breadth</button>
-        <button class="vd-subtab @(_tab == "comparison" ? "active" : "")" @onclick='() => _tab = "comparison"'>Comparison</button>
-        <button class="vd-subtab @(_tab == "liquidity" ? "active" : "")" @onclick='() => _tab = "liquidity"'>Liquidity</button>
+        <button class="vd-subtab @(_tab == "overview" ? "active" : "")" @onclick='() => _tab = "overview"'>@L["Trading_SQ_TabOverview"]</button>
+        <button class="vd-subtab @(_tab == "momentum" ? "active" : "")" @onclick='() => _tab = "momentum"'>@L["Trading_SQ_TabMomentum"]</button>
+        <button class="vd-subtab @(_tab == "comparison" ? "active" : "")" @onclick='() => _tab = "comparison"'>@L["Trading_SQ_TabComparison"]</button>
+        <button class="vd-subtab @(_tab == "liquidity" ? "active" : "")" @onclick='() => _tab = "liquidity"'>@L["Trading_SQ_TabLiquidity"]</button>
     </div>
 
     @if (_tab == "overview")
     {
         <div class="vd-panel">
-            <div class="vd-section-title">Định lượng ngành — Sector Board</div>
+            <div class="vd-section-title">@L["Trading_SQ_BoardTitle"]</div>
             <p class="ts-muted mb-0" style="font-size:0.82rem">@_board.Sectors.Count nhóm • @s.TotalUp tăng / @s.TotalDown giảm</p>
             <div class="vd-metric-grid mt-2">
                 <div class="vd-metric-card"><div class="vd-metric-label">Điểm TB</div><div class="vd-metric-value">@s.AvgScore.ToString("F1")</div></div>
@@ -90,11 +93,11 @@
                 <span class="vd-badge">Độ rộng TB: @s.MarketBreadth.ToString("F0")%</span>
                 <span class="vd-badge">TK TB: @s.AvgVolR.ToString("F2")</span>
             </div>
-            <p class="vd-disclaimer">* Maker &amp; xác suất là ước lượng từ dữ liệu công khai (VNDirect + sectors.json).</p>
+            <p class="vd-disclaimer">@L["Trading_SQ_Disclaimer"]</p>
         </div>
 
         <div class="vd-panel">
-            <h4 class="vd-section-title">Top 10 ngành <span class="ts-muted" style="font-weight:400;font-size:0.78rem">— bấm để chọn mã</span></h4>
+            <h4 class="vd-section-title">@L["Trading_SQ_TopSectors"] <span class="ts-muted" style="font-weight:400;font-size:0.78rem">@L["Trading_SQ_TopSectorsHint"]</span></h4>
             <div class="vd-rank-grid">
                 @foreach (var c in top10)
                 {
@@ -124,7 +127,7 @@
     else if (_tab == "momentum")
     {
         <div class="vd-panel">
-            <h4 class="vd-section-title">Momentum / Breadth — xếp theo ΔRank</h4>
+            <h4 class="vd-section-title">@L["Trading_SQ_MomentumTitle"]</h4>
             <table class="vd-grid">
                 <thead><tr><th>#</th><th>Ngành</th><th>Score</th><th>ΔRank</th><th>Breadth</th><th>Avg %</th><th>VolR</th><th>Maker</th></tr></thead>
                 <tbody>
@@ -149,7 +152,7 @@
     else if (_tab == "comparison")
     {
         <div class="vd-panel">
-            <h4 class="vd-section-title">Comparison — chọn 2-3 ngành</h4>
+            <h4 class="vd-section-title">@L["Trading_SQ_CompareTitle"]</h4>
             <div class="vd-checks">
                 @foreach (var c in _board.Sectors)
                 {
@@ -180,7 +183,7 @@
     else if (_tab == "liquidity")
     {
         <div class="vd-panel">
-            <h4 class="vd-section-title">Liquidity — ranking theo VolR</h4>
+            <h4 class="vd-section-title">@L["Trading_SQ_LiquidityTitle"]</h4>
             <table class="vd-grid">
                 <thead><tr><th>#</th><th>Ngành</th><th>VolR</th><th>Thanh khoản</th><th>Tổng KL</th><th>Score</th></tr></thead>
                 <tbody>
@@ -203,7 +206,7 @@
 }
 else if (!_busy)
 {
-    <div class="vd-panel"><p class="ts-muted">Bấm "Tải định lượng ngành" để bắt đầu. VolR sẽ được tính nền sau khi tải xong (số tăng dần là bình thường).</p></div>
+    <VdLoading Label="Đang tải định lượng ngành…" />
 }
 
 @code {
@@ -218,6 +221,11 @@ else if (!_busy)
     private int _phase2Total;
     private string _sectorFilter = "";
     private readonly HashSet<string> _compareSelected = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
 
     private async Task Load()
     {

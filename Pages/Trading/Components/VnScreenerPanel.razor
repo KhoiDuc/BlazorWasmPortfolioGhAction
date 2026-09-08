@@ -6,16 +6,17 @@
 @inject IndicatorService Indicators
 @inject WatchlistScorer Scorer
 @inject IVnDeskStore Store
+@inject IStringLocalizer<SharedResources> L
 
 <div class="vd-panel">
     <div class="vd-subtabs">
-        <button class="vd-subtab @(_sub == "screen" ? "active" : "")" @onclick='() => _sub = "screen"'>Screener</button>
-        <button class="vd-subtab @(_sub == "watch" ? "active" : "")" @onclick='() => _sub = "watch"'>Watchlist chấm điểm</button>
+        <button class="vd-subtab @(_sub == "screen" ? "active" : "")" @onclick='() => _sub = "screen"'>@L["Trading_Screener_TabScreen"]</button>
+        <button class="vd-subtab @(_sub == "watch" ? "active" : "")" @onclick='() => _sub = "watch"'>@L["Trading_Screener_TabWatch"]</button>
     </div>
     @if (_sub == "screen")
     {
         <div class="vd-controls">
-            <label class="ts-label">Danh sách</label>
+            <label class="ts-label">@L["Trading_Screener_List"]</label>
             <select class="vd-select" @bind="_listKey" disabled="@_busy">
                 <option value="VN30">VN30</option>
                 <option value="HOSE">HOSE</option>
@@ -23,17 +24,17 @@
                 <option value="UPCOM">UPCOM</option>
                 <option value="NganHang">Ngân hàng</option>
             </select>
-            <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="RunScreener" disabled="@_busy">Quét @_listKey</button>
+            <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="RunScreener" disabled="@_busy">@L["Trading_Screener_ScanBtn", _listKey]</button>
         </div>
         @if (_progress > 0) { <p class="ts-muted mt-1" style="font-size:0.82rem">@_progress / @_progressTotal</p> }
     }
     else
     {
         <div class="vd-section">
-            <label class="ts-label">Danh mã (cách nhau dấu phẩy, tối đa 10)</label>
+            <label class="ts-label">@L["Trading_Screener_WatchSymbols"]</label>
             <input class="vd-input" @bind="_watchSymbols" placeholder="VNM,FPT,MWG..." disabled="@_busy" />
         </div>
-        <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="RunWatchlist" disabled="@_busy">Chấm điểm</button>
+        <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="RunWatchlist" disabled="@_busy">@L["Trading_Screener_ScoreBtn"]</button>
     }
     @if (_busy) { <span class="vd-spinner mt-2"></span> }
     @if (!string.IsNullOrEmpty(_error)) { <div class="vd-alert vd-alert-error mt-2">@_error</div> }
@@ -43,7 +44,7 @@
 {
     <div class="vd-panel">
         <table class="vd-grid">
-            <thead><tr><th>Mã</th><th>Giá</th><th>%</th><th>Score</th><th>Lý do</th></tr></thead>
+            <thead><tr><th>Mã</th><th>Giá</th><th>%</th><th>Score</th><th>@L["Trading_Screener_Reason"]</th></tr></thead>
             <tbody>
                 @foreach (var s in _screenResults.Take(30))
                 {
@@ -62,7 +63,7 @@
 else if (_sub == "watch" && _watchScores.Count > 0)
 {
     <div class="vd-panel">
-        <p class="ts-muted" style="font-size:0.82rem">Tiêu chí (pass ≥ 12/20): @string.Join(" | ", _criteria)</p>
+        <p class="ts-muted" style="font-size:0.82rem">@L["Trading_Screener_Criteria"] @string.Join(" | ", _criteria)</p>
     </div>
     <div class="vd-panel">
         <table class="vd-grid">
@@ -111,7 +112,7 @@ else if (_sub == "watch" && _watchScores.Count > 0)
             var lists = await Screener.GetListsAsync();
             if (!lists.TryGetValue(_listKey, out var symbols) || symbols.Count == 0)
             {
-                _error = "Danh sách rỗng.";
+                _error = L["Trading_Screener_Empty"];
                 return;
             }
             _progressTotal = symbols.Count;

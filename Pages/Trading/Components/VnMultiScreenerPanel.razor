@@ -3,12 +3,13 @@
 @inject IVnMarketClient Market
 @inject IndicatorService Indicators
 @inject VnScreenerService Screener
+@inject IStringLocalizer<SharedResources> L
 
 <div class="vd-panel">
     <div class="vd-section">
-        <label class="ts-label">Danh sách</label>
+        <label class="ts-label">@L["Trading_Screener_List"]</label>
         <select class="vd-select" @bind="_listKey" disabled="@_busy">
-            <option value="">— Nhập tay —</option>
+            <option value="">@L["Trading_MultiScreen_Manual"]</option>
             @foreach (var k in _listKeys)
             {
                 <option value="@k">@k</option>
@@ -18,12 +19,12 @@
     @if (string.IsNullOrEmpty(_listKey))
     {
         <div class="vd-section">
-            <label class="ts-label">Mã (phẩy)</label>
+            <label class="ts-label">@L["Trading_MultiScreen_Symbols"]</label>
             <input class="vd-input" @bind="_symbolsInput" placeholder="VNM,FPT,HPG..." disabled="@_busy" />
         </div>
     }
     <div class="vd-section">
-        <span class="ts-label">Bộ lọc</span>
+        <span class="ts-label">@L["Trading_MultiScreen_Filters"]</span>
         <div class="vd-checks">
             <label><input type="checkbox" @bind="_fSuperTrendUp" disabled="@_busy" /> SuperTrend Up</label>
             <label><input type="checkbox" @bind="_fVcp" disabled="@_busy" /> VCP</label>
@@ -34,7 +35,7 @@
         </div>
     </div>
     <div class="vd-controls">
-        <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="Scan" disabled="@_busy">Quét</button>
+        <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="Scan" disabled="@_busy">@L["Trading_MultiScreen_ScanBtn"]</button>
         @if (_busy) { <span class="ts-muted" style="font-size:0.82rem">@_progress</span> }
     </div>
     @if (!string.IsNullOrEmpty(_error)) { <div class="vd-alert vd-alert-error mt-2">@_error</div> }
@@ -43,7 +44,7 @@
 @if (_results.Count > 0)
 {
     <div class="vd-panel">
-        <h4 class="vd-section-title">Kết quả (@_results.Count)</h4>
+        <h4 class="vd-section-title">@L["Trading_MultiScreen_Results", _results.Count]</h4>
         <table class="vd-grid">
             <thead><tr><th>Mã</th><th>SuperTrend</th><th>Patterns</th><th>OrderBlock</th><th>Elliott</th><th>Close</th></tr></thead>
             <tbody>
@@ -64,7 +65,7 @@
 }
 else if (!_busy && _scanned)
 {
-    <div class="vd-panel"><p class="ts-muted">Không có mã khớp bộ lọc.</p></div>
+    <div class="vd-panel"><p class="ts-muted">@L["Trading_MultiScreen_NoMatch"]</p></div>
 }
 
 @code {

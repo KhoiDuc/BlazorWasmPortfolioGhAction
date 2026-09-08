@@ -4,21 +4,22 @@
 @inject IBrokerGeminiClient Gemini
 @inject IVnMarketClient Market
 @inject IndicatorService Indicators
+@inject IStringLocalizer<SharedResources> L
 
 <div class="vd-panel">
     <div class="vd-subtabs">
-        <button class="vd-subtab @(_sub == "news" ? "active" : "")" @onclick='() => _sub = "news"'>News brief</button>
-        <button class="vd-subtab @(_sub == "thesis" ? "active" : "")" @onclick='() => _sub = "thesis"'>Draft thesis</button>
+        <button class="vd-subtab @(_sub == "news" ? "active" : "")" @onclick='() => _sub = "news"'>@L["Trading_AiPanel_News"]</button>
+        <button class="vd-subtab @(_sub == "thesis" ? "active" : "")" @onclick='() => _sub = "thesis"'>@L["Trading_AiPanel_Thesis"]</button>
     </div>
-    <p class="ts-muted" style="font-size:0.82rem">Dán tin thủ công. AI soạn thảo — người quyết định.</p>
+    <p class="ts-muted" style="font-size:0.82rem">@L["Trading_AiPanel_Lead"]</p>
 </div>
 
 @if (_sub == "news")
 {
     <div class="vd-panel">
-        <textarea class="vd-input" rows="6" @bind="_newsRaw" placeholder="Dán nội dung tin tức..." style="width:100%"></textarea>
+        <textarea class="vd-input" rows="6" @bind="_newsRaw" placeholder="@L["Trading_AiPanel_NewsPlaceholder"]" style="width:100%"></textarea>
         <div class="vd-controls mt-2">
-            <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="AnalyzeNews" disabled="@_busy">Phân tích (Gemini)</button>
+            <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="AnalyzeNews" disabled="@_busy">@L["Trading_AiPanel_AnalyzeNews"]</button>
             @if (_busy) { <span class="vd-spinner"></span> }
         </div>
         @if (_brief is not null)
@@ -27,7 +28,7 @@
                 <p><strong>FACTS</strong><br/>@_brief.Facts</p>
                 <p><strong>SOURCES</strong><br/>@_brief.Sources</p>
                 <p><strong>IMPLICATIONS</strong><br/>@_brief.Implications</p>
-                <label><input type="checkbox" @bind="_briefVerified" /> Đã đối chiếu nguồn</label>
+                <label><input type="checkbox" @bind="_briefVerified" /> @L["Trading_AiPanel_Verified"]</label>
             </div>
         }
     </div>
@@ -36,21 +37,21 @@ else
 {
     <div class="vd-panel">
         <div class="vd-section">
-            <label class="ts-label">Mã</label>
-            <input class="vd-input" @bind="_symbol" placeholder="Mã" disabled="@_busy" />
+            <label class="ts-label">@L["Trading_AiPanel_Symbol"]</label>
+            <input class="vd-input" @bind="_symbol" placeholder="@L["Trading_AiPanel_Symbol"]" disabled="@_busy" />
         </div>
         <div class="vd-section">
-            <label class="ts-label">Ghi chú</label>
-            <textarea class="vd-input" rows="3" @bind="_notes" placeholder="Ghi chú..." style="width:100%"></textarea>
+            <label class="ts-label">@L["Trading_AiPanel_Notes"]</label>
+            <textarea class="vd-input" rows="3" @bind="_notes" placeholder="@L["Trading_AiPanel_NotesPlaceholder"]" style="width:100%"></textarea>
         </div>
         <div class="vd-controls">
-            <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="DraftThesis" disabled="@_busy">Soạn thesis</button>
+            <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="DraftThesis" disabled="@_busy">@L["Trading_AiPanel_DraftBtn"]</button>
             @if (_busy) { <span class="vd-spinner"></span> }
         </div>
         @if (!string.IsNullOrEmpty(_thesisText))
         {
             <pre class="mt-3" style="font-size:0.82rem;white-space:pre-wrap">@_thesisText</pre>
-            <button class="vd-btn vd-btn-sm mt-2" @onclick="() => OnThesisReady.InvokeAsync(_thesisText)">Copy sang Phân tích</button>
+            <button class="vd-btn vd-btn-sm mt-2" @onclick="() => OnThesisReady.InvokeAsync(_thesisText)">@L["Trading_AiPanel_CopyToAnalysis"]</button>
         }
     </div>
 }
@@ -83,8 +84,8 @@ else
         if (string.IsNullOrWhiteSpace(text))
         {
             _brief.Facts = _newsRaw;
-            _brief.Sources = result.Error ?? "(AI không khả dụng)";
-            _error = "AI skip — hiển thị raw.";
+            _brief.Sources = result.Error ?? L["Trading_AiPanel_AiUnavailable"];
+            _error = L["Trading_AiPanel_AiSkip"];
         }
         else ParseNews(text, _brief);
         _busy = false;
@@ -100,7 +101,7 @@ else
             ? "(không có chỉ báo)"
             : $"{ta.Symbol} close={ta.LatestClose:N2} trend={ta.Trend} RSI={ta.RSI:N1} signal={ta.TradingSignal.Action}";
         var result = await Gemini.ExplainAsync(PromptLibrary.Thesis(_symbol, numbers, _notes));
-        _thesisText = result.Text ?? (result.Error ?? "AI không khả dụng.");
+        _thesisText = result.Text ?? (result.Error ?? L["Trading_AiPanel_AiUnavailable"]);
         _busy = false;
     }
 

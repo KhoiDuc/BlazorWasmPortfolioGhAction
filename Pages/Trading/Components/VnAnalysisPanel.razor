@@ -7,22 +7,28 @@
 @inject PositionService Positions
 @inject IBrokerGeminiClient Gemini
 @inject ICultureService CultureService
+@inject IStringLocalizer<SharedResources> L
 
 <div class="vd-panel">
     <div class="vd-subtabs">
-        <button class="vd-subtab @(_sub == "ta" ? "active" : "")" @onclick='() => _sub = "ta"'>Phân tích TA</button>
-        <button class="vd-subtab @(_sub == "check" ? "active" : "")" @onclick='() => _sub = "check"'>Checklist</button>
-        <button class="vd-subtab @(_sub == "pnl" ? "active" : "")" @onclick='() => _sub = "pnl"'>P&amp;L</button>
+        <button class="vd-subtab @(_sub == "ta" ? "active" : "")" @onclick='() => _sub = "ta"'>@L["Trading_Analysis_Ta"]</button>
+        <button class="vd-subtab @(_sub == "check" ? "active" : "")" @onclick='() => _sub = "check"'>@L["Trading_Analysis_Checklist"]</button>
+        <button class="vd-subtab @(_sub == "pnl" ? "active" : "")" @onclick='() => _sub = "pnl"'>@L["Trading_Analysis_Pnl"]</button>
     </div>
     <div class="vd-controls">
         <label class="vd-checks">
-            <input type="checkbox" @bind="_intraday" disabled="@_busy" /> Intraday
+            <input type="checkbox" @bind="_intraday" disabled="@_busy" /> @L["Trading_Analysis_Intraday"]
         </label>
-        <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="Analyze" disabled="@_busy">Phân tích @_symbol</button>
+        <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="Analyze" disabled="@_busy">@L["Trading_Analysis_AnalyzeBtn", _symbol]</button>
         @if (_busy) { <span class="vd-spinner"></span> }
     </div>
     @if (!string.IsNullOrEmpty(_error)) { <div class="vd-alert vd-alert-error">@_error</div> }
 </div>
+
+@if (_busy && _ta is null)
+{
+    <VdLoading Label="@L["Trading_Analysis_Loading", _symbol]" Sub="@L["Trading_Analysis_LoadingSub"]" />
+}
 
 @if (_ta is not null && _sub == "ta")
 {
@@ -49,7 +55,7 @@
     </div>
 
     <div class="vd-panel">
-        <h4 class="vd-section-title">Xu hướng nâng cao</h4>
+        <h4 class="vd-section-title">@L["Trading_Analysis_AdvancedTrend"]</h4>
         <div class="vd-metric-grid">
             @if (_ta.SuperTrend is not null && _ta.SuperTrend.IsUptrend.Length > 0)
             {
@@ -61,7 +67,7 @@
             }
             else
             {
-                <div class="ts-muted">SuperTrend — chưa đủ dữ liệu</div>
+                <div class="ts-muted">@L["Trading_Analysis_NotEnoughData"]</div>
             }
             @if (_ta.T3.Length > 0)
             {
@@ -75,7 +81,7 @@
     @if (_ta.AdvancedPatterns.Count > 0)
     {
         <div class="vd-panel">
-            <h4 class="vd-section-title">Chart patterns</h4>
+            <h4 class="vd-section-title">@L["Trading_Analysis_ChartPatterns"]</h4>
             <table class="vd-grid">
                 <thead><tr><th>Pattern</th><th>Ngày</th><th>Entry</th><th>SL</th><th>TP</th><th>Reliability</th></tr></thead>
                 <tbody>
@@ -118,7 +124,7 @@
     }
 
     <div class="vd-panel">
-        <a class="vd-btn" href="@($"/{CultureService.UrlLang}/trading/backtest?symbol={_symbol}")" target="_blank">Backtest indicator này →</a>
+        <a class="vd-btn" href="@($"/{CultureService.UrlLang}/trading/backtest?symbol={_symbol}")" target="_blank">@L["Trading_Analysis_BacktestLink"]</a>
     </div>
 }
 else if (_checklist is not null && _sub == "check")
@@ -131,27 +137,27 @@ else if (_checklist is not null && _sub == "check")
         <p><strong>Verify:</strong> @_checklist.Verify</p>
         <p><strong>Observation:</strong> @_checklist.Observation</p>
         <div class="vd-section">
-            <label class="ts-label">Ghi chú chart</label>
+            <label class="ts-label">@L["Trading_Analysis_ChartNotes"]</label>
             <textarea class="vd-input" rows="2" @bind="_notes" style="width:100%"></textarea>
         </div>
-        <button class="vd-btn" @onclick="AiChecklist" disabled="@_aiBusy">AI nhập trung lập</button>
+        <button class="vd-btn" @onclick="AiChecklist" disabled="@_aiBusy">@L["Trading_Analysis_NeutralAi"]</button>
         @if (!string.IsNullOrEmpty(_aiText)) { <pre class="mt-2" style="font-size:0.78rem;white-space:pre-wrap">@_aiText</pre> }
     </div>
 }
 else if (_sub == "pnl")
 {
     <div class="vd-panel">
-        <h4 class="vd-section-title">P&amp;L Calculator</h4>
+        <h4 class="vd-section-title">@L["Trading_Analysis_PnlCalc"]</h4>
         <div class="vd-controls">
-            <input type="number" class="vd-input" @bind="_entry" placeholder="Giá mua" step="any" />
-            <input type="number" class="vd-input" @bind="_shares" placeholder="Số CP" />
+            <input type="number" class="vd-input" @bind="_entry" placeholder="@L["Trading_Analysis_BuyPrice"]" step="any" />
+            <input type="number" class="vd-input" @bind="_shares" placeholder="@L["Trading_Analysis_Shares"]" />
             <select class="vd-select" @bind="_broker">
                 <option value="A">VPS 0.15%</option>
                 <option value="B">SSI 0.15%</option>
                 <option value="C">TCBS 0.10%</option>
                 <option value="D">MBS 0.12%</option>
             </select>
-            <button class="vd-btn vd-btn-primary" @onclick="CalcPnl">Tính P&amp;L</button>
+            <button class="vd-btn vd-btn-primary" @onclick="CalcPnl">@L["Trading_Analysis_CalcPnl"]</button>
         </div>
         @if (_pnl is not null)
         {
@@ -198,7 +204,7 @@ else if (_sub == "pnl")
         _symbol = _symbol.Trim().ToUpperInvariant();
         if (_symbol.Length < 3)
         {
-            _error = "Mã cổ phiếu cần ít nhất 3 ký tự (VD: VNM, FPT).";
+            _error = L["Trading_Analysis_SymbolTooShort"];
             return;
         }
         _busy = true;
@@ -210,7 +216,7 @@ else if (_sub == "pnl")
             _ta = Indicators.Calculate(_symbol, hist);
             if (_ta is null)
             {
-                _error = $"Không đủ dữ liệu TA cho {_symbol} (cần ~200 phiên, có {hist.Count}).";
+                _error = L["Trading_Analysis_NoData", _symbol, hist.Count];
                 return;
             }
             if (_intraday)
@@ -218,14 +224,14 @@ else if (_sub == "pnl")
                 var ticks = await Market.FetchIntradayAsync(_symbol);
                 Indicators.ApplyIntraday(_ta, ticks);
                 if (ticks.Count == 0)
-                    _ta.IntradayNote = "Không có intraday (TCBS). Dùng dữ liệu daily.";
+                    _ta.IntradayNote = L["Trading_Analysis_NoIntraday"];
             }
             _checklist = Indicators.BuildTechnicalChecklist(_ta, _notes);
         }
         catch (Exception ex)
         {
             _error = ex.Message.Contains("DivideByZero", StringComparison.OrdinalIgnoreCase)
-                ? $"Không thể phân tích {_symbol} — dữ liệu giá không hợp lệ hoặc quá ít phiên."
+                ? L["Trading_Analysis_DivZero", _symbol]
                 : ex.Message;
         }
         finally { _busy = false; await InvokeAsync(StateHasChanged); }

@@ -1,0 +1,23 @@
+@* Reusable loading overlay — spinner + bars + label *@
+@if (!string.IsNullOrEmpty(Label))
+{
+    <div class="vd-loading-overlay" role="status" aria-live="polite">
+        <div class="vd-loading-bars"><span></span><span></span><span></span><span></span></div>
+        <span class="vd-loading-label">@Label</span>
+        @if (!string.IsNullOrEmpty(Sub))
+        {
+            <span class="vd-loading-sub">@Sub</span>
+        }
+    </div>
+}
+else
+{
+    <div class="vd-loading-overlay" role="status" aria-live="polite">
+        <div class="vd-spinner"></div>
+    </div>
+}
+
+@code {
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Sub { get; set; }
+}

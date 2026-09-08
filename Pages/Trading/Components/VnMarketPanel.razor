@@ -2,32 +2,41 @@
 @using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
 @inject IVnMarketClient Market
 @inject VnSectorService Sectors
+@inject IStringLocalizer<SharedResources> L
 
 <div class="vd-panel">
     <div class="vd-subtabs">
-        <button class="vd-subtab @(_sub == "quant" ? "active" : "")" @onclick='() => _sub = "quant"'>Định lượng ngành</button>
-        <button class="vd-subtab @(_sub == "overview" ? "active" : "")" @onclick='() => _sub = "overview"'>Tổng quan</button>
-        <button class="vd-subtab @(_sub == "sector" ? "active" : "")" @onclick='() => _sub = "sector"'>Heatmap ngành</button>
+        <button class="vd-subtab @(_sub == "quant" ? "active" : "")" @onclick='() => _sub = "quant"'>@L["Trading_Market_Quant"]</button>
+        <button class="vd-subtab @(_sub == "overview" ? "active" : "")" @onclick='() => _sub = "overview"'>@L["Trading_Market_Overview"]</button>
+        <button class="vd-subtab @(_sub == "sector" ? "active" : "")" @onclick='() => _sub = "sector"'>@L["Trading_Market_Heatmap"]</button>
     </div>
     <div class="vd-controls">
-        <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="LoadAll" disabled="@_busy">@(_market is null ? "Tải thị trường" : "Làm mới")</button>
+        <button class="vd-btn vd-btn-sm" @onclick="LoadAll" disabled="@_busy" title="@L["Trading_Market_Refresh"]">↻ @L["Trading_Market_Refresh"]</button>
         @if (_sub == "sector")
         {
-            <input class="vd-input" @bind="_sectorFilter" placeholder="Lọc ngành / mã..." disabled="@_busy" />
+            <input class="vd-input" @bind="_sectorFilter" placeholder="@L["Trading_Market_FilterPlaceholder"]" disabled="@_busy" />
         }
         @if (_busy) { <span class="vd-spinner"></span> }
+        @if (_market is not null)
+        {
+            <span class="ts-muted" style="font-size:0.78rem">@L["Trading_Market_Updated", _market.LoadedAt.ToLocalTime().ToString("HH:mm:ss")]</span>
+        }
     </div>
     @if (!string.IsNullOrEmpty(_error)) { <div class="vd-alert vd-alert-error">@_error</div> }
 </div>
 
-@if (_sub == "quant")
+@if (_busy && _market is null)
+{
+    <VdLoading Label="@L["Trading_Market_Loading"]" Sub="@L["Trading_Market_LoadingSub"]" />
+}
+else if (_sub == "quant")
 {
     <VnSectorQuantPanel OnSymbolSelected="OnSymbolSelected" />
 }
 else if (_sub == "overview" && _market is not null)
 {
     <div class="vd-panel">
-        <h4 class="vd-section-title">Chỉ số</h4>
+        <h4 class="vd-section-title">@L["Trading_Market_Indices"]</h4>
         <table class="vd-grid">
             <thead><tr><th>Chỉ số</th><th>Giá trị</th><th>+/-</th><th>%</th></tr></thead>
             <tbody>
@@ -42,10 +51,10 @@ else if (_sub == "overview" && _market is not null)
                 }
             </tbody>
         </table>
-        <p class="ts-updated mt-2">Cập nhật: @_market.LoadedAt.ToLocalTime():HH:mm:ss</p>
+        <p class="ts-updated mt-2">Cập nhật: @_market.LoadedAt.ToLocalTime().ToString("HH:mm:ss")</p>
     </div>
     <div class="vd-panel">
-        <h4 class="vd-section-title">Top tăng</h4>
+        <h4 class="vd-section-title">@L["Trading_Market_TopGainers"]</h4>
         <table class="vd-grid">
             <thead><tr><th>Mã</th><th>Giá</th><th>%</th><th>KL</th></tr></thead>
             <tbody>
@@ -62,7 +71,7 @@ else if (_sub == "overview" && _market is not null)
         </table>
     </div>
     <div class="vd-panel">
-        <h4 class="vd-section-title">Top giảm</h4>
+        <h4 class="vd-section-title">@L["Trading_Market_TopLosers"]</h4>
         <table class="vd-grid">
             <thead><tr><th>Mã</th><th>Giá</th><th>%</th><th>KL</th></tr></thead>
             <tbody>
@@ -107,11 +116,11 @@ else if (_sub == "sector" && _sectorData?.Count > 0)
 }
 else if (_sub == "overview" && _market is null && !_busy)
 {
-    <div class="vd-panel"><p class="ts-muted">Bấm "Tải thị trường" để xem chỉ số và top tăng/giảm.</p></div>
+    <VdLoading Label="@L["Trading_Market_Loading"]" />
 }
 else if (_sub == "sector" && (_sectorData is null || _sectorData.Count == 0) && !_busy)
 {
-    <div class="vd-panel"><p class="ts-muted">Bấm "Tải thị trường" để xem heatmap ngành.</p></div>
+    <VdLoading Label="@L["Trading_Market_LoadingHeatmap"]" />
 }
 
 @code {
@@ -123,6 +132,11 @@ else if (_sub == "sector" && (_sectorData is null || _sectorData.Count == 0) && 
     private string _sectorFilter = "";
     private string? _error;
     private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAll();
+    }
 
     private async Task LoadAll()
     {

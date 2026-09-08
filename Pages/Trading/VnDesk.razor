@@ -28,16 +28,16 @@
                     }
                 </div>
             }
-            <button type="button" class="vd-btn vd-btn-primary vd-btn-sm" @onclick="CommitAndAnalyze">Phân tích</button>
+            <button type="button" class="vd-btn vd-btn-primary vd-btn-sm" @onclick="CommitAndAnalyze">@L["Trading_VnDesk_Analyze"]</button>
         </div>
     </div>
 
     <nav class="vd-nav" aria-label="VnDesk navigation">
-        <button class="vd-nav-item @(_tab == "market" ? "active" : "")" @onclick='() => GoTab("market")'>Thị trường</button>
-        <button class="vd-nav-item @(_tab == "analyze" ? "active" : "")" @onclick='() => GoTab("analyze")'>Phân tích</button>
-        <button class="vd-nav-item @(_tab == "screen" ? "active" : "")" @onclick='() => GoTab("screen")'>Lọc</button>
-        <button class="vd-nav-item @(_tab == "ai" ? "active" : "")" @onclick='() => GoTab("ai")'>AI</button>
-    </nav>
+        <button class="vd-nav-item @(_tab == "market" ? "active" : "")" @onclick='() => GoTab("market")'>@L["Trading_VnDesk_TabMarket"]</button>
+        <button class="vd-nav-item @(_tab == "analyze" ? "active" : "")" @onclick='() => GoTab("analyze")'>@L["Trading_VnDesk_TabAnalyze"]</button>
+        <button class="vd-nav-item @(_tab == "screen" ? "active" : "")" @onclick='() => GoTab("screen")'>@L["Trading_VnDesk_TabScreen"]</button>
+        <button class="vd-nav-item @(_tab == "ai" ? "active" : "")" @onclick='() => GoTab("ai")'>@L["Trading_VnDesk_TabAi"]</button>
+    40|    </nav>
 
     <div class="vd-content">
         @if (_tab == "market")
@@ -54,8 +54,8 @@
                     <div class="vd-chart-dock-head">
                         <span class="vd-chart-dock-title">@_activeSymbol</span>
                         <div class="vd-controls">
-                            <a class="vd-btn vd-btn-sm" href="@BacktestHref" target="_blank">Backtest</a>
-                            <button class="vd-btn vd-btn-sm" @onclick="ToggleChart" aria-label="@(_chartCollapsed ? "Mở rộng" : "Thu gọn")">@(_chartCollapsed ? "▸ Biểu đồ" : "▾ Thu gọn")</button>
+                            <a class="vd-btn vd-btn-sm" href="@BacktestHref" target="_blank">@L["Trading_VnDesk_Backtest"]</a>
+                            <button class="vd-btn vd-btn-sm" @onclick="ToggleChart" aria-label="@(_chartCollapsed ? L["Trading_VnDesk_ChartExpand"] : L["Trading_VnDesk_ChartCollapse"])">@(_chartCollapsed ? L["Trading_VnDesk_ChartExpand"] : L["Trading_VnDesk_ChartCollapse"])</button>
                         </div>
                     </div>
                     @if (!_chartCollapsed)
@@ -64,7 +64,7 @@
                             <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={_activeSymbol}")"
                                     width="100%" height="420" frameborder="0" title="Vietstock chart"></iframe>
                             <details class="vd-alert-collapse">
-                                <summary>Cảnh báo giá — @_activeSymbol</summary>
+                                <summary>@L["Trading_VnDesk_PriceAlert", _activeSymbol]</summary>
                                 <PriceAlertWidget Symbol="@_activeSymbol" AssetType="stock" />
                             </details>
                         </div>
@@ -75,8 +75,8 @@
         else if (_tab == "screen")
         {
             <div class="vd-subtabs">
-                <button class="vd-subtab @(_screenSub == "basic" ? "active" : "")" @onclick='() => _screenSub = "basic"'>Screener cơ bản</button>
-                <button class="vd-subtab @(_screenSub == "multi" ? "active" : "")" @onclick='() => _screenSub = "multi"'>Đa chỉ báo</button>
+                <button class="vd-subtab @(_screenSub == "basic" ? "active" : "")" @onclick='() => _screenSub = "basic"'>@L["Trading_VnDesk_ScreenBasic"]</button>
+                <button class="vd-subtab @(_screenSub == "multi" ? "active" : "")" @onclick='() => _screenSub = "multi"'>@L["Trading_VnDesk_ScreenMulti"]</button>
             </div>
             @if (_screenSub == "basic")
             {

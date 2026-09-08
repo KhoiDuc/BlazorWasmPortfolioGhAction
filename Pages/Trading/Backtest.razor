@@ -13,26 +13,26 @@
 <div class="vd-page">
     <div class="vd-header">
         <div>
-            <h2>Backtest chỉ báo</h2>
-            <p>Kiểm tra tín hiệu mua/bán trên dữ liệu lịch sử — win-rate, lãi/lỗ trung bình, số ngày giữ.</p>
+            <h2>@L["Trading_Backtest_Title"]</h2>
+            <p>@L["Trading_Backtest_Lead"]</p>
         </div>
-        <a class="vd-btn" href="@($"/{CultureService.UrlLang}/trading/vndesk")">← VnDesk</a>
+        <a class="vd-btn" href="@($"/{CultureService.UrlLang}/trading/vndesk")">@L["Trading_VnDesk_BackToVnDesk"]</a>
     </div>
 
     <div class="vd-panel">
         <div class="vd-alert vd-alert-info" style="font-size:0.85rem">
-            <strong>Cách dùng:</strong>
+            <strong>@L["Trading_Backtest_HowTo"]</strong>
             <ol style="margin:0.4rem 0 0 1.1rem;padding:0">
-                <li>Chọn <em>chỉ báo</em> (SuperTrend, T3, VCP…)</li>
-                <li>Nhập danh sách mã, cách nhau bằng dấu phẩy (VD: VNM,FPT,MWG)</li>
-                <li>Đặt <em>Take Profit %</em> và <em>Stop Loss %</em> — hệ thống giả lập thoát lệnh khi đạt TP/SL</li>
-                <li>Bấm <strong>Chạy backtest</strong> — kết quả hiện bên dưới (tối đa 100 lệnh)</li>
+                <li>@((MarkupString)L["Trading_Backtest_Step1"].Value)</li>
+                <li>@L["Trading_Backtest_Step2"]</li>
+                <li>@((MarkupString)L["Trading_Backtest_Step3"].Value)</li>
+                <li>@((MarkupString)L["Trading_Backtest_Step4"].Value)</li>
             </ol>
         </div>
 
         <div class="vd-controls mt-2" style="flex-direction:column;align-items:stretch;gap:0.75rem">
             <div>
-                <label class="ts-label" for="bt-indicator">Chỉ báo</label>
+                <label class="ts-label" for="bt-indicator">@L["Trading_Backtest_Indicator"]</label>
                 <select id="bt-indicator" class="vd-select" style="width:100%;max-width:320px" @bind="_indicator">
                     <option value="SuperTrend">SuperTrend — đổi xu hướng</option>
                     <option value="T3">T3 Tilson — xu hướng mượt</option>
@@ -43,7 +43,7 @@
                 </select>
             </div>
             <div>
-                <label class="ts-label" for="bt-symbols">Mã cổ phiếu (cách nhau bằng dấu phẩy)</label>
+                <label class="ts-label" for="bt-symbols">@L["Trading_Backtest_Symbols"]</label>
                 <input id="bt-symbols" class="vd-input" style="width:100%;max-width:480px" @bind="_symbols" placeholder="VNM,FPT,MWG..." />
             </div>
             <div class="vd-controls">
@@ -57,7 +57,7 @@
                 </div>
             </div>
             <div>
-                <button class="vd-btn vd-btn-primary" @onclick="RunBacktest" disabled="@_busy">Chạy backtest</button>
+                <button class="vd-btn vd-btn-primary" @onclick="RunBacktest" disabled="@_busy">@L["Trading_Backtest_RunBtn"]</button>
                 @if (_busy) { <span class="vd-spinner"></span> }
             </div>
         </div>
@@ -67,26 +67,26 @@
     @if (_result is not null)
     {
         <div class="vd-panel">
-            <h4 class="vd-section-title">@_result.Indicator — @_result.TotalTrades lệnh</h4>
+            <h4 class="vd-section-title">@L["Trading_Backtest_Trades", _result.Indicator, _result.TotalTrades]</h4>
             <div class="vd-metric-grid">
                 <div class="vd-metric-card">
-                    <div class="vd-metric-label">Win-rate</div>
+                    <div class="vd-metric-label">@L["Trading_Backtest_WinRate"]</div>
                     <div class="vd-metric-value @(_result.WinRate >= 50 ? "vd-pos" : "vd-neg")">@_result.WinRate.ToString("F1")%</div>
                 </div>
                 <div class="vd-metric-card">
-                    <div class="vd-metric-label">Thắng / Thua</div>
+                    <div class="vd-metric-label">@L["Trading_Backtest_WinLoss"]</div>
                     <div class="vd-metric-value">@_result.Wins / @_result.Losses</div>
                 </div>
                 <div class="vd-metric-card">
-                    <div class="vd-metric-label">PnL TB / lệnh</div>
+                    <div class="vd-metric-label">@L["Trading_Backtest_AvgPnl"]</div>
                     <div class="vd-metric-value @(_result.AvgTakeProfitPct >= 0 ? "vd-pos" : "vd-neg")">@_result.AvgTakeProfitPct.ToString("F2")%</div>
                 </div>
                 <div class="vd-metric-card">
-                    <div class="vd-metric-label">Giữ TB</div>
-                    <div class="vd-metric-value">@_result.AvgHoldDays.ToString("F0") ngày</div>
+                    <div class="vd-metric-label">@L["Trading_Backtest_AvgHold"]</div>
+                    <div class="vd-metric-value">@_result.AvgHoldDays.ToString("F0") @L["Trading_Backtest_Days"]</div>
                 </div>
                 <div class="vd-metric-card">
-                    <div class="vd-metric-label">Tổng PnL</div>
+                    <div class="vd-metric-label">@L["Trading_Backtest_TotalPnl"]</div>
                     <div class="vd-metric-value @(_result.TotalPnl >= 0 ? "vd-pos" : "vd-neg")">@(_result.TotalPnl > 0 ? "+" : "")@_result.TotalPnl.ToString("N2")</div>
                 </div>
             </div>
@@ -106,7 +106,7 @@
                                 <td>@t.EntryPrice.ToString("N2")</td>
                                 <td>@(t.Exit?.ToString("dd/MM/yyyy") ?? "-")</td>
                                 <td>@(t.ExitPrice?.ToString("N2") ?? "-")</td>
-                                <td>@t.HoldDays ngày</td>
+                                <td>@t.HoldDays @L["Trading_Backtest_Days"]</td>
                                 <td class="@(t.PnlPct >= 0 ? "vd-pos" : "vd-neg")">@t.PnlPct.ToString("F2")%</td>
                                 <td>@(t.IsWin ? "✓" : "✗")</td>
                             </tr>
@@ -148,14 +148,14 @@
                 .Select(s => s.ToUpperInvariant()).Where(s => s.Length >= 3).ToList();
             if (symbols.Count == 0)
             {
-                _error = "Cần ít nhất 1 mã hợp lệ (3 ký tự trở lên).";
+                _error = L["Trading_Backtest_NeedSymbol"];
                 return;
             }
             var req = new BacktestRequest(_indicator, symbols,
                 DateTime.Today.AddYears(-2), DateTime.Today, _tpPct, _slPct);
             _result = await BacktestSvc.BacktestAsync(req);
             if (_result.TotalTrades == 0)
-                _error = "Không có lệnh nào — thử chỉ báo hoặc mã khác.";
+                _error = L["Trading_Backtest_NoTrades"];
         }
         catch (Exception ex) { _error = ex.Message; }
         finally { _busy = false; await InvokeAsync(StateHasChanged); }
