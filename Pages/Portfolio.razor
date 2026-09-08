@@ -51,7 +51,10 @@
                 </div>
             </div>
             <div class="carousel-container">
-                <div class="carousel-skeleton skeleton" aria-hidden="true"></div>
+                @if (!_imagesReady)
+                {
+                    <div class="carousel-skeleton skeleton" aria-hidden="true"></div>
+                }
                 <img src="images/photo2.jpg" class="carousel-image active" alt="Khoi Duc Photo 1" loading="lazy" decoding="async" @onload="OnImageLoaded" @onerror="OnImageError">
                 <img src="images/photo3.jpg" class="carousel-image" alt="Khoi Duc Photo 2" loading="lazy" decoding="async" @onload="OnImageLoaded" @onerror="OnImageError">
                 <img src="images/photo1.jpg" class="carousel-image" alt="Khoi Duc Photo 3" loading="lazy" decoding="async" @onload="OnImageLoaded" @onerror="OnImageError">
@@ -309,8 +312,8 @@
         return phone;
     }
 
-    private void OnImageLoaded() => _imagesLoaded++;
-    private void OnImageError() => _imagesLoaded++;
+    private void OnImageLoaded() { _imagesLoaded++; StateHasChanged(); }
+    private void OnImageError() { _imagesLoaded++; StateHasChanged(); }
 
     public async ValueTask DisposeAsync()
     {
