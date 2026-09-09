@@ -3,6 +3,11 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
 
+// ponytail: HMAC secrets + PEM keys duplicated from JwtExampleKeys.cs (main Blazor project).
+// Cannot directly reference because this is a standalone net8.0 code-gen tool, not a Blazor SDK project.
+// Upgrade path: extract JwtExampleKeys + Base64Url into a shared netstandard project referenced by both,
+// then replace the constants below with calls to the shared JwtExampleKeys.
+
 const string HmacSecret256 = "a-string-secret-at-least-256-bits-long";
 const string HmacSecret384 = "a-string-secret-at-least-384-bits-long-for-hmac-sha384-example-key!!";
 const string HmacSecret512 = "a-string-secret-at-least-512-bits-long-for-hmac-sha512-example-key-value!!!!!!";

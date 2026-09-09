@@ -3,6 +3,9 @@ using BlazorWasmPortfolioGhAction.Models.Trading.Broker;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
 
+// ponytail: overlaps BrokerPromptLibrary.BuildPortfolioContext — both serialize a BrokerPortfolio to text.
+// Different output shape (this: symbol+price+qty summary; that: full sector/status/stop/target context).
+// Merge when: a single configurable formatter serving both call sites is warranted.
 public static class StockAiPortfolioFormatter
 {
     public static string Format(BrokerPortfolio portfolio, IReadOnlyDictionary<string, decimal> quotes)

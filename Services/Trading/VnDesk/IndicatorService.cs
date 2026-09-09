@@ -1,5 +1,8 @@
 using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk;
 
+// ponytail: this file is mirrored in StockPrj\VnDesk\Services\IndicatorService.cs.
+// StockPrj is a console project excluded from the Blazor build (see csproj Compile Remove="StockPrj\**").
+// Upgrade path: extract a VnDesk.Shared netstandard project referenced by both, then delete the mirror.
 namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk;
 
 public sealed partial class IndicatorService

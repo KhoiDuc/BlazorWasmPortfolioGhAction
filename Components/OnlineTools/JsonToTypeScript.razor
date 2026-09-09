@@ -1,4 +1,5 @@
 @using System.Text.Json
+@using BlazorWasmPortfolioGhAction.Utils
 @inject IClipboardService Clipboard
 
 <ToolShell ResourceKey="jsontotypescript" Title="JSON to TypeScript" Icon="bi-filetype-tsx" Description="Generate TypeScript interface definitions from JSON.">
@@ -146,7 +147,7 @@
 
             foreach (var property in element.EnumerateObject())
             {
-                var propName = usePascalCase ? property.Name : ToCamelCase(property.Name);
+                var propName = usePascalCase ? property.Name : StringCaseUtils.ToCamelCase(property.Name);
                 var (type, needsType) = GetTypeScriptType(property.Value, propName);
 
                 sb.AppendLine($"{indentStr}  {propName}{optional}: {type};");
@@ -180,7 +181,7 @@
             JsonValueKind.Number => ("number", false),
             JsonValueKind.True or JsonValueKind.False => ("boolean", false),
             JsonValueKind.Array => GetArrayType(element, propName),
-            JsonValueKind.Object => (ToPascalCase(propName) + "Type", true),
+            JsonValueKind.Object => (StringCaseUtils.ToPascalCase(propName) + "Type", true),
             JsonValueKind.Null => ("null", false),
             _ => ("unknown", false)
         };
@@ -194,20 +195,5 @@
 
         var (itemType, needsType) = GetTypeScriptType(firstElement, propName.TrimEnd('s') + "Item");
         return ($"{itemType}[]", needsType);
-    }
-
-    private string ToCamelCase(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return text;
-        var words = text.Split(new[] { '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-        if (!words.Any()) return text;
-        return words.First().ToLower() + string.Concat(words.Skip(1).Select(w => char.ToUpper(w[0]) + w.Substring(1).ToLower()));
-    }
-
-    private string ToPascalCase(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return text;
-        var words = text.Split(new[] { '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-        return string.Concat(words.Select(w => char.ToUpper(w[0]) + w.Substring(1).ToLower()));
     }
 }

@@ -1,5 +1,6 @@
 @page "/MyResume"
 @page "/resume"
+@using BlazorWasmPortfolioGhAction.Utils
 @page "/{lang:regex(^(en|vn)$)}/resume"
 @inherits CultureAwareComponent
 @inject IJSRuntime JS
@@ -20,7 +21,7 @@
                     {
                         <li>
                             <i class="bi bi-telephone" aria-hidden="true"></i>
-                            <a href="tel:@phone.Replace(" ", "")">@FormatPhone(phone)</a>
+                            <a href="tel:@phone.Replace(" ", "")">@TextUtils.FormatPhone(phone)</a>
                         </li>
                     }
                     @foreach (var email in Resume.Profile.Emails)
@@ -300,16 +301,6 @@
         {
             await carouselInstance.InvokeAsync<object>("changeSlide", direction);
         }
-    }
-
-    private static string FormatPhone(string phone)
-    {
-        var digits = new string(phone.Where(char.IsDigit).ToArray());
-        if (digits.StartsWith("84") && digits.Length >= 11)
-            return $"(+84) {digits[2..]}";
-        if (digits.StartsWith("0") && digits.Length >= 10)
-            return $"(+84) {digits[1..]}";
-        return phone;
     }
 
     private void OnImageLoaded() { _imagesLoaded++; StateHasChanged(); }

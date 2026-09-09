@@ -2,6 +2,7 @@
 @using Meziantou.GitLab
 @using System.Globalization
 @using System.Text.Json
+@using BlazorWasmPortfolioGhAction.Utils
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
@@ -162,10 +163,10 @@
                 var inProgressJobs = 0;
                 for (var i = 0; i < pipelines.Count; i++)
                 {
-                    if (!IsCompleted(pipelines[i]))
+                    if (!GitLabStatusUtils.IsCompleted(pipelines[i].Status))
                     {
                         pipelines[i] = (await client.Pipelines.GetPipelineAsync(project, pipelines[i], cancellationToken: cancellationToken))!;
-                        if (!IsCompleted(pipelines[i]))
+                        if (!GitLabStatusUtils.IsCompleted(pipelines[i].Status))
                             inProgressJobs++;
                     }
                 }
@@ -196,39 +197,14 @@
         }
     }
 
-    private static bool IsCompleted(Pipeline pipeline) =>
-        pipeline.Status is PipelineStatus.Canceled or PipelineStatus.Failed or PipelineStatus.Success;
-
     private RenderFragment<Pipeline> RenderPipeline => pipeline =>
         @<a href="@pipeline.WebUrl" target="_blank" rel="noopener" class="gitlab-job-link">
-            <span class="gitlab-status-badge @GetStatusBadgeClass(pipeline.Status)">
-                <i class="bi @GetStatusIcon(pipeline.Status)" aria-hidden="true"></i>
+            <span class="gitlab-status-badge @GitLabStatusUtils.GetStatusBadgeClass(pipeline.Status)">
+                <i class="bi @GitLabStatusUtils.GetStatusIcon(pipeline.Status)" aria-hidden="true"></i>
                 @pipeline.Status
             </span>
             <span>@pipeline.Id</span>
         </a>;
-
-    private static string GetStatusBadgeClass(PipelineStatus status) => status switch
-    {
-        PipelineStatus.Success => "gitlab-status-success",
-        PipelineStatus.Failed => "gitlab-status-failed",
-        PipelineStatus.Running => "gitlab-status-running",
-        PipelineStatus.Pending or PipelineStatus.Created => "gitlab-status-pending",
-        PipelineStatus.Canceled => "gitlab-status-canceled",
-        PipelineStatus.Skipped => "gitlab-status-skipped",
-        _ => "gitlab-status-default",
-    };
-
-    private static string GetStatusIcon(PipelineStatus status) => status switch
-    {
-        PipelineStatus.Success => "bi-check-circle-fill",
-        PipelineStatus.Failed => "bi-x-circle-fill",
-        PipelineStatus.Running => "bi-arrow-repeat",
-        PipelineStatus.Pending or PipelineStatus.Created => "bi-clock-fill",
-        PipelineStatus.Canceled => "bi-slash-circle-fill",
-        PipelineStatus.Skipped => "bi-skip-forward-fill",
-        _ => "bi-question-circle-fill",
-    };
 
     sealed class PipelineForm
     {

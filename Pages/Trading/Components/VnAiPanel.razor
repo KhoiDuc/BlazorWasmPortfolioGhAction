@@ -1,6 +1,7 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
 @using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
 @using BlazorWasmPortfolioGhAction.Services.Trading.Broker
+@using BlazorWasmPortfolioGhAction.Utils
 @inject IBrokerGeminiClient Gemini
 @inject IVnMarketClient Market
 @inject IndicatorService Indicators
@@ -107,19 +108,9 @@ else
 
     private static void ParseNews(string text, NewsBrief brief)
     {
-        brief.Facts = Slice(text, "FACTS", "SOURCES");
-        brief.Sources = Slice(text, "SOURCES", "IMPLICATIONS");
-        brief.Implications = Slice(text, "IMPLICATIONS", null);
+        brief.Facts = TextUtils.Slice(text, "FACTS", "SOURCES");
+        brief.Sources = TextUtils.Slice(text, "SOURCES", "IMPLICATIONS");
+        brief.Implications = TextUtils.Slice(text, "IMPLICATIONS", null);
         if (string.IsNullOrWhiteSpace(brief.Facts)) brief.Facts = text;
-    }
-
-    private static string Slice(string text, string from, string? until)
-    {
-        var i = text.IndexOf(from, StringComparison.OrdinalIgnoreCase);
-        if (i < 0) return "";
-        i += from.Length;
-        var j = until is null ? text.Length : text.IndexOf(until, i, StringComparison.OrdinalIgnoreCase);
-        if (j < 0) j = text.Length;
-        return text[i..j].Trim().TrimStart(':', '-', '\n', '\r', ' ');
     }
 }

@@ -1,6 +1,7 @@
 @inject IJSRuntime JSRuntime
 @inject IConfiguration Configuration
 @inject IScriptLoaderService ScriptLoader
+@using BlazorWasmPortfolioGhAction.Utils
 @using BlazorWasmPortfolioGhAction.Services
 @using System.Text.RegularExpressions
 
@@ -91,7 +92,7 @@
                             @foreach (var att in Attachments)
                             {
                                 <li class="email-attachment-item">
-                                    <span class="email-attachment-name"><i class="bi bi-paperclip" aria-hidden="true"></i> @att.Name <small class="email-attachment-size">(@FormatSize(att.Size))</small></span>
+                                    <span class="email-attachment-name"><i class="bi bi-paperclip" aria-hidden="true"></i> @att.Name <small class="email-attachment-size">(@NumberFormatUtils.FormatByteSize(att.Size))</small></span>
                                     <button class="tool-btn tool-btn-danger email-attachment-remove" @onclick="(() => RemoveAttachment(att))" aria-label="Remove @att.Name">
                                         <i class="bi bi-x" aria-hidden="true"></i>
                                     </button>
@@ -347,11 +348,4 @@
     }
 
     private void DismissAlert() => Sent = false;
-
-    private static string FormatSize(long bytes) => bytes switch
-    {
-        < 1024 => $"{bytes} B",
-        < 1024 * 1024 => $"{bytes / 1024.0:F1} KB",
-        _ => $"{bytes / (1024.0 * 1024):F1} MB"
-    };
 }

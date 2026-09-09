@@ -3,6 +3,7 @@
 @using System.Text.RegularExpressions
 @using System.Globalization
 @using System.Text.Json
+@using BlazorWasmPortfolioGhAction.Utils
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
@@ -160,7 +161,7 @@
         try
         {
             var currentJob = job;
-            while (!IsCompleted(currentJob))
+            while (!GitLabStatusUtils.IsCompleted(currentJob.Status))
             {
                 var jobId = currentJob.Id;
                 currentJob = await client.Jobs.GetJobAsync(project.Id, jobId);
@@ -178,10 +179,10 @@
                 var inProgressJobs = 0;
                 for (var i = 0; i < jobs.Count; i++)
                 {
-                    if (!IsCompleted(jobs[i]))
+                    if (!GitLabStatusUtils.IsCompleted(jobs[i].Status))
                     {
                         jobs[i] = (await client.Jobs.GetJobAsync(project.Id, jobs[i].Id, cancellationToken: cancellationToken))!;
-                        if (!IsCompleted(jobs[i]))
+                        if (!GitLabStatusUtils.IsCompleted(jobs[i].Status))
                             inProgressJobs++;
                     }
                 }
@@ -190,7 +191,7 @@
                 {
                     try
                     {
-                        var jobToRetry = jobs.Where(j => IsCompleted(j)).OrderByDescending(j => j.Id).First();
+                        var jobToRetry = jobs.Where(j => GitLabStatusUtils.IsCompleted(j.Status)).OrderByDescending(j => j.Id).First();
                         jobs.Add(await client.Jobs.RetryJobAsync(project.Id, jobToRetry, cancellationToken: cancellationToken));
                     }
                     catch (Exception ex)
@@ -213,40 +214,14 @@
         }
     }
 
-    private static bool IsCompleted(Job job) =>
-        job.Status is JobStatus.Canceled or JobStatus.Failed or JobStatus.Success;
-
     private RenderFragment<Job> RenderJob => job =>
         @<a href="@job.WebUrl" target="_blank" rel="noopener" class="gitlab-job-link">
-            <span class="gitlab-status-badge @GetStatusBadgeClass(job.Status)">
-                <i class="bi @GetStatusIcon(job.Status)" aria-hidden="true"></i>
+            <span class="gitlab-status-badge @GitLabStatusUtils.GetStatusBadgeClass(job.Status)">
+                <i class="bi @GitLabStatusUtils.GetStatusIcon(job.Status)" aria-hidden="true"></i>
                 @job.Status
             </span>
             <span>@job.Id - @job.Name</span>
         </a>;
-
-    private static string GetStatusBadgeClass(JobStatus status) => status switch
-    {
-        JobStatus.Success => "gitlab-status-success",
-        JobStatus.Failed => "gitlab-status-failed",
-        JobStatus.Running => "gitlab-status-running",
-        JobStatus.Pending or JobStatus.Created => "gitlab-status-pending",
-        JobStatus.Canceled or JobStatus.Manual => "gitlab-status-canceled",
-        JobStatus.Skipped => "gitlab-status-skipped",
-        _ => "gitlab-status-default",
-    };
-
-    private static string GetStatusIcon(JobStatus status) => status switch
-    {
-        JobStatus.Success => "bi-check-circle-fill",
-        JobStatus.Failed => "bi-x-circle-fill",
-        JobStatus.Running => "bi-arrow-repeat",
-        JobStatus.Pending or JobStatus.Created => "bi-clock-fill",
-        JobStatus.Canceled => "bi-slash-circle-fill",
-        JobStatus.Manual => "bi-hand-index-fill",
-        JobStatus.Skipped => "bi-skip-forward-fill",
-        _ => "bi-question-circle-fill",
-    };
 
     sealed class RetryGitLabJobForm
     {

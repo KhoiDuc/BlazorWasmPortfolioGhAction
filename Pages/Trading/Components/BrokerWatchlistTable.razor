@@ -1,3 +1,4 @@
+@using BlazorWasmPortfolioGhAction.Utils
 @inject IStringLocalizer<SharedResources> L
 
 <div class="ts-panel ts-table-wrap broker-watchlist">
@@ -600,9 +601,6 @@
         var lotNote = p.Buys.OrderByDescending(b => b.BoughtAt).FirstOrDefault(b => !string.IsNullOrWhiteSpace(b.Note))?.Note;
         var timeline = p.LatestNote?.Text;
         var text = lotNote ?? timeline;
-        return string.IsNullOrWhiteSpace(text) ? "—" : Truncate(text, 48);
+        return string.IsNullOrWhiteSpace(text) ? "—" : TextUtils.Truncate(text, 48);
     }
-
-    private static string Truncate(string text, int max) =>
-        text.Length <= max ? text : text[..max] + "…";
 }

@@ -1,6 +1,7 @@
 @using System.Globalization
 @using System.Text
 @using BlazorWasmPortfolioGhAction.Services
+@using BlazorWasmPortfolioGhAction.Utils
 @inject IClipboardService Clipboard
 
 <ToolShell ResourceKey="stringconverter" Title="String Converter" Icon="bi-fonts" Description="Convert text between common casing and naming conventions.">
@@ -72,16 +73,16 @@
             "upper" => _input.ToUpperInvariant(),
             "lower" => _input.ToLowerInvariant(),
             "title" => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(_input.ToLowerInvariant()),
-            "sentence" => ToSentenceCase(_input),
-            "camel" => ToCamelCase(_input),
-            "pascal" => ToPascalCase(_input),
-            "snake" => string.Join('_', SplitWords(_input).Select(w => w.ToLowerInvariant())),
-            "kebab" => string.Join('-', SplitWords(_input).Select(w => w.ToLowerInvariant())),
-            "constant" => string.Join('_', SplitWords(_input).Select(w => w.ToUpperInvariant())),
-            "dot" => string.Join('.', SplitWords(_input).Select(w => w.ToLowerInvariant())),
-            "train" => string.Join('-', SplitWords(_input).Select(w => char.ToUpperInvariant(w[0]) + w[1..].ToLowerInvariant())),
+            "sentence" => StringCaseUtils.ToSentenceCase(_input),
+            "camel" => StringCaseUtils.ToCamelCase(_input),
+            "pascal" => StringCaseUtils.ToPascalCase(_input),
+            "snake" => string.Join('_', StringCaseUtils.SplitWords(_input).Select(w => w.ToLowerInvariant())),
+            "kebab" => string.Join('-', StringCaseUtils.SplitWords(_input).Select(w => w.ToLowerInvariant())),
+            "constant" => string.Join('_', StringCaseUtils.SplitWords(_input).Select(w => w.ToUpperInvariant())),
+            "dot" => string.Join('.', StringCaseUtils.SplitWords(_input).Select(w => w.ToLowerInvariant())),
+            "train" => string.Join('-', StringCaseUtils.SplitWords(_input).Select(w => char.ToUpperInvariant(w[0]) + w[1..].ToLowerInvariant())),
             "toggle" => new string(_input.Select(c => char.IsUpper(c) ? char.ToLowerInvariant(c) : char.ToUpperInvariant(c)).ToArray()),
-            "alternating" => ToAlternating(_input),
+            "alternating" => StringCaseUtils.ToAlternating(_input),
             "strip" => string.Concat(_input.Where(c => !char.IsWhiteSpace(c))),
             _ => _input
         };
@@ -103,58 +104,5 @@
     {
         if (!string.IsNullOrEmpty(_output))
             await Clipboard.CopyTextAsync(_output);
-    }
-
-    private static string ToSentenceCase(string text)
-    {
-        var parts = text.Split([". ", "! ", "? "], StringSplitOptions.None);
-        return string.Join(". ", parts.Select(s =>
-            string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s[1..].ToLowerInvariant()));
-    }
-
-    private static string ToCamelCase(string text)
-    {
-        var words = SplitWords(text);
-        if (words.Count == 0) return text;
-        return words[0].ToLowerInvariant() + string.Concat(words.Skip(1).Select(Pascalize));
-    }
-
-    private static string ToPascalCase(string text) =>
-        string.Concat(SplitWords(text).Select(Pascalize));
-
-    private static string Pascalize(string w) =>
-        string.IsNullOrEmpty(w) ? w : char.ToUpperInvariant(w[0]) + w[1..].ToLowerInvariant();
-
-    private static string ToAlternating(string text)
-    {
-        var sb = new StringBuilder(text.Length);
-        var upper = true;
-        foreach (var c in text)
-        {
-            if (char.IsLetter(c))
-            {
-                sb.Append(upper ? char.ToUpperInvariant(c) : char.ToLowerInvariant(c));
-                upper = !upper;
-            }
-            else sb.Append(c);
-        }
-        return sb.ToString();
-    }
-
-    private static List<string> SplitWords(string text)
-    {
-        var words = new List<string>();
-        var current = new StringBuilder();
-        foreach (var c in text)
-        {
-            if (char.IsLetterOrDigit(c)) current.Append(c);
-            else if (current.Length > 0)
-            {
-                words.Add(current.ToString());
-                current.Clear();
-            }
-        }
-        if (current.Length > 0) words.Add(current.ToString());
-        return words;
     }
 }

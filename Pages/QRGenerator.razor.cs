@@ -1,3 +1,4 @@
+using BlazorWasmPortfolioGhAction.Extensions;
 using BlazorWasmPortfolioGhAction.Shared.Model;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components;

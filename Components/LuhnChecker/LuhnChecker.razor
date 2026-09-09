@@ -1,4 +1,5 @@
 @using System.Linq;
+@using BlazorWasmPortfolioGhAction.Utils;
 
 <ToolShell ResourceKey="luhn" Title="Luhn Checker" Icon="bi-credit-card" Description="Validate credit card numbers using the Luhn algorithm.">
     <div class="tool-form">
@@ -35,17 +36,6 @@
         valid = false;
     }
 
-    private void CheckSingle() { valid = LuhnCheck(check); }
+    private void CheckSingle() { valid = TextUtils.LuhnCheck(check); }
     private void ClearSingle() { check = string.Empty; }
-
-    private static bool LuhnCheck(string digits)
-    {
-        if (string.IsNullOrEmpty(digits)) return false;
-        return digits.All(char.IsDigit) && digits.Reverse()
-            .Select(c => c - 48)
-            .Select((thisNum, i) => i % 2 == 0
-                ? thisNum
-                : ((thisNum *= 2) > 9 ? thisNum - 9 : thisNum)
-            ).Sum() % 10 == 0;
-    }
 }

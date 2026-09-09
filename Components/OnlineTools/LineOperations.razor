@@ -1,4 +1,5 @@
 @using System.Text.RegularExpressions
+@using BlazorWasmPortfolioGhAction.Utils
 @inject IClipboardService Clipboard
 
 <ToolShell ResourceKey="lineoperations" Title="Line Operations" Icon="bi-list-task" Description="Powerful line manipulation tools inspired by Notepad++.">
@@ -228,17 +229,6 @@
         }
     }
 
-    private static string ParseDelimiter(string input)
-    {
-        if (string.IsNullOrEmpty(input)) return input;
-
-        return input
-            .Replace("\\n", "\n")
-            .Replace("\\r", "\r")
-            .Replace("\\t", "\t")
-            .Replace("\\\\", "\\");
-    }
-
     private void Process()
     {
         errorMessage = string.Empty;
@@ -252,8 +242,8 @@
         try
         {
             var lines = inputText.Split('\n').Select(l => l.TrimEnd('\r')).ToList();
-            var actualJoinSeparator = ParseDelimiter(joinSeparator);
-            var actualSplitDelimiter = ParseDelimiter(splitDelimiter);
+            var actualJoinSeparator = TextUtils.ParseDelimiter(joinSeparator);
+            var actualSplitDelimiter = TextUtils.ParseDelimiter(splitDelimiter);
 
             var result = operation switch
             {
