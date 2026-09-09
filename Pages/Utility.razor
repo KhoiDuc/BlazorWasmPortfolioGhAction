@@ -58,7 +58,7 @@
                 <div class="utility-launcher">
                     @foreach (var group in LauncherGroups)
                     {
-                        <section class="utility-launch-group" aria-labelledby="@($"utility-group-{group.CategoryKey}")">
+                        <section class="utility-launch-group cat-@(group.CategoryKey.Replace(" & ", "-").Replace(" ", "-").ToLowerInvariant())" aria-labelledby="@($"utility-group-{group.CategoryKey}")" style="@CategoryAccentStyle(group.CategoryKey)">
                             <h3 id="@($"utility-group-{group.CategoryKey}")" class="utility-launch-group-title">
                                 <i class="bi @group.Icon" aria-hidden="true"></i>
                                 @LocalizeCategory(group.CategoryKey)
@@ -94,30 +94,46 @@
             }
             else
             {
-                <div class="utility-workspace">
+                <div class="utility-workspace" @onkeydown="OnWorkspaceKeyDown" tabindex="-1">
                     <div class="utility-workspace-bar">
-                        <NavLink href="@UtilityHomeHref" class="utility-back-link">
+                        <NavLink href="@UtilityHomeHref" class="utility-back-link" aria-label="@L["Utility_AllTools"]">
                             <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
-                            @L["Utility_AllTools"]
+                            <span class="utility-back-link-text">@L["Utility_AllTools"]</span>
                         </NavLink>
-                        <div class="utility-workspace-meta">
+                        <div class="utility-workspace-breadcrumb">
                             @if (ActiveTool is not null)
                             {
                                 <span class="utility-workspace-category">@LocalizeCategory(ActiveTool.CategoryKey)</span>
-                                <h3>@L[ActiveTool.TitleKey]</h3>
+                                <i class="bi bi-chevron-right utility-breadcrumb-sep" aria-hidden="true"></i>
+                                <h3 class="utility-workspace-title">@L[ActiveTool.TitleKey]</h3>
                             }
                         </div>
                         <div class="utility-workspace-switch">
                             <label class="visually-hidden" for="utility-switch">@L["Utility_SwitchTool"]</label>
-                            <select id="utility-switch"
-                                    class="utility-switch-select"
-                                    value="@Component"
-                                    @onchange="OnToolSwitch">
-                                @foreach (var tool in AllTools.OrderBy(t => L[t.TitleKey].Value))
-                                {
-                                    <option value="@tool.Key">@L[tool.TitleKey]</option>
-                                }
-                            </select>
+                            <input id="utility-switch"
+                                   class="utility-switch-input"
+                                   type="search"
+                                   placeholder="@L["Utility_SwitchTool"]"
+                                   value="@_switchQuery"
+                                   @oninput="OnSwitchInput"
+                                   @onkeydown="OnSwitchKeyDown"
+                                   autocomplete="off" />
+                            @if (!string.IsNullOrEmpty(_switchQuery) && _switchResults.Any())
+                            {
+                                <div class="utility-switch-dropdown" role="listbox">
+                                    @foreach (var tool in _switchResults.Take(10))
+                                    {
+                                        <button type="button"
+                                                class="utility-switch-option"
+                                                role="option"
+                                                @onclick="() => SwitchToTool(tool.Key)">
+                                            <i class="bi @tool.Icon" aria-hidden="true"></i>
+                                            <span>@L[tool.TitleKey]</span>
+                                            <small>@LocalizeCategory(tool.CategoryKey)</small>
+                                        </button>
+                                    }
+                                </div>
+                            }
                         </div>
                     </div>
 
@@ -173,16 +189,25 @@
 
     private string LocalizeCategory(string categoryKey) => categoryKey switch
     {
-        "General Tools" => L["Cat_General"],
-        "Cryptography Tools" => L["Cat_Crypto"],
-        "Time & Calculation Tools" => L["Cat_TimeCalc"],
-        "Encoding & Format Tools" => L["Cat_Encoding"],
-        "Testing Library Tools" => L["Cat_Testing"],
-        "DevOps Tools" => L["Cat_DevOps"],
+        "Text & Code" => L["Cat_TextCode"],
+        "Converters & Encoding" => L["Cat_Converters"],
+        "DevOps & APIs" => L["Cat_DevOpsApis"],
+        "Demos & Testing" => L["Cat_DemosTesting"],
         _ => categoryKey
     };
 
     private string UtilityHomeHref => CulturePath.Combine(CultureService.UrlLang, "Utility");
+
+    private static readonly Dictionary<string, string> CategoryAccents = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Text & Code"] = "var(--color-accent)",
+        ["Converters & Encoding"] = "var(--color-info)",
+        ["DevOps & APIs"] = "var(--color-success)",
+        ["Demos & Testing"] = "var(--color-primary)"
+    };
+
+    private static string? CategoryAccentStyle(string categoryKey) =>
+        CategoryAccents.TryGetValue(categoryKey, out var accent) ? $"--cat-accent: {accent}" : null;
     private string ToolHref(string key) => CulturePath.Combine(CultureService.UrlLang, $"Utility/{key}");
 
     private void SelectAllCategories() => SelectCategory(null);
@@ -194,11 +219,49 @@
             Navigation.NavigateTo(UtilityHomeHref);
     }
 
-    private void OnToolSwitch(ChangeEventArgs e)
+    private string _switchQuery = string.Empty;
+    private List<ToolDef> _switchResults = new();
+
+    private void OnSwitchInput(ChangeEventArgs e)
     {
-        var key = e.Value?.ToString();
-        if (!string.IsNullOrEmpty(key))
-            Navigation.NavigateTo(ToolHref(key));
+        _switchQuery = e.Value?.ToString() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(_switchQuery))
+        {
+            _switchResults = new();
+            return;
+        }
+        var q = _switchQuery.Trim();
+        _switchResults = AllTools
+            .OrderBy(t => L[t.TitleKey].Value)
+            .Where(t => L[t.TitleKey].Value.Contains(q, StringComparison.OrdinalIgnoreCase)
+                        || t.Key.Contains(q, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    private void OnSwitchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            _switchQuery = string.Empty;
+            _switchResults = new();
+        }
+        else if (e.Key == "Enter" && _switchResults.Count > 0)
+        {
+            SwitchToTool(_switchResults[0].Key);
+        }
+    }
+
+    private void SwitchToTool(string key)
+    {
+        _switchQuery = string.Empty;
+        _switchResults = new();
+        Navigation.NavigateTo(ToolHref(key));
+    }
+
+    private void OnWorkspaceKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+            Navigation.NavigateTo(UtilityHomeHref);
     }
 
     private RenderFragment DynamicComponent => (Component?.ToLowerInvariant()) switch
@@ -219,17 +282,14 @@
         "html" => RenderComponent<BlazorWasmPortfolioGhAction.Components.HTMLEncodeDecode.HTMLEncodeDecode>(),
         "markdown" => RenderComponent<BlazorWasmPortfolioGhAction.Components.MarkdownConverter.MarkdownConverter>(),
         "timerstopwatch" => RenderTimerStopwatchComponents(),
-        "colourconverter" => RenderComponent<ColorConverter>(),
         "colorconverter" => RenderComponent<ColorConverter>(),
         "binary" => RenderComponent<BlazorWasmPortfolioGhAction.Components.Binary.Binary>(),
         "stringconverter" => RenderComponent<BlazorWasmPortfolioGhAction.Components.StringConverter.StringConverter>(),
-        "epoch" => RenderComponent<BlazorWasmPortfolioGhAction.Components.EpochConverter.EpochConverter>(),
         "converter" => RenderConverterComponents(),
         "jwt" => RenderComponent<BlazorWasmPortfolioGhAction.Components.JWTDebugger.JWTDebugger>(),
         "luhn" => RenderComponent<BlazorWasmPortfolioGhAction.Components.LuhnChecker.LuhnChecker>(),
         "hcf" => RenderComponent<BlazorWasmPortfolioGhAction.Components.HCF.HCF>(),
         "unicode" => RenderComponent<BlazorWasmPortfolioGhAction.Components.UnicodePicker.UnicodePicker>(),
-        "cryptography" => RenderComponent<BlazorWasmPortfolioGhAction.Components.MD5Converter.MD5Converter>(),
         "fluxortest" => RenderFluxorTestComponents(),
         "qrgenerator" => RenderComponent<QRGenerator>(),
         "randomfact" => RenderComponent<RandomFacts>(),
@@ -368,109 +428,114 @@
 
     private static readonly Dictionary<string, string> CategoryIcons = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["General Tools"] = "bi-box-seam",
-        ["Cryptography Tools"] = "bi-shield-lock",
-        ["Time & Calculation Tools"] = "bi-calculator",
-        ["Encoding & Format Tools"] = "bi-braces",
-        ["Testing Library Tools"] = "bi-bezier2",
-        ["DevOps Tools"] = "bi-rocket-takeoff"
+        ["Text & Code"] = "bi-code-slash",
+        ["Converters & Encoding"] = "bi-arrow-left-right",
+        ["DevOps & APIs"] = "bi-rocket-takeoff",
+        ["Demos & Testing"] = "bi-bezier2"
     };
 
     private static readonly List<ToolDef> AllTools = new()
     {
-        new("base64", "bi-file-binary", "General Tools"),
-        new("urls", "bi-link-45deg", "General Tools"),
-        new("guid", "bi-hash", "General Tools"),
-        new("html", "bi-code-slash", "General Tools"),
-        new("markdown", "bi-markdown", "General Tools"),
-        new("converter", "bi-arrow-left-right", "General Tools"),
-        new("stringconverter", "bi-fonts", "General Tools"),
-        new("geminispellchecker", "bi-spellcheck", "General Tools"),
-        new("randomfact", "bi-lightbulb", "General Tools"),
-        new("jokequotes", "bi-emoji-laughing", "General Tools"),
-        new("jwt", "bi-shield-lock", "Cryptography Tools"),
-        new("luhn", "bi-credit-card", "Cryptography Tools"),
-        new("cryptography", "bi-fingerprint", "Cryptography Tools"),
-        new("mathcalculator", "bi-calculator", "Time & Calculation Tools"),
-        new("overnightmintemp", "bi-thermometer-half", "Time & Calculation Tools"),
-        new("cidrcalculator", "bi-diagram-3", "Time & Calculation Tools"),
-        new("timerstopwatch", "bi-stopwatch", "Time & Calculation Tools"),
-        new("epoch", "bi-clock-history", "Time & Calculation Tools"),
-        new("currenttime", "bi-clock", "Time & Calculation Tools"),
-        new("ascii", "bi-keyboard", "Encoding & Format Tools"),
-        new("colourconverter", "bi-palette", "Encoding & Format Tools"),
-        new("binary", "bi-0-circle", "Encoding & Format Tools"),
-        new("unicode", "bi-translate", "Encoding & Format Tools"),
-        new("hcf", "bi-eye", "Encoding & Format Tools"),
-        new("fluxortest", "bi-boxes", "Testing Library Tools"),
-        new("webglrender", "bi-gpu-card", "Testing Library Tools"),
-        new("browserstorage", "bi-hdd-stack", "Testing Library Tools"),
-        new("qrgenerator", "bi-qr-code", "Testing Library Tools"),
-        new("map", "bi-geo-alt", "Testing Library Tools"),
-        new("bigbangcounter", "bi-stars", "Testing Library Tools"),
-        new("svgdiagrameditor", "bi-diagram-2", "Testing Library Tools"),
-        new("emailcomposer", "bi-envelope", "Testing Library Tools"),
-        new("discord", "bi-discord", "DevOps Tools"),
-        new("slack", "bi-slack", "DevOps Tools"),
-        new("teams", "bi-microsoft-teams", "DevOps Tools"),
-        new("githubsearch", "bi-search", "DevOps Tools"),
-        new("githubinspector", "bi-person-badge", "DevOps Tools"),
-        new("githubtrending", "bi-graph-up-arrow", "DevOps Tools"),
-        new("gist", "bi-file-earmark-code", "DevOps Tools"),
-        new("hexaencode", "bi-123", "Encoding & Format Tools"),
-        new("jsonstring", "bi-braces", "Encoding & Format Tools"),
-        new("xmlencode", "bi-code-slash", "Encoding & Format Tools"),
-        new("yamlstring", "bi-filetype-yml", "Encoding & Format Tools"),
-        new("argumentescape", "bi-terminal", "General Tools"),
-        new("hashdata", "bi-fingerprint", "Cryptography Tools"),
-        new("jsonformatter", "bi-braces-asterisk", "Encoding & Format Tools"),
-        new("jsonviewer", "bi-braces", "Encoding & Format Tools"),
-        new("localfont", "bi-fonts", "Encoding & Format Tools"),
-        new("fontview", "bi-file-font", "Encoding & Format Tools"),
-        new("xmlformatter", "bi-filetype-xml", "Encoding & Format Tools"),
-        new("yamltojson", "bi-arrow-left-right", "Encoding & Format Tools"),
-        new("markdowntohtml", "bi-markdown", "General Tools"),
-        new("natoalphabet", "bi-alphabet", "General Tools"),
-        new("morsecode", "bi-broadcast", "General Tools"),
-        new("loremipsum", "bi-text-paragraph", "General Tools"),
-        new("crontab", "bi-clock-history", "Time & Calculation Tools"),
-        new("rrule", "bi-calendar-event", "Time & Calculation Tools"),
-        new("dateconverter", "bi-calendar3", "Time & Calculation Tools"),
-        new("numbers", "bi-123", "General Tools"),
-        new("numberbaseconverter", "bi-calculator", "General Tools"),
-        new("bytesconverter", "bi-hdd", "General Tools"),
-        new("charinfo", "bi-type", "Encoding & Format Tools"),
-        new("stringinfo", "bi-type", "Encoding & Format Tools"),
-        new("textdiff", "bi-file-diff", "Testing Library Tools"),
-        new("regex", "bi-regex", "Testing Library Tools"),
-        new("evaluatejsonpath", "bi-braces", "Testing Library Tools"),
-        new("evaluatexpath", "bi-filetype-xml", "Testing Library Tools"),
-        new("barcode", "bi-upc-scan", "Testing Library Tools"),
-        new("recordmic", "bi-mic", "Testing Library Tools"),
-        new("recordscreen", "bi-display", "Testing Library Tools"),
-        new("gitlabretry", "bi-git", "DevOps Tools"),
-        new("gitlabpipeline", "bi-git", "DevOps Tools"),
-        new("microsofttenantid", "bi-microsoft", "DevOps Tools"),
-        new("htmlviewer", "bi-code-slash", "Encoding & Format Tools"),
-        new("markdownviewer", "bi-markdown", "Encoding & Format Tools"),
-        new("diagramviewer", "bi-diagram-3", "Testing Library Tools"),
-        new("httpclient", "bi-globe2", "Testing Library Tools"),
-        new("stringreverse", "bi-arrow-left-right", "General Tools"),
-        new("trimpad", "bi-text-indent-left", "General Tools"),
-        new("linecounter", "bi-list-ol", "General Tools"),
-        new("lineoperations", "bi-list-check", "General Tools"),
-        new("extract", "bi-scissors", "General Tools"),
-        new("jsoncompare", "bi-file-diff", "Encoding & Format Tools"),
-        new("jsontocsharp", "bi-filetype-cs", "Encoding & Format Tools"),
-        new("jsontojava", "bi-cup-hot", "Encoding & Format Tools"),
-        new("jsontotypescript", "bi-filetype-tsx", "Encoding & Format Tools"),
-        new("passwordgenerator", "bi-key", "Cryptography Tools"),
-        new("stringformatter", "bi-fonts", "General Tools"),
-        new("datetimeformatter", "bi-calendar-week", "Time & Calculation Tools"),
-        new("codediff", "bi-file-earmark-diff", "Testing Library Tools"),
-        new("codepaste", "bi-clipboard2-data", "Testing Library Tools"),
-        new("barcodescanner", "bi-upc", "Testing Library Tools"),
-        new("creditcarddemo", "bi-credit-card-2-front", "Testing Library Tools")
+        // ── Text & Code ──
+        new("stringconverter", "bi-fonts", "Text & Code"),
+        new("stringreverse", "bi-arrow-left-right", "Text & Code"),
+        new("trimpad", "bi-text-indent-left", "Text & Code"),
+        new("linecounter", "bi-list-ol", "Text & Code"),
+        new("lineoperations", "bi-list-check", "Text & Code"),
+        new("extract", "bi-scissors", "Text & Code"),
+        new("stringformatter", "bi-fonts", "Text & Code"),
+        new("textdiff", "bi-file-diff", "Text & Code"),
+        new("codediff", "bi-file-earmark-diff", "Text & Code"),
+        new("regex", "bi-regex", "Text & Code"),
+        new("evaluatejsonpath", "bi-braces", "Text & Code"),
+        new("evaluatexpath", "bi-filetype-xml", "Text & Code"),
+        new("codepaste", "bi-clipboard2-data", "Text & Code"),
+        new("jsonformatter", "bi-braces-asterisk", "Text & Code"),
+        new("jsonviewer", "bi-braces", "Text & Code"),
+        new("jsoncompare", "bi-file-diff", "Text & Code"),
+        new("jsontocsharp", "bi-filetype-cs", "Text & Code"),
+        new("jsontojava", "bi-cup-hot", "Text & Code"),
+        new("jsontotypescript", "bi-filetype-tsx", "Text & Code"),
+        new("markdown", "bi-markdown", "Text & Code"),
+        new("markdowntohtml", "bi-markdown", "Text & Code"),
+        new("markdownviewer", "bi-markdown", "Text & Code"),
+        new("htmlviewer", "bi-code-slash", "Text & Code"),
+        new("diagramviewer", "bi-diagram-3", "Text & Code"),
+        new("charinfo", "bi-type", "Text & Code"),
+        new("stringinfo", "bi-type", "Text & Code"),
+        new("hcf", "bi-eye", "Text & Code"),
+
+        // ── Converters & Encoding ──
+        new("base64", "bi-file-binary", "Converters & Encoding"),
+        new("binary", "bi-0-circle", "Converters & Encoding"),
+        new("hexaencode", "bi-123", "Converters & Encoding"),
+        new("jsonstring", "bi-braces", "Converters & Encoding"),
+        new("xmlencode", "bi-code-slash", "Converters & Encoding"),
+        new("yamlstring", "bi-filetype-yml", "Converters & Encoding"),
+        new("argumentescape", "bi-terminal", "Converters & Encoding"),
+        new("colorconverter", "bi-palette", "Converters & Encoding"),
+        new("unicode", "bi-translate", "Converters & Encoding"),
+        new("ascii", "bi-keyboard", "Converters & Encoding"),
+        new("hashdata", "bi-fingerprint", "Converters & Encoding"),
+        new("passwordgenerator", "bi-key", "Converters & Encoding"),
+        new("jwt", "bi-shield-lock", "Converters & Encoding"),
+        new("luhn", "bi-credit-card", "Converters & Encoding"),
+        new("numbers", "bi-123", "Converters & Encoding"),
+        new("numberbaseconverter", "bi-calculator", "Converters & Encoding"),
+        new("bytesconverter", "bi-hdd", "Converters & Encoding"),
+        new("dateconverter", "bi-calendar3", "Converters & Encoding"),
+        new("datetimeformatter", "bi-calendar-week", "Converters & Encoding"),
+        new("currenttime", "bi-clock", "Converters & Encoding"),
+        new("crontab", "bi-clock-history", "Converters & Encoding"),
+        new("rrule", "bi-calendar-event", "Converters & Encoding"),
+        new("xmlformatter", "bi-filetype-xml", "Converters & Encoding"),
+        new("yamltojson", "bi-arrow-left-right", "Converters & Encoding"),
+        new("html", "bi-code-slash", "Converters & Encoding"),
+        new("guid", "bi-hash", "Converters & Encoding"),
+        new("creditcarddemo", "bi-credit-card-2-front", "Converters & Encoding"),
+
+        // ── DevOps & APIs ──
+        new("discord", "bi-discord", "DevOps & APIs"),
+        new("slack", "bi-slack", "DevOps & APIs"),
+        new("teams", "bi-microsoft-teams", "DevOps & APIs"),
+        new("githubsearch", "bi-search", "DevOps & APIs"),
+        new("githubinspector", "bi-person-badge", "DevOps & APIs"),
+        new("githubtrending", "bi-graph-up-arrow", "DevOps & APIs"),
+        new("gist", "bi-file-earmark-code", "DevOps & APIs"),
+        new("gitlabretry", "bi-git", "DevOps & APIs"),
+        new("gitlabpipeline", "bi-git", "DevOps & APIs"),
+        new("microsofttenantid", "bi-microsoft", "DevOps & APIs"),
+        new("httpclient", "bi-globe2", "DevOps & APIs"),
+        new("emailcomposer", "bi-envelope", "DevOps & APIs"),
+        new("map", "bi-geo-alt", "DevOps & APIs"),
+        new("qrgenerator", "bi-qr-code", "DevOps & APIs"),
+        new("barcode", "bi-upc-scan", "DevOps & APIs"),
+        new("barcodescanner", "bi-upc", "DevOps & APIs"),
+
+        // ── Demos & Testing ──
+        new("fluxortest", "bi-boxes", "Demos & Testing"),
+        new("webglrender", "bi-gpu-card", "Demos & Testing"),
+        new("browserstorage", "bi-hdd-stack", "Demos & Testing"),
+        new("bigbangcounter", "bi-stars", "Demos & Testing"),
+        new("svgdiagrameditor", "bi-diagram-2", "Demos & Testing"),
+        new("mathcalculator", "bi-calculator", "Demos & Testing"),
+        new("overnightmintemp", "bi-thermometer-half", "Demos & Testing"),
+        new("cidrcalculator", "bi-diagram-3", "Demos & Testing"),
+        new("timerstopwatch", "bi-stopwatch", "Demos & Testing"),
+        new("randomfact", "bi-lightbulb", "Demos & Testing"),
+        new("jokequotes", "bi-emoji-laughing", "Demos & Testing"),
+        new("geminispellchecker", "bi-spellcheck", "Demos & Testing"),
+        new("loremipsum", "bi-text-paragraph", "Demos & Testing"),
+        new("natoalphabet", "bi-alphabet", "Demos & Testing"),
+        new("morsecode", "bi-broadcast", "Demos & Testing"),
+        new("recordmic", "bi-mic", "Demos & Testing"),
+        new("recordscreen", "bi-display", "Demos & Testing"),
+        new("localfont", "bi-fonts", "Demos & Testing"),
+        new("fontview", "bi-file-font", "Demos & Testing"),
+
+        // ── Legacy multi-tool stacks ──
+        new("urls", "bi-link-45deg", "Converters & Encoding"),
+        new("converter", "bi-arrow-left-right", "Converters & Encoding"),
     };
 
     private record ToolDef(string Key, string Icon, string CategoryKey)
