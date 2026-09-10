@@ -2,6 +2,7 @@
 @using System.Security.Cryptography
 @using System.Diagnostics.CodeAnalysis
 @using System.Text
+@using BlazorWasmPortfolioGhAction.Utils.OnlineTools
 
 <ToolShell ResourceKey="hashdata" Title="Compute hash" Icon="bi-shield-lock">
     <div class="tool-form">
@@ -11,6 +12,7 @@
                 <option value="md5">MD5</option>
                 <option value="sha1">SHA1</option>
                 <option value="sha256">SHA256</option>
+                <option value="sha384">SHA384</option>
                 <option value="sha512">SHA512</option>
             </select>
         </div>
@@ -33,10 +35,18 @@
         </div>
         <div class="tool-actions">
             <button type="button" class="tool-btn tool-btn-secondary" @onclick="Hash">Hash</button>
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="HashAll">Compute all</button>
         </div>
         @if (resultBase64 != null || resultHexa != null)
         {
             <ResultValueList Values="GetResults()" />
+        }
+        @if (allResults.Count > 0)
+        {
+            <div class="tool-field">
+                <label class="tool-label">All algorithms</label>
+                <ResultValueList Values="allResults" />
+            </div>
         }
     </div>
 </ToolShell>
@@ -47,6 +57,7 @@
     string? algorithm;
     string? resultBase64;
     string? resultHexa;
+    List<ResultValue> allResults = new();
 
     private async Task OnInputFileChange(InputFileChangeEventArgs e)
     {
@@ -55,10 +66,12 @@
         await stream.CopyToAsync(ms);
 
         Hash(ms.ToArray());
+        allResults = new();
     }
 
     void Hash()
     {
+        allResults = new();
         Hash(GetEncoding().GetBytes(text ?? ""));
     }
 
@@ -72,6 +85,7 @@
             {
                 "md5" => MD5.HashData(data),
                 "sha256" => SHA256.HashData(data),
+                "sha384" => SHA384.HashData(data),
                 "sha512" => SHA512.HashData(data),
                 _ => SHA1.HashData(data),
             };
@@ -84,6 +98,23 @@
             resultBase64 = ex.Message;
             resultHexa = null;
         }
+    }
+
+    [SuppressMessage("Security", "CA5350: Hash uses a weak cryptographic algorithm SHA1")]
+    [SuppressMessage("Security", "CA5351: Hash uses a weak cryptographic algorithm MD5")]
+    void HashAll()
+    {
+        resultBase64 = null;
+        resultHexa = null;
+        var data = GetEncoding().GetBytes(text ?? "");
+        allResults = new()
+        {
+            new("MD5", Convert.ToHexString(MD5.HashData(data)).ToLowerInvariant()),
+            new("SHA1", Convert.ToHexString(SHA1.HashData(data)).ToLowerInvariant()),
+            new("SHA256", Convert.ToHexString(SHA256.HashData(data)).ToLowerInvariant()),
+            new("SHA384", Convert.ToHexString(SHA384.HashData(data)).ToLowerInvariant()),
+            new("SHA512", Convert.ToHexString(SHA512.HashData(data)).ToLowerInvariant()),
+        };
     }
 
     IReadOnlyList<ResultValue> GetResults()

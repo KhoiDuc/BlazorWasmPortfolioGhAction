@@ -1,0 +1,308 @@
+<ToolShell ResourceKey="carogame" Title="Caro 10×10" Icon="bi-grid-3x3" Description="Play Caro (Gomoku) on a 10×10 board. Get 5 in a row to win. You are X, AI is O.">
+    <div class="tool-form">
+        <div class="caro-scoreboard">
+            <span class="caro-score caro-score-win">Wins: @_wins</span>
+            <span class="caro-score caro-score-loss">Losses: @_losses</span>
+            <span class="caro-score caro-score-draw">Draws: @_draws</span>
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="Reset">
+                <i class="bi bi-arrow-repeat" aria-hidden="true"></i> New Game
+            </button>
+        </div>
+        <div class="caro-status @_statusClass">@_status</div>
+        <div class="caro-board" style="--caro-cols:@Size;">
+            @for (var r = 0; r < Size; r++)
+            {
+                @for (var c = 0; c < Size; c++)
+                {
+                    var idx = r * Size + c;
+                    var mark = _board[idx];
+                    <button type="button"
+                            class="caro-cell @(mark == 'X' ? "caro-x" : mark == 'O' ? "caro-o" : "") @(_winningLine.Contains(idx) ? "caro-win" : "")"
+                            disabled="@(mark != ' ' || _gameOver)"
+                            @onclick="() => PlayerMove(idx)">
+                        @mark
+                    </button>
+                }
+            }
+        </div>
+    </div>
+</ToolShell>
+
+<style>
+    .caro-scoreboard {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.75rem;
+    }
+    .caro-score {
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 0.25rem 0.6rem;
+        border-radius: var(--radius-full);
+    }
+    .caro-score-win { background: color-mix(in srgb, var(--color-success) 15%, transparent); color: var(--color-success); }
+    .caro-score-loss { background: color-mix(in srgb, var(--color-danger) 15%, transparent); color: var(--color-danger); }
+    .caro-score-draw { background: color-mix(in srgb, var(--color-text-muted) 15%, transparent); color: var(--color-text-muted); }
+
+    .caro-status {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: var(--color-text-secondary);
+    }
+    .caro-status.caro-status-win { color: var(--color-success); }
+    .caro-status.caro-status-lose { color: var(--color-danger); }
+
+    .caro-board {
+        display: grid;
+        grid-template-columns: repeat(var(--caro-cols), 1fr);
+        gap: 2px;
+        background: var(--color-border);
+        padding: 2px;
+        border-radius: var(--radius-sm);
+        max-width: 500px;
+    }
+    .caro-cell {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(0.9rem, 3vw, 1.4rem);
+        font-weight: 800;
+        border: none;
+        background: var(--color-bg-surface);
+        color: var(--color-text-primary);
+        cursor: pointer;
+        border-radius: 2px;
+        transition: background var(--transition);
+    }
+    .caro-cell:hover:not(:disabled) {
+        background: color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-surface));
+    }
+    .caro-cell:disabled {
+        cursor: default;
+    }
+    .caro-cell.caro-x { color: var(--color-accent); }
+    .caro-cell.caro-o { color: var(--color-info); }
+    .caro-cell.caro-win {
+        background: color-mix(in srgb, var(--color-success) 25%, var(--color-bg-surface));
+        color: var(--color-success);
+    }
+</style>
+
+@code {
+    private const int Size = 10;
+    private const int WinLength = 5;
+    private char[] _board = new char[Size * Size];
+    private bool _gameOver;
+    private string _status = "Your turn (X)";
+    private string _statusClass = "";
+    private int _wins, _losses, _draws;
+    private List<int> _winningLine = new();
+    private readonly Random _rng = new();
+
+    protected override void OnInitialized() => Reset();
+
+    private void Reset()
+    {
+        _board = Enumerable.Repeat(' ', Size * Size).ToArray();
+        _gameOver = false;
+        _status = "Your turn (X)";
+        _statusClass = "";
+        _winningLine = new();
+    }
+
+    private void PlayerMove(int idx)
+    {
+        if (_gameOver || _board[idx] != ' ') return;
+        _board[idx] = 'X';
+
+        var winLine = CheckWin(idx, 'X');
+        if (winLine is not null)
+        {
+            _status = "You win!";
+            _statusClass = "caro-status-win";
+            _gameOver = true;
+            _wins++;
+            _winningLine = winLine;
+            return;
+        }
+
+        if (IsFull())
+        {
+            _status = "Draw";
+            _statusClass = "";
+            _gameOver = true;
+            _draws++;
+            return;
+        }
+
+        _status = "AI thinking...";
+        StateHasChanged();
+        AiMove();
+    }
+
+    private void AiMove()
+    {
+        // 1. Win if possible
+        var move = FindWinningMove('O');
+        // 2. Block opponent
+        if (move < 0) move = FindWinningMove('X');
+        // 3. Strategic: extend own line or block double-threat
+        if (move < 0) move = FindStrategicMove();
+        // 4. Fallback: center or random
+        if (move < 0) move = FindBestOpen();
+
+        if (move < 0) return;
+        _board[move] = 'O';
+
+        var winLine = CheckWin(move, 'O');
+        if (winLine is not null)
+        {
+            _status = "AI wins!";
+            _statusClass = "caro-status-lose";
+            _gameOver = true;
+            _losses++;
+            _winningLine = winLine;
+            return;
+        }
+
+        if (IsFull())
+        {
+            _status = "Draw";
+            _statusClass = "";
+            _gameOver = true;
+            _draws++;
+            return;
+        }
+
+        _status = "Your turn (X)";
+        _statusClass = "";
+    }
+
+    private int FindWinningMove(char p)
+    {
+        for (var i = 0; i < Size * Size; i++)
+        {
+            if (_board[i] != ' ') continue;
+            _board[i] = p;
+            var win = CheckWin(i, p);
+            _board[i] = ' ';
+            if (win is not null) return i;
+        }
+        return -1;
+    }
+
+    private int FindStrategicMove()
+    {
+        // Score each empty cell by counting consecutive same-color neighbors
+        var bestScore = -1;
+        var bestMove = -1;
+        for (var i = 0; i < Size * Size; i++)
+        {
+            if (_board[i] != ' ') continue;
+            var score = ScorePosition(i, 'O') + ScorePosition(i, 'X') / 2;
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestMove = i;
+            }
+        }
+        return bestMove;
+    }
+
+    private int ScorePosition(int idx, char p)
+    {
+        var r = idx / Size;
+        var c = idx % Size;
+        var score = 0;
+        int[][] dirs = { new[] { 0, 1 }, new[] { 1, 0 }, new[] { 1, 1 }, new[] { 1, -1 } };
+        foreach (var d in dirs)
+        {
+            var count = 1;
+            for (var k = 1; k < WinLength; k++)
+            {
+                var nr = r + d[0] * k;
+                var nc = c + d[1] * k;
+                if (nr < 0 || nr >= Size || nc < 0 || nc >= Size) break;
+                if (_board[nr * Size + nc] == p) count++;
+                else break;
+            }
+            for (var k = 1; k < WinLength; k++)
+            {
+                var nr = r - d[0] * k;
+                var nc = c - d[1] * k;
+                if (nr < 0 || nr >= Size || nc < 0 || nc >= Size) break;
+                if (_board[nr * Size + nc] == p) count++;
+                else break;
+            }
+            score += count * count;
+        }
+        // Center bonus
+        var cr = Size / 2;
+        var cc = Size / 2;
+        score += Math.Max(0, 5 - (Math.Abs(r - cr) + Math.Abs(c - cc)));
+        return score;
+    }
+
+    private int FindBestOpen()
+    {
+        // Prefer near center
+        var center = Size / 2;
+        var best = -1;
+        var bestDist = int.MaxValue;
+        for (var i = 0; i < Size * Size; i++)
+        {
+            if (_board[i] != ' ') continue;
+            var r = i / Size;
+            var c = i % Size;
+            var dist = Math.Abs(r - center) + Math.Abs(c - center);
+            if (dist < bestDist)
+            {
+                bestDist = dist;
+                best = i;
+            }
+        }
+        return best;
+    }
+
+    private List<int>? CheckWin(int idx, char p)
+    {
+        var r = idx / Size;
+        var c = idx % Size;
+        int[][] dirs = { new[] { 0, 1 }, new[] { 1, 0 }, new[] { 1, 1 }, new[] { 1, -1 } };
+
+        foreach (var d in dirs)
+        {
+            var line = new List<int> { idx };
+            // Forward
+            for (var k = 1; k < WinLength; k++)
+            {
+                var nr = r + d[0] * k;
+                var nc = c + d[1] * k;
+                if (nr < 0 || nr >= Size || nc < 0 || nc >= Size) break;
+                var ni = nr * Size + nc;
+                if (_board[ni] != p) break;
+                line.Add(ni);
+            }
+            // Backward
+            for (var k = 1; k < WinLength; k++)
+            {
+                var nr = r - d[0] * k;
+                var nc = c - d[1] * k;
+                if (nr < 0 || nr >= Size || nc < 0 || nc >= Size) break;
+                var ni = nr * Size + nc;
+                if (_board[ni] != p) break;
+                line.Insert(0, ni);
+            }
+
+            if (line.Count >= WinLength)
+                return line;
+        }
+        return null;
+    }
+
+    private bool IsFull() => _board.All(c => c != ' ');
+}
