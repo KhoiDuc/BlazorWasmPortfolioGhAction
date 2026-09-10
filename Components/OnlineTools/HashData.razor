@@ -9,7 +9,6 @@
         <div class="tool-field">
             <label class="tool-label" for="hash-algorithm">Algorithm</label>
             <select id="hash-algorithm" class="tool-select" @bind="algorithm">
-                <option value="md5">MD5</option>
                 <option value="sha1">SHA1</option>
                 <option value="sha256">SHA256</option>
                 <option value="sha384">SHA384</option>
@@ -76,14 +75,12 @@
     }
 
     [SuppressMessage("Security", "CA5350: Hash uses a weak cryptographic algorithm SHA1")]
-    [SuppressMessage("Security", "CA5351: Hash uses a weak cryptographic algorithm MD5")]
     void Hash(byte[] data)
     {
         try
         {
             var hash = algorithm switch
             {
-                "md5" => MD5.HashData(data),
                 "sha256" => SHA256.HashData(data),
                 "sha384" => SHA384.HashData(data),
                 "sha512" => SHA512.HashData(data),
@@ -101,7 +98,6 @@
     }
 
     [SuppressMessage("Security", "CA5350: Hash uses a weak cryptographic algorithm SHA1")]
-    [SuppressMessage("Security", "CA5351: Hash uses a weak cryptographic algorithm MD5")]
     void HashAll()
     {
         resultBase64 = null;
@@ -109,7 +105,6 @@
         var data = GetEncoding().GetBytes(text ?? "");
         allResults = new()
         {
-            new("MD5", Convert.ToHexString(MD5.HashData(data)).ToLowerInvariant()),
             new("SHA1", Convert.ToHexString(SHA1.HashData(data)).ToLowerInvariant()),
             new("SHA256", Convert.ToHexString(SHA256.HashData(data)).ToLowerInvariant()),
             new("SHA384", Convert.ToHexString(SHA384.HashData(data)).ToLowerInvariant()),

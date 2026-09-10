@@ -1,4 +1,4 @@
-<ToolShell ResourceKey="carogame" Title="Caro 10×10" Icon="bi-grid-3x3" Description="Play Caro (Gomoku) on a 10×10 board. Get 5 in a row to win. You are X, AI is O.">
+<ToolShell ResourceKey="carogame" Title="Caro 30×30" Icon="bi-grid-3x3" Description="Play Caro (Gomoku) on a 30×30 board. Get 5 in a row to win. You are X, AI is O.">
     <div class="tool-form">
         <div class="caro-scoreboard">
             <span class="caro-score caro-score-win">Wins: @_wins</span>
@@ -58,18 +58,20 @@
     .caro-board {
         display: grid;
         grid-template-columns: repeat(var(--caro-cols), 1fr);
-        gap: 2px;
+        gap: 1px;
         background: var(--color-border);
-        padding: 2px;
+        padding: 1px;
         border-radius: var(--radius-sm);
-        max-width: 500px;
+        max-width: 720px;
+        max-height: 70vh;
+        overflow: auto;
     }
     .caro-cell {
         aspect-ratio: 1;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: clamp(0.9rem, 3vw, 1.4rem);
+        font-size: clamp(0.55rem, 1.4vw, 0.95rem);
         font-weight: 800;
         border: none;
         background: var(--color-bg-surface);
@@ -93,7 +95,7 @@
 </style>
 
 @code {
-    private const int Size = 10;
+    private const int Size = 30;
     private const int WinLength = 5;
     private char[] _board = new char[Size * Size];
     private bool _gameOver;

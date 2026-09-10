@@ -2,9 +2,40 @@
 @using BlazorWasmPortfolioGhAction.Utils
 @using BlazorWasmPortfolioGhAction.Utils.OnlineTools
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
-<ToolShell ResourceKey="dateconverter" Title="Date Converter" Icon="bi-calendar3" Description="Convert between date strings, Unix timestamps, .NET ticks, and MongoDB ObjectIds.">
+<ToolShell ResourceKey="dateconverter" Title="Date Converter" Icon="bi-calendar3" Description="Convert between date strings, Unix timestamps, .NET ticks, and MongoDB ObjectIds. Live clock and date-to-timestamp builder included.">
     <div class="tool-form">
+        <div class="tool-field">
+            <span class="tool-label">Current time</span>
+            <div class="dc-now-panel">
+                <div class="dc-now-row"><strong>@nowLocal</strong></div>
+                <div class="dc-now-row"><span>UTC:</span> @nowUtc</div>
+                <div class="dc-now-row"><span>Unix (s):</span> <code>@nowUnixSec</code></div>
+                <div class="dc-now-row"><span>Unix (ms):</span> <code>@nowUnixMs</code></div>
+                <button type="button" class="tool-btn tool-btn-secondary" @onclick="RefreshNow">
+                    <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <hr class="tool-divider" />
+
+        <div class="tool-field">
+            <span class="tool-label">Date/time &rarr; Unix timestamp</span>
+            <div class="dc-builder">
+                <input type="date" class="tool-input" @bind="pickerDate" />
+                <input type="time" class="tool-input" step="1" @bind="pickerTime" />
+                <button type="button" class="tool-btn tool-btn-primary" @onclick="BuildTimestamp">Convert</button>
+            </div>
+            @if (!string.IsNullOrEmpty(builderResult))
+            {
+                <div class="tool-alert tool-alert-success">@builderResult</div>
+            }
+        </div>
+
+        <hr class="tool-divider" />
+
         <div class="tool-field">
             <label class="tool-label" for="inputFormat">Input format</label>
             <select id="inputFormat" class="tool-select" @onchange="OnInputFormatChanged" value="@InputFormat">
@@ -48,9 +79,23 @@
     private string? errorMessage;
     private IReadOnlyList<ResultValue> values = [];
 
+    // Live clock
+    private string nowLocal = "";
+    private string nowUtc = "";
+    private long nowUnixSec;
+    private long nowUnixMs;
+    private System.Threading.Timer? clockTimer;
+
+    // Date→timestamp builder
+    private DateOnly pickerDate = DateOnly.FromDateTime(DateTime.Now);
+    private TimeOnly pickerTime = TimeOnly.FromDateTime(DateTime.Now);
+    private string? builderResult;
+
     protected override void OnInitialized()
     {
         NavigationManager.SetParametersFromQueryString(this);
+        RefreshNow();
+        clockTimer = new System.Threading.Timer(_ => InvokeAsync(() => { RefreshNow(); StateHasChanged(); }), null, 1000, 1000);
         Compute();
     }
 
@@ -92,4 +137,32 @@
         parsedSource = source;
         values = DateConvertUtils.BuildDisplayValues(dateTimeOffset);
     }
+
+    private void RefreshNow()
+    {
+        var now = DateTimeOffset.Now;
+        nowLocal = now.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss");
+        nowUtc = now.UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss");
+        nowUnixSec = now.ToUnixTimeSeconds();
+        nowUnixMs = now.ToUnixTimeMilliseconds();
+    }
+
+    private void BuildTimestamp()
+    {
+        var dto = new DateTimeOffset(pickerDate.ToDateTime(pickerTime));
+        builderResult = $"Local: {dto.LocalDateTime:yyyy-MM-dd HH:mm:ss}\nUTC: {dto.UtcDateTime:yyyy-MM-dd HH:mm:ss}\nUnix (s): {dto.ToUnixTimeSeconds()}\nUnix (ms): {dto.ToUnixTimeMilliseconds()}";
+    }
+
+    public void Dispose()
+    {
+        clockTimer?.Dispose();
+    }
 }
+
+<style>
+    .dc-now-panel { display: flex; flex-direction: column; gap: 0.25rem; }
+    .dc-now-row { display: flex; gap: 0.5rem; align-items: center; }
+    .dc-now-row span { color: var(--color-text-muted); min-width: 5.5em; }
+    .dc-now-row code { font-family: monospace; }
+    .dc-builder { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+</style>
