@@ -8,6 +8,7 @@
         <div class="tool-field">
             <label class="tool-label" for="hash-algorithm">Algorithm</label>
             <select id="hash-algorithm" class="tool-select" @bind="algorithm">
+                <option value="md5">MD5</option>
                 <option value="sha1">SHA1</option>
                 <option value="sha256">SHA256</option>
                 <option value="sha512">SHA512</option>
@@ -62,12 +63,14 @@
     }
 
     [SuppressMessage("Security", "CA5350: Hash uses a weak cryptographic algorithm SHA1")]
+    [SuppressMessage("Security", "CA5351: Hash uses a weak cryptographic algorithm MD5")]
     void Hash(byte[] data)
     {
         try
         {
             var hash = algorithm switch
             {
+                "md5" => MD5.HashData(data),
                 "sha256" => SHA256.HashData(data),
                 "sha512" => SHA512.HashData(data),
                 _ => SHA1.HashData(data),

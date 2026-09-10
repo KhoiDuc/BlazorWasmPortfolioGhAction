@@ -1,0 +1,144 @@
+@using System.Globalization
+@using System.Net
+@using BlazorWasmPortfolioGhAction.Utils.OnlineTools
+
+<ToolShell ResourceKey="urlparser" Title="URL Parser" Icon="bi-link-45deg" Description="Parse an absolute URL into scheme, host, port, path, query, and fragment.">
+    <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="urlparser-input">URL</label>
+            <input id="urlparser-input" class="tool-input" @bind="url" placeholder="https://username:password@example.com:8080/path?foo=bar&amp;foo=baz#hash" />
+        </div>
+        <div class="tool-actions">
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="ParseUrl">Parse</button>
+        </div>
+        @if (errorMessage != null)
+        {
+            <div class="tool-alert tool-alert-danger">@errorMessage</div>
+        }
+        @if (urlComponents.Count > 0)
+        {
+            <div class="tool-field">
+                <label class="tool-label">URL components</label>
+                <ResultValueList Values="urlComponents" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label">Query string values</label>
+                @if (queryStringValues.Count == 0)
+                {
+                    <p class="tool-hint">No query string value found.</p>
+                }
+                else
+                {
+                    <ResultValueList Values="queryStringValues" />
+                }
+            </div>
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private string? url;
+    private string? errorMessage;
+    private IReadOnlyList<ResultValue> urlComponents = [];
+    private IReadOnlyList<ResultValue> queryStringValues = [];
+
+    private void ParseUrl()
+    {
+        errorMessage = null;
+        urlComponents = [];
+        queryStringValues = [];
+
+        var input = (url ?? string.Empty).Trim();
+        if (string.IsNullOrEmpty(input))
+        {
+            errorMessage = "Please enter an absolute URL.";
+            return;
+        }
+
+        if (!Uri.TryCreate(input, UriKind.Absolute, out var uri))
+        {
+            errorMessage = "Invalid URL. Please enter a valid absolute URL.";
+            return;
+        }
+
+        var (username, password) = ParseUserInfo(uri);
+
+        urlComponents =
+        [
+            new("Scheme", DisplayValue(uri.Scheme)),
+            new("Username", DisplayValue(username)),
+            new("Password", DisplayValue(password)),
+            new("Domain", DisplayValue(uri.Host)),
+            new("Port", GetPortDisplay(uri)),
+            new("Path", DisplayValue(uri.AbsolutePath)),
+            new("Query string", DisplayValue(uri.Query)),
+            new("Fragment", DisplayValue(uri.Fragment)),
+        ];
+
+        queryStringValues = ParseQueryString(uri.Query);
+    }
+
+    private static (string? Username, string? Password) ParseUserInfo(Uri uri)
+    {
+        var userInfo = uri.GetComponents(UriComponents.UserInfo, UriFormat.UriEscaped);
+        if (string.IsNullOrEmpty(userInfo))
+            return (null, null);
+
+        var separatorIndex = userInfo.IndexOf(':');
+        if (separatorIndex < 0)
+            return (WebUtility.UrlDecode(userInfo), null);
+
+        var username = WebUtility.UrlDecode(userInfo[..separatorIndex]);
+        var password = WebUtility.UrlDecode(userInfo[(separatorIndex + 1)..]);
+        return (username, password);
+    }
+
+    private static string GetPortDisplay(Uri uri)
+    {
+        return uri.IsDefaultPort
+            ? "(not set)"
+            : uri.Port.ToString(CultureInfo.InvariantCulture);
+    }
+
+    private static IReadOnlyList<ResultValue> ParseQueryString(string queryString)
+    {
+        if (string.IsNullOrEmpty(queryString))
+            return [];
+
+        var query = queryString.StartsWith('?') ? queryString[1..] : queryString;
+        if (string.IsNullOrEmpty(query))
+            return [];
+
+        var results = new List<ResultValue>();
+        var keyCount = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        foreach (var pair in query.Split('&', StringSplitOptions.None))
+        {
+            if (pair.Length == 0)
+                continue;
+
+            var separatorIndex = pair.IndexOf('=');
+            var rawKey = separatorIndex < 0 ? pair : pair[..separatorIndex];
+            var rawValue = separatorIndex < 0 ? string.Empty : pair[(separatorIndex + 1)..];
+
+            var key = WebUtility.UrlDecode(rawKey) ?? string.Empty;
+            var value = WebUtility.UrlDecode(rawValue) ?? string.Empty;
+
+            if (string.IsNullOrEmpty(key))
+                key = "(empty key)";
+
+            var index = keyCount.GetValueOrDefault(key, 0) + 1;
+            keyCount[key] = index;
+
+            var label = index == 1 ? key : $"{key} [{index}]";
+            results.Add(new ResultValue(label, value));
+        }
+
+        return results;
+    }
+
+    private static string DisplayValue(string? value)
+    {
+        return string.IsNullOrEmpty(value) ? "(not set)" : value;
+    }
+}

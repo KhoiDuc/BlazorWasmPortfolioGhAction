@@ -1,11 +1,22 @@
 @using System.Text
+@using System.IO
 @using BlazorWasmPortfolioGhAction.Services
 @inherits CultureAwareComponent
 @inject IClipboardService Clipboard
+@inject IJSRuntime JSRuntime
 @inject IStringLocalizer<SharedResources> L
 
-<ToolShell ResourceKey="base64" Title="Base64 Encode/Decode" Icon="bi-file-binary" Description="Encode or decode Base64 strings.">
+<ToolShell ResourceKey="base64" Title="Base64 Encode/Decode" Icon="bi-file-binary" Description="Encode or decode Base64 strings with encoding selector and file upload.">
     <div class="tool-form">
+        <div class="tool-field">
+            <label class="tool-label" for="b64-encoding">Encoding</label>
+            <select id="b64-encoding" class="tool-select" @bind="encoding">
+                <option value="utf-8">UTF-8</option>
+                <option value="utf-16">UTF-16</option>
+                <option value="utf-32">UTF-32</option>
+                <option value="ascii">ASCII</option>
+            </select>
+        </div>
         <div class="tool-field">
             <label class="tool-label" for="binary">@L["Tool_Input"]</label>
             <textarea id="binary" class="tool-textarea" rows="4" @bind="Input" placeholder="QWxleEhlZGxleQ=="></textarea>
@@ -19,6 +30,10 @@
             </div>
         </div>
         <div class="tool-field">
+            <label class="tool-label">Or upload a file</label>
+            <InputFile OnChange="@OnInputFileChange" />
+        </div>
+        <div class="tool-field">
             <label class="tool-label" for="output">@L["Tool_Output"]</label>
             <textarea id="output" class="tool-textarea" rows="4" @bind="Output" placeholder="String"></textarea>
             <div class="tool-actions">
@@ -30,6 +45,14 @@
                 </button>
             </div>
         </div>
+        @if (decodedData != null)
+        {
+            <div class="tool-actions">
+                <button type="button" class="tool-btn tool-btn-primary" @onclick="DownloadDecodedDataAsync">
+                    <i class="bi bi-download" aria-hidden="true"></i> Download decoded data
+                </button>
+            </div>
+        }
     </div>
     <hr class="tool-divider" />
     <p class="tool-hint">
@@ -42,35 +65,68 @@
     [Parameter] public string? Input { get; set; }
     [Parameter] public string? Output { get; set; }
 
+    private string encoding = "utf-8";
+    private byte[]? decodedData;
+
+    private Encoding GetEncoding() => encoding switch
+    {
+        "utf-16" => Encoding.Unicode,
+        "utf-32" => Encoding.UTF32,
+        "ascii" => Encoding.ASCII,
+        _ => Encoding.UTF8,
+    };
+
     void Encode()
     {
+        decodedData = null;
         if (string.IsNullOrEmpty(Output)) return;
-        Input = Base64Encode(Output);
+        try
+        {
+            Input = Convert.ToBase64String(GetEncoding().GetBytes(Output));
+        }
+        catch (Exception ex)
+        {
+            Input = ex.Message;
+        }
     }
 
     void Decode()
     {
+        decodedData = null;
         if (string.IsNullOrEmpty(Input)) return;
-        Output = Base64Decode(Input);
+        try
+        {
+            decodedData = Convert.FromBase64String(Input);
+            Output = GetEncoding().GetString(decodedData);
+        }
+        catch (Exception ex)
+        {
+            Output = ex.Message;
+        }
     }
 
-    private void Clear() { Input = string.Empty; }
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        using var stream = e.File.OpenReadStream();
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+
+        decodedData = null;
+        Input = Convert.ToBase64String(ms.ToArray());
+    }
+
+    private async Task DownloadDecodedDataAsync()
+    {
+        if (decodedData == null || decodedData.Length == 0) return;
+        var base64 = Convert.ToBase64String(decodedData);
+        await JSRuntime.InvokeVoidAsync("eval", $"fetch('data:application/octet-stream;base64,{base64}').then(r=>r.blob()).then(b=>{{var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='decoded.bin';a.click();URL.revokeObjectURL(u);}})");
+    }
+
+    private void Clear() { Input = string.Empty; decodedData = null; }
 
     async Task Copy()
     {
         if (!string.IsNullOrEmpty(Output))
             await Clipboard.CopyTextAsync(Output);
-    }
-
-    public static string Base64Encode(string plainText)
-    {
-        var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
-        return System.Convert.ToBase64String(plainTextBytes);
-    }
-
-    public static string Base64Decode(string base64EncodedData)
-    {
-        var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData);
-        return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
     }
 }
