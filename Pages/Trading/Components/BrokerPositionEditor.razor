@@ -96,6 +96,7 @@
         <button type="button" role="tab" class="broker-tab @(_tab == "info" ? "active" : "")" @onclick='() => _tab = "info"'>Tổng quan</button>
         <button type="button" role="tab" class="broker-tab @(_tab == "lots" ? "active" : "")" @onclick='() => _tab = "lots"'>Lần mua (@Position.Buys.Count)</button>
         <button type="button" role="tab" class="broker-tab @(_tab == "sells" ? "active" : "")" @onclick='() => _tab = "sells"'>Lần bán (@Position.Sells.Count)</button>
+        <button type="button" role="tab" class="broker-tab @(_tab == "dividends" ? "active" : "")" @onclick='() => _tab = "dividends"'>Cổ tức (@(Position.Dividends?.Count ?? 0))</button>
         <button type="button" role="tab" class="broker-tab @(_tab == "timeline" ? "active" : "")" @onclick='() => _tab = "timeline"'>Timeline</button>
         <button type="button" role="tab" class="broker-tab @(_tab == "notes" ? "active" : "")" @onclick='() => _tab = "notes"'>Note (@Position.Notes.Count)</button>
     </div>
@@ -347,6 +348,90 @@
                 </article>
             }
         }
+        else if (_tab == "dividends")
+        {
+            <section class="broker-block broker-dividend-form">
+                <h4 class="broker-block-title">Ghi nhận cổ tức</h4>
+                <div class="broker-form-row broker-form-row-3 broker-form-row-align">
+                    <div class="broker-field">
+                        <label class="broker-field-label" for="div-exdate">Ngày chốt quyền</label>
+                        <input id="div-exdate" class="ts-input" type="date" @bind="_divExDate" @bind:format="yyyy-MM-dd" />
+                    </div>
+                    <div class="broker-field">
+                        <label class="broker-field-label" for="div-paydate">Ngày thanh toán <span class="broker-optional">(tùy chọn)</span></label>
+                        <input id="div-paydate" class="ts-input" type="date" @bind="_divPayDate" @bind:format="yyyy-MM-dd" />
+                    </div>
+                    <div class="broker-field">
+                        <label class="broker-field-label" for="div-amount">Số tiền/CP (đ)</label>
+                        <input id="div-amount" class="ts-input @(_divErr is not null ? "ts-input-invalid" : "")"
+                               type="number" min="0" step="any" placeholder="2000"
+                               @bind="_divAmount" @bind:after='() => _divErr = null' />
+                    </div>
+                </div>
+                <div class="broker-form-row broker-form-row-2 broker-form-row-align">
+                    <div class="broker-field">
+                        <label class="broker-field-label" for="div-qty">KL nhận cổ tức</label>
+                        <input id="div-qty" class="ts-input @(_divErr is not null ? "ts-input-invalid" : "")"
+                               type="number" min="1" step="1" placeholder="@BrokerFormat.Quantity(Position.TotalQuantity)"
+                               @bind="_divQty" @bind:after='() => _divErr = null' />
+                    </div>
+                    <div class="broker-field broker-lot-note-field">
+                        <label class="broker-field-label" for="div-note">Ghi chú</label>
+                        <input id="div-note" class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen"
+                               placeholder="Cổ tức tiền mặt / cổ tức cổ phiếu…" @bind="_divNote" />
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(_divErr))
+                {
+                    <p class="ts-field-error">@_divErr</p>
+                }
+                <button class="ts-btn ts-btn-primary ts-btn-sm" type="button" @onclick="AddDividend">Ghi cổ tức</button>
+            </section>
+
+            @if ((Position.Dividends?.Count ?? 0) == 0)
+            {
+                <p class="broker-empty-inline">Chưa có cổ tức nào.</p>
+            }
+            else
+            {
+                <div class="broker-dividend-summary">
+                    <span class="broker-kpi-label">Tổng cổ tức nhận:</span>
+                    <span class="broker-kpi-value ts-positive">@BrokerFormat.Vnd(Position.TotalDividends)</span>
+                </div>
+
+                <div class="broker-table-scroll">
+                    <table class="ts-table broker-dividend-table">
+                        <thead>
+                            <tr>
+                                <th><span class="broker-dt-th-inner">Ngày chốt</span></th>
+                                <th><span class="broker-dt-th-inner">Ngày trả</span></th>
+                                <th><span class="broker-dt-th-inner">đ/CP</span></th>
+                                <th><span class="broker-dt-th-inner">KL</span></th>
+                                <th><span class="broker-dt-th-inner">Tổng (đ)</span></th>
+                                <th><span class="broker-dt-th-inner">Ghi chú</span></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in (Position.Dividends ?? []).OrderByDescending(d => d.ExDate))
+                            {
+                                <tr>
+                                    <td>@d.ExDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@(d.PayDate?.ToString("dd/MM/yyyy") ?? "—")</td>
+                                    <td class="broker-num">@d.AmountPerShare.ToString("N0")</td>
+                                    <td class="broker-num">@BrokerFormat.Quantity(d.Quantity)</td>
+                                    <td class="broker-num ts-positive">@BrokerFormat.VndPlain(d.TotalAmount)</td>
+                                    <td>@(d.Note ?? "—")</td>
+                                    <td>
+                                        <button type="button" class="broker-lot-remove" title="Xóa cổ tức" @onclick="() => RemoveDividend(d)">×</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
         else if (_tab == "timeline")
         {
             @if (Position.Buys.Count == 0 && Position.Sells.Count == 0 && Position.Notes.Count == 0)
@@ -371,6 +456,10 @@
                         foreach (var n in Position.Notes.OrderBy(n => n.At))
                             entries.Add((n.At, "◆", "note",
                                 $"{(n.Kind == BrokerNoteKind.Self ? "Của tôi" : "Broker")}: {n.Text}"));
+                        foreach (var d in (Position.Dividends ?? []).OrderBy(d => d.ExDate))
+                            entries.Add((d.PayDate ?? d.ExDate, "★", "dividend",
+                                $"Cổ tức: {d.AmountPerShare:N0}đ/CP × {d.Quantity} = {BrokerFormat.VndPlain(d.TotalAmount)}"
+                                + (!string.IsNullOrWhiteSpace(d.Note) ? $" · {d.Note}" : "")));
                         entries = entries.OrderByDescending(e => e.Date).ThenByDescending(e => e.Kind).ToList();
                     }
 
@@ -472,6 +561,14 @@
     private string _sellNote = "";
     private string? _sellErr;
     private string _newTag = "";
+
+    // Dividend form state
+    private DateTime _divExDate = DateTime.Today;
+    private DateTime? _divPayDate;
+    private decimal? _divAmount;
+    private int? _divQty;
+    private string _divNote = "";
+    private string? _divErr;
     private readonly Dictionary<string, string> _lotTagInput = new(StringComparer.OrdinalIgnoreCase);
 
     private decimal? PositionRefPrice =>
@@ -686,6 +783,49 @@
     {
         lot.Tags?.Remove(tag);
         _ = Changed();
+    }
+
+    private async Task AddDividend()
+    {
+        _divErr = null;
+
+        if (_divAmount is not > 0)
+        {
+            _divErr = "Số tiền/CP phải > 0.";
+            return;
+        }
+        if (_divQty is not > 0)
+        {
+            _divErr = "KL nhận cổ tức phải > 0.";
+            return;
+        }
+
+        Position.Dividends ??= [];
+        Position.Dividends.Add(new BrokerDividend
+        {
+            ExDate = _divExDate,
+            PayDate = _divPayDate,
+            AmountPerShare = _divAmount!.Value,
+            Quantity = _divQty!.Value,
+            Note = string.IsNullOrWhiteSpace(_divNote) ? null : _divNote.Trim()
+        });
+
+        _divAmount = null;
+        _divQty = null;
+        _divNote = "";
+        _divPayDate = null;
+        _divExDate = DateTime.Today;
+        _divErr = null;
+
+        await Changed();
+    }
+
+    private async Task RemoveDividend(BrokerDividend d)
+    {
+        if (!await JS.InvokeAsync<bool>("tradingAuth.confirm", "Xóa cổ tức này?"))
+            return;
+        Position.Dividends?.Remove(d);
+        await Changed();
     }
 
     private async Task AddNote()

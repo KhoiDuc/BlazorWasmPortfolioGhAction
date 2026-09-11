@@ -1,0 +1,160 @@
+@using BlazorWasmPortfolioGhAction.Utils
+@inject IStringLocalizer<SharedResources> L
+
+@{
+    var recs = GetRecommendations();
+}
+
+@if (recs.Count > 0)
+{
+    <div class="ts-panel broker-rec-board">
+        <div class="broker-rec-head">
+            <div>
+                <h3 class="ts-panel-title">Khuyến nghị broker</h3>
+                <span class="broker-rec-sub">@recs.Count mã đang theo dõi khuyến nghị</span>
+            </div>
+            <div class="broker-rec-filter-bar">
+                <label class="broker-dt-label" for="rec-filter">Lọc</label>
+                <select id="rec-filter" class="ts-select" @bind="_filter">
+                    <option value="all">Tất cả</option>
+                    <option value="cho-mua">Chờ mua</option>
+                    <option value="bo-theo-doi">Bỏ theo dõi</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="broker-rec-grid">
+            @foreach (var r in recs)
+            {
+                var expanded = _expandedIds.Contains(r.Symbol);
+                <article class="broker-rec-card broker-rec-status-@r.StatusBadge">
+                    <header class="broker-rec-card-head">
+                        <div class="broker-rec-card-id">
+                            <span class="broker-symbol">@r.Symbol</span>
+                            @if (!string.IsNullOrWhiteSpace(r.Sector))
+                            {
+                                <span class="broker-rec-sector">@r.Sector</span>
+                            }
+                        </div>
+                        <span class="broker-status-pill broker-status-@r.StatusBadge">@BrokerStatusLabels.Vi(r.StatusBadge)</span>
+                    </header>
+
+                    <div class="broker-rec-card-levels">
+                        @if (r.EntryLow is > 0 || r.EntryHigh is > 0)
+                        {
+                            <div class="broker-rec-level">
+                                <span class="broker-rec-level-label">Vùng mua</span>
+                                <span class="broker-rec-level-value">
+                                    @(r.EntryLow is > 0 ? r.EntryLow.Value.ToString("N2") : "—")
+                                    @(r.EntryHigh is > 0 && r.EntryHigh != r.EntryLow ? $" – {r.EntryHigh.Value:N2}" : "")
+                                </span>
+                            </div>
+                        }
+                        @if (r.StopLoss is > 0)
+                        {
+                            <div class="broker-rec-level">
+                                <span class="broker-rec-level-label">Cắt lỗ</span>
+                                <span class="broker-rec-level-value">@r.StopLoss.Value.ToString("N2")</span>
+                            </div>
+                        }
+                        @if (r.TargetPrice is > 0)
+                        {
+                            <div class="broker-rec-level">
+                                <span class="broker-rec-level-label">Mục tiêu</span>
+                                <span class="broker-rec-level-value">@r.TargetPrice.Value.ToString("N2")</span>
+                            </div>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(r.RecommendationText))
+                    {
+                        <div class="broker-rec-text">
+                            <p class="broker-rec-text-content @(expanded ? "" : "broker-rec-truncate")">
+                                @r.RecommendationText
+                            </p>
+                            @if (r.RecommendationText!.Length > 150)
+                            {
+                                <button type="button" class="broker-rec-expand-btn"
+                                        @onclick="() => ToggleExpand(r.Symbol)">
+                                    @(expanded ? "Thu gọn" : "Đọc thêm")
+                                </button>
+                            }
+                        </div>
+                    }
+
+                    <div class="broker-rec-card-actions">
+                        @if (r.StatusBadge != BrokerPositionStatus.BoTheoDoi)
+                        {
+                            <button type="button" class="ts-btn ts-btn-primary ts-btn-sm"
+                                    @onclick="() => OnBuy.InvokeAsync(r.Symbol)">Mua</button>
+                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm"
+                                    @onclick="() => OnSelect.InvokeAsync(r.Symbol)">Chi tiết</button>
+                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm broker-btn-danger"
+                                    @onclick="() => OnDrop.InvokeAsync(r.Symbol)">Bỏ theo dõi</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm"
+                                    @onclick="() => OnReactivate.InvokeAsync(r.Symbol)">Theo dõi lại</button>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public BrokerPortfolio Portfolio { get; set; } = new();
+    [Parameter] public EventCallback<string> OnBuy { get; set; }
+    [Parameter] public EventCallback<string> OnSelect { get; set; }
+    [Parameter] public EventCallback<string> OnDrop { get; set; }
+    [Parameter] public EventCallback<string> OnReactivate { get; set; }
+
+    private string _filter = "all";
+    private readonly HashSet<string> _expandedIds = new(StringComparer.OrdinalIgnoreCase);
+
+    private record RecEntry(
+        string Symbol,
+        string Sector,
+        BrokerPositionStatus StatusBadge,
+        decimal? EntryLow,
+        decimal? EntryHigh,
+        decimal? StopLoss,
+        decimal? TargetPrice,
+        string? RecommendationText);
+
+    private List<RecEntry> GetRecommendations()
+    {
+        var positions = Portfolio.Positions ?? [];
+
+        IEnumerable<BrokerPosition> filtered = _filter switch
+        {
+            "cho-mua" => positions.Where(p => p.Status == BrokerPositionStatus.ChoMua),
+            "bo-theo-doi" => positions.Where(p => p.Status == BrokerPositionStatus.BoTheoDoi),
+            _ => positions.Where(p => p.Status == BrokerPositionStatus.ChoMua
+                                   || p.Status == BrokerPositionStatus.BoTheoDoi
+                                   || !string.IsNullOrWhiteSpace(p.RecommendationText))
+        };
+
+        return filtered
+            .Select(p => new RecEntry(
+                p.Symbol,
+                p.Sector,
+                p.Status,
+                p.EntryLow,
+                p.EntryHigh,
+                p.StopLoss,
+                p.TargetPrice,
+                p.RecommendationText))
+            .OrderByDescending(p => p.StatusBadge == BrokerPositionStatus.ChoMua)
+            .ThenBy(p => p.Symbol, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private void ToggleExpand(string symbol)
+    {
+        if (!_expandedIds.Add(symbol))
+            _expandedIds.Remove(symbol);
+    }
+}

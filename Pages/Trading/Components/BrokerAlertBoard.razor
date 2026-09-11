@@ -1,0 +1,145 @@
+@using BlazorWasmPortfolioGhAction.Utils
+@inject IStringLocalizer<SharedResources> L
+
+@{
+    var alerts = BuildAlerts();
+}
+
+@if (alerts.Count > 0)
+{
+    <div class="ts-panel broker-alert-board">
+        <div class="broker-alert-head">
+            <h3 class="ts-panel-title">Cảnh báo giá</h3>
+            <span class="broker-alert-count">@alerts.Count cảnh báo</span>
+        </div>
+
+        <div class="broker-alert-groups">
+            @if (alerts.Any(a => a.Level == "hit-sl"))
+            {
+                <div class="broker-alert-group broker-alert-group-sl">
+                    <h4 class="broker-alert-group-title">🔴 Chạm cắt lỗ</h4>
+                    <div class="broker-alert-cards">
+                        @foreach (var a in alerts.Where(a => a.Level == "hit-sl"))
+                        {
+                            <div class="broker-alert-card broker-alert-card-sl">
+                                <div class="broker-alert-card-main">
+                                    <span class="broker-symbol">@a.Symbol</span>
+                                    <span class="broker-alert-price">@a.Current.ToString("N2")</span>
+                                    <span class="broker-alert-detail">SL @a.LevelValue.ToString("N2") · @(a.DistancePct >= 0 ? "+" : "")@a.DistancePct.ToString("N2")%</span>
+                                </div>
+                                <div class="broker-alert-card-actions">
+                                    <button type="button" class="ts-btn ts-btn-outline ts-btn-sm"
+                                            @onclick="() => OnSelect.InvokeAsync(a.Symbol)">Chi tiết</button>
+                                    <button type="button" class="ts-btn ts-btn-primary ts-btn-sm"
+                                            @onclick="() => OnQuickSell.InvokeAsync(a.Symbol)">Bán nhanh</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (alerts.Any(a => a.Level == "hit-tp"))
+            {
+                <div class="broker-alert-group broker-alert-group-tp">
+                    <h4 class="broker-alert-group-title">🟢 Chạm mục tiêu</h4>
+                    <div class="broker-alert-cards">
+                        @foreach (var a in alerts.Where(a => a.Level == "hit-tp"))
+                        {
+                            <div class="broker-alert-card broker-alert-card-tp">
+                                <div class="broker-alert-card-main">
+                                    <span class="broker-symbol">@a.Symbol</span>
+                                    <span class="broker-alert-price">@a.Current.ToString("N2")</span>
+                                    <span class="broker-alert-detail">TP @a.LevelValue.ToString("N2") · +@a.DistancePct.ToString("N2")%</span>
+                                </div>
+                                <div class="broker-alert-card-actions">
+                                    <button type="button" class="ts-btn ts-btn-outline ts-btn-sm"
+                                            @onclick="() => OnSelect.InvokeAsync(a.Symbol)">Chi tiết</button>
+                                    <button type="button" class="ts-btn ts-btn-primary ts-btn-sm"
+                                            @onclick="() => OnQuickSell.InvokeAsync(a.Symbol)">Bán nhanh</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (alerts.Any(a => a.Level == "near-sl" || a.Level == "near-tp"))
+            {
+                <div class="broker-alert-group broker-alert-group-near">
+                    <h4 class="broker-alert-group-title">🟡 Gần chạm (trong 2%)</h4>
+                    <div class="broker-alert-cards">
+                        @foreach (var a in alerts.Where(a => a.Level == "near-sl" || a.Level == "near-tp"))
+                        {
+                            <div class="broker-alert-card broker-alert-card-near @($"broker-alert-card-{(a.Level == "near-sl" ? "sl" : "tp")}")">
+                                <div class="broker-alert-card-main">
+                                    <span class="broker-symbol">@a.Symbol</span>
+                                    <span class="broker-alert-price">@a.Current.ToString("N2")</span>
+                                    <span class="broker-alert-detail">@(a.Level == "near-sl" ? "SL" : "TP") @a.LevelValue.ToString("N2") · @(a.DistancePct >= 0 ? "+" : "")@a.DistancePct.ToString("N2")%</span>
+                                </div>
+                                <div class="broker-alert-card-actions">
+                                    <button type="button" class="ts-btn ts-btn-outline ts-btn-sm"
+                                            @onclick="() => OnSelect.InvokeAsync(a.Symbol)">Chi tiết</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public BrokerPortfolio Portfolio { get; set; } = new();
+    [Parameter, EditorRequired] public Dictionary<string, decimal> Quotes { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    [Parameter] public EventCallback<string> OnSelect { get; set; }
+    [Parameter] public EventCallback<string> OnQuickSell { get; set; }
+
+    private const decimal NearThreshold = 0.02m; // 2%
+
+    private record AlertEntry(string Symbol, decimal Current, decimal LevelValue, decimal DistancePct, string Level);
+
+    private List<AlertEntry> BuildAlerts()
+    {
+        var result = new List<AlertEntry>();
+        var positions = (Portfolio.Positions ?? []).Where(p => !p.IsClosed).ToList();
+
+        foreach (var p in positions)
+        {
+            if (!Quotes.TryGetValue(p.Symbol, out var current) || current <= 0) continue;
+
+            if (p.StopLoss is > 0)
+            {
+                var sl = p.StopLoss.Value;
+                if (current <= sl)
+                {
+                    var dist = (current - sl) / sl * 100m;
+                    result.Add(new AlertEntry(p.Symbol, current, sl, dist, "hit-sl"));
+                }
+                else if (current <= sl * (1 + NearThreshold))
+                {
+                    var dist = (current - sl) / sl * 100m;
+                    result.Add(new AlertEntry(p.Symbol, current, sl, dist, "near-sl"));
+                }
+            }
+
+            if (p.TargetPrice is > 0)
+            {
+                var tp = p.TargetPrice.Value;
+                if (current >= tp)
+                {
+                    var dist = (current - tp) / tp * 100m;
+                    result.Add(new AlertEntry(p.Symbol, current, tp, dist, "hit-tp"));
+                }
+                else if (current >= tp * (1 - NearThreshold))
+                {
+                    var dist = (current - tp) / tp * 100m;
+                    result.Add(new AlertEntry(p.Symbol, current, tp, dist, "near-tp"));
+                }
+            }
+        }
+
+        return result;
+    }
+}

@@ -186,6 +186,17 @@
             </div>
         </section>
 
+        <BrokerRecommendationBoard Portfolio="_portfolio"
+                                    OnBuy="PrefillBuyForm"
+                                    OnSelect="SelectSymbol"
+                                    OnDrop="DropRecommendation"
+                                    OnReactivate="ReactivateRecommendation" />
+
+        <BrokerAlertBoard Portfolio="_portfolio"
+                          Quotes="_quotes"
+                          OnSelect="SelectSymbol"
+                          OnQuickSell="OpenQuickSell" />
+
         @if (_loading)
         {
             <div class="vd-loading-overlay" role="status" aria-live="polite">
@@ -258,6 +269,8 @@
                 </div>
             </div>
         }
+
+        <BrokerCashFlowPanel Portfolio="_portfolio" />
 
         <BrokerAiExplain Portfolio="_portfolio" />
     </div>
@@ -509,6 +522,45 @@
         return _fieldErrors.Count == 0;
     }
 
+    private async Task PrefillBuyForm(string symbol)
+    {
+        var pos = _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
+        if (pos is null) return;
+
+        _newSymbol = pos.Symbol;
+        if (pos.EntryLow is > 0)
+            _newPrice = pos.EntryLow;
+        if (pos.StopLoss is > 0)
+        {
+            _stopMode = BrokerLevelInputMode.Price;
+            _stopInput = pos.StopLoss;
+        }
+        if (pos.TargetPrice is > 0)
+        {
+            _targetMode = BrokerLevelInputMode.Price;
+            _targetInput = pos.TargetPrice;
+        }
+        if (!string.IsNullOrWhiteSpace(pos.RecommendationText))
+            _newNote = pos.RecommendationText;
+        await JS.InvokeVoidAsync("eval", "document.getElementById('broker-symbol')?.focus()");
+    }
+
+    private void DropRecommendation(string symbol)
+    {
+        var pos = _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
+        if (pos is null) return;
+        pos.Status = BrokerPositionStatus.BoTheoDoi;
+        MarkDirty();
+    }
+
+    private void ReactivateRecommendation(string symbol)
+    {
+        var pos = _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
+        if (pos is null) return;
+        pos.Status = pos.Buys.Count > 0 ? BrokerPositionStatus.NamGiu : BrokerPositionStatus.ChoMua;
+        MarkDirty();
+    }
+
     private async Task AddRecommendation()
     {
         if (!ValidateForm(out var symbol))
@@ -540,6 +592,10 @@
                 };
                 _portfolio.Positions.Add(existing);
             }
+
+            // Chuyển từ ChờMua → NắmGiữ khi có lần mua đầu tiên
+            if (existing.Status == BrokerPositionStatus.ChoMua)
+                existing.Status = BrokerPositionStatus.NamGiu;
 
             var lot = new BrokerLot
             {

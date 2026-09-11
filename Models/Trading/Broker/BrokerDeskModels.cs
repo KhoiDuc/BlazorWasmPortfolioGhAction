@@ -18,6 +18,15 @@ public enum BrokerNoteKind
     Self
 }
 
+public enum CashFlowKind
+{
+    Buy,
+    Sell,
+    Fee,
+    Tax,
+    Dividend
+}
+
 public class BrokerPortfolio
 {
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
@@ -37,9 +46,13 @@ public class BrokerPosition
     public BrokerLevelInputMode? TargetPriceMode { get; set; }
     public decimal? TargetPriceInput { get; set; }
     public decimal? WeightPct { get; set; }
+    public decimal? EntryLow { get; set; }
+    public decimal? EntryHigh { get; set; }
+    public string? RecommendationText { get; set; }
     public List<BrokerLot> Buys { get; set; } = [];
     public List<BrokerSell> Sells { get; set; } = [];
     public List<BrokerNote> Notes { get; set; } = [];
+    public List<BrokerDividend> Dividends { get; set; } = [];
     public List<string> Tags { get; set; } = [];
 
     [JsonIgnore]
@@ -114,6 +127,10 @@ public class BrokerPosition
 
     /// <summary>Realized P&L (VND) using FIFO matching of sells against buy lots.</summary>
     [JsonIgnore]
+    public decimal? TotalDividends =>
+        Dividends.Count > 0 ? Dividends.Sum(d => d.TotalAmount) : null;
+
+    [JsonIgnore]
     public decimal? RealizedPnl
     {
         get
@@ -151,6 +168,9 @@ public class BrokerPosition
                 realized -= sell.Fee ?? 0m;
                 realized -= sell.Tax ?? 0m;
             }
+
+            // Add dividends
+            realized += Dividends?.Sum(d => d.TotalAmount) ?? 0m;
 
             return realized;
         }
@@ -241,6 +261,119 @@ public class BrokerNote
     public BrokerNoteKind Kind { get; set; } = BrokerNoteKind.Broker;
     public string Text { get; set; } = "";
     public string? AiExplain { get; set; }
+}
+
+public class BrokerDividend
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N")[..8];
+    public DateTime ExDate { get; set; } = DateTime.Today;
+    public DateTime? PayDate { get; set; }
+    public decimal AmountPerShare { get; set; }
+    public int Quantity { get; set; }
+    public decimal TotalAmount => AmountPerShare * Quantity;
+    public string? Note { get; set; }
+}
+
+public sealed class BrokerCashFlowEntry
+{
+    public DateTime Date { get; init; }
+    public string Symbol { get; init; } = "";
+    public CashFlowKind Kind { get; init; }
+    public decimal Amount { get; init; }
+    public string? Note { get; init; }
+}
+
+public sealed class BrokerCashFlowReport
+{
+    public List<BrokerCashFlowEntry> Entries { get; init; } = [];
+    public decimal TotalInvested { get; init; }
+    public decimal TotalReceived { get; init; }
+    public decimal TotalFees { get; init; }
+    public decimal TotalTaxes { get; init; }
+    public decimal TotalDividends { get; init; }
+    public decimal NetCashFlow => TotalReceived + TotalDividends - TotalInvested - TotalFees - TotalTaxes;
+    public bool HasData => Entries.Count > 0;
+}
+
+public static class BrokerCashFlowCalculator
+{
+    public static BrokerCashFlowReport Compute(BrokerPortfolio portfolio)
+    {
+        var entries = new List<BrokerCashFlowEntry>();
+        var allPositions = (portfolio.Positions ?? []).Concat(portfolio.ClosedPositions ?? []);
+
+        foreach (var p in allPositions)
+        {
+            foreach (var b in p.Buys.Where(b => b.Price > 0 && b.Quantity is > 0))
+            {
+                entries.Add(new BrokerCashFlowEntry
+                {
+                    Date = b.BoughtAt,
+                    Symbol = p.Symbol,
+                    Kind = CashFlowKind.Buy,
+                    Amount = -BrokerMoney.PositionValueVnd(b.Price, b.Quantity!.Value),
+                    Note = b.Note
+                });
+            }
+
+            foreach (var s in p.Sells.Where(s => s.Price > 0 && s.Quantity is > 0))
+            {
+                entries.Add(new BrokerCashFlowEntry
+                {
+                    Date = s.SoldAt,
+                    Symbol = p.Symbol,
+                    Kind = CashFlowKind.Sell,
+                    Amount = BrokerMoney.PositionValueVnd(s.Price, s.Quantity!.Value),
+                    Note = s.Note
+                });
+
+                if (s.Fee is > 0)
+                    entries.Add(new BrokerCashFlowEntry
+                    {
+                        Date = s.SoldAt,
+                        Symbol = p.Symbol,
+                        Kind = CashFlowKind.Fee,
+                        Amount = -s.Fee.Value,
+                        Note = "Phí giao dịch"
+                    });
+
+                if (s.Tax is > 0)
+                    entries.Add(new BrokerCashFlowEntry
+                    {
+                        Date = s.SoldAt,
+                        Symbol = p.Symbol,
+                        Kind = CashFlowKind.Tax,
+                        Amount = -s.Tax.Value,
+                        Note = "Thuế TNCN"
+                    });
+            }
+
+            foreach (var d in p.Dividends ?? [])
+            {
+                var payDate = d.PayDate ?? d.ExDate;
+                entries.Add(new BrokerCashFlowEntry
+                {
+                    Date = payDate,
+                    Symbol = p.Symbol,
+                    Kind = CashFlowKind.Dividend,
+                    Amount = d.TotalAmount,
+                    Note = d.Note
+                });
+            }
+        }
+
+        entries = entries.OrderByDescending(e => e.Date).ThenBy(e => e.Symbol).ToList();
+
+        return new BrokerCashFlowReport
+        {
+            Entries = entries,
+            TotalInvested = entries.Where(e => e.Kind == CashFlowKind.Buy).Sum(e => -e.Amount),
+            TotalReceived = entries.Where(e => e.Kind == CashFlowKind.Sell).Sum(e => e.Amount),
+            TotalFees = entries.Where(e => e.Kind == CashFlowKind.Fee).Sum(e => -e.Amount),
+            TotalTaxes = entries.Where(e => e.Kind == CashFlowKind.Tax).Sum(e => -e.Amount),
+            TotalDividends = entries.Where(e => e.Kind == CashFlowKind.Dividend).Sum(e => e.Amount)
+        };
+    }
 }
 
 public static class BrokerStatusLabels

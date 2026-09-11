@@ -1,0 +1,123 @@
+@using BlazorWasmPortfolioGhAction.Utils
+@inject IStringLocalizer<SharedResources> L
+
+@{
+    var report = BrokerCashFlowCalculator.Compute(Portfolio);
+}
+
+@if (report.HasData)
+{
+    <div class="ts-panel broker-cashflow-panel">
+        <div class="broker-cashflow-head">
+            <h3 class="ts-panel-title">Dòng tiền</h3>
+            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ToggleExpand">
+                @(_expanded ? "Thu gọn" : "Mở rộng")
+            </button>
+        </div>
+
+        <div class="broker-cashflow-stats">
+            <div class="broker-stat-card">
+                <span class="broker-stat-card-label">Tổng đầu tư</span>
+                <span class="broker-stat-card-value">@BrokerFormat.VndPlain(report.TotalInvested)</span>
+            </div>
+            <div class="broker-stat-card">
+                <span class="broker-stat-card-label">Tổng thu về</span>
+                <span class="broker-stat-card-value">@BrokerFormat.VndPlain(report.TotalReceived)</span>
+            </div>
+            <div class="broker-stat-card">
+                <span class="broker-stat-card-label">Phí giao dịch</span>
+                <span class="broker-stat-card-value">@BrokerFormat.VndPlain(report.TotalFees)</span>
+            </div>
+            <div class="broker-stat-card">
+                <span class="broker-stat-card-label">Thuế</span>
+                <span class="broker-stat-card-value">@BrokerFormat.VndPlain(report.TotalTaxes)</span>
+            </div>
+            <div class="broker-stat-card">
+                <span class="broker-stat-card-label">Cổ tức</span>
+                <span class="broker-stat-card-value ts-positive">@BrokerFormat.VndPlain(report.TotalDividends)</span>
+            </div>
+            <div class="broker-stat-card broker-stat-card-primary @(report.NetCashFlow >= 0 ? "positive" : "negative")">
+                <span class="broker-stat-card-label">Dòng tiền ròng</span>
+                <span class="broker-stat-card-value">@BrokerFormat.Vnd(report.NetCashFlow)</span>
+            </div>
+        </div>
+
+        @if (_expanded)
+        {
+            <div class="broker-cashflow-filter">
+                <label class="broker-dt-label" for="cashflow-month">Lọc theo tháng</label>
+                <select id="cashflow-month" class="ts-select" @bind="_monthFilter">
+                    <option value="">Tất cả</option>
+                    @foreach (var m in AvailableMonths)
+                    {
+                        <option value="@m">@m</option>
+                    }
+                </select>
+            </div>
+
+            <div class="broker-table-scroll">
+                <table class="ts-table broker-cashflow-table">
+                    <thead>
+                        <tr>
+                            <th><span class="broker-dt-th-inner">Ngày</span></th>
+                            <th><span class="broker-dt-th-inner">Mã</span></th>
+                            <th><span class="broker-dt-th-inner">Loại</span></th>
+                            <th><span class="broker-dt-th-inner">Số tiền</span></th>
+                            <th><span class="broker-dt-th-inner">Ghi chú</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var e in FilteredEntries)
+                        {
+                            <tr class="broker-cashflow-row broker-cashflow-@e.Kind.ToString().ToLowerInvariant()">
+                                <td>@e.Date.ToString("dd/MM/yyyy")</td>
+                                <td><span class="broker-symbol">@e.Symbol</span></td>
+                                <td>
+                                    <span class="broker-cashflow-kind">@KindLabel(e.Kind)</span>
+                                </td>
+                                <td class="broker-num @(e.Amount > 0 ? "ts-positive" : e.Amount < 0 ? "ts-negative" : "")">
+                                    @BrokerFormat.Vnd(e.Amount)
+                                </td>
+                                <td>@(e.Note ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public BrokerPortfolio Portfolio { get; set; } = new();
+
+    private bool _expanded;
+    private string _monthFilter = "";
+
+    private List<BrokerCashFlowEntry> AllEntries =>
+        BrokerCashFlowCalculator.Compute(Portfolio).Entries;
+
+    private IReadOnlyList<BrokerCashFlowEntry> FilteredEntries =>
+        string.IsNullOrEmpty(_monthFilter)
+            ? AllEntries
+            : AllEntries.Where(e => $"{e.Date.Year}-{e.Date.Month:D2}" == _monthFilter).ToList();
+
+    private IReadOnlyList<string> AvailableMonths =>
+        AllEntries
+            .Select(e => $"{e.Date.Year}-{e.Date.Month:D2}")
+            .Distinct()
+            .OrderByDescending(m => m)
+            .ToList();
+
+    private void ToggleExpand() => _expanded = !_expanded;
+
+    private static string KindLabel(CashFlowKind kind) => kind switch
+    {
+        CashFlowKind.Buy => "Mua",
+        CashFlowKind.Sell => "Bán",
+        CashFlowKind.Fee => "Phí",
+        CashFlowKind.Tax => "Thuế",
+        CashFlowKind.Dividend => "Cổ tức",
+        _ => kind.ToString()
+    };
+}

@@ -153,6 +153,7 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
         position.Buys ??= [];
         position.Sells ??= [];
         position.Notes ??= [];
+        position.Dividends ??= [];
         position.Tags ??= [];
         position.Buys = position.Buys.Where(b => b.Price > 0).ToList();
         position.Sells = position.Sells.Where(s => s.Price > 0).ToList();
@@ -171,7 +172,7 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
     public Task DownloadCsvAsync(BrokerPortfolio portfolio)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Nganh,Ma CP,Gia mua,KL tong,KL con lai,Gia TB,Cat lo,Muc tieu,Ti trong,Trang thai,Realized P&L (đ),Note moi nhat");
+        sb.AppendLine("Nganh,Ma CP,Gia mua,KL tong,KL con lai,Gia TB,Cat lo,Muc tieu,Ti trong,Trang thai,Realized P&L (đ),Co tuc (đ),Note moi nhat");
         foreach (var p in portfolio.Positions.OrderBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase))
         {
             var lots = string.Join(" | ", p.Buys.OrderBy(b => b.BoughtAt).Select((b, i) =>
@@ -192,6 +193,7 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
                 Csv(p.WeightPct?.ToString("0.##", CultureInfo.InvariantCulture)),
                 Csv(BrokerStatusLabels.Vi(p.Status)),
                 Csv(p.RealizedPnl?.ToString("N0", CultureInfo.InvariantCulture)),
+                Csv(p.TotalDividends?.ToString("N0", CultureInfo.InvariantCulture)),
                 Csv(note)));
         }
 
