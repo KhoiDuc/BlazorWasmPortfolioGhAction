@@ -105,6 +105,53 @@
     color: var(--color-bg-app, #fff);
 }
 
+/* Two-row tab groups (VN + Macro) */
+.vd-nav-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+}
+.vd-nav-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+.vd-nav-group-label {
+    flex-shrink: 0;
+    min-width: 4.5rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+}
+.vd-nav-group .vd-nav {
+    flex: 1 1 auto;
+    margin-bottom: 0;
+    min-width: 0;
+}
+.vd-chart-source-toggle {
+    display: inline-flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 48rem) {
+    .vd-nav-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .vd-nav-group-label {
+        min-width: 0;
+    }
+    .vd-nav-group .vd-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+}
+
 /* Sub-tabs (inside a panel) */
 .vd-subtabs {
     display: flex;
