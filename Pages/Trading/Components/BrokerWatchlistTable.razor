@@ -1,5 +1,7 @@
 @using BlazorWasmPortfolioGhAction.Utils
+@using Blazored.LocalStorage
 @inject IStringLocalizer<SharedResources> L
+@inject ILocalStorageService LocalStorage
 
 <div class="ts-panel ts-table-wrap broker-watchlist">
     <div class="broker-table-head">
@@ -121,6 +123,83 @@
                     <option value="0">Tất cả</option>
                 </select>
                 <span class="broker-dt-label">dòng</span>
+                <div class="broker-col-toggle-wrap">
+                    <button type="button"
+                            class="ts-btn ts-btn-outline ts-btn-sm broker-col-toggle-btn"
+                            aria-label="Ẩn/hiện cột"
+                            aria-expanded="@(_colToggleOpen.ToString().ToLowerInvariant())"
+                            aria-controls="broker-col-toggle-menu"
+                            @onclick="ToggleColMenu">
+                        <i class="bi bi-layout-three-columns" aria-hidden="true"></i>
+                        <span> Cột</span>
+                    </button>
+                    @if (_colToggleOpen)
+                    {
+                        <div id="broker-col-toggle-menu" class="broker-col-toggle-menu" role="group" aria-label="Hiển thị cột">
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.Symbol)" @onchange="@(e => ToggleCol(BrokerCol.Symbol, e.Value))" />
+                                Mã
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.Sector)" @onchange="@(e => ToggleCol(BrokerCol.Sector, e.Value))" />
+                                Ngành
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.Buys)" @onchange="@(e => ToggleCol(BrokerCol.Buys, e.Value))" />
+                                Lần mua
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.Quantity)" @onchange="@(e => ToggleCol(BrokerCol.Quantity, e.Value))" />
+                                KL
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.SoldQty)" @onchange="@(e => ToggleCol(BrokerCol.SoldQty, e.Value))" />
+                                Đã bán
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.Remaining)" @onchange="@(e => ToggleCol(BrokerCol.Remaining, e.Value))" />
+                                Còn lại
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.AvgBuy)" @onchange="@(e => ToggleCol(BrokerCol.AvgBuy, e.Value))" />
+                                Giá TB
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.Current)" @onchange="@(e => ToggleCol(BrokerCol.Current, e.Value))" />
+                                Hiện tại
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.PnlPct)" @onchange="@(e => ToggleCol(BrokerCol.PnlPct, e.Value))" />
+                                L/L %
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.PnlAmount)" @onchange="@(e => ToggleCol(BrokerCol.PnlAmount, e.Value))" />
+                                L/L (đ)
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.Stop)" @onchange="@(e => ToggleCol(BrokerCol.Stop, e.Value))" />
+                                Cắt lỗ
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.Target)" @onchange="@(e => ToggleCol(BrokerCol.Target, e.Value))" />
+                                Mục tiêu
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.Tag)" @onchange="@(e => ToggleCol(BrokerCol.Tag, e.Value))" />
+                                Tag
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.Status)" @onchange="@(e => ToggleCol(BrokerCol.Status, e.Value))" />
+                                Trạng thái
+                            </label>
+                            <label class="broker-col-toggle-item">
+                                <input type="checkbox" checked="@IsColVisible(BrokerCol.Note)" @onchange="@(e => ToggleCol(BrokerCol.Note, e.Value))" />
+                                Ghi chú
+                            </label>
+                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm broker-col-reset-btn" @onclick="ResetCols">Mặc định</button>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
 
@@ -132,11 +211,11 @@
         }
         else
         {
-            <div class="broker-table-scroll">
+            <div class="broker-table-scroll @HiddenColClasses()">
                 <table class="ts-table broker-table">
                     <thead>
                         <tr>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.Symbol)"
+                            <th class="broker-dt-sortable broker-col-symbol @SortClass(SortColumn.Symbol)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.Symbol)"
                                 @onclick='() => ToggleSort(SortColumn.Symbol)'
@@ -144,7 +223,7 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColSymbol"] @SortIcon(SortColumn.Symbol)</span>
                             </th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.Sector)"
+                            <th class="broker-dt-sortable broker-col-sector @SortClass(SortColumn.Sector)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.Sector)"
                                 @onclick='() => ToggleSort(SortColumn.Sector)'
@@ -152,8 +231,8 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColSector"] @SortIcon(SortColumn.Sector)</span>
                             </th>
-                            <th><span class="broker-dt-th-inner">@L["Trading_BrokerColBuys"]</span></th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.Quantity)"
+                            <th class="broker-col-buys"><span class="broker-dt-th-inner">@L["Trading_BrokerColBuys"]</span></th>
+                            <th class="broker-dt-sortable broker-col-quantity @SortClass(SortColumn.Quantity)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.Quantity)"
                                 @onclick='() => ToggleSort(SortColumn.Quantity)'
@@ -161,7 +240,7 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColQty"] @SortIcon(SortColumn.Quantity)</span>
                             </th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.SoldQty)"
+                            <th class="broker-dt-sortable broker-col-soldqty @SortClass(SortColumn.SoldQty)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.SoldQty)"
                                 @onclick='() => ToggleSort(SortColumn.SoldQty)'
@@ -169,7 +248,7 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColSoldQty"] @SortIcon(SortColumn.SoldQty)</span>
                             </th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.Remaining)"
+                            <th class="broker-dt-sortable broker-col-remaining @SortClass(SortColumn.Remaining)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.Remaining)"
                                 @onclick='() => ToggleSort(SortColumn.Remaining)'
@@ -177,7 +256,7 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColRemaining"] @SortIcon(SortColumn.Remaining)</span>
                             </th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.AvgBuy)"
+                            <th class="broker-dt-sortable broker-col-avgbuy @SortClass(SortColumn.AvgBuy)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.AvgBuy)"
                                 @onclick='() => ToggleSort(SortColumn.AvgBuy)'
@@ -185,7 +264,7 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColAvgBuy"] @SortIcon(SortColumn.AvgBuy)</span>
                             </th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.Current)"
+                            <th class="broker-dt-sortable broker-col-current @SortClass(SortColumn.Current)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.Current)"
                                 @onclick='() => ToggleSort(SortColumn.Current)'
@@ -193,7 +272,7 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColCurrent"] @SortIcon(SortColumn.Current)</span>
                             </th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.PnlPct)"
+                            <th class="broker-dt-sortable broker-col-pnlpct @SortClass(SortColumn.PnlPct)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.PnlPct)"
                                 @onclick='() => ToggleSort(SortColumn.PnlPct)'
@@ -201,7 +280,7 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColPnlPct"] @SortIcon(SortColumn.PnlPct)</span>
                             </th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.PnlAmount)"
+                            <th class="broker-dt-sortable broker-col-pnlamt @SortClass(SortColumn.PnlAmount)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.PnlAmount)"
                                 @onclick='() => ToggleSort(SortColumn.PnlAmount)'
@@ -209,10 +288,10 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColPnlAmt"] @SortIcon(SortColumn.PnlAmount)</span>
                             </th>
-                            <th><span class="broker-dt-th-inner">@L["Trading_BrokerStop"]</span></th>
-                            <th><span class="broker-dt-th-inner">@L["Trading_BrokerTarget"]</span></th>
-                            <th><span class="broker-dt-th-inner">Tag</span></th>
-                            <th class="broker-dt-sortable @SortClass(SortColumn.Status)"
+                            <th class="broker-col-stop"><span class="broker-dt-th-inner">@L["Trading_BrokerStop"]</span></th>
+                            <th class="broker-col-target"><span class="broker-dt-th-inner">@L["Trading_BrokerTarget"]</span></th>
+                            <th class="broker-col-tag"><span class="broker-dt-th-inner">Tag</span></th>
+                            <th class="broker-dt-sortable broker-col-status @SortClass(SortColumn.Status)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.Status)"
                                 @onclick='() => ToggleSort(SortColumn.Status)'
@@ -220,8 +299,8 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColStatus"] @SortIcon(SortColumn.Status)</span>
                             </th>
-                            <th><span class="broker-dt-th-inner">@L["Trading_BrokerNote"]</span></th>
-                            <th><span class="broker-dt-th-inner">Thao tác</span></th>
+                            <th class="broker-col-note"><span class="broker-dt-th-inner">@L["Trading_BrokerNote"]</span></th>
+                            <th class="broker-col-action"><span class="broker-dt-th-inner">Thao tác</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -242,7 +321,7 @@
                                 tabindex="0"
                                 @onclick="() => OnSelect.InvokeAsync(p.Symbol)"
                                 @onkeydown='(e) => OnRowKeydown(e, p.Symbol)'>
-                                <td>
+                                <td class="broker-col-symbol">
                                     <span class="broker-symbol">@p.Symbol</span>
                                     @if (p.HasPartialQtyLots)
                                     {
@@ -257,8 +336,8 @@
                                         <span class="broker-alert-icon" title="Chạm mục tiêu" aria-label="Chạm mục tiêu">🟢</span>
                                     }
                                 </td>
-                                <td class="broker-sector">@DisplaySector(p.Sector)</td>
-                                <td>
+                                <td class="broker-sector broker-col-sector">@DisplaySector(p.Sector)</td>
+                                <td class="broker-col-buys">
                                     <div class="broker-lots">
                                         @foreach (var (lot, idx) in p.Buys.OrderBy(b => b.BoughtAt).Select((b, idx) => (b, idx)))
                                         {
@@ -266,20 +345,20 @@
                                         }
                                     </div>
                                 </td>
-                                <td class="broker-num broker-qty">@BrokerFormat.Quantity(p.TotalQuantity)</td>
-                                <td class="broker-num broker-sold-qty">@BrokerFormat.Quantity(p.SoldQuantity)</td>
-                                <td class="broker-num broker-remaining">@BrokerFormat.Quantity(p.RemainingQuantity)</td>
-                                <td class="broker-num">@(p.AvgBuy?.ToString("N2") ?? "—")</td>
-                                <td class="broker-num">@(current?.ToString("N2") ?? "—")</td>
-                                <td class="broker-num @(pnl is > 0 ? "ts-positive" : pnl is < 0 ? "ts-negative" : "")">
+                                <td class="broker-num broker-qty broker-col-quantity">@BrokerFormat.Quantity(p.TotalQuantity)</td>
+                                <td class="broker-num broker-sold-qty broker-col-soldqty">@BrokerFormat.Quantity(p.SoldQuantity)</td>
+                                <td class="broker-num broker-remaining broker-col-remaining">@BrokerFormat.Quantity(p.RemainingQuantity)</td>
+                                <td class="broker-num broker-col-avgbuy">@(p.AvgBuy?.ToString("N2") ?? "—")</td>
+                                <td class="broker-num broker-col-current">@(current?.ToString("N2") ?? "—")</td>
+                                <td class="broker-num broker-col-pnlpct @(pnl is > 0 ? "ts-positive" : pnl is < 0 ? "ts-negative" : "")">
                                     @(pnl is null ? "—" : $"{pnl.Value:N2}%")
                                 </td>
-                                <td class="broker-num broker-pnl-amt @(pnlAmt is > 0 ? "ts-positive" : pnlAmt is < 0 ? "ts-negative" : "")">
+                                <td class="broker-num broker-pnl-amt broker-col-pnlamt @(pnlAmt is > 0 ? "ts-positive" : pnlAmt is < 0 ? "ts-negative" : "")">
                                     @BrokerFormat.Vnd(pnlAmt)
                                 </td>
-                                <td class="broker-num broker-stop">@BrokerLevelHelper.FormatDisplay(p.StopLoss, p.StopLossMode, p.StopLossInput, isStop: true)</td>
-                                <td class="broker-num broker-target">@BrokerLevelHelper.FormatDisplay(p.TargetPrice, p.TargetPriceMode, p.TargetPriceInput, isStop: false)</td>
-                                <td class="broker-tag-cell">
+                                <td class="broker-num broker-stop broker-col-stop">@BrokerLevelHelper.FormatDisplay(p.StopLoss, p.StopLossMode, p.StopLossInput, isStop: true)</td>
+                                <td class="broker-num broker-target broker-col-target">@BrokerLevelHelper.FormatDisplay(p.TargetPrice, p.TargetPriceMode, p.TargetPriceInput, isStop: false)</td>
+                                <td class="broker-tag-cell broker-col-tag">
                                     @if (p.Tags is { Count: > 0 })
                                     {
                                         @foreach (var t in p.Tags)
@@ -292,7 +371,7 @@
                                         <span class="broker-status-muted">—</span>
                                     }
                                 </td>
-                                <td>
+                                <td class="broker-col-status">
                                     @if (p.Status == BrokerPositionStatus.ChuaQuyet)
                                     {
                                         <span class="broker-status-pill broker-status-muted">—</span>
@@ -302,8 +381,8 @@
                                         <span class="broker-status-pill broker-status-@p.Status">@BrokerStatusLabels.Vi(p.Status)</span>
                                     }
                                 </td>
-                                <td class="broker-note-cell">@DisplayLatestNote(p)</td>
-                                <td class="broker-row-action">
+                                <td class="broker-note-cell broker-col-note">@DisplayLatestNote(p)</td>
+                                <td class="broker-row-action broker-col-action">
                                     @if (!p.IsClosed && p.RemainingQuantity is > 0)
                                     {
                                         <button type="button" class="ts-btn ts-btn-outline ts-btn-sm broker-quick-sell-btn"
@@ -421,6 +500,26 @@
         Status
     }
 
+    private enum BrokerCol
+    {
+        Symbol,
+        Sector,
+        Buys,
+        Quantity,
+        SoldQty,
+        Remaining,
+        AvgBuy,
+        Current,
+        PnlPct,
+        PnlAmount,
+        Stop,
+        Target,
+        Tag,
+        Status,
+        Note,
+        Action
+    }
+
     [Parameter] public BrokerPortfolio Portfolio { get; set; } = new();
     [Parameter] public Dictionary<string, decimal> Quotes { get; set; } = new();
     [Parameter] public string? SelectedSymbol { get; set; }
@@ -435,9 +534,65 @@
     private bool _sortDesc;
     private int _page = 1;
     private int _pageSize = 10;
+    private bool _colToggleOpen;
+    private HashSet<BrokerCol> _hiddenCols = new();
+
+    private const string ColStorageKey = "broker-watchlist-hidden-cols";
+
+    // ponytail: default hidden columns for all viewports — upgrade by adding per-breakpoint defaults
+    private static readonly BrokerCol[] DefaultMobileHidden =
+    [
+        BrokerCol.Stop, BrokerCol.Target, BrokerCol.Note
+    ];
 
     private decimal _closedRealized =>
         (Portfolio.ClosedPositions ?? []).Sum(p => p.RealizedPnl ?? 0m);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var saved = await LocalStorage.GetItemAsync<List<BrokerCol>>(ColStorageKey);
+            if (saved is { Count: > 0 })
+                _hiddenCols = [.. saved];
+            else
+                _hiddenCols = [.. DefaultMobileHidden];
+        }
+        catch
+        {
+            _hiddenCols = [.. DefaultMobileHidden];
+        }
+    }
+
+    private bool IsColVisible(BrokerCol col) => !_hiddenCols.Contains(col);
+
+    private string ColClass(BrokerCol col) => IsColVisible(col) ? "" : "broker-col-hidden";
+
+    private string HiddenColClasses() =>
+        string.Join(" ", _hiddenCols.Select(c => $"hide-col-{c.ToString().ToLowerInvariant()}"));
+
+    private async Task ToggleCol(BrokerCol col, object? value)
+    {
+        if (value is bool b && b)
+            _hiddenCols.Remove(col);
+        else
+            _hiddenCols.Add(col);
+        await SaveCols();
+    }
+
+    private async Task ResetCols()
+    {
+        _hiddenCols = [.. DefaultMobileHidden];
+        await SaveCols();
+    }
+
+    private void ToggleColMenu() => _colToggleOpen = !_colToggleOpen;
+
+    private async Task SaveCols()
+    {
+        try { await LocalStorage.SetItemAsync(ColStorageKey, _hiddenCols.ToList()); }
+        catch { /* localStorage unavailable */ }
+    }
 
     private IReadOnlyList<string> AllTags =>
         (Portfolio.Positions ?? [])

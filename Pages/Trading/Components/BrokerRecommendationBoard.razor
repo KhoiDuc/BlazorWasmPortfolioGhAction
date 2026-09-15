@@ -40,7 +40,6 @@
                 <tbody>
                     @foreach (var r in recs)
                     {
-                        var expanded = _expandedIds.Contains(r.Symbol);
                         <tr class="broker-rec-row broker-rec-status-@r.StatusBadge" @onclick="() => OnSelect.InvokeAsync(r.Symbol)" style="cursor: pointer;">
                             <td><span class="broker-symbol">@r.Symbol</span></td>
                             <td>@(string.IsNullOrWhiteSpace(r.Sector) ? "—" : r.Sector)</td>
@@ -110,7 +109,6 @@
     [Parameter] public EventCallback<string> OnReactivate { get; set; }
 
     private string _filter = "all";
-    private readonly HashSet<string> _expandedIds = new(StringComparer.OrdinalIgnoreCase);
 
     private record RecEntry(
         string Symbol,
@@ -148,11 +146,5 @@
             .OrderByDescending(p => p.StatusBadge == BrokerPositionStatus.ChoMua)
             .ThenBy(p => p.Symbol, StringComparer.OrdinalIgnoreCase)
             .ToList();
-    }
-
-    private void ToggleExpand(string symbol)
-    {
-        if (!_expandedIds.Add(symbol))
-            _expandedIds.Remove(symbol);
     }
 }

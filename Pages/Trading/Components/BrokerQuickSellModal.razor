@@ -1,8 +1,10 @@
 @inject IStringLocalizer<SharedResources> L
+@inject IJSRuntime JS
 
 @if (_show)
 {
-    <div class="broker-qs-overlay" @onclick="Close" role="dialog" aria-modal="true" aria-labelledby="broker-qs-title">
+    <div class="broker-qs-overlay" @onclick="Close" @onkeydown="OnOverlayKeydown"
+         role="dialog" aria-modal="true" aria-labelledby="broker-qs-title">
         <div class="broker-qs-modal" @onclick:stopPropagation="true">
             <div class="broker-qs-head">
                 <h3 id="broker-qs-title" class="ts-panel-title">Bán nhanh @Position?.Symbol</h3>
@@ -72,7 +74,7 @@
     private string _note = "";
     private string? _err;
 
-    public void Open(BrokerPosition position, decimal? currentPrice)
+    public async Task Open(BrokerPosition position, decimal? currentPrice)
     {
         Position = position;
         CurrentPrice = currentPrice;
@@ -82,9 +84,22 @@
         _note = "";
         _err = null;
         _show = true;
+        await InvokeAsync(StateHasChanged);
+        try { await JS.InvokeVoidAsync("tradingAuth.trapFocus", ".broker-qs-overlay"); }
+        catch { /* JS not ready */ }
     }
 
-    public void Close() => _show = false;
+    public async Task Close()
+    {
+        _show = false;
+        try { await JS.InvokeVoidAsync("tradingAuth.releaseFocus"); }
+        catch { /* JS not ready */ }
+    }
+
+    private async Task OnOverlayKeydown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") await Close();
+    }
 
     private async Task Submit()
     {
@@ -117,7 +132,7 @@
             Note = string.IsNullOrWhiteSpace(_note) ? null : _note.Trim()
         };
 
-        _show = false;
+        await Close();
         await OnSubmitSell.InvokeAsync(sell);
     }
 }

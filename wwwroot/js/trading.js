@@ -10,6 +10,31 @@ window.tradingAuth = {
     },
     confirm: function (message) {
         return confirm(message);
+    },
+    _savedFocus: null,
+    trapFocus: function (dialogSelector) {
+        this._savedFocus = document.activeElement;
+        var dialog = document.querySelector(dialogSelector);
+        if (!dialog) return;
+        var focusable = dialog.querySelectorAll('input, button, select, textarea, a[href], [tabindex]:not([tabindex="-1"])');
+        if (focusable.length > 0) focusable[0].focus();
+        this._handler = function (e) {
+            if (e.key !== 'Tab') return;
+            var f = Array.from(dialog.querySelectorAll('input, button, select, textarea, a[href], [tabindex]:not([tabindex="-1"])'));
+            if (f.length === 0) return;
+            var first = f[0], last = f[f.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        };
+        dialog.addEventListener('keydown', this._handler);
+    },
+    releaseFocus: function () {
+        if (this._handler) {
+            var dialog = document.querySelector('.broker-qs-overlay');
+            if (dialog) dialog.removeEventListener('keydown', this._handler);
+            this._handler = null;
+        }
+        if (this._savedFocus) { try { this._savedFocus.focus(); } catch { } this._savedFocus = null; }
     }
 };
 

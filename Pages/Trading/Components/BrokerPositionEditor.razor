@@ -93,15 +93,21 @@
     </div>
 
     <div class="broker-detail-tabs" role="tablist">
-        <button type="button" role="tab" class="broker-tab @(_tab == "info" ? "active" : "")" @onclick='() => _tab = "info"'>Tổng quan</button>
-        <button type="button" role="tab" class="broker-tab @(_tab == "lots" ? "active" : "")" @onclick='() => _tab = "lots"'>Lần mua (@Position.Buys.Count)</button>
-        <button type="button" role="tab" class="broker-tab @(_tab == "sells" ? "active" : "")" @onclick='() => _tab = "sells"'>Lần bán (@Position.Sells.Count)</button>
-        <button type="button" role="tab" class="broker-tab @(_tab == "dividends" ? "active" : "")" @onclick='() => _tab = "dividends"'>Cổ tức (@(Position.Dividends?.Count ?? 0))</button>
-        <button type="button" role="tab" class="broker-tab @(_tab == "timeline" ? "active" : "")" @onclick='() => _tab = "timeline"'>Timeline</button>
-        <button type="button" role="tab" class="broker-tab @(_tab == "notes" ? "active" : "")" @onclick='() => _tab = "notes"'>Note (@Position.Notes.Count)</button>
+        <button type="button" role="tab" id="tab-info" aria-selected="@(_tab == "info")" aria-controls="panel-info"
+                class="broker-tab @(_tab == "info" ? "active" : "")" @onclick='() => _tab = "info"'>Tổng quan</button>
+        <button type="button" role="tab" id="tab-lots" aria-selected="@(_tab == "lots")" aria-controls="panel-lots"
+                class="broker-tab @(_tab == "lots" ? "active" : "")" @onclick='() => _tab = "lots"'>Lần mua (@Position.Buys.Count)</button>
+        <button type="button" role="tab" id="tab-sells" aria-selected="@(_tab == "sells")" aria-controls="panel-sells"
+                class="broker-tab @(_tab == "sells" ? "active" : "")" @onclick='() => _tab = "sells"'>Lần bán (@Position.Sells.Count)</button>
+        <button type="button" role="tab" id="tab-dividends" aria-selected="@(_tab == "dividends")" aria-controls="panel-dividends"
+                class="broker-tab @(_tab == "dividends" ? "active" : "")" @onclick='() => _tab = "dividends"'>Cổ tức (@(Position.Dividends?.Count ?? 0))</button>
+        <button type="button" role="tab" id="tab-timeline" aria-selected="@(_tab == "timeline")" aria-controls="panel-timeline"
+                class="broker-tab @(_tab == "timeline" ? "active" : "")" @onclick='() => _tab = "timeline"'>Timeline</button>
+        <button type="button" role="tab" id="tab-notes" aria-selected="@(_tab == "notes")" aria-controls="panel-notes"
+                class="broker-tab @(_tab == "notes" ? "active" : "")" @onclick='() => _tab = "notes"'>Note (@Position.Notes.Count)</button>
     </div>
 
-    <div class="broker-inner broker-detail-body">
+    <div class="broker-inner broker-detail-body" role="tabpanel" id="panel-info" aria-labelledby="tab-info">
         @if (_tab == "info")
         {
             <section class="broker-block">

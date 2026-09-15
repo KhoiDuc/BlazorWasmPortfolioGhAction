@@ -408,12 +408,12 @@
         else Flash($"Sync fail: {error}", error: true);
     }
 
-    private void OpenQuickSell(string symbol)
+    private async Task OpenQuickSell(string symbol)
     {
         var pos = _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
         if (pos is null || pos.IsClosed || pos.RemainingQuantity is null or 0) return;
         _quickSellPosition = pos;
-        _quickSellModal?.Open(pos, Quote(symbol));
+        await _quickSellModal!.Open(pos, Quote(symbol));
     }
 
     private async Task SubmitQuickSell(BrokerSell sell)
