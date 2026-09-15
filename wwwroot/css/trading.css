@@ -1336,6 +1336,7 @@
 
 .broker-table-scroll {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     margin: 0 -0.25rem;
     padding: 0 0.25rem;
 }
@@ -2158,9 +2159,54 @@
     .broker-kpi:nth-child(n+4) {
         border-top: none;
     }
+
+    /* Table column hiding on tablet */
+    .broker-table .broker-stop,
+    .broker-table .broker-target,
+    .broker-table .broker-tag-cell {
+        display: none;
+    }
 }
 
 @media (max-width: 640px) {
+    /* Table mobile responsive */
+    .broker-table-scroll {
+        margin: 0;
+        padding: 0;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .broker-table {
+        font-size: 0.75rem;
+        min-width: 100%;
+    }
+
+    .broker-table thead th {
+        padding: 0.35rem 0.4rem;
+        font-size: 0.6rem;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .broker-table tbody td {
+        padding: 0.35rem 0.4rem;
+    }
+
+    /* Hide less critical columns on mobile */
+    .broker-table .broker-sector,
+    .broker-table .broker-note-cell,
+    .broker-table .broker-sold-qty,
+    .broker-table .broker-stop,
+    .broker-table .broker-target,
+    .broker-table .broker-tag-cell,
+    .broker-table .broker-lots {
+        display: none;
+    }
+
+    /* Shrink symbol and price columns */
+    .broker-symbol { font-size: 0.8rem; }
+    .broker-num { font-size: 0.75rem; }
+
     .form-row-2 {
         flex-direction: column;
         flex-wrap: wrap;
