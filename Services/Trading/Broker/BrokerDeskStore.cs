@@ -12,6 +12,7 @@ public interface IBrokerDeskStore
     Task<BrokerPortfolio> LoadAsync(CancellationToken ct = default);
     Task<BrokerPortfolio> LoadFromFileAsync(CancellationToken ct = default);
     Task SaveDraftAsync(BrokerPortfolio portfolio, CancellationToken ct = default);
+    Task<bool> SaveToApiAsync(BrokerPortfolio portfolio, CancellationToken ct = default);
     Task ClearDraftAsync(CancellationToken ct = default);
     Task DownloadJsonAsync(BrokerPortfolio portfolio);
     Task DownloadCsvAsync(BrokerPortfolio portfolio);
@@ -33,22 +34,39 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
 
     private readonly HttpClient _http;
     private readonly IJSRuntime _js;
+    private readonly IBrokerApiClient _api;
 
-    public BrokerDeskStore(HttpClient http, IJSRuntime js)
+    public BrokerDeskStore(HttpClient http, IJSRuntime js, IBrokerApiClient api)
     {
         _http = http;
         _js = js;
+        _api = api;
     }
 
     public async Task<BrokerPortfolio> LoadAsync(CancellationToken ct = default)
     {
         try
         {
+            var fromApi = await _api.GetPortfolioAsync(ct);
+            if (fromApi is not null && (fromApi.Positions.Count > 0 || (fromApi.ClosedPositions?.Count ?? 0) > 0))
+            {
+                var normalized = NormalizePortfolio(fromApi);
+                await SaveDraftAsync(normalized, ct);
+                return normalized;
+            }
+        }
+        catch
+        {
+            // Ignore API errors and fall back to local cache / static JSON.
+        }
+
+        try
+        {
             var draft = await _js.InvokeAsync<string?>("tradingAuth.getItem", DraftKey);
             if (!string.IsNullOrWhiteSpace(draft))
             {
                 var fromDraft = NormalizePortfolio(ParseJson(draft));
-                if (fromDraft.Positions.Count > 0)
+                if (fromDraft.Positions.Count > 0 || (fromDraft.ClosedPositions?.Count ?? 0) > 0)
                     return fromDraft;
             }
         }
@@ -104,6 +122,9 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
         var json = JsonSerializer.Serialize(NormalizePortfolio(portfolio), JsonOpts);
         await _js.InvokeVoidAsync("tradingAuth.setItem", DraftKey, json);
     }
+
+    public Task<bool> SaveToApiAsync(BrokerPortfolio portfolio, CancellationToken ct = default) =>
+        _api.SavePortfolioAsync(NormalizePortfolio(portfolio), ct);
 
     public async Task ClearDraftAsync(CancellationToken ct = default)
     {

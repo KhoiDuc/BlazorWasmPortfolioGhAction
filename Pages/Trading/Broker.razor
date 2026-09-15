@@ -319,6 +319,7 @@
     private int _priceProgressDone;
     private int _priceProgressTotal;
     private Timer? _persistTimer;
+    private Timer? _apiTimer;
     private Timer? _flashTimer;
     private CancellationTokenSource? _priceCts;
 
@@ -450,6 +451,7 @@
         _dirty = true;
         _portfolio.UpdatedAt = DateTime.Now;
         SchedulePersistDraft();
+        ScheduleApiSave();
     }
 
     private void SchedulePersistDraft()
@@ -477,6 +479,43 @@
         catch
         {
             // Ignore localStorage failures (private mode, quota, etc.).
+        }
+    }
+
+    private void ScheduleApiSave()
+    {
+        _apiTimer?.Dispose();
+        _apiTimer = new Timer(_ =>
+        {
+            try
+            {
+                _ = InvokeAsync(PersistApiAsync);
+            }
+            catch
+            {
+                // Component may be disposed.
+            }
+        }, null, 2000, Timeout.Infinite);
+    }
+
+    private async Task PersistApiAsync()
+    {
+        try
+        {
+            var ok = await Store.SaveToApiAsync(_portfolio);
+            if (ok)
+            {
+                _dirty = false;
+                Flash("Đã đồng bộ danh mục lên server.");
+            }
+            else
+            {
+                Flash("Chưa đồng bộ được lên server — kiểm tra BrokerApi trong appsettings.", error: true);
+            }
+        }
+        catch
+        {
+            Flash("Chưa đồng bộ được lên server — kiểm tra BrokerApi trong appsettings.", error: true);
         }
     }
 
@@ -866,6 +905,7 @@
     public override void Dispose()
     {
         _persistTimer?.Dispose();
+        _apiTimer?.Dispose();
         _flashTimer?.Dispose();
         _priceCts?.Cancel();
         _priceCts?.Dispose();

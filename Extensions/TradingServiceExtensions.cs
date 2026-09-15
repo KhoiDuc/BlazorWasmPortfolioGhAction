@@ -63,6 +63,11 @@ public static class TradingServiceExtensions
         var brokerOptions = new BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerOptions();
         configuration.GetSection("Gemini").Bind(brokerOptions);
         services.AddSingleton(brokerOptions);
+        services.AddHttpClient<BlazorWasmPortfolioGhAction.Services.Trading.Broker.IBrokerApiClient,
+            BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerApiClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.Broker.IBrokerDeskStore,
             BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerDeskStore>();
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.Broker.IBrokerGeminiClient,
