@@ -6,21 +6,22 @@
     --validation-message-color: #5dade2;
 }
 
-.diagram-editor-wrapper {
-    display: flex;
-    margin: 0;
-    width: 100%;
-    height: calc(100vh - 110px);
-}
-
 .diagram-panel-wrapper {
     display: flex;
     flex-direction: column;
     margin: 0;
     padding: 20px;
-    width: 300px;
-    height: calc(100vh - 110px);
+    width: 100%; /* base: full width on mobile */
+    height: 40vh; /* base: nua tren */
     overflow-y: auto;
+}
+
+/* 768px = --bp-md */
+@media (min-width: 48rem) {
+    .diagram-panel-wrapper {
+        width: 300px;
+        height: calc(100vh - 110px);
+    }
 }
 
 .diagram-panel-parameter-wrapper {

@@ -6495,6 +6495,83 @@
         margin: 0.1rem;
     }
 }
+/* /Pages/Trading/Components/BrokerWatchlistTable.razor.rz.scp.css */
+/* Column visibility toggle menu */
+.broker-col-toggle-wrap[b-2hq3uo42kk] {
+    position: relative;
+    display: inline-flex;
+}
+
+.broker-col-toggle-btn[b-2hq3uo42kk] {
+    white-space: nowrap;
+}
+
+.broker-col-toggle-menu[b-2hq3uo42kk] {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.75rem;
+    min-width: 11rem;
+    max-height: 24rem;
+    overflow-y: auto;
+    background: var(--color-bg-surface-elevated, #fff);
+    border: 1px solid var(--color-border, #ddd);
+    border-radius: var(--radius-sm, 6px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.broker-col-toggle-item[b-2hq3uo42kk] {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.broker-col-toggle-item input[b-2hq3uo42kk] {
+    flex-shrink: 0;
+}
+
+.broker-col-reset-btn[b-2hq3uo42kk] {
+    margin-top: 0.4rem;
+    align-self: stretch;
+    text-align: center;
+}
+
+/* Hidden columns — parent wrapper gets hide-col-* class,
+   ::deep reaches the th/td inside the scoped table */
+[b-2hq3uo42kk] .hide-col-symbol .broker-col-symbol,
+[b-2hq3uo42kk] .hide-col-sector .broker-col-sector,
+[b-2hq3uo42kk] .hide-col-buys .broker-col-buys,
+[b-2hq3uo42kk] .hide-col-quantity .broker-col-quantity,
+[b-2hq3uo42kk] .hide-col-soldqty .broker-col-soldqty,
+[b-2hq3uo42kk] .hide-col-remaining .broker-col-remaining,
+[b-2hq3uo42kk] .hide-col-avgbuy .broker-col-avgbuy,
+[b-2hq3uo42kk] .hide-col-current .broker-col-current,
+[b-2hq3uo42kk] .hide-col-pnlpct .broker-col-pnlpct,
+[b-2hq3uo42kk] .hide-col-pnlamt .broker-col-pnlamt,
+[b-2hq3uo42kk] .hide-col-stop .broker-col-stop,
+[b-2hq3uo42kk] .hide-col-target .broker-col-target,
+[b-2hq3uo42kk] .hide-col-tag .broker-col-tag,
+[b-2hq3uo42kk] .hide-col-status .broker-col-status,
+[b-2hq3uo42kk] .hide-col-note .broker-col-note,
+[b-2hq3uo42kk] .hide-col-action .broker-col-action {
+    display: none !important;
+}
+
+/* 640px — compact toggle menu on small screens */
+@media (max-width: 640px) {
+    .broker-col-toggle-menu[b-2hq3uo42kk] {
+        right: auto;
+        left: 0;
+        min-width: 9rem;
+    }
+}
 /* /Pages/Trading/Components/StockAiChat.razor.rz.scp.css */
 /* Stock AI chat — reuses broker-ai-* base styles, adds template grid + history */
 
