@@ -23,83 +23,81 @@
             </div>
         </div>
 
-        <div class="broker-rec-grid">
-            @foreach (var r in recs)
-            {
-                var expanded = _expandedIds.Contains(r.Symbol);
-                <article class="broker-rec-card broker-rec-status-@r.StatusBadge">
-                    <header class="broker-rec-card-head">
-                        <div class="broker-rec-card-id">
-                            <span class="broker-symbol">@r.Symbol</span>
-                            @if (!string.IsNullOrWhiteSpace(r.Sector))
-                            {
-                                <span class="broker-rec-sector">@r.Sector</span>
-                            }
-                        </div>
-                        <span class="broker-status-pill broker-status-@r.StatusBadge">@BrokerStatusLabels.Vi(r.StatusBadge)</span>
-                    </header>
-
-                    <div class="broker-rec-card-levels">
-                        @if (r.EntryLow is > 0 || r.EntryHigh is > 0)
-                        {
-                            <div class="broker-rec-level">
-                                <span class="broker-rec-level-label">Vùng mua</span>
-                                <span class="broker-rec-level-value">
-                                    @(r.EntryLow is > 0 ? r.EntryLow.Value.ToString("N2") : "—")
-                                    @(r.EntryHigh is > 0 && r.EntryHigh != r.EntryLow ? $" – {r.EntryHigh.Value:N2}" : "")
-                                </span>
-                            </div>
-                        }
-                        @if (r.StopLoss is > 0)
-                        {
-                            <div class="broker-rec-level">
-                                <span class="broker-rec-level-label">Cắt lỗ</span>
-                                <span class="broker-rec-level-value">@r.StopLoss.Value.ToString("N2")</span>
-                            </div>
-                        }
-                        @if (r.TargetPrice is > 0)
-                        {
-                            <div class="broker-rec-level">
-                                <span class="broker-rec-level-label">Mục tiêu</span>
-                                <span class="broker-rec-level-value">@r.TargetPrice.Value.ToString("N2")</span>
-                            </div>
-                        }
-                    </div>
-
-                    @if (!string.IsNullOrWhiteSpace(r.RecommendationText))
+        <div class="broker-rec-table-scroll">
+            <table class="ts-table broker-rec-table">
+                <thead>
+                    <tr>
+                        <th><span class="broker-dt-th-inner">Mã</span></th>
+                        <th><span class="broker-dt-th-inner">Ngành</span></th>
+                        <th><span class="broker-dt-th-inner">Vùng mua</span></th>
+                        <th><span class="broker-dt-th-inner">Cắt lỗ</span></th>
+                        <th><span class="broker-dt-th-inner">Mục tiêu</span></th>
+                        <th><span class="broker-dt-th-inner">Note</span></th>
+                        <th><span class="broker-dt-th-inner">Trạng thái</span></th>
+                        <th class="broker-rec-table-actions"><span class="broker-dt-th-inner">Hành động</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in recs)
                     {
-                        <div class="broker-rec-text">
-                            <p class="broker-rec-text-content @(expanded ? "" : "broker-rec-truncate")">
-                                @r.RecommendationText
-                            </p>
-                            @if (r.RecommendationText!.Length > 150)
-                            {
-                                <button type="button" class="broker-rec-expand-btn"
-                                        @onclick="() => ToggleExpand(r.Symbol)">
-                                    @(expanded ? "Thu gọn" : "Đọc thêm")
-                                </button>
-                            }
-                        </div>
+                        var expanded = _expandedIds.Contains(r.Symbol);
+                        <tr class="broker-rec-row broker-rec-status-@r.StatusBadge" @onclick="() => OnSelect.InvokeAsync(r.Symbol)" style="cursor: pointer;">
+                            <td><span class="broker-symbol">@r.Symbol</span></td>
+                            <td>@(string.IsNullOrWhiteSpace(r.Sector) ? "—" : r.Sector)</td>
+                            <td>
+                                @if (r.EntryLow is > 0 || r.EntryHigh is > 0)
+                                {
+                                    @(r.EntryLow is > 0 ? r.EntryLow.Value.ToString("N2") : "—")
+                                    @if (r.EntryHigh is > 0 && r.EntryHigh != r.EntryLow)
+                                    {
+                                        <span> – @r.EntryHigh.Value.ToString("N2")</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                            <td>@(r.StopLoss is > 0 ? r.StopLoss.Value.ToString("N2") : "—")</td>
+                            <td>@(r.TargetPrice is > 0 ? r.TargetPrice.Value.ToString("N2") : "—")</td>
+                            <td class="broker-rec-note">
+                                @if (!string.IsNullOrWhiteSpace(r.RecommendationText))
+                                {
+                                    <span class="broker-rec-text-preview" title="@r.RecommendationText">
+                                        @if (r.RecommendationText.Length > 30)
+                                        {
+                                            @r.RecommendationText.Substring(0, 30)@("…")
+                                        }
+                                        else
+                                        {
+                                            @r.RecommendationText
+                                        }
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                            <td><span class="broker-status-pill broker-status-@r.StatusBadge">@BrokerStatusLabels.Vi(r.StatusBadge)</span></td>
+                            <td class="broker-rec-table-actions" @onclick:stopPropagation="true">
+                                @if (r.StatusBadge != BrokerPositionStatus.BoTheoDoi)
+                                {
+                                    <button type="button" class="ts-btn ts-btn-primary ts-btn-xs"
+                                            @onclick="() => OnBuy.InvokeAsync(r.Symbol)" title="Mua">Mua</button>
+                                    <button type="button" class="ts-btn ts-btn-outline ts-btn-xs broker-btn-danger"
+                                            @onclick="() => OnDrop.InvokeAsync(r.Symbol)" title="Bỏ theo dõi">Bỏ</button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="ts-btn ts-btn-outline ts-btn-xs"
+                                            @onclick="() => OnReactivate.InvokeAsync(r.Symbol)" title="Theo dõi lại">Kích hoạt</button>
+                                }
+                            </td>
+                        </tr>
                     }
-
-                    <div class="broker-rec-card-actions">
-                        @if (r.StatusBadge != BrokerPositionStatus.BoTheoDoi)
-                        {
-                            <button type="button" class="ts-btn ts-btn-primary ts-btn-sm"
-                                    @onclick="() => OnBuy.InvokeAsync(r.Symbol)">Mua</button>
-                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm"
-                                    @onclick="() => OnSelect.InvokeAsync(r.Symbol)">Chi tiết</button>
-                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm broker-btn-danger"
-                                    @onclick="() => OnDrop.InvokeAsync(r.Symbol)">Bỏ theo dõi</button>
-                        }
-                        else
-                        {
-                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm"
-                                    @onclick="() => OnReactivate.InvokeAsync(r.Symbol)">Theo dõi lại</button>
-                        }
-                    </div>
-                </article>
-            }
+                </tbody>
+            </table>
         </div>
     </div>
 }
