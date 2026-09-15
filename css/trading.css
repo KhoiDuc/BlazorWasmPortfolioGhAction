@@ -1345,7 +1345,7 @@
     font-size: 0.82rem;
     width: max-content;
     min-width: 100%;
-    table-layout: auto;
+    table-layout: fixed;
 }
 .broker-table thead th {
     font-size: 0.72rem;
@@ -1355,12 +1355,61 @@
     white-space: nowrap;
     vertical-align: middle;
     padding: 0.5rem 0.6rem;
+    min-width: 80px;
 }
 
 .broker-table tbody td {
     white-space: nowrap;
     padding: 0.4rem 0.6rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
+/* Column widths */
+.broker-table th:nth-child(1),
+.broker-table td:nth-child(1) { min-width: 70px; } /* Symbol */
+
+.broker-table th:nth-child(2),
+.broker-table td:nth-child(2) { min-width: 90px; } /* Sector */
+
+.broker-table th:nth-child(3),
+.broker-table td:nth-child(3) { min-width: 75px; } /* Buys */
+
+.broker-table th:nth-child(4),
+.broker-table td:nth-child(4) { min-width: 70px; } /* Qty */
+
+.broker-table th:nth-child(5),
+.broker-table td:nth-child(5) { min-width: 85px; } /* Sold Qty */
+
+.broker-table th:nth-child(6),
+.broker-table td:nth-child(6) { min-width: 90px; } /* Remaining Qty */
+
+.broker-table th:nth-child(7),
+.broker-table td:nth-child(7) { min-width: 85px; } /* Avg Buy */
+
+.broker-table th:nth-child(8),
+.broker-table td:nth-child(8) { min-width: 80px; } /* Current */
+
+.broker-table th:nth-child(9),
+.broker-table td:nth-child(9) { min-width: 75px; } /* % P/L */
+
+.broker-table th:nth-child(10),
+.broker-table td:nth-child(10) { min-width: 90px; } /* P/L (đ) */
+
+.broker-table th:nth-child(11),
+.broker-table td:nth-child(11) { min-width: 80px; } /* Stop */
+
+.broker-table th:nth-child(12),
+.broker-table td:nth-child(12) { min-width: 80px; } /* Target */
+
+.broker-table th:nth-child(13),
+.broker-table td:nth-child(13) { min-width: 75px; } /* Status */
+
+.broker-table th:nth-child(14),
+.broker-table td:nth-child(14) { min-width: 120px; } /* Note */
+
+.broker-table th:nth-child(15),
+.broker-table td:nth-child(15) { min-width: 100px; } /* Action */
 
 .broker-dt-th-inner {
     display: inline-flex;
