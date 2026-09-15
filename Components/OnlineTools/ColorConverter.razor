@@ -2,7 +2,7 @@
 @using System.Text.RegularExpressions
 @using BlazorWasmPortfolioGhAction.Utils
 @using BlazorWasmPortfolioGhAction.Utils.OnlineTools
-@inject NavigationManager NavigationManager
+@inherits OnlineToolBase
 
 <ToolShell ResourceKey="colorconverter" Title="Color Converter" Icon="bi-palette2" Description="Convert color between hex, rgb, hsl, hwb, oklab, lch and cmyk. Every field is interactive.">
     <div class="tool-form color-converter">
@@ -174,7 +174,7 @@
         if (updateUrl)
         {
             Value = HexText;
-            NavigationManager.UpdateUrlUsingParameters(this, replaceHistory: true);
+            UpdateUrlDebounced();
         }
     }
 

@@ -3,14 +3,13 @@
 @using BlazorWasmPortfolioGhAction.Services
 @using BlazorWasmPortfolioGhAction.Utils.OnlineTools
 @inject IClipboardService Clipboard
-@inject NavigationManager NavigationManager
-@implements IDisposable
+@inherits OnlineToolBase
 
 <ToolShell ResourceKey="regex" Title=".NET Regex Tester" Icon="bi-braces" Description="Test regular expressions with live highlighting and C# export.">
     <div class="tool-form">
         <div class="tool-field">
             <label class="tool-label" for="regex-pattern">Pattern</label>
-            <textarea id="regex-pattern" class="tool-textarea" @bind="Pattern" @bind:event="oninput" spellcheck="false"></textarea>
+            <textarea id="regex-pattern" class="tool-textarea" @bind="Pattern" @bind:event="oninput" @bind:after="OnInputChanged" spellcheck="false"></textarea>
         </div>
 
         <div class="tool-checkbox-group regex-options">
@@ -28,7 +27,7 @@
 
         <div class="tool-field">
             <label class="tool-label" for="regex-input">Input</label>
-            <textarea id="regex-input" class="tool-textarea" @bind="Text" @bind:event="oninput" spellcheck="false"></textarea>
+            <textarea id="regex-input" class="tool-textarea" @bind="Text" @bind:event="oninput" @bind:after="OnInputChanged" spellcheck="false"></textarea>
         </div>
 
         <div class="tool-field">
@@ -38,7 +37,7 @@
             </label>
             @if (Replace)
             {
-                <textarea class="tool-textarea" @bind="Replacement" @bind:event="oninput" spellcheck="false"></textarea>
+                <textarea class="tool-textarea" @bind="Replacement" @bind:event="oninput" @bind:after="OnInputChanged" spellcheck="false"></textarea>
             }
         </div>
 
@@ -115,12 +114,10 @@
     private MatchCollection? matches;
     private MarkupString highlightedText;
     private string? replacedText;
-    private System.Threading.Timer? timer;
 
     protected override void OnInitialized()
     {
         NavigationManager.SetParametersFromQueryString(this);
-        timer = new System.Threading.Timer(_ => UpdateUrl(), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(500));
         ExecuteRegex();
     }
 
@@ -131,9 +128,15 @@
         await Clipboard.CopyTextAsync(text);
     }
 
+    private void OnInputChanged()
+    {
+        UpdateUrlDebounced();
+        ExecuteRegex();
+    }
+
     private void UpdateUrl()
     {
-        NavigationManager.UpdateUrlUsingParameters(this, replaceHistory: true);
+        UpdateUrlDebounced();
     }
 
     void ExecuteRegex()
@@ -203,8 +206,6 @@
         UpdateUrl();
         ExecuteRegex();
     }
-
-    public void Dispose() => timer?.Dispose();
 
     private static string WriteRegexOptions(RegexOptions options)
     {

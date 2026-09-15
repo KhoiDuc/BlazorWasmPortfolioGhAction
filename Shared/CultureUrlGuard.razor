@@ -4,15 +4,29 @@
 
 @code {
     private bool _redirecting;
+    private string? _lastPath;
+
+    private static string PathOnly(NavigationManager nav)
+    {
+        var rel = nav.ToBaseRelativePath(nav.Uri);
+        var idx = rel.IndexOf('?');
+        return idx >= 0 ? rel[..idx] : rel;
+    }
 
     protected override void OnInitialized()
     {
+        _lastPath = PathOnly(Navigation);
         Navigation.LocationChanged += OnLocationChanged;
         _ = SyncFromUrlAsync();
     }
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) =>
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        var path = PathOnly(Navigation);
+        if (path == _lastPath) return; // query-only change — skip culture sync
+        _lastPath = path;
         _ = SyncFromUrlAsync();
+    }
 
     private async Task SyncFromUrlAsync()
     {

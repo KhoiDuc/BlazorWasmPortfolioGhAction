@@ -1,5 +1,5 @@
 @using BlazorWasmPortfolioGhAction.Utils.OnlineTools
-@inject NavigationManager NavigationManager
+@inherits OnlineToolBase
 
 <ToolShell ResourceKey="charinfo" Title="Character Info" Icon="bi-type" Description="Look up Unicode character properties by codepoint or name.">
     <div class="tool-form">
@@ -85,46 +85,21 @@
     protected override void OnInitialized()
     {
         NavigationManager.SetParametersFromQueryString(this);
-        onInputEvent = DebounceEvent<ChangeEventArgs>(e => OnChange(e), TimeSpan.FromMilliseconds(1000));
-        Compute();
+        onInputEvent = e => OnChange(e);
+        Compute(updateUrl: false);
     }
 
     void OnChange(ChangeEventArgs e)
     {
         Text = e.Value as string;
-        Compute();
+        Compute(updateUrl: true);
     }
 
-    void Compute()
+    void Compute(bool updateUrl)
     {
         Text ??= "";
-        NavigationManager.UpdateUrlUsingParameters(this, replaceHistory: true);
+        if (updateUrl)
+            UpdateUrlDebounced();
         result = UnicodeData.GetData(Text);
-    }
-
-    Action<T> DebounceEvent<T>(Action<T> action, TimeSpan interval)
-    {
-        return Debounce<T>(arg =>
-        {
-            InvokeAsync(() =>
-            {
-                action(arg);
-                StateHasChanged();
-            });
-        }, interval);
-    }
-
-    Action<T> Debounce<T>(Action<T> action, TimeSpan interval)
-    {
-        var last = 0;
-        return arg =>
-        {
-            var current = System.Threading.Interlocked.Increment(ref last);
-            Task.Delay(interval).ContinueWith(_ =>
-            {
-                if (current == last)
-                    action(arg);
-            });
-        };
     }
 }

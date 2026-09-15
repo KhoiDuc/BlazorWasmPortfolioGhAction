@@ -23,6 +23,15 @@
 <Footer />
 
 @code {
+    private string? _lastPath;
+
+    private static string PathOnly(NavigationManager nav)
+    {
+        var rel = nav.ToBaseRelativePath(nav.Uri);
+        var idx = rel.IndexOf('?');
+        return idx >= 0 ? rel[..idx] : rel;
+    }
+
     private async Task SkipToContent()
     {
         try { await JS.InvokeVoidAsync("skipToContent"); }
@@ -46,11 +55,15 @@
 
     protected override void OnInitialized()
     {
+        _lastPath = PathOnly(Navigation);
         Navigation.LocationChanged += OnLocationChanged;
     }
 
     private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
+        var path = PathOnly(Navigation);
+        if (path == _lastPath) return; // query-only change — skip progress bar
+        _lastPath = path;
         try
         {
             await JS.InvokeVoidAsync("routeProgress.show");

@@ -1,10 +1,10 @@
-@inject NavigationManager NavigationManager
+@inherits OnlineToolBase
 
 <ToolShell ResourceKey="stringinfo" Title="String Info" Icon="bi-type" Description="Inspect string length, codepoints, and encoding.">
     <div class="tool-form">
         <div class="tool-field">
             <label class="tool-label" for="string-info-text">Text</label>
-            <textarea id="string-info-text" class="tool-textarea" rows="6" @bind-value="Text" @bind-value:event="oninput" @bind-value:after="Compute"></textarea>
+            <textarea id="string-info-text" class="tool-textarea" rows="6" @bind-value="Text" @bind-value:event="oninput" @bind-value:after="() => Compute(true)"></textarea>
         </div>
         <div class="tool-actions">
             <button type="button" class="tool-btn tool-btn-secondary" @onclick="NormalizeC">Normalize Form C</button>
@@ -48,13 +48,14 @@
 
     protected override void OnParametersSet()
     {
-        Compute();
+        Compute(updateUrl: false);
     }
 
-    void Compute()
+    void Compute(bool updateUrl)
     {
         Text ??= "";
-        NavigationManager.UpdateUrlUsingParameters(this, replaceHistory: true);
+        if (updateUrl)
+            UpdateUrlDebounced();
 
         var info = new System.Globalization.StringInfo(Text);
 
@@ -83,12 +84,12 @@
     void NormalizeC()
     {
         Text = Text?.Normalize(NormalizationForm.FormC);
-        Compute();
+        Compute(true);
     }
 
     void NormalizeD()
     {
         Text = Text?.Normalize(NormalizationForm.FormD);
-        Compute();
+        Compute(true);
     }
 }

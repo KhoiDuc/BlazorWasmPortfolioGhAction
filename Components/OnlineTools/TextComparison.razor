@@ -3,7 +3,7 @@
 @using Meziantou.Framework
 @using BlazorWasmPortfolioGhAction.Utils
 @using BlazorWasmPortfolioGhAction.Utils.OnlineTools
-@inject NavigationManager NavigationManager
+@inherits OnlineToolBase
 
 <ToolShell ResourceKey="textdiff" Title="Text Comparison" Icon="bi-file-diff" Description="Compare two texts with multiple diff algorithms.">
     <div class="tool-form">
@@ -86,52 +86,52 @@
     protected override void OnInitialized()
     {
         NavigationManager.SetParametersFromQueryString(this);
-        ComputeDiff();
+        ComputeDiff(updateUrl: false);
     }
 
     private void OnLeftTextChanged(ChangeEventArgs e)
     {
         LeftText = e.Value?.ToString();
-        ComputeDiff();
+        ComputeDiff(updateUrl: true);
     }
 
     private void OnRightTextChanged(ChangeEventArgs e)
     {
         RightText = e.Value?.ToString();
-        ComputeDiff();
+        ComputeDiff(updateUrl: true);
     }
 
     private void OnAlgorithmChanged(ChangeEventArgs e)
     {
         Algorithm = e.Value?.ToString();
-        ComputeDiff();
+        ComputeDiff(updateUrl: true);
     }
 
     private void OnChunkModeChanged(ChangeEventArgs e)
     {
         ChunkMode = e.Value?.ToString();
-        ComputeDiff();
+        ComputeDiff(updateUrl: true);
     }
 
     private void OnIgnoreCaseChanged(ChangeEventArgs e)
     {
         IgnoreCase = DiffMarkupUtils.ToBoolean(e.Value);
-        ComputeDiff();
+        ComputeDiff(updateUrl: true);
     }
 
     private void OnIgnoreWhitespaceChanged(ChangeEventArgs e)
     {
         IgnoreWhitespace = DiffMarkupUtils.ToBoolean(e.Value);
-        ComputeDiff();
+        ComputeDiff(updateUrl: true);
     }
 
     private void OnIgnoreEndOfLineChanged(ChangeEventArgs e)
     {
         IgnoreEndOfLine = DiffMarkupUtils.ToBoolean(e.Value);
-        ComputeDiff();
+        ComputeDiff(updateUrl: true);
     }
 
-    private void ComputeDiff()
+    private void ComputeDiff(bool updateUrl)
     {
         LeftText ??= "";
         RightText ??= "";
@@ -165,6 +165,7 @@
             ErrorMessage = ex.ToString();
         }
 
-        NavigationManager.UpdateUrlUsingParameters(this, replaceHistory: true);
+        if (updateUrl)
+            UpdateUrlDebounced();
     }
 }

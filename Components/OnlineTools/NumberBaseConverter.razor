@@ -1,7 +1,7 @@
 @using System.Globalization
 @using System.Numerics
 @using Meziantou.Framework
-@inject NavigationManager NavigationManager
+@inherits OnlineToolBase
 
 <ToolShell ResourceKey="numberbaseconverter" Title="Number base converter" Icon="bi-calculator" Description="Convert numbers between bases 2-36.">
     <div class="tool-form">
@@ -49,28 +49,28 @@
 
     protected override void OnParametersSet()
     {
-        Compute();
+        Compute(updateUrl: false);
     }
 
     void OnNumberChanged(ChangeEventArgs e)
     {
         Number = e.Value?.ToString();
-        Compute();
+        Compute(updateUrl: true);
     }
 
     void OnInputBaseChanged(ChangeEventArgs e)
     {
         InputBase = e.Value?.ToString();
-        Compute();
+        Compute(updateUrl: true);
     }
 
     void OnCustomBaseChanged(ChangeEventArgs e)
     {
         CustomBase = e.Value?.ToString();
-        Compute();
+        Compute(updateUrl: true);
     }
 
-    void Compute()
+    void Compute(bool updateUrl)
     {
         Number ??= "0xff";
         InputBase = NormalizeInputBase(InputBase);
@@ -80,7 +80,7 @@
         {
             ErrorMessage = customBaseError;
             result = null;
-            NavigationManager.UpdateUrlUsingParameters(this, replaceHistory: true);
+            if (updateUrl) UpdateUrlDebounced();
             return;
         }
 
@@ -88,7 +88,7 @@
         {
             ErrorMessage = parseError;
             result = null;
-            NavigationManager.UpdateUrlUsingParameters(this, replaceHistory: true);
+            if (updateUrl) UpdateUrlDebounced();
             return;
         }
 
@@ -96,7 +96,7 @@
         ErrorMessage = null;
 
         CustomBase = customBase.ToString(CultureInfo.InvariantCulture);
-        NavigationManager.UpdateUrlUsingParameters(this, replaceHistory: true);
+        if (updateUrl) UpdateUrlDebounced();
     }
 
     static string NormalizeInputBase(string? inputBase)
