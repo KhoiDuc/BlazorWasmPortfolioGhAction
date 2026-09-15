@@ -167,7 +167,7 @@
                                 @onclick='() => ToggleSort(SortColumn.SoldQty)'
                                 @onkeydown='(e) => OnSortKeydown(e, SortColumn.SoldQty)'
                                 @onclick:stopPropagation="true">
-                                <span class="broker-dt-th-inner">Đã bán @SortIcon(SortColumn.SoldQty)</span>
+                                <span class="broker-dt-th-inner">@L["Trading_BrokerColSoldQty"] @SortIcon(SortColumn.SoldQty)</span>
                             </th>
                             <th class="broker-dt-sortable @SortClass(SortColumn.Remaining)"
                                 tabindex="0"
@@ -175,7 +175,7 @@
                                 @onclick='() => ToggleSort(SortColumn.Remaining)'
                                 @onkeydown='(e) => OnSortKeydown(e, SortColumn.Remaining)'
                                 @onclick:stopPropagation="true">
-                                <span class="broker-dt-th-inner">Còn lại @SortIcon(SortColumn.Remaining)</span>
+                                <span class="broker-dt-th-inner">@L["Trading_BrokerColRemaining"] @SortIcon(SortColumn.Remaining)</span>
                             </th>
                             <th class="broker-dt-sortable @SortClass(SortColumn.AvgBuy)"
                                 tabindex="0"
@@ -347,7 +347,7 @@
             <div class="broker-sold-panel ts-panel">
                 <div class="broker-sold-panel-head">
                     <div class="broker-sold-panel-title">
-                        <h3 class="ts-panel-title">Danh mục đã bán</h3>
+                        <h3 class="ts-panel-title">@L["Trading_BrokerClosedPanelTitle"]</h3>
                         <span class="broker-sold-panel-count">@Portfolio.ClosedPositions!.Count vị thế · lịch sử giao dịch đã chốt</span>
                     </div>
                     <div class="broker-sold-panel-realized @(_closedRealized >= 0 ? "ts-positive" : "ts-negative")">
@@ -361,7 +361,7 @@
                         <thead>
                             <tr>
                                 <th><span class="broker-dt-th-inner">Mã</span></th>
-                                <th><span class="broker-dt-th-inner">Ngành</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerColSector"]</span></th>
                                 <th><span class="broker-dt-th-inner">Lần mua</span></th>
                                 <th><span class="broker-dt-th-inner">Lần bán</span></th>
                                 <th><span class="broker-dt-th-inner">KL bán</span></th>
