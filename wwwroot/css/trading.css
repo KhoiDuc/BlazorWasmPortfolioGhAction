@@ -2219,13 +2219,6 @@
     .broker-kpi:nth-child(n+4) {
         border-top: none;
     }
-
-    /* Table column hiding on tablet */
-    .broker-table .broker-stop,
-    .broker-table .broker-target,
-    .broker-table .broker-tag-cell {
-        display: none;
-    }
 }
 
 @media (max-width: 640px) {
@@ -2251,16 +2244,6 @@
     .broker-table tbody td {
         padding: 0.35rem 0.5rem;
         white-space: nowrap;
-    }
-
-    /* Hide less critical columns on mobile to reduce initial width */
-    .broker-table .broker-sector,
-    .broker-table .broker-note-cell,
-    .broker-table .broker-stop,
-    .broker-table .broker-target,
-    .broker-table .broker-tag-cell,
-    .broker-table .broker-lots {
-        display: none;
     }
 
     /* Shrink symbol and price columns */
@@ -2434,22 +2417,9 @@
     }
 }
 
-/* Broker table responsive — hide less-critical columns on narrow screens */
-@media (max-width: 991px) {
-    .broker-table .broker-stop,
-    .broker-table .broker-target,
-    .broker-table .broker-tag-cell {
-        display: none;
-    }
-}
-
+/* Broker table responsive — mobile keeps all columns, horizontal scroll */
 @media (max-width: 640px) {
     .broker-table { font-size: 0.75rem; }
-    .broker-table .broker-sector,
-    .broker-table .broker-note-cell,
-    .broker-table .broker-sold-qty {
-        display: none;
-    }
     .broker-lots { max-width: 100px; }
     .broker-lot-chip { font-size: 0.62rem; padding: 1px 5px; }
     .broker-symbol { font-size: 0.82rem; }
