@@ -161,6 +161,22 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColQty"] @SortIcon(SortColumn.Quantity)</span>
                             </th>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.SoldQty)"
+                                tabindex="0"
+                                aria-sort="@SortAria(SortColumn.SoldQty)"
+                                @onclick='() => ToggleSort(SortColumn.SoldQty)'
+                                @onkeydown='(e) => OnSortKeydown(e, SortColumn.SoldQty)'
+                                @onclick:stopPropagation="true">
+                                <span class="broker-dt-th-inner">Đã bán @SortIcon(SortColumn.SoldQty)</span>
+                            </th>
+                            <th class="broker-dt-sortable @SortClass(SortColumn.Remaining)"
+                                tabindex="0"
+                                aria-sort="@SortAria(SortColumn.Remaining)"
+                                @onclick='() => ToggleSort(SortColumn.Remaining)'
+                                @onkeydown='(e) => OnSortKeydown(e, SortColumn.Remaining)'
+                                @onclick:stopPropagation="true">
+                                <span class="broker-dt-th-inner">Còn lại @SortIcon(SortColumn.Remaining)</span>
+                            </th>
                             <th class="broker-dt-sortable @SortClass(SortColumn.AvgBuy)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.AvgBuy)"
@@ -251,6 +267,8 @@
                                     </div>
                                 </td>
                                 <td class="broker-num broker-qty">@BrokerFormat.Quantity(p.TotalQuantity)</td>
+                                <td class="broker-num broker-sold-qty">@BrokerFormat.Quantity(p.SoldQuantity)</td>
+                                <td class="broker-num broker-remaining">@BrokerFormat.Quantity(p.RemainingQuantity)</td>
                                 <td class="broker-num">@(p.AvgBuy?.ToString("N2") ?? "—")</td>
                                 <td class="broker-num">@(current?.ToString("N2") ?? "—")</td>
                                 <td class="broker-num @(pnl is > 0 ? "ts-positive" : pnl is < 0 ? "ts-negative" : "")">
@@ -394,6 +412,8 @@
         Symbol,
         Sector,
         Quantity,
+        SoldQty,
+        Remaining,
         AvgBuy,
         Current,
         PnlPct,
@@ -479,6 +499,8 @@
         {
             SortColumn.Sector => OrderBy(source, p => p.Sector ?? "", StringComparer.OrdinalIgnoreCase),
             SortColumn.Quantity => OrderBy(source, p => p.TotalQuantity),
+            SortColumn.SoldQty => OrderBy(source, p => p.SoldQuantity),
+            SortColumn.Remaining => OrderBy(source, p => p.RemainingQuantity),
             SortColumn.AvgBuy => OrderBy(source, p => p.AvgBuy),
             SortColumn.Current => OrderBy(source, p => Quote(p.Symbol)),
             SortColumn.PnlPct => OrderBy(source, p => p.PnlPct(Quote(p.Symbol))),
