@@ -1,5 +1,5 @@
 @using BlazorWasmPortfolioGhAction.Utils.OnlineTools
-@inherits OnlineToolBase
+@inject NavigationManager NavigationManager
 
 <ToolShell ResourceKey="charinfo" Title="Character Info" Icon="bi-type" Description="Look up Unicode character properties by codepoint or name.">
     <div class="tool-form">
@@ -86,20 +86,18 @@
     {
         NavigationManager.SetParametersFromQueryString(this);
         onInputEvent = e => OnChange(e);
-        Compute(updateUrl: false);
+        Compute();
     }
 
     void OnChange(ChangeEventArgs e)
     {
         Text = e.Value as string;
-        Compute(updateUrl: true);
+        Compute();
     }
 
-    void Compute(bool updateUrl)
+    void Compute()
     {
         Text ??= "";
-        if (updateUrl)
-            UpdateUrlDebounced();
         result = UnicodeData.GetData(Text);
     }
 }

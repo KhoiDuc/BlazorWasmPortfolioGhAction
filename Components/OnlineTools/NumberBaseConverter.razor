@@ -1,7 +1,6 @@
 @using System.Globalization
 @using System.Numerics
 @using Meziantou.Framework
-@inherits OnlineToolBase
 
 <ToolShell ResourceKey="numberbaseconverter" Title="Number base converter" Icon="bi-calculator" Description="Convert numbers between bases 2-36.">
     <div class="tool-form">
@@ -49,28 +48,28 @@
 
     protected override void OnParametersSet()
     {
-        Compute(updateUrl: false);
+        Compute();
     }
 
     void OnNumberChanged(ChangeEventArgs e)
     {
         Number = e.Value?.ToString();
-        Compute(updateUrl: true);
+        Compute();
     }
 
     void OnInputBaseChanged(ChangeEventArgs e)
     {
         InputBase = e.Value?.ToString();
-        Compute(updateUrl: true);
+        Compute();
     }
 
     void OnCustomBaseChanged(ChangeEventArgs e)
     {
         CustomBase = e.Value?.ToString();
-        Compute(updateUrl: true);
+        Compute();
     }
 
-    void Compute(bool updateUrl)
+    void Compute()
     {
         Number ??= "0xff";
         InputBase = NormalizeInputBase(InputBase);
@@ -80,7 +79,6 @@
         {
             ErrorMessage = customBaseError;
             result = null;
-            if (updateUrl) UpdateUrlDebounced();
             return;
         }
 
@@ -88,7 +86,6 @@
         {
             ErrorMessage = parseError;
             result = null;
-            if (updateUrl) UpdateUrlDebounced();
             return;
         }
 
@@ -96,7 +93,6 @@
         ErrorMessage = null;
 
         CustomBase = customBase.ToString(CultureInfo.InvariantCulture);
-        if (updateUrl) UpdateUrlDebounced();
     }
 
     static string NormalizeInputBase(string? inputBase)

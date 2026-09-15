@@ -1,5 +1,4 @@
 @using Meziantou.Framework
-@inherits OnlineToolBase
 
 <ToolShell ResourceKey="numbers" Title="Number" Icon="bi-123" Description="Display numbers in decimal, hex, octal, binary.">
     <div class="tool-form">
@@ -22,20 +21,17 @@
 
     protected override void OnParametersSet()
     {
-        Compute(updateUrl: false);
+        Compute();
     }
 
     void OnInput(ChangeEventArgs e)
     {
         Text = e.Value as string;
-        Compute(updateUrl: true);
+        Compute();
     }
 
-    void Compute(bool updateUrl)
+    void Compute()
     {
-        if (updateUrl)
-            UpdateUrlDebounced();
-
         if (long.TryParse(Text, out var parsed))
             result = parsed;
         else

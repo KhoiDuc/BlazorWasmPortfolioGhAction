@@ -1,7 +1,8 @@
 @using System.Globalization
 @using BlazorWasmPortfolioGhAction.Utils
 @using BlazorWasmPortfolioGhAction.Utils.OnlineTools
-@inherits OnlineToolBase
+@inject NavigationManager NavigationManager
+@implements IDisposable
 
 <ToolShell ResourceKey="dateconverter" Title="Date Converter" Icon="bi-calendar3" Description="Convert between date strings, Unix timestamps, .NET ticks, and MongoDB ObjectIds. Live clock and date-to-timestamp builder included.">
     <div class="tool-form">
@@ -95,26 +96,24 @@
         NavigationManager.SetParametersFromQueryString(this);
         RefreshNow();
         clockTimer = new System.Threading.Timer(_ => InvokeAsync(() => { RefreshNow(); StateHasChanged(); }), null, 1000, 1000);
-        Compute(updateUrl: false);
+        Compute();
     }
 
     private void OnInput(ChangeEventArgs e)
     {
         Text = e.Value as string;
-        Compute(updateUrl: true);
+        Compute();
     }
 
     private void OnInputFormatChanged(ChangeEventArgs e)
     {
         InputFormat = DateConvertUtils.NormalizeInputFormat(e.Value as string);
-        Compute(updateUrl: true);
+        Compute();
     }
 
-    private void Compute(bool updateUrl)
+    private void Compute()
     {
         InputFormat = DateConvertUtils.NormalizeInputFormat(InputFormat);
-        if (updateUrl)
-            UpdateUrlDebounced();
 
         parsedValue = null;
         parsedSource = null;
@@ -153,10 +152,9 @@
         builderResult = $"Local: {dto.LocalDateTime:yyyy-MM-dd HH:mm:ss}\nUTC: {dto.UtcDateTime:yyyy-MM-dd HH:mm:ss}\nUnix (s): {dto.ToUnixTimeSeconds()}\nUnix (ms): {dto.ToUnixTimeMilliseconds()}";
     }
 
-    public override void Dispose()
+    public void Dispose()
     {
         clockTimer?.Dispose();
-        base.Dispose();
     }
 }
 
