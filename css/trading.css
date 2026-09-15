@@ -1341,7 +1341,12 @@
     padding: 0 0.25rem;
 }
 
-.broker-table { font-size: 0.82rem; }
+.broker-table {
+    font-size: 0.82rem;
+    width: max-content;
+    min-width: 100%;
+    table-layout: auto;
+}
 .broker-table thead th {
     font-size: 0.72rem;
     text-transform: uppercase;
@@ -1349,6 +1354,12 @@
     color: var(--color-text-muted);
     white-space: nowrap;
     vertical-align: middle;
+    padding: 0.5rem 0.6rem;
+}
+
+.broker-table tbody td {
+    white-space: nowrap;
+    padding: 0.4rem 0.6rem;
 }
 
 .broker-dt-th-inner {
@@ -2169,7 +2180,7 @@
 }
 
 @media (max-width: 640px) {
-    /* Table mobile responsive */
+    /* Table mobile responsive — keep horizontal scroll */
     .broker-table-scroll {
         margin: 0;
         padding: 0;
@@ -2178,24 +2189,25 @@
 
     .broker-table {
         font-size: 0.75rem;
-        min-width: 100%;
+        width: max-content;
+        min-width: 600px;
+        table-layout: auto;
     }
 
     .broker-table thead th {
-        padding: 0.35rem 0.4rem;
-        font-size: 0.6rem;
-        white-space: normal;
-        word-break: break-word;
+        padding: 0.4rem 0.5rem;
+        font-size: 0.68rem;
+        white-space: nowrap;
     }
 
     .broker-table tbody td {
-        padding: 0.35rem 0.4rem;
+        padding: 0.35rem 0.5rem;
+        white-space: nowrap;
     }
 
-    /* Hide less critical columns on mobile */
+    /* Hide less critical columns on mobile to reduce initial width */
     .broker-table .broker-sector,
     .broker-table .broker-note-cell,
-    .broker-table .broker-sold-qty,
     .broker-table .broker-stop,
     .broker-table .broker-target,
     .broker-table .broker-tag-cell,
@@ -2204,8 +2216,8 @@
     }
 
     /* Shrink symbol and price columns */
-    .broker-symbol { font-size: 0.8rem; }
-    .broker-num { font-size: 0.75rem; }
+    .broker-symbol { font-size: 0.75rem; }
+    .broker-num { font-size: 0.7rem; }
 
     .form-row-2 {
         flex-direction: column;
