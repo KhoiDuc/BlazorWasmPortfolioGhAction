@@ -192,7 +192,7 @@
                     <div class="broker-lot-fields">
                         <div class="broker-field">
                             <label class="broker-field-label">Ngày</label>
-                            <input class="ts-input" type="date" @bind="lot.Lot.BoughtAt" @bind:format="yyyy-MM-dd" @bind:after="Changed" />
+                            <input class="ts-input" type="date" @bind="lot.Lot.BoughtAt" @bind:format="yyyy-MM-dd" @bind:after="() => LotChanged(lot.Lot)" />
                         </div>
                         <div class="broker-field">
                             <label class="broker-field-label">Giá mua</label>
@@ -227,7 +227,7 @@
                     </div>
                     <div class="broker-field broker-lot-note-field">
                         <label class="broker-field-label">Note lần mua</label>
-                        <input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" placeholder="Ghi chú riêng cho lần mua này…" @bind="lot.Lot.Note" @bind:after="Changed" />
+                        <input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" placeholder="Ghi chú riêng cho lần mua này…" @bind="lot.Lot.Note" @bind:after="() => LotChanged(lot.Lot)" />
                     </div>
                     <div class="broker-field broker-lot-tags-field">
                         <label class="broker-field-label">Tag lần mua</label>
@@ -320,30 +320,30 @@
                     <div class="broker-lot-fields">
                         <div class="broker-field">
                             <label class="broker-field-label">Ngày</label>
-                            <input class="ts-input" type="date" @bind="sell.Sell.SoldAt" @bind:format="yyyy-MM-dd" @bind:after="TradeChanged" />
+                            <input class="ts-input" type="date" @bind="sell.Sell.SoldAt" @bind:format="yyyy-MM-dd" @bind:after="() => SellChanged(sell.Sell)" />
                         </div>
                         <div class="broker-field">
                             <label class="broker-field-label">Giá bán</label>
-                            <input class="ts-input" type="number" min="0.0001" step="any" @bind="sell.Sell.Price" @bind:after="TradeChanged" />
+                            <input class="ts-input" type="number" min="0.0001" step="any" @bind="sell.Sell.Price" @bind:after="() => SellChanged(sell.Sell)" />
                         </div>
                         <div class="broker-field">
                             <label class="broker-field-label">KL</label>
-                            <input class="ts-input" type="number" min="0.0001" step="any" placeholder="—" @bind="sell.Sell.Quantity" @bind:after="TradeChanged" />
+                            <input class="ts-input" type="number" min="0.0001" step="any" placeholder="—" @bind="sell.Sell.Quantity" @bind:after="() => SellChanged(sell.Sell)" />
                         </div>
                     </div>
                     <div class="broker-form-row broker-form-row-2 broker-form-row-align">
                         <div class="broker-field">
                             <label class="broker-field-label">Phí (đ)</label>
-                            <input class="ts-input" type="number" min="0" step="any" placeholder="0" @bind="sell.Sell.Fee" @bind:after="TradeChanged" />
+                            <input class="ts-input" type="number" min="0" step="any" placeholder="0" @bind="sell.Sell.Fee" @bind:after="() => SellChanged(sell.Sell)" />
                         </div>
                         <div class="broker-field">
                             <label class="broker-field-label">Thuế (đ)</label>
-                            <input class="ts-input" type="number" min="0" step="any" placeholder="0" @bind="sell.Sell.Tax" @bind:after="TradeChanged" />
+                            <input class="ts-input" type="number" min="0" step="any" placeholder="0" @bind="sell.Sell.Tax" @bind:after="() => SellChanged(sell.Sell)" />
                         </div>
                     </div>
                     <div class="broker-field broker-lot-note-field">
                         <label class="broker-field-label">Note lệnh bán</label>
-                        <input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" placeholder="Ghi chú riêng cho lệnh bán này…" @bind="sell.Sell.Note" @bind:after="TradeChanged" />
+                        <input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" placeholder="Ghi chú riêng cho lệnh bán này…" @bind="sell.Sell.Note" @bind:after="() => SellChanged(sell.Sell)" />
                     </div>
                 </article>
             }
@@ -485,7 +485,7 @@
                 {
                     <article class="broker-timeline-card">
                         <div class="broker-timeline-card-head">
-                            <input class="ts-input broker-timeline-date" type="datetime-local" @bind="note.At" @bind:format="yyyy-MM-ddTHH:mm" @bind:after="Changed" />
+                            <input class="ts-input broker-timeline-date" type="datetime-local" @bind="note.At" @bind:format="yyyy-MM-ddTHH:mm" @bind:after="() => NoteChanged(note)" />
                             <button class="broker-lot-remove" type="button" title="Xóa note" @onclick="() => RemoveNote(note)">×</button>
                         </div>
                         <textarea class="ts-input ts-textarea broker-textarea"
@@ -494,7 +494,7 @@
                                   placeholder="Nội dung note broker…"
                                   @bind="note.Text"
                                   @bind:event="oninput"
-                                  @bind:after="Changed"></textarea>
+                                  @bind:after="() => NoteChanged(note)"></textarea>
                         <div class="broker-timeline-actions">
                             <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" disabled="@_explainBusy" @onclick="() => Explain(note)">
                                 @(_explainBusy ? "Đang giải thích…" : "✦ AI giải thích")
@@ -537,8 +537,7 @@
 @code {
     [Parameter, EditorRequired] public BrokerPosition Position { get; set; } = new();
     [Parameter] public decimal? CurrentPrice { get; set; }
-    [Parameter] public EventCallback OnChanged { get; set; }
-    [Parameter] public EventCallback OnTradeChanged { get; set; }
+    [Parameter] public EventCallback<BrokerSyncAction> OnSync { get; set; }
     [Parameter] public EventCallback OnDeleted { get; set; }
     [Parameter] public EventCallback OnClosed { get; set; }
     [Parameter] public EventCallback OnReopen { get; set; }
@@ -599,11 +598,11 @@
         set { Position.TargetPriceInput = value; ValidatePositionLevels(); }
     }
 
-    private Task Changed() => OnChanged.InvokeAsync();
+    private Task Changed() => OnSync.InvokeAsync(new PositionSyncAction("update", Position));
 
-    private Task TradeChanged() => OnTradeChanged.HasDelegate
-        ? OnTradeChanged.InvokeAsync()
-        : OnChanged.InvokeAsync();
+    private Task TradeChanged() => OnSync.HasDelegate
+        ? OnSync.InvokeAsync(new PositionSyncAction("update", Position))
+        : Task.CompletedTask;
 
     private void ValidatePositionLevels()
     {
@@ -668,8 +667,11 @@
         lot.TargetPrice = resolvedTarget;
 
         _lotErrors.Remove(lot.Id);
-        _ = TradeChanged();
+        _ = LotChanged(lot);
     }
+
+    private Task LotChanged(BrokerLot lot) =>
+        OnSync.InvokeAsync(new LotSyncAction("update", lot));
 
     private async Task RemoveLot(BrokerLot lot)
     {
@@ -678,7 +680,7 @@
 
         Position.Buys.Remove(lot);
         _lotErrors.Remove(lot.Id);
-        await TradeChanged();
+        await OnSync.InvokeAsync(new LotSyncAction("delete", lot));
     }
 
     private async Task AddSell()
@@ -703,7 +705,7 @@
             return;
         }
 
-        Position.Sells.Add(new BrokerSell
+        var sell = new BrokerSell
         {
             SoldAt = _sellDate,
             Price = _sellPrice!.Value,
@@ -711,7 +713,8 @@
             Fee = _sellFee is > 0 ? _sellFee : null,
             Tax = _sellTax is > 0 ? _sellTax : null,
             Note = string.IsNullOrWhiteSpace(_sellNote) ? null : _sellNote.Trim()
-        });
+        };
+        Position.Sells.Add(sell);
 
         _sellPrice = _sellQty = _sellFee = _sellTax = null;
         _sellNote = "";
@@ -720,12 +723,19 @@
         // Auto-close if no remaining quantity
         if (Position.RemainingQuantity is null or 0)
         {
+            await OnSync.InvokeAsync(new SellSyncAction("create", sell));
             await OnClosed.InvokeAsync();
             return;
         }
 
-        await TradeChanged();
+        await OnSync.InvokeAsync(new SellSyncAction("create", sell));
     }
+
+    private Task SellChanged(BrokerSell sell) =>
+        OnSync.InvokeAsync(new SellSyncAction("update", sell));
+
+    private Task NoteChanged(BrokerNote note) =>
+        OnSync.InvokeAsync(new NoteSyncAction("update", note));
 
     private async Task RemoveSell(BrokerSell sell)
     {
@@ -733,7 +743,7 @@
             return;
 
         Position.Sells.Remove(sell);
-        await TradeChanged();
+        await OnSync.InvokeAsync(new SellSyncAction("delete", sell));
     }
 
     private void OnTagKeydown(KeyboardEventArgs e)
@@ -805,15 +815,16 @@
             return;
         }
 
-        Position.Dividends ??= [];
-        Position.Dividends.Add(new BrokerDividend
+        var dividend = new BrokerDividend
         {
             ExDate = _divExDate,
             PayDate = _divPayDate,
             AmountPerShare = _divAmount!.Value,
             Quantity = _divQty!.Value,
             Note = string.IsNullOrWhiteSpace(_divNote) ? null : _divNote.Trim()
-        });
+        };
+        Position.Dividends ??= [];
+        Position.Dividends.Add(dividend);
 
         _divAmount = null;
         _divQty = null;
@@ -822,7 +833,7 @@
         _divExDate = DateTime.Today;
         _divErr = null;
 
-        await TradeChanged();
+        await OnSync.InvokeAsync(new DividendSyncAction("create", dividend));
     }
 
     private async Task RemoveDividend(BrokerDividend d)
@@ -830,7 +841,7 @@
         if (!await JS.InvokeAsync<bool>("tradingAuth.confirm", "Xóa cổ tức này?"))
             return;
         Position.Dividends?.Remove(d);
-        await TradeChanged();
+        await OnSync.InvokeAsync(new DividendSyncAction("delete", d));
     }
 
     private async Task AddNote()
@@ -847,23 +858,24 @@
             return;
         }
 
-        Position.Notes.Add(new BrokerNote
+        var note = new BrokerNote
         {
             At = DateTime.Now,
             Kind = BrokerNoteKind.Broker,
             Text = _noteText.Trim()
-        });
+        };
+        Position.Notes.Add(note);
         _noteText = "";
         _noteErr = null;
         _error = null;
         _tab = "notes";
-        await Changed();
+        await OnSync.InvokeAsync(new NoteSyncAction("create", note));
     }
 
     private async Task RemoveNote(BrokerNote note)
     {
         Position.Notes.Remove(note);
-        await Changed();
+        await OnSync.InvokeAsync(new NoteSyncAction("delete", note));
     }
 
     private async Task Delete() => await OnDeleted.InvokeAsync();
@@ -914,7 +926,7 @@
             }
 
             note.AiExplain = result.Text;
-            await Changed();
+            await OnSync.InvokeAsync(new NoteSyncAction("update", note));
         }
         catch (Exception ex)
         {

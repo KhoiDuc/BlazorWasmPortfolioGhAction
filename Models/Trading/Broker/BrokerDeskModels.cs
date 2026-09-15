@@ -274,6 +274,15 @@ public class BrokerDividend
     public string? Note { get; set; }
 }
 
+// ── Sync actions (FE → API CRUD) ──
+
+public abstract record BrokerSyncAction(string Action);
+public record PositionSyncAction(string Action, BrokerPosition Position) : BrokerSyncAction(Action);
+public record LotSyncAction(string Action, BrokerLot Lot) : BrokerSyncAction(Action);
+public record SellSyncAction(string Action, BrokerSell Sell) : BrokerSyncAction(Action);
+public record NoteSyncAction(string Action, BrokerNote Note) : BrokerSyncAction(Action);
+public record DividendSyncAction(string Action, BrokerDividend Dividend) : BrokerSyncAction(Action);
+
 public sealed class BrokerCashFlowEntry
 {
     public DateTime Date { get; init; }

@@ -286,8 +286,7 @@
             <BrokerPositionEditor @key="Selected.Symbol"
                                   Position="Selected"
                                   CurrentPrice="@Quote(Selected.Symbol)"
-                                  OnChanged="MarkDirty"
-                                  OnTradeChanged="MarkDirtyAndSync"
+                                  OnSync="OnEditorSync"
                                   OnDeleted="DeleteSelected"
                                   OnClosed="OnPositionClosed"
                                   OnReopen="OnPositionReopened"
@@ -320,7 +319,6 @@
     private int _priceProgressDone;
     private int _priceProgressTotal;
     private Timer? _persistTimer;
-    private Timer? _apiTimer;
     private Timer? _flashTimer;
     private CancellationTokenSource? _priceCts;
 
@@ -376,7 +374,7 @@
         _portfolio.ClosedPositions ??= [];
         _portfolio.ClosedPositions.Add(pos);
         _selected = null;
-        MarkDirtyAndSync();
+        await SyncPositionUpdate(pos);
         var realized = pos.RealizedPnl ?? 0m;
         Flash(realized >= 0
             ? $"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}"
@@ -391,7 +389,7 @@
         if (_portfolio.ClosedPositions?.Contains(pos) != true) return;
         _portfolio.ClosedPositions.Remove(pos);
         _portfolio.Positions.Add(pos);
-        MarkDirtyAndSync();
+        await SyncPositionUpdate(pos);
         Flash($"Đã mở lại {pos.Symbol} — có thể sửa lệnh bán rồi đóng lại.");
         await Task.CompletedTask;
     }
@@ -401,9 +399,12 @@
         if (Selected is null) return;
         if (!await JS.InvokeAsync<bool>("tradingAuth.confirm", $"Xóa vĩnh viễn vị thế đã đóng {Selected.Symbol}? Hành động này không thể hoàn tác."))
             return;
+        var symbol = Selected.Symbol;
         _portfolio.ClosedPositions?.Remove(Selected);
         _selected = null;
-        MarkDirtyAndSync();
+        MarkDirty();
+        var (ok, error) = await Store.DeletePositionAsync(symbol);
+        if (!ok) Flash($"Sync fail: {error}", error: true);
     }
 
     private void OpenQuickSell(string symbol)
@@ -419,7 +420,10 @@
         if (_quickSellPosition is null) return;
         var pos = _quickSellPosition;
         pos.Sells.Add(sell);
-        MarkDirtyAndSync();
+        MarkDirty();
+
+        var (ok, error) = await Store.AddSellAsync(pos.Symbol, sell);
+        if (!ok) Flash($"Sync fail: {error}", error: true);
 
         if (pos.RemainingQuantity is null or 0)
         {
@@ -441,22 +445,17 @@
         _portfolio.ClosedPositions.Add(pos);
         if (_selected?.Equals(pos.Symbol, StringComparison.OrdinalIgnoreCase) == true)
             _selected = null;
-        MarkDirtyAndSync();
+        await SyncPositionUpdate(pos);
         var realized = pos.RealizedPnl ?? 0m;
         Flash($"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}");
         await Task.CompletedTask;
     }
 
-    private void MarkDirty() => MarkDirty(syncApiImmediately: false);
-
-    private void MarkDirtyAndSync() => MarkDirty(syncApiImmediately: true);
-
-    private void MarkDirty(bool syncApiImmediately)
+    private void MarkDirty()
     {
         _dirty = true;
         _portfolio.UpdatedAt = DateTime.Now;
         SchedulePersistDraft();
-        ScheduleApiSave(syncApiImmediately ? 0 : 2000);
     }
 
     private void SchedulePersistDraft()
@@ -487,65 +486,88 @@
         }
     }
 
-    private void ScheduleApiSave(int delayMs)
+    // ── Direct CRUD sync (no debounce, no full-portfolio PUT) ──
+
+    private async Task SyncPositionUpdate(BrokerPosition pos)
     {
-        _apiTimer?.Dispose();
-        _apiTimer = null;
-
-        if (delayMs <= 0)
-        {
-            try
-            {
-                _ = InvokeAsync(PersistApiAsync);
-            }
-            catch
-            {
-                // Component may be disposed.
-            }
-            return;
-        }
-
-        _apiTimer = new Timer(_ =>
-        {
-            try
-            {
-                _ = InvokeAsync(PersistApiAsync);
-            }
-            catch
-            {
-                // Component may be disposed.
-            }
-        }, null, delayMs, Timeout.Infinite);
+        MarkDirty();
+        var (ok, error) = await Store.UpdatePositionAsync(pos.Symbol, pos);
+        if (!ok) Flash($"Sync fail: {error}", error: true);
     }
 
-    private Task PersistApiAsync() => PersistApiAsync(showMessage: true);
-
-    private async Task PersistApiAsync(bool showMessage)
+    private async Task OnEditorSync(BrokerSyncAction action)
     {
+        if (Selected is null) return;
+        var symbol = Selected.Symbol;
+        MarkDirty();
+
         try
         {
-            var (ok, error) = await Store.SaveToApiAsync(_portfolio);
-            if (ok)
+            switch (action)
             {
-                _dirty = false;
-                if (showMessage)
-                    Flash("Đã đồng bộ danh mục lên server.");
-            }
-            else if (showMessage)
-            {
-                Flash($"Sync fail: {error ?? "không rõ lỗi"}", error: true);
-            }
-            else
-            {
-                Console.WriteLine($"[Broker] sync fail (silent): {error}");
+                case PositionSyncAction posAction:
+                    {
+                        var (ok, error) = posAction.Action switch
+                        {
+                            "create" => await Store.CreatePositionAsync(posAction.Position),
+                            "update" => await Store.UpdatePositionAsync(symbol, posAction.Position),
+                            _ => (false, $"Unknown position action: {posAction.Action}")
+                        };
+                        if (!ok) Flash($"Sync fail: {error}", error: true);
+                        break;
+                    }
+                case LotSyncAction lotAction:
+                    {
+                        var (ok, error) = lotAction.Action switch
+                        {
+                            "create" => await Store.AddLotAsync(symbol, lotAction.Lot),
+                            "update" => await Store.UpdateLotAsync(symbol, lotAction.Lot),
+                            "delete" => await Store.DeleteLotAsync(symbol, lotAction.Lot.Id),
+                            _ => (false, $"Unknown lot action: {lotAction.Action}")
+                        };
+                        if (!ok) Flash($"Sync fail: {error}", error: true);
+                        break;
+                    }
+                case SellSyncAction sellAction:
+                    {
+                        var (ok, error) = sellAction.Action switch
+                        {
+                            "create" => await Store.AddSellAsync(symbol, sellAction.Sell),
+                            "update" => await Store.UpdateSellAsync(symbol, sellAction.Sell),
+                            "delete" => await Store.DeleteSellAsync(symbol, sellAction.Sell.Id),
+                            _ => (false, $"Unknown sell action: {sellAction.Action}")
+                        };
+                        if (!ok) Flash($"Sync fail: {error}", error: true);
+                        break;
+                    }
+                case NoteSyncAction noteAction:
+                    {
+                        var (ok, error) = noteAction.Action switch
+                        {
+                            "create" => await Store.AddNoteAsync(symbol, noteAction.Note),
+                            "update" => await Store.UpdateNoteAsync(symbol, noteAction.Note),
+                            "delete" => await Store.DeleteNoteAsync(symbol, noteAction.Note.Id),
+                            _ => (false, $"Unknown note action: {noteAction.Action}")
+                        };
+                        if (!ok) Flash($"Sync fail: {error}", error: true);
+                        break;
+                    }
+                case DividendSyncAction divAction:
+                    {
+                        var (ok, error) = divAction.Action switch
+                        {
+                            "create" => await Store.AddDividendAsync(symbol, divAction.Dividend),
+                            "delete" => await Store.DeleteDividendAsync(symbol, divAction.Dividend.Id),
+                            _ => (false, $"Unknown dividend action: {divAction.Action}")
+                        };
+                        if (!ok) Flash($"Sync fail: {error}", error: true);
+                        break;
+                    }
             }
         }
         catch (Exception ex)
         {
-            if (showMessage)
-                Flash($"Sync exception: {ex.GetType().Name}: {ex.Message}", error: true);
-            else
-                Console.WriteLine($"[Broker] sync exception (silent): {ex}");
+            Flash($"Sync exception: {ex.GetType().Name}: {ex.Message}", error: true);
         }
     }
 
@@ -554,8 +576,6 @@
         try
         {
             await Store.SaveDraftAsync(_portfolio);
-            if (_dirty)
-                await PersistApiAsync(showMessage: false);
         }
         catch
         {
@@ -628,20 +648,20 @@
         await JS.InvokeVoidAsync("eval", "document.getElementById('broker-symbol')?.focus()");
     }
 
-    private void DropRecommendation(string symbol)
+    private async Task DropRecommendation(string symbol)
     {
         var pos = _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
         if (pos is null) return;
         pos.Status = BrokerPositionStatus.BoTheoDoi;
-        MarkDirtyAndSync();
+        await SyncPositionUpdate(pos);
     }
 
-    private void ReactivateRecommendation(string symbol)
+    private async Task ReactivateRecommendation(string symbol)
     {
         var pos = _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
         if (pos is null) return;
         pos.Status = pos.Buys.Count > 0 ? BrokerPositionStatus.NamGiu : BrokerPositionStatus.ChoMua;
-        MarkDirtyAndSync();
+        await SyncPositionUpdate(pos);
     }
 
     private async Task AddRecommendation()
@@ -709,14 +729,16 @@
                 existing.TargetPrice = BrokerLevelHelper.ResolveTarget(refPrice, _targetMode, _targetInput) ?? resolvedTarget;
             }
 
+            BrokerNote? newNote = null;
             if (!string.IsNullOrWhiteSpace(_newNote))
             {
-                existing.Notes.Add(new BrokerNote
+                newNote = new BrokerNote
                 {
                     At = DateTime.Now,
                     Kind = BrokerNoteKind.Broker,
                     Text = $"Mua @ {_newPrice.Value:N2}: {_newNote.Trim()}"
-                });
+                };
+                existing.Notes.Add(newNote);
             }
 
             _selected = existing.Symbol;
@@ -726,7 +748,27 @@
             _stopMode = _targetMode = BrokerLevelInputMode.Price;
             _newNote = "";
             _fieldErrors.Clear();
-            MarkDirtyAndSync();
+            MarkDirty();
+
+            // Sync to API — create position (with nested lot+note) OR add lot to existing
+            if (isNew)
+            {
+                var (ok, error) = await Store.CreatePositionAsync(existing);
+                if (!ok) Flash($"Sync fail: {error}", error: true);
+            }
+            else
+            {
+                var (ok, error) = await Store.AddLotAsync(symbol, lot);
+                if (!ok) Flash($"Sync fail: {error}", error: true);
+                if (newNote is not null)
+                {
+                    var (okN, errN) = await Store.AddNoteAsync(symbol, newNote);
+                    if (!okN) Flash($"Sync note fail: {errN}", error: true);
+                }
+                // Update position-level stop/target/sector/status
+                var (okP, errP) = await Store.UpdatePositionAsync(symbol, existing);
+                if (!okP) Flash($"Sync position fail: {errP}", error: true);
+            }
 
             var avg = existing.AvgBuy;
             Flash(lotNo > 1
@@ -748,9 +790,12 @@
         if (!await JS.InvokeAsync<bool>("tradingAuth.confirm", L["Trading_BrokerConfirmDeleteSymbol", Selected.Symbol].Value))
             return;
 
+        var symbol = Selected.Symbol;
         _portfolio.Positions.Remove(Selected);
         _selected = null;
-        MarkDirtyAndSync();
+        MarkDirty();
+        var (ok, error) = await Store.DeletePositionAsync(symbol);
+        if (!ok) Flash($"Sync fail: {error}", error: true);
     }
 
     private async Task ExportJson()
@@ -770,8 +815,6 @@
 
             _persistTimer?.Dispose();
             _persistTimer = null;
-            _apiTimer?.Dispose();
-            _apiTimer = null;
             _priceCts?.Cancel();
 
             _selected = null;
@@ -837,7 +880,7 @@
                 return;
             }
 
-            var (synced, syncError) = await Store.SaveToApiAsync(_portfolio);
+            var (synced, syncError) = await Store.ImportAsync(_portfolio);
             _dirty = !synced;
 
             Flash(synced
@@ -963,7 +1006,6 @@
     public override void Dispose()
     {
         _persistTimer?.Dispose();
-        _apiTimer?.Dispose();
         _flashTimer?.Dispose();
         _priceCts?.Cancel();
         _priceCts?.Dispose();

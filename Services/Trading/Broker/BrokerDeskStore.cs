@@ -11,10 +11,36 @@ public interface IBrokerDeskStore
     Task<BrokerPortfolio> LoadAsync(CancellationToken ct = default);
     Task<BrokerPortfolio?> LoadFromApiAsync(CancellationToken ct = default);
     Task SaveDraftAsync(BrokerPortfolio portfolio, CancellationToken ct = default);
-    Task<(bool Ok, string? Error)> SaveToApiAsync(BrokerPortfolio portfolio, CancellationToken ct = default);
     Task DownloadJsonAsync(BrokerPortfolio portfolio);
     Task DownloadCsvAsync(BrokerPortfolio portfolio);
     BrokerPortfolio ParseJson(string json);
+
+    // CRUD Position
+    Task<(bool Ok, string? Error)> CreatePositionAsync(BrokerPosition pos);
+    Task<(bool Ok, string? Error)> UpdatePositionAsync(string symbol, BrokerPosition pos);
+    Task<(bool Ok, string? Error)> DeletePositionAsync(string symbol);
+
+    // CRUD Lot
+    Task<(bool Ok, string? Error)> AddLotAsync(string symbol, BrokerLot lot);
+    Task<(bool Ok, string? Error)> UpdateLotAsync(string symbol, BrokerLot lot);
+    Task<(bool Ok, string? Error)> DeleteLotAsync(string symbol, string lotId);
+
+    // CRUD Sell
+    Task<(bool Ok, string? Error)> AddSellAsync(string symbol, BrokerSell sell);
+    Task<(bool Ok, string? Error)> UpdateSellAsync(string symbol, BrokerSell sell);
+    Task<(bool Ok, string? Error)> DeleteSellAsync(string symbol, string sellId);
+
+    // CRUD Note
+    Task<(bool Ok, string? Error)> AddNoteAsync(string symbol, BrokerNote note);
+    Task<(bool Ok, string? Error)> UpdateNoteAsync(string symbol, BrokerNote note);
+    Task<(bool Ok, string? Error)> DeleteNoteAsync(string symbol, string noteId);
+
+    // CRUD Dividend
+    Task<(bool Ok, string? Error)> AddDividendAsync(string symbol, BrokerDividend div);
+    Task<(bool Ok, string? Error)> DeleteDividendAsync(string symbol, string divId);
+
+    // Import (PUT toàn bộ — cho ImportJson)
+    Task<(bool Ok, string? Error)> ImportAsync(BrokerPortfolio portfolio);
 }
 
 public sealed class BrokerDeskStore : IBrokerDeskStore
@@ -75,9 +101,6 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
         await _js.InvokeVoidAsync("tradingAuth.setItem", DraftKey, json);
     }
 
-    public Task<(bool Ok, string? Error)> SaveToApiAsync(BrokerPortfolio portfolio, CancellationToken ct = default) =>
-        _api.SavePortfolioAsync(NormalizePortfolio(portfolio), ct);
-
     public BrokerPortfolio ParseJson(string json)
     {
         if (string.IsNullOrWhiteSpace(json))
@@ -122,6 +145,63 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
             lot.Tags ??= [];
         return position;
     }
+
+    // ── CRUD Position ──
+
+    public Task<(bool Ok, string? Error)> CreatePositionAsync(BrokerPosition pos) =>
+        _api.CreatePositionAsync(pos);
+
+    public Task<(bool Ok, string? Error)> UpdatePositionAsync(string symbol, BrokerPosition pos) =>
+        _api.UpdatePositionAsync(symbol, pos);
+
+    public Task<(bool Ok, string? Error)> DeletePositionAsync(string symbol) =>
+        _api.DeletePositionAsync(symbol);
+
+    // ── CRUD Lot ──
+
+    public Task<(bool Ok, string? Error)> AddLotAsync(string symbol, BrokerLot lot) =>
+        _api.AddLotAsync(symbol, lot);
+
+    public Task<(bool Ok, string? Error)> UpdateLotAsync(string symbol, BrokerLot lot) =>
+        _api.UpdateLotAsync(symbol, lot);
+
+    public Task<(bool Ok, string? Error)> DeleteLotAsync(string symbol, string lotId) =>
+        _api.DeleteLotAsync(symbol, lotId);
+
+    // ── CRUD Sell ──
+
+    public Task<(bool Ok, string? Error)> AddSellAsync(string symbol, BrokerSell sell) =>
+        _api.AddSellAsync(symbol, sell);
+
+    public Task<(bool Ok, string? Error)> UpdateSellAsync(string symbol, BrokerSell sell) =>
+        _api.UpdateSellAsync(symbol, sell);
+
+    public Task<(bool Ok, string? Error)> DeleteSellAsync(string symbol, string sellId) =>
+        _api.DeleteSellAsync(symbol, sellId);
+
+    // ── CRUD Note ──
+
+    public Task<(bool Ok, string? Error)> AddNoteAsync(string symbol, BrokerNote note) =>
+        _api.AddNoteAsync(symbol, note);
+
+    public Task<(bool Ok, string? Error)> UpdateNoteAsync(string symbol, BrokerNote note) =>
+        _api.UpdateNoteAsync(symbol, note);
+
+    public Task<(bool Ok, string? Error)> DeleteNoteAsync(string symbol, string noteId) =>
+        _api.DeleteNoteAsync(symbol, noteId);
+
+    // ── CRUD Dividend ──
+
+    public Task<(bool Ok, string? Error)> AddDividendAsync(string symbol, BrokerDividend div) =>
+        _api.AddDividendAsync(symbol, div);
+
+    public Task<(bool Ok, string? Error)> DeleteDividendAsync(string symbol, string divId) =>
+        _api.DeleteDividendAsync(symbol, divId);
+
+    // ── Import (PUT toàn bộ) ──
+
+    public Task<(bool Ok, string? Error)> ImportAsync(BrokerPortfolio portfolio) =>
+        _api.ImportPortfolioAsync(NormalizePortfolio(portfolio));
 
     public Task DownloadJsonAsync(BrokerPortfolio portfolio)
     {
