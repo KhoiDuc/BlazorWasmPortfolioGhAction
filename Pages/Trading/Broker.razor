@@ -287,6 +287,7 @@
                                   Position="Selected"
                                   CurrentPrice="@Quote(Selected.Symbol)"
                                   OnChanged="MarkDirty"
+                                  OnTradeChanged="MarkDirtyAndSync"
                                   OnDeleted="DeleteSelected"
                                   OnClosed="OnPositionClosed"
                                   OnReopen="OnPositionReopened"
@@ -375,7 +376,7 @@
         _portfolio.ClosedPositions ??= [];
         _portfolio.ClosedPositions.Add(pos);
         _selected = null;
-        MarkDirty();
+        MarkDirtyAndSync();
         var realized = pos.RealizedPnl ?? 0m;
         Flash(realized >= 0
             ? $"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}"
@@ -390,7 +391,7 @@
         if (_portfolio.ClosedPositions?.Contains(pos) != true) return;
         _portfolio.ClosedPositions.Remove(pos);
         _portfolio.Positions.Add(pos);
-        MarkDirty();
+        MarkDirtyAndSync();
         Flash($"Đã mở lại {pos.Symbol} — có thể sửa lệnh bán rồi đóng lại.");
         await Task.CompletedTask;
     }
@@ -418,7 +419,7 @@
         if (_quickSellPosition is null) return;
         var pos = _quickSellPosition;
         pos.Sells.Add(sell);
-        MarkDirty();
+        MarkDirtyAndSync();
 
         if (pos.RemainingQuantity is null or 0)
         {
@@ -440,18 +441,22 @@
         _portfolio.ClosedPositions.Add(pos);
         if (_selected?.Equals(pos.Symbol, StringComparison.OrdinalIgnoreCase) == true)
             _selected = null;
-        MarkDirty();
+        MarkDirtyAndSync();
         var realized = pos.RealizedPnl ?? 0m;
         Flash($"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}");
         await Task.CompletedTask;
     }
 
-    private void MarkDirty()
+    private void MarkDirty() => MarkDirty(syncApiImmediately: false);
+
+    private void MarkDirtyAndSync() => MarkDirty(syncApiImmediately: true);
+
+    private void MarkDirty(bool syncApiImmediately)
     {
         _dirty = true;
         _portfolio.UpdatedAt = DateTime.Now;
         SchedulePersistDraft();
-        ScheduleApiSave();
+        ScheduleApiSave(syncApiImmediately ? 0 : 2000);
     }
 
     private void SchedulePersistDraft()
@@ -482,9 +487,24 @@
         }
     }
 
-    private void ScheduleApiSave()
+    private void ScheduleApiSave(int delayMs)
     {
         _apiTimer?.Dispose();
+        _apiTimer = null;
+
+        if (delayMs <= 0)
+        {
+            try
+            {
+                _ = InvokeAsync(PersistApiAsync);
+            }
+            catch
+            {
+                // Component may be disposed.
+            }
+            return;
+        }
+
         _apiTimer = new Timer(_ =>
         {
             try
@@ -495,7 +515,7 @@
             {
                 // Component may be disposed.
             }
-        }, null, 2000, Timeout.Infinite);
+        }, null, delayMs, Timeout.Infinite);
     }
 
     private async Task PersistApiAsync()
@@ -682,7 +702,7 @@
             _stopMode = _targetMode = BrokerLevelInputMode.Price;
             _newNote = "";
             _fieldErrors.Clear();
-            MarkDirty();
+            MarkDirtyAndSync();
 
             var avg = existing.AvgBuy;
             Flash(lotNo > 1

@@ -538,6 +538,7 @@
     [Parameter, EditorRequired] public BrokerPosition Position { get; set; } = new();
     [Parameter] public decimal? CurrentPrice { get; set; }
     [Parameter] public EventCallback OnChanged { get; set; }
+    [Parameter] public EventCallback OnTradeChanged { get; set; }
     [Parameter] public EventCallback OnDeleted { get; set; }
     [Parameter] public EventCallback OnClosed { get; set; }
     [Parameter] public EventCallback OnReopen { get; set; }
@@ -599,6 +600,10 @@
     }
 
     private Task Changed() => OnChanged.InvokeAsync();
+
+    private Task TradeChanged() => OnTradeChanged.HasDelegate
+        ? OnTradeChanged.InvokeAsync()
+        : OnChanged.InvokeAsync();
 
     private void ValidatePositionLevels()
     {
@@ -663,7 +668,7 @@
         lot.TargetPrice = resolvedTarget;
 
         _lotErrors.Remove(lot.Id);
-        _ = Changed();
+        _ = TradeChanged();
     }
 
     private async Task RemoveLot(BrokerLot lot)
@@ -673,7 +678,7 @@
 
         Position.Buys.Remove(lot);
         _lotErrors.Remove(lot.Id);
-        await Changed();
+        await TradeChanged();
     }
 
     private async Task AddSell()
@@ -719,7 +724,7 @@
             return;
         }
 
-        await Changed();
+        await TradeChanged();
     }
 
     private async Task RemoveSell(BrokerSell sell)
@@ -728,7 +733,7 @@
             return;
 
         Position.Sells.Remove(sell);
-        await Changed();
+        await TradeChanged();
     }
 
     private void OnTagKeydown(KeyboardEventArgs e)
