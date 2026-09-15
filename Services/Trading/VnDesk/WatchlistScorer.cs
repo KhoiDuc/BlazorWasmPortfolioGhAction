@@ -16,7 +16,7 @@ public sealed class WatchlistScorer
         s.Rsi = ind.RSI >= 40 && ind.RSI <= 65 ? 4 : ind.RSI >= 35 && ind.RSI <= 70 ? 2 : 0;
         s.NearSupport = dist <= 0.05m ? 4 : dist <= 0.08m ? 2 : 0;
         s.Volume = ind.VolumeRatio >= 1.2m ? 4 : ind.VolumeRatio >= 1.0m ? 2 : 0;
-        s.Note = s.Pass ? "Dat" : "Loai";
+        s.Note = s.Pass ? "Đạt" : "Loại";
         return s;
     }
 }

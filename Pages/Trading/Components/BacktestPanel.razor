@@ -19,7 +19,7 @@
     <div class="vd-controls mt-2" style="flex-direction:column;align-items:stretch;gap:0.75rem">
         <div>
             <label class="ts-label" for="bt-indicator">@L["Trading_Backtest_Indicator"]</label>
-            <select id="bt-indicator" class="vd-select" style="width:100%;max-width:320px" @bind="_indicator">
+            <select id="bt-indicator" class="vd-select vd-input-wide" @bind="_indicator">
                 <option value="SuperTrend">SuperTrend — đổi xu hướng</option>
                 <option value="T3">T3 Tilson — xu hướng mượt</option>
                 <option value="VCP">VCP — co biên độ + breakout</option>
@@ -30,16 +30,16 @@
         </div>
         <div>
             <label class="ts-label" for="bt-symbols">@L["Trading_Backtest_Symbols"]</label>
-            <input id="bt-symbols" class="vd-input" style="width:100%;max-width:480px" @bind="_symbols" placeholder="VNM,FPT,MWG..." />
+            <input id="bt-symbols" class="vd-input vd-input-wide" @bind="_symbols" placeholder="VNM,FPT,MWG..." />
         </div>
         <div class="vd-controls">
             <div>
                 <label class="ts-label" for="bt-tp">Take Profit %</label>
-                <input id="bt-tp" type="number" class="vd-input" @bind="_tpPct" style="max-width:120px" />
+                <input id="bt-tp" type="number" class="vd-input vd-input-narrow" @bind="_tpPct" />
             </div>
             <div>
                 <label class="ts-label" for="bt-sl">Stop Loss %</label>
-                <input id="bt-sl" type="number" class="vd-input" @bind="_slPct" style="max-width:120px" />
+                <input id="bt-sl" type="number" class="vd-input vd-input-narrow" @bind="_slPct" />
             </div>
         </div>
         <div>

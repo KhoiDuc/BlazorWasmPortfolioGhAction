@@ -97,7 +97,7 @@ public sealed class VnScreenerService
             PriceChange = data.Count >= 2 ? (decimal)((current - (double)data[^2].Close) / (double)data[^2].Close * 100) : 0,
             Volume = (decimal)volumes.Last(),
             PotentialScore = score,
-            Reason = $"Giam {drop:P1} ({peak:N0}->{bottom:N0}) | Hoi {rec:P1} | Vol x{volSurge:N1}"
+            Reason = $"Giảm {drop:P1} ({peak:N0}→{bottom:N0}) | Hồi {rec:P1} | Vol x{volSurge:N1}"
         };
     }
 
@@ -118,9 +118,9 @@ public sealed class VnScreenerService
         var low = closes.TakeLast(20).Min();
         var cur = closes.Last();
         var dist = (cur - low) / low;
-        if (dist <= 0.05) return (30, $"Gan ho tro (cach day {dist * 100:F1}%)");
-        if (dist <= 0.1) return (20, $"Tiem can ho tro (cach day {dist * 100:F1}%)");
-        return (0, $"Vung trung binh (cach day {dist * 100:F1}%)");
+        if (dist <= 0.05) return (30, $"Gần hỗ trợ (cách đáy {dist * 100:F1}%)");
+        if (dist <= 0.1) return (20, $"Tiệm cận hỗ trợ (cách đáy {dist * 100:F1}%)");
+        return (0, $"Vùng trung bình (cách đáy {dist * 100:F1}%)");
     }
 
     private static (int score, string reason) EvaluateVolume(double[] volumes)
@@ -128,7 +128,7 @@ public sealed class VnScreenerService
         var last = volumes.Last();
         var avg = volumes.TakeLast(20).Average();
         var ratio = avg == 0 ? 1 : last / avg;
-        if (last > avg * 2) return (30, $"Volume dot bien x{ratio:F1}");
+        if (last > avg * 2) return (30, $"Volume đột biến x{ratio:F1}");
         if (last > avg * 1.5) return (20, $"Volume cao x{ratio:F1}");
         return (0, $"Volume TB x{ratio:F1}");
     }

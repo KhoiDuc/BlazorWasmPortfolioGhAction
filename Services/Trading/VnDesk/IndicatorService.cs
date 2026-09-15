@@ -110,7 +110,7 @@ public sealed partial class IndicatorService
     {
         if (ticks.Count == 0)
         {
-            ind.IntradayNote = "Khong co du lieu intraday (Python/TCBS).";
+            ind.IntradayNote = "Không có dữ liệu intraday (Python/TCBS).";
             return;
         }
 
@@ -141,11 +141,11 @@ public sealed partial class IndicatorService
         return new TechnicalChecklist
         {
             Symbol = ind.Symbol,
-            Context = $"Trend: {ind.Trend}. Gia {close:N2} | SMA20 {ind.SMA20:N2} SMA50 {ind.SMA50:N2} SMA200 {ind.SMA200:N2}. KL x{ind.VolumeRatio:N2} TB20. {ind.LiquidityAssessment}",
-            ConfirmInvalidate = $"Xac nhan: {ind.TradingSignal.Action} (quan sat). RSI {ind.RSI:N1}, MACD hist {ind.Histogram:N3}, {ind.Divergence}. Invalidate: mat {nearestSup:N2} hoac RSI dao chieu.",
-            Risk = $"ATR% {ind.ATR:N2}. Stop goi y {ind.TradingSignal.StopLoss:N2}. TP {ind.TradingSignal.TakeProfit:N2}. Khang cu {nearestRes:N2}.",
+            Context = $"Trend: {ind.Trend}. Giá {close:N2} | SMA20 {ind.SMA20:N2} SMA50 {ind.SMA50:N2} SMA200 {ind.SMA200:N2}. KL x{ind.VolumeRatio:N2} TB20. {ind.LiquidityAssessment}",
+            ConfirmInvalidate = $"Xác nhận: {ind.TradingSignal.Action} (quan sát). RSI {ind.RSI:N1}, MACD hist {ind.Histogram:N3}, {ind.Divergence}. Invalidate: mất {nearestSup:N2} hoặc RSI đảo chiều.",
+            Risk = $"ATR% {ind.ATR:N2}. Stop gợi ý {ind.TradingSignal.StopLoss:N2}. TP {ind.TradingSignal.TakeProfit:N2}. Kháng cự {nearestRes:N2}.",
             Verify = string.IsNullOrWhiteSpace(notes)
-                ? "Doi chieu lai nen + KL goc VNDirect truoc khi hanh dong."
+                ? "Đối chiếu lại nến + KL gốc VNDirect trước khi hành động."
                 : notes,
             Observation = string.Join("; ", ind.Patterns.Take(5).Select(p => p.Name))
         };
@@ -393,21 +393,21 @@ public sealed partial class IndicatorService
 
     private static string AnalyzeLiquidity(decimal latest, decimal avg20, decimal avg50)
     {
-        if (avg20 <= 0 && avg50 <= 0) return "Khong du du lieu khoi luong.";
-        if (avg20 > 0 && avg20 < 50_000) return "Thanh khoan rat thap (TB20 < 50k).";
+        if (avg20 <= 0 && avg50 <= 0) return "Không đủ dữ liệu khối lượng.";
+        if (avg20 > 0 && avg20 < 50_000) return "Thanh khoản rất thấp (TB20 < 50k).";
         var shortR = avg20 > 0 ? latest / avg20 : 1;
         var longR = avg20 > 0 && avg50 > 0 ? avg20 / avg50 : 1;
-        if (longR < 0.7m && shortR < 0.7m) return "Thanh khoan giam dan va thap phien gan nhat.";
-        if (longR < 0.7m) return "Thanh khoan giam dan (TB20 < 70% TB50).";
-        if (shortR < 0.7m) return "Thanh khoan phien gan nhat thap hon 70% TB20.";
-        return "Thanh khoan binh thuong.";
+        if (longR < 0.7m && shortR < 0.7m) return "Thanh khoản giảm dần và thấp phiên gần nhất.";
+        if (longR < 0.7m) return "Thanh khoản giảm dần (TB20 < 70% TB50).";
+        if (shortR < 0.7m) return "Thanh khoản phiên gần nhất thấp hơn 70% TB20.";
+        return "Thanh khoản bình thường.";
     }
 
     private static string DetermineTrend(decimal[] closes, decimal sma20, decimal sma50, decimal sma200,
         decimal latestVolume, decimal volumeAverage, decimal rsi, decimal atr,
         decimal bbUpper, decimal bbLower, decimal bbMiddle)
     {
-        if (closes.Length < 20 || volumeAverage <= 0) return "Khong du du lieu";
+        if (closes.Length < 20 || volumeAverage <= 0) return "Không đủ dữ liệu";
         var latest = closes.Last();
         var prev20 = closes.TakeLast(21).Take(20).Average();
         var prev50 = closes.Length >= 51 ? closes.TakeLast(51).Take(50).Average() : 0;
@@ -421,40 +421,40 @@ public sealed partial class IndicatorService
         {
             if (latest > sma200 && sma50 > sma200)
             {
-                if (sma20 > sma50 && sma20Up && sma50 > prev50 && volOk && rsiUp && !sideways) return "Tang manh dai han";
-                if (sma20 > sma50 || (volOk && rsiUp && !sideways)) return "Tang dai han";
+                if (sma20 > sma50 && sma20Up && sma50 > prev50 && volOk && rsiUp && !sideways) return "Tăng mạnh dài hạn";
+                if (sma20 > sma50 || (volOk && rsiUp && !sideways)) return "Tăng dài hạn";
             }
             if (latest < sma200 && sma50 < sma200)
             {
-                if (sma20 < sma50 && !sma20Up && sma50 < prev50 && volOk && rsiDn && !sideways) return "Giam manh dai han";
-                if (sma20 < sma50 || (volOk && rsiDn && !sideways)) return "Giam dai han";
+                if (sma20 < sma50 && !sma20Up && sma50 < prev50 && volOk && rsiDn && !sideways) return "Giảm mạnh dài hạn";
+                if (sma20 < sma50 || (volOk && rsiDn && !sideways)) return "Giảm dài hạn";
             }
         }
         if (closes.Length >= 50 && prev50 > 0)
         {
             if (latest > sma50)
             {
-                if (sma20 > sma50 && sma20Up && sma50 > prev50 && volOk && rsiUp && !sideways) return "Tang manh trung han";
-                if ((sma20 > sma50 && sma20Up) || (volOk && rsiUp && !sideways)) return "Tang trung han";
+                if (sma20 > sma50 && sma20Up && sma50 > prev50 && volOk && rsiUp && !sideways) return "Tăng mạnh trung hạn";
+                if ((sma20 > sma50 && sma20Up) || (volOk && rsiUp && !sideways)) return "Tăng trung hạn";
             }
             if (latest < sma50)
             {
-                if (sma20 < sma50 && !sma20Up && sma50 < prev50 && volOk && rsiDn && !sideways) return "Giam manh trung han";
-                if ((sma20 < sma50 && !sma20Up) || (volOk && rsiDn && !sideways)) return "Giam trung han";
+                if (sma20 < sma50 && !sma20Up && sma50 < prev50 && volOk && rsiDn && !sideways) return "Giảm mạnh trung hạn";
+                if ((sma20 < sma50 && !sma20Up) || (volOk && rsiDn && !sideways)) return "Giảm trung hạn";
             }
         }
         if (latest > sma20)
         {
-            if (sma20Up && volOk && rsiUp && !sideways) return "Tang manh ngan han";
-            if (sma20Up || volOk) return "Tang ngan han";
+            if (sma20Up && volOk && rsiUp && !sideways) return "Tăng mạnh ngắn hạn";
+            if (sma20Up || volOk) return "Tăng ngắn hạn";
         }
         if (latest < sma20)
         {
-            if (!sma20Up && volOk && rsiDn && !sideways) return "Giam manh ngan han";
-            if (!sma20Up || volOk) return "Giam ngan han";
+            if (!sma20Up && volOk && rsiDn && !sideways) return "Giảm mạnh ngắn hạn";
+            if (!sma20Up || volOk) return "Giảm ngắn hạn";
         }
-        if (sma20 != 0 && Math.Abs(latest - sma20) / sma20 < 0.01m) return "Di ngang chat";
-        return "Di ngang";
+        if (sma20 != 0 && Math.Abs(latest - sma20) / sma20 < 0.01m) return "Đi ngang chật";
+        return "Đi ngang";
     }
 
     private static TradingSignal GenerateTradingSignals(decimal rsi, MACDResult macd, StochasticResult stoch,
@@ -465,8 +465,8 @@ public sealed partial class IndicatorService
 
         bool bullX = macd.MacdLine > macd.SignalLine && macd.Histogram > 0;
         bool bearX = macd.MacdLine < macd.SignalLine && macd.Histogram < 0;
-        bool buy = rsi < 45 && bullX && stoch.k < 35 && stoch.k > stoch.d && volume.Ratio > 1.1m && (trend.Contains("Tang") || trend.Contains("ngang"));
-        bool sell = rsi > 55 && bearX && stoch.k > 65 && stoch.k < stoch.d && volume.Ratio > 1.1m && (trend.Contains("Giam") || trend.Contains("ngang"));
+        bool buy = rsi < 45 && bullX && stoch.k < 35 && stoch.k > stoch.d && volume.Ratio > 1.1m && (trend.Contains("Tăng") || trend.Contains("ngang"));
+        bool sell = rsi > 55 && bearX && stoch.k > 65 && stoch.k < stoch.d && volume.Ratio > 1.1m && (trend.Contains("Giảm") || trend.Contains("ngang"));
         var supports = sr.SupportLevels.OrderByDescending(s => s).ToArray();
         var resistances = sr.ResistanceLevels.OrderBy(r => r).ToArray();
         var atrAbs = atr / 100 * latest;
@@ -485,9 +485,9 @@ public sealed partial class IndicatorService
             if (volume.Ratio > 1.3m) score++;
             if (macd.MacdLine - macd.SignalLine > 0.2m) score++;
             if (stoch.k < 25) score++;
-            if (trend.Contains("manh")) score++;
+            if (trend.Contains("mạnh")) score++;
             if (score >= 3) { signal.Action = "StrongBuy"; signal.Recommendation = RecommendationAction.StrongBuy; }
-            signal.Rationale = "Quan sat: RSI thap + MACD cat len + volume. Khong phai lenh.";
+            signal.Rationale = "Quan sát: RSI thấp + MACD cắt lên + volume. Không phải lệnh.";
         }
         if (sell)
         {
@@ -503,9 +503,9 @@ public sealed partial class IndicatorService
             if (volume.Ratio > 1.3m) score++;
             if (macd.SignalLine - macd.MacdLine > 0.2m) score++;
             if (stoch.k > 75) score++;
-            if (trend.Contains("manh")) score++;
+            if (trend.Contains("mạnh")) score++;
             if (score >= 3) { signal.Action = "StrongSell"; signal.Recommendation = RecommendationAction.StrongSell; }
-            signal.Rationale = "Quan sat: RSI cao + MACD cat xuong + volume. Khong phai lenh.";
+            signal.Rationale = "Quan sát: RSI cao + MACD cắt xuống + volume. Không phải lệnh.";
         }
         return signal;
     }
@@ -523,13 +523,13 @@ public sealed partial class IndicatorService
 
     private static string DetectDivergence(decimal[] closes, decimal[] volumes, int lookback)
     {
-        if (closes.Length < lookback || lookback < 5) return "Khong du du lieu";
+        if (closes.Length < lookback || lookback < 5) return "Không đủ dữ liệu";
         var rsi = RsiValues(closes);
         var macd = MacdLineValues(closes);
         var recentC = closes.TakeLast(lookback).ToArray();
         var recentR = rsi.TakeLast(lookback).ToArray();
         var recentM = macd.TakeLast(lookback).ToArray();
-        if (recentR.Length < lookback || recentM.Length < lookback) return "Khong du du lieu RSI/MACD";
+        if (recentR.Length < lookback || recentM.Length < lookback) return "Không đủ dữ liệu RSI/MACD";
         var highs = new List<(int i, decimal p, decimal r, decimal m)>();
         var lows = new List<(int i, decimal p, decimal r, decimal m)>();
         for (int i = 1; i < recentC.Length - 1; i++)
@@ -551,31 +551,31 @@ public sealed partial class IndicatorService
             if (last.p < prev.p && (last.r > prev.r || last.m > prev.m))
                 return "Bullish Divergence";
         }
-        return "Khong co phan ky";
+        return "Không có phân kỳ";
     }
 
     private static List<string> DetectChartPatterns(List<StockData> data, decimal tolerance = 0.03m)
     {
         var patterns = new List<string>();
-        if (data.Count < 20) return ["Khong du du lieu"];
+        if (data.Count < 20) return ["Không đủ dữ liệu"];
         var closes = data.Select(d => d.Close).ToArray();
         var highs = data.Select(d => d.High).ToArray();
         var lows = data.Select(d => d.Low).ToArray();
         var vols = data.Select(d => d.Volume).ToArray();
         var avgVol = vols.TakeLast(20).Average();
-        if (avgVol < 100_000) return ["Thanh khoan thap, loai tin hieu"];
+        if (avgVol < 100_000) return ["Thanh khoản thấp, loại tín hiệu"];
 
         var recentLows = lows.TakeLast(20).ToArray();
         var lowIdx = recentLows.Select((v, i) => new { v, i }).OrderBy(x => x.v).Take(2).OrderBy(x => x.i).ToArray();
         if (lowIdx.Length == 2 && Math.Abs(lowIdx[0].v - lowIdx[1].v) / lowIdx[0].v <= tolerance && lowIdx[1].i - lowIdx[0].i >= 3)
-            patterns.Add("Double Bottom (quan sat)");
+            patterns.Add("Double Bottom (quan sát)");
 
         var recentHighs = highs.TakeLast(20).ToArray();
         var highIdx = recentHighs.Select((v, i) => new { v, i }).OrderByDescending(x => x.v).Take(2).OrderBy(x => x.i).ToArray();
         if (highIdx.Length == 2 && Math.Abs(highIdx[0].v - highIdx[1].v) / highIdx[0].v <= tolerance && highIdx[1].i - highIdx[0].i >= 3)
-            patterns.Add("Double Top (quan sat)");
+            patterns.Add("Double Top (quan sát)");
 
-        return patterns.Count > 0 ? patterns : ["Khong phat hien mau hinh"];
+        return patterns.Count > 0 ? patterns : ["Không phát hiện mẫu hình"];
     }
 }
 

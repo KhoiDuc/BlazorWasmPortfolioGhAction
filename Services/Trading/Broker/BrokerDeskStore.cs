@@ -213,7 +213,7 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
     public Task DownloadCsvAsync(BrokerPortfolio portfolio)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Nganh,Ma CP,Gia mua,KL tong,KL con lai,Gia TB,Cat lo,Muc tieu,Ti trong,Trang thai,Realized P&L (đ),Co tuc (đ),Note moi nhat");
+        sb.AppendLine("Ngành,Mã CP,Giá mua,KL tổng,KL còn lại,Giá TB,Cắt lỗ,Mục tiêu,Tỷ trọng,Trạng thái,Realized P&L (đ),Cổ tức (đ),Note mới nhất");
         foreach (var p in portfolio.Positions.OrderBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase))
         {
             var lots = string.Join(" | ", p.Buys.OrderBy(b => b.BoughtAt).Select((b, i) =>

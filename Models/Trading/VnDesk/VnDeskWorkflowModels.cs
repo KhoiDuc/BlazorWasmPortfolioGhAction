@@ -4,10 +4,10 @@ public class WatchlistState
 {
     public List<string> Criteria { get; set; } =
     [
-        "Thanh khoan: KL >= TB20 * 0.8",
-        "Trend: gia > SMA20 hoac SMA20 > SMA50",
-        "RSI vung 40-65 (khong qua mua cuc doan)",
-        "Gan ho tro: cach day 20 phien <= 8%",
+        "Thanh khoản: KL >= TB20 * 0.8",
+        "Trend: giá > SMA20 hoặc SMA20 > SMA50",
+        "RSI vùng 40-65 (không quá mua cục đoạn)",
+        "Gần hỗ trợ: cách đáy 20 phiên <= 8%",
         "Volume: KL >= TB20 * 1.2"
     ];
     public List<WatchlistScore> LastScores { get; set; } = [];

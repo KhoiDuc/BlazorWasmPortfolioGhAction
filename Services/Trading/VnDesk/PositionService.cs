@@ -17,7 +17,7 @@ public sealed class PositionService
         // VN quotes are often in thousands; keep user input as typed (dong or nghin — user types actual).
         var broker = Brokers.FirstOrDefault(b => b.Key.Equals(brokerKey, StringComparison.OrdinalIgnoreCase));
         var feePct = customFee ?? (broker.Name is null ? 0.15m : broker.FeePct);
-        var name = broker.Name ?? "Khac";
+        var name = broker.Name ?? "Khác";
         const decimal sellTaxRate = 0.001m;
 
         decimal buyValue = entryPrice * shares;
@@ -30,9 +30,9 @@ public sealed class PositionService
         decimal pnl = net - totalCost;
         decimal pct = totalCost == 0 ? 0 : pnl / totalCost * 100;
 
-        var note = pct < -5 ? "Lo > 5%. Can nhac cat lo / theo doi."
-            : pct > 10 ? "Lai > 10%. Can nhac chot mot phan."
-            : "Vi the on dinh. Tiep tuc theo doi.";
+        var note = pct < -5 ? "Lỗ > 5%. Cân nhắc cắt lỗ / theo dõi."
+            : pct > 10 ? "Lãi > 10%. Cân nhắc chốt một phần."
+            : "Vị thế ổn định. Tiếp tục theo dõi.";
 
         return new PositionResult
         {
@@ -61,14 +61,14 @@ public sealed class PositionService
         if (price <= 0 || capital <= 0 || riskPct <= 0)
         {
             result.NoTrade = true;
-            result.Reason = "Thieu von / gia / % risk.";
+            result.Reason = "Thiếu vốn / giá / % risk.";
             return result;
         }
         var dist = Math.Abs(price - stop);
         if (dist <= 0)
         {
             result.NoTrade = true;
-            result.Reason = "Thieu stop hoac stop = gia. No-trade.";
+            result.Reason = "Thiếu stop hoặc stop = giá. No-trade.";
             return result;
         }
         result.StopDistance = dist;
