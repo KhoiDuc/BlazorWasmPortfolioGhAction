@@ -524,7 +524,7 @@
     {
         try
         {
-            var ok = await Store.SaveToApiAsync(_portfolio);
+            var (ok, error) = await Store.SaveToApiAsync(_portfolio);
             if (ok)
             {
                 _dirty = false;
@@ -533,13 +533,19 @@
             }
             else if (showMessage)
             {
-                Flash("Chưa đồng bộ được lên server — kiểm tra BrokerApi trong appsettings.", error: true);
+                Flash($"Sync fail: {error ?? "không rõ lỗi"}", error: true);
+            }
+            else
+            {
+                Console.WriteLine($"[Broker] sync fail (silent): {error}");
             }
         }
-        catch
+        catch (Exception ex)
         {
             if (showMessage)
-                Flash("Chưa đồng bộ được lên server — kiểm tra BrokerApi trong appsettings.", error: true);
+                Flash($"Sync exception: {ex.GetType().Name}: {ex.Message}", error: true);
+            else
+                Console.WriteLine($"[Broker] sync exception (silent): {ex}");
         }
     }
 
@@ -831,12 +837,12 @@
                 return;
             }
 
-            var synced = await Store.SaveToApiAsync(_portfolio);
+            var (synced, syncError) = await Store.SaveToApiAsync(_portfolio);
             _dirty = !synced;
 
             Flash(synced
                 ? $"Đã import {(_portfolio.Positions.Count + (_portfolio.ClosedPositions?.Count ?? 0))} mã và đồng bộ lên server."
-                : L["Trading_BrokerImportOk", _portfolio.Positions.Count].Value + " — chưa đồng bộ được lên server.",
+                : L["Trading_BrokerImportOk", _portfolio.Positions.Count].Value + $" — sync fail: {syncError}",
                 error: !synced);
 
             await RefreshPrices();

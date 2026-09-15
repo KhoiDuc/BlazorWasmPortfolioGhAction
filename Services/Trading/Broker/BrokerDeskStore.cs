@@ -11,7 +11,7 @@ public interface IBrokerDeskStore
     Task<BrokerPortfolio> LoadAsync(CancellationToken ct = default);
     Task<BrokerPortfolio?> LoadFromApiAsync(CancellationToken ct = default);
     Task SaveDraftAsync(BrokerPortfolio portfolio, CancellationToken ct = default);
-    Task<bool> SaveToApiAsync(BrokerPortfolio portfolio, CancellationToken ct = default);
+    Task<(bool Ok, string? Error)> SaveToApiAsync(BrokerPortfolio portfolio, CancellationToken ct = default);
     Task DownloadJsonAsync(BrokerPortfolio portfolio);
     Task DownloadCsvAsync(BrokerPortfolio portfolio);
     BrokerPortfolio ParseJson(string json);
@@ -75,7 +75,7 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
         await _js.InvokeVoidAsync("tradingAuth.setItem", DraftKey, json);
     }
 
-    public Task<bool> SaveToApiAsync(BrokerPortfolio portfolio, CancellationToken ct = default) =>
+    public Task<(bool Ok, string? Error)> SaveToApiAsync(BrokerPortfolio portfolio, CancellationToken ct = default) =>
         _api.SavePortfolioAsync(NormalizePortfolio(portfolio), ct);
 
     public BrokerPortfolio ParseJson(string json)
