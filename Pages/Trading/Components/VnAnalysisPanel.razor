@@ -124,7 +124,7 @@
     }
 
     <div class="vd-panel">
-        <a class="vd-btn" href="@($"/{CultureService.UrlLang}/trading/backtest?symbol={_symbol}")" target="_blank">@L["Trading_Analysis_BacktestLink"]</a>
+        <button type="button" class="vd-btn" @onclick="RequestBacktest">@L["Trading_Analysis_BacktestLink"]</button>
     </div>
 }
 else if (_checklist is not null && _sub == "check")
@@ -172,6 +172,7 @@ else if (_sub == "pnl")
 
 @code {
     [Parameter] public string Symbol { get; set; } = "VNM";
+    [Parameter] public EventCallback OnBacktestRequested { get; set; }
 
     private string _sub = "ta";
     private string _symbol = "VNM";
@@ -253,4 +254,6 @@ else if (_sub == "pnl")
         if (_ta is null) return;
         _pnl = Positions.Calculate(_symbol, _entry, _shares, _ta.LatestClose, _broker);
     }
+
+    private Task RequestBacktest() => OnBacktestRequested.InvokeAsync();
 }

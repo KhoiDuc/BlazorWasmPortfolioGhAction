@@ -1,7 +1,6 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using BlazorWasmPortfolioGhAction.Models.Trading.Broker;
 using Microsoft.Extensions.Configuration;
 
@@ -15,14 +14,6 @@ public interface IBrokerApiClient
 
 public sealed class BrokerApiClient : IBrokerApiClient
 {
-    private static readonly JsonSerializerOptions JsonOpts = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true,
-        WriteIndented = true,
-        Converters = { new JsonStringEnumConverter() }
-    };
-
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
 
@@ -51,7 +42,7 @@ public sealed class BrokerApiClient : IBrokerApiClient
             if (string.IsNullOrWhiteSpace(json))
                 return null;
 
-            return JsonSerializer.Deserialize<BrokerPortfolio>(json, JsonOpts);
+            return JsonSerializer.Deserialize<BrokerPortfolio>(json, BrokerJson.Options);
         }
         catch
         {
@@ -69,7 +60,7 @@ public sealed class BrokerApiClient : IBrokerApiClient
             portfolio.UpdatedAt = DateTime.Now;
             using var request = new HttpRequestMessage(HttpMethod.Put, $"{BaseUrl}/api/portfolio");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", ApiKey);
-            request.Content = JsonContent.Create(portfolio, options: JsonOpts);
+            request.Content = JsonContent.Create(portfolio, options: BrokerJson.Options);
 
             using var resp = await _http.SendAsync(request, ct);
             return resp.IsSuccessStatusCode;

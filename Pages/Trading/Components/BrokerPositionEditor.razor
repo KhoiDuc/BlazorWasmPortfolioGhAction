@@ -320,30 +320,30 @@
                     <div class="broker-lot-fields">
                         <div class="broker-field">
                             <label class="broker-field-label">Ngày</label>
-                            <input class="ts-input" type="date" @bind="sell.Sell.SoldAt" @bind:format="yyyy-MM-dd" @bind:after="Changed" />
+                            <input class="ts-input" type="date" @bind="sell.Sell.SoldAt" @bind:format="yyyy-MM-dd" @bind:after="TradeChanged" />
                         </div>
                         <div class="broker-field">
                             <label class="broker-field-label">Giá bán</label>
-                            <input class="ts-input" type="number" min="0.0001" step="any" @bind="sell.Sell.Price" @bind:after="Changed" />
+                            <input class="ts-input" type="number" min="0.0001" step="any" @bind="sell.Sell.Price" @bind:after="TradeChanged" />
                         </div>
                         <div class="broker-field">
                             <label class="broker-field-label">KL</label>
-                            <input class="ts-input" type="number" min="0.0001" step="any" placeholder="—" @bind="sell.Sell.Quantity" @bind:after="Changed" />
+                            <input class="ts-input" type="number" min="0.0001" step="any" placeholder="—" @bind="sell.Sell.Quantity" @bind:after="TradeChanged" />
                         </div>
                     </div>
                     <div class="broker-form-row broker-form-row-2 broker-form-row-align">
                         <div class="broker-field">
                             <label class="broker-field-label">Phí (đ)</label>
-                            <input class="ts-input" type="number" min="0" step="any" placeholder="0" @bind="sell.Sell.Fee" @bind:after="Changed" />
+                            <input class="ts-input" type="number" min="0" step="any" placeholder="0" @bind="sell.Sell.Fee" @bind:after="TradeChanged" />
                         </div>
                         <div class="broker-field">
                             <label class="broker-field-label">Thuế (đ)</label>
-                            <input class="ts-input" type="number" min="0" step="any" placeholder="0" @bind="sell.Sell.Tax" @bind:after="Changed" />
+                            <input class="ts-input" type="number" min="0" step="any" placeholder="0" @bind="sell.Sell.Tax" @bind:after="TradeChanged" />
                         </div>
                     </div>
                     <div class="broker-field broker-lot-note-field">
                         <label class="broker-field-label">Note lệnh bán</label>
-                        <input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" placeholder="Ghi chú riêng cho lệnh bán này…" @bind="sell.Sell.Note" @bind:after="Changed" />
+                        <input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" placeholder="Ghi chú riêng cho lệnh bán này…" @bind="sell.Sell.Note" @bind:after="TradeChanged" />
                     </div>
                 </article>
             }
@@ -822,7 +822,7 @@
         _divExDate = DateTime.Today;
         _divErr = null;
 
-        await Changed();
+        await TradeChanged();
     }
 
     private async Task RemoveDividend(BrokerDividend d)
@@ -830,7 +830,7 @@
         if (!await JS.InvokeAsync<bool>("tradingAuth.confirm", "Xóa cổ tức này?"))
             return;
         Position.Dividends?.Remove(d);
-        await Changed();
+        await TradeChanged();
     }
 
     private async Task AddNote()

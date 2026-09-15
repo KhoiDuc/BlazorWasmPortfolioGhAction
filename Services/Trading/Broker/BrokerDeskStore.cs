@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using BlazorWasmPortfolioGhAction.Models.Trading.Broker;
 using Microsoft.JSInterop;
 
@@ -10,10 +9,9 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
 public interface IBrokerDeskStore
 {
     Task<BrokerPortfolio> LoadAsync(CancellationToken ct = default);
-    Task<BrokerPortfolio> LoadFromFileAsync(CancellationToken ct = default);
+    Task<BrokerPortfolio?> LoadFromApiAsync(CancellationToken ct = default);
     Task SaveDraftAsync(BrokerPortfolio portfolio, CancellationToken ct = default);
     Task<bool> SaveToApiAsync(BrokerPortfolio portfolio, CancellationToken ct = default);
-    Task ClearDraftAsync(CancellationToken ct = default);
     Task DownloadJsonAsync(BrokerPortfolio portfolio);
     Task DownloadCsvAsync(BrokerPortfolio portfolio);
     BrokerPortfolio ParseJson(string json);
@@ -21,122 +19,64 @@ public interface IBrokerDeskStore
 
 public sealed class BrokerDeskStore : IBrokerDeskStore
 {
-    public const string PortfolioPath = "trading/broker/portfolio.json";
     private const string DraftKey = "broker.desk.draft";
 
-    private static readonly JsonSerializerOptions JsonOpts = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true,
-        WriteIndented = true,
-        Converters = { new JsonStringEnumConverter() }
-    };
-
-    private readonly HttpClient _http;
     private readonly IJSRuntime _js;
     private readonly IBrokerApiClient _api;
 
-    public BrokerDeskStore(HttpClient http, IJSRuntime js, IBrokerApiClient api)
+    public BrokerDeskStore(IJSRuntime js, IBrokerApiClient api)
     {
-        _http = http;
         _js = js;
         _api = api;
     }
 
     public async Task<BrokerPortfolio> LoadAsync(CancellationToken ct = default)
     {
-        try
-        {
-            var fromApi = await _api.GetPortfolioAsync(ct);
-            if (fromApi is not null && (fromApi.Positions.Count > 0 || (fromApi.ClosedPositions?.Count ?? 0) > 0))
-            {
-                var normalized = NormalizePortfolio(fromApi);
-                await SaveDraftAsync(normalized, ct);
-                return normalized;
-            }
-        }
-        catch
-        {
-            // Ignore API errors and fall back to local cache / static JSON.
-        }
+        var fromApi = await LoadFromApiAsync(ct);
+        if (fromApi is not null)
+            return fromApi;
 
         try
         {
             var draft = await _js.InvokeAsync<string?>("tradingAuth.getItem", DraftKey);
             if (!string.IsNullOrWhiteSpace(draft))
-            {
-                var fromDraft = NormalizePortfolio(ParseJson(draft));
-                if (fromDraft.Positions.Count > 0 || (fromDraft.ClosedPositions?.Count ?? 0) > 0)
-                    return fromDraft;
-            }
+                return NormalizePortfolio(ParseJson(draft));
         }
         catch
         {
-            // Ignore localStorage errors and fall back to static JSON.
+            // Ignore localStorage errors.
         }
 
-        try
-        {
-            var url = $"{PortfolioPath}?v={DateTime.UtcNow.Ticks}";
-            using var resp = await _http.GetAsync(url, ct);
-            if (!resp.IsSuccessStatusCode)
-                return new BrokerPortfolio();
-
-            var json = await resp.Content.ReadAsStringAsync(ct);
-            return NormalizePortfolio(ParseJson(json));
-        }
-        catch
-        {
-            return new BrokerPortfolio();
-        }
+        return new BrokerPortfolio();
     }
 
-    public async Task<BrokerPortfolio> LoadFromFileAsync(CancellationToken ct = default)
+    public async Task<BrokerPortfolio?> LoadFromApiAsync(CancellationToken ct = default)
     {
         try
         {
-            var url = $"{PortfolioPath}?v={DateTime.UtcNow.Ticks}";
-            using var resp = await _http.GetAsync(url, ct);
-            if (!resp.IsSuccessStatusCode)
-                return new BrokerPortfolio();
+            var fromApi = await _api.GetPortfolioAsync(ct);
+            if (fromApi is null)
+                return null;
 
-            var json = await resp.Content.ReadAsStringAsync(ct);
-            try
-            {
-                return NormalizePortfolio(ParseJson(json));
-            }
-            catch (InvalidOperationException)
-            {
-                return new BrokerPortfolio();
-            }
+            var normalized = NormalizePortfolio(fromApi);
+            await SaveDraftAsync(normalized, ct);
+            return normalized;
         }
         catch
         {
-            return new BrokerPortfolio();
+            return null;
         }
     }
 
     public async Task SaveDraftAsync(BrokerPortfolio portfolio, CancellationToken ct = default)
     {
         portfolio.UpdatedAt = DateTime.Now;
-        var json = JsonSerializer.Serialize(NormalizePortfolio(portfolio), JsonOpts);
+        var json = JsonSerializer.Serialize(NormalizePortfolio(portfolio), BrokerJson.Options);
         await _js.InvokeVoidAsync("tradingAuth.setItem", DraftKey, json);
     }
 
     public Task<bool> SaveToApiAsync(BrokerPortfolio portfolio, CancellationToken ct = default) =>
         _api.SavePortfolioAsync(NormalizePortfolio(portfolio), ct);
-
-    public async Task ClearDraftAsync(CancellationToken ct = default)
-    {
-        try
-        {
-            await _js.InvokeVoidAsync("tradingAuth.removeItem", DraftKey);
-        }
-        catch
-        {
-            // Ignore localStorage failures.
-        }
-    }
 
     public BrokerPortfolio ParseJson(string json)
     {
@@ -145,7 +85,7 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
 
         try
         {
-            return NormalizePortfolio(JsonSerializer.Deserialize<BrokerPortfolio>(json, JsonOpts) ?? new BrokerPortfolio());
+            return NormalizePortfolio(JsonSerializer.Deserialize<BrokerPortfolio>(json, BrokerJson.Options) ?? new BrokerPortfolio());
         }
         catch (JsonException ex)
         {
@@ -186,7 +126,7 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
     public Task DownloadJsonAsync(BrokerPortfolio portfolio)
     {
         portfolio.UpdatedAt = DateTime.Now;
-        var json = JsonSerializer.Serialize(portfolio, JsonOpts);
+        var json = JsonSerializer.Serialize(portfolio, BrokerJson.Options);
         return DownloadAsync("portfolio.json", json);
     }
 

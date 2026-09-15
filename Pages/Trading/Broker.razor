@@ -34,8 +34,8 @@
                        class="broker-file-input"
                        OnChange="ImportJson"
                        accept=".json,application/json" />
-            <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ReloadFromFile" disabled="@_loading">@L["Trading_BrokerReloadFile"]</button>
-            <button class="ts-btn ts-btn-primary ts-btn-sm" @onclick="SaveJson">@L["Trading_SaveJson"]</button>
+            <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ReloadFromServer" disabled="@_loading">@L["Trading_BrokerReloadFile"]</button>
+            <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ExportJson">@L["Trading_SaveJson"]</button>
         </div>
     </div>
 
@@ -403,7 +403,7 @@
             return;
         _portfolio.ClosedPositions?.Remove(Selected);
         _selected = null;
-        MarkDirty();
+        MarkDirtyAndSync();
     }
 
     private void OpenQuickSell(string symbol)
@@ -518,7 +518,9 @@
         }, null, delayMs, Timeout.Infinite);
     }
 
-    private async Task PersistApiAsync()
+    private Task PersistApiAsync() => PersistApiAsync(showMessage: true);
+
+    private async Task PersistApiAsync(bool showMessage)
     {
         try
         {
@@ -526,16 +528,32 @@
             if (ok)
             {
                 _dirty = false;
-                Flash("Đã đồng bộ danh mục lên server.");
+                if (showMessage)
+                    Flash("Đã đồng bộ danh mục lên server.");
             }
-            else
+            else if (showMessage)
             {
                 Flash("Chưa đồng bộ được lên server — kiểm tra BrokerApi trong appsettings.", error: true);
             }
         }
         catch
         {
-            Flash("Chưa đồng bộ được lên server — kiểm tra BrokerApi trong appsettings.", error: true);
+            if (showMessage)
+                Flash("Chưa đồng bộ được lên server — kiểm tra BrokerApi trong appsettings.", error: true);
+        }
+    }
+
+    private async Task FlushPendingSavesAsync()
+    {
+        try
+        {
+            await Store.SaveDraftAsync(_portfolio);
+            if (_dirty)
+                await PersistApiAsync(showMessage: false);
+        }
+        catch
+        {
+            // Best-effort flush on navigation away.
         }
     }
 
@@ -609,7 +627,7 @@
         var pos = _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
         if (pos is null) return;
         pos.Status = BrokerPositionStatus.BoTheoDoi;
-        MarkDirty();
+        MarkDirtyAndSync();
     }
 
     private void ReactivateRecommendation(string symbol)
@@ -617,7 +635,7 @@
         var pos = _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
         if (pos is null) return;
         pos.Status = pos.Buys.Count > 0 ? BrokerPositionStatus.NamGiu : BrokerPositionStatus.ChoMua;
-        MarkDirty();
+        MarkDirtyAndSync();
     }
 
     private async Task AddRecommendation()
@@ -726,19 +744,18 @@
 
         _portfolio.Positions.Remove(Selected);
         _selected = null;
-        MarkDirty();
+        MarkDirtyAndSync();
     }
 
-    private async Task SaveJson()
+    private async Task ExportJson()
     {
         await Store.DownloadJsonAsync(_portfolio);
-        _dirty = false;
         Flash(L["Trading_BrokerSavedJson"]);
     }
 
     private async Task ExportCsv() => await Store.DownloadCsvAsync(_portfolio);
 
-    private async Task ReloadFromFile()
+    private async Task ReloadFromServer()
     {
         try
         {
@@ -747,20 +764,29 @@
 
             _persistTimer?.Dispose();
             _persistTimer = null;
+            _apiTimer?.Dispose();
+            _apiTimer = null;
             _priceCts?.Cancel();
 
             _selected = null;
             await InvokeAsync(StateHasChanged);
 
-            await Store.ClearDraftAsync();
-            _portfolio = await Store.LoadFromFileAsync();
+            var fromApi = await Store.LoadFromApiAsync();
+            if (fromApi is null)
+            {
+                Flash(L["Trading_BrokerReloadFailed"], error: true);
+                return;
+            }
+
+            _portfolio = fromApi;
 
             foreach (var p in _portfolio.Positions.Where(x => string.IsNullOrWhiteSpace(x.Sector)))
                 p.Sector = await Sectors.FindSectorAsync(p.Symbol);
 
             _dirty = false;
             _quotes.Clear();
-            Flash(L["Trading_BrokerReloadedFile", _portfolio.Positions.Count]);
+            var count = _portfolio.Positions.Count + (_portfolio.ClosedPositions?.Count ?? 0);
+            Flash(L["Trading_BrokerReloadedFile", count]);
 
             if (_portfolio.Positions.Count > 0)
                 await RefreshPrices();
@@ -793,20 +819,26 @@
 
             _portfolio = Store.ParseJson(json);
             _selected = null;
-            _dirty = true;
 
             foreach (var p in _portfolio.Positions.Where(x => string.IsNullOrWhiteSpace(x.Sector)))
                 p.Sector = await Sectors.FindSectorAsync(p.Symbol);
 
             await Store.SaveDraftAsync(_portfolio);
 
-            if (_portfolio.Positions.Count == 0)
+            if (_portfolio.Positions.Count == 0 && (_portfolio.ClosedPositions?.Count ?? 0) == 0)
             {
                 Flash(L["Trading_BrokerImportNoPositions"], error: true);
                 return;
             }
 
-            Flash(L["Trading_BrokerImportOk", _portfolio.Positions.Count]);
+            var synced = await Store.SaveToApiAsync(_portfolio);
+            _dirty = !synced;
+
+            Flash(synced
+                ? $"Đã import {(_portfolio.Positions.Count + (_portfolio.ClosedPositions?.Count ?? 0))} mã và đồng bộ lên server."
+                : L["Trading_BrokerImportOk", _portfolio.Positions.Count].Value + " — chưa đồng bộ được lên server.",
+                error: !synced);
+
             await RefreshPrices();
         }
         catch (Exception ex)
@@ -929,6 +961,19 @@
         _flashTimer?.Dispose();
         _priceCts?.Cancel();
         _priceCts?.Dispose();
+
+        if (_dirty)
+        {
+            try
+            {
+                _ = FlushPendingSavesAsync();
+            }
+            catch
+            {
+                // Component may be disposed.
+            }
+        }
+
         base.Dispose();
     }
 }
