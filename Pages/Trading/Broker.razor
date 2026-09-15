@@ -404,7 +404,8 @@
         _selected = null;
         MarkDirty();
         var (ok, error) = await Store.DeletePositionAsync(symbol);
-        if (!ok) Flash($"Sync fail: {error}", error: true);
+        if (ok) _dirty = false;
+        else Flash($"Sync fail: {error}", error: true);
     }
 
     private void OpenQuickSell(string symbol)
@@ -423,7 +424,8 @@
         MarkDirty();
 
         var (ok, error) = await Store.AddSellAsync(pos.Symbol, sell);
-        if (!ok) Flash($"Sync fail: {error}", error: true);
+        if (ok) _dirty = false;
+        else Flash($"Sync fail: {error}", error: true);
 
         if (pos.RemainingQuantity is null or 0)
         {
@@ -492,7 +494,8 @@
     {
         MarkDirty();
         var (ok, error) = await Store.UpdatePositionAsync(pos.Symbol, pos);
-        if (!ok) Flash($"Sync fail: {error}", error: true);
+        if (ok) _dirty = false;
+        else Flash($"Sync fail: {error}", error: true);
     }
 
     private async Task OnEditorSync(BrokerSyncAction action)
@@ -503,67 +506,46 @@
 
         try
         {
-            switch (action)
+            var (ok, error) = action switch
             {
-                case PositionSyncAction posAction:
-                    {
-                        var (ok, error) = posAction.Action switch
-                        {
-                            "create" => await Store.CreatePositionAsync(posAction.Position),
-                            "update" => await Store.UpdatePositionAsync(symbol, posAction.Position),
-                            _ => (false, $"Unknown position action: {posAction.Action}")
-                        };
-                        if (!ok) Flash($"Sync fail: {error}", error: true);
-                        break;
-                    }
-                case LotSyncAction lotAction:
-                    {
-                        var (ok, error) = lotAction.Action switch
-                        {
-                            "create" => await Store.AddLotAsync(symbol, lotAction.Lot),
-                            "update" => await Store.UpdateLotAsync(symbol, lotAction.Lot),
-                            "delete" => await Store.DeleteLotAsync(symbol, lotAction.Lot.Id),
-                            _ => (false, $"Unknown lot action: {lotAction.Action}")
-                        };
-                        if (!ok) Flash($"Sync fail: {error}", error: true);
-                        break;
-                    }
-                case SellSyncAction sellAction:
-                    {
-                        var (ok, error) = sellAction.Action switch
-                        {
-                            "create" => await Store.AddSellAsync(symbol, sellAction.Sell),
-                            "update" => await Store.UpdateSellAsync(symbol, sellAction.Sell),
-                            "delete" => await Store.DeleteSellAsync(symbol, sellAction.Sell.Id),
-                            _ => (false, $"Unknown sell action: {sellAction.Action}")
-                        };
-                        if (!ok) Flash($"Sync fail: {error}", error: true);
-                        break;
-                    }
-                case NoteSyncAction noteAction:
-                    {
-                        var (ok, error) = noteAction.Action switch
-                        {
-                            "create" => await Store.AddNoteAsync(symbol, noteAction.Note),
-                            "update" => await Store.UpdateNoteAsync(symbol, noteAction.Note),
-                            "delete" => await Store.DeleteNoteAsync(symbol, noteAction.Note.Id),
-                            _ => (false, $"Unknown note action: {noteAction.Action}")
-                        };
-                        if (!ok) Flash($"Sync fail: {error}", error: true);
-                        break;
-                    }
-                case DividendSyncAction divAction:
-                    {
-                        var (ok, error) = divAction.Action switch
-                        {
-                            "create" => await Store.AddDividendAsync(symbol, divAction.Dividend),
-                            "delete" => await Store.DeleteDividendAsync(symbol, divAction.Dividend.Id),
-                            _ => (false, $"Unknown dividend action: {divAction.Action}")
-                        };
-                        if (!ok) Flash($"Sync fail: {error}", error: true);
-                        break;
-                    }
-            }
+                PositionSyncAction posAction => posAction.Action switch
+                {
+                    "create" => await Store.CreatePositionAsync(posAction.Position),
+                    "update" => await Store.UpdatePositionAsync(symbol, posAction.Position),
+                    _ => (false, $"Unknown position action: {posAction.Action}")
+                },
+                LotSyncAction lotAction => lotAction.Action switch
+                {
+                    "create" => await Store.AddLotAsync(symbol, lotAction.Lot),
+                    "update" => await Store.UpdateLotAsync(symbol, lotAction.Lot),
+                    "delete" => await Store.DeleteLotAsync(symbol, lotAction.Lot.Id),
+                    _ => (false, $"Unknown lot action: {lotAction.Action}")
+                },
+                SellSyncAction sellAction => sellAction.Action switch
+                {
+                    "create" => await Store.AddSellAsync(symbol, sellAction.Sell),
+                    "update" => await Store.UpdateSellAsync(symbol, sellAction.Sell),
+                    "delete" => await Store.DeleteSellAsync(symbol, sellAction.Sell.Id),
+                    _ => (false, $"Unknown sell action: {sellAction.Action}")
+                },
+                NoteSyncAction noteAction => noteAction.Action switch
+                {
+                    "create" => await Store.AddNoteAsync(symbol, noteAction.Note),
+                    "update" => await Store.UpdateNoteAsync(symbol, noteAction.Note),
+                    "delete" => await Store.DeleteNoteAsync(symbol, noteAction.Note.Id),
+                    _ => (false, $"Unknown note action: {noteAction.Action}")
+                },
+                DividendSyncAction divAction => divAction.Action switch
+                {
+                    "create" => await Store.AddDividendAsync(symbol, divAction.Dividend),
+                    "delete" => await Store.DeleteDividendAsync(symbol, divAction.Dividend.Id),
+                    _ => (false, $"Unknown dividend action: {divAction.Action}")
+                },
+                _ => (false, $"Unknown sync action: {action.GetType().Name}")
+            };
+
+            if (ok) _dirty = false;
+            else Flash($"Sync fail: {error}", error: true);
         }
         catch (Exception ex)
         {
@@ -754,20 +736,23 @@
             if (isNew)
             {
                 var (ok, error) = await Store.CreatePositionAsync(existing);
-                if (!ok) Flash($"Sync fail: {error}", error: true);
+                if (ok) _dirty = false;
+                else Flash($"Sync fail: {error}", error: true);
             }
             else
             {
+                var allOk = true;
                 var (ok, error) = await Store.AddLotAsync(symbol, lot);
-                if (!ok) Flash($"Sync fail: {error}", error: true);
+                if (!ok) { allOk = false; Flash($"Sync fail: {error}", error: true); }
                 if (newNote is not null)
                 {
                     var (okN, errN) = await Store.AddNoteAsync(symbol, newNote);
-                    if (!okN) Flash($"Sync note fail: {errN}", error: true);
+                    if (!okN) { allOk = false; Flash($"Sync note fail: {errN}", error: true); }
                 }
                 // Update position-level stop/target/sector/status
                 var (okP, errP) = await Store.UpdatePositionAsync(symbol, existing);
-                if (!okP) Flash($"Sync position fail: {errP}", error: true);
+                if (!okP) { allOk = false; Flash($"Sync position fail: {errP}", error: true); }
+                if (allOk) _dirty = false;
             }
 
             var avg = existing.AvgBuy;
@@ -795,7 +780,8 @@
         _selected = null;
         MarkDirty();
         var (ok, error) = await Store.DeletePositionAsync(symbol);
-        if (!ok) Flash($"Sync fail: {error}", error: true);
+        if (ok) _dirty = false;
+        else Flash($"Sync fail: {error}", error: true);
     }
 
     private async Task ExportJson()
