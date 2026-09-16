@@ -37,13 +37,13 @@ public static class BrokerLevelHelper
         {
             if (input <= 0 || input >= 100)
             {
-                error = "Cắt lỗ % phải từ 0 đến 100 (VD: 5 = -5%).";
+                error = "Trading_BrokerLevel_StopPctRange";
                 return false;
             }
             resolved = ResolveStop(buyPrice, mode, input);
             if (resolved is not > 0)
             {
-                error = "Cắt lỗ % quá lớn so với giá mua.";
+                error = "Trading_BrokerLevel_StopPctTooLarge";
                 return false;
             }
         }
@@ -51,7 +51,7 @@ public static class BrokerLevelHelper
         {
             if (input >= buyPrice)
             {
-                error = "Cắt lỗ giá phải thấp hơn giá mua.";
+                error = "Trading_BrokerLevel_StopPriceBelowBuy";
                 return false;
             }
             resolved = input;
@@ -74,7 +74,7 @@ public static class BrokerLevelHelper
         {
             if (input <= 0)
             {
-                error = "Mục tiêu % phải > 0 (VD: 10 = +10%).";
+                error = "Trading_BrokerLevel_TargetPctPositive";
                 return false;
             }
             resolved = ResolveTarget(buyPrice, mode, input);
@@ -83,7 +83,7 @@ public static class BrokerLevelHelper
         {
             if (input <= buyPrice)
             {
-                error = "Mục tiêu giá phải cao hơn giá mua.";
+                error = "Trading_BrokerLevel_TargetPriceAboveBuy";
                 return false;
             }
             resolved = input;

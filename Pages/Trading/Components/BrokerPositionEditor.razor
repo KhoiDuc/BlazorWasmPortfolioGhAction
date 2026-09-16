@@ -18,7 +18,7 @@
                 }
                 @if (Position.Status != BrokerPositionStatus.ChuaQuyet)
                 {
-                    <span class="broker-status-pill broker-status-@Position.Status">@BrokerStatusLabels.Vi(Position.Status)</span>
+                    <span class="broker-status-pill broker-status-@Position.Status">@L[BrokerStatusLabels.Vi(Position.Status)].Value</span>
                 }
                 @if (Position.HasPartialQtyLots)
                 {
@@ -122,7 +122,7 @@
                         <select id="pos-status" class="ts-select" @bind="Position.Status" @bind:after="Changed">
                             @foreach (var s in Enum.GetValues<BrokerPositionStatus>())
                             {
-                                <option value="@s">@BrokerStatusLabels.Vi(s)</option>
+                                <option value="@s">@L[BrokerStatusLabels.Vi(s)].Value</option>
                             }
                         </select>
                     </div>
@@ -638,13 +638,13 @@
     {
         if (lot.Price is not > 0)
         {
-            _lotErrors[lot.Id] = "Giá mua > 0.";
+            _lotErrors[lot.Id] = L["Trading_BrokerVal_PriceRequired"].Value;
             return;
         }
 
         if (!BrokerInputValidation.TryValidateQuantity(lot.Quantity, out var qtyErr))
         {
-            _lotErrors[lot.Id] = qtyErr!;
+            _lotErrors[lot.Id] = L[qtyErr!].Value;
             return;
         }
 
@@ -655,13 +655,13 @@
 
         if (!BrokerLevelHelper.TryValidateStop(lot.Price, stopMode, stopInput, out var resolvedStop, out var stopErr))
         {
-            _lotErrors[lot.Id] = stopErr!;
+            _lotErrors[lot.Id] = L[stopErr!].Value;
             return;
         }
 
         if (!BrokerLevelHelper.TryValidateTarget(lot.Price, targetMode, targetInput, out var resolvedTarget, out var targetErr))
         {
-            _lotErrors[lot.Id] = targetErr!;
+            _lotErrors[lot.Id] = L[targetErr!].Value;
             return;
         }
 
@@ -854,13 +854,13 @@
     {
         if (!BrokerInputValidation.TryValidateNote(_noteText, out var noteErr) || noteErr is not null)
         {
-            _noteErr = noteErr ?? "Note không hợp lệ.";
+            _noteErr = noteErr is not null ? L[noteErr].Value : L["Trading_BrokerVal_NoteInvalid"].Value;
             return;
         }
 
         if (string.IsNullOrWhiteSpace(_noteText))
         {
-            _noteErr = "Note không được để trống.";
+            _noteErr = L["Trading_BrokerVal_NoteEmpty"].Value;
             return;
         }
 
@@ -911,7 +911,7 @@
             var prompt = BrokerPromptLibrary.ExplainNote(
                 Position.Symbol,
                 Position.Sector,
-                Position.Status == BrokerPositionStatus.ChuaQuyet ? "Chưa quyết" : BrokerStatusLabels.Vi(Position.Status),
+                Position.Status == BrokerPositionStatus.ChuaQuyet ? L["Trading_BrokerStatus_ChuaQuyet"].Value : L[BrokerStatusLabels.Vi(Position.Status)].Value,
                 Position.AvgBuy?.ToString("N2"),
                 Position.StopLoss?.ToString("N2") ?? "—",
                 Position.TargetPrice?.ToString("N2") ?? "—",

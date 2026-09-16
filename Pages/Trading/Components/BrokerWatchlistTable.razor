@@ -378,7 +378,7 @@
                                     }
                                     else
                                     {
-                                        <span class="broker-status-pill broker-status-@p.Status">@BrokerStatusLabels.Vi(p.Status)</span>
+                                        <span class="broker-status-pill broker-status-@p.Status">@L[BrokerStatusLabels.Vi(p.Status)].Value</span>
                                     }
                                 </td>
                                 <td class="broker-note-cell broker-col-note">@DisplayLatestNote(p)</td>
@@ -630,7 +630,7 @@
             return true;
         if (!string.IsNullOrWhiteSpace(p.Sector) && p.Sector.Contains(q, StringComparison.OrdinalIgnoreCase))
             return true;
-        if (BrokerStatusLabels.Vi(p.Status).Contains(q, StringComparison.OrdinalIgnoreCase))
+        if (L[BrokerStatusLabels.Vi(p.Status)].Value.Contains(q, StringComparison.OrdinalIgnoreCase))
             return true;
 
         var note = DisplayLatestNote(p);

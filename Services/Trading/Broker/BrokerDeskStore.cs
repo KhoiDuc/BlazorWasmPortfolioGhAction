@@ -2,6 +2,8 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using BlazorWasmPortfolioGhAction.Models.Trading.Broker;
+using BlazorWasmPortfolioGhAction.Resources;
+using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
@@ -49,11 +51,13 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
 
     private readonly IJSRuntime _js;
     private readonly IBrokerApiClient _api;
+    private readonly IStringLocalizer<SharedResources> _L;
 
-    public BrokerDeskStore(IJSRuntime js, IBrokerApiClient api)
+    public BrokerDeskStore(IJSRuntime js, IBrokerApiClient api, IStringLocalizer<SharedResources> L)
     {
         _js = js;
         _api = api;
+        _L = L;
     }
 
     public async Task<BrokerPortfolio> LoadAsync(CancellationToken ct = default)
@@ -112,7 +116,7 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
         }
         catch (JsonException ex)
         {
-            throw new InvalidOperationException($"JSON không hợp lệ: {ex.Message}", ex);
+            throw new InvalidOperationException(_L["Trading_Broker_JsonInvalid", ex.Message].Value, ex);
         }
     }
 
@@ -213,7 +217,7 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
     public Task DownloadCsvAsync(BrokerPortfolio portfolio)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Ngành,Mã CP,Giá mua,KL tổng,KL còn lại,Giá TB,Cắt lỗ,Mục tiêu,Tỷ trọng,Trạng thái,Realized P&L (đ),Cổ tức (đ),Note mới nhất");
+        sb.AppendLine(_L["Trading_Broker_CsvHeader"].Value);
         foreach (var p in portfolio.Positions.OrderBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase))
         {
             var lots = string.Join(" | ", p.Buys.OrderBy(b => b.BoughtAt).Select((b, i) =>
@@ -241,8 +245,8 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
         if ((portfolio.ClosedPositions?.Count ?? 0) > 0)
         {
             sb.AppendLine();
-            sb.AppendLine("# Vi the da dong");
-            sb.AppendLine("Ma CP,Ngay dong,KL ban,Realized P&L (đ),Realized %");
+            sb.AppendLine($"# {_L["Trading_Broker_CsvClosedHeader"].Value}");
+            sb.AppendLine(_L["Trading_Broker_CsvClosedColumns"].Value);
             foreach (var p in portfolio.ClosedPositions!.OrderBy(x => x.ClosedAt ?? DateTime.MinValue))
             {
                 sb.AppendLine(string.Join(',',

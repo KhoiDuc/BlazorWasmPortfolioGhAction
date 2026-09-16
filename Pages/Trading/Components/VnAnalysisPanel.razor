@@ -33,7 +33,7 @@
 @if (_ta is not null && _sub == "ta")
 {
     <div class="vd-panel">
-        <h4 style="margin:0 0 0.6rem">@_ta.Symbol — @_ta.Trend</h4>
+        <h4 style="margin:0 0 0.6rem">@_ta.Symbol — @L[IndicatorService.TrendLabel(_ta.Trend)].Value</h4>
         <div class="vd-metric-grid">
             <div class="vd-metric-card"><div class="vd-metric-label">Close</div><div class="vd-metric-value">@_ta.LatestClose.ToString("N2")</div></div>
             <div class="vd-metric-card"><div class="vd-metric-label">RSI</div><div class="vd-metric-value">@_ta.RSI.ToString("F1")</div></div>
@@ -242,7 +242,7 @@ else if (_sub == "pnl")
     {
         if (_ta is null) return;
         _aiBusy = true;
-        var numbers = $"{_ta.Symbol} close={_ta.LatestClose:N2} trend={_ta.Trend} RSI={_ta.RSI:N1} signal={_ta.TradingSignal.Action}";
+        var numbers = $"{_ta.Symbol} close={_ta.LatestClose:N2} trend={L[IndicatorService.TrendLabel(_ta.Trend)].Value} RSI={_ta.RSI:N1} signal={_ta.TradingSignal.Action}";
         var result = await Gemini.ExplainAsync(PromptLibrary.NeutralChecklist(_ta.Symbol, numbers, _notes));
         _aiText = result.Text ?? (result.Error ?? "AI không khả dụng.");
         _aiBusy = false;

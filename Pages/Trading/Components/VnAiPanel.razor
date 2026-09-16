@@ -100,7 +100,7 @@ else
         var ta = Indicators.Calculate(_symbol, hist);
         var numbers = ta is null
             ? "(không có chỉ báo)"
-            : $"{ta.Symbol} close={ta.LatestClose:N2} trend={ta.Trend} RSI={ta.RSI:N1} signal={ta.TradingSignal.Action}";
+            : $"{ta.Symbol} close={ta.LatestClose:N2} trend={L[IndicatorService.TrendLabel(ta.Trend)].Value} RSI={ta.RSI:N1} signal={ta.TradingSignal.Action}";
         var result = await Gemini.ExplainAsync(PromptLibrary.Thesis(_symbol, numbers, _notes));
         _thesisText = result.Text ?? (result.Error ?? L["Trading_AiPanel_AiUnavailable"]);
         _busy = false;

@@ -17,20 +17,20 @@ public static partial class BrokerInputValidation
         symbol = "";
         if (string.IsNullOrWhiteSpace(input))
         {
-            error = "Mã CP bắt buộc.";
+            error = "Trading_BrokerVal_SymbolRequired";
             return false;
         }
 
         symbol = input.Trim().ToUpperInvariant();
         if (symbol.Length < SymbolMinLen || symbol.Length > SymbolMaxLen)
         {
-            error = $"Mã CP: {SymbolMinLen}–{SymbolMaxLen} ký tự.";
+            error = "Trading_BrokerVal_SymbolLength";
             return false;
         }
 
         if (!SymbolRegex().IsMatch(symbol))
         {
-            error = "Mã CP chỉ gồm chữ và số (A–Z, 0–9).";
+            error = "Trading_BrokerVal_SymbolFormat";
             return false;
         }
 
@@ -42,7 +42,7 @@ public static partial class BrokerInputValidation
     {
         if (price is not > 0)
         {
-            error = "Giá mua bắt buộc và > 0.";
+            error = "Trading_BrokerVal_PriceRequired";
             return false;
         }
 
@@ -60,7 +60,7 @@ public static partial class BrokerInputValidation
 
         if (qty <= 0)
         {
-            error = "KL phải > 0 nếu nhập.";
+            error = "Trading_BrokerVal_QtyPositive";
             return false;
         }
 
@@ -78,7 +78,7 @@ public static partial class BrokerInputValidation
 
         if (note.Length > NoteMaxLen)
         {
-            error = $"Note tối đa {NoteMaxLen} ký tự.";
+            error = "Trading_BrokerVal_NoteMax";
             return false;
         }
 

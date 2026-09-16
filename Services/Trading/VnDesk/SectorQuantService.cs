@@ -1,4 +1,6 @@
 using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk;
+using BlazorWasmPortfolioGhAction.Resources;
+using Microsoft.Extensions.Localization;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk;
 
@@ -7,12 +9,14 @@ public sealed class SectorQuantService
     private readonly IVnMarketClient _market;
     private readonly VnSectorService _sectors;
     private readonly IVnDeskStore _store;
+    private readonly IStringLocalizer<SharedResources> _L;
 
-    public SectorQuantService(IVnMarketClient market, VnSectorService sectors, IVnDeskStore store)
+    public SectorQuantService(IVnMarketClient market, VnSectorService sectors, IVnDeskStore store, IStringLocalizer<SharedResources> L)
     {
         _market = market;
         _sectors = sectors;
         _store = store;
+        _L = L;
     }
 
     /// <summary>Phase 1: latest quotes → Breadth/Maker/Score (VolR = 1 placeholder).</summary>
@@ -133,7 +137,7 @@ public sealed class SectorQuantService
         return Math.Clamp(score, 0, 100);
     }
 
-    private static MarketQuantSummary BuildSummary(List<SectorRankCard> sectors, int totalUp, int totalDown, int totalUnch, decimal totalVol)
+    private MarketQuantSummary BuildSummary(List<SectorRankCard> sectors, int totalUp, int totalDown, int totalUnch, decimal totalVol)
     {
         var totalStocks = totalUp + totalDown + totalUnch;
         var breadth = totalStocks > 0 ? (double)totalUp / totalStocks * 100 : 0;
@@ -151,7 +155,7 @@ public sealed class SectorQuantService
         var highLiq = sectors.Count(s => s.VolR >= 1.0);
         var highLiqRatio = sectors.Count > 0 ? (double)highLiq / sectors.Count * 100 : 0;
 
-        var state = breadth >= 45 && avgVolR >= 1.05 ? "MỞ RỘNG" : "CO HẸP";
+        var state = breadth >= 45 && avgVolR >= 1.05 ? _L["Trading_MarketState_Expansion"].Value : _L["Trading_MarketState_Contraction"].Value;
 
         return new MarketQuantSummary
         {

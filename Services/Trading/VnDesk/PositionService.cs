@@ -1,9 +1,14 @@
 using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk;
+using BlazorWasmPortfolioGhAction.Resources;
+using Microsoft.Extensions.Localization;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk;
 
 public sealed class PositionService
 {
+    private readonly IStringLocalizer<SharedResources> _L;
+    public PositionService(IStringLocalizer<SharedResources> L) => _L = L;
+
     public static readonly (string Key, string Name, decimal FeePct)[] Brokers =
     [
         ("A", "VPS", 0.15m),
@@ -17,7 +22,7 @@ public sealed class PositionService
         // VN quotes are often in thousands; keep user input as typed (dong or nghin — user types actual).
         var broker = Brokers.FirstOrDefault(b => b.Key.Equals(brokerKey, StringComparison.OrdinalIgnoreCase));
         var feePct = customFee ?? (broker.Name is null ? 0.15m : broker.FeePct);
-        var name = broker.Name ?? "Khác";
+        var name = broker.Name ?? _L["Position_BrokerOther"].Value;
         const decimal sellTaxRate = 0.001m;
 
         decimal buyValue = entryPrice * shares;
@@ -30,9 +35,9 @@ public sealed class PositionService
         decimal pnl = net - totalCost;
         decimal pct = totalCost == 0 ? 0 : pnl / totalCost * 100;
 
-        var note = pct < -5 ? "Lỗ > 5%. Cân nhắc cắt lỗ / theo dõi."
-            : pct > 10 ? "Lãi > 10%. Cân nhắc chốt một phần."
-            : "Vị thế ổn định. Tiếp tục theo dõi.";
+        var note = pct < -5 ? _L["Position_Note_Loss5"].Value
+            : pct > 10 ? _L["Position_Note_Profit10"].Value
+            : _L["Position_Note_Stable"].Value;
 
         return new PositionResult
         {
@@ -61,14 +66,14 @@ public sealed class PositionService
         if (price <= 0 || capital <= 0 || riskPct <= 0)
         {
             result.NoTrade = true;
-            result.Reason = "Thiếu vốn / giá / % risk.";
+            result.Reason = _L["Position_NoTrade_Capital"].Value;
             return result;
         }
         var dist = Math.Abs(price - stop);
         if (dist <= 0)
         {
             result.NoTrade = true;
-            result.Reason = "Thiếu stop hoặc stop = giá. No-trade.";
+            result.Reason = _L["Position_NoTrade_Stop"].Value;
             return result;
         }
         result.StopDistance = dist;
@@ -78,7 +83,7 @@ public sealed class PositionService
         if (result.Shares < 100)
         {
             result.NoTrade = true;
-            result.Reason = "Size < 1 lot. No-trade.";
+            result.Reason = _L["Position_NoTrade_Size"].Value;
             return result;
         }
         result.PositionValue = result.Shares * price;
@@ -89,7 +94,7 @@ public sealed class PositionService
             if (result.RiskReward < 1.2m)
             {
                 result.NoTrade = true;
-                result.Reason = $"R:R {result.RiskReward:N2} < 1.2. No-trade.";
+                result.Reason = _L["Position_NoTrade_RR", result.RiskReward].Value;
             }
         }
         return result;

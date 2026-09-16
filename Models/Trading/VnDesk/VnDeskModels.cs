@@ -22,6 +22,15 @@ public class CandlestickPattern
 public enum PatternType { Reversal, Continuation, Indecision, Doji, Support, Resistance }
 public enum Direction { Bullish, Bearish, Neutral }
 
+/// <summary>Trend classification used by IndicatorService. Logic key — display via TrendLabel().</summary>
+public enum TrendDirection
+{
+    StrongUpLong, UpLong, StrongDownLong, DownLong,
+    StrongUpMid, UpMid, StrongDownMid, DownMid,
+    StrongUpShort, UpShort, StrongDownShort, DownShort,
+    Sideways, InsufficientData
+}
+
 public class TrendInfo
 {
     public bool IsUptrend { get; set; }
@@ -135,7 +144,7 @@ public class MarketQuantSummary
     public int TotalDown { get; set; }
     public int TotalUnchanged { get; set; }
     public decimal TotalVolume { get; set; }
-    public string MarketState { get; set; } = "CO HẸP";
+    public string MarketState { get; set; } = "";
     public double ProbUp { get; set; }
     public double ProbDown { get; set; }
     public double ProbFlat { get; set; }
@@ -198,7 +207,7 @@ public class TechnicalIndicators
     public decimal VolumeAverage50 { get; set; }
     public decimal VolumeRatio { get; set; }
     public decimal VolumeRatioIntradayData { get; set; }
-    public string Trend { get; set; } = "";
+    public TrendDirection Trend { get; set; } = TrendDirection.InsufficientData;
     public List<CandlestickPattern> Patterns { get; set; } = [];
     public List<string> ChartPatterns { get; set; } = [];
     public string LiquidityAssessment { get; set; } = "";

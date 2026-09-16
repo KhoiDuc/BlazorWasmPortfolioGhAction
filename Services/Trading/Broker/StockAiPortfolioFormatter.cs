@@ -15,7 +15,7 @@ public static class StockAiPortfolioFormatter
         {
             quotes.TryGetValue(p.Symbol, out var current);
             var currentText = current > 0 ? current.ToString("N2") : "—";
-            sb.AppendLine($"{p.Symbol}: Giá TB {p.AvgBuy?.ToString("N2") ?? "—"}, Hiện tại {currentText}, KL {BrokerFormat.Quantity(p.TotalQuantity)}, TT {BrokerStatusLabels.Vi(p.Status)}");
+            sb.AppendLine($"{p.Symbol}: avg {p.AvgBuy?.ToString("N2") ?? "—"}, current {currentText}, qty {BrokerFormat.Quantity(p.TotalQuantity)}, status {BrokerStatusLabels.Vi(p.Status)}");
         }
         return sb.ToString().Trim();
     }

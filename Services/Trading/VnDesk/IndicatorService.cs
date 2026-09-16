@@ -1,4 +1,6 @@
 using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk;
+using Microsoft.Extensions.Localization;
+using BlazorWasmPortfolioGhAction.Resources;
 
 // ponytail: this file is mirrored in StockPrj\VnDesk\Services\IndicatorService.cs.
 // StockPrj is a console project excluded from the Blazor build (see csproj Compile Remove="StockPrj\**").
@@ -7,6 +9,8 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk;
 
 public sealed partial class IndicatorService
 {
+    private readonly IStringLocalizer<SharedResources> _L;
+    public IndicatorService(IStringLocalizer<SharedResources> L) => _L = L;
     public TechnicalIndicators? Calculate(string symbol, List<StockData> historyData)
     {
         historyData = historyData.OrderBy(d => d.Date).ToList();
@@ -110,7 +114,7 @@ public sealed partial class IndicatorService
     {
         if (ticks.Count == 0)
         {
-            ind.IntradayNote = "Không có dữ liệu intraday (Python/TCBS).";
+            ind.IntradayNote = _L["Trading_Intraday_NoData"].Value;
             return;
         }
 
@@ -141,11 +145,11 @@ public sealed partial class IndicatorService
         return new TechnicalChecklist
         {
             Symbol = ind.Symbol,
-            Context = $"Trend: {ind.Trend}. Giá {close:N2} | SMA20 {ind.SMA20:N2} SMA50 {ind.SMA50:N2} SMA200 {ind.SMA200:N2}. KL x{ind.VolumeRatio:N2} TB20. {ind.LiquidityAssessment}",
-            ConfirmInvalidate = $"Xác nhận: {ind.TradingSignal.Action} (quan sát). RSI {ind.RSI:N1}, MACD hist {ind.Histogram:N3}, {ind.Divergence}. Invalidate: mất {nearestSup:N2} hoặc RSI đảo chiều.",
-            Risk = $"ATR% {ind.ATR:N2}. Stop gợi ý {ind.TradingSignal.StopLoss:N2}. TP {ind.TradingSignal.TakeProfit:N2}. Kháng cự {nearestRes:N2}.",
+            Context = _L["Trading_Checklist_Context", _L[TrendLabel(ind.Trend)].Value, close, ind.SMA20, ind.SMA50, ind.SMA200, ind.VolumeRatio, ind.LiquidityAssessment].Value,
+            ConfirmInvalidate = _L["Trading_Checklist_Confirm", ind.TradingSignal.Action, ind.RSI, ind.Histogram, ind.Divergence, nearestSup].Value,
+            Risk = _L["Trading_Checklist_Risk", ind.ATR, ind.TradingSignal.StopLoss, ind.TradingSignal.TakeProfit, nearestRes].Value,
             Verify = string.IsNullOrWhiteSpace(notes)
-                ? "Đối chiếu lại nến + KL gốc VNDirect trước khi hành động."
+                ? _L["Trading_Checklist_VerifyDefault"].Value
                 : notes,
             Observation = string.Join("; ", ind.Patterns.Take(5).Select(p => p.Name))
         };
@@ -391,23 +395,23 @@ public sealed partial class IndicatorService
         return new(avg, avg == 0 ? 1 : volumes[^1] / avg);
     }
 
-    private static string AnalyzeLiquidity(decimal latest, decimal avg20, decimal avg50)
+    private string AnalyzeLiquidity(decimal latest, decimal avg20, decimal avg50)
     {
-        if (avg20 <= 0 && avg50 <= 0) return "Không đủ dữ liệu khối lượng.";
-        if (avg20 > 0 && avg20 < 50_000) return "Thanh khoản rất thấp (TB20 < 50k).";
+        if (avg20 <= 0 && avg50 <= 0) return _L["Trading_Liquidity_NoData"].Value;
+        if (avg20 > 0 && avg20 < 50_000) return _L["Trading_Liquidity_VeryLow"].Value;
         var shortR = avg20 > 0 ? latest / avg20 : 1;
         var longR = avg20 > 0 && avg50 > 0 ? avg20 / avg50 : 1;
-        if (longR < 0.7m && shortR < 0.7m) return "Thanh khoản giảm dần và thấp phiên gần nhất.";
-        if (longR < 0.7m) return "Thanh khoản giảm dần (TB20 < 70% TB50).";
-        if (shortR < 0.7m) return "Thanh khoản phiên gần nhất thấp hơn 70% TB20.";
-        return "Thanh khoản bình thường.";
+        if (longR < 0.7m && shortR < 0.7m) return _L["Trading_Liquidity_DecliningLow"].Value;
+        if (longR < 0.7m) return _L["Trading_Liquidity_Declining"].Value;
+        if (shortR < 0.7m) return _L["Trading_Liquidity_LowRecent"].Value;
+        return _L["Trading_Liquidity_Normal"].Value;
     }
 
-    private static string DetermineTrend(decimal[] closes, decimal sma20, decimal sma50, decimal sma200,
+    private static TrendDirection DetermineTrend(decimal[] closes, decimal sma20, decimal sma50, decimal sma200,
         decimal latestVolume, decimal volumeAverage, decimal rsi, decimal atr,
         decimal bbUpper, decimal bbLower, decimal bbMiddle)
     {
-        if (closes.Length < 20 || volumeAverage <= 0) return "Không đủ dữ liệu";
+        if (closes.Length < 20 || volumeAverage <= 0) return TrendDirection.InsufficientData;
         var latest = closes.Last();
         var prev20 = closes.TakeLast(21).Take(20).Average();
         var prev50 = closes.Length >= 51 ? closes.TakeLast(51).Take(50).Average() : 0;
@@ -421,52 +425,89 @@ public sealed partial class IndicatorService
         {
             if (latest > sma200 && sma50 > sma200)
             {
-                if (sma20 > sma50 && sma20Up && sma50 > prev50 && volOk && rsiUp && !sideways) return "Tăng mạnh dài hạn";
-                if (sma20 > sma50 || (volOk && rsiUp && !sideways)) return "Tăng dài hạn";
+                if (sma20 > sma50 && sma20Up && sma50 > prev50 && volOk && rsiUp && !sideways) return TrendDirection.StrongUpLong;
+                if (sma20 > sma50 || (volOk && rsiUp && !sideways)) return TrendDirection.UpLong;
             }
             if (latest < sma200 && sma50 < sma200)
             {
-                if (sma20 < sma50 && !sma20Up && sma50 < prev50 && volOk && rsiDn && !sideways) return "Giảm mạnh dài hạn";
-                if (sma20 < sma50 || (volOk && rsiDn && !sideways)) return "Giảm dài hạn";
+                if (sma20 < sma50 && !sma20Up && sma50 < prev50 && volOk && rsiDn && !sideways) return TrendDirection.StrongDownLong;
+                if (sma20 < sma50 || (volOk && rsiDn && !sideways)) return TrendDirection.DownLong;
             }
         }
         if (closes.Length >= 50 && prev50 > 0)
         {
             if (latest > sma50)
             {
-                if (sma20 > sma50 && sma20Up && sma50 > prev50 && volOk && rsiUp && !sideways) return "Tăng mạnh trung hạn";
-                if ((sma20 > sma50 && sma20Up) || (volOk && rsiUp && !sideways)) return "Tăng trung hạn";
+                if (sma20 > sma50 && sma20Up && sma50 > prev50 && volOk && rsiUp && !sideways) return TrendDirection.StrongUpMid;
+                if ((sma20 > sma50 && sma20Up) || (volOk && rsiUp && !sideways)) return TrendDirection.UpMid;
             }
             if (latest < sma50)
             {
-                if (sma20 < sma50 && !sma20Up && sma50 < prev50 && volOk && rsiDn && !sideways) return "Giảm mạnh trung hạn";
-                if ((sma20 < sma50 && !sma20Up) || (volOk && rsiDn && !sideways)) return "Giảm trung hạn";
+                if (sma20 < sma50 && !sma20Up && sma50 < prev50 && volOk && rsiDn && !sideways) return TrendDirection.StrongDownMid;
+                if ((sma20 < sma50 && !sma20Up) || (volOk && rsiDn && !sideways)) return TrendDirection.DownMid;
             }
         }
         if (latest > sma20)
         {
-            if (sma20Up && volOk && rsiUp && !sideways) return "Tăng mạnh ngắn hạn";
-            if (sma20Up || volOk) return "Tăng ngắn hạn";
+            if (sma20Up && volOk && rsiUp && !sideways) return TrendDirection.StrongUpShort;
+            if (sma20Up || volOk) return TrendDirection.UpShort;
         }
         if (latest < sma20)
         {
-            if (!sma20Up && volOk && rsiDn && !sideways) return "Giảm mạnh ngắn hạn";
-            if (!sma20Up || volOk) return "Giảm ngắn hạn";
+            if (!sma20Up && volOk && rsiDn && !sideways) return TrendDirection.StrongDownShort;
+            if (!sma20Up || volOk) return TrendDirection.DownShort;
         }
-        if (sma20 != 0 && Math.Abs(latest - sma20) / sma20 < 0.01m) return "Đi ngang chật";
-        return "Đi ngang";
+        if (sma20 != 0 && Math.Abs(latest - sma20) / sma20 < 0.01m) return TrendDirection.Sideways;
+        return TrendDirection.Sideways;
     }
 
-    private static TradingSignal GenerateTradingSignals(decimal rsi, MACDResult macd, StochasticResult stoch,
-        string trend, VolumeAnalysis volume, decimal atr, SupportResistanceResult sr, decimal latest)
+    /// <summary>Returns the resx key for a trend direction.</summary>
+    public static string TrendLabel(TrendDirection t) => t switch
+    {
+        TrendDirection.StrongUpLong => "Trading_Trend_StrongUpLong",
+        TrendDirection.UpLong => "Trading_Trend_UpLong",
+        TrendDirection.StrongDownLong => "Trading_Trend_StrongDownLong",
+        TrendDirection.DownLong => "Trading_Trend_DownLong",
+        TrendDirection.StrongUpMid => "Trading_Trend_StrongUpMid",
+        TrendDirection.UpMid => "Trading_Trend_UpMid",
+        TrendDirection.StrongDownMid => "Trading_Trend_StrongDownMid",
+        TrendDirection.DownMid => "Trading_Trend_DownMid",
+        TrendDirection.StrongUpShort => "Trading_Trend_StrongUpShort",
+        TrendDirection.UpShort => "Trading_Trend_UpShort",
+        TrendDirection.StrongDownShort => "Trading_Trend_StrongDownShort",
+        TrendDirection.DownShort => "Trading_Trend_DownShort",
+        TrendDirection.Sideways => "Trading_Trend_Sideways",
+        _ => "Trading_Trend_InsufficientData"
+    };
+
+    /// <summary>True if trend is bullish (up variants).</summary>
+    public static bool IsUpTrend(TrendDirection t) =>
+        t is TrendDirection.StrongUpLong or TrendDirection.UpLong
+            or TrendDirection.StrongUpMid or TrendDirection.UpMid
+            or TrendDirection.StrongUpShort or TrendDirection.UpShort;
+
+    /// <summary>True if trend is bearish (down variants).</summary>
+    public static bool IsDownTrend(TrendDirection t) =>
+        t is TrendDirection.StrongDownLong or TrendDirection.DownLong
+            or TrendDirection.StrongDownMid or TrendDirection.DownMid
+            or TrendDirection.StrongDownShort or TrendDirection.DownShort;
+
+    /// <summary>True if trend is a "strong" variant.</summary>
+    public static bool IsStrongTrend(TrendDirection t) =>
+        t is TrendDirection.StrongUpLong or TrendDirection.StrongDownLong
+            or TrendDirection.StrongUpMid or TrendDirection.StrongDownMid
+            or TrendDirection.StrongUpShort or TrendDirection.StrongDownShort;
+
+    private TradingSignal GenerateTradingSignals(decimal rsi, MACDResult macd, StochasticResult stoch,
+        TrendDirection trend, VolumeAnalysis volume, decimal atr, SupportResistanceResult sr, decimal latest)
     {
         var signal = new TradingSignal { Action = "Hold", Recommendation = RecommendationAction.Hold };
         if (latest <= 0 || atr <= 0) return signal;
 
         bool bullX = macd.MacdLine > macd.SignalLine && macd.Histogram > 0;
         bool bearX = macd.MacdLine < macd.SignalLine && macd.Histogram < 0;
-        bool buy = rsi < 45 && bullX && stoch.k < 35 && stoch.k > stoch.d && volume.Ratio > 1.1m && (trend.Contains("Tăng") || trend.Contains("ngang"));
-        bool sell = rsi > 55 && bearX && stoch.k > 65 && stoch.k < stoch.d && volume.Ratio > 1.1m && (trend.Contains("Giảm") || trend.Contains("ngang"));
+        bool buy = rsi < 45 && bullX && stoch.k < 35 && stoch.k > stoch.d && volume.Ratio > 1.1m && (IsUpTrend(trend) || trend == TrendDirection.Sideways);
+        bool sell = rsi > 55 && bearX && stoch.k > 65 && stoch.k < stoch.d && volume.Ratio > 1.1m && (IsDownTrend(trend) || trend == TrendDirection.Sideways);
         var supports = sr.SupportLevels.OrderByDescending(s => s).ToArray();
         var resistances = sr.ResistanceLevels.OrderBy(r => r).ToArray();
         var atrAbs = atr / 100 * latest;
@@ -485,9 +526,9 @@ public sealed partial class IndicatorService
             if (volume.Ratio > 1.3m) score++;
             if (macd.MacdLine - macd.SignalLine > 0.2m) score++;
             if (stoch.k < 25) score++;
-            if (trend.Contains("mạnh")) score++;
+            if (IsStrongTrend(trend)) score++;
             if (score >= 3) { signal.Action = "StrongBuy"; signal.Recommendation = RecommendationAction.StrongBuy; }
-            signal.Rationale = "Quan sát: RSI thấp + MACD cắt lên + volume. Không phải lệnh.";
+            signal.Rationale = _L["Trading_Signal_Rationale_Buy"].Value;
         }
         if (sell)
         {
@@ -503,9 +544,9 @@ public sealed partial class IndicatorService
             if (volume.Ratio > 1.3m) score++;
             if (macd.SignalLine - macd.MacdLine > 0.2m) score++;
             if (stoch.k > 75) score++;
-            if (trend.Contains("mạnh")) score++;
+            if (IsStrongTrend(trend)) score++;
             if (score >= 3) { signal.Action = "StrongSell"; signal.Recommendation = RecommendationAction.StrongSell; }
-            signal.Rationale = "Quan sát: RSI cao + MACD cắt xuống + volume. Không phải lệnh.";
+            signal.Rationale = _L["Trading_Signal_Rationale_Sell"].Value;
         }
         return signal;
     }
@@ -521,15 +562,15 @@ public sealed partial class IndicatorService
         return macd.Skip(longP - 1).ToArray();
     }
 
-    private static string DetectDivergence(decimal[] closes, decimal[] volumes, int lookback)
+    private string DetectDivergence(decimal[] closes, decimal[] volumes, int lookback)
     {
-        if (closes.Length < lookback || lookback < 5) return "Không đủ dữ liệu";
+        if (closes.Length < lookback || lookback < 5) return _L["Trading_Divergence_NoData"].Value;
         var rsi = RsiValues(closes);
         var macd = MacdLineValues(closes);
         var recentC = closes.TakeLast(lookback).ToArray();
         var recentR = rsi.TakeLast(lookback).ToArray();
         var recentM = macd.TakeLast(lookback).ToArray();
-        if (recentR.Length < lookback || recentM.Length < lookback) return "Không đủ dữ liệu RSI/MACD";
+        if (recentR.Length < lookback || recentM.Length < lookback) return _L["Trading_Divergence_NoDataRsiMacd"].Value;
         var highs = new List<(int i, decimal p, decimal r, decimal m)>();
         var lows = new List<(int i, decimal p, decimal r, decimal m)>();
         for (int i = 1; i < recentC.Length - 1; i++)
@@ -551,31 +592,31 @@ public sealed partial class IndicatorService
             if (last.p < prev.p && (last.r > prev.r || last.m > prev.m))
                 return "Bullish Divergence";
         }
-        return "Không có phân kỳ";
+        return _L["Trading_Divergence_None"].Value;
     }
 
-    private static List<string> DetectChartPatterns(List<StockData> data, decimal tolerance = 0.03m)
+    private List<string> DetectChartPatterns(List<StockData> data, decimal tolerance = 0.03m)
     {
         var patterns = new List<string>();
-        if (data.Count < 20) return ["Không đủ dữ liệu"];
+        if (data.Count < 20) return [_L["Trading_Pattern_NoData"].Value];
         var closes = data.Select(d => d.Close).ToArray();
         var highs = data.Select(d => d.High).ToArray();
         var lows = data.Select(d => d.Low).ToArray();
         var vols = data.Select(d => d.Volume).ToArray();
         var avgVol = vols.TakeLast(20).Average();
-        if (avgVol < 100_000) return ["Thanh khoản thấp, loại tín hiệu"];
+        if (avgVol < 100_000) return [_L["Trading_Pattern_LowLiquidity"].Value];
 
         var recentLows = lows.TakeLast(20).ToArray();
         var lowIdx = recentLows.Select((v, i) => new { v, i }).OrderBy(x => x.v).Take(2).OrderBy(x => x.i).ToArray();
         if (lowIdx.Length == 2 && Math.Abs(lowIdx[0].v - lowIdx[1].v) / lowIdx[0].v <= tolerance && lowIdx[1].i - lowIdx[0].i >= 3)
-            patterns.Add("Double Bottom (quan sát)");
+            patterns.Add($"Double Bottom ({_L["Trading_Pattern_Observation"].Value})");
 
         var recentHighs = highs.TakeLast(20).ToArray();
         var highIdx = recentHighs.Select((v, i) => new { v, i }).OrderByDescending(x => x.v).Take(2).OrderBy(x => x.i).ToArray();
         if (highIdx.Length == 2 && Math.Abs(highIdx[0].v - highIdx[1].v) / highIdx[0].v <= tolerance && highIdx[1].i - highIdx[0].i >= 3)
-            patterns.Add("Double Top (quan sát)");
+            patterns.Add($"Double Top ({_L["Trading_Pattern_Observation"].Value})");
 
-        return patterns.Count > 0 ? patterns : ["Không phát hiện mẫu hình"];
+        return patterns.Count > 0 ? patterns : [_L["Trading_Pattern_None"].Value];
     }
 }
 

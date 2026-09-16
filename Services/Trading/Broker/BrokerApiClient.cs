@@ -1,3 +1,5 @@
+using BlazorWasmPortfolioGhAction.Resources;
+using Microsoft.Extensions.Localization;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -45,11 +47,13 @@ public sealed class BrokerApiClient : IBrokerApiClient
 {
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
+    private readonly IStringLocalizer<SharedResources> _L;
 
-    public BrokerApiClient(HttpClient http, IConfiguration config)
+    public BrokerApiClient(HttpClient http, IConfiguration config, IStringLocalizer<SharedResources> L)
     {
         _http = http;
         _config = config;
+        _L = L;
     }
 
     private string? BaseUrl => _config["BrokerApi:BaseUrl"]?.Trim().TrimEnd('/');
@@ -139,9 +143,9 @@ public sealed class BrokerApiClient : IBrokerApiClient
     public async Task<(bool Ok, string? Error)> SavePortfolioAsync(BrokerPortfolio portfolio, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(BaseUrl))
-            return (false, "BrokerApi:BaseUrl trống trong appsettings.json");
+            return (false, _L["Trading_BrokerApi_BaseUrlMissing"].Value);
         if (string.IsNullOrWhiteSpace(ApiKey))
-            return (false, "BrokerApi:ApiKey trống trong appsettings.json");
+            return (false, _L["Trading_BrokerApi_ApiKeyMissing"].Value);
 
         try
         {
@@ -161,7 +165,7 @@ public sealed class BrokerApiClient : IBrokerApiClient
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
         {
-            return (false, $"Timeout sau {_http.Timeout.TotalSeconds:F0}s — {ex.Message}");
+            return (false, _L["Trading_BrokerApi_Timeout", _http.Timeout.TotalSeconds, ex.Message].Value);
         }
         catch (HttpRequestException ex)
         {
@@ -178,9 +182,9 @@ public sealed class BrokerApiClient : IBrokerApiClient
     private async Task<(bool Ok, string? Error)> SendJsonAsync<T>(HttpMethod method, string path, T body, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(BaseUrl))
-            return (false, "BrokerApi:BaseUrl trống trong appsettings.json");
+            return (false, _L["Trading_BrokerApi_BaseUrlMissing"].Value);
         if (string.IsNullOrWhiteSpace(ApiKey))
-            return (false, "BrokerApi:ApiKey trống trong appsettings.json");
+            return (false, _L["Trading_BrokerApi_ApiKeyMissing"].Value);
 
         try
         {
@@ -197,7 +201,7 @@ public sealed class BrokerApiClient : IBrokerApiClient
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
         {
-            return (false, $"Timeout sau {_http.Timeout.TotalSeconds:F0}s — {ex.Message}");
+            return (false, _L["Trading_BrokerApi_Timeout", _http.Timeout.TotalSeconds, ex.Message].Value);
         }
         catch (HttpRequestException ex)
         {
@@ -212,9 +216,9 @@ public sealed class BrokerApiClient : IBrokerApiClient
     private async Task<(bool Ok, string? Error)> SendNoContentAsync(HttpMethod method, string path, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(BaseUrl))
-            return (false, "BrokerApi:BaseUrl trống trong appsettings.json");
+            return (false, _L["Trading_BrokerApi_BaseUrlMissing"].Value);
         if (string.IsNullOrWhiteSpace(ApiKey))
-            return (false, "BrokerApi:ApiKey trống trong appsettings.json");
+            return (false, _L["Trading_BrokerApi_ApiKeyMissing"].Value);
 
         try
         {
@@ -230,7 +234,7 @@ public sealed class BrokerApiClient : IBrokerApiClient
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
         {
-            return (false, $"Timeout sau {_http.Timeout.TotalSeconds:F0}s — {ex.Message}");
+            return (false, _L["Trading_BrokerApi_Timeout", _http.Timeout.TotalSeconds, ex.Message].Value);
         }
         catch (HttpRequestException ex)
         {

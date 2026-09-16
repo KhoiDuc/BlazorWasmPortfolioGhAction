@@ -1,7 +1,9 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BlazorWasmPortfolioGhAction.Resources;
 using BlazorWasmPortfolioGhAction.Services.Trading;
+using Microsoft.Extensions.Localization;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
 
@@ -23,11 +25,13 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
 
     private readonly HttpClient _http;
     private readonly BrokerOptions _options;
+    private readonly IStringLocalizer<SharedResources> _L;
 
-    public BrokerGeminiClient(HttpClient http, BrokerOptions options)
+    public BrokerGeminiClient(HttpClient http, BrokerOptions options, IStringLocalizer<SharedResources> L)
     {
         _http = http;
         _options = options;
+        _L = L;
     }
 
     public bool HasDirectKey => !string.IsNullOrWhiteSpace(_options.ApiKey);
@@ -53,7 +57,7 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
 
         // ponytail: no internal proxy fallback anymore — require a key.
         return new GeminiExplainResult(null,
-            "Không có Gemini API key. Nhập key (nút khóa trên Broker desk) hoặc cấu hình Gemini:ApiKey.");
+            _L["Trading_Gemini_MissingKey"].Value);
     }
 
     private async Task<GeminiExplainResult?> TryDirectAsync(

@@ -173,15 +173,17 @@
         await LoadBrokerSymbolsAsync();
     }
 
-    private string GetTemplateTitle(string key) =>
-        L[$"Trading_StockAiTpl_{key}_Title"].Value is { Length: > 0 } t && t != $"Trading_StockAiTpl_{key}_Title"
-            ? t
-            : Array.Find(StockAiPromptLibrary.Templates, x => x.Key == key)?.Title ?? L["Trading_StockAiAsk"];
+    private string GetTemplateTitle(string key)
+    {
+        var title = Array.Find(StockAiPromptLibrary.Templates, x => x.Key == key)?.Title;
+        return title is not null ? L[title].Value : L["Trading_StockAiAsk"];
+    }
 
-    private string GetTemplateDescription(string key) =>
-        L[$"Trading_StockAiTpl_{key}_Desc"].Value is { Length: > 0 } d && d != $"Trading_StockAiTpl_{key}_Desc"
-            ? d
-            : Array.Find(StockAiPromptLibrary.Templates, x => x.Key == key)?.Description ?? "";
+    private string GetTemplateDescription(string key)
+    {
+        var desc = Array.Find(StockAiPromptLibrary.Templates, x => x.Key == key)?.Description;
+        return desc is not null ? L[desc].Value : "";
+    }
 
     private void SelectTemplate(string key)
     {

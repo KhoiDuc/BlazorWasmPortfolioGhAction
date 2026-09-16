@@ -1,9 +1,14 @@
 using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk;
+using BlazorWasmPortfolioGhAction.Resources;
+using Microsoft.Extensions.Localization;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk;
 
 public sealed class WatchlistScorer
 {
+    private readonly IStringLocalizer<SharedResources> _L;
+    public WatchlistScorer(IStringLocalizer<SharedResources> L) => _L = L;
+
     public WatchlistScore Score(TechnicalIndicators ind)
     {
         var close = ind.LatestClose;
@@ -16,7 +21,7 @@ public sealed class WatchlistScorer
         s.Rsi = ind.RSI >= 40 && ind.RSI <= 65 ? 4 : ind.RSI >= 35 && ind.RSI <= 70 ? 2 : 0;
         s.NearSupport = dist <= 0.05m ? 4 : dist <= 0.08m ? 2 : 0;
         s.Volume = ind.VolumeRatio >= 1.2m ? 4 : ind.VolumeRatio >= 1.0m ? 2 : 0;
-        s.Note = s.Pass ? "Đạt" : "Loại";
+        s.Note = s.Pass ? _L["Trading_Score_Pass"].Value : _L["Trading_Score_Fail"].Value;
         return s;
     }
 }

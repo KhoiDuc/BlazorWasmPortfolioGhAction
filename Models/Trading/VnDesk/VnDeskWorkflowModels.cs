@@ -4,11 +4,11 @@ public class WatchlistState
 {
     public List<string> Criteria { get; set; } =
     [
-        "Thanh khoản: KL >= TB20 * 0.8",
-        "Trend: giá > SMA20 hoặc SMA20 > SMA50",
-        "RSI vùng 40-65 (không quá mua cục đoạn)",
-        "Gần hỗ trợ: cách đáy 20 phiên <= 8%",
-        "Volume: KL >= TB20 * 1.2"
+        "Trading_Criteria_Liquidity",
+        "Trading_Criteria_Trend",
+        "Trading_Criteria_Rsi",
+        "Trading_Criteria_NearSupport",
+        "Trading_Criteria_Volume"
     ];
     public List<WatchlistScore> LastScores { get; set; } = [];
     public DateTime UpdatedAt { get; set; }

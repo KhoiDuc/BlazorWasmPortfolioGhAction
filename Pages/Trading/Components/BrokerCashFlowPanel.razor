@@ -78,7 +78,7 @@
                                 <td class="broker-num @(e.Amount > 0 ? "ts-positive" : e.Amount < 0 ? "ts-negative" : "")">
                                     @BrokerFormat.Vnd(e.Amount)
                                 </td>
-                                <td>@(e.Note ?? "—")</td>
+                                <td>@(string.IsNullOrEmpty(e.Note) ? "—" : L[e.Note].Value)</td>
                             </tr>
                         }
                     </tbody>

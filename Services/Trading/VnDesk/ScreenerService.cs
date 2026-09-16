@@ -1,13 +1,20 @@
 using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk;
+using BlazorWasmPortfolioGhAction.Resources;
+using Microsoft.Extensions.Localization;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk;
 
 public sealed class VnScreenerService
 {
     private readonly VnDeskDataService _data;
+    private readonly IStringLocalizer<SharedResources> _L;
     private Dictionary<string, List<string>>? _lists;
 
-    public VnScreenerService(VnDeskDataService data) => _data = data;
+    public VnScreenerService(VnDeskDataService data, IStringLocalizer<SharedResources> L)
+    {
+        _data = data;
+        _L = L;
+    }
 
     public async Task<Dictionary<string, List<string>>> GetListsAsync()
     {
@@ -26,7 +33,7 @@ public sealed class VnScreenerService
             .ToList();
     }
 
-    private static List<PotentialStock> FindTrend(List<StockData> historicalData, int minDays = 50, int maShort = 20, int maLong = 50)
+    private List<PotentialStock> FindTrend(List<StockData> historicalData, int minDays = 50, int maShort = 20, int maLong = 50)
     {
         var result = new List<PotentialStock>();
         foreach (var group in historicalData.GroupBy(d => d.Symbol))
@@ -56,7 +63,7 @@ public sealed class VnScreenerService
         return result;
     }
 
-    private static List<PotentialStock> FindRecovery(List<StockData> historicalData,
+    private List<PotentialStock> FindRecovery(List<StockData> historicalData,
         double maxDrop = 0.20, double minRecovery = 0.03, int recoveryDays = 5)
     {
         return historicalData
@@ -68,7 +75,7 @@ public sealed class VnScreenerService
             .ToList();
     }
 
-    private static PotentialStock? AnalyzeRecovery(List<StockData> data, double maxDrop, double minRecovery, int recoveryDays)
+    private PotentialStock? AnalyzeRecovery(List<StockData> data, double maxDrop, double minRecovery, int recoveryDays)
     {
         var closes = data.Select(d => (double)d.Close).ToArray();
         var volumes = data.Select(d => (double)d.Volume).ToArray();
@@ -97,7 +104,7 @@ public sealed class VnScreenerService
             PriceChange = data.Count >= 2 ? (decimal)((current - (double)data[^2].Close) / (double)data[^2].Close * 100) : 0,
             Volume = (decimal)volumes.Last(),
             PotentialScore = score,
-            Reason = $"Giảm {drop:P1} ({peak:N0}→{bottom:N0}) | Hồi {rec:P1} | Vol x{volSurge:N1}"
+            Reason = _L["Trading_Screen_Recovery", drop, peak, bottom, rec, volSurge].Value
         };
     }
 
@@ -113,24 +120,24 @@ public sealed class VnScreenerService
         return (maS > maL, pos + (int)(baseScore * conf));
     }
 
-    private static (int score, string reason) EvaluatePrice(double[] closes)
+    private (int score, string reason) EvaluatePrice(double[] closes)
     {
         var low = closes.TakeLast(20).Min();
         var cur = closes.Last();
         var dist = (cur - low) / low;
-        if (dist <= 0.05) return (30, $"Gần hỗ trợ (cách đáy {dist * 100:F1}%)");
-        if (dist <= 0.1) return (20, $"Tiệm cận hỗ trợ (cách đáy {dist * 100:F1}%)");
-        return (0, $"Vùng trung bình (cách đáy {dist * 100:F1}%)");
+        if (dist <= 0.05) return (30, _L["Trading_Screen_NearSupport", dist * 100].Value);
+        if (dist <= 0.1) return (20, _L["Trading_Screen_NearSupport2", dist * 100].Value);
+        return (0, _L["Trading_Screen_Average", dist * 100].Value);
     }
 
-    private static (int score, string reason) EvaluateVolume(double[] volumes)
+    private (int score, string reason) EvaluateVolume(double[] volumes)
     {
         var last = volumes.Last();
         var avg = volumes.TakeLast(20).Average();
         var ratio = avg == 0 ? 1 : last / avg;
-        if (last > avg * 2) return (30, $"Volume đột biến x{ratio:F1}");
-        if (last > avg * 1.5) return (20, $"Volume cao x{ratio:F1}");
-        return (0, $"Volume TB x{ratio:F1}");
+        if (last > avg * 2) return (30, _L["Trading_Screen_VolumeSurge", ratio].Value);
+        if (last > avg * 1.5) return (20, _L["Trading_Screen_VolumeHigh", ratio].Value);
+        return (0, _L["Trading_Screen_VolumeAvg", ratio].Value);
     }
 
     public static (double slope, double rSquared, double intercept) AdvancedSlope(double[] data, bool weighted = true)

@@ -343,7 +343,7 @@ public static class BrokerCashFlowCalculator
                         Symbol = p.Symbol,
                         Kind = CashFlowKind.Fee,
                         Amount = -s.Fee.Value,
-                        Note = "Phí giao dịch"
+                        Note = "Trading_CashFlow_Fee"
                     });
 
                 if (s.Tax is > 0)
@@ -353,7 +353,7 @@ public static class BrokerCashFlowCalculator
                         Symbol = p.Symbol,
                         Kind = CashFlowKind.Tax,
                         Amount = -s.Tax.Value,
-                        Note = "Thuế TNCN"
+                        Note = "Trading_CashFlow_Tax"
                     });
             }
 
@@ -389,16 +389,16 @@ public static class BrokerStatusLabels
 {
     public static string Vi(BrokerPositionStatus status) => status switch
     {
-        BrokerPositionStatus.ChuaQuyet => "Chưa quyết",
-        BrokerPositionStatus.ChoMua => "Chờ mua",
-        BrokerPositionStatus.NamGiu => "Nắm giữ",
-        BrokerPositionStatus.CatLo => "Cắt lỗ",
-        BrokerPositionStatus.ChotLoi => "Chốt lời",
-        BrokerPositionStatus.BoTheoDoi => "Bỏ theo dõi",
+        BrokerPositionStatus.ChuaQuyet => "Trading_BrokerStatus_ChuaQuyet",
+        BrokerPositionStatus.ChoMua => "Trading_BrokerStatus_ChoMua",
+        BrokerPositionStatus.NamGiu => "Trading_BrokerStatus_NamGiu",
+        BrokerPositionStatus.CatLo => "Trading_BrokerStatus_CatLo",
+        BrokerPositionStatus.ChotLoi => "Trading_BrokerStatus_ChotLoi",
+        BrokerPositionStatus.BoTheoDoi => "Trading_BrokerStatus_BoTheoDoi",
         _ => status.ToString()
     };
 
-    public static string Vi(BrokerNoteKind kind) => kind == BrokerNoteKind.Self ? "Của tôi" : "Broker";
+    public static string Vi(BrokerNoteKind kind) => kind == BrokerNoteKind.Self ? "Trading_BrokerStatus_Self" : "Trading_BrokerStatus_Broker";
 }
 
 public static class BrokerMoney

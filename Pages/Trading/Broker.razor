@@ -577,7 +577,7 @@
             _message = null;
     }
 
-    private void SetFieldError(string field, string message) => _fieldErrors[field] = message;
+    private void SetFieldError(string field, string message) => _fieldErrors[field] = L[message].Value;
 
     private string FieldClass(string field) =>
         _fieldErrors.ContainsKey(field) ? "ts-input-invalid" : "";
