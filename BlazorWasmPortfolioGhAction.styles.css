@@ -523,28 +523,8 @@
     font-size: 0.8rem;
 }
 
-.email-body-toggle[b-6w9b50vi19] {
-    margin-bottom: 0.4rem;
-}
-
-.email-toggle-btn[b-6w9b50vi19] {
-    padding: 0.35rem 0.85rem;
-    font-size: 0.8rem;
-}
-
-.email-toggle-active[b-6w9b50vi19] {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
-    background-color: var(--color-bg-glass-active);
-}
-
-.email-tinymce[b-6w9b50vi19] {
+.email-body-editor[b-6w9b50vi19] {
     width: 100%;
-}
-
-.email-tinymce :deep(.tox.tox-tinymce)[b-6w9b50vi19] {
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--color-border);
 }
 
 .email-attachments[b-6w9b50vi19] {
@@ -1635,6 +1615,49 @@
 }
 /* /Components/MarkdownConverter/MarkdownConverter.razor.rz.scp.css */
 /* MarkdownConverter uses shared tool classes only */
+/* /Components/MarkdownEditor/MarkdownEditor.razor.rz.scp.css */
+.md-editor[b-45iadwlhi6] {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.md-editor--split[b-45iadwlhi6] {
+    grid-template-columns: 1fr 1fr;
+}
+
+.md-editor__input[b-45iadwlhi6] {
+    width: 100%;
+    min-height: 12rem;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    resize: vertical;
+}
+
+.md-editor__input:focus-visible[b-45iadwlhi6] {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+}
+
+.md-editor__preview[b-45iadwlhi6] {
+    overflow-wrap: break-word;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-surface-elevated);
+}
+
+/* 768px = --bp-md */
+@media (max-width: 48rem) {
+    .md-editor--split[b-45iadwlhi6] {
+        grid-template-columns: 1fr;
+    }
+}
 /* /Components/MD5Converter/MD5Converter.razor.rz.scp.css */
 .conv-row[b-hpx7c02zjl] {
     display: flex;
@@ -7512,10 +7535,6 @@
     right: 0;
     top: 0;
     z-index: 2;
-}
-
-.tinymce-editor[b-xtwal4usc9] {
-    min-height: 120px;
 }
 
 @media (max-width: 768px) {

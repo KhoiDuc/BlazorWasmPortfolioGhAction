@@ -138,8 +138,8 @@ window.tradingSignals = {
     _escHandler: null,
     initEsc: function (dotNetRef) {
         this._dotNet = dotNetRef;
-        this._escHandler = function (e) {
-            if (e.key === 'Escape' && document.fullscreenElement) {
+        this._escHandler = function () {
+            if (!document.fullscreenElement) {
                 dotNetRef.invokeMethodAsync('OnEscPressed');
             }
         };
