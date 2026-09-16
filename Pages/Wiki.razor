@@ -133,7 +133,6 @@
                                 <WikiBlock type="@ViewType"
                                            sections="@Section"
                                            subSections="@SubSection"
-                                           TinyAPIKey="@TinyApiKey"
                                            count="@FilteredContents.Count"
                                            indexParsed="@index"
                                            username="@Username"
@@ -168,7 +167,6 @@
     [Parameter] public string? SubSection { get; set; }
 
     private string? _searchTerm;
-    private string TinyApiKey => Configuration["Wiki:TinyMceApiKey"] ?? "no-api-key";
     private string Username => "editor";
 
     private bool IsEditMode => Navigation.Uri.Contains("/wiki/edit/", StringComparison.OrdinalIgnoreCase);
@@ -235,8 +233,6 @@
                 Navigation.NavigateTo($"/{CultureService.UrlLang}/admin?returnUrl={Uri.EscapeDataString(Navigation.Uri)}");
                 return;
             }
-
-            await JSRuntime.InvokeVoidAsync("tinyMceLoader.ensureLoaded");
         }
 
         if (ContentState.Value.FileCount == 0 && ContentState.Value.LoadedFilesCount == 0)

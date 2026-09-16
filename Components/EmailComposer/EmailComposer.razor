@@ -1,6 +1,6 @@
 @inject IJSRuntime JSRuntime
 @inject IConfiguration Configuration
-@inject IScriptLoaderService ScriptLoader
+@using Markdig
 @using BlazorWasmPortfolioGhAction.Utils
 @using BlazorWasmPortfolioGhAction.Services
 @using System.Text.RegularExpressions
@@ -60,27 +60,10 @@
 
                 <div class="tool-field">
                     <span class="tool-label">Body <span class="email-req">*</span></span>
-                    <div class="tool-actions email-body-toggle">
-                        <button type="button" class="tool-btn email-toggle-btn @(IsHtml ? "email-toggle-active" : "")" @onclick="(() => IsHtml = true)">Rich Text</button>
-                        <button type="button" class="tool-btn email-toggle-btn @(!IsHtml ? "email-toggle-active" : "")" @onclick="(() => IsHtml = false)">Plain Text</button>
+                    <div class="email-body-editor">
+                        <MarkdownEditor Value="@Body"
+                                        ValueChanged="@(EventCallback.Factory.Create<string?>(this, v => Body = v ?? string.Empty))" />
                     </div>
-                    @if (IsHtml)
-                    {
-                        <div class="email-tinymce">
-                            <Editor Id="email-body-editor"
-                                    Inline="false"
-                                    CloudChannel="5"
-                                    Disable="false"
-                                    Conf="@EditorConf"
-                                    ApiKey="@TinyApiKey"
-                                    ClassName="emailEditor"
-                                    @bind-Value="Body" />
-                        </div>
-                    }
-                    else
-                    {
-                        <textarea class="tool-textarea" rows="10" @bind="Body" placeholder="Write your email..."></textarea>
-                    }
                 </div>
 
                 <div class="tool-field">
@@ -186,7 +169,6 @@
     private string Bcc = string.Empty;
     private string Subject = string.Empty;
     private string Body = string.Empty;
-    private bool IsHtml = true;
     private bool Sent = false;
     private string? ErrorMessage;
     private bool ShowToError;
@@ -197,7 +179,6 @@
     private List<AttachmentPreview> Attachments = new();
     private record AttachmentPreview(string Name, long Size, string ContentType);
 
-    private string TinyApiKey => Configuration["EmailJs:ApiKey"] ?? string.Empty;
     private bool IsConfigured =>
         !string.IsNullOrWhiteSpace(Configuration["EmailJs:ServiceId"]) &&
         !string.IsNullOrWhiteSpace(Configuration["EmailJs:TemplateId"]) &&
@@ -206,29 +187,19 @@
     private const int MaxAttachmentSize = 10 * 1024 * 1024;
     private const int MaxAttachments = 5;
 
-    private readonly Dictionary<string, object> EditorConf = new()
-    {
-        { "menubar", "edit insert format tools help" },
-        { "toolbar", "undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist | forecolor backcolor | link | removeformat" },
-        { "plugins", "autolink link lists advlist autoresize wordcount" },
-        { "toolbar_mode", "floating" },
-        { "toolbar_location", "top" },
-        { "width", "100%" },
-        { "min_height", 250 },
-        { "autoresize_bottom_margin", 30 },
-        { "skin", "oxide-dark" },
-        { "content_css", "dark" },
-        { "browser_spellcheck", "true" },
-        { "paste_as_text", "true" },
-        { "resize", "true" }
-    };
+    private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .UseEmojiAndSmiley(true)
+        .Build();
+
+    private string HtmlBody => string.IsNullOrWhiteSpace(Body)
+        ? string.Empty
+        : Markdown.ToHtml(Body, Pipeline);
 
     private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
 
     protected override async Task OnInitializedAsync()
     {
-        if (IsHtml)
-            await ScriptLoader.EnsureTinyMceAsync();
     }
 
     private async Task OnAttachmentChange(InputFileChangeEventArgs e)
@@ -304,7 +275,7 @@
                     cc_email = Cc,
                     bcc_email = Bcc,
                     subject = Subject,
-                    message = Body,
+                    message = HtmlBody,
                     from_name = "Portfolio Contact"
                 }
             };
@@ -327,7 +298,7 @@
                     cc_email = Cc,
                     bcc_email = Bcc,
                     subject = Subject,
-                    message = Body,
+                    message = HtmlBody,
                     from_name = "Portfolio Contact"
                 });
             Sent = true;

@@ -1,6 +1,7 @@
 ﻿@inject IState<ContentState> contentState
 @inject IHtmlSanitizerService Sanitizer
 @using BlazorWasmPortfolioGhAction.Services
+@using Markdig
 @inject IDispatcher Dispatcher
 @using BlazorWasmPortfolioGhAction.Shared.Model;
 @using BlazorWasmPortfolioGhAction.Store.Actions;
@@ -18,7 +19,7 @@
             <td>
                 @RenderSectionHeader(item, editable: false)
                 <div class="wiki-article-body dotted-lines">
-                    @(Sanitizer.ToSafeMarkup(item.content ?? string.Empty))
+                    @RenderContent(item.content)
                 </div>
             </td>
         </tr>
@@ -28,7 +29,7 @@
         <article class="wiki-article" id="@anchorId">
             @RenderSectionHeader(item, editable: false)
             <div class="wiki-article-body dotted-lines">
-                @(Sanitizer.ToSafeMarkup(item.content ?? string.Empty))
+                @RenderContent(item.content)
             </div>
         </article>
     }
@@ -39,6 +40,11 @@ else
 }
 
 @code {
+    private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .UseEmojiAndSmiley(true)
+        .Build();
+
     [Parameter] public bool? inline { get; set; }
     [Parameter] public bool matchTypeSectionsSubSections { get; set; }
     [Parameter] public bool matchTypeSections { get; set; }
@@ -49,6 +55,18 @@ else
     [Parameter] public int count { get; set; }
     [Parameter] public int localCount { get; set; }
     [Parameter] public int indexParsed { get; set; }
+
+    private static bool IsHtml(string? raw) =>
+        !string.IsNullOrWhiteSpace(raw) && raw.TrimStart().StartsWith('<');
+
+    private MarkupString RenderContent(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return new(string.Empty);
+        var html = IsHtml(raw) ? raw : Markdown.ToHtml(raw, Pipeline);
+        return Sanitizer.ToSafeMarkup(html);
+    }
+
+    private MarkupString RenderField(string? raw) => Sanitizer.ToSafeMarkup(raw);
 
     private RenderFragment RenderSectionHeader(ContentHolder item, bool editable) => __builder =>
     {
@@ -70,7 +88,7 @@ else
 
             __builder.OpenElement(5, "h3");
             __builder.AddAttribute(6, "class", "wiki-article-title");
-            __builder.AddContent(7, (MarkupString)Sanitizer.ToSafeMarkup(item.section ?? string.Empty));
+            __builder.AddContent(7, RenderField(item.section));
             __builder.CloseElement();
         }
 
@@ -78,14 +96,14 @@ else
         {
             __builder.OpenElement(8, "p");
             __builder.AddAttribute(9, "class", "wiki-article-subtitle");
-            __builder.AddContent(10, (MarkupString)Sanitizer.ToSafeMarkup(item.subSection ?? string.Empty));
+            __builder.AddContent(10, RenderField(item.subSection));
             __builder.CloseElement();
         }
         else if (showSubOnly && !string.IsNullOrWhiteSpace(item.subSection))
         {
             __builder.OpenElement(11, "h3");
             __builder.AddAttribute(12, "class", "wiki-article-title");
-            __builder.AddContent(13, (MarkupString)Sanitizer.ToSafeMarkup(item.subSection ?? string.Empty));
+            __builder.AddContent(13, RenderField(item.subSection));
             __builder.CloseElement();
         }
 

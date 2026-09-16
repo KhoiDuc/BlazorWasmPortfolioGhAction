@@ -1,0 +1,36 @@
+@using Markdig
+@inject IHtmlSanitizerService Sanitizer
+
+<div class="md-editor @(@ShowPreview ? "md-editor--split" : "")">
+    <textarea class="md-editor__input"
+              rows="@Rows"
+              spellcheck="false"
+              placeholder="Write Markdown..."
+              @bind="Value"
+              @bind:event="oninput"
+              @bind:after="OnValueChanged"></textarea>
+    @if (ShowPreview)
+    {
+        <div class="md-editor__preview wiki-article-body">
+            @((MarkupString)Sanitizer.Sanitize(PreviewHtml))
+        </div>
+    }
+</div>
+
+@code {
+    private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .UseEmojiAndSmiley(true)
+        .Build();
+
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public int Rows { get; set; } = 10;
+    [Parameter] public bool ShowPreview { get; set; } = true;
+
+    private string PreviewHtml => string.IsNullOrWhiteSpace(Value)
+        ? string.Empty
+        : Markdown.ToHtml(Value, Pipeline);
+
+    private async Task OnValueChanged() => await ValueChanged.InvokeAsync(Value);
+}

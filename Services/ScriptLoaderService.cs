@@ -7,7 +7,6 @@ public interface IScriptLoaderService
     Task EnsureChartJsAsync();
     Task EnsurePhysicsLibsAsync();
     Task EnsureInteractJsAsync();
-    Task EnsureTinyMceAsync();
 }
 
 public class ScriptLoaderService : IScriptLoaderService
@@ -24,7 +23,4 @@ public class ScriptLoaderService : IScriptLoaderService
 
     public Task EnsureInteractJsAsync() =>
         _js.InvokeVoidAsync("scriptLoader.loadInteractJs").AsTask();
-
-    public Task EnsureTinyMceAsync() =>
-        _js.InvokeVoidAsync("tinyMceLoader.ensureLoaded").AsTask();
 }

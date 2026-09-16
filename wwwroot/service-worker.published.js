@@ -42,7 +42,6 @@ const cacheFirstAssets = [
     // _content folder
     `${basePath}/_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/*`,
     `${basePath}/_content/Microsoft.Authentication.WebAssembly.Msal/*`,
-    `${basePath}/_content/TinyMCE.Blazor/*`,
 
     // css folders
     `${basePath}/css/bootstrap/*`,
