@@ -1,0 +1,37 @@
+@page "/trading/signals"
+@page "/{lang:regex(^(en|vn)$)}/trading/signals"
+@layout TradingLayout
+@inherits CultureAwareComponent
+@using BlazorFrame
+@inject IStringLocalizer<SharedResources> L
+
+<div class="ts-page @(_fs ? "signals-fs" : "")">
+    <div class="ts-panel">
+        <div class="ts-header">
+            <div>
+                <h2>@L["Trading_SignalsTitle"]</h2>
+                <p>@L["Trading_SignalsLead"]</p>
+            </div>
+            <button class="ts-btn ts-btn-outline ts-btn-sm"
+                    @onclick="ToggleFullscreen">
+                @(_fs ? L["Trading_SignalsExitFs"] : L["Trading_SignalsFs"])
+            </button>
+        </div>
+    </div>
+
+    <BlazorFrame Src="https://trading-signals-pi.vercel.app/stock"
+                 EnableAutoResize="true"
+                 Width="100%"
+                 Height="700px"
+                 SecurityOptions="@_sec" />
+</div>
+
+@code {
+    private bool _fs;
+    private readonly MessageSecurityOptions _sec = new MessageSecurityOptions()
+        .ForProduction()
+        .WithBasicSandbox()
+        .RequireHttps();
+
+    private void ToggleFullscreen() => _fs = !_fs;
+}
