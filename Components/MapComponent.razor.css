@@ -20,10 +20,18 @@
     z-index: 1000;
     display: flex;
     gap: 10px;
-    background: var(--color-bg-glass);
+    background: var(--color-bg-surface);
     padding: 12px;
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-sm);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .info-window-controls {
+        background: var(--color-bg-glass);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
 }
 
 .btn-control {

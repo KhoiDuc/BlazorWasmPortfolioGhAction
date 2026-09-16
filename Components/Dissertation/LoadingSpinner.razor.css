@@ -7,8 +7,16 @@
     position: absolute;
     top: 0;
     left: 0;
-    background-color: var(--color-bg-glass);
+    background-color: var(--color-bg-surface);
     z-index: 1000;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .loading-spinner-overlay {
+        background-color: var(--color-bg-glass);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
 }
 
 .spinner-border {

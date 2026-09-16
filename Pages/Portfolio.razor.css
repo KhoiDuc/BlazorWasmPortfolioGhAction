@@ -47,7 +47,7 @@
 
 .resume-hero-role {
     margin: 0 0 1.75rem;
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     font-size: 1rem;
     font-weight: var(--font-weight-medium);
     letter-spacing: 0.02em;
@@ -74,7 +74,7 @@
 .resume-contact-info i {
     flex-shrink: 0;
     width: 1.1rem;
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     font-size: 1rem;
     text-align: center;
 }
@@ -88,7 +88,7 @@
     transition: color var(--transition);
 }
 
-    .resume-contact-info a:hover { color: var(--color-accent); }
+    .resume-contact-info a:hover { color: var(--color-brand-symbol); }
 
 .resume-hero-links {
     display: flex;
@@ -128,7 +128,7 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: var(--color-bg-glass-heavy);
+    background: var(--color-bg-surface);
     border: 1px solid var(--color-border);
     color: var(--color-text-primary);
     width: 36px;
@@ -139,13 +139,19 @@
     align-items: center;
     justify-content: center;
     z-index: 2;
-    backdrop-filter: var(--blur-glass);
     transition: background-color var(--transition), border-color var(--transition);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .carousel-nav {
+        background: var(--color-bg-glass-heavy);
+        backdrop-filter: var(--blur-glass);
+    }
 }
 
     .carousel-nav:hover {
         background: var(--color-bg-surface);
-        border-color: var(--color-accent);
+        border-color: var(--color-brand-symbol);
     }
 
 .carousel-nav.prev { left: 10px; }
@@ -206,7 +212,7 @@
 
 .experience-company {
     margin-bottom: 1rem;
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     font-weight: 500;
 }
 
@@ -258,7 +264,7 @@
 
     .project-card:hover {
         transform: translateY(-4px);
-        border-color: var(--color-accent);
+        border-color: var(--color-brand-symbol);
     }
 
 .project-header {
@@ -269,7 +275,7 @@
 }
 
 .project-type {
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     font-size: 0.8rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -312,10 +318,10 @@
         transition: color var(--transition);
     }
 
-        .project-links a:hover { color: var(--color-accent); }
+        .project-links a:hover { color: var(--color-brand-symbol); }
 
         .project-links i {
-            color: var(--color-accent);
+            color: var(--color-brand-symbol);
             font-size: 0.9rem;
         }
 
@@ -419,7 +425,7 @@
     padding: 0.3rem 0.65rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-full);
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     font-size: 0.75rem;
     font-weight: 600;
 }
@@ -481,7 +487,7 @@
         text-decoration: none;
     }
 
-        .resume-footer a:hover { color: var(--color-accent); }
+        .resume-footer a:hover { color: var(--color-brand-symbol); }
 
 /* --------------------------------------------------------------------------- */
 /* RESPONSIVE                                                                   */
