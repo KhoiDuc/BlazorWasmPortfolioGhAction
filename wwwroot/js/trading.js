@@ -132,3 +132,32 @@ window.tradingExport = {
         URL.revokeObjectURL(url);
     }
 };
+
+window.tradingSignals = {
+    _dotNet: null,
+    _escHandler: null,
+    initEsc: function (dotNetRef) {
+        this._dotNet = dotNetRef;
+        this._escHandler = function (e) {
+            if (e.key === 'Escape' && document.fullscreenElement) {
+                dotNetRef.invokeMethodAsync('OnEscPressed');
+            }
+        };
+        document.addEventListener('fullscreenchange', this._escHandler);
+    },
+    disposeEsc: function (dotNetRef) {
+        if (this._escHandler) {
+            document.removeEventListener('fullscreenchange', this._escHandler);
+            this._escHandler = null;
+        }
+        if (dotNetRef) dotNetRef.dispose();
+        this._dotNet = null;
+    },
+    requestFs: function (elRef) {
+        var el = elRef;
+        if (el && el.requestFullscreen) el.requestFullscreen();
+    },
+    exitFs: function () {
+        if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
+    }
+};

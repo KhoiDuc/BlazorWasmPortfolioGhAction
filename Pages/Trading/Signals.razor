@@ -1,37 +1,129 @@
 @page "/trading/signals"
 @page "/{lang:regex(^(en|vn)$)}/trading/signals"
 @layout TradingLayout
+@implements IDisposable
 @inherits CultureAwareComponent
 @using BlazorFrame
+@using BlazorFrame.Models
 @inject IStringLocalizer<SharedResources> L
+@inject IJSRuntime JS
 
-<div class="ts-page @(_fs ? "signals-fs" : "")">
+<div class="ts-page @(_fs ? "signals-fs" : "")" @ref="_pageEl">
     <div class="ts-panel">
         <div class="ts-header">
             <div>
                 <h2>@L["Trading_SignalsTitle"]</h2>
                 <p>@L["Trading_SignalsLead"]</p>
             </div>
-            <button class="ts-btn ts-btn-outline ts-btn-sm"
-                    @onclick="ToggleFullscreen">
-                @(_fs ? L["Trading_SignalsExitFs"] : L["Trading_SignalsFs"])
-            </button>
+            <div class="signals-actions">
+                <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ReloadIframe">
+                    @L["Trading_SignalsReload"]
+                </button>
+                <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ToggleFullscreen">
+                    @(_fs ? L["Trading_SignalsExitFs"] : L["Trading_SignalsFs"])
+                </button>
+            </div>
         </div>
+
+        @if (_navUrl is not null)
+        {
+            <div class="signals-nav-status" role="status">
+                <span class="signals-nav-label">@L["Trading_SignalsNavLabel"]:</span>
+                <a href="@_navUrl" target="_blank" rel="noopener noreferrer" class="signals-nav-url">@_navUrl</a>
+            </div>
+        }
     </div>
 
-    <BlazorFrame Src="https://trading-signals-pi.vercel.app/stock"
+    <BlazorFrame @ref="_iframe"
+                 Src="https://trading-signals-pi.vercel.app/stock"
                  EnableAutoResize="true"
+                 EnableNavigationTracking="true"
                  Width="100%"
                  Height="700px"
-                 SecurityOptions="@_sec" />
+                 SecurityOptions="@_sec"
+                 ResizeOptions="@_resize"
+                 OnNavigation="HandleNavigation"
+                 OnValidatedMessage="HandleMessage"
+                 OnSecurityViolation="HandleViolation" />
 </div>
 
 @code {
     private bool _fs;
+    private BlazorFrame? _iframe;
+    private ElementReference _pageEl;
+    private string? _navUrl;
+
     private readonly MessageSecurityOptions _sec = new MessageSecurityOptions()
         .ForProduction()
         .WithBasicSandbox()
         .RequireHttps();
 
-    private void ToggleFullscreen() => _fs = !_fs;
+    private readonly ResizeOptions _resize = new()
+    {
+        MinHeight = 200,
+        MaxHeight = 50000,
+        PollingInterval = 500,
+        DebounceMs = 100,
+        UseResizeObserver = true
+    };
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _escRef = DotNetObjectReference.Create(this);
+            _ = JS.InvokeVoidAsync("tradingSignals.initEsc", _escRef);
+        }
+    }
+
+    private DotNetObjectReference<Signals>? _escRef;
+
+    [JSInvokable]
+    public Task OnEscPressed() => _fs ? ExitFullscreen() : Task.CompletedTask;
+
+    private async Task ReloadIframe()
+    {
+        if (_iframe is not null)
+            await _iframe.ReloadAsync();
+    }
+
+    private async Task ToggleFullscreen()
+    {
+        _fs = !_fs;
+        if (_fs)
+            await JS.InvokeVoidAsync("tradingSignals.requestFs", _pageEl);
+        else
+            await JS.InvokeVoidAsync("tradingSignals.exitFs");
+    }
+
+    private async Task ExitFullscreen()
+    {
+        _fs = false;
+        await JS.InvokeVoidAsync("tradingSignals.exitFs");
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task HandleNavigation(NavigationEvent nav)
+    {
+        _navUrl = nav.Url;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private Task HandleMessage(IframeMessage msg)
+    {
+        // Hook for bidirectional comms — handle validated messages from iframe here.
+        return Task.CompletedTask;
+    }
+
+    private Task HandleViolation(IframeMessage violation)
+    {
+        // Security violation logged — extend to surface UI warning if needed.
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        _ = JS.InvokeVoidAsync("tradingSignals.disposeEsc", _escRef);
+        _escRef?.Dispose();
+    }
 }
