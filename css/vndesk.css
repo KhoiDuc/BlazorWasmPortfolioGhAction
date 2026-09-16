@@ -24,7 +24,7 @@
 
 /* Symbol bar */
 .vd-symbol-bar {
-    background: var(--color-bg-glass);
+    background: var(--color-bg-surface);
     backdrop-filter: blur(8px);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -44,12 +44,12 @@
     padding: 0.45rem 0.7rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-    background: var(--color-bg-glass-heavy);
+    background: var(--color-bg-surface);
     color: var(--color-text-primary);
 }
 .vd-symbol-input:focus {
     outline: none;
-    border-color: var(--color-accent);
+    border-color: var(--color-brand-symbol);
     box-shadow: 0 0 0 2px var(--color-accent-glow);
 }
 .vd-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
@@ -59,15 +59,15 @@
     font-weight: 600;
     border-radius: var(--radius-full);
     border: 1px solid var(--color-border);
-    background: var(--color-bg-glass);
-    color: var(--color-text-secondary);
+    background: var(--color-bg-surface);
+    color: var(--color-nav-link);
     cursor: pointer;
     transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
 }
 .vd-chip:hover, .vd-chip.active {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
-    background: var(--color-bg-glass-hover);
+    border-color: var(--color-nav-link-active);
+    color: var(--color-nav-link-active);
+    background: var(--color-bg-surface-elevated);
 }
 
 /* Pill nav */
@@ -76,7 +76,7 @@
     gap: 0.25rem;
     flex-wrap: wrap;
     padding: 0.25rem;
-    background: var(--color-bg-glass);
+    background: var(--color-bg-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-full);
     margin-bottom: 0.85rem;
@@ -94,15 +94,15 @@
     border: none;
     border-radius: var(--radius-full);
     background: transparent;
-    color: var(--color-text-secondary);
+    color: var(--color-nav-link);
     cursor: pointer;
     white-space: nowrap;
     transition: background var(--transition-fast), color var(--transition-fast);
 }
-.vd-nav-item:hover { color: var(--color-text-primary); background: var(--color-bg-glass-hover); }
+.vd-nav-item:hover { color: var(--color-nav-link-hover); background: var(--color-bg-surface-elevated); }
 .vd-nav-item.active {
     background: var(--gradient-accent);
-    color: var(--color-bg-app, #fff);
+    color: #fff;
 }
 
 /* Two-row tab groups (VN + Macro) */
@@ -166,22 +166,28 @@
     font-weight: 600;
     border: none;
     background: transparent;
-    color: var(--color-text-secondary);
+    color: var(--color-nav-link);
     cursor: pointer;
     border-bottom: 2px solid transparent;
     transition: color var(--transition-fast), border-color var(--transition-fast);
 }
-.vd-subtab:hover { color: var(--color-text-primary); }
-.vd-subtab.active { color: var(--color-accent); border-bottom-color: var(--color-accent); }
+.vd-subtab:hover { color: var(--color-nav-link-hover); }
+.vd-subtab.active { color: var(--color-nav-link-active); border-bottom-color: var(--color-nav-link-active); }
 
 /* Panel / section */
 .vd-panel {
-    background: var(--color-bg-glass);
-    backdrop-filter: blur(8px);
+    background: var(--color-bg-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     padding: 1rem 1.1rem;
     margin-bottom: 0.75rem;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .vd-panel {
+        background: var(--color-bg-surface);
+        backdrop-filter: blur(8px);
+    }
 }
 .vd-section { margin-bottom: 1rem; }
 .vd-section:last-child { margin-bottom: 0; }
@@ -204,7 +210,7 @@
     padding: 0.75rem 0.9rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-    background: var(--color-bg-glass-card);
+    background: var(--color-bg-surface-elevated);
 }
 .vd-metric-card .vd-metric-label {
     font-size: 0.72rem;
@@ -236,7 +242,7 @@
     font-weight: 600;
     border-radius: var(--radius-full);
     border: 1px solid var(--color-border);
-    background: var(--color-bg-glass);
+    background: var(--color-bg-surface);
     color: var(--color-text-secondary);
 }
 .vd-badge.vd-bull { background: rgba(16, 185, 129, 0.12); color: var(--color-success); border-color: rgba(16, 185, 129, 0.3); }
@@ -254,11 +260,11 @@
     padding: 0.75rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-    background: var(--color-bg-glass-card);
+    background: var(--color-bg-surface-elevated);
     cursor: pointer;
     transition: border-color var(--transition-fast), background var(--transition-fast);
 }
-.vd-rank-card:hover { border-color: var(--color-border-hover); background: var(--color-bg-glass-hover); }
+.vd-rank-card:hover { border-color: var(--color-border-hover); background: var(--color-bg-surface-elevated); }
 .vd-rank-head {
     display: flex;
     align-items: center;
@@ -269,7 +275,7 @@
 .vd-rank-num {
     font-size: 1.1rem;
     font-weight: 800;
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     min-width: 1.8rem;
 }
 .vd-rank-name {
@@ -325,7 +331,7 @@
     letter-spacing: 0.03em;
     color: var(--color-text-muted);
     border-bottom: 1px solid var(--color-border);
-    background: var(--color-bg-glass-card);
+    background: var(--color-bg-surface-elevated);
     position: sticky;
     top: 0;
 }
@@ -334,7 +340,7 @@
     border-bottom: 1px solid var(--color-border-subtle);
 }
 .vd-grid tr { cursor: pointer; }
-.vd-grid tr:hover td { background: var(--color-bg-glass-hover); }
+.vd-grid tr:hover td { background: var(--color-bg-surface-elevated); }
 
 /* Vietstock chart iframe — mobile responsive height */
 .vd-chart-iframe {
@@ -374,7 +380,7 @@
 
 /* Sector symbol picker */
 .vd-sector-picker {
-    background: var(--color-bg-glass-heavy);
+    background: var(--color-bg-surface);
     border: 1px solid var(--color-accent);
     border-radius: var(--radius-md);
     padding: 0.75rem 1rem;
@@ -430,7 +436,7 @@
 
 /* Chart dock */
 .vd-chart-dock {
-    background: var(--color-bg-glass);
+    background: var(--color-bg-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     overflow: hidden;
@@ -470,13 +476,13 @@
     padding: 0.4rem 0.6rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-    background: var(--color-bg-glass-heavy);
+    background: var(--color-bg-surface);
     color: var(--color-text-primary);
     font-size: 0.88rem;
 }
 .vd-input:focus, .vd-select:focus {
     outline: none;
-    border-color: var(--color-accent);
+    border-color: var(--color-brand-symbol);
     box-shadow: 0 0 0 2px var(--color-accent-glow);
 }
 /* Backtest input width helpers */
@@ -494,17 +500,17 @@
     font-weight: 600;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-    background: var(--color-bg-glass);
+    background: var(--color-bg-surface);
     color: var(--color-text-primary);
     cursor: pointer;
     text-decoration: none;
     transition: background var(--transition-fast), border-color var(--transition-fast);
 }
-.vd-btn:hover { background: var(--color-bg-glass-hover); border-color: var(--color-border-hover); }
+.vd-btn:hover { background: var(--color-bg-surface-elevated); border-color: var(--color-border-hover); }
 .vd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .vd-btn.vd-btn-primary {
     background: var(--gradient-accent);
-    color: var(--color-bg-app, #fff);
+    color: #fff;
     border: none;
 }
 .vd-btn.vd-btn-sm { padding: 0.3rem 0.65rem; font-size: 0.78rem; }
@@ -522,7 +528,7 @@
     width: 22px;
     height: 22px;
     border: 2px solid var(--color-border);
-    border-top-color: var(--color-accent);
+    border-top-color: var(--color-brand-symbol);
     border-radius: 50%;
     animation: vd-spin 0.7s linear infinite;
 }
@@ -530,7 +536,7 @@
 
 /* Skeleton */
 .vd-skeleton {
-    background: linear-gradient(90deg, var(--color-bg-glass) 25%, var(--color-bg-glass-hover) 50%, var(--color-bg-glass) 75%);
+    background: linear-gradient(90deg, var(--color-bg-surface) 25%, var(--color-bg-surface-elevated) 50%, var(--color-bg-surface) 75%);
     background-size: 200% 100%;
     animation: vd-shimmer 1.5s infinite;
     border-radius: var(--radius-sm);

@@ -16,10 +16,16 @@
     top: 72px;
     z-index: 999;
     margin-top: 72px;
-    background: var(--color-bg-glass-heavy);
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    background: var(--color-bg-surface);
     border-bottom: 1px solid var(--color-border);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .trading-subnav {
+        background: var(--color-bg-glass-heavy);
+        backdrop-filter: blur(14px) saturate(140%);
+        -webkit-backdrop-filter: blur(14px) saturate(140%);
+    }
 }
 
 .trading-subnav-inner {
@@ -37,6 +43,9 @@
     align-items: center;
     gap: 1.25rem;
     flex: 1;
+    margin: 0;
+    padding: 0;
+    list-style: none;
     overflow-x: auto;
     scrollbar-width: none;
 }
@@ -45,7 +54,7 @@
 .trading-subnav-links a {
     position: relative;
     flex-shrink: 0;
-    color: var(--color-text-secondary);
+    color: var(--color-nav-link);
     font-size: 0.85rem;
     font-weight: 500;
     text-decoration: none;
@@ -54,8 +63,8 @@
     transition: color var(--transition-fast);
 }
 
-.trading-subnav-links a:hover { color: var(--color-text-primary); }
-.trading-subnav-links a.active { color: var(--color-accent); }
+.trading-subnav-links a:hover { color: var(--color-nav-link-hover); }
+.trading-subnav-links a.active { color: var(--color-nav-link-active); }
 
 .trading-subnav-links a::after {
     content: "";
@@ -64,7 +73,7 @@
     right: 0;
     bottom: -0.35rem;
     height: 2px;
-    background-color: var(--color-accent);
+    background-color: var(--color-nav-link-active);
     border-radius: var(--radius-full);
     transform: scaleX(0);
     transform-origin: center;
@@ -94,7 +103,7 @@
     padding: 6px 14px;
     font-size: 0.82rem;
     font-weight: 600;
-    color: var(--color-accent) !important;
+    color: var(--color-brand-symbol) !important;
     background: transparent;
     border: 1px solid var(--color-border-accent);
     border-radius: var(--radius-full);
@@ -104,8 +113,8 @@
 }
 
 .trading-subnav-btn:hover {
-    background: var(--color-bg-glass-hover);
-    border-color: var(--color-accent);
+    background: var(--color-bg-surface-elevated);
+    border-color: var(--color-brand-symbol);
 }
 
 .trading-subnav-toggle {
@@ -179,7 +188,7 @@
 /* Typography helpers — mirror portfolio section-heading */
 .ts-section-label {
     margin-bottom: 0.5rem;
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     font-size: 0.85rem;
     font-weight: var(--font-weight-bold);
     letter-spacing: 0.12em;
@@ -215,21 +224,27 @@
     color: var(--color-text-primary);
 }
 
-.ts-muted { color: var(--color-text-secondary); }
-.ts-subtle { color: var(--color-text-muted); }
+.ts-muted { color: var(--color-nav-link); }
+.ts-subtle { color: var(--color-nav-link); }
 .ts-divider { border-bottom: 1px solid var(--color-border); }
 
 /* Panels — glass-card style */
 .ts-panel {
-    background: var(--color-bg-glass);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: var(--color-bg-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     padding: 1.25rem;
     margin-bottom: 1rem;
     box-shadow: var(--shadow-md);
     transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .ts-panel {
+        background: var(--color-bg-glass);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
 }
 
 .ts-panel:hover {
@@ -259,7 +274,7 @@
 .ts-tab:hover {
     color: var(--color-text-primary);
     border-color: var(--color-border-hover);
-    background: var(--color-bg-glass-hover);
+    background: var(--color-bg-surface-elevated);
 }
 
 .ts-tab.active {
@@ -294,12 +309,12 @@
 }
 
 .ts-table tr:hover td {
-    background: var(--color-bg-glass-hover);
+    background: var(--color-bg-surface-elevated);
     cursor: pointer;
 }
 
 .ts-table tr.selected td {
-    background: var(--color-bg-glass-active);
+    background: var(--color-bg-surface-elevated);
 }
 
 /* Buttons */
@@ -330,13 +345,13 @@
 
 .ts-btn-outline {
     background: transparent;
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     border: 1px solid var(--color-border-accent);
 }
 
 .ts-btn-outline:hover:not(:disabled) {
-    background: var(--color-bg-glass-hover);
-    border-color: var(--color-accent);
+    background: var(--color-bg-surface-elevated);
+    border-color: var(--color-brand-symbol);
 }
 
 .ts-btn:disabled {
@@ -392,7 +407,7 @@
     display: block;
     font-size: 0.82rem;
     font-weight: var(--font-weight-semibold);
-    color: var(--color-text-secondary);
+    color: var(--color-nav-link);
     margin-bottom: 4px;
 }
 
@@ -425,7 +440,7 @@
 
 .ts-signal-top_growth_20d {
     background: rgba(120, 53, 15, 0.12);
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
 }
 
 .ts-positive { color: var(--color-success); font-weight: 600; }
@@ -514,7 +529,7 @@
 .ts-stock-dropdown li:hover,
 .ts-stock-dropdown__item--active {
     background: rgba(59, 130, 246, 0.08);
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
 }
 
 .ts-signal + .ts-signal { margin-left: 4px; }
@@ -533,7 +548,7 @@
 }
 
 .ts-category-badge strong {
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     font-family: var(--font-mono, ui-monospace, monospace);
 }
 
@@ -566,7 +581,7 @@
     width: 32px;
     height: 32px;
     border: 3px solid var(--color-border);
-    border-top-color: var(--color-accent);
+    border-top-color: var(--color-brand-symbol);
     border-radius: 50%;
     animation: ts-spin 0.8s linear infinite;
     margin: 0 auto 1rem;
@@ -590,7 +605,7 @@
 
 .ts-alert-info {
     background: rgba(120, 53, 15, 0.08);
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     border: 1px solid var(--color-border-accent);
 }
 
@@ -709,7 +724,7 @@
 
 .ts-channel-label {
     font-size: 0.78rem;
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     font-weight: var(--font-weight-semibold);
 }
 
@@ -1210,7 +1225,7 @@
 
 .broker-mode-btn:hover:not(.active) {
     color: var(--color-text-primary);
-    background: var(--color-bg-glass-hover);
+    background: var(--color-bg-surface-elevated);
 }
 
 /* Watchlist */
@@ -1423,7 +1438,7 @@
     transition: background-color var(--transition-fast);
 }
 
-.broker-table tbody tr:hover { background: var(--color-bg-glass-hover); }
+.broker-table tbody tr:hover { background: var(--color-bg-surface-elevated); }
 .broker-table tbody tr.selected {
     background: rgba(217, 119, 6, 0.1);
     box-shadow: inset 3px 0 0 var(--color-warning);
@@ -1958,8 +1973,8 @@
 .broker-tab:hover { color: var(--color-text-primary); }
 
 .broker-tab.active {
-    color: var(--color-accent);
-    border-bottom-color: var(--color-accent);
+    color: var(--color-brand-symbol);
+    border-bottom-color: var(--color-brand-symbol);
 }
 
 .broker-detail-body {
@@ -2143,7 +2158,7 @@
     padding: 1px 6px;
     border-radius: var(--radius-full);
     background: rgba(217, 119, 6, 0.15);
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     font-size: 0.65rem;
     font-weight: 700;
     vertical-align: middle;
@@ -2433,9 +2448,9 @@
 
 .ts-chip:hover,
 .ts-chip.active {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
-    background: var(--color-bg-glass-hover);
+    border-color: var(--color-brand-symbol);
+    color: var(--color-brand-symbol);
+    background: var(--color-bg-surface-elevated);
 }
 
 .ts-btn-sm {
@@ -2628,12 +2643,12 @@
     line-height: 1.4;
 }
 
-.broker-ai-key-hint a { color: var(--color-accent); }
+.broker-ai-key-hint a { color: var(--color-brand-symbol); }
 
 .ts-btn-link {
     background: none;
     border: none;
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     padding: 4px 0;
     font-size: 0.78rem;
     font-weight: 500;
@@ -2972,7 +2987,7 @@
     color: var(--color-text-secondary);
 }
 .signals-nav-url {
-    color: var(--color-accent);
+    color: var(--color-brand-symbol);
     text-decoration: none;
     word-break: break-all;
 }
