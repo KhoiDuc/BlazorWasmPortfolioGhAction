@@ -1,5 +1,6 @@
 @inherits CultureAwareComponent
 @inject IStringLocalizer<SharedResources> L
+@implements IDisposable
 
 <header class="navbar">
     <div class="navbar-container">
@@ -44,6 +45,9 @@
     [Inject] IJSRuntime JS { get; set; } = default!;
     [Inject] NavigationManager Navigation { get; set; } = default!;
 
+    private DotNetObjectReference<Navbar>? _dotNetRef;
+    private Action? _disposeClose;
+
     private string HomeHref => CultureService.UrlLang;
     private string LangHref(string path) => CulturePath.Combine(CultureService.UrlLang, path);
 
@@ -57,6 +61,22 @@
                 StateHasChanged();
             }
             catch { }
+        }
+
+        if (_isMenuOpen && _disposeClose is null)
+        {
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            try
+            {
+                _disposeClose = await JS.InvokeAsync<Action>("tradingAuth.closeOnOutside",
+                    "#main-navigation", ".menu-toggle", _dotNetRef);
+            }
+            catch { }
+        }
+        else if (!_isMenuOpen && _disposeClose is not null)
+        {
+            try { _disposeClose(); } catch { }
+            _disposeClose = null;
         }
     }
 
@@ -81,5 +101,11 @@
     }
 
     private void ToggleMenu() => _isMenuOpen = !_isMenuOpen;
-    private void CloseMenu() => _isMenuOpen = false;
+    [JSInvokable] public void CloseMenu() => _isMenuOpen = false;
+
+    public void Dispose()
+    {
+        if (_disposeClose is not null) { try { _disposeClose(); } catch { } _disposeClose = null; }
+        _dotNetRef?.Dispose();
+    }
 }

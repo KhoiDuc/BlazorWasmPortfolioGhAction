@@ -35,6 +35,28 @@ window.tradingAuth = {
             this._handler = null;
         }
         if (this._savedFocus) { try { this._savedFocus.focus(); } catch { } this._savedFocus = null; }
+    },
+    closeOnOutside: function (menuSelector, toggleSelector, dotNetRef) {
+        var menu = document.querySelector(menuSelector);
+        var toggle = document.querySelector(toggleSelector);
+        if (!menu || !toggle) return null;
+        var onPointer = function (e) {
+            if (menu.contains(e.target) || toggle.contains(e.target)) return;
+            cleanup();
+            dotNetRef.invokeMethodAsync('CloseMenu');
+        };
+        var onKey = function (e) {
+            if (e.key !== 'Escape') return;
+            cleanup();
+            dotNetRef.invokeMethodAsync('CloseMenu');
+        };
+        function cleanup() {
+            document.removeEventListener('pointerdown', onPointer, true);
+            document.removeEventListener('keydown', onKey, true);
+        }
+        document.addEventListener('pointerdown', onPointer, true);
+        document.addEventListener('keydown', onKey, true);
+        return cleanup;
     }
 };
 

@@ -126,66 +126,63 @@
                 <div class="broker-col-toggle-wrap">
                     <button type="button"
                             class="ts-btn ts-btn-outline ts-btn-sm broker-col-toggle-btn"
-                            aria-label="Ẩn/hiện cột"
+                            aria-label="@L["Trading_BrokerColToggleAria"].Value"
                             aria-expanded="@(_colToggleOpen.ToString().ToLowerInvariant())"
                             aria-controls="broker-col-toggle-menu"
                             @onclick="ToggleColMenu">
                         <i class="bi bi-layout-three-columns" aria-hidden="true"></i>
-                        <span> Cột</span>
+                        <span>@L["Trading_BrokerColToggleBtn"].Value</span>
                     </button>
                     @if (_colToggleOpen)
                     {
-                        <div id="broker-col-toggle-menu" class="broker-col-toggle-menu" role="group" aria-label="Hiển thị cột">
-                            <div class="broker-col-toggle-item" style="background:#ffecb3;padding:0.3rem 0.4rem;border-radius:4px;font-size:0.7rem;border:1px dashed #f5a623;">
-                                DEBUG hidden: [@string.Join(",", _hiddenCols.Select(c => c.ToString()))] | classes: [@HiddenColClasses()]
-                            </div>
+                        <div id="broker-col-toggle-menu" class="broker-col-toggle-menu" role="group" aria-label="@L["Trading_BrokerColToggleAria"].Value">
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Symbol)" @onchange="@(e => ToggleCol(BrokerCol.Symbol, e.Value))" />
-                                Mã
+                                @L["Trading_BrokerColSymbol"].Value
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Sector)" @onchange="@(e => ToggleCol(BrokerCol.Sector, e.Value))" />
-                                Ngành
+                                @L["Trading_BrokerColSector"].Value
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Buys)" @onchange="@(e => ToggleCol(BrokerCol.Buys, e.Value))" />
-                                Lần mua
+                                @L["Trading_BrokerColBuys"].Value
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Quantity)" @onchange="@(e => ToggleCol(BrokerCol.Quantity, e.Value))" />
-                                KL
+                                @L["Trading_BrokerColQty"].Value
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.SoldQty)" @onchange="@(e => ToggleCol(BrokerCol.SoldQty, e.Value))" />
-                                Đã bán
+                                @L["Trading_BrokerColSoldQty"].Value
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Remaining)" @onchange="@(e => ToggleCol(BrokerCol.Remaining, e.Value))" />
-                                Còn lại
+                                @L["Trading_BrokerColRemaining"].Value
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.AvgBuy)" @onchange="@(e => ToggleCol(BrokerCol.AvgBuy, e.Value))" />
-                                Giá TB
+                                @L["Trading_BrokerColAvgBuy"].Value
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Current)" @onchange="@(e => ToggleCol(BrokerCol.Current, e.Value))" />
-                                Hiện tại
+                                @L["Trading_BrokerColCurrent"].Value
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.PnlPct)" @onchange="@(e => ToggleCol(BrokerCol.PnlPct, e.Value))" />
-                                L/L %
+                                @L["Trading_BrokerColPnlPct"].Value
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.PnlAmount)" @onchange="@(e => ToggleCol(BrokerCol.PnlAmount, e.Value))" />
-                                L/L (đ)
+                                @L["Trading_BrokerColPnlAmt"].Value
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Stop)" @onchange="@(e => ToggleCol(BrokerCol.Stop, e.Value))" />
-                                Cắt lỗ
+                                @L["Trading_BrokerStop"].Value
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Target)" @onchange="@(e => ToggleCol(BrokerCol.Target, e.Value))" />
-                                Mục tiêu
+                                @L["Trading_BrokerTarget"].Value
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Tag)" @onchange="@(e => ToggleCol(BrokerCol.Tag, e.Value))" />
@@ -193,13 +190,13 @@
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Status)" @onchange="@(e => ToggleCol(BrokerCol.Status, e.Value))" />
-                                Trạng thái
+                                @L["Trading_BrokerColStatus"].Value
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Note)" @onchange="@(e => ToggleCol(BrokerCol.Note, e.Value))" />
-                                Ghi chú
+                                @L["Trading_BrokerNote"].Value
                             </label>
-                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm broker-col-reset-btn" @onclick="ResetCols">Mặc định</button>
+                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm broker-col-reset-btn" @onclick="ResetCols">@L["Trading_BrokerColReset"].Value</button>
                         </div>
                     }
                 </div>

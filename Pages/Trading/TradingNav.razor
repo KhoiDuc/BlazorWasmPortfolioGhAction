@@ -1,5 +1,7 @@
 @inherits CultureAwareComponent
 @inject IStringLocalizer<SharedResources> L
+@inject IJSRuntime JS
+@implements IDisposable
 
 <nav class="trading-subnav" aria-label="@L["TradingNav_Label"]">
     <div class="trading-subnav-inner">
@@ -12,7 +14,9 @@
             <span aria-hidden="true"></span>
         </button>
 
-        <ul class="trading-subnav-links @(_menuOpen ? "open" : "")">
+        <div class="trading-subnav-backdrop @(_menuOpen ? "show" : "")" @onclick="CloseMenu" aria-hidden="true"></div>
+
+        <ul class="trading-subnav-links scroll-hint-x @(_menuOpen ? "open" : "")">
             <li><NavLink href="@H("trading/vndesk")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_VnDesk"]</NavLink></li>
             <li><NavLink href="@H("trading/broker")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_Broker"]</NavLink></li>
             <li><NavLink href="@H("trading/stock-ai")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_StockAi"]</NavLink></li>
@@ -23,9 +27,36 @@
 
 @code {
     private bool _menuOpen;
+    private DotNetObjectReference<TradingNav>? _dotNetRef;
+    private Action? _disposeClose;
 
     private string H(string path) => CulturePath.Combine(CultureService.UrlLang, path);
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_menuOpen && _disposeClose is null)
+        {
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            try
+            {
+                _disposeClose = await JS.InvokeAsync<Action>("tradingAuth.closeOnOutside",
+                    ".trading-subnav-links", ".trading-subnav-toggle", _dotNetRef);
+            }
+            catch { }
+        }
+        else if (!_menuOpen && _disposeClose is not null)
+        {
+            try { _disposeClose(); } catch { }
+            _disposeClose = null;
+        }
+    }
+
     private void ToggleMenu() => _menuOpen = !_menuOpen;
-    private void CloseMenu() => _menuOpen = false;
+    [JSInvokable] public void CloseMenu() => _menuOpen = false;
+
+    public void Dispose()
+    {
+        if (_disposeClose is not null) { try { _disposeClose(); } catch { } _disposeClose = null; }
+        _dotNetRef?.Dispose();
+    }
 }

@@ -114,10 +114,12 @@ body.is-scrolled .navbar {
 
 .menu-toggle { display: none; width: 40px; height: 40px; padding: 0; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background: var(--color-bg-surface); border: 0; cursor: pointer; z-index: 1001; }
 .menu-toggle span { width: 22px; height: 2px; background-color: var(--color-text-primary); border-radius: var(--radius-xs); transition: transform var(--transition), opacity var(--transition); }
-@media (max-width: 768px) {
+/* ponytail: desktop-first override — rewrite as mobile-first min-width:48rem when next touching this block */
+/* 768px = --bp-md */
+@media (max-width: 48rem) {
     .menu-toggle { display: flex; }
-    .theme-toggle { display: flex !important; }
-    .lang-toggle { display: inline-flex !important; }
+    .theme-toggle { display: flex; }
+    .lang-toggle { display: inline-flex; }
     .navbar-links {
         position: fixed;
         top: 72px;
