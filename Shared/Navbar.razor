@@ -1,6 +1,6 @@
 @inherits CultureAwareComponent
 @inject IStringLocalizer<SharedResources> L
-@implements IDisposable
+@implements IAsyncDisposable
 
 <header class="navbar">
     <div class="navbar-container">
@@ -39,14 +39,16 @@
 </header>
 
 @code {
+    private const string CloseHandlerId = "navbar";
+
     private bool _isMenuOpen;
     private bool _isDark;
+    private bool _closeRegistered;
 
     [Inject] IJSRuntime JS { get; set; } = default!;
     [Inject] NavigationManager Navigation { get; set; } = default!;
 
     private DotNetObjectReference<Navbar>? _dotNetRef;
-    private Action? _disposeClose;
 
     private string HomeHref => CultureService.UrlLang;
     private string LangHref(string path) => CulturePath.Combine(CultureService.UrlLang, path);
@@ -63,20 +65,25 @@
             catch { }
         }
 
-        if (_isMenuOpen && _disposeClose is null)
+        if (_isMenuOpen && !_closeRegistered)
         {
             _dotNetRef ??= DotNetObjectReference.Create(this);
             try
             {
-                _disposeClose = await JS.InvokeAsync<Action>("tradingAuth.closeOnOutside",
-                    "#main-navigation", ".menu-toggle", _dotNetRef);
+                await JS.InvokeVoidAsync("tradingAuth.registerCloseOnOutside",
+                    CloseHandlerId, "#main-navigation", ".menu-toggle", _dotNetRef);
+                _closeRegistered = true;
             }
             catch { }
         }
-        else if (!_isMenuOpen && _disposeClose is not null)
+        else if (!_isMenuOpen && _closeRegistered)
         {
-            try { _disposeClose(); } catch { }
-            _disposeClose = null;
+            try
+            {
+                await JS.InvokeVoidAsync("tradingAuth.unregisterCloseOnOutside", CloseHandlerId);
+            }
+            catch { }
+            _closeRegistered = false;
         }
     }
 
@@ -101,11 +108,20 @@
     }
 
     private void ToggleMenu() => _isMenuOpen = !_isMenuOpen;
-    [JSInvokable] public void CloseMenu() => _isMenuOpen = false;
+    private void CloseMenu() => _isMenuOpen = false;
 
-    public void Dispose()
+    [JSInvokable]
+    public void CloseMenuFromJs()
     {
-        if (_disposeClose is not null) { try { _disposeClose(); } catch { } _disposeClose = null; }
+        _isMenuOpen = false;
+        _closeRegistered = false;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("tradingAuth.unregisterCloseOnOutside", CloseHandlerId); }
+        catch { }
         _dotNetRef?.Dispose();
     }
 }

@@ -151,6 +151,23 @@
     .vd-nav-group .vd-nav {
         flex-wrap: nowrap;
         overflow-x: auto;
+        width: 100%;
+        position: relative;
+        -webkit-overflow-scrolling: touch;
+    }
+    .vd-nav-group .vd-nav-item {
+        flex: 0 0 auto;
+        min-width: auto;
+    }
+    .vd-nav-group .vd-nav::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 1.5rem;
+        pointer-events: none;
+        background: linear-gradient(to right, transparent, var(--color-bg-surface));
     }
 }
 
@@ -637,7 +654,8 @@
     }
 
     .vd-nav-item {
-        min-width: clamp(60px, 18vw, 75px);
+        flex: 0 0 auto;
+        min-width: auto;
         padding: 0.4rem 0.75rem;
         font-size: 0.78rem;
     }

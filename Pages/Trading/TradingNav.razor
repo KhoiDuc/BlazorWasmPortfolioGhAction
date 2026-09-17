@@ -1,7 +1,12 @@
 @inherits CultureAwareComponent
 @inject IStringLocalizer<SharedResources> L
 @inject IJSRuntime JS
-@implements IDisposable
+@implements IAsyncDisposable
+
+@if (_menuOpen)
+{
+    <div class="trading-subnav-backdrop show" @onclick="CloseMenu" aria-hidden="true"></div>
+}
 
 <nav class="trading-subnav" aria-label="@L["TradingNav_Label"]">
     <div class="trading-subnav-inner">
@@ -14,9 +19,7 @@
             <span aria-hidden="true"></span>
         </button>
 
-        <div class="trading-subnav-backdrop @(_menuOpen ? "show" : "")" @onclick="CloseMenu" aria-hidden="true"></div>
-
-        <ul class="trading-subnav-links scroll-hint-x @(_menuOpen ? "open" : "")">
+        <ul class="trading-subnav-links @(_menuOpen ? "open" : "")">
             <li><NavLink href="@H("trading/vndesk")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_VnDesk"]</NavLink></li>
             <li><NavLink href="@H("trading/broker")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_Broker"]</NavLink></li>
             <li><NavLink href="@H("trading/stock-ai")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_StockAi"]</NavLink></li>
@@ -26,37 +29,53 @@
 </nav>
 
 @code {
+    private const string CloseHandlerId = "trading-subnav";
+
     private bool _menuOpen;
+    private bool _closeRegistered;
     private DotNetObjectReference<TradingNav>? _dotNetRef;
-    private Action? _disposeClose;
 
     private string H(string path) => CulturePath.Combine(CultureService.UrlLang, path);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_menuOpen && _disposeClose is null)
+        if (_menuOpen && !_closeRegistered)
         {
             _dotNetRef ??= DotNetObjectReference.Create(this);
             try
             {
-                _disposeClose = await JS.InvokeAsync<Action>("tradingAuth.closeOnOutside",
-                    ".trading-subnav-links", ".trading-subnav-toggle", _dotNetRef);
+                await JS.InvokeVoidAsync("tradingAuth.registerCloseOnOutside",
+                    CloseHandlerId, ".trading-subnav-links", ".trading-subnav-toggle", _dotNetRef);
+                _closeRegistered = true;
             }
             catch { }
         }
-        else if (!_menuOpen && _disposeClose is not null)
+        else if (!_menuOpen && _closeRegistered)
         {
-            try { _disposeClose(); } catch { }
-            _disposeClose = null;
+            try
+            {
+                await JS.InvokeVoidAsync("tradingAuth.unregisterCloseOnOutside", CloseHandlerId);
+            }
+            catch { }
+            _closeRegistered = false;
         }
     }
 
     private void ToggleMenu() => _menuOpen = !_menuOpen;
-    [JSInvokable] public void CloseMenu() => _menuOpen = false;
+    private void CloseMenu() => _menuOpen = false;
 
-    public void Dispose()
+    [JSInvokable]
+    public void CloseMenuFromJs()
     {
-        if (_disposeClose is not null) { try { _disposeClose(); } catch { } _disposeClose = null; }
+        _menuOpen = false;
+        _closeRegistered = false;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("tradingAuth.unregisterCloseOnOutside", CloseHandlerId); }
+        catch { }
         _dotNetRef?.Dispose();
     }
 }
