@@ -1,0 +1,100 @@
+@page "/trading/login"
+@page "/{lang:regex(^(en|vn)$)}/trading/login"
+@layout TradingLayout
+@inherits CultureAwareComponent
+@using Microsoft.AspNetCore.Components.Authorization
+@using BlazorWasmPortfolioGhAction.Services.Trading.Broker
+@inject IBrokerAuthService BrokerAuth
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResources> L
+
+<div class="ts-page broker-login-page">
+    <div class="ts-panel broker-login-card">
+        <p class="section-label">@L["TradingLogin_Label"]</p>
+        <h1>@L["TradingLogin_Title"]</h1>
+        <p class="broker-login-lead">@L["TradingLogin_Lead"]</p>
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <div class="ts-alert ts-alert-error" role="alert">@_error</div>
+        }
+
+        <EditForm Model="_model" OnValidSubmit="LoginAsync" class="broker-login-form">
+            <div class="broker-field">
+                <label class="broker-field-label" for="broker-login-user">@L["TradingLogin_Username"]</label>
+                <InputText id="broker-login-user"
+                           class="ts-input"
+                           @bind-Value="_model.Username"
+                           autocomplete="username"
+                           aria-required="true" />
+            </div>
+            <div class="broker-field">
+                <label class="broker-field-label" for="broker-login-pass">@L["TradingLogin_Password"]</label>
+                <InputText id="broker-login-pass"
+                           type="password"
+                           class="ts-input"
+                           @bind-Value="_model.Password"
+                           autocomplete="current-password"
+                           aria-required="true" />
+            </div>
+            <div class="broker-login-actions">
+                <button type="submit" class="ts-btn ts-btn-primary" disabled="@_busy">
+                    @(_busy ? L["TradingLogin_SigningIn"] : L["TradingLogin_SignIn"])
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private readonly LoginModel _model = new();
+    private string? _error;
+    private bool _busy;
+
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.IsInRole("Broker"))
+        {
+            Navigation.NavigateTo(GetDefaultReturnUrl());
+        }
+    }
+
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+
+    private async Task LoginAsync()
+    {
+        _busy = true;
+        _error = null;
+
+        var (ok, err) = await BrokerAuth.LoginAsync(_model.Username.Trim(), _model.Password);
+        _busy = false;
+
+        if (!ok)
+        {
+            _error = err is null ? L["TradingLogin_Invalid"] : err;
+            return;
+        }
+
+        Navigation.NavigateTo(GetDefaultReturnUrl());
+    }
+
+    private string GetDefaultReturnUrl()
+    {
+        if (!string.IsNullOrWhiteSpace(ReturnUrl))
+            return ReturnUrl;
+
+        var prefix = string.IsNullOrEmpty(CultureService.UrlLang) ? "" : $"/{CultureService.UrlLang}";
+        return $"{prefix}/trading/broker";
+    }
+
+    private sealed class LoginModel
+    {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+}

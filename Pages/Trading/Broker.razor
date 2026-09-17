@@ -1,6 +1,7 @@
 @page "/trading/broker"
 @page "/{lang:regex(^(en|vn)$)}/trading/broker"
 @layout TradingLayout
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Broker")]
 @inherits CultureAwareComponent
 @implements IDisposable
 @inject IBrokerDeskStore Store

@@ -4,6 +4,8 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using BlazorWasmPortfolioGhAction.Models.Trading.Broker;
+using BlazorWasmPortfolioGhAction.Services.Localization;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
@@ -48,16 +50,27 @@ public sealed class BrokerApiClient : IBrokerApiClient
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
     private readonly IStringLocalizer<SharedResources> _L;
+    private readonly IBrokerAuthService _auth;
+    private readonly NavigationManager _navigation;
+    private readonly ICultureService _culture;
 
-    public BrokerApiClient(HttpClient http, IConfiguration config, IStringLocalizer<SharedResources> L)
+    public BrokerApiClient(
+        HttpClient http,
+        IConfiguration config,
+        IStringLocalizer<SharedResources> L,
+        IBrokerAuthService auth,
+        NavigationManager navigation,
+        ICultureService culture)
     {
         _http = http;
         _config = config;
         _L = L;
+        _auth = auth;
+        _navigation = navigation;
+        _culture = culture;
     }
 
     private string? BaseUrl => _config["BrokerApi:BaseUrl"]?.Trim().TrimEnd('/');
-    private string? ApiKey => _config["BrokerApi:ApiKey"]?.Trim();
 
     public async Task<BrokerPortfolio?> GetPortfolioAsync(CancellationToken ct = default)
     {
@@ -66,8 +79,14 @@ public sealed class BrokerApiClient : IBrokerApiClient
 
         try
         {
-            var url = $"{BaseUrl}/api/portfolio?v={DateTime.UtcNow.Ticks}";
-            using var resp = await _http.GetAsync(url, ct);
+            using var request = await CreateAuthorizedRequestAsync(HttpMethod.Get, $"/api/portfolio?v={DateTime.UtcNow.Ticks}", ct);
+            if (request is null)
+                return null;
+
+            using var resp = await _http.SendAsync(request, ct);
+            if (await HandleUnauthorizedAsync(resp))
+                return null;
+
             if (!resp.IsSuccessStatusCode)
                 return null;
 
@@ -144,17 +163,19 @@ public sealed class BrokerApiClient : IBrokerApiClient
     {
         if (string.IsNullOrWhiteSpace(BaseUrl))
             return (false, _L["Trading_BrokerApi_BaseUrlMissing"].Value);
-        if (string.IsNullOrWhiteSpace(ApiKey))
-            return (false, _L["Trading_BrokerApi_ApiKeyMissing"].Value);
 
         try
         {
             portfolio.UpdatedAt = DateTime.Now;
-            using var request = new HttpRequestMessage(HttpMethod.Put, $"{BaseUrl}/api/portfolio");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", ApiKey);
+            using var request = await CreateAuthorizedRequestAsync(HttpMethod.Put, "/api/portfolio", ct);
+            if (request is null)
+                return (false, _L["Trading_BrokerApi_TokenMissing"].Value);
+
             request.Content = JsonContent.Create(portfolio, options: BrokerJson.Options);
 
             using var resp = await _http.SendAsync(request, ct);
+            if (await HandleUnauthorizedAsync(resp))
+                return (false, _L["Trading_BrokerApi_Unauthorized"].Value);
 
             if (resp.IsSuccessStatusCode)
                 return (true, null);
@@ -183,16 +204,19 @@ public sealed class BrokerApiClient : IBrokerApiClient
     {
         if (string.IsNullOrWhiteSpace(BaseUrl))
             return (false, _L["Trading_BrokerApi_BaseUrlMissing"].Value);
-        if (string.IsNullOrWhiteSpace(ApiKey))
-            return (false, _L["Trading_BrokerApi_ApiKeyMissing"].Value);
 
         try
         {
-            using var request = new HttpRequestMessage(method, $"{BaseUrl}{path}");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", ApiKey);
+            using var request = await CreateAuthorizedRequestAsync(method, path, ct);
+            if (request is null)
+                return (false, _L["Trading_BrokerApi_TokenMissing"].Value);
+
             request.Content = JsonContent.Create(body, options: BrokerJson.Options);
 
             using var resp = await _http.SendAsync(request, ct);
+            if (await HandleUnauthorizedAsync(resp))
+                return (false, _L["Trading_BrokerApi_Unauthorized"].Value);
+
             if (resp.IsSuccessStatusCode)
                 return (true, null);
 
@@ -217,15 +241,17 @@ public sealed class BrokerApiClient : IBrokerApiClient
     {
         if (string.IsNullOrWhiteSpace(BaseUrl))
             return (false, _L["Trading_BrokerApi_BaseUrlMissing"].Value);
-        if (string.IsNullOrWhiteSpace(ApiKey))
-            return (false, _L["Trading_BrokerApi_ApiKeyMissing"].Value);
 
         try
         {
-            using var request = new HttpRequestMessage(method, $"{BaseUrl}{path}");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", ApiKey);
+            using var request = await CreateAuthorizedRequestAsync(method, path, ct);
+            if (request is null)
+                return (false, _L["Trading_BrokerApi_TokenMissing"].Value);
 
             using var resp = await _http.SendAsync(request, ct);
+            if (await HandleUnauthorizedAsync(resp))
+                return (false, _L["Trading_BrokerApi_Unauthorized"].Value);
+
             if (resp.IsSuccessStatusCode)
                 return (true, null);
 
@@ -244,6 +270,29 @@ public sealed class BrokerApiClient : IBrokerApiClient
         {
             return (false, $"{ex.GetType().Name}: {ex.Message}");
         }
+    }
+
+    private async Task<HttpRequestMessage?> CreateAuthorizedRequestAsync(HttpMethod method, string path, CancellationToken ct)
+    {
+        var token = await _auth.GetTokenAsync();
+        if (string.IsNullOrWhiteSpace(token))
+            return null;
+
+        var request = new HttpRequestMessage(method, $"{BaseUrl}{path}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return request;
+    }
+
+    private async Task<bool> HandleUnauthorizedAsync(HttpResponseMessage resp)
+    {
+        if (resp.StatusCode != System.Net.HttpStatusCode.Unauthorized)
+            return false;
+
+        await _auth.LogoutAsync();
+        var returnUrl = Uri.EscapeDataString(_navigation.Uri);
+        var prefix = string.IsNullOrEmpty(_culture.UrlLang) ? "" : $"/{_culture.UrlLang}";
+        _navigation.NavigateTo($"{prefix}/trading/login?returnUrl={returnUrl}", forceLoad: false);
+        return true;
     }
 
     private static string TruncateBody(string? body)

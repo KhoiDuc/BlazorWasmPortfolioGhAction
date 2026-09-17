@@ -1,8 +1,25 @@
 ﻿@inject NavigationManager Navigation
+@using BlazorWasmPortfolioGhAction.Services.Localization
 
 @code {
     protected override void OnInitialized()
     {
-        Navigation.NavigateTo($"/admin?returnUrl={Uri.EscapeDataString(Navigation.Uri)}");
+        var returnUrl = Uri.EscapeDataString(Navigation.Uri);
+        var relative = Navigation.ToBaseRelativePath(Navigation.Uri);
+        CulturePath.Split(relative, out var lang, out var remainder);
+
+        if (IsBrokerProtectedPath(remainder))
+        {
+            var loginPath = string.IsNullOrEmpty(lang)
+                ? $"/trading/login?returnUrl={returnUrl}"
+                : $"/{lang}/trading/login?returnUrl={returnUrl}";
+            Navigation.NavigateTo(loginPath);
+            return;
+        }
+
+        Navigation.NavigateTo($"/admin?returnUrl={returnUrl}");
     }
+
+    private static bool IsBrokerProtectedPath(string remainder) =>
+        remainder.StartsWith("trading/broker", StringComparison.OrdinalIgnoreCase);
 }

@@ -1,5 +1,9 @@
 @inherits CultureAwareComponent
+@using Microsoft.AspNetCore.Components.Authorization
+@using BlazorWasmPortfolioGhAction.Services.Trading.Broker
 @inject IStringLocalizer<SharedResources> L
+@inject IBrokerAuthService BrokerAuth
+@inject NavigationManager Navigation
 
 <nav class="trading-subnav" aria-label="@L["TradingNav_Label"]">
     <div class="trading-subnav-inner">
@@ -9,9 +13,31 @@
             <li><NavLink href="@H("trading/stock-ai")" Match="NavLinkMatch.Prefix">@L["TradingNav_StockAi"]</NavLink></li>
             <li><NavLink href="@H("trading/signals")" Match="NavLinkMatch.Prefix">@L["TradingNav_Signals"]</NavLink></li>
         </ul>
+        <div class="trading-subnav-actions">
+            <AuthorizeView Roles="Broker">
+                <Authorized>
+                    <span class="trading-subnav-user">@context.User.Identity?.Name</span>
+                    <button type="button"
+                            class="trading-subnav-btn"
+                            aria-label="@L["TradingLogin_SignOut"]"
+                            @onclick="LogoutBrokerAsync">
+                        @L["TradingLogin_SignOut"]
+                    </button>
+                </Authorized>
+                <NotAuthorized>
+                    <NavLink href="@H("trading/login")" class="trading-subnav-btn">@L["TradingLogin_SignIn"]</NavLink>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
     </div>
 </nav>
 
 @code {
     private string H(string path) => CulturePath.Combine(CultureService.UrlLang, path);
+
+    private async Task LogoutBrokerAsync()
+    {
+        await BrokerAuth.LogoutAsync();
+        Navigation.NavigateTo(H("trading/login"));
+    }
 }
