@@ -61,8 +61,8 @@ jobs:
       - name: Remove backup file
         run: rm ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html.bak
 
-      - name: Copy index.html to 404.html
-        run: cp ${{ env.OUTPUT_FOLDER }}/wwwroot/index.html ${{ env.OUTPUT_FOLDER }}/wwwroot/404.html
+      - name: Verify SPA 404 redirect page
+        run: test -f ${{ env.OUTPUT_FOLDER }}/wwwroot/404.html
 
       - name: Add .nojekyll file
         run: touch ${{ env.OUTPUT_FOLDER }}/wwwroot/.nojekyll
