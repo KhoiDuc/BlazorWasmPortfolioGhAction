@@ -136,6 +136,9 @@
                     @if (_colToggleOpen)
                     {
                         <div id="broker-col-toggle-menu" class="broker-col-toggle-menu" role="group" aria-label="Hiển thị cột">
+                            <div class="broker-col-toggle-item" style="background:#ffecb3;padding:0.3rem 0.4rem;border-radius:4px;font-size:0.7rem;border:1px dashed #f5a623;">
+                                DEBUG hidden: [@string.Join(",", _hiddenCols.Select(c => c.ToString()))] | classes: [@HiddenColClasses()]
+                            </div>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Symbol)" @onchange="@(e => ToggleCol(BrokerCol.Symbol, e.Value))" />
                                 Mã
@@ -553,6 +556,9 @@
         try
         {
             var saved = await LocalStorage.GetItemAsync<List<BrokerCol>>(ColStorageKey);
+            // #region agent log
+            fetch('http://127.0.0.1:7871/ingest/bb30d1f2-958d-4bc3-8a5d-74824153bd63',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'659b14'},body:JSON.stringify({sessionId:'659b14',location:'BrokerWatchlistTable.razor:OnInitializedAsync',message:'loaded saved cols',data:{savedCount:saved?.Count ?? 0,savedList:saved is null ? 'null' : string.Join(',',saved.Select(c=>c.ToString()))},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
+            // #endregion
             if (saved is { Count: > 0 })
                 _hiddenCols = [.. saved];
             else
@@ -564,19 +570,38 @@
         }
     }
 
-    private bool IsColVisible(BrokerCol col) => !_hiddenCols.Contains(col);
+    private bool IsColVisible(BrokerCol col)
+    {
+        var visible = !_hiddenCols.Contains(col);
+        // #region agent log
+        fetch('http://127.0.0.1:7871/ingest/bb30d1f2-958d-4bc3-8a5d-74824153bd63',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'659b14'},body:JSON.stringify({sessionId:'659b14',location:'BrokerWatchlistTable.razor:IsColVisible',message:'col visibility check',data:{col:col.ToString(),visible:visible,hiddenCount:_hiddenCols.Count,hiddenList:string.Join(',',_hiddenCols.Select(c=>c.ToString()))},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
+        // #endregion
+        return visible;
+    }
 
     private string ColClass(BrokerCol col) => IsColVisible(col) ? "" : "broker-col-hidden";
 
-    private string HiddenColClasses() =>
-        string.Join(" ", _hiddenCols.Select(c => $"hide-col-{c.ToString().ToLowerInvariant()}"));
+    private string HiddenColClasses()
+    {
+        var classes = string.Join(" ", _hiddenCols.Select(c => $"hide-col-{c.ToString().ToLowerInvariant()}"));
+        // #region agent log
+        fetch('http://127.0.0.1:7871/ingest/bb30d1f2-958d-4bc3-8a5d-74824153bd63',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'659b14'},body:JSON.stringify({sessionId:'659b14',location:'BrokerWatchlistTable.razor:HiddenColClasses',message:'generated hide classes',data:{classes:classes,hiddenCount:_hiddenCols.Count},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
+        // #endregion
+        return classes;
+    }
 
     private async Task ToggleCol(BrokerCol col, object? value)
     {
+        // #region agent log
+        fetch('http://127.0.0.1:7871/ingest/bb30d1f2-958d-4bc3-8a5d-74824153bd63',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'659b14'},body:JSON.stringify({sessionId:'659b14',location:'BrokerWatchlistTable.razor:ToggleCol',message:'toggle col entry',data:{col:col.ToString(),valueType:value?.GetType().Name ?? 'null',value:value?.ToString() ?? 'null',hiddenBefore:_hiddenCols.Contains(col)},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+        // #endregion
         if (value is bool b && b)
             _hiddenCols.Remove(col);
         else
             _hiddenCols.Add(col);
+        // #region agent log
+        fetch('http://127.0.0.1:7871/ingest/bb30d1f2-958d-4bc3-8a5d-74824153bd63',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'659b14'},body:JSON.stringify({sessionId:'659b14',location:'BrokerWatchlistTable.razor:ToggleCol',message:'toggle col exit',data:{col:col.ToString(),hiddenAfter:_hiddenCols.Contains(col),hiddenCount:_hiddenCols.Count},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+        // #endregion
         await SaveCols();
     }
 
