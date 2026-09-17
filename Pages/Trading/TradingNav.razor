@@ -1,81 +1,17 @@
 @inherits CultureAwareComponent
 @inject IStringLocalizer<SharedResources> L
-@inject IJSRuntime JS
-@implements IAsyncDisposable
-
-@if (_menuOpen)
-{
-    <div class="trading-subnav-backdrop show" @onclick="CloseMenu" aria-hidden="true"></div>
-}
 
 <nav class="trading-subnav" aria-label="@L["TradingNav_Label"]">
     <div class="trading-subnav-inner">
-        <button type="button" class="trading-subnav-toggle @(_menuOpen ? "open" : "")"
-                @onclick="ToggleMenu"
-                aria-label="@(_menuOpen ? L["TradingNav_Close"] : L["TradingNav_Open"])"
-                aria-expanded="@_menuOpen.ToString().ToLowerInvariant()">
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-        </button>
-
-        <ul class="trading-subnav-links @(_menuOpen ? "open" : "")">
-            <li><NavLink href="@H("trading/vndesk")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_VnDesk"]</NavLink></li>
-            <li><NavLink href="@H("trading/broker")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_Broker"]</NavLink></li>
-            <li><NavLink href="@H("trading/stock-ai")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_StockAi"]</NavLink></li>
-            <li><NavLink href="@H("trading/signals")" Match="NavLinkMatch.Prefix" @onclick="CloseMenu">@L["TradingNav_Signals"]</NavLink></li>
+        <ul class="trading-subnav-links">
+            <li><NavLink href="@H("trading/vndesk")" Match="NavLinkMatch.Prefix">@L["TradingNav_VnDesk"]</NavLink></li>
+            <li><NavLink href="@H("trading/broker")" Match="NavLinkMatch.Prefix">@L["TradingNav_Broker"]</NavLink></li>
+            <li><NavLink href="@H("trading/stock-ai")" Match="NavLinkMatch.Prefix">@L["TradingNav_StockAi"]</NavLink></li>
+            <li><NavLink href="@H("trading/signals")" Match="NavLinkMatch.Prefix">@L["TradingNav_Signals"]</NavLink></li>
         </ul>
     </div>
 </nav>
 
 @code {
-    private const string CloseHandlerId = "trading-subnav";
-
-    private bool _menuOpen;
-    private bool _closeRegistered;
-    private DotNetObjectReference<TradingNav>? _dotNetRef;
-
     private string H(string path) => CulturePath.Combine(CultureService.UrlLang, path);
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (_menuOpen && !_closeRegistered)
-        {
-            _dotNetRef ??= DotNetObjectReference.Create(this);
-            try
-            {
-                await JS.InvokeVoidAsync("tradingAuth.registerCloseOnOutside",
-                    CloseHandlerId, ".trading-subnav-links", ".trading-subnav-toggle", _dotNetRef);
-                _closeRegistered = true;
-            }
-            catch { }
-        }
-        else if (!_menuOpen && _closeRegistered)
-        {
-            try
-            {
-                await JS.InvokeVoidAsync("tradingAuth.unregisterCloseOnOutside", CloseHandlerId);
-            }
-            catch { }
-            _closeRegistered = false;
-        }
-    }
-
-    private void ToggleMenu() => _menuOpen = !_menuOpen;
-    private void CloseMenu() => _menuOpen = false;
-
-    [JSInvokable]
-    public void CloseMenuFromJs()
-    {
-        _menuOpen = false;
-        _closeRegistered = false;
-        StateHasChanged();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        try { await JS.InvokeVoidAsync("tradingAuth.unregisterCloseOnOutside", CloseHandlerId); }
-        catch { }
-        _dotNetRef?.Dispose();
-    }
 }
