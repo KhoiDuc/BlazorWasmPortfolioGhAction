@@ -370,6 +370,7 @@
     {
         if (Selected is null) return;
         var pos = Selected;
+        pos.Status = BrokerPositionStatus.DaDong;
         _portfolio.Positions.Remove(pos);
         _portfolio.ClosedPositions ??= [];
         _portfolio.ClosedPositions.Add(pos);
@@ -387,6 +388,7 @@
         if (Selected is null) return;
         var pos = Selected;
         if (_portfolio.ClosedPositions?.Contains(pos) != true) return;
+        pos.Status = BrokerPositionStatus.NamGiu;
         _portfolio.ClosedPositions.Remove(pos);
         _portfolio.Positions.Add(pos);
         await SyncPositionUpdate(pos);
@@ -442,6 +444,7 @@
 
     private async Task OnPositionClosedCore(BrokerPosition pos)
     {
+        pos.Status = BrokerPositionStatus.DaDong;
         _portfolio.Positions.Remove(pos);
         _portfolio.ClosedPositions ??= [];
         _portfolio.ClosedPositions.Add(pos);

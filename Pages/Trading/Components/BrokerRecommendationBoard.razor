@@ -128,9 +128,10 @@
         {
             "cho-mua" => positions.Where(p => p.Status == BrokerPositionStatus.ChoMua),
             "bo-theo-doi" => positions.Where(p => p.Status == BrokerPositionStatus.BoTheoDoi),
-            _ => positions.Where(p => p.Status == BrokerPositionStatus.ChoMua
-                                   || p.Status == BrokerPositionStatus.BoTheoDoi
-                                   || !string.IsNullOrWhiteSpace(p.RecommendationText))
+            _ => positions.Where(p => p.Status != BrokerPositionStatus.DaDong
+                                   && (p.Status == BrokerPositionStatus.ChoMua
+                                       || p.Status == BrokerPositionStatus.BoTheoDoi
+                                       || !string.IsNullOrWhiteSpace(p.RecommendationText)))
         };
 
         return filtered

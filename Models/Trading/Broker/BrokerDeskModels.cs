@@ -9,7 +9,8 @@ public enum BrokerPositionStatus
     NamGiu,
     CatLo,
     ChotLoi,
-    BoTheoDoi
+    BoTheoDoi,
+    DaDong
 }
 
 public enum BrokerNoteKind
@@ -395,6 +396,7 @@ public static class BrokerStatusLabels
         BrokerPositionStatus.CatLo => "Trading_BrokerStatus_CatLo",
         BrokerPositionStatus.ChotLoi => "Trading_BrokerStatus_ChotLoi",
         BrokerPositionStatus.BoTheoDoi => "Trading_BrokerStatus_BoTheoDoi",
+        BrokerPositionStatus.DaDong => "Trading_BrokerStatus_DaDong",
         _ => status.ToString()
     };
 
