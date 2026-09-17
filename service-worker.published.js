@@ -80,6 +80,24 @@ async function onFetch(event) {
         return fetch(event.request);
     }
 
+    // GitHub Pages returns HTTP 404 for deep links — serve index.html so Blazor boots with 200
+    if (event.request.mode === 'navigate') {
+        try {
+            const response = await fetch(event.request);
+            if (response.status === 404) {
+                const indexUrl = `${self.location.origin}${basePath}/index.html`;
+                const indexResponse = await fetch(indexUrl);
+                if (indexResponse.ok) return indexResponse;
+            }
+            return response;
+        } catch (err) {
+            const cache = await caches.open(cacheName);
+            const cached = await cache.match(`${basePath}/index.html`);
+            if (cached) return cached;
+            throw err;
+        }
+    }
+
     if (cacheFirstAssets.includes(event.request.url)) {
         // For assets in the cacheFirstAssets list, try to serve from the cache first
         const cache = await caches.open(cacheName);
