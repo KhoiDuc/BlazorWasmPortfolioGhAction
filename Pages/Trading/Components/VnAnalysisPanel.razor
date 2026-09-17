@@ -33,7 +33,7 @@
 @if (_ta is not null && _sub == "ta")
 {
     <div class="vd-panel">
-        <h4 style="margin:0 0 0.6rem">@_ta.Symbol — @L[IndicatorService.TrendLabel(_ta.Trend)].Value</h4>
+        <h2 style="margin:0 0 0.6rem">@_ta.Symbol — @L[IndicatorService.TrendLabel(_ta.Trend)].Value</h2>
         <div class="vd-metric-grid">
             <div class="vd-metric-card"><div class="vd-metric-label">Close</div><div class="vd-metric-value">@_ta.LatestClose.ToString("N2")</div></div>
             <div class="vd-metric-card"><div class="vd-metric-label">RSI</div><div class="vd-metric-value">@_ta.RSI.ToString("F1")</div></div>
@@ -55,7 +55,7 @@
     </div>
 
     <div class="vd-panel">
-        <h4 class="vd-section-title">@L["Trading_Analysis_AdvancedTrend"]</h4>
+        <h2 class="vd-section-title">@L["Trading_Analysis_AdvancedTrend"]</h2>
         <div class="vd-metric-grid">
             @if (_ta.SuperTrend is not null && _ta.SuperTrend.IsUptrend.Length > 0)
             {
@@ -81,7 +81,7 @@
     @if (_ta.AdvancedPatterns.Count > 0)
     {
         <div class="vd-panel">
-            <h4 class="vd-section-title">@L["Trading_Analysis_ChartPatterns"]</h4>
+            <h2 class="vd-section-title">@L["Trading_Analysis_ChartPatterns"]</h2>
             <table class="vd-grid">
                 <thead><tr><th>Pattern</th><th>Ngày</th><th>Entry</th><th>SL</th><th>TP</th><th>Reliability</th></tr></thead>
                 <tbody>
@@ -106,7 +106,7 @@
         var ob = _ta.OrderBlock;
         var bullish = ob.Mode.StartsWith("Bot");
         <div class="vd-panel">
-            <h4 class="vd-section-title">OrderBlock <span class="vd-badge @(bullish ? "vd-bull" : "vd-bear")">@ob.Mode</span></h4>
+            <h2 class="vd-section-title">OrderBlock <span class="vd-badge @(bullish ? "vd-bull" : "vd-bear")">@ob.Mode</span></h2>
             <p class="mb-0" style="font-size:0.85rem"><strong>Ngày:</strong> @ob.Date.ToString("dd/MM/yyyy") | <strong>Entry:</strong> @ob.Entry.ToString("N2") | <strong>SL:</strong> @ob.StopLoss.ToString("N2") | <strong>TP:</strong> @string.Join(" / ", ob.TakeProfits.Select(tp => tp.ToString("N2")))</p>
             <p class="ts-muted mt-1 mb-0" style="font-size:0.82rem">@ob.Note</p>
         </div>
@@ -117,7 +117,7 @@
         var el = _ta.Elliott;
         var bullish = el.Direction.Contains("Bullish");
         <div class="vd-panel">
-            <h4 class="vd-section-title">Elliott <span class="vd-badge @(bullish ? "vd-bull" : "vd-bear")">@el.Direction</span></h4>
+            <h2 class="vd-section-title">Elliott <span class="vd-badge @(bullish ? "vd-bull" : "vd-bear")">@el.Direction</span></h2>
             <p class="mb-0" style="font-size:0.85rem"><strong>Wave:</strong> @el.Wave | <strong>Level:</strong> @el.Level.ToString("N2") | <strong>Ngày:</strong> @el.Date.ToString("dd/MM/yyyy")</p>
             <p class="ts-muted mt-1 mb-0" style="font-size:0.82rem">@el.Note</p>
         </div>
@@ -130,7 +130,7 @@
 else if (_checklist is not null && _sub == "check")
 {
     <div class="vd-panel">
-        <h4 class="vd-section-title">Checklist — @_checklist.Symbol</h4>
+        <h2 class="vd-section-title">Checklist — @_checklist.Symbol</h2>
         <p><strong>Context:</strong> @_checklist.Context</p>
         <p><strong>Confirm / Invalidate:</strong> @_checklist.ConfirmInvalidate</p>
         <p><strong>Risk:</strong> @_checklist.Risk</p>
@@ -147,7 +147,7 @@ else if (_checklist is not null && _sub == "check")
 else if (_sub == "pnl")
 {
     <div class="vd-panel">
-        <h4 class="vd-section-title">@L["Trading_Analysis_PnlCalc"]</h4>
+        <h2 class="vd-section-title">@L["Trading_Analysis_PnlCalc"]</h2>
         <div class="vd-controls">
             <input type="number" class="vd-input" @bind="_entry" placeholder="@L["Trading_Analysis_BuyPrice"]" step="any" />
             <input type="number" class="vd-input" @bind="_shares" placeholder="@L["Trading_Analysis_Shares"]" />

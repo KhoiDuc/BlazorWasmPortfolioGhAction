@@ -149,6 +149,11 @@ body {
     --scrollbar-thumb-hover: rgba(255, 255, 255, 0.25);
 
     --pattern-opacity: 0.22;
+
+    /* WCAG 1.4.3: brighter semantic colors for text on dark surfaces */
+    --color-success-text: #34d399; /* 5.9:1 on #0a0a0f */
+    --color-danger-text: #f87171;  /* 5.1:1 on #0a0a0f */
+    --color-warning-text: #fbbf24; /* 8.9:1 on #0a0a0f */
 }
 
 /* Shared tokens (same for both themes) */
@@ -183,6 +188,11 @@ body {
     --color-warning: #d97706;
     --color-danger: #ef4444;
     --color-info: #0ea5e9;
+
+    /* WCAG 1.4.3: darker semantic colors for text on light surfaces */
+    --color-success-text: #047857; /* 4.6:1 on #f1f5f9 */
+    --color-danger-text: #b91c1c;  /* 4.5:1 on #f1f5f9 */
+    --color-warning-text: #92400e; /* 4.5:1 on #f1f5f9 */
 
     /* Text on colored backgrounds (buttons, badges) */
     --color-text-on-primary: #ffffff;
@@ -923,7 +933,7 @@ a:hover {
 }
 
 .converter-container .close-button:hover {
-    color: var(--color-danger);
+    color: var(--color-danger-text);
 }
 
 .calculators-container {
@@ -942,7 +952,7 @@ a:hover {
 /* --------------------------------------------------------------------------- */
 #blazor-error-ui {
     background: var(--color-bg-surface-elevated);
-    color: var(--color-danger);
+    color: var(--color-danger-text);
     border-top: 1px solid var(--color-border);
     bottom: 0;
     box-shadow: var(--shadow-lg);
@@ -960,11 +970,11 @@ a:hover {
     position: absolute;
     right: 1rem;
     top: 0.75rem;
-    color: var(--color-danger);
+    color: var(--color-danger-text);
 }
 
 #blazor-error-ui a {
-    color: var(--color-danger);
+    color: var(--color-danger-text);
     text-decoration: underline;
 }
 
@@ -1183,22 +1193,22 @@ a:hover {
 }
 
 .tool-btn-danger {
-    border-color: var(--color-danger);
-    color: var(--color-danger);
+    border-color: var(--color-danger-text);
+    color: var(--color-danger-text);
 }
 
 .tool-btn-danger:hover {
-    background-color: var(--color-danger);
+    background-color: var(--color-danger-text);
     color: var(--color-text-on-danger);
 }
 
 .tool-btn-success {
-    border-color: var(--color-success);
-    color: var(--color-success);
+    border-color: var(--color-success-text);
+    color: var(--color-success-text);
 }
 
 .tool-btn-success:hover {
-    background-color: var(--color-success);
+    background-color: var(--color-success-text);
     color: var(--color-text-on-success);
 }
 
@@ -1344,13 +1354,13 @@ a.button {
 .tool-alert-success {
     background-color: color-mix(in srgb, var(--color-success) 10%, transparent);
     border: 1px solid var(--color-success);
-    color: var(--color-success);
+    color: var(--color-success-text);
 }
 
 .tool-alert-danger {
     background-color: color-mix(in srgb, var(--color-danger) 10%, transparent);
     border: 1px solid var(--color-danger);
-    color: var(--color-danger);
+    color: var(--color-danger-text);
 }
 
 .tool-alert-info {
@@ -1362,7 +1372,7 @@ a.button {
 .tool-alert-warning {
     background-color: color-mix(in srgb, var(--color-warning) 10%, transparent);
     border: 1px solid var(--color-warning);
-    color: var(--color-warning);
+    color: var(--color-warning-text);
 }
 
 .tool-table {
