@@ -27,6 +27,8 @@
     gap: 1rem;
     min-height: 48px;
     padding: 0.35rem 0;
+    position: relative;
+    z-index: 2;
 }
 
 .trading-subnav-links {
@@ -138,20 +140,41 @@
     color: var(--color-text);
 }
 
-/* ponytail: if scroll-snap desired later, add scroll-snap-type: x proximity to .scroll-hint-x containers */
-.scroll-hint-x {
-    mask-image: linear-gradient(to right, transparent 0, #000 8px, #000 calc(100% - 24px), transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 8px, #000 calc(100% - 24px), transparent 100%);
+/* Backdrop — sibling of sticky nav (NOT inside it) so position:fixed stays viewport-locked */
+.trading-subnav-backdrop {
+    display: none;
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 998;
 }
+.trading-subnav-backdrop.show { display: block; }
 
-.trading-subnav-links.scroll-hint-x {
-    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 24px), transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 24px), transparent 100%);
+/* Desktop horizontal subnav — subtle right-edge scroll hint */
+@media (min-width: 48rem) {
+    .trading-subnav-inner {
+        position: relative;
+    }
+    .trading-subnav-inner::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 1.5rem;
+        pointer-events: none;
+        background: linear-gradient(to right, transparent, var(--color-bg-surface));
+    }
 }
 
 /* ponytail: desktop-first override — rewrite as mobile-first min-width:48rem when next touching this block */
 /* 768px = --bp-md */
 @media (max-width: 48rem) {
+    .trading-subnav-inner::after { display: none; }
+
     .trading-subnav-toggle { display: flex; }
 
     .trading-subnav-links {
@@ -170,26 +193,29 @@
         overflow-y: auto;
     }
 
-    .trading-subnav-links.open { display: flex; box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
-
-    .trading-subnav-backdrop {
-        display: none;
-        position: fixed;
-        inset: 72px 0 0 0;
-        background: rgba(0,0,0,0.35);
-        z-index: 998;
+    .trading-subnav-links.open {
+        display: flex;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+        z-index: 3;
     }
-    .trading-subnav-backdrop.show { display: block; }
+
+    .trading-subnav-links li {
+        display: block;
+        width: 100%;
+    }
 
     .trading-subnav-links a {
-        padding: 0.85rem 0;
+        display: block;
+        width: 100%;
+        padding: 1rem 0;
         border-bottom: 1px solid var(--color-border);
         font-size: 0.95rem;
+        line-height: 1.4;
     }
 
     .trading-subnav-links a::after { display: none; }
 
-    .trading-subnav-inner { position: relative; flex-wrap: wrap; }
+    .trading-subnav-inner { flex-wrap: nowrap; }
 
     .trading-subnav-actions { margin-left: auto; }
 
@@ -2311,8 +2337,18 @@
         -webkit-overflow-scrolling: touch;
         padding: 0 0.5rem;
         margin: 0 -0.5rem;
-        mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 24px), transparent 100%);
-        -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 24px), transparent 100%);
+        position: relative;
+    }
+
+    .broker-detail-tabs::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 1.5rem;
+        pointer-events: none;
+        background: linear-gradient(to right, transparent, var(--color-bg-surface-elevated));
     }
 
     .broker-form-row-align {

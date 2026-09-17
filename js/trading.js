@@ -36,27 +36,35 @@ window.tradingAuth = {
         }
         if (this._savedFocus) { try { this._savedFocus.focus(); } catch { } this._savedFocus = null; }
     },
-    closeOnOutside: function (menuSelector, toggleSelector, dotNetRef) {
+    _closeHandlers: {},
+    registerCloseOnOutside: function (id, menuSelector, toggleSelector, dotNetRef) {
+        this.unregisterCloseOnOutside(id);
         var menu = document.querySelector(menuSelector);
         var toggle = document.querySelector(toggleSelector);
-        if (!menu || !toggle) return null;
+        if (!menu || !toggle) return;
         var onPointer = function (e) {
             if (menu.contains(e.target) || toggle.contains(e.target)) return;
-            cleanup();
-            dotNetRef.invokeMethodAsync('CloseMenu');
+            window.tradingAuth.unregisterCloseOnOutside(id);
+            dotNetRef.invokeMethodAsync('CloseMenuFromJs');
         };
         var onKey = function (e) {
             if (e.key !== 'Escape') return;
-            cleanup();
-            dotNetRef.invokeMethodAsync('CloseMenu');
+            window.tradingAuth.unregisterCloseOnOutside(id);
+            dotNetRef.invokeMethodAsync('CloseMenuFromJs');
         };
-        function cleanup() {
-            document.removeEventListener('pointerdown', onPointer, true);
-            document.removeEventListener('keydown', onKey, true);
-        }
         document.addEventListener('pointerdown', onPointer, true);
         document.addEventListener('keydown', onKey, true);
-        return cleanup;
+        this._closeHandlers[id] = function () {
+            document.removeEventListener('pointerdown', onPointer, true);
+            document.removeEventListener('keydown', onKey, true);
+        };
+    },
+    unregisterCloseOnOutside: function (id) {
+        var cleanup = this._closeHandlers[id];
+        if (cleanup) {
+            cleanup();
+            delete this._closeHandlers[id];
+        }
     }
 };
 
