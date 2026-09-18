@@ -35,6 +35,10 @@
             {
                 <div class="utility-deck-pills" role="tablist" aria-label="@L["Utility_CategoriesAria"]">
                     <button type="button"
+                            id="utility-tab-all"
+                            role="tab"
+                            aria-selected="@(_activeCategory == null ? "true" : "false")"
+                            aria-controls="utility-tabpanel-launcher"
                             class="utility-pill @(_activeCategory == null ? "is-active" : "")"
                             @onclick="SelectAllCategories">
                         @L["Utility_All"]
@@ -42,7 +46,12 @@
                     @foreach (var category in Categories)
                     {
                         var cat = category;
+                        var tabId = CategoryTabId(cat);
                         <button type="button"
+                                id="@tabId"
+                                role="tab"
+                                aria-selected="@(_activeCategory == cat ? "true" : "false")"
+                                aria-controls="utility-tabpanel-launcher"
                                 class="utility-pill @(_activeCategory == cat ? "is-active" : "")"
                                 @onclick="() => SelectCategory(cat)">
                             @LocalizeCategory(cat)
@@ -55,7 +64,10 @@
 
             @if (Component == null)
             {
-                <div class="utility-launcher">
+                <div id="utility-tabpanel-launcher"
+                     class="utility-launcher"
+                     role="tabpanel"
+                     aria-labelledby="@ActiveCategoryTabId">
                     @foreach (var group in LauncherGroups)
                     {
                         <section class="utility-launch-group cat-@(group.CategoryKey.Replace(" & ", "-").Replace(" ", "-").ToLowerInvariant())" aria-labelledby="@($"utility-group-{group.CategoryKey}")" style="@CategoryAccentStyle(group.CategoryKey)">
@@ -68,14 +80,20 @@
                                 @foreach (var tool in group.Tools)
                                 {
                                     <NavLink href="@ToolHref(tool.Key)" class="utility-launch-card">
-                                        <span class="utility-launch-icon" aria-hidden="true">
-                                            <i class="bi @tool.Icon"></i>
-                                        </span>
-                                        <span class="utility-launch-body">
-                                            <strong>@L[tool.TitleKey]</strong>
-                                            <span>@L[tool.DescKey]</span>
-                                        </span>
-                                        <i class="bi bi-arrow-up-right utility-launch-arrow" aria-hidden="true"></i>
+                                        <div class="utility-launch-card-header">
+                                            <span class="utility-launch-icon" aria-hidden="true">
+                                                <i class="bi @tool.Icon"></i>
+                                            </span>
+                                            <i class="bi bi-arrow-up-right utility-launch-arrow" aria-hidden="true"></i>
+                                        </div>
+                                        <div class="utility-launch-body">
+                                            <strong class="utility-launch-title">@L[tool.TitleKey]</strong>
+                                            <p class="utility-launch-desc">@L[tool.DescKey]</p>
+                                        </div>
+                                        @if (_activeCategory is null)
+                                        {
+                                            <span class="utility-launch-tag">@LocalizeCategory(group.CategoryKey)</span>
+                                        }
                                     </NavLink>
                                 }
                             </div>
@@ -85,9 +103,17 @@
                     @if (!LauncherGroups.Any())
                     {
                         <div class="utility-launch-empty">
-                            <i class="bi bi-search" aria-hidden="true"></i>
+                            <div class="utility-launch-empty-icon" aria-hidden="true">
+                                <i class="bi bi-search"></i>
+                            </div>
                             <h3>@L["Utility_NoToolsTitle"]</h3>
                             <p>@L["Utility_NoToolsLead"]</p>
+                            @if (!string.IsNullOrWhiteSpace(_filter) || _activeCategory is not null)
+                            {
+                                <button type="button" class="utility-launch-empty-action" @onclick="ClearFilters">
+                                    @L["Utility_ClearFilters"]
+                                </button>
+                            }
                         </div>
                     }
                 </div>
@@ -212,12 +238,26 @@
 
     private void SelectAllCategories() => SelectCategory(null);
 
+    private void ClearFilters()
+    {
+        _filter = "";
+        _activeCategory = null;
+    }
+
     private void SelectCategory(string? category)
     {
         _activeCategory = category;
         if (Component is not null)
             Navigation.NavigateTo(UtilityHomeHref);
     }
+
+    private string ActiveCategoryTabId => _activeCategory is null ? "utility-tab-all" : CategoryTabId(_activeCategory);
+
+    private static string CategoryTabId(string categoryKey) =>
+        $"utility-tab-{CategoryTabSlug(categoryKey)}";
+
+    private static string CategoryTabSlug(string categoryKey) =>
+        categoryKey.Replace(" & ", "-").Replace(" ", "-").ToLowerInvariant();
 
     private string _switchQuery = string.Empty;
     private List<ToolDef> _switchResults = new();
