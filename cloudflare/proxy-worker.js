@@ -1,11 +1,10 @@
-// Cloudflare Worker — CORS proxy for Yahoo Finance + Petrolimex
+// Cloudflare Worker — CORS proxy for Yahoo Finance
 // Deploy: wrangler deploy proxy-worker.js
 // Set WORKER_URL in app config after deploy (e.g. https://your-worker.your-subdomain.workers.dev)
 
 const ALLOWED_TARGETS = [
   'query1.finance.yahoo.com',
   'query2.finance.yahoo.com',
-  'portals.petrolimex.com.vn',
 ];
 
 export default {

@@ -85,8 +85,6 @@ else if (_tab == "silver")
 }
 else
 {
-    <CommoditySpreadCards Title="@L["Trading_Commodities_OilSpread"]" Data="@_oilSpread" Loading="@_oilSpreadLoading" />
-
     <div class="ts-tabs" style="margin-bottom:0.5rem">
         <button type="button" class="ts-tab @(_oilChart == "wti" ? "active" : "")" @onclick='() => SetOilChart("wti")'>WTI</button>
         <button type="button" class="ts-tab @(_oilChart == "brent" ? "active" : "")" @onclick='() => SetOilChart("brent")'>Brent</button>
@@ -101,61 +99,13 @@ else
         <TradingViewChart Symbol="TVC:UKOIL" />
         <PriceAlertWidget Symbol="UKOIL" AssetType="oil" />
     }
-
-    <div class="ts-panel">
-        <div class="ts-header">
-            <div>
-                <h2>Vietnam Petrolimex Prices</h2>
-                <p class="ts-muted">@_oilUpdated</p>
-            </div>
-            <button type="button" class="ts-btn ts-btn-outline" @onclick="RefreshOil" disabled="@_oilLoading">
-                @(_oilLoading ? "..." : "Refresh")
-            </button>
-        </div>
-        @if (_oilRows.Count > 0)
-        {
-            <div class="ts-field" style="padding:0 1rem">
-                <label for="oil-product" class="ts-label">@L["Trading_Commodities_OilProduct"]</label>
-                <select id="oil-product" class="ts-select" style="max-width:280px" @bind="_selectedOilProduct" @bind:after="LoadOilSpread">
-                    @foreach (var r in _oilRows)
-                    {
-                        <option value="@r.Title">@r.Title</option>
-                    }
-                </select>
-            </div>
-        }
-        @if (_oilError is not null)
-        {
-            <p class="ts-alert ts-alert-error">@_oilError</p>
-        }
-        else if (_oilRows.Count > 0)
-        {
-            <div class="ts-table-wrap">
-                <table class="ts-table">
-                    <thead><tr><th>Product</th><th>Zone 1 (VND/L)</th><th>Zone 2 (VND/L)</th></tr></thead>
-                    <tbody>
-                        @foreach (var r in _oilRows)
-                        {
-                            <tr class="@(_selectedOilProduct == r.Title ? "selected" : "")">
-                                <td><strong>@r.Title</strong></td>
-                                <td class="ts-positive">@r.Zone1Display</td>
-                                <td class="ts-negative">@r.Zone2Display</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-    </div>
 }
 
 @code {
     private const double TaelOzFactor = 1.20565;
-    private const double LitersPerBarrel = 158.987;
 
     private string _tab = "gold";
     private string _oilChart = "wti";
-    private string _selectedOilProduct = "";
 
     private List<GoldRow> _goldRows = [];
     private string? _goldUpdated;
@@ -171,27 +121,14 @@ else
     private CommoditySpreadCards.SpreadSnapshot? _silverSpread;
     private bool _silverSpreadLoading;
 
-    private List<OilRow> _oilRows = [];
-    private string? _oilUpdated;
-    private string? _oilError;
-    private bool _oilLoading;
-    private CommoditySpreadCards.SpreadSnapshot? _oilSpread;
-    private bool _oilSpreadLoading;
-
     private void SetTab(string tab)
     {
         _tab = tab;
         if (tab == "silver" && _silverHtml is null && !_silverLoading)
             _ = RefreshSilver();
-        if (tab == "oil" && _oilRows.Count == 0 && !_oilLoading)
-            _ = RefreshOil();
     }
 
-    private void SetOilChart(string chart)
-    {
-        _oilChart = chart;
-        _ = LoadOilSpread();
-    }
+    private void SetOilChart(string chart) => _oilChart = chart;
 
     protected override void OnInitialized() => _ = RefreshGold();
 
@@ -205,12 +142,6 @@ else
     {
         await LoadSilver();
         await LoadSilverSpread();
-    }
-
-    private async Task RefreshOil()
-    {
-        await LoadOil();
-        await LoadOilSpread();
     }
 
     private async Task LoadGold()
@@ -292,69 +223,6 @@ else
         finally { _silverSpreadLoading = false; await InvokeAsync(StateHasChanged); }
     }
 
-    private async Task LoadOil()
-    {
-        _oilLoading = true;
-        _oilError = null;
-        try
-        {
-            var json = await Api.GetProxyJsonAsync("petrolimex/search");
-            if (json is not null && json.Value.TryGetProperty("Objects", out var objs) && objs.ValueKind == JsonValueKind.Array)
-            {
-                _oilRows.Clear();
-                foreach (var item in objs.EnumerateArray())
-                {
-                    _oilRows.Add(new OilRow(
-                        item.GetProperty("Title").GetString() ?? "",
-                        item.GetProperty("Zone1Price").GetDouble(),
-                        item.GetProperty("Zone2Price").GetDouble()));
-                }
-                if (string.IsNullOrEmpty(_selectedOilProduct))
-                    _selectedOilProduct = _oilRows.FirstOrDefault(r => r.Title.Contains("RON 95", StringComparison.OrdinalIgnoreCase))?.Title
-                        ?? _oilRows.FirstOrDefault()?.Title ?? "";
-                _oilUpdated = DateTime.Now.ToString("g");
-            }
-        }
-        catch (Exception ex) { _oilError = ex.Message; }
-        finally { _oilLoading = false; await InvokeAsync(StateHasChanged); }
-    }
-
-    private async Task LoadOilSpread()
-    {
-        _oilSpreadLoading = true;
-        try
-        {
-            var item = _oilRows.FirstOrDefault(r => r.Title == _selectedOilProduct) ?? _oilRows.FirstOrDefault();
-            if (item is null) { _oilSpread = null; return; }
-
-            var symbol = _oilChart == "wti" ? "CL=F" : "BZ=F";
-            var usdVnd = await GetUsdVndRateAsync();
-            var worldUsd = await FetchYahooPriceAsync(symbol)
-                ?? await GetRateOrYahooAsync(_oilChart == "wti" ? "USOIL" : "UKOIL", symbol)
-                ?? (_oilChart == "wti" ? 72.5 : 76.5);
-
-            var worldVndPerLiter = worldUsd / LitersPerBarrel * usdVnd;
-            var spread = item.Zone1 - worldVndPerLiter;
-            var pct = worldVndPerLiter > 0 ? spread / worldVndPerLiter * 100 : 0;
-
-            _oilSpread = new CommoditySpreadCards.SpreadSnapshot(
-                item.Title,
-                item.Zone1,
-                item.Zone1,
-                item.Zone2,
-                item.Zone2,
-                worldUsd,
-                worldVndPerLiter,
-                spread,
-                pct,
-                usdVnd,
-                "lít",
-                "bbl",
-                SpreadUpdatedAt());
-        }
-        finally { _oilSpreadLoading = false; await InvokeAsync(StateHasChanged); }
-    }
-
     private CommoditySpreadCards.SpreadSnapshot BuildSpread(
         string vnLabel, double buy, double sell, double worldUsd, double worldVnd, double spread, double usdVnd, string unit, string worldUnit) =>
         new(vnLabel, sell, buy, sell, sell, worldUsd, worldVnd, spread,
@@ -433,9 +301,4 @@ else
         public string Spread => (Sell - Buy).ToString("N0");
     }
 
-    private record OilRow(string Title, double Zone1, double Zone2)
-    {
-        public string Zone1Display => Zone1.ToString("N0");
-        public string Zone2Display => Zone2.ToString("N0");
-    }
 }

@@ -95,23 +95,24 @@ function initializeScrollProgress() {
 }
 
 function initializeStarfield() {
-    const $ = document.querySelector.bind(document);
-    const section = $('.hero');
+    const section = document.querySelector('.hero');
 
     if (!section) {
-        console.warn("Element with class 'hero' not found — starfield skipped.");
         return;
     }
 
-    console.log("Starfield initialized");
+    let layer = section.querySelector('.hero-starfield');
+    if (!layer) {
+        layer = document.createElement('div');
+        layer.className = 'hero-starfield';
+        layer.setAttribute('aria-hidden', 'true');
+        section.insertBefore(layer, section.firstChild);
+    } else {
+        layer.replaceChildren();
+    }
 
     const count = 800;
-    let i = 0;
-
-    // Clear existing stars to avoid duplicates (optional)
-    section.innerHTML = '';
-
-    while (i < count) {
+    for (let i = 0; i < count; i++) {
         const star = document.createElement('i');
         const x = Math.floor(Math.random() * window.innerWidth);
         const y = Math.floor(Math.random() * window.innerHeight);
@@ -125,8 +126,7 @@ function initializeStarfield() {
         star.style.animationDuration = `${duration * 2}s`;
         star.style.animationDelay = `${duration}s`;
 
-        section.appendChild(star);
-        i++;
+        layer.appendChild(star);
     }
 }
 

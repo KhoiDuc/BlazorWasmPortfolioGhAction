@@ -16,13 +16,15 @@
         <div class="trading-subnav-actions">
             <AuthorizeView Roles="Broker">
                 <Authorized>
-                    <span class="trading-subnav-user">@context.User.Identity?.Name</span>
-                    <button type="button"
-                            class="trading-subnav-btn"
-                            aria-label="@L["TradingLogin_SignOut"]"
-                            @onclick="LogoutBrokerAsync">
-                        @L["TradingLogin_SignOut"]
-                    </button>
+                    <div class="trading-subnav-auth">
+                        <span class="trading-subnav-user">@context.User.Identity?.Name</span>
+                        <button type="button"
+                                class="trading-subnav-btn"
+                                aria-label="@L["TradingLogin_SignOut"]"
+                                @onclick="LogoutBrokerAsync">
+                            @L["TradingLogin_SignOut"]
+                        </button>
+                    </div>
                 </Authorized>
                 <NotAuthorized>
                     <NavLink href="@H("trading/login")" class="trading-subnav-btn">@L["TradingLogin_SignIn"]</NavLink>

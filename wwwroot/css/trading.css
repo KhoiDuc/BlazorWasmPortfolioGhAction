@@ -30,7 +30,22 @@
     position: relative;
 }
 
-.trading-subnav-inner::after {
+.trading-subnav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+}
+
+.trading-subnav-links::after {
     content: "";
     position: absolute;
     right: 0;
@@ -39,19 +54,6 @@
     width: 1.5rem;
     pointer-events: none;
     background: linear-gradient(to right, transparent, var(--color-bg-surface));
-}
-
-.trading-subnav-links {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    flex: 1;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
 }
 .trading-subnav-links::-webkit-scrollbar { display: none; }
 
@@ -90,12 +92,22 @@
 .trading-subnav-actions {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
     flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    padding-left: 0.75rem;
+    background: var(--color-bg-surface);
+}
+
+.trading-subnav-auth {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .trading-subnav-user {
     font-size: 0.82rem;
+    line-height: 1.2;
     color: var(--color-text-secondary);
     max-width: 120px;
     overflow: hidden;
@@ -104,9 +116,14 @@
 }
 
 .trading-subnav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 6px 14px;
     font-size: 0.82rem;
     font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
     color: var(--color-brand-symbol) !important;
     background: transparent;
     border: 1px solid var(--color-border-accent);
@@ -169,12 +186,15 @@
     }
 
     .trading-subnav-actions {
-        flex-shrink: 1;
-        min-width: 0;
+        padding-left: 0.5rem;
+    }
+
+    .trading-subnav-auth {
+        gap: 0.5rem;
     }
 
     .trading-subnav-user {
-        max-width: 80px;
+        max-width: 72px;
         font-size: 0.75rem;
     }
 
@@ -184,7 +204,7 @@
         flex-shrink: 0;
     }
 
-    .trading-subnav-inner::after {
+    .trading-subnav-links::after {
         display: none;
     }
 }

@@ -36,7 +36,7 @@ public class TradingApiClient : ITradingApiClient
     private async Task<JsonElement?> GetJsonAsync(string path, CancellationToken ct)
     {
         var url = _endpoints.ResolveFetchUrl(path);
-        // Absolute external URL (vndirect, cafef, yahoo, petrolimex, …) — fetch directly.
+        // Absolute external URL (vndirect, cafef, yahoo, …) — fetch directly.
         if (Uri.IsWellFormedUriString(url, UriKind.Absolute))
             return await GetAbsoluteJsonAsync(url, ct);
 

@@ -1,7 +1,7 @@
 namespace BlazorWasmPortfolioGhAction.Services.Trading;
 
 /// <summary>
-/// Maps proxy paths to external owner URLs (VnDirect, CafeF, Yahoo, Petrolimex, SJC, TCBS, DNSE, Coingecko, calendar, FX).
+/// Maps proxy paths to external owner URLs (VnDirect, CafeF, Yahoo, SJC, TCBS, DNSE, Coingecko, calendar, FX).
 /// No internal backend routing — RRG/Fly/OSINT removed.
 /// </summary>
 public class TradingEndpointResolver
@@ -10,7 +10,7 @@ public class TradingEndpointResolver
 
     public TradingEndpointResolver(TradingApiOptions options) => _options = options;
 
-    /// <summary>Absolute URL for img/iframe src (gold, petrolimex…).</summary>
+    /// <summary>Absolute URL for img/iframe src (gold, silver…).</summary>
     public string ResolveProxyUrl(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -26,17 +26,6 @@ public class TradingEndpointResolver
 
         if (p.StartsWith("silverprice/", StringComparison.OrdinalIgnoreCase))
             return RewritePrefix(p, "silverprice", "https://giabac.phuquygroup.vn/PhuQuyPrice");
-
-        if (p.StartsWith("petrolimex/", StringComparison.OrdinalIgnoreCase))
-        {
-            if (p.Equals("petrolimex/search", StringComparison.OrdinalIgnoreCase)
-                || p.Equals("petrolimex", StringComparison.OrdinalIgnoreCase))
-            {
-            return WrapCorsProxy("https://portals.petrolimex.com.vn/~apis/portals/cms.item/search?object-identity=search&x-request=eyJGaWx0ZXJCeSI6eyJBbmQiOlt7IlN5c3RlbUlEIjp7IkVxdWFscyI6IjY3ODNkYzEyNzFmZjQ0OWU5NWI3NGE5NTIwOTY0MTY5In19LHsiUmVwb3NpdG9yeUlEIjp7IkVxdWFscyI6ImE5NTQ1MWUyM2I0NzRmZTU4ODZiZmI3Y2Y4NDNmNTNjIn19LHsiUmVwb3NpdG9yeUVudGl0eUlEIjp7IkVxdWFscyI6IjM4MDEzNzhmZjFlMDQ1YjFhZmExMGRlN2M1Nzc2MTI0In19LHsiU3RhdHVzIjp7IkVxdWFscyI6IlB1Ymxpc2hlZCJ9fV19LCJTb3J0QnkiOnsiTGFzdE1vZGlmaWVkIjoiRGVzY2VuZGluZyJ9LCJQYWdpbmF0aW9uIjp7IlRvdGFsUmVjb3JkcyI6LTEsIlRvdGFsUGFnZXMiOjAsIlBhZ2VTaXplIjowLCJQYWdlTnVtYmVyIjowfX0=");
-        }
-        if (p.StartsWith("petrolimex/", StringComparison.OrdinalIgnoreCase))
-            return WrapCorsProxy(RewritePrefix(p, "petrolimex", "https://portals.petrolimex.com.vn"));
-        }
 
         if (p.StartsWith("yahoo/", StringComparison.OrdinalIgnoreCase))
             p = "yahoo-finance/" + p["yahoo/".Length..];
