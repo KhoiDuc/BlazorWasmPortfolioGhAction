@@ -80,20 +80,19 @@
                                 @foreach (var tool in group.Tools)
                                 {
                                     <NavLink href="@ToolHref(tool.Key)" class="utility-launch-card">
-                                        <div class="utility-launch-card-header">
-                                            <span class="utility-launch-icon" aria-hidden="true">
+                                        <div class="utility-launch-card-visual" aria-hidden="true">
+                                            <span class="utility-launch-icon">
                                                 <i class="bi @tool.Icon"></i>
                                             </span>
-                                            <i class="bi bi-arrow-up-right utility-launch-arrow" aria-hidden="true"></i>
                                         </div>
                                         <div class="utility-launch-body">
                                             <strong class="utility-launch-title">@L[tool.TitleKey]</strong>
                                             <p class="utility-launch-desc">@L[tool.DescKey]</p>
                                         </div>
-                                        @if (_activeCategory is null)
-                                        {
-                                            <span class="utility-launch-tag">@LocalizeCategory(group.CategoryKey)</span>
-                                        }
+                                        <div class="utility-launch-card-footer">
+                                            <span class="utility-launch-action">@L["Utility_OpenTool"]</span>
+                                            <i class="bi bi-arrow-up-right utility-launch-arrow"></i>
+                                        </div>
                                     </NavLink>
                                 }
                             </div>
