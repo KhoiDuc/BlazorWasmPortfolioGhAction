@@ -17,6 +17,7 @@ public interface IBrokerApiClient
     // CRUD Position
     Task<(bool Ok, string? Error)> CreatePositionAsync(BrokerPosition pos, CancellationToken ct = default);
     Task<(bool Ok, string? Error)> UpdatePositionAsync(string symbol, BrokerPosition pos, CancellationToken ct = default);
+    Task<(bool Ok, string? Error)> ArchivePositionAsync(string symbol, bool isArchived, BrokerPositionStatus? status = null, CancellationToken ct = default);
     Task<(bool Ok, string? Error)> DeletePositionAsync(string symbol, CancellationToken ct = default);
 
     // CRUD Lot
@@ -36,6 +37,7 @@ public interface IBrokerApiClient
 
     // CRUD Dividend
     Task<(bool Ok, string? Error)> AddDividendAsync(string symbol, BrokerDividend div, CancellationToken ct = default);
+    Task<(bool Ok, string? Error)> UpdateDividendAsync(string symbol, BrokerDividend div, CancellationToken ct = default);
     Task<(bool Ok, string? Error)> DeleteDividendAsync(string symbol, string divId, CancellationToken ct = default);
 
     // Import (giữ nguyên PUT toàn bộ — cho ImportJson)
@@ -110,6 +112,9 @@ public sealed class BrokerApiClient : IBrokerApiClient
     public Task<(bool Ok, string? Error)> UpdatePositionAsync(string symbol, BrokerPosition pos, CancellationToken ct = default) =>
         SendJsonAsync(HttpMethod.Put, $"/api/positions/{Uri.EscapeDataString(symbol)}", body: pos, ct: ct);
 
+    public Task<(bool Ok, string? Error)> ArchivePositionAsync(string symbol, bool isArchived, BrokerPositionStatus? status = null, CancellationToken ct = default) =>
+        SendJsonAsync(HttpMethod.Patch, $"/api/positions/{Uri.EscapeDataString(symbol)}/archive", new { isArchived, status = status?.ToString() }, ct);
+
     public Task<(bool Ok, string? Error)> DeletePositionAsync(string symbol, CancellationToken ct = default) =>
         SendNoContentAsync(HttpMethod.Delete, $"/api/positions/{Uri.EscapeDataString(symbol)}", ct: ct);
 
@@ -150,6 +155,9 @@ public sealed class BrokerApiClient : IBrokerApiClient
 
     public Task<(bool Ok, string? Error)> AddDividendAsync(string symbol, BrokerDividend div, CancellationToken ct = default) =>
         SendJsonAsync(HttpMethod.Post, $"/api/positions/{Uri.EscapeDataString(symbol)}/dividends", body: div, ct: ct);
+
+    public Task<(bool Ok, string? Error)> UpdateDividendAsync(string symbol, BrokerDividend div, CancellationToken ct = default) =>
+        SendJsonAsync(HttpMethod.Put, $"/api/positions/{Uri.EscapeDataString(symbol)}/dividends/{Uri.EscapeDataString(div.Id)}", body: div, ct: ct);
 
     public Task<(bool Ok, string? Error)> DeleteDividendAsync(string symbol, string divId, CancellationToken ct = default) =>
         SendNoContentAsync(HttpMethod.Delete, $"/api/positions/{Uri.EscapeDataString(symbol)}/dividends/{Uri.EscapeDataString(divId)}", ct: ct);

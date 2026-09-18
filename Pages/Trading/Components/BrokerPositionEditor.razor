@@ -422,12 +422,22 @@
                             @foreach (var d in (Position.Dividends ?? []).OrderByDescending(d => d.ExDate))
                             {
                                 <tr>
-                                    <td>@d.ExDate.ToString("dd/MM/yyyy")</td>
-                                    <td>@(d.PayDate?.ToString("dd/MM/yyyy") ?? "—")</td>
-                                    <td class="broker-num">@d.AmountPerShare.ToString("N0")</td>
-                                    <td class="broker-num">@BrokerFormat.Quantity(d.Quantity)</td>
+                                    <td>
+                                        <input class="ts-input" type="date" @bind="d.ExDate" @bind:format="yyyy-MM-dd" @bind:after="() => DividendChanged(d)" />
+                                    </td>
+                                    <td>
+                                        <input class="ts-input" type="date" @bind="d.PayDate" @bind:format="yyyy-MM-dd" @bind:after="() => DividendChanged(d)" />
+                                    </td>
+                                    <td class="broker-num">
+                                        <input class="ts-input" type="number" min="0" step="any" @bind="d.AmountPerShare" @bind:after="() => DividendChanged(d)" />
+                                    </td>
+                                    <td class="broker-num">
+                                        <input class="ts-input" type="number" min="1" step="1" @bind="d.Quantity" @bind:after="() => DividendChanged(d)" />
+                                    </td>
                                     <td class="broker-num ts-positive">@BrokerFormat.VndPlain(d.TotalAmount)</td>
-                                    <td>@(d.Note ?? "—")</td>
+                                    <td>
+                                        <input class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen" @bind="d.Note" @bind:after="() => DividendChanged(d)" />
+                                    </td>
                                     <td>
                                         <button type="button" class="broker-lot-remove" title="Xóa cổ tức" @onclick="() => RemoveDividend(d)">×</button>
                                     </td>
@@ -841,6 +851,9 @@
 
         await OnSync.InvokeAsync(new DividendSyncAction("create", dividend));
     }
+
+    private Task DividendChanged(BrokerDividend d) =>
+        OnSync.InvokeAsync(new DividendSyncAction("update", d));
 
     private async Task RemoveDividend(BrokerDividend d)
     {

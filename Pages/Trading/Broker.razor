@@ -376,7 +376,7 @@
         _portfolio.ClosedPositions ??= [];
         _portfolio.ClosedPositions.Add(pos);
         _selected = null;
-        await SyncPositionUpdate(pos);
+        await SyncArchivePosition(pos, isArchived: true, BrokerPositionStatus.DaDong);
         var realized = pos.RealizedPnl ?? 0m;
         Flash(realized >= 0
             ? $"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}"
@@ -392,7 +392,7 @@
         pos.Status = BrokerPositionStatus.NamGiu;
         _portfolio.ClosedPositions.Remove(pos);
         _portfolio.Positions.Add(pos);
-        await SyncPositionUpdate(pos);
+        await SyncArchivePosition(pos, isArchived: false, BrokerPositionStatus.NamGiu);
         Flash($"Đã mở lại {pos.Symbol} — có thể sửa lệnh bán rồi đóng lại.");
         await Task.CompletedTask;
     }
@@ -451,7 +451,7 @@
         _portfolio.ClosedPositions.Add(pos);
         if (_selected?.Equals(pos.Symbol, StringComparison.OrdinalIgnoreCase) == true)
             _selected = null;
-        await SyncPositionUpdate(pos);
+        await SyncArchivePosition(pos, isArchived: true, BrokerPositionStatus.DaDong);
         var realized = pos.RealizedPnl ?? 0m;
         Flash($"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}");
         await Task.CompletedTask;
@@ -502,6 +502,14 @@
         else Flash($"Sync fail: {error}", error: true);
     }
 
+    private async Task SyncArchivePosition(BrokerPosition pos, bool isArchived, BrokerPositionStatus status)
+    {
+        MarkDirty();
+        var (ok, error) = await Store.ArchivePositionAsync(pos.Symbol, isArchived, status);
+        if (ok) _dirty = false;
+        else Flash($"Sync fail: {error}", error: true);
+    }
+
     private async Task OnEditorSync(BrokerSyncAction action)
     {
         if (Selected is null) return;
@@ -542,6 +550,7 @@
                 DividendSyncAction divAction => divAction.Action switch
                 {
                     "create" => await Store.AddDividendAsync(symbol, divAction.Dividend),
+                    "update" => await Store.UpdateDividendAsync(symbol, divAction.Dividend),
                     "delete" => await Store.DeleteDividendAsync(symbol, divAction.Dividend.Id),
                     _ => (false, $"Unknown dividend action: {divAction.Action}")
                 },

@@ -20,6 +20,7 @@ public interface IBrokerDeskStore
     // CRUD Position
     Task<(bool Ok, string? Error)> CreatePositionAsync(BrokerPosition pos);
     Task<(bool Ok, string? Error)> UpdatePositionAsync(string symbol, BrokerPosition pos);
+    Task<(bool Ok, string? Error)> ArchivePositionAsync(string symbol, bool isArchived, BrokerPositionStatus? status = null);
     Task<(bool Ok, string? Error)> DeletePositionAsync(string symbol);
 
     // CRUD Lot
@@ -39,6 +40,7 @@ public interface IBrokerDeskStore
 
     // CRUD Dividend
     Task<(bool Ok, string? Error)> AddDividendAsync(string symbol, BrokerDividend div);
+    Task<(bool Ok, string? Error)> UpdateDividendAsync(string symbol, BrokerDividend div);
     Task<(bool Ok, string? Error)> DeleteDividendAsync(string symbol, string divId);
 
     // Import (PUT toàn bộ — cho ImportJson)
@@ -158,6 +160,9 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
     public Task<(bool Ok, string? Error)> UpdatePositionAsync(string symbol, BrokerPosition pos) =>
         _api.UpdatePositionAsync(symbol, pos);
 
+    public Task<(bool Ok, string? Error)> ArchivePositionAsync(string symbol, bool isArchived, BrokerPositionStatus? status = null) =>
+        _api.ArchivePositionAsync(symbol, isArchived, status);
+
     public Task<(bool Ok, string? Error)> DeletePositionAsync(string symbol) =>
         _api.DeletePositionAsync(symbol);
 
@@ -198,6 +203,9 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
 
     public Task<(bool Ok, string? Error)> AddDividendAsync(string symbol, BrokerDividend div) =>
         _api.AddDividendAsync(symbol, div);
+
+    public Task<(bool Ok, string? Error)> UpdateDividendAsync(string symbol, BrokerDividend div) =>
+        _api.UpdateDividendAsync(symbol, div);
 
     public Task<(bool Ok, string? Error)> DeleteDividendAsync(string symbol, string divId) =>
         _api.DeleteDividendAsync(symbol, divId);
