@@ -56,4 +56,24 @@ public static class CulturePath
         Split(relativePath, out var lang, out var remainder);
         return Combine(lang ?? fallbackLang, remainder);
     }
+
+    /// <summary>
+    /// App-relative route for <see cref="Microsoft.AspNetCore.Components.NavigationManager.NavigateTo"/>.
+    /// No leading slash — required for GitHub Pages base href (/BlazorWasmPortfolioGhAction/).
+    /// </summary>
+    public static string AppRoute(string? lang, string path)
+    {
+        path = (path ?? "").Trim().TrimStart('/');
+        if (string.IsNullOrEmpty(path))
+            return string.IsNullOrEmpty(lang) ? "" : lang.Trim().ToLowerInvariant();
+
+        return string.IsNullOrEmpty(lang) ? path : Combine(lang, path);
+    }
+
+    public static string AppRouteWithQuery(string? lang, string path, string query)
+    {
+        var route = AppRoute(lang, path);
+        query = (query ?? "").TrimStart('?');
+        return string.IsNullOrEmpty(query) ? route : $"{route}?{query}";
+    }
 }

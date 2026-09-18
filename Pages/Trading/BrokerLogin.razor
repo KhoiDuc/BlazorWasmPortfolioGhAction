@@ -4,6 +4,7 @@
 @inherits CultureAwareComponent
 @using Microsoft.AspNetCore.Components.Authorization
 @using BlazorWasmPortfolioGhAction.Services.Trading.Broker
+@using BlazorWasmPortfolioGhAction.Services.Localization
 @inject IBrokerAuthService BrokerAuth
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResources> L
@@ -88,8 +89,7 @@
         if (!string.IsNullOrWhiteSpace(ReturnUrl))
             return ReturnUrl;
 
-        var prefix = string.IsNullOrEmpty(CultureService.UrlLang) ? "" : $"/{CultureService.UrlLang}";
-        return $"{prefix}/trading/broker";
+        return CulturePath.AppRoute(CultureService.UrlLang, "trading/broker");
     }
 
     private sealed class LoginModel

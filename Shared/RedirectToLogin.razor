@@ -10,14 +10,13 @@
 
         if (IsBrokerProtectedPath(remainder))
         {
-            var loginPath = string.IsNullOrEmpty(lang)
-                ? $"/trading/login?returnUrl={returnUrl}"
-                : $"/{lang}/trading/login?returnUrl={returnUrl}";
-            Navigation.NavigateTo(loginPath);
+            Navigation.NavigateTo(
+                CulturePath.AppRouteWithQuery(lang, "trading/login", $"returnUrl={returnUrl}"));
             return;
         }
 
-        Navigation.NavigateTo($"/admin?returnUrl={returnUrl}");
+        Navigation.NavigateTo(
+            CulturePath.AppRouteWithQuery(lang, "admin", $"returnUrl={returnUrl}"));
     }
 
     private static bool IsBrokerProtectedPath(string remainder) =>

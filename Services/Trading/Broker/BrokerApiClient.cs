@@ -290,8 +290,9 @@ public sealed class BrokerApiClient : IBrokerApiClient
 
         await _auth.LogoutAsync();
         var returnUrl = Uri.EscapeDataString(_navigation.Uri);
-        var prefix = string.IsNullOrEmpty(_culture.UrlLang) ? "" : $"/{_culture.UrlLang}";
-        _navigation.NavigateTo($"{prefix}/trading/login?returnUrl={returnUrl}", forceLoad: false);
+        _navigation.NavigateTo(
+            CulturePath.AppRouteWithQuery(_culture.UrlLang, "trading/login", $"returnUrl={returnUrl}"),
+            forceLoad: false);
         return true;
     }
 

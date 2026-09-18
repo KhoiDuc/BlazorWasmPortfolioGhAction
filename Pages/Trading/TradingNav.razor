@@ -38,6 +38,6 @@
     private async Task LogoutBrokerAsync()
     {
         await BrokerAuth.LogoutAsync();
-        Navigation.NavigateTo(H("trading/login"));
+        Navigation.NavigateTo(CulturePath.AppRoute(CultureService.UrlLang, "trading/login"));
     }
 }
