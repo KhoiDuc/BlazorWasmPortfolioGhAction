@@ -1,0 +1,211 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@inject IVnFundamentalsClient Fundamentals
+@inject MarketContextService MarketContext
+@inject TradeScoreService Scorer
+@inject IStringLocalizer<SharedResources> L
+
+@if (_busy)
+{
+    <div class="vd-panel" role="status" aria-live="polite">
+        <VdLoading Label="@L["Trading_Score_Loading", Symbol]" Sub="@L["Trading_Analysis_LoadingSub"]" />
+    </div>
+}
+else if (_score is not null)
+{
+    var recClass = _score.Recommendation switch
+    {
+        TradeScoreRecommendation.StrongBuy or TradeScoreRecommendation.Buy => "vd-pos",
+        TradeScoreRecommendation.Watch => "vd-neutral",
+        _ => "vd-neg"
+    };
+
+    <div class="vd-panel ts-score-header">
+        <div class="ts-score-title-row">
+            <h2 class="vd-section-title mb-0">@L["Trading_Score_Title", _score.Symbol]</h2>
+            <span class="ts-muted">@_score.AnalysisDate.ToString("dd/MM/yyyy")</span>
+        </div>
+        <p class="ts-score-price mb-2">@FormatVnd(_score.Price)</p>
+        <div class="ts-score-total-row">
+            <div class="ts-score-total">
+                <span class="ts-score-total-label">@L["Trading_Score_Total"]</span>
+                <strong class="ts-score-total-value">@_score.TotalScore/100</strong>
+            </div>
+            <span class="vd-badge @recClass ts-score-rec">@RecLabel(_score.Recommendation)</span>
+        </div>
+        @if (_score.FundamentalsPartial)
+        {
+            <p class="ts-muted mb-0 mt-2" style="font-size:0.82rem">@L["Trading_Score_PartialFundamentals"]</p>
+        }
+    </div>
+
+    <div class="vd-panel">
+        <h3 class="vd-section-title">@L["Trading_Score_Technical"] (@_score.TechnicalScore/@_score.Technical.MaxScore)</h3>
+        <div class="vd-metric-grid">
+            <div class="vd-metric-card">
+                <div class="vd-metric-label">@L["Trading_Score_Trend"]</div>
+                <div class="vd-metric-value">@L[IndicatorService.TrendLabel(Ta.Trend)].Value</div>
+            </div>
+            <div class="vd-metric-card">
+                <div class="vd-metric-label">@L["Trading_Score_Support"] / @L["Trading_Score_Resistance"]</div>
+                <div class="vd-metric-value" style="font-size:0.9rem">
+                    @FormatVnd(Ta.SupportResistance.SupportLevels.OrderByDescending(s => s).FirstOrDefault(s => s < Ta.LatestClose)) /
+                    @FormatVnd(Ta.SupportResistance.ResistanceLevels.OrderBy(r => r).FirstOrDefault(r => r > Ta.LatestClose))
+                </div>
+            </div>
+            <div class="vd-metric-card">
+                <div class="vd-metric-label">@L["Trading_Score_Volume"]</div>
+                <div class="vd-metric-value">@Ta.VolumeRatio.ToString("F1")×</div>
+            </div>
+        </div>
+        <ul class="ts-score-notes">
+            @foreach (var note in _score.Technical.Notes) { <li>@note</li> }
+        </ul>
+    </div>
+
+    <div class="vd-panel">
+        <h3 class="vd-section-title">@L["Trading_Score_Fundamental"] (@_score.FundamentalScore/@_score.Fundamental.MaxScore)</h3>
+        @if (_score.Fundamentals is not null)
+        {
+            <div class="vd-metric-grid">
+                @if (_score.Fundamentals.Pe is decimal pe)
+                {
+                    <div class="vd-metric-card"><div class="vd-metric-label">@L["Trading_Score_PE"]</div><div class="vd-metric-value">@pe.ToString("F1")</div></div>
+                }
+                @if (_score.Fundamentals.Pb is decimal pb)
+                {
+                    <div class="vd-metric-card"><div class="vd-metric-label">@L["Trading_Score_PB"]</div><div class="vd-metric-value">@pb.ToString("F2")</div></div>
+                }
+                @if (_score.Fundamentals.Roe is decimal roe)
+                {
+                    var roePct = roe <= 1 ? roe * 100 : roe;
+                    <div class="vd-metric-card"><div class="vd-metric-label">@L["Trading_Score_ROE"]</div><div class="vd-metric-value">@roePct.ToString("F1")%</div></div>
+                }
+                @if (_score.Fundamentals.ProfitGrowthYoY is decimal g)
+                {
+                    var gPct = g <= 1 && g >= -1 ? g * 100 : g;
+                    <div class="vd-metric-card"><div class="vd-metric-label">@L["Trading_Score_ProfitGrowth"]</div><div class="vd-metric-value">@(gPct >= 0 ? "+" : "")@gPct.ToString("F1")%</div></div>
+                }
+                @if (_score.Fundamentals.PretaxGrowthYoY is decimal pt)
+                {
+                    var ptPct = pt <= 1 && pt >= -1 ? pt * 100 : pt;
+                    <div class="vd-metric-card"><div class="vd-metric-label">@L["Trading_Score_PretaxGrowth"]</div><div class="vd-metric-value">@(ptPct >= 0 ? "+" : "")@ptPct.ToString("F1")%</div></div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="ts-muted mb-0">@L["Trading_Score_NoFundamentals"]</p>
+        }
+        <ul class="ts-score-notes">
+            @foreach (var note in _score.Fundamental.Notes) { <li>@note</li> }
+        </ul>
+    </div>
+
+    <div class="vd-panel">
+        <h3 class="vd-section-title">@L["Trading_Score_Market"] (@_score.MarketScore/@_score.Market.MaxScore)</h3>
+        @if (_score.Context is not null)
+        {
+            <div class="vd-metric-grid">
+                <div class="vd-metric-card">
+                    <div class="vd-metric-label">@L["Trading_Score_VnIndex"]</div>
+                    <div class="vd-metric-value">@L[IndicatorService.TrendLabel(_score.Context.VnIndexTrend)].Value</div>
+                </div>
+                <div class="vd-metric-card">
+                    <div class="vd-metric-label">@L["Trading_Score_SectorRs"]</div>
+                    <div class="vd-metric-value">@(_score.Context.SectorRelativeStrength >= 0 ? "+" : "")@_score.Context.SectorRelativeStrength.ToString("F1")%</div>
+                </div>
+            </div>
+        }
+        <ul class="ts-score-notes">
+            @foreach (var note in _score.Market.Notes) { <li>@note</li> }
+        </ul>
+    </div>
+
+    <div class="vd-panel">
+        <h3 class="vd-section-title">@L["Trading_Score_Risk"] (@_score.RiskScore/@_score.Risk.MaxScore)</h3>
+        <ul class="ts-score-notes">
+            @foreach (var note in _score.Risk.Notes) { <li>@note</li> }
+        </ul>
+        <p class="ts-muted mb-0 mt-2" style="font-size:0.82rem">@L["Trading_Score_RiskNote"]</p>
+    </div>
+
+    <div class="vd-panel">
+        <h3 class="vd-section-title">@L["Trading_Score_Plan"]</h3>
+        <div class="vd-metric-grid">
+            <div class="vd-metric-card">
+                <div class="vd-metric-label">@L["Trading_Score_BuyZone"]</div>
+                <div class="vd-metric-value" style="font-size:0.9rem">@FormatVnd(_score.Plan.BuyZoneLow) – @FormatVnd(_score.Plan.BuyZoneHigh)</div>
+            </div>
+            <div class="vd-metric-card">
+                <div class="vd-metric-label">@L["Trading_Score_StopLoss"]</div>
+                <div class="vd-metric-value vd-neg">@FormatVnd(_score.Plan.StopLoss) (-@_score.Plan.StopLossPct%)</div>
+            </div>
+            <div class="vd-metric-card">
+                <div class="vd-metric-label">@L["Trading_Score_Target"]</div>
+                <div class="vd-metric-value vd-pos">@FormatVnd(_score.Plan.Target) (+@_score.Plan.TargetPct%)</div>
+            </div>
+            <div class="vd-metric-card">
+                <div class="vd-metric-label">@L["Trading_Score_RR"]</div>
+                <div class="vd-metric-value">1:@_score.Plan.RiskRewardRatio.ToString("F1")</div>
+            </div>
+        </div>
+    </div>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="vd-panel"><div class="vd-alert vd-alert-error">@_error</div></div>
+}
+
+@code {
+    [Parameter, EditorRequired] public TechnicalIndicators Ta { get; set; } = null!;
+    [Parameter] public string Symbol { get; set; } = "";
+
+    private TradeScoreResult? _score;
+    private bool _busy;
+    private string? _error;
+    private string _loadedFor = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var sym = (Symbol ?? Ta.Symbol).Trim().ToUpperInvariant();
+        var key = $"{sym}_{Ta.LatestClose:F2}_{Ta.Date:yyyyMMdd}";
+        if (key == _loadedFor && _score is not null) return;
+        await LoadScoreAsync(sym, key);
+    }
+
+    private async Task LoadScoreAsync(string sym, string key)
+    {
+        _busy = true;
+        _error = null;
+        _score = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var fundamentals = await Fundamentals.GetAsync(sym);
+            var context = await MarketContext.GetAsync(sym);
+            _score = Scorer.Score(Ta, fundamentals, context);
+            _loadedFor = key;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private string FormatVnd(decimal priceInThousands) =>
+        priceInThousands <= 0 ? "—" : $"{TradeScoreService.PriceToVnd(priceInThousands):N0} đ";
+
+    private string RecLabel(TradeScoreRecommendation rec) => rec switch
+    {
+        TradeScoreRecommendation.StrongBuy => L["Trading_Score_Rec_StrongBuy"].Value,
+        TradeScoreRecommendation.Buy => L["Trading_Score_Rec_Buy"].Value,
+        TradeScoreRecommendation.Watch => L["Trading_Score_Rec_Watch"].Value,
+        _ => L["Trading_Score_Rec_Avoid"].Value
+    };
+}

@@ -15,6 +15,7 @@ public interface IVnMarketClient
     Task<List<StockData>> GetHistoricalAsync(string symbol, int sessions = 250, string timeframe = "daily", CancellationToken ct = default);
     Task<List<StockData>> GetLatestManyAsync(IReadOnlyList<string> symbols, IProgress<int>? progress = null, int maxParallel = 12, CancellationToken ct = default);
     Task<List<IntradayData>> FetchIntradayAsync(string symbol, CancellationToken ct = default);
+    Task<List<StockData>> GetMarketIndexHistoryAsync(string indexCode = "VNINDEX", int sessions = 250, CancellationToken ct = default);
     void ClearCache();
 }
 
@@ -142,6 +143,47 @@ public sealed class VnMarketClient : IVnMarketClient
         });
         await Task.WhenAll(tasks);
         return bag.ToList();
+    }
+
+    public async Task<List<StockData>> GetMarketIndexHistoryAsync(string indexCode = "VNINDEX", int sessions = 250, CancellationToken ct = default)
+    {
+        var cacheKey = $"IDX_{indexCode}_{sessions}";
+        if (_cache.TryGetValue(cacheKey, out var cached) && cached.Count > 0)
+            return cached.OrderBy(d => d.Date).TakeLast(sessions).ToList();
+
+        try
+        {
+            var path = $"v4/vnmarket_prices?sort=date:desc&q=code:{Uri.EscapeDataString(indexCode)}&size={sessions}";
+            var url = _endpoints.ResolveFetchUrl(path);
+            using var response = await _vndHttp.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+            if (!response.IsSuccessStatusCode)
+                return FallbackCache(cacheKey, sessions);
+
+            await using var stream = await response.Content.ReadAsStreamAsync(ct);
+            var api = await JsonSerializer.DeserializeAsync<VnMarketPriceResponse>(stream, JsonOpts, ct);
+            if (api?.data is null || api.data.Count == 0)
+                return FallbackCache(cacheKey, sessions);
+
+            var history = api.data.Select(x => new StockData
+            {
+                Symbol = x.code,
+                Date = x.date,
+                Open = x.open,
+                High = x.high,
+                Low = x.low,
+                Close = x.close,
+                Volume = x.nmVolume > 0 ? x.nmVolume : x.accumulatedVol,
+                Change = x.change,
+                PercentChange = x.pctChange
+            }).OrderBy(d => d.Date).ToList();
+
+            _cache[cacheKey] = history;
+            return history.TakeLast(sessions).ToList();
+        }
+        catch
+        {
+            return FallbackCache(cacheKey, sessions);
+        }
     }
 
     public async Task<List<IntradayData>> FetchIntradayAsync(string symbol, CancellationToken ct = default)

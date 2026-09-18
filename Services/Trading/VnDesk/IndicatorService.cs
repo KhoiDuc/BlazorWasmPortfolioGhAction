@@ -54,7 +54,8 @@ public sealed partial class IndicatorService
         var orderBlock = OrderBlockDetector.Detect(historyData);
         var superTrend = CalculateSuperTrend(historyData);
         var t3 = CalculateT3(historyData);
-        var signal = GenerateTradingSignals(rsi, macd, stoch, trend, vol20, atr, sr, closes.Last());
+        var latestHigh20 = highs.TakeLast(20).Max();
+        var signal = GenerateTradingSignals(rsi, macd, stoch, trend, vol20, atr, sr, closes.Last(), sma20, sma50, latestHigh20);
         signal.Symbol = symbol;
         signal.SignalTime = DateTime.Now;
 
@@ -499,7 +500,8 @@ public sealed partial class IndicatorService
             or TrendDirection.StrongUpShort or TrendDirection.StrongDownShort;
 
     private TradingSignal GenerateTradingSignals(decimal rsi, MACDResult macd, StochasticResult stoch,
-        TrendDirection trend, VolumeAnalysis volume, decimal atr, SupportResistanceResult sr, decimal latest)
+        TrendDirection trend, VolumeAnalysis volume, decimal atr, SupportResistanceResult sr, decimal latest,
+        decimal sma20, decimal sma50, decimal latestHigh20)
     {
         var signal = new TradingSignal { Action = "Hold", Recommendation = RecommendationAction.Hold };
         if (latest <= 0 || atr <= 0) return signal;
@@ -507,14 +509,17 @@ public sealed partial class IndicatorService
         bool bullX = macd.MacdLine > macd.SignalLine && macd.Histogram > 0;
         bool bearX = macd.MacdLine < macd.SignalLine && macd.Histogram < 0;
         bool buy = rsi < 45 && bullX && stoch.k < 35 && stoch.k > stoch.d && volume.Ratio > 1.1m && (IsUpTrend(trend) || trend == TrendDirection.Sideways);
+        bool breakoutBuy = !buy && latest > sma20 && sma20 > sma50 && volume.Ratio >= 1.8m
+            && rsi >= 50 && rsi <= 75 && latest >= latestHigh20 * 0.99m && bullX
+            && (IsUpTrend(trend) || trend == TrendDirection.Sideways);
         bool sell = rsi > 55 && bearX && stoch.k > 65 && stoch.k < stoch.d && volume.Ratio > 1.1m && (IsDownTrend(trend) || trend == TrendDirection.Sideways);
         var supports = sr.SupportLevels.OrderByDescending(s => s).ToArray();
         var resistances = sr.ResistanceLevels.OrderBy(r => r).ToArray();
         var atrAbs = atr / 100 * latest;
 
-        if (buy)
+        if (buy || breakoutBuy)
         {
-            signal.Action = "Buy";
+            signal.Action = breakoutBuy ? "BreakoutBuy" : "Buy";
             signal.Recommendation = RecommendationAction.Buy;
             signal.EntryPrice = latest;
             var res = resistances.FirstOrDefault(r => r > latest);
@@ -522,13 +527,26 @@ public sealed partial class IndicatorService
             var sup = supports.FirstOrDefault(s => s < latest);
             signal.StopLoss = sup > 0 ? Math.Max(sup, latest * 0.95m) : latest - 1.5m * atrAbs;
             int score = 0;
-            if (rsi < 40) score++;
-            if (volume.Ratio > 1.3m) score++;
-            if (macd.MacdLine - macd.SignalLine > 0.2m) score++;
-            if (stoch.k < 25) score++;
-            if (IsStrongTrend(trend)) score++;
+            if (breakoutBuy)
+            {
+                if (volume.Ratio >= 2.5m) score += 2;
+                else if (volume.Ratio >= 2.0m) score++;
+                if (latest >= latestHigh20) score++;
+                if (IsStrongTrend(trend)) score++;
+                if (macd.MacdLine - macd.SignalLine > 0.2m) score++;
+            }
+            else
+            {
+                if (rsi < 40) score++;
+                if (volume.Ratio > 1.3m) score++;
+                if (macd.MacdLine - macd.SignalLine > 0.2m) score++;
+                if (stoch.k < 25) score++;
+                if (IsStrongTrend(trend)) score++;
+            }
             if (score >= 3) { signal.Action = "StrongBuy"; signal.Recommendation = RecommendationAction.StrongBuy; }
-            signal.Rationale = _L["Trading_Signal_Rationale_Buy"].Value;
+            signal.Rationale = breakoutBuy
+                ? _L["Trading_Signal_Rationale_BreakoutBuy"].Value
+                : _L["Trading_Signal_Rationale_Buy"].Value;
         }
         if (sell)
         {
@@ -548,7 +566,21 @@ public sealed partial class IndicatorService
             if (score >= 3) { signal.Action = "StrongSell"; signal.Recommendation = RecommendationAction.StrongSell; }
             signal.Rationale = _L["Trading_Signal_Rationale_Sell"].Value;
         }
+
+        ApplyRiskReward(signal);
         return signal;
+    }
+
+    private static void ApplyRiskReward(TradingSignal signal)
+    {
+        if (signal.EntryPrice is not decimal entry || signal.StopLoss is not decimal stop) return;
+        var risk = entry - stop;
+        if (risk <= 0) return;
+
+        if (signal.TakeProfit is decimal tp && tp > entry)
+            signal.RiskRewardRatio1 = Math.Round((tp - entry) / risk, 2);
+        if (signal.TakeProfit1 is decimal tp1 && tp1 > entry)
+            signal.RiskRewardRatio2 = Math.Round((tp1 - entry) / risk, 2);
     }
 
     private static decimal[] MacdLineValues(decimal[] closes, int shortP = 12, int longP = 26)

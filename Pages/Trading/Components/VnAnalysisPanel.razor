@@ -11,9 +11,10 @@
 
 <div class="vd-panel">
     <div class="vd-subtabs">
-        <button class="vd-subtab @(_sub == "ta" ? "active" : "")" @onclick='() => _sub = "ta"'>@L["Trading_Analysis_Ta"]</button>
-        <button class="vd-subtab @(_sub == "check" ? "active" : "")" @onclick='() => _sub = "check"'>@L["Trading_Analysis_Checklist"]</button>
-        <button class="vd-subtab @(_sub == "pnl" ? "active" : "")" @onclick='() => _sub = "pnl"'>@L["Trading_Analysis_Pnl"]</button>
+        <button type="button" class="vd-subtab @(_sub == "ta" ? "active" : "")" @onclick='() => _sub = "ta"'>@L["Trading_Analysis_Ta"]</button>
+        <button type="button" class="vd-subtab @(_sub == "score" ? "active" : "")" @onclick='() => _sub = "score"'>@L["Trading_Score_Tab"]</button>
+        <button type="button" class="vd-subtab @(_sub == "check" ? "active" : "")" @onclick='() => _sub = "check"'>@L["Trading_Analysis_Checklist"]</button>
+        <button type="button" class="vd-subtab @(_sub == "pnl" ? "active" : "")" @onclick='() => _sub = "pnl"'>@L["Trading_Analysis_Pnl"]</button>
     </div>
     <div class="vd-controls">
         <label class="vd-checks">
@@ -126,6 +127,10 @@
     <div class="vd-panel">
         <button type="button" class="vd-btn" @onclick="RequestBacktest">@L["Trading_Analysis_BacktestLink"]</button>
     </div>
+}
+else if (_ta is not null && _sub == "score")
+{
+    <VnTradeScorePanel Ta="_ta" Symbol="_symbol" />
 }
 else if (_checklist is not null && _sub == "check")
 {
