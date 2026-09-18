@@ -32,16 +32,20 @@ public class TradingEndpointResolver
             if (p.Equals("petrolimex/search", StringComparison.OrdinalIgnoreCase)
                 || p.Equals("petrolimex", StringComparison.OrdinalIgnoreCase))
             {
-                return "https://portals.petrolimex.com.vn/~apis/portals/cms.item/search?object-identity=search&x-request=eyJGaWx0ZXJCeSI6eyJBbmQiOlt7IlN5c3RlbUlEIjp7IkVxdWFscyI6IjY3ODNkYzEyNzFmZjQ0OWU5NWI3NGE5NTIwOTY0MTY5In19LHsiUmVwb3NpdG9yeUlEIjp7IkVxdWFscyI6ImE5NTQ1MWUyM2I0NzRmZTU4ODZiZmI3Y2Y4NDNmNTNjIn19LHsiUmVwb3NpdG9yeUVudGl0eUlEIjp7IkVxdWFscyI6IjM4MDEzNzhmZjFlMDQ1YjFhZmExMGRlN2M1Nzc2MTI0In19LHsiU3RhdHVzIjp7IkVxdWFscyI6IlB1Ymxpc2hlZCJ9fV19LCJTb3J0QnkiOnsiTGFzdE1vZGlmaWVkIjoiRGVzY2VuZGluZyJ9LCJQYWdpbmF0aW9uIjp7IlRvdGFsUmVjb3JkcyI6LTEsIlRvdGFsUGFnZXMiOjAsIlBhZ2VTaXplIjowLCJQYWdlTnVtYmVyIjowfX0=";
-            }
-            return RewritePrefix(p, "petrolimex", "https://portals.petrolimex.com.vn");
+            return WrapCorsProxy("https://portals.petrolimex.com.vn/~apis/portals/cms.item/search?object-identity=search&x-request=eyJGaWx0ZXJCeSI6eyJBbmQiOlt7IlN5c3RlbUlEIjp7IkVxdWFscyI6IjY3ODNkYzEyNzFmZjQ0OWU5NWI3NGE5NTIwOTY0MTY5In19LHsiUmVwb3NpdG9yeUlEIjp7IkVxdWFscyI6ImE5NTQ1MWUyM2I0NzRmZTU4ODZiZmI3Y2Y4NDNmNTNjIn19LHsiUmVwb3NpdG9yeUVudGl0eUlEIjp7IkVxdWFscyI6IjM4MDEzNzhmZjFlMDQ1YjFhZmExMGRlN2M1Nzc2MTI0In19LHsiU3RhdHVzIjp7IkVxdWFscyI6IlB1Ymxpc2hlZCJ9fV19LCJTb3J0QnkiOnsiTGFzdE1vZGlmaWVkIjoiRGVzY2VuZGluZyJ9LCJQYWdpbmF0aW9uIjp7IlRvdGFsUmVjb3JkcyI6LTEsIlRvdGFsUGFnZXMiOjAsIlBhZ2VTaXplIjowLCJQYWdlTnVtYmVyIjowfX0=");
+        }
+        if (p.StartsWith("petrolimex/", StringComparison.OrdinalIgnoreCase))
+            return WrapCorsProxy(RewritePrefix(p, "petrolimex", "https://portals.petrolimex.com.vn"));
         }
 
         if (p.StartsWith("yahoo/", StringComparison.OrdinalIgnoreCase))
             p = "yahoo-finance/" + p["yahoo/".Length..];
 
         if (p.StartsWith("yahoo-finance/", StringComparison.OrdinalIgnoreCase))
-            return RewritePrefix(p, "yahoo-finance", "https://query1.finance.yahoo.com");
+        {
+            var direct = RewritePrefix(p, "yahoo-finance", "https://query1.finance.yahoo.com");
+            return WrapCorsProxy(direct);
+        }
 
         if (p.StartsWith("tcanalysis/", StringComparison.OrdinalIgnoreCase))
             return RewritePrefix(p, "tcanalysis", "https://apipubaws.tcbs.com.vn/tcanalysis");
@@ -88,4 +92,13 @@ public class TradingEndpointResolver
     }
 
     private static string Normalize(string path) => path.Trim().TrimStart('/');
+
+    /// <summary>Wraps an external URL through the CORS proxy if configured.</summary>
+    private string WrapCorsProxy(string directUrl)
+    {
+        var proxy = _options.CorsProxyUrl?.Trim().TrimEnd('/');
+        if (string.IsNullOrEmpty(proxy))
+            return directUrl;
+        return $"{proxy}/?url={Uri.EscapeDataString(directUrl)}";
+    }
 }

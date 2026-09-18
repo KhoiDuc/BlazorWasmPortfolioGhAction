@@ -96,10 +96,10 @@ function initializeScrollProgress() {
 
 function initializeStarfield() {
     const $ = document.querySelector.bind(document);
-    const section = $('.start_light');
+    const section = $('.hero');
 
     if (!section) {
-        console.error("Element with class 'start_light' not found.");
+        console.warn("Element with class 'hero' not found — starfield skipped.");
         return;
     }
 

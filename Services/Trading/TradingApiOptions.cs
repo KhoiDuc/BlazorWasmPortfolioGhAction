@@ -10,4 +10,7 @@ public class TradingApiOptions
 
     /// <summary>Live FX rates JSON.</summary>
     public string FxRatesUrl { get; set; } = "https://live-rates.com/rates";
+
+    /// <summary>CORS proxy base URL (Cloudflare Worker). Leave empty to fetch directly (dev only).</summary>
+    public string CorsProxyUrl { get; set; } = "";
 }
