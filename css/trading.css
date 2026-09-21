@@ -1964,8 +1964,22 @@
 .broker-pnl-sector { margin-top: 1.25rem; }
 .broker-pnl-sector .ts-panel-title { margin-bottom: 0.75rem; }
 
-.broker-pnl-table { font-size: 0.85rem; }
-.broker-pnl-table td, .broker-pnl-table th { padding: 0.45rem 0.6rem; }
+.broker-pnl-table {
+    font-size: 0.85rem;
+    width: max-content;
+    min-width: 100%;
+    table-layout: auto;
+}
+.broker-pnl-table td, .broker-pnl-table th {
+    padding: 0.45rem 0.6rem;
+    white-space: nowrap;
+}
+.broker-pnl-table .broker-symbol { white-space: nowrap; }
+.broker-pnl-table .broker-sector {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 /* ponytail: mobile sync — pnl top-grid 2/dòng like stat-card, list col gap 0.5rem */
 @media (max-width: 48rem) {
