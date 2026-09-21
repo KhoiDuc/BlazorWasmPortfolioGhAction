@@ -1934,6 +1934,11 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    min-width: 0;
+}
+.broker-pnl-list-col .broker-table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
 }
 .broker-pnl-list-title {
     font-size: 0.95rem;
@@ -1961,8 +1966,16 @@
     padding: 0.65rem 0.8rem;
 }
 
-.broker-pnl-sector { margin-top: 1.25rem; }
+.broker-pnl-top-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.broker-pnl-sector { margin-top: 1.25rem; min-width: 0; }
 .broker-pnl-sector .ts-panel-title { margin-bottom: 0.75rem; }
+.broker-pnl-sector .broker-table-scroll { max-width: 100%; }
 
 .broker-pnl-table {
     font-size: 0.85rem;
@@ -1981,8 +1994,26 @@
     text-overflow: ellipsis;
 }
 
+.broker-pnl-badge {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: var(--radius-full);
+    font-size: 0.68rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.broker-pnl-badge-closed {
+    background: rgba(148, 163, 184, 0.18);
+    color: var(--color-text-secondary);
+}
+.broker-pnl-badge-open {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--color-success-text);
+}
+
 /* ponytail: mobile sync — pnl top-grid 2/dòng like stat-card, list col gap 0.5rem */
 @media (max-width: 48rem) {
+    .broker-pnl-panel { padding: 0.85rem; }
     .broker-pnl-top-grid .broker-stat-card {
         flex: 1 1 calc(50% - 0.325rem);
         min-width: calc(50% - 0.325rem);
@@ -1990,6 +2021,13 @@
     .broker-pnl-lists,
     .broker-pnl-top { gap: 0.75rem; }
     .broker-pnl-list-col { gap: 0.4rem; }
+    .broker-pnl-list-col .broker-table-scroll,
+    .broker-pnl-sector .broker-table-scroll {
+        margin: 0;
+        padding: 0;
+    }
+    .broker-pnl-table { font-size: 0.78rem; }
+    .broker-pnl-table td, .broker-pnl-table th { padding: 0.35rem 0.5rem; }
 }
 
 /* Detail panel */
