@@ -619,3 +619,146 @@ public sealed class BrokerPerformanceMonth
     public string BestSymbol { get; init; } = "";
     public string WorstSymbol { get; init; } = "";
 }
+
+// ── PnL summary (winners/losers, profit factor, realized vs unrealized, sector) ──
+
+public sealed class BrokerPnlEntry
+{
+    public string Symbol { get; init; } = "";
+    public string Sector { get; init; } = "";
+    public decimal? CurrentPrice { get; init; }
+    public decimal? AvgBuy { get; init; }
+    public decimal? PnlPct { get; init; }
+    public decimal PnlAmount { get; init; }
+    public decimal? RealizedPnl { get; init; }
+    public bool IsClosed { get; init; }
+}
+
+public sealed class BrokerSectorPnl
+{
+    public string Sector { get; init; } = "";
+    public int SymbolCount { get; init; }
+    public decimal TotalPnl { get; init; }
+    public decimal? PnlPct { get; init; }
+}
+
+public sealed class BrokerPnlSummary
+{
+    public decimal TotalWinAmount { get; init; }
+    public decimal TotalLossAmount { get; init; }
+    public decimal NetPnl => TotalWinAmount + TotalLossAmount;
+    public decimal? ProfitFactor => TotalLossAmount != 0
+        ? TotalWinAmount / Math.Abs(TotalLossAmount) : null;
+    public int WinCount { get; init; }
+    public int LossCount { get; init; }
+    public int FlatCount { get; init; }
+    public decimal WinRate => (WinCount + LossCount) > 0
+        ? (decimal)WinCount / (WinCount + LossCount) * 100m : 0m;
+    public decimal AvgWin => WinCount > 0 ? TotalWinAmount / WinCount : 0m;
+    public decimal AvgLoss => LossCount > 0 ? TotalLossAmount / LossCount : 0m;
+    public decimal? WinLossRatio => AvgLoss != 0 ? AvgWin / Math.Abs(AvgLoss) : null;
+
+    public decimal Realized { get; init; }
+    public decimal Unrealized { get; init; }
+    public decimal TotalPnl => Realized + Unrealized;
+
+    public List<BrokerPnlEntry> Winners { get; init; } = [];
+    public List<BrokerPnlEntry> Losers { get; init; } = [];
+    public List<BrokerPnlEntry> AllPositions { get; init; } = [];
+    public List<BrokerSectorPnl> SectorBreakdown { get; init; } = [];
+    public bool HasData => AllPositions.Count > 0;
+}
+
+public static class BrokerPnlSummaryCalculator
+{
+    public static BrokerPnlSummary Compute(
+        BrokerPortfolio portfolio,
+        IReadOnlyDictionary<string, decimal> quotes)
+    {
+        var entries = new List<BrokerPnlEntry>();
+        decimal realizedTotal = 0m;
+        decimal unrealizedTotal = 0m;
+
+        // Open positions: unrealized PnL on remaining qty + partial realized from sells
+        foreach (var p in portfolio.Positions ?? [])
+        {
+            var current = quotes.TryGetValue(p.Symbol, out var v) ? v : (decimal?)null;
+            var pnlAmount = p.PnlAmount(current) ?? 0m;
+            var realized = p.RealizedPnl ?? 0m;
+            unrealizedTotal += pnlAmount;
+            realizedTotal += realized;
+
+            entries.Add(new BrokerPnlEntry
+            {
+                Symbol = p.Symbol,
+                Sector = p.Sector ?? "",
+                CurrentPrice = current,
+                AvgBuy = p.AvgBuy,
+                PnlPct = p.PnlPct(current),
+                PnlAmount = pnlAmount + realized,
+                RealizedPnl = realized,
+                IsClosed = p.IsClosed
+            });
+        }
+
+        // Closed positions: realized only
+        foreach (var p in portfolio.ClosedPositions ?? [])
+        {
+            var realized = p.RealizedPnl ?? 0m;
+            realizedTotal += realized;
+            entries.Add(new BrokerPnlEntry
+            {
+                Symbol = p.Symbol,
+                Sector = p.Sector ?? "",
+                CurrentPrice = null,
+                AvgBuy = p.AvgBuy,
+                PnlPct = p.RealizedPnlPct,
+                PnlAmount = realized,
+                RealizedPnl = realized,
+                IsClosed = true
+            });
+        }
+
+        if (entries.Count == 0)
+            return new BrokerPnlSummary();
+
+        var winners = entries.Where(e => e.PnlAmount > 0)
+            .OrderByDescending(e => e.PnlAmount).ToList();
+        var losers = entries.Where(e => e.PnlAmount < 0)
+            .OrderBy(e => e.PnlAmount).ToList();
+        var flat = entries.Count(e => e.PnlAmount == 0);
+
+        var sectorBreakdown = entries
+            .Where(e => !string.IsNullOrWhiteSpace(e.Sector))
+            .GroupBy(e => e.Sector, StringComparer.OrdinalIgnoreCase)
+            .Select(g =>
+            {
+                var totalPnl = g.Sum(e => e.PnlAmount);
+                var totalCost = g.Sum(e => e.AvgBuy is > 0 ? e.AvgBuy.Value : 0m);
+                return new BrokerSectorPnl
+                {
+                    Sector = g.Key,
+                    SymbolCount = g.Count(),
+                    TotalPnl = totalPnl,
+                    PnlPct = totalCost > 0 ? totalPnl / totalCost * 100m : null
+                };
+            })
+            .OrderByDescending(s => s.TotalPnl)
+            .ToList();
+
+        return new BrokerPnlSummary
+        {
+            TotalWinAmount = winners.Sum(e => e.PnlAmount),
+            TotalLossAmount = losers.Sum(e => e.PnlAmount),
+            WinCount = winners.Count,
+            LossCount = losers.Count,
+            FlatCount = flat,
+            Realized = realizedTotal,
+            Unrealized = unrealizedTotal,
+            Winners = winners,
+            Losers = losers,
+            AllPositions = entries,
+            SectorBreakdown = sectorBreakdown
+        };
+    }
+}
