@@ -148,9 +148,10 @@
                             </span>
                         }
                         <input id="pos-tags" class="ts-input broker-tag-input"
-                               placeholder="Swing, dài hạn, lướt sóng… (Enter để thêm)"
+                               placeholder="Swing, dài hạn, lướt sóng…"
                                @bind="_newTag" @bind:event="oninput"
                                @onkeydown="OnTagKeydown" />
+                        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm broker-tag-add-btn" aria-label="Thêm tag" @onclick="AddTag" disabled="@string.IsNullOrWhiteSpace(_newTag)">+</button>
                     </div>
                     <p class="broker-block-desc">Phân loại vị thế để lọc và báo cáo theo chiến lược.</p>
                 </div>
@@ -256,10 +257,11 @@
                                 </span>
                             }
                             <input class="ts-input broker-tag-input"
-                                   placeholder="Swing, lướt sóng… (Enter để thêm)"
+                                   placeholder="Swing, lướt sóng…"
                                    value="@GetLotTagInput(lot.Lot.Id)"
                                    @oninput="@((ChangeEventArgs e) => SetLotTagInput(lot.Lot.Id, (string?)e.Value ?? ""))"
                                    @onkeydown="@((KeyboardEventArgs e) => OnLotTagKeydown(e, lot.Lot))" />
+                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm broker-tag-add-btn" aria-label="Thêm tag lần mua" @onclick="() => AddLotTag(lot.Lot)" disabled="@string.IsNullOrWhiteSpace(GetLotTagInput(lot.Lot.Id))">+</button>
                         </div>
                     </div>
                     @if (_lotErrors.TryGetValue(lot.Lot.Id, out var lotErr))
