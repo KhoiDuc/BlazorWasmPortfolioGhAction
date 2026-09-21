@@ -149,9 +149,10 @@
                         }
                         <input id="pos-tags" class="ts-input broker-tag-input"
                                placeholder="Swing, dài hạn, lướt sóng…"
-                               @bind="_newTag" @bind:event="oninput"
+                               value="@_newTag"
+                               @oninput="OnTagInput"
                                @onkeydown="OnTagKeydown" />
-                        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm broker-tag-add-btn" aria-label="Thêm tag" @onclick="AddTag" disabled="@string.IsNullOrWhiteSpace(_newTag)">+</button>
+                        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm broker-tag-add-btn" aria-label="Thêm tag" @onclick="AddTag" disabled="@string.IsNullOrWhiteSpace(_newTag)">Thêm tag</button>
                     </div>
                     <p class="broker-block-desc">Phân loại vị thế để lọc và báo cáo theo chiến lược.</p>
                 </div>
@@ -791,13 +792,18 @@
         await OnSync.InvokeAsync(new SellSyncAction("delete", sell));
     }
 
+    private void OnTagInput(ChangeEventArgs e)
+    {
+        _newTag = e.Value?.ToString() ?? "";
+    }
+
     private void OnTagKeydown(KeyboardEventArgs e)
     {
         if (e.Key is "Enter" or ",")
             AddTag();
     }
 
-    private void AddTag()
+    private async Task AddTag()
     {
         var tag = _newTag.Trim();
         if (string.IsNullOrEmpty(tag)) return;
@@ -807,14 +813,14 @@
             Position.Tags.Add(tag);
         _newTag = "";
         _dirty = true;
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
-    private void RemoveTag(string tag)
+    private async Task RemoveTag(string tag)
     {
         Position.Tags?.Remove(tag);
         _dirty = true;
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private void SetLotTagInput(string lotId, string value) => _lotTagInput[lotId] = value;
