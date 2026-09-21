@@ -80,6 +80,7 @@
                                     <th><span class="broker-dt-th-inner">PnL%</span></th>
                                     <th><span class="broker-dt-th-inner">PnL tiền</span></th>
                                     <th><span class="broker-dt-th-inner">Realized</span></th>
+                                    <th><span class="broker-dt-th-inner">TT</span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -92,6 +93,7 @@
                                         <td class="broker-num ts-positive">@BrokerFormat.Pct(e.PnlPct)</td>
                                         <td class="broker-num ts-positive">@BrokerFormat.Vnd(e.PnlAmount)</td>
                                         <td class="broker-num">@(e.RealizedPnl is null ? "—" : BrokerFormat.Vnd(e.RealizedPnl))</td>
+                                        <td>@StatusBadge(e.IsClosed)</td>
                                     </tr>
                                 }
                             </tbody>
@@ -111,6 +113,7 @@
                                     <th><span class="broker-dt-th-inner">PnL%</span></th>
                                     <th><span class="broker-dt-th-inner">PnL tiền</span></th>
                                     <th><span class="broker-dt-th-inner">Realized</span></th>
+                                    <th><span class="broker-dt-th-inner">TT</span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -123,6 +126,7 @@
                                         <td class="broker-num ts-negative">@BrokerFormat.Pct(e.PnlPct)</td>
                                         <td class="broker-num ts-negative">@BrokerFormat.Vnd(e.PnlAmount)</td>
                                         <td class="broker-num">@(e.RealizedPnl is null ? "—" : BrokerFormat.Vnd(e.RealizedPnl))</td>
+                                        <td>@StatusBadge(e.IsClosed)</td>
                                     </tr>
                                 }
                             </tbody>
@@ -204,4 +208,9 @@
     private bool _expanded;
 
     private void ToggleExpand() => _expanded = !_expanded;
+
+    private static MarkupString StatusBadge(bool isClosed) =>
+        isClosed
+            ? new MarkupString("<span class=\"broker-pnl-badge broker-pnl-badge-closed\" title=\"Đã bán hết\">Đã đóng</span>")
+            : new MarkupString("<span class=\"broker-pnl-badge broker-pnl-badge-open\" title=\"Vẫn nắm giữ\">Đang giữ</span>");
 }
