@@ -548,6 +548,16 @@
     {
         <div class="ts-alert ts-alert-error broker-detail-error">@_error</div>
     }
+
+    @if (_dirty)
+    {
+        <div class="broker-detail-save-bar">
+            <span class="broker-detail-save-hint">Có thay đổi chưa lưu</span>
+            <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" disabled="@_saving" @onclick="SaveAll">
+                @(_saving ? "Đang lưu…" : "Lưu thay đổi")
+            </button>
+        </div>
+    }
 </div>
 
 @code {
@@ -566,6 +576,8 @@
     private string? _posTargetErr;
     private bool _explainBusy;
     private string? _error;
+    private bool _dirty;
+    private bool _saving;
     private readonly Dictionary<string, string> _lotErrors = new();
 
     // Sell form state
@@ -614,11 +626,17 @@
         set { Position.TargetPriceInput = value; ValidatePositionLevels(); }
     }
 
-    private Task Changed() => OnSync.InvokeAsync(new PositionSyncAction("update", Position));
+    private Task Changed()
+    {
+        _dirty = true;
+        return Task.CompletedTask;
+    }
 
-    private Task TradeChanged() => OnSync.HasDelegate
-        ? OnSync.InvokeAsync(new PositionSyncAction("update", Position))
-        : Task.CompletedTask;
+    private Task TradeChanged()
+    {
+        _dirty = true;
+        return Task.CompletedTask;
+    }
 
     private void ValidatePositionLevels()
     {
@@ -627,7 +645,7 @@
         var refPrice = PositionRefPrice;
         if (refPrice is not > 0)
         {
-            _ = Changed();
+            _dirty = true;
             return;
         }
 
@@ -641,7 +659,7 @@
         else
             _posTargetErr = targetErr;
 
-        _ = Changed();
+        _dirty = true;
     }
 
     private void ValidateLot(BrokerLot lot)
@@ -686,8 +704,11 @@
         _ = LotChanged(lot);
     }
 
-    private Task LotChanged(BrokerLot lot) =>
-        OnSync.InvokeAsync(new LotSyncAction("update", lot));
+    private Task LotChanged(BrokerLot lot)
+    {
+        _dirty = true;
+        return Task.CompletedTask;
+    }
 
     private async Task RemoveLot(BrokerLot lot)
     {
@@ -747,11 +768,17 @@
         await OnSync.InvokeAsync(new SellSyncAction("create", sell));
     }
 
-    private Task SellChanged(BrokerSell sell) =>
-        OnSync.InvokeAsync(new SellSyncAction("update", sell));
+    private Task SellChanged(BrokerSell sell)
+    {
+        _dirty = true;
+        return Task.CompletedTask;
+    }
 
-    private Task NoteChanged(BrokerNote note) =>
-        OnSync.InvokeAsync(new NoteSyncAction("update", note));
+    private Task NoteChanged(BrokerNote note)
+    {
+        _dirty = true;
+        return Task.CompletedTask;
+    }
 
     private async Task RemoveSell(BrokerSell sell)
     {
@@ -777,13 +804,13 @@
         if (!Position.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase))
             Position.Tags.Add(tag);
         _newTag = "";
-        _ = Changed();
+        _dirty = true;
     }
 
     private void RemoveTag(string tag)
     {
         Position.Tags?.Remove(tag);
-        _ = Changed();
+        _dirty = true;
     }
 
     private void SetLotTagInput(string lotId, string value) => _lotTagInput[lotId] = value;
@@ -807,13 +834,13 @@
         if (!lot.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase))
             lot.Tags.Add(tag);
         _lotTagInput[lotId] = "";
-        _ = Changed();
+        _dirty = true;
     }
 
     private void RemoveLotTag(BrokerLot lot, string tag)
     {
         lot.Tags?.Remove(tag);
-        _ = Changed();
+        _dirty = true;
     }
 
     private async Task AddDividend()
@@ -852,8 +879,11 @@
         await OnSync.InvokeAsync(new DividendSyncAction("create", dividend));
     }
 
-    private Task DividendChanged(BrokerDividend d) =>
-        OnSync.InvokeAsync(new DividendSyncAction("update", d));
+    private Task DividendChanged(BrokerDividend d)
+    {
+        _dirty = true;
+        return Task.CompletedTask;
+    }
 
     private async Task RemoveDividend(BrokerDividend d)
     {
@@ -902,6 +932,39 @@
     private async Task Reopen() => await OnReopen.InvokeAsync();
 
     private async Task DeleteClosed() => await OnDeleteClosed.InvokeAsync();
+
+    private async Task SaveAll()
+    {
+        if (!_dirty) return;
+        _saving = true;
+        try
+        {
+            // Position-level (sector, status, tags, SL/TP)
+            await OnSync.InvokeAsync(new PositionSyncAction("update", Position));
+
+            // Lots
+            foreach (var lot in Position.Buys)
+                await OnSync.InvokeAsync(new LotSyncAction("update", lot));
+
+            // Sells
+            foreach (var sell in Position.Sells)
+                await OnSync.InvokeAsync(new SellSyncAction("update", sell));
+
+            // Notes
+            foreach (var note in Position.Notes)
+                await OnSync.InvokeAsync(new NoteSyncAction("update", note));
+
+            // Dividends
+            foreach (var div in Position.Dividends ?? [])
+                await OnSync.InvokeAsync(new DividendSyncAction("update", div));
+
+            _dirty = false;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
 
     private async Task Explain(BrokerNote note)
     {
