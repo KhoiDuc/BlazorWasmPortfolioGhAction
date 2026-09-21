@@ -9,59 +9,59 @@
 {
     <div class="ts-panel broker-pnl-panel" aria-live="polite">
         <div class="broker-pnl-head">
-            <h2 class="ts-panel-title">Tổng kết lãi / lỗ</h2>
+            <h2 class="ts-panel-title">@L["Trading_BrokerPnl_Title"]</h2>
             <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ToggleExpand">
-                @(_expanded ? "Thu gọn" : "Mở rộng")
+                @(_expanded ? L["Trading_BrokerPnl_Collapse"].Value : L["Trading_BrokerPnl_Expand"].Value)
             </button>
         </div>
 
         <div class="broker-portfolio-stats">
             <div class="broker-stat-card broker-stat-card-pnl positive">
-                <span class="broker-stat-card-label">Tổng lãi</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerPnl_TotalWin"]</span>
                 <span class="broker-stat-card-value">@BrokerFormat.Vnd(s.TotalWinAmount)</span>
-                <span class="broker-stat-card-sub">@s.WinCount mã</span>
+                <span class="broker-stat-card-sub">@L["Trading_BrokerPnl_SymbolsFmt", s.WinCount]</span>
             </div>
             <div class="broker-stat-card broker-stat-card-pnl negative">
-                <span class="broker-stat-card-label">Tổng lỗ</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerPnl_TotalLoss"]</span>
                 <span class="broker-stat-card-value">@BrokerFormat.Vnd(s.TotalLossAmount)</span>
-                <span class="broker-stat-card-sub">@s.LossCount mã</span>
+                <span class="broker-stat-card-sub">@L["Trading_BrokerPnl_SymbolsFmt", s.LossCount]</span>
             </div>
             <div class="broker-stat-card broker-stat-card-primary @(s.NetPnl >= 0 ? "positive" : "negative")">
-                <span class="broker-stat-card-label">Net PnL</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerPnl_NetPnl"]</span>
                 <span class="broker-stat-card-value">@BrokerFormat.Vnd(s.NetPnl)</span>
-                <span class="broker-stat-card-sub">@(s.FlatCount > 0 ? $"{s.FlatCount} mã hòa" : "")</span>
+                <span class="broker-stat-card-sub">@(s.FlatCount > 0 ? L["Trading_BrokerPnl_FlatFmt", s.FlatCount].Value : "")</span>
             </div>
             <div class="broker-stat-card">
-                <span class="broker-stat-card-label">Profit factor</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerPnl_ProfitFactor"]</span>
                 <span class="broker-stat-card-value">@(s.ProfitFactor is null ? "—" : s.ProfitFactor.Value.ToString("F2"))</span>
-                <span class="broker-stat-card-sub">lãi / |lỗ|</span>
+                <span class="broker-stat-card-sub">@L["Trading_BrokerPnl_LaiLos"]</span>
             </div>
             <div class="broker-stat-card">
-                <span class="broker-stat-card-label">Win rate</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerPnl_WinRate"]</span>
                 <span class="broker-stat-card-value">@s.WinRate.ToString("N1")%</span>
-                <span class="broker-stat-card-sub">@s.WinCount thắng / @s.LossCount thua</span>
+                <span class="broker-stat-card-sub">@L["Trading_BrokerPnl_WinLossFmt", s.WinCount, s.LossCount]</span>
             </div>
             <div class="broker-stat-card">
-                <span class="broker-stat-card-label">Avg thắng</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerPnl_AvgWin"]</span>
                 <span class="broker-stat-card-value ts-positive">@BrokerFormat.Vnd(s.AvgWin)</span>
             </div>
             <div class="broker-stat-card">
-                <span class="broker-stat-card-label">Avg thua</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerPnl_AvgLoss"]</span>
                 <span class="broker-stat-card-value ts-negative">@BrokerFormat.Vnd(s.AvgLoss)</span>
             </div>
             <div class="broker-stat-card">
-                <span class="broker-stat-card-label">Tỷ lệ W:L</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerPnl_WinLossRatio"]</span>
                 <span class="broker-stat-card-value">@(s.WinLossRatio is null ? "—" : s.WinLossRatio.Value.ToString("F2"))</span>
             </div>
             <div class="broker-stat-card @(s.Realized >= 0 ? "positive" : "negative")">
-                <span class="broker-stat-card-label">Realized</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerPnl_Realized"]</span>
                 <span class="broker-stat-card-value">@BrokerFormat.Vnd(s.Realized)</span>
-                <span class="broker-stat-card-sub">đã chốt</span>
+                <span class="broker-stat-card-sub">@L["Trading_BrokerPnl_RealizedSub"]</span>
             </div>
             <div class="broker-stat-card @(s.Unrealized >= 0 ? "positive" : "negative")">
-                <span class="broker-stat-card-label">Unrealized</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerPnl_Unrealized"]</span>
                 <span class="broker-stat-card-value">@BrokerFormat.Vnd(s.Unrealized)</span>
-                <span class="broker-stat-card-sub">chưa chốt</span>
+                <span class="broker-stat-card-sub">@L["Trading_BrokerPnl_UnrealizedSub"]</span>
             </div>
         </div>
 
@@ -69,18 +69,18 @@
         {
             <div class="broker-pnl-lists">
                 <div class="broker-pnl-list-col">
-                    <h3 class="ts-panel-title broker-pnl-list-title ts-positive">Mã lãi (@s.Winners.Count)</h3>
+                    <h3 class="ts-panel-title broker-pnl-list-title ts-positive">@L["Trading_BrokerPnl_Winners"] (@s.Winners.Count)</h3>
                     <div class="broker-table-scroll">
                         <table class="ts-table broker-pnl-table">
                             <thead>
                                 <tr>
-                                    <th><span class="broker-dt-th-inner">Mã</span></th>
-                                    <th><span class="broker-dt-th-inner">Ngành</span></th>
-                                    <th><span class="broker-dt-th-inner">Giá</span></th>
-                                    <th><span class="broker-dt-th-inner">PnL%</span></th>
-                                    <th><span class="broker-dt-th-inner">PnL tiền</span></th>
-                                    <th><span class="broker-dt-th-inner">Realized</span></th>
-                                    <th><span class="broker-dt-th-inner">TT</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerColSymbol"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerColSector"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerPnl_ColPrice"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerPnl_ColPnlPct"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerPnl_ColPnlAmt"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerRealized"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerPnl_ColStatus"]</span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -102,18 +102,18 @@
                 </div>
 
                 <div class="broker-pnl-list-col">
-                    <h3 class="ts-panel-title broker-pnl-list-title ts-negative">Mã lỗ (@s.Losers.Count)</h3>
+                    <h3 class="ts-panel-title broker-pnl-list-title ts-negative">@L["Trading_BrokerPnl_Losers"] (@s.Losers.Count)</h3>
                     <div class="broker-table-scroll">
                         <table class="ts-table broker-pnl-table">
                             <thead>
                                 <tr>
-                                    <th><span class="broker-dt-th-inner">Mã</span></th>
-                                    <th><span class="broker-dt-th-inner">Ngành</span></th>
-                                    <th><span class="broker-dt-th-inner">Giá</span></th>
-                                    <th><span class="broker-dt-th-inner">PnL%</span></th>
-                                    <th><span class="broker-dt-th-inner">PnL tiền</span></th>
-                                    <th><span class="broker-dt-th-inner">Realized</span></th>
-                                    <th><span class="broker-dt-th-inner">TT</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerColSymbol"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerColSector"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerPnl_ColPrice"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerPnl_ColPnlPct"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerPnl_ColPnlAmt"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerRealized"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerPnl_ColStatus"]</span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -137,7 +137,7 @@
 
             <div class="broker-pnl-top">
                 <div class="broker-pnl-top-col">
-                    <h3 class="ts-panel-title broker-pnl-list-title ts-positive">Top 5 lãi</h3>
+                    <h3 class="ts-panel-title broker-pnl-list-title ts-positive">@L["Trading_BrokerPnl_TopWinners"]</h3>
                     <div class="broker-pnl-top-grid">
                         @foreach (var e in s.Winners.Take(5))
                         {
@@ -150,7 +150,7 @@
                     </div>
                 </div>
                 <div class="broker-pnl-top-col">
-                    <h3 class="ts-panel-title broker-pnl-list-title ts-negative">Top 5 lỗ</h3>
+                    <h3 class="ts-panel-title broker-pnl-list-title ts-negative">@L["Trading_BrokerPnl_TopLosers"]</h3>
                     <div class="broker-pnl-top-grid">
                         @foreach (var e in s.Losers.Take(5))
                         {
@@ -167,15 +167,15 @@
             @if (s.SectorBreakdown.Count > 0)
             {
                 <div class="broker-pnl-sector">
-                    <h3 class="ts-panel-title">Lãi / lỗ theo ngành</h3>
+                    <h3 class="ts-panel-title">@L["Trading_BrokerPnl_SectorTitle"]</h3>
                     <div class="broker-table-scroll">
                         <table class="ts-table broker-pnl-table">
                             <thead>
                                 <tr>
-                                    <th><span class="broker-dt-th-inner">Ngành</span></th>
-                                    <th><span class="broker-dt-th-inner">Số mã</span></th>
-                                    <th><span class="broker-dt-th-inner">Tổng PnL</span></th>
-                                    <th><span class="broker-dt-th-inner">PnL%</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerColSector"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerPnl_ColSymbolCount"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerPnl_ColTotalPnl"]</span></th>
+                                    <th><span class="broker-dt-th-inner">@L["Trading_BrokerPnl_ColPnlPct"]</span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -209,13 +209,13 @@
 
     private void ToggleExpand() => _expanded = !_expanded;
 
-    private static MarkupString StatusBadge(bool isClosed) =>
+    private MarkupString StatusBadge(bool isClosed) =>
         isClosed
-            ? new MarkupString("<span class=\"broker-pnl-badge broker-pnl-badge-closed\" title=\"Đã bán hết\">Đã đóng</span>")
-            : new MarkupString("<span class=\"broker-pnl-badge broker-pnl-badge-open\" title=\"Vẫn nắm giữ\">Đang giữ</span>");
+            ? new MarkupString($"<span class=\"broker-pnl-badge broker-pnl-badge-closed\" title=\"{L["Trading_BrokerPnl_BadgeClosedTitle"].Value}\">{L["Trading_BrokerPnl_BadgeClosed"].Value}</span>")
+            : new MarkupString($"<span class=\"broker-pnl-badge broker-pnl-badge-open\" title=\"{L["Trading_BrokerPnl_BadgeOpenTitle"].Value}\">{L["Trading_BrokerPnl_BadgeOpen"].Value}</span>");
 
-    private static MarkupString TopBadge(bool isClosed) =>
+    private MarkupString TopBadge(bool isClosed) =>
         isClosed
-            ? new MarkupString("<span class=\"broker-pnl-badge-mini\" title=\"Đã bán hết\">Đã đóng</span>")
+            ? new MarkupString($"<span class=\"broker-pnl-badge-mini\" title=\"{L["Trading_BrokerPnl_BadgeClosedTitle"].Value}\">{L["Trading_BrokerPnl_BadgeClosed"].Value}</span>")
             : new MarkupString("");
 }

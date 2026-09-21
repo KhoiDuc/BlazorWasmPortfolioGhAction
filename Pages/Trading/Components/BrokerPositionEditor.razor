@@ -13,7 +13,7 @@
             <span class="broker-detail-symbol">@Position.Symbol</span>
             @if (_dirty)
             {
-                <span class="broker-detail-dirty-dot" title="Có thay đổi chưa lưu" aria-label="Có thay đổi chưa lưu">●</span>
+                <span class="broker-detail-dirty-dot" title="@L["Trading_BrokerDetail_DirtyDot"].Value" aria-label="@L["Trading_BrokerDetail_DirtyDot"].Value">●</span>
             }
             <div class="broker-detail-meta">
                 @if (!string.IsNullOrWhiteSpace(Position.Sector))
@@ -30,21 +30,21 @@
                 }
                 @if (Position.IsClosed && Position.ClosedAt is not null)
                 {
-                    <span class="broker-status-pill broker-status-DaDong" title="Đã đóng position">Đã đóng @Position.ClosedAt.Value.ToString("dd/MM/yyyy")</span>
+                    <span class="broker-status-pill broker-status-DaDong" title="@L["Trading_BrokerDetail_ClosedAt"].Value">@L["Trading_BrokerDetail_ClosedAt"].Value @Position.ClosedAt.Value.ToString("dd/MM/yyyy")</span>
                 }
             </div>
         </div>
         <div class="broker-detail-header-actions">
             @if (Position.IsClosed)
             {
-                <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Reopen" aria-label="Mở lại vị thế đã đóng">Mở lại</button>
-                <button class="ts-btn ts-btn-outline ts-btn-sm broker-btn-danger" type="button" @onclick="DeleteClosed" aria-label="Xóa vị thế đã đóng">Xóa đã đóng</button>
+                <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Reopen" aria-label="@L["Trading_BrokerDetail_ReopenAria"].Value">@L["Trading_BrokerReopen"]</button>
+                <button class="ts-btn ts-btn-outline ts-btn-sm broker-btn-danger" type="button" @onclick="DeleteClosed" aria-label="@L["Trading_BrokerDetail_DeleteClosedAria"].Value">@L["Trading_BrokerDeleteClosed"]</button>
             }
             <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Delete">@L["Trading_BrokerDeleteSymbol"]</button>
             @if (_dirty)
             {
                 <button class="ts-btn ts-btn-primary ts-btn-sm" type="button" disabled="@_saving" @onclick="SaveAll">
-                    @(_saving ? "Đang lưu…" : "Lưu thay đổi")
+                    @(_saving ? L["Trading_BrokerDetail_Saving"].Value : L["Trading_BrokerDetail_Save"].Value)
                 </button>
             }
         </div>
@@ -148,11 +148,11 @@
                             </span>
                         }
                         <input id="pos-tags" class="ts-input broker-tag-input"
-                               placeholder="Swing, dài hạn, lướt sóng…"
+                               placeholder="@L["Trading_BrokerTagPlaceholder"]"
                                value="@_newTag"
                                @oninput="OnTagInput"
                                @onkeydown="OnTagKeydown" />
-                        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm broker-tag-add-btn" aria-label="Thêm tag" @onclick="AddTag" disabled="@string.IsNullOrWhiteSpace(_newTag)">Thêm tag</button>
+                        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm broker-tag-add-btn" aria-label="@L["Trading_BrokerDetail_AddTag"].Value" @onclick="AddTag" disabled="@string.IsNullOrWhiteSpace(_newTag)">+</button>
                     </div>
                     <p class="broker-block-desc">Phân loại vị thế để lọc và báo cáo theo chiến lược.</p>
                 </div>
@@ -258,11 +258,11 @@
                                 </span>
                             }
                             <input class="ts-input broker-tag-input"
-                                   placeholder="Swing, lướt sóng…"
+                                   placeholder="@L["Trading_BrokerTagPlaceholder"]"
                                    value="@GetLotTagInput(lot.Lot.Id)"
                                    @oninput="@((ChangeEventArgs e) => SetLotTagInput(lot.Lot.Id, (string?)e.Value ?? ""))"
                                    @onkeydown="@((KeyboardEventArgs e) => OnLotTagKeydown(e, lot.Lot))" />
-                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm broker-tag-add-btn" aria-label="Thêm tag lần mua" @onclick="() => AddLotTag(lot.Lot)" disabled="@string.IsNullOrWhiteSpace(GetLotTagInput(lot.Lot.Id))">+</button>
+                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm broker-tag-add-btn" aria-label="@L["Trading_BrokerDetail_AddLotTagAria"].Value" @onclick="() => AddLotTag(lot.Lot)" disabled="@string.IsNullOrWhiteSpace(GetLotTagInput(lot.Lot.Id))">+</button>
                         </div>
                     </div>
                     @if (_lotErrors.TryGetValue(lot.Lot.Id, out var lotErr))
