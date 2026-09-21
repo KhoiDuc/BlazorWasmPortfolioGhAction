@@ -11,6 +11,10 @@
     <div class="broker-detail-header">
         <div class="broker-detail-header-main">
             <span class="broker-detail-symbol">@Position.Symbol</span>
+            @if (_dirty)
+            {
+                <span class="broker-detail-dirty-dot" title="Có thay đổi chưa lưu" aria-label="Có thay đổi chưa lưu">●</span>
+            }
             <div class="broker-detail-meta">
                 @if (!string.IsNullOrWhiteSpace(Position.Sector))
                 {
@@ -37,6 +41,12 @@
                 <button class="ts-btn ts-btn-outline ts-btn-sm broker-btn-danger" type="button" @onclick="DeleteClosed" aria-label="Xóa vị thế đã đóng">Xóa đã đóng</button>
             }
             <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Delete">@L["Trading_BrokerDeleteSymbol"]</button>
+            @if (_dirty)
+            {
+                <button class="ts-btn ts-btn-primary ts-btn-sm" type="button" disabled="@_saving" @onclick="SaveAll">
+                    @(_saving ? "Đang lưu…" : "Lưu thay đổi")
+                </button>
+            }
         </div>
     </div>
 
@@ -548,16 +558,6 @@
     {
         <div class="ts-alert ts-alert-error broker-detail-error">@_error</div>
     }
-
-    @if (_dirty)
-    {
-        <div class="broker-detail-save-bar">
-            <span class="broker-detail-save-hint">Có thay đổi chưa lưu</span>
-            <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" disabled="@_saving" @onclick="SaveAll">
-                @(_saving ? "Đang lưu…" : "Lưu thay đổi")
-            </button>
-        </div>
-    }
 </div>
 
 @code {
@@ -939,25 +939,8 @@
         _saving = true;
         try
         {
-            // Position-level (sector, status, tags, SL/TP)
+            // 1 API call — PUT full position, server syncs all nested in 1 transaction
             await OnSync.InvokeAsync(new PositionSyncAction("update", Position));
-
-            // Lots
-            foreach (var lot in Position.Buys)
-                await OnSync.InvokeAsync(new LotSyncAction("update", lot));
-
-            // Sells
-            foreach (var sell in Position.Sells)
-                await OnSync.InvokeAsync(new SellSyncAction("update", sell));
-
-            // Notes
-            foreach (var note in Position.Notes)
-                await OnSync.InvokeAsync(new NoteSyncAction("update", note));
-
-            // Dividends
-            foreach (var div in Position.Dividends ?? [])
-                await OnSync.InvokeAsync(new DividendSyncAction("update", div));
-
             _dirty = false;
         }
         finally
