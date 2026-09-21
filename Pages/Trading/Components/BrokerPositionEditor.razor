@@ -807,12 +807,14 @@
             Position.Tags.Add(tag);
         _newTag = "";
         _dirty = true;
+        StateHasChanged();
     }
 
     private void RemoveTag(string tag)
     {
         Position.Tags?.Remove(tag);
         _dirty = true;
+        StateHasChanged();
     }
 
     private void SetLotTagInput(string lotId, string value) => _lotTagInput[lotId] = value;
