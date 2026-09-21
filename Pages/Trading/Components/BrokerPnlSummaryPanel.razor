@@ -142,7 +142,7 @@
                         @foreach (var e in s.Winners.Take(5))
                         {
                             <div class="broker-stat-card broker-stat-card-pnl positive">
-                                <span class="broker-stat-card-label">@e.Symbol</span>
+                                <span class="broker-stat-card-label">@e.Symbol @TopBadge(e.IsClosed)</span>
                                 <span class="broker-stat-card-value">@BrokerFormat.Vnd(e.PnlAmount)</span>
                                 <span class="broker-stat-card-sub ts-positive">@BrokerFormat.Pct(e.PnlPct)</span>
                             </div>
@@ -155,7 +155,7 @@
                         @foreach (var e in s.Losers.Take(5))
                         {
                             <div class="broker-stat-card broker-stat-card-pnl negative">
-                                <span class="broker-stat-card-label">@e.Symbol</span>
+                                <span class="broker-stat-card-label">@e.Symbol @TopBadge(e.IsClosed)</span>
                                 <span class="broker-stat-card-value">@BrokerFormat.Vnd(e.PnlAmount)</span>
                                 <span class="broker-stat-card-sub ts-negative">@BrokerFormat.Pct(e.PnlPct)</span>
                             </div>
@@ -213,4 +213,9 @@
         isClosed
             ? new MarkupString("<span class=\"broker-pnl-badge broker-pnl-badge-closed\" title=\"Đã bán hết\">Đã đóng</span>")
             : new MarkupString("<span class=\"broker-pnl-badge broker-pnl-badge-open\" title=\"Vẫn nắm giữ\">Đang giữ</span>");
+
+    private static MarkupString TopBadge(bool isClosed) =>
+        isClosed
+            ? new MarkupString("<span class=\"broker-pnl-badge-mini\" title=\"Đã bán hết\">Đã đóng</span>")
+            : new MarkupString("");
 }
