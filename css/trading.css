@@ -1898,6 +1898,86 @@
 .broker-stat-card-realized.positive { background: rgba(16, 185, 129, 0.08); }
 .broker-stat-card-realized.negative { background: rgba(239, 68, 68, 0.08); }
 
+/* ── BrokerPnlSummaryPanel ── */
+.broker-pnl-panel { margin-bottom: 1rem; }
+
+.broker-pnl-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+/* ponytail: align gap with .broker-portfolio-stats (0.65rem) for visual sync */
+.broker-pnl-panel .broker-portfolio-stats {
+    gap: 0.65rem;
+    margin-bottom: 0;
+}
+.broker-pnl-panel .broker-stat-card {
+    flex: 1 1 175px;
+    padding: 0.8rem 0.95rem;
+}
+
+.broker-pnl-lists {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 1.25rem;
+}
+@media (min-width: 64rem) {
+    .broker-pnl-lists { grid-template-columns: 1fr 1fr; }
+}
+
+.broker-pnl-list-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.broker-pnl-list-title {
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.broker-pnl-top {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 1.25rem;
+}
+@media (min-width: 64rem) {
+    .broker-pnl-top { grid-template-columns: 1fr 1fr; }
+}
+
+/* ponytail: gap synced to .broker-portfolio-stats 0.65rem */
+.broker-pnl-top-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.65rem;
+}
+.broker-pnl-top-grid .broker-stat-card {
+    flex: 1 1 140px;
+    padding: 0.65rem 0.8rem;
+}
+
+.broker-pnl-sector { margin-top: 1.25rem; }
+.broker-pnl-sector .ts-panel-title { margin-bottom: 0.75rem; }
+
+.broker-pnl-table { font-size: 0.85rem; }
+.broker-pnl-table td, .broker-pnl-table th { padding: 0.45rem 0.6rem; }
+
+/* ponytail: mobile sync — pnl top-grid 2/dòng like stat-card, list col gap 0.5rem */
+@media (max-width: 48rem) {
+    .broker-pnl-top-grid .broker-stat-card {
+        flex: 1 1 calc(50% - 0.325rem);
+        min-width: calc(50% - 0.325rem);
+    }
+    .broker-pnl-lists,
+    .broker-pnl-top { gap: 0.75rem; }
+    .broker-pnl-list-col { gap: 0.4rem; }
+}
+
 /* Detail panel */
 .broker-detail { padding: 0; overflow: hidden; }
 
@@ -2364,10 +2444,10 @@
         padding: 0.4rem 0.5rem;
     }
 
-    /* Stats grid on mobile */
+    /* Stats grid on mobile — 2 per row, account for parent gap 0.65rem */
     .broker-stat-card {
-        flex: 1 1 calc(50% - 1px);
-        min-width: calc(50% - 1px);
+        flex: 1 1 calc(50% - 0.325rem);
+        min-width: calc(50% - 0.325rem);
         padding: 0.65rem;
         font-size: 0.8rem;
     }
@@ -2453,8 +2533,8 @@
         gap: 0.4rem;
     }
     .broker-stat-card {
-        flex: 1 1 calc(50% - 1px);
-        min-width: calc(50% - 1px);
+        flex: 1 1 calc(50% - 0.325rem);
+        min-width: calc(50% - 0.325rem);
     }
     .broker-header-actions {
         flex-wrap: wrap;
