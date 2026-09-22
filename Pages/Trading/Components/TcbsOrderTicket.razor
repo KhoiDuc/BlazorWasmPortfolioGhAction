@@ -1,0 +1,186 @@
+@inject ITcbsApiClient Tcbs
+@inject IBrokerDeskStore Store
+
+<section class="ts-panel tcbs-panel">
+    <h2 class="ts-panel-title">Đặt lệnh cơ sở</h2>
+    <p class="ts-muted">Lệnh chỉ gửi sau khi xem lại. Mặc định tài khoản đang chỉ đọc cho đến khi tắt ở phần kết nối. Không đặt phái sinh.</p>
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="ts-alert ts-alert-error" role="alert">@_error</div>
+    }
+    @if (!string.IsNullOrEmpty(_info))
+    {
+        <div class="ts-alert ts-alert-info" role="status">@_info</div>
+    }
+
+    <div class="broker-form-row broker-form-row-2">
+        <div class="broker-field">
+            <label class="broker-field-label" for="tcbs-sym">Mã</label>
+            <input id="tcbs-sym" class="ts-input" @bind="_symbol" @bind:after="RefreshQuote" />
+        </div>
+        <div class="broker-field">
+            <label class="broker-field-label" for="tcbs-side">Chiều</label>
+            <select id="tcbs-side" class="ts-select" @bind="_side">
+                <option value="NB">Mua (NB)</option>
+                <option value="NS">Bán (NS)</option>
+            </select>
+        </div>
+    </div>
+    <div class="broker-form-row broker-form-row-2">
+        <div class="broker-field">
+            <label class="broker-field-label" for="tcbs-price">Giá (nghìn đồng)</label>
+            <input id="tcbs-price" class="ts-input" type="number" step="0.1" min="0.1" @bind="_price" @bind:after="RefreshPower" />
+        </div>
+        <div class="broker-field">
+            <label class="broker-field-label" for="tcbs-qty">Khối lượng (lô 100)</label>
+            <input id="tcbs-qty" class="ts-input" type="number" step="100" min="100" @bind="_qty" />
+        </div>
+    </div>
+    <div class="broker-field">
+        <label class="broker-field-label" for="tcbs-ptype">Loại giá</label>
+        <select id="tcbs-ptype" class="ts-select" @bind="_priceType">
+            <option>LO</option><option>ATO</option><option>ATC</option><option>MP</option><option>MTL</option>
+        </select>
+    </div>
+    @if (_quote is not null)
+    {
+        <p>Trần @_quote.CeilPrice.ToString("N2") · Sàn @_quote.FloorPrice.ToString("N2") · Tham chiếu @_quote.RefPrice.ToString("N2") · Khớp @_quote.MatchPrice.ToString("N2")</p>
+    }
+    @if (_power is not null)
+    {
+        <p>Sức mua @_power.PurchasingPower.ToString("N0") · KL tối đa @_power.MaxQuantity.ToString("N0")</p>
+    }
+    <button type="button" class="ts-btn ts-btn-primary" @onclick="Preview" disabled="@_busy">Xem lại lệnh</button>
+
+    @if (_preview is not null)
+    {
+        <div class="tcbs-confirm" role="dialog" aria-modal="true" aria-labelledby="tcbs-confirm-title">
+            <h3 id="tcbs-confirm-title">Xác nhận @(string.IsNullOrWhiteSpace(AmendOrderId) ? "lệnh mới" : "sửa " + AmendOrderId) @_preview.ExecType @_preview.Symbol</h3>
+            <p>@_preview.Quantity cổ · giá @((_preview.PriceVnd / 1000m).ToString("N2")) · sàn @_preview.Exchange</p>
+            <p>Giá trị @_preview.Notional.ToString("N0") · phí @_preview.Fee.ToString("N0") · thuế @_preview.Tax.ToString("N0")</p>
+            <p>Tổng ước tính @_preview.Total.ToString("N0") VND. Đây không phải tư vấn đầu tư.</p>
+            @if (_preview.ReadOnly)
+            {
+                <p role="alert">Đang chỉ đọc. Tắt chế độ chỉ đọc trước khi gửi.</p>
+            }
+            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => _preview = null">Quay lại</button>
+            <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="Place" disabled="@(_busy || _preview.ReadOnly)">Gửi lệnh</button>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter] public string? InitialSymbol { get; set; }
+    [Parameter] public string? InitialSide { get; set; }
+    [Parameter] public decimal? InitialPrice { get; set; }
+    [Parameter] public decimal? InitialQty { get; set; }
+    [Parameter] public string? AmendOrderId { get; set; }
+
+    private string _symbol = "";
+    private string _side = "NB";
+    private string _priceType = "LO";
+    private decimal _price = 10;
+    private int _qty = 100;
+    private TcbsQuote? _quote;
+    private TcbsBuyingPower? _power;
+    private TcbsOrderPreview? _preview;
+    private string? _error;
+    private string? _info;
+    private bool _busy;
+    private string _applied = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var key = $"{InitialSymbol}|{InitialSide}|{InitialPrice}|{InitialQty}";
+        if (key == _applied) return;
+        _applied = key;
+        if (!string.IsNullOrWhiteSpace(InitialSymbol)) _symbol = InitialSymbol.Trim().ToUpperInvariant();
+        if (!string.IsNullOrWhiteSpace(InitialSide)) _side = InitialSide;
+        if (InitialPrice is > 0) _price = InitialPrice.Value;
+        if (InitialQty is > 0) _qty = (int)InitialQty.Value;
+        await RefreshQuote();
+    }
+
+    private async Task RefreshQuote()
+    {
+        _symbol = _symbol.Trim().ToUpperInvariant();
+        if (_symbol.Length < 3) return;
+        var call = await Tcbs.GetAsync($"market/quotes?tickers={Uri.EscapeDataString(_symbol)}");
+        _quote = call.Ok ? TcbsMapper.ReadQuotes(call.Json).FirstOrDefault() : null;
+        if (_quote?.MatchPrice > 0 && InitialPrice is null or 0) _price = _quote.MatchPrice;
+        await RefreshPower();
+    }
+
+    private async Task RefreshPower()
+    {
+        var status = await Tcbs.GetStatusAsync();
+        if (!status.Connected || _symbol.Length < 3 || _price <= 0) return;
+        var call = await Tcbs.GetAsync($"buying-power?accountNo={Uri.EscapeDataString(status.AccountNo)}&symbol={_symbol}&price={_price.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+        _power = call.Ok ? TcbsMapper.ReadBuyingPower(call.Json) : null;
+    }
+
+    private async Task Preview()
+    {
+        _error = null;
+        _info = null;
+        _symbol = _symbol.Trim().ToUpperInvariant();
+        if (_qty <= 0 || _qty % 100 != 0) { _error = "Khối lượng phải là bội số của 100."; return; }
+        if (_quote is not null && _priceType == "LO" && _quote.FloorPrice > 0 && _quote.CeilPrice > 0 && (_price < _quote.FloorPrice || _price > _quote.CeilPrice))
+        {
+            _error = $"Giá phải trong sàn {_quote.FloorPrice:N2} – trần {_quote.CeilPrice:N2}.";
+            return;
+        }
+        var status = await Tcbs.GetStatusAsync();
+        _busy = true;
+        _preview = await Tcbs.PreviewOrderAsync(new
+        {
+            accountNo = status.AccountNo,
+            symbol = _symbol,
+            execType = _side,
+            priceType = _priceType,
+            price = _price,
+            quantity = _qty,
+        });
+        _busy = false;
+        if (_preview is null) _error = "Không tạo được bản xem lại.";
+    }
+
+    private async Task Place()
+    {
+        if (_preview is null) return;
+        _busy = true;
+        var status = await Tcbs.GetStatusAsync();
+        if (!string.IsNullOrWhiteSpace(AmendOrderId))
+        {
+            var amended = await Tcbs.SendAsync(HttpMethod.Put, $"orders/{Uri.EscapeDataString(AmendOrderId)}", new
+            {
+                confirmToken = _preview.ConfirmToken,
+                accountNo = status.AccountNo,
+                price = _preview.PriceVnd >= 1000 ? _preview.PriceVnd / 1000m : _preview.PriceVnd,
+                quantity = _preview.Quantity,
+            });
+            _busy = false;
+            if (!amended.Ok) { _error = amended.Error; return; }
+            _info = $"Đã gửi sửa lệnh {AmendOrderId}.";
+            _preview = null;
+            return;
+        }
+        var call = await Tcbs.PlaceOrderAsync(new
+        {
+            confirmToken = _preview.ConfirmToken,
+            accountNo = status.AccountNo,
+            symbol = _preview.Symbol,
+            execType = _preview.ExecType,
+            priceType = _priceType,
+            price = _preview.PriceVnd >= 1000 ? _preview.PriceVnd / 1000m : _preview.PriceVnd,
+            quantity = _preview.Quantity,
+            exchange = _preview.Exchange,
+        }, Guid.NewGuid().ToString("N"));
+        _busy = false;
+        if (!call.Ok) { _error = call.Error; return; }
+        var note = $"Lệnh TCBS {_preview.ExecType} {_preview.Symbol} {_preview.Quantity} @ {_preview.PriceVnd}.";
+        await Store.AddNoteAsync(_preview.Symbol, new BrokerNote { Kind = BrokerNoteKind.Self, Text = note });
+        _info = note + " Đã ghi vào note của mã nếu mã có trong danh mục.";
+        _preview = null;
+    }
+}

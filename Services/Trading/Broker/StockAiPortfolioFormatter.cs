@@ -8,7 +8,7 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
 // Merge when: a single configurable formatter serving both call sites is warranted.
 public static class StockAiPortfolioFormatter
 {
-    public static string Format(BrokerPortfolio portfolio, IReadOnlyDictionary<string, decimal> quotes)
+    public static string Format(BrokerPortfolio portfolio, IReadOnlyDictionary<string, decimal> quotes, string? tcbsContext = null)
     {
         var sb = new StringBuilder();
         foreach (var p in portfolio.Positions.OrderBy(x => x.Symbol, StringComparer.OrdinalIgnoreCase))
@@ -16,6 +16,11 @@ public static class StockAiPortfolioFormatter
             quotes.TryGetValue(p.Symbol, out var current);
             var currentText = current > 0 ? current.ToString("N2") : "—";
             sb.AppendLine($"{p.Symbol}: avg {p.AvgBuy?.ToString("N2") ?? "—"}, current {currentText}, qty {BrokerFormat.Quantity(p.TotalQuantity)}, status {BrokerStatusLabels.Vi(p.Status)}");
+        }
+        if (!string.IsNullOrWhiteSpace(tcbsContext))
+        {
+            sb.AppendLine();
+            sb.AppendLine(tcbsContext.Trim());
         }
         return sb.ToString().Trim();
     }

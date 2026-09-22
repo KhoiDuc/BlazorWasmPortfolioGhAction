@@ -55,6 +55,7 @@
                     <div class="broker-qs-actions">
                         <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Close">Hủy</button>
                         <button class="ts-btn ts-btn-primary ts-btn-sm" type="button" @onclick="Submit">Ghi lệnh bán</button>
+                        <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="PlaceTcbs">Đặt lệnh bán TCBS</button>
                     </div>
                 </div>
             }
@@ -66,6 +67,7 @@
     [Parameter] public BrokerPosition? Position { get; set; }
     [Parameter] public decimal? CurrentPrice { get; set; }
     [Parameter] public EventCallback<BrokerSell> OnSubmitSell { get; set; }
+    [Parameter] public EventCallback<BrokerPosition> OnPlaceOrder { get; set; }
 
     private bool _show;
     private decimal? _price;
@@ -134,5 +136,13 @@
 
         await Close();
         await OnSubmitSell.InvokeAsync(sell);
+    }
+
+    private async Task PlaceTcbs()
+    {
+        if (Position is null) return;
+        var pos = Position;
+        await Close();
+        await OnPlaceOrder.InvokeAsync(pos);
     }
 }

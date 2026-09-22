@@ -36,6 +36,21 @@ public sealed class TradeScoreService
         return result;
     }
 
+    public void ApplyTcbsBias(TradeScoreResult result, decimal? buySellRatio, decimal? foreignNet)
+    {
+        var notes = result.Market.Notes;
+        var bonus = 0;
+        if (buySellRatio is > 1.1m) bonus += 1;
+        if (foreignNet is > 0) bonus += 1;
+        if (buySellRatio is < 0.9m) bonus -= 1;
+        if (bonus == 0 && buySellRatio is null && foreignNet is null) return;
+        notes.Add($"TCBS cung cầu {buySellRatio?.ToString("N2") ?? "—"}, NN ròng {foreignNet?.ToString("N0") ?? "—"}: {bonus:+#;-#;0}");
+        result.Market.Score = Math.Clamp(result.Market.Score + bonus, 0, result.Market.MaxScore);
+        result.MarketScore = result.Market.Score;
+        result.TotalScore = result.TechnicalScore + result.FundamentalScore + result.MarketScore + result.RiskScore;
+        result.Recommendation = MapRecommendation(result.TotalScore);
+    }
+
     private static void ScoreTechnical(TechnicalIndicators ta, TradeScoreBreakdown bd)
     {
         var notes = bd.Notes;

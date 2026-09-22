@@ -42,6 +42,7 @@
                        OnChange="ImportJson"
                        accept=".json,application/json" />
             <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ReloadFromServer" disabled="@_loading">@L["Trading_BrokerReloadFile"]</button>
+            <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="OpenTcbsSync" disabled="@_loading">Đồng bộ từ TCBS</button>
             <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ExportJson">@L["Trading_SaveJson"]</button>
         </div>
     </div>
@@ -60,6 +61,28 @@
         </div>
     }
 
+    <TcbsConnectPanel />
+    <div class="tcbs-tabs" role="tablist" aria-label="Broker desk">
+        <button type="button" class="ts-btn ts-btn-sm @(_deskTab == "portfolio" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _deskTab = "portfolio"'>Danh mục</button>
+        <button type="button" class="ts-btn ts-btn-sm @(_deskTab == "account" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _deskTab = "account"'>Tài khoản TCBS</button>
+        <button type="button" class="ts-btn ts-btn-sm @(_deskTab == "orders" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _deskTab = "orders"'>Sổ lệnh</button>
+        <button type="button" class="ts-btn ts-btn-sm @(_deskTab == "ticket" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _deskTab = "ticket"'>Đặt lệnh</button>
+    </div>
+
+    @if (_deskTab == "account")
+    {
+        <TcbsAccountPanel />
+    }
+    else if (_deskTab == "orders")
+    {
+        <TcbsOrderBook OnAmend="StartAmend" />
+    }
+    else if (_deskTab == "ticket")
+    {
+        <TcbsOrderTicket @key="_ticketKey" InitialSymbol="@_ticketSymbol" InitialSide="@_ticketSide" InitialPrice="@_ticketPrice" InitialQty="@_ticketQty" AmendOrderId="@_amendId" />
+    }
+    else
+    {
     <div class="broker-stack">
         <section class="ts-panel broker-form-card">
             <div class="broker-form-card-head">
@@ -195,6 +218,7 @@
 
         <BrokerRecommendationBoard Portfolio="_portfolio"
                                     OnBuy="PrefillBuyForm"
+                                    OnPlaceOrder="PlaceFromRecommendation"
                                     OnSelect="SelectSymbol"
                                     OnDrop="DropRecommendation"
                                     OnReactivate="ReactivateRecommendation" />
@@ -285,11 +309,14 @@
 
         <BrokerAiExplain Portfolio="_portfolio" />
     </div>
+    }
 
     <BrokerQuickSellModal @ref="_quickSellModal"
                           Position="@(_quickSellPosition)"
                           CurrentPrice="@(_quickSellPosition is not null ? Quote(_quickSellPosition.Symbol) : null)"
-                          OnSubmitSell="SubmitQuickSell" />
+                          OnSubmitSell="SubmitQuickSell"
+                          OnPlaceOrder="PlaceFromQuickSell" />
+    <TcbsSyncDialog @ref="_tcbsSync" OnApply="ApplyTcbsSync" />
 
     @if (Selected is not null)
     {
@@ -347,6 +374,14 @@
     private Dictionary<string, MoneyFlowSnapshot> _moneyFlowBySymbol = new(StringComparer.OrdinalIgnoreCase);
     private bool _moneyFlowScanned;
     private bool _moneyFlowBusy;
+    private string _deskTab = "portfolio";
+    private string? _ticketSymbol;
+    private string _ticketSide = "NB";
+    private decimal? _ticketPrice;
+    private decimal? _ticketQty;
+    private string? _amendId;
+    private int _ticketKey;
+    private TcbsSyncDialog? _tcbsSync;
 
     private BrokerPosition? Selected =>
         string.IsNullOrEmpty(_selected)
@@ -424,6 +459,54 @@
         var (ok, error) = await Store.DeletePositionAsync(symbol);
         if (ok) _dirty = false;
         else Flash($"Sync fail: {error}", error: true);
+    }
+
+    private async Task OpenTcbsSync()
+    {
+        if (_tcbsSync is null) return;
+        var error = await _tcbsSync.Open(_portfolio);
+        if (!string.IsNullOrEmpty(error)) Flash(error, error: true);
+    }
+
+    private async Task ApplyTcbsSync(BrokerPortfolio portfolio)
+    {
+        _portfolio = portfolio;
+        var (ok, err) = await Store.ImportAsync(portfolio);
+        Flash(ok ? "Đã ghi danh mục đồng bộ từ TCBS." : $"Sync fail: {err}", error: !ok);
+    }
+
+    private void PlaceFromRecommendation(string symbol)
+    {
+        var pos = _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
+        _ticketSymbol = symbol;
+        _ticketSide = "NB";
+        _ticketPrice = pos?.EntryLow ?? pos?.AvgBuy;
+        _ticketQty = 100;
+        _amendId = null;
+        _ticketKey++;
+        _deskTab = "ticket";
+    }
+
+    private void PlaceFromQuickSell(BrokerPosition pos)
+    {
+        _ticketSymbol = pos.Symbol;
+        _ticketSide = "NS";
+        _ticketPrice = Quote(pos.Symbol) ?? pos.AvgBuy;
+        _ticketQty = pos.RemainingQuantity;
+        _amendId = null;
+        _ticketKey++;
+        _deskTab = "ticket";
+    }
+
+    private void StartAmend(TcbsOrder order)
+    {
+        _ticketSymbol = order.Symbol;
+        _ticketSide = order.ExecType is "NS" or "S" ? "NS" : "NB";
+        _ticketPrice = order.Price;
+        _ticketQty = order.Quantity;
+        _amendId = order.OrderId;
+        _ticketKey++;
+        _deskTab = "ticket";
     }
 
     private async Task OpenQuickSell(string symbol)

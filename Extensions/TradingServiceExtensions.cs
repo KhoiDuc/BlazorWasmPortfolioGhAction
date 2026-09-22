@@ -79,6 +79,11 @@ public static class TradingServiceExtensions
         {
             client.Timeout = TimeSpan.FromSeconds(90);
         });
+        services.AddHttpClient<BlazorWasmPortfolioGhAction.Services.Trading.Tcbs.ITcbsApiClient,
+            BlazorWasmPortfolioGhAction.Services.Trading.Tcbs.TcbsApiClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(45);
+        });
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.Broker.IBrokerDeskStore,
             BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerDeskStore>();
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.Broker.IBrokerGeminiClient,

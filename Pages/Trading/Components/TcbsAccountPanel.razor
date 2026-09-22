@@ -1,0 +1,152 @@
+@using BlazorWasmPortfolioGhAction.Utils
+@inject ITcbsApiClient Tcbs
+
+<section class="ts-panel tcbs-panel">
+    <div class="tcbs-head">
+        <h2 class="ts-panel-title">Tài khoản TCBS</h2>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="Load" disabled="@_busy">@(_busy ? "Đang tải…" : "Tải lại")</button>
+    </div>
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="ts-alert ts-alert-error" role="alert">@_error</div>
+    }
+    @if (_accounts.Count > 0)
+    {
+        <label class="broker-field-label" for="tcbs-acct">Tiểu khoản cơ sở</label>
+        <select id="tcbs-acct" class="ts-select" @bind="_accountNo" @bind:after="Load">
+            @foreach (var a in _accounts)
+            {
+                <option value="@a.AccountNo">@a.AccountNo — @a.Type @a.Status</option>
+            }
+        </select>
+    }
+
+    <div class="broker-portfolio-stats">
+        <div class="broker-stat-card">
+            <span class="broker-stat-card-label">Tiền mặt</span>
+            <span class="broker-stat-card-value">@Money(_cash?.CashBalance)</span>
+        </div>
+        <div class="broker-stat-card">
+            <span class="broker-stat-card-label">Tiền đầu ngày</span>
+            <span class="broker-stat-card-value">@Money(_cash?.BodBalance)</span>
+        </div>
+        <div class="broker-stat-card">
+            <span class="broker-stat-card-label">Nợ gốc (margin)</span>
+            <span class="broker-stat-card-value">@_riskText</span>
+        </div>
+    </div>
+
+    <h3 class="ts-panel-title">Tài sản cổ phiếu</h3>
+    <div class="broker-table-scroll">
+        <table class="ts-table">
+            <thead><tr><th>Mã</th><th>KL</th><th>Giá TB</th><th>Giá trị TT</th></tr></thead>
+            <tbody>
+                @foreach (var a in _assets)
+                {
+                    <tr>
+                        <td>@a.Symbol</td>
+                        <td class="broker-num">@a.Quantity.ToString("N0")</td>
+                        <td class="broker-num">@a.AvgPrice.ToString("N2")</td>
+                        <td class="broker-num">@Money(a.MarketValue)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <h3 class="ts-panel-title">Sao kê tiền</h3>
+    <div class="broker-table-scroll">
+        <table class="ts-table">
+            <thead><tr><th>Ngày</th><th>Loại</th><th>Tăng</th><th>Giảm</th><th>Mô tả</th></tr></thead>
+            <tbody>
+                @foreach (var row in _statement.Take(40))
+                {
+                    <tr>
+                        <td>@(row.Date == DateTime.MinValue ? "—" : row.Date.ToString("dd/MM/yyyy"))</td>
+                        <td>@row.Name</td>
+                        <td class="broker-num">@Money(row.Debit)</td>
+                        <td class="broker-num">@Money(row.Credit)</td>
+                        <td>@row.Description</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <h3 class="ts-panel-title">Nợ và gói vay</h3>
+    <pre class="tcbs-raw">@_debtRaw</pre>
+    <h3 class="ts-panel-title">Hạn mức, rủi ro, gói bổ trợ, lãi suất</h3>
+    <pre class="tcbs-raw">@_marginRaw</pre>
+</section>
+
+@code {
+    private readonly List<TcbsSubAccount> _accounts = [];
+    private readonly List<TcbsAsset> _assets = [];
+    private readonly List<TcbsStatementRow> _statement = [];
+    private TcbsCash? _cash;
+    private string _accountNo = "";
+    private string _riskText = "—";
+    private string _debtRaw = "";
+    private string _marginRaw = "";
+    private string? _error;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Load()
+    {
+        _busy = true;
+        _error = null;
+        var status = await Tcbs.GetStatusAsync();
+        if (!status.Connected)
+        {
+            _error = status.NeedsReauth ? "Cần xác thực lại iOTP." : "Chưa kết nối TCBS.";
+            _busy = false;
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_accountNo)) _accountNo = status.AccountNo;
+
+        var accounts = await Tcbs.GetAsync("accounts");
+        if (accounts.NeedsReauth) { _error = accounts.Error; _busy = false; return; }
+        if (accounts.Ok)
+        {
+            _accounts.Clear();
+            _accounts.AddRange(TcbsMapper.ReadAccounts(accounts.Json));
+            if (string.IsNullOrWhiteSpace(_accountNo) && _accounts.Count > 0)
+                _accountNo = _accounts.FirstOrDefault(a => a.IsDefault)?.AccountNo ?? _accounts[0].AccountNo;
+        }
+
+        var from = DateTime.Today.AddMonths(-1).ToString("yyyy-MM-dd");
+        var to = DateTime.Today.ToString("yyyy-MM-dd");
+        var assets = await Tcbs.GetAsync(WithAccount("assets"));
+        var cash = await Tcbs.GetAsync(WithAccount("cash"));
+        var statement = await Tcbs.GetAsync(WithAccount($"statement?fromDate={from}&toDate={to}"));
+        var debt = await Tcbs.GetAsync(WithAccount($"debt?fromDate={from}&toDate={to}"));
+        var limits = await Tcbs.GetAsync("margin/limits");
+        var risk = await Tcbs.GetAsync(WithAccount("margin/risk"));
+        var addons = await Tcbs.GetAsync(WithAccount("margin/addons"));
+        var loans = await Tcbs.GetAsync(WithAccount("margin/loans"));
+        var pricing = await Tcbs.GetAsync(WithAccount("margin/pricing"));
+
+        _assets.Clear();
+        if (assets.Ok) _assets.AddRange(TcbsMapper.ReadAssets(assets.Json));
+        _cash = cash.Ok ? TcbsMapper.ReadCash(cash.Json) : null;
+        _statement.Clear();
+        if (statement.Ok) _statement.AddRange(TcbsMapper.ReadStatement(statement.Json));
+        _debtRaw = debt.Ok ? Trim(debt.Json) : debt.Error ?? "";
+        _riskText = risk.Ok ? "đã tải" : "—";
+        _marginRaw = string.Join("\n\n", new[] { limits, risk, addons, loans, pricing }.Where(c => c.Ok).Select(c => Trim(c.Json)));
+        if (assets.NeedsReauth || cash.NeedsReauth) _error = "Phiên TCBS hết hạn.";
+        _busy = false;
+    }
+
+    private string WithAccount(string path)
+    {
+        if (string.IsNullOrWhiteSpace(_accountNo)) return path;
+        var joiner = path.Contains('?') ? "&" : "?";
+        return path + joiner + "accountNo=" + Uri.EscapeDataString(_accountNo);
+    }
+
+    private static string Money(decimal? n) => n is null or 0 ? "—" : BrokerFormat.Vnd(n);
+    private static string Trim(string json) => json.Length > 1800 ? json[..1800] + "…" : json;
+}

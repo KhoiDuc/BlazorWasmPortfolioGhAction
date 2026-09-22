@@ -1,0 +1,37 @@
+@page "/new-guid"
+@using Meziantou.Framework
+
+<h1>Guid Generator</h1>
+
+<div>
+    <button class="btn btn-secondary" @onclick="Compute">Generate</button>
+</div>
+
+@if (result != null)
+{
+	<ResultValueList Values="result" />
+}
+
+@code {
+    IReadOnlyList<ResultValue>? result;
+
+    protected override void OnInitialized()
+    {
+        Compute();
+        base.OnInitialized();
+    }
+
+    void Compute()
+    {
+        // https://docs.microsoft.com/en-us/dotnet/api/system.guid.tostring?view=netcore-3.1#System_Guid_ToString_System_String_
+        var guid = Guid.NewGuid();
+        result =
+        [
+            new("N", guid.ToString("N")),
+            new("D", guid.ToString("D")),
+            new("B", guid.ToString("B")),
+            new("P", guid.ToString("P")),
+            new("X", guid.ToString("X")),
+        ];
+    }
+}

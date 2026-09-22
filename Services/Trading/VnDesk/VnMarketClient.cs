@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using BlazorWasmPortfolioGhAction.Extensions;
 using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk;
+using BlazorWasmPortfolioGhAction.Services.Trading.Tcbs;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk;
 
@@ -25,16 +26,19 @@ public sealed class VnMarketClient : IVnMarketClient
     private readonly HttpClient _cafefHttp;
     private readonly TradingEndpointResolver _endpoints;
     private readonly VnDeskOptions _options;
+    private readonly ITcbsApiClient _tcbs;
     private readonly ConcurrentDictionary<string, List<StockData>> _cache = new();
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
 
     public VnMarketClient(
         IHttpClientFactory factory,
         TradingEndpointResolver endpoints,
-        VnDeskOptions options)
+        VnDeskOptions options,
+        ITcbsApiClient tcbs)
     {
         _endpoints = endpoints;
         _options = options;
+        _tcbs = tcbs;
         _vndHttp = factory.CreateClient(TradingServiceExtensions.VnMarketClientName);
         _cafefHttp = factory.CreateClient(TradingServiceExtensions.VnCafeFClientName);
     }
@@ -121,10 +125,19 @@ public sealed class VnMarketClient : IVnMarketClient
 
     public async Task<List<StockData>> GetLatestManyAsync(IReadOnlyList<string> symbols, IProgress<int>? progress = null, int maxParallel = 12, CancellationToken ct = default, bool forceRefresh = false)
     {
+        var fromTcbs = await TryTcbsQuotesAsync(symbols, ct);
+        var have = new HashSet<string>(fromTcbs.Select(x => x.Symbol), StringComparer.OrdinalIgnoreCase);
+        var missing = symbols.Where(s => !have.Contains(s)).ToList();
+        if (missing.Count == 0)
+        {
+            progress?.Report(symbols.Count);
+            return fromTcbs;
+        }
+
         var bag = new ConcurrentBag<StockData>();
         using var sem = new SemaphoreSlim(maxParallel);
         int done = 0;
-        var tasks = symbols.Select(async symbol =>
+        var tasks = missing.Select(async symbol =>
         {
             await sem.WaitAsync(ct);
             try
@@ -142,7 +155,32 @@ public sealed class VnMarketClient : IVnMarketClient
             }
         });
         await Task.WhenAll(tasks);
-        return bag.ToList();
+        return fromTcbs.Concat(bag).ToList();
+    }
+
+    private async Task<List<StockData>> TryTcbsQuotesAsync(IReadOnlyList<string> symbols, CancellationToken ct)
+    {
+        try
+        {
+            var status = await _tcbs.GetStatusAsync(ct);
+            if (!status.Connected) return [];
+            var quotes = await _tcbs.GetQuotesAsync(symbols, ct);
+            return quotes.Where(q => q.MatchPrice > 0).Select(q => new StockData
+            {
+                Symbol = q.Symbol,
+                Date = DateTime.Today,
+                Open = q.RefPrice,
+                High = q.CeilPrice,
+                Low = q.FloorPrice,
+                Close = q.MatchPrice,
+                Volume = q.TotalVolume,
+                PercentChange = q.ChangePercent
+            }).ToList();
+        }
+        catch
+        {
+            return [];
+        }
     }
 
     public async Task<List<StockData>> GetMarketIndexHistoryAsync(string indexCode = "VNINDEX", int sessions = 250, CancellationToken ct = default)
@@ -188,6 +226,28 @@ public sealed class VnMarketClient : IVnMarketClient
 
     public async Task<List<IntradayData>> FetchIntradayAsync(string symbol, CancellationToken ct = default)
     {
+        try
+        {
+            var live = await _tcbs.GetAsync($"market/matches?ticker={Uri.EscapeDataString(symbol.ToUpperInvariant())}&page=0&size=100", ct);
+            if (live.Ok)
+            {
+                var rows = TcbsMapper.ReadMatches(live.Json);
+                if (rows.Count > 0)
+                {
+                    return rows.Select(m => new IntradayData
+                    {
+                        Time = m.Time ?? DateTime.Now,
+                        Price = m.Price,
+                        Volume = m.Quantity
+                    }).OrderBy(x => x.Time).ToList();
+                }
+            }
+        }
+        catch
+        {
+            /* fall through to the public TCBS bar endpoint */
+        }
+
         try
         {
             var url = _endpoints.ResolveFetchUrl($"stock-insight/v1/stock/bars/{Uri.EscapeDataString(symbol.ToUpperInvariant())}?timeframe=1&count=200");

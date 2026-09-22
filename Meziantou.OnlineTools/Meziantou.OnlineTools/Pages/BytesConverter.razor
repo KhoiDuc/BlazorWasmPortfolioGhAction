@@ -1,0 +1,45 @@
+@page "/byte-converter"
+@using Meziantou.Framework
+
+<h1>Bytes converter</h1>
+
+<input class="form-control code" @bind="text" />
+
+<div>
+    <button class="btn btn-secondary" @onclick="Compute">Convert</button>
+</div>
+
+@if (result != null)
+{
+    <ResultValueList Values="result" />
+}
+
+@code {
+    string? text = "1kiB";
+    IReadOnlyList<ResultValue>? result;
+
+    void Compute()
+    {
+        try
+        {
+            var size = ByteSize.Parse(text ?? "", System.Globalization.CultureInfo.InvariantCulture);
+
+            var values = new List<ResultValue>();
+            foreach (var unit in new[] { "B", "kB", "MB", "GB", "TB", "PB" })
+            {
+                values.Add(new ResultValue($"Decimal ({unit})", size.ToString(unit, System.Globalization.CultureInfo.InvariantCulture)));
+            }
+
+            foreach (var unit in new[] { "B", "kiB", "MiB", "GiB", "TiB", "PiB" })
+            {
+                values.Add(new ResultValue($"Binary ({unit})", size.ToString(unit, System.Globalization.CultureInfo.InvariantCulture)));
+            }
+
+            result = values;
+        }
+        catch (Exception ex)
+        {
+            result = [new ResultValue("Error", ex.Message)];
+        }
+    }
+}

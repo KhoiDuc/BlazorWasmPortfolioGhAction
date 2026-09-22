@@ -84,6 +84,8 @@
                                 {
                                     <button type="button" class="ts-btn ts-btn-primary ts-btn-xs"
                                             @onclick="() => OnBuy.InvokeAsync(r.Symbol)" title="Mua">Mua</button>
+                                    <button type="button" class="ts-btn ts-btn-outline ts-btn-xs"
+                                            @onclick="() => OnPlaceOrder.InvokeAsync(r.Symbol)">Đặt lệnh</button>
                                     <button type="button" class="ts-btn ts-btn-outline ts-btn-xs broker-btn-danger"
                                             @onclick="() => OnDrop.InvokeAsync(r.Symbol)" title="Bỏ theo dõi">Bỏ</button>
                                 }
@@ -104,6 +106,7 @@
 @code {
     [Parameter, EditorRequired] public BrokerPortfolio Portfolio { get; set; } = new();
     [Parameter] public EventCallback<string> OnBuy { get; set; }
+    [Parameter] public EventCallback<string> OnPlaceOrder { get; set; }
     [Parameter] public EventCallback<string> OnSelect { get; set; }
     [Parameter] public EventCallback<string> OnDrop { get; set; }
     [Parameter] public EventCallback<string> OnReactivate { get; set; }

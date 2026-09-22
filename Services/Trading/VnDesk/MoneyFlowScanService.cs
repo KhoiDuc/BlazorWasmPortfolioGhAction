@@ -1,4 +1,5 @@
 using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk;
+using BlazorWasmPortfolioGhAction.Services.Trading.Tcbs;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk;
 
@@ -8,8 +9,13 @@ public sealed class MoneyFlowScanService
     private const int MaxParallel = 8;
 
     private readonly IVnMarketClient _market;
+    private readonly ITcbsApiClient _tcbs;
 
-    public MoneyFlowScanService(IVnMarketClient market) => _market = market;
+    public MoneyFlowScanService(IVnMarketClient market, ITcbsApiClient tcbs)
+    {
+        _market = market;
+        _tcbs = tcbs;
+    }
 
     public async Task<MoneyFlowSnapshot?> ScanSymbolAsync(string symbol, CancellationToken ct = default)
     {
@@ -20,7 +26,9 @@ public sealed class MoneyFlowScanService
         {
             var hist = await _market.GetHistoricalAsync(symbol, HistorySessions, ct: ct);
             var snap = MoneyFlowCalculator.Compute(symbol, hist);
-            return snap.HasData ? snap : null;
+            if (!snap.HasData) return null;
+            await AttachTcbsAsync(snap, ct);
+            return snap;
         }
         catch
         {
@@ -65,9 +73,37 @@ public sealed class MoneyFlowScanService
         MoneyFlowCalculator.ApplyHeatPercentiles(results);
 
         return results
-            .OrderByDescending(s => s.MediumWaveSignal)
+            .OrderByDescending(s => s.BuySellRatio ?? 0)
+            .ThenByDescending(s => s.MediumWaveSignal)
             .ThenByDescending(s => s.Heat30D)
             .ThenByDescending(s => s.SLong)
             .ToList();
+    }
+
+    private async Task AttachTcbsAsync(MoneyFlowSnapshot snap, CancellationToken ct)
+    {
+        try
+        {
+            var status = await _tcbs.GetStatusAsync(ct);
+            if (!status.Connected) return;
+            var day = await _tcbs.GetAsync($"market/supply-demand?ticker={Uri.EscapeDataString(snap.Symbol)}&window=day", ct);
+            var month = await _tcbs.GetAsync($"market/supply-demand?ticker={Uri.EscapeDataString(snap.Symbol)}&window=month", ct);
+            var room = await _tcbs.GetAsync("market/foreign-room?index=1", ct);
+            var points = day.Ok ? TcbsMapper.ReadSupply(day.Json) : [];
+            if (points.Count == 0 && month.Ok) points = TcbsMapper.ReadSupply(month.Json);
+            var last = points.LastOrDefault();
+            if (last is not null) snap.BuySellRatio = last.Ratio;
+            if (room.Ok)
+            {
+                var quote = TcbsMapper.ReadQuotes(room.Json).FirstOrDefault(q => q.Symbol.Equals(snap.Symbol, StringComparison.OrdinalIgnoreCase));
+                if (quote is not null) snap.ForeignNet = quote.BuyForeign - quote.SellForeign;
+            }
+            if (snap.BuySellRatio is not null || snap.ForeignNet is not null)
+                snap.TcbsFlowNote = $"Cung cầu {snap.BuySellRatio:N2} · NN {snap.ForeignNet:N0}";
+        }
+        catch
+        {
+            /* quote overlay is optional */
+        }
     }
 }

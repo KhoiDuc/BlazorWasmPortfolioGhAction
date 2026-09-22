@@ -3,6 +3,7 @@
 @inject IVnFundamentalsClient Fundamentals
 @inject MarketContextService MarketContext
 @inject TradeScoreService Scorer
+@inject ITcbsApiClient Tcbs
 @inject IStringLocalizer<SharedResources> L
 
 @if (_busy)
@@ -185,6 +186,16 @@ else if (!string.IsNullOrEmpty(_error))
             var fundamentals = await Fundamentals.GetAsync(sym);
             var context = await MarketContext.GetAsync(sym);
             _score = Scorer.Score(Ta, fundamentals, context);
+            var flow = await Tcbs.GetAsync($"market/supply-demand?ticker={Uri.EscapeDataString(sym)}&window=day");
+            var room = await Tcbs.GetAsync("market/foreign-room?index=1");
+            decimal? ratio = flow.Ok ? TcbsMapper.ReadSupply(flow.Json).LastOrDefault()?.Ratio : null;
+            decimal? foreign = null;
+            if (room.Ok)
+            {
+                var q = TcbsMapper.ReadQuotes(room.Json).FirstOrDefault(x => x.Symbol.Equals(sym, StringComparison.OrdinalIgnoreCase));
+                if (q is not null) foreign = q.BuyForeign - q.SellForeign;
+            }
+            Scorer.ApplyTcbsBias(_score, ratio, foreign);
             _loadedFor = key;
         }
         catch (Exception ex)

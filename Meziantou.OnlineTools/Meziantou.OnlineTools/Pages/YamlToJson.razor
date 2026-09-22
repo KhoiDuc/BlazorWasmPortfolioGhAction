@@ -1,0 +1,40 @@
+@page "/yaml-to-json"
+@using System.Text.Json
+
+<h1>Yaml to Json</h1>
+
+<textarea class="form-control code" @bind="text"></textarea>
+
+<div>
+    <button class="btn btn-secondary" @onclick="ToJson">Convert to JSON</button>
+</div>
+
+@if (result != null)
+{
+<ResultValueSingle CopyLabel="JSON" Value="@result" />
+}
+
+@code {
+		string? text = """
+			scalar: a scalar
+			scalar: 1
+			sequence:
+			  - one
+			  - two
+			""";
+		string? result;
+
+    void ToJson()
+    {
+        try
+        {
+            var yamlObject = Meziantou.Framework.Yaml.YamlSerializer.Deserialize<object>(text ?? "");
+
+            result = JsonUtils.ToDisplayJson(yamlObject);
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+}

@@ -1,0 +1,48 @@
+@inject ITcbsApiClient Tcbs
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<p class="ts-muted" role="status">@_label</p>
+
+@code {
+    [Parameter] public string Symbol { get; set; } = "";
+    private string _label = "Realtime: đang dùng giá poll khi chưa có relay.";
+    private DotNetObjectReference<TcbsStreamBadge>? _ref;
+    private bool _started;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_started || string.IsNullOrWhiteSpace(Symbol)) return;
+        _started = true;
+        var ticket = await Tcbs.CreateStreamTicketAsync("normal", Symbol);
+        if (ticket is null || string.IsNullOrWhiteSpace(ticket.RelayUrl))
+        {
+            _label = "Realtime WebSocket chưa cấu hình relay. Giá vẫn cập nhật qua API 5.1.";
+            return;
+        }
+        _ref = DotNetObjectReference.Create(this);
+        var url = ticket.RelayUrl.TrimEnd('/') + "?ticket=" + Uri.EscapeDataString(ticket.Ticket);
+        var ok = await JS.InvokeAsync<bool>("tcbsStream.connect", url, _ref);
+        _label = ok ? $"Đang nghe {_labelStream(ticket.Stream)} cho {Symbol}." : "Không mở được WebSocket relay.";
+    }
+
+    private static string _labelStream(string stream) => stream switch
+    {
+        "orders" => "sổ lệnh 5.9",
+        "flow" => "cung cầu 5.10",
+        _ => "bảng giá 5.2"
+    };
+
+    [JSInvokable]
+    public Task OnTick(string message)
+    {
+        _label = "Tick " + (message.Length > 80 ? message[..80] : message);
+        return InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("tcbsStream.close"); } catch { /* ignore */ }
+        _ref?.Dispose();
+    }
+}

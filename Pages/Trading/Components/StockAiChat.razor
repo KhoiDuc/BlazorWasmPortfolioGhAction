@@ -1,6 +1,7 @@
 @inject IBrokerGeminiClient Gemini
 @inject IBrokerDeskStore BrokerStore
 @inject IVnMarketClient Market
+@inject ITcbsApiClient Tcbs
 @inject IJSRuntime JS
 @inject IStringLocalizer<SharedResources> L
 @implements IDisposable
@@ -220,7 +221,8 @@
             var quotes = (await Market.GetLatestManyAsync(symbols))
                 .GroupBy(s => s.Symbol, StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(g => g.Key, g => g.First().Close, StringComparer.OrdinalIgnoreCase);
-            _raw = StockAiPortfolioFormatter.Format(portfolio, quotes);
+            var tcbsContext = await BuildTcbsContextAsync(symbols);
+            _raw = StockAiPortfolioFormatter.Format(portfolio, quotes, tcbsContext);
             _aiErr = null;
         }
         catch (Exception ex)
@@ -231,6 +233,32 @@
         {
             _dataBusy = false;
         }
+    }
+
+    private async Task<string?> BuildTcbsContextAsync(List<string> symbols)
+    {
+        var status = await Tcbs.GetStatusAsync();
+        if (!status.Connected) return null;
+        var lines = new List<string> { "TCBS account (read-only context, not an order):" };
+        if (!string.IsNullOrWhiteSpace(status.AccountNo))
+        {
+            var power = await Tcbs.GetAsync($"buying-power?accountNo={Uri.EscapeDataString(status.AccountNo)}");
+            var risk = await Tcbs.GetAsync($"margin/risk?accountNo={Uri.EscapeDataString(status.AccountNo)}");
+            if (power.Ok)
+            {
+                var p = TcbsMapper.ReadBuyingPower(power.Json);
+                lines.Add($"Buying power {p.PurchasingPower:N0}, max qty {p.MaxQuantity:N0}.");
+            }
+            if (risk.Ok) lines.Add("Margin risk JSON: " + (risk.Json.Length > 500 ? risk.Json[..500] : risk.Json));
+        }
+        foreach (var symbol in symbols.Take(8))
+        {
+            var q = await Tcbs.GetAsync($"buying-power?accountNo={Uri.EscapeDataString(status.AccountNo)}&symbol={Uri.EscapeDataString(symbol)}");
+            if (!q.Ok) continue;
+            var p = TcbsMapper.ReadBuyingPower(q.Json);
+            lines.Add($"{symbol} max qty {p.MaxQuantity:N0}, pp {p.PurchasingPower:N0}.");
+        }
+        return string.Join("\n", lines);
     }
 
     private void OpenSymbolDropdown()

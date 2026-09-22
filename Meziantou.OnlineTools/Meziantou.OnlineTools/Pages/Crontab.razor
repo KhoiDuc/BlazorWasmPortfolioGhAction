@@ -1,0 +1,44 @@
+@page "/crontab"
+@using Meziantou.Framework.Scheduling
+@using System.Globalization
+
+<h1>Crontab</h1>
+<p><a href="https://github.com/meziantou/Meziantou.Framework/blob/main/src/Meziantou.Framework.Scheduling/readme.md">Crontab documentation</a></p>
+
+<input class="form-control code" list="expressions" @bind="text" />
+<datalist id="expressions">
+    <option value="* * * * *" />
+</datalist>
+
+<div>
+    <button class="btn btn-secondary" @onclick="Compute">Get occurences</button>
+</div>
+
+@if (result != null)
+{
+    <ResultValueList Values="result" />
+}
+
+@code {
+    string? text = "* * * * *";
+    IReadOnlyList<ResultValue>? result;
+
+    void Compute()
+    {
+        try
+        {
+            var schedule = CronExpression.Parse(text ?? "");
+#pragma warning disable RS0030 // Do not use banned APIs
+            result = schedule
+                .GetNextOccurrences(DateTime.Now)
+                .Take(50)
+                .Select((value, index) => new ResultValue($"Occurrence {index + 1}", value.ToString("o", CultureInfo.InvariantCulture)))
+                .ToArray();
+#pragma warning restore RS0030
+        }
+        catch (Exception ex)
+        {
+            result = [new ResultValue("Error", ex.Message)];
+        }
+    }
+}

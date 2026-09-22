@@ -1,0 +1,46 @@
+@page "/json-formatter"
+@using System.Text.Json
+
+<h1>JSON Formatter</h1>
+
+<textarea class="form-control code" @bind="text"></textarea>
+
+<div>
+    <label for="indentSize">Spaces</label>
+    <input id="indentSize" type="number" min="1" max="8" class="form-control" style="width: 8em; display: inline-block;" @bind="indentSize" />
+    <button class="btn btn-secondary" @onclick="() => Format(true)">Format</button>
+    <button class="btn btn-secondary" @onclick="() => Format(false)">Minify</button>
+</div>
+
+@if (result != null)
+{
+<ResultValueSingle CopyLabel="@(resultLabel ?? "result")" Value="@result" />
+}
+
+@code {
+    string? text;
+    string? result;
+    string? resultLabel;
+    int indentSize = 2;
+
+    void Format(bool indented)
+    {
+        resultLabel = indented ? "Formatted JSON" : "Minified JSON";
+        try
+        {
+            var doc = JsonDocument.Parse(text ?? "", new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = System.Text.Json.JsonCommentHandling.Skip, MaxDepth = 1000 });
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = indented,
+                IndentCharacter = ' ',
+                IndentSize = Math.Clamp(indentSize, 1, 8),
+            };
+
+            result = JsonSerializer.Serialize(doc.RootElement, options);
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+}

@@ -47,6 +47,7 @@
                 <button type="button" class="vd-nav-item @(_group == "vn" && _tab == "screen" ? "active" : "")" @onclick='() => Go("vn", "screen")'>@L["Trading_VnDesk_TabScreen"]</button>
                 <button type="button" class="vd-nav-item @(_group == "vn" && _tab == "backtest" ? "active" : "")" @onclick='() => Go("vn", "backtest")'>@L["Trading_VnDesk_TabBacktest"]</button>
                 <button type="button" class="vd-nav-item @(_group == "vn" && _tab == "ai" ? "active" : "")" @onclick='() => Go("vn", "ai")'>@L["Trading_VnDesk_TabAi"]</button>
+                <button type="button" class="vd-nav-item @(_group == "vn" && _tab == "tcbs" ? "active" : "")" @onclick='() => Go("vn", "tcbs")'>TCBS</button>
             </nav>
         </div>
         <div class="vd-nav-group">
@@ -130,6 +131,10 @@
         else if (_group == "vn" && _tab == "ai")
         {
             <VnAiPanel Symbol="@_activeSymbol" OnThesisReady="OnThesisReady" />
+        }
+        else if (_group == "vn" && _tab == "tcbs")
+        {
+            <VnTcbsMarketPanel Symbol="@_activeSymbol" />
         }
         else if (_group == "macro" && _tab == "commodities")
         {
@@ -221,7 +226,7 @@
 
     private static bool IsValidTab(string group, string tab) => group switch
     {
-        "vn" => tab is "market" or "analyze" or "screen" or "backtest" or "ai",
+        "vn" => tab is "market" or "analyze" or "screen" or "backtest" or "ai" or "tcbs",
         "macro" => tab is "commodities" or "central-banks" or "forex-sessions",
         _ => false
     };

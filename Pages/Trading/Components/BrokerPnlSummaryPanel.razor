@@ -1,5 +1,6 @@
 @using BlazorWasmPortfolioGhAction.Utils
 @inject IStringLocalizer<SharedResources> L
+@inject ITcbsApiClient Tcbs
 
 @{
     var s = BrokerPnlSummaryCalculator.Compute(Portfolio, Quotes);
@@ -8,6 +9,10 @@
 @if (s.HasData)
 {
     <div class="ts-panel broker-pnl-panel" aria-live="polite">
+        @if (_tcbsMarketValue is not null)
+        {
+            <p class="ts-muted">Giá trị thị trường TCBS @BrokerFormat.Vnd(_tcbsMarketValue) · sổ tay @BrokerFormat.Vnd(s.Unrealized + (Portfolio.Positions.Sum(p => p.CostBasis ?? 0)))</p>
+        }
         <div class="broker-pnl-head">
             <h2 class="ts-panel-title">@L["Trading_BrokerPnl_Title"]</h2>
             <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ToggleExpand">
@@ -206,6 +211,18 @@
     [Parameter] public Dictionary<string, decimal> Quotes { get; set; } = new();
 
     private bool _expanded;
+    private decimal? _tcbsMarketValue;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var status = await Tcbs.GetStatusAsync();
+        if (!status.Connected) return;
+        var q = string.IsNullOrWhiteSpace(status.AccountNo) ? "" : "?accountNo=" + Uri.EscapeDataString(status.AccountNo);
+        var assets = await Tcbs.GetAsync("assets" + q);
+        if (!assets.Ok) return;
+        var rows = TcbsMapper.ReadAssets(assets.Json);
+        if (rows.Count > 0) _tcbsMarketValue = rows.Sum(a => a.MarketValue);
+    }
 
     private void ToggleExpand() => _expanded = !_expanded;
 

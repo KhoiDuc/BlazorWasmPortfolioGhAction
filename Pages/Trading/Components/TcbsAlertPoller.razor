@@ -1,0 +1,51 @@
+@inject ITcbsApiClient Tcbs
+@inject IPriceAlertService Alerts
+@implements IDisposable
+
+@code {
+    private PeriodicTimer? _timer;
+    private CancellationTokenSource? _cts;
+
+    protected override void OnInitialized()
+    {
+        _cts = new CancellationTokenSource();
+        _timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        _ = Run(_cts.Token);
+    }
+
+    private async Task Run(CancellationToken ct)
+    {
+        while (await _timer!.WaitForNextTickAsync(ct))
+        {
+            try
+            {
+                var status = await Tcbs.GetStatusAsync(ct);
+                if (!status.Connected) continue;
+                var alerts = await Alerts.LoadAsync();
+                var symbols = alerts.Where(a => a.Status == AlertStatus.Active && a.AssetType == "stock")
+                    .Select(a => a.Symbol)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                if (symbols.Count == 0) continue;
+                var quotes = await Tcbs.GetQuotesAsync(symbols, ct);
+                foreach (var q in quotes.Where(q => q.MatchPrice > 0))
+                    await Alerts.CheckAlertsAsync(q.Symbol, (double)q.MatchPrice);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch
+            {
+                /* keep polling */
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _timer?.Dispose();
+        _cts?.Dispose();
+    }
+}

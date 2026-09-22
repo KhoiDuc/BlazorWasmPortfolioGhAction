@@ -333,6 +333,9 @@ public sealed class MoneyFlowSnapshot
     public double ChartMin { get; set; }
     public double ChartMax { get; set; }
     public bool MediumWaveSignal { get; set; }
+    public string? TcbsFlowNote { get; set; }
+    public decimal? BuySellRatio { get; set; }
+    public decimal? ForeignNet { get; set; }
     public List<MediumWaveCondition> WaveConditions { get; set; } = [];
     public List<MoneyFlowDayPoint> Series { get; set; } = [];
 }

@@ -65,7 +65,13 @@
                     var s = r;
                     <tr class="mf-row @(_detail?.Symbol == s.Symbol ? "mf-row-active" : "")"
                         @onclick="() => OnRowClick(s)">
-                        <td><strong>@s.Symbol</strong></td>
+                        <td>
+                            <strong>@s.Symbol</strong>
+                            @if (!string.IsNullOrWhiteSpace(s.TcbsFlowNote))
+                            {
+                                <div class="ts-muted">@s.TcbsFlowNote</div>
+                            }
+                        </td>
                         <td>@s.LastClose.ToString("N2")</td>
                         <td class="@(s.PercentChange >= 0 ? "vd-pos" : "vd-neg")">@s.PercentChange.ToString("F2")%</td>
                         <td>@s.Maker.ToString("F2")</td>

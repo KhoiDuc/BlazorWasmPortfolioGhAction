@@ -1,0 +1,132 @@
+@inject ITcbsApiClient Tcbs
+
+<section class="ts-panel tcbs-panel">
+    <div class="tcbs-head">
+        <h2 class="ts-panel-title">Sổ lệnh cơ sở</h2>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="Load" disabled="@_busy">Tải sổ lệnh</button>
+    </div>
+    <div class="broker-form-row broker-form-row-2">
+        <div class="broker-field">
+            <label class="broker-field-label" for="tcbs-order-status">Trạng thái</label>
+            <input id="tcbs-order-status" class="ts-input" @bind="_statusFilter" placeholder="FILLED, 2, 4…" />
+        </div>
+        <div class="broker-field">
+            <label class="broker-field-label" for="tcbs-order-symbol">Mã</label>
+            <input id="tcbs-order-symbol" class="ts-input" @bind="_symbolFilter" />
+        </div>
+    </div>
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="ts-alert ts-alert-error" role="alert">@_error</div>
+    }
+    <div class="broker-table-scroll">
+        <table class="ts-table">
+            <thead>
+                <tr><th>Mã</th><th>Chiều</th><th>Giá</th><th>KL</th><th>Khớp</th><th>TT</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var o in Filtered)
+                {
+                    <tr>
+                        <td>@o.Symbol</td>
+                        <td>@o.ExecType</td>
+                        <td class="broker-num">@o.Price.ToString("N2")</td>
+                        <td class="broker-num">@o.Quantity.ToString("N0")</td>
+                        <td class="broker-num">@o.ExecQuantity.ToString("N0")</td>
+                        <td>@o.Status</td>
+                        <td>
+                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => Show(o)">Chi tiết</button>
+                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => OnAmend.InvokeAsync(o)">Sửa</button>
+                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => Cancel(o)">Huỷ</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!string.IsNullOrEmpty(_detail))
+    {
+        <pre class="tcbs-raw">@_detail</pre>
+    }
+
+    <h3 class="ts-panel-title">Khớp lệnh</h3>
+    <div class="broker-table-scroll">
+        <table class="ts-table">
+            <thead><tr><th>Mã</th><th>Chiều</th><th>KL</th><th>Giá</th><th>Thời gian</th></tr></thead>
+            <tbody>
+                @foreach (var m in _matches.Take(50))
+                {
+                    <tr>
+                        <td>@m.Symbol</td>
+                        <td>@m.Side</td>
+                        <td class="broker-num">@m.Quantity.ToString("N0")</td>
+                        <td class="broker-num">@m.Price.ToString("N2")</td>
+                        <td>@(m.Time?.ToString("dd/MM HH:mm:ss") ?? "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    [Parameter] public EventCallback<TcbsOrder> OnAmend { get; set; }
+
+    private readonly List<TcbsOrder> _orders = [];
+    private readonly List<TcbsMatch> _matches = [];
+    private string _statusFilter = "";
+    private string _symbolFilter = "";
+    private string? _error;
+    private string? _detail;
+    private bool _busy;
+
+    private IEnumerable<TcbsOrder> Filtered => _orders.Where(o =>
+        (string.IsNullOrWhiteSpace(_symbolFilter) || o.Symbol.Contains(_symbolFilter.Trim(), StringComparison.OrdinalIgnoreCase))
+        && (string.IsNullOrWhiteSpace(_statusFilter) || o.Status.Contains(_statusFilter.Trim(), StringComparison.OrdinalIgnoreCase)));
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Load()
+    {
+        _busy = true;
+        _error = null;
+        var status = await Tcbs.GetStatusAsync();
+        if (!status.Connected)
+        {
+            _error = "Chưa kết nối TCBS.";
+            _busy = false;
+            return;
+        }
+        var q = string.IsNullOrWhiteSpace(status.AccountNo) ? "" : "?accountNo=" + Uri.EscapeDataString(status.AccountNo);
+        var orders = await Tcbs.GetAsync("orders" + q);
+        var matches = await Tcbs.GetAsync("matches" + q);
+        _orders.Clear();
+        _matches.Clear();
+        if (orders.Ok) _orders.AddRange(TcbsMapper.ReadOrders(orders.Json));
+        else _error = orders.Error;
+        if (matches.Ok) _matches.AddRange(TcbsMapper.ReadMatches(matches.Json));
+        _busy = false;
+    }
+
+    private async Task Show(TcbsOrder order)
+    {
+        var status = await Tcbs.GetStatusAsync();
+        var q = string.IsNullOrWhiteSpace(status.AccountNo) ? "" : "?accountNo=" + Uri.EscapeDataString(status.AccountNo);
+        var call = await Tcbs.GetAsync($"orders/{Uri.EscapeDataString(order.OrderId)}{q}");
+        _detail = call.Ok ? call.Json : call.Error;
+    }
+
+    private async Task Cancel(TcbsOrder order)
+    {
+        var status = await Tcbs.GetStatusAsync();
+        var first = await Tcbs.SendAsync(HttpMethod.Put, $"orders/{Uri.EscapeDataString(order.OrderId)}/cancel", new { accountNo = status.AccountNo });
+        if (!first.Ok) { _error = first.Error; return; }
+        var token = TcbsMapper.ReadError(first.Json);
+        using var doc = System.Text.Json.JsonDocument.Parse(string.IsNullOrWhiteSpace(first.Json) ? "{}" : first.Json);
+        var confirm = doc.RootElement.TryGetProperty("confirmToken", out var c) ? c.GetString() : null;
+        if (string.IsNullOrWhiteSpace(confirm)) { _error = token; return; }
+        var second = await Tcbs.SendAsync(HttpMethod.Put, $"orders/{Uri.EscapeDataString(order.OrderId)}/cancel", new { accountNo = status.AccountNo, confirmToken = confirm });
+        _error = second.Ok ? null : second.Error;
+        if (second.Ok) await Load();
+    }
+}

@@ -1,0 +1,47 @@
+@page "/yaml-string-encoder"
+
+<h1>Yaml String Encoder</h1>
+
+<textarea class="form-control code" @bind="text"></textarea>
+
+<div>
+    <button class="btn btn-secondary" @onclick="Encode">Encode to YAML string</button>
+    <button class="btn btn-secondary" @onclick="Decode">Decode YAML string</button>
+</div>
+
+@if (result != null)
+{
+<ResultValueSingle CopyLabel="@(resultLabel ?? "result")" Value="@result" />
+}
+
+@code {
+    string? text = "";
+    string? result;
+    string? resultLabel;
+
+    void Encode()
+    {
+        resultLabel = "YAML string";
+        try
+        {
+            result = Meziantou.Framework.Yaml.YamlSerializer.Serialize(text);
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+
+    void Decode()
+    {
+        resultLabel = "Decoded text";
+        try
+        {
+            result = Meziantou.Framework.Yaml.YamlSerializer.Deserialize<object>(text ?? "")?.ToString();
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+    }
+}

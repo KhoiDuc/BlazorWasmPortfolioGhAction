@@ -1,8 +1,21 @@
 @using BlazorWasmPortfolioGhAction.Utils
 @inject IStringLocalizer<SharedResources> L
+@inject ITcbsApiClient Tcbs
 
 @{
     var report = BrokerCashFlowCalculator.Compute(Portfolio);
+}
+
+@if (_tcbsCash is not null || _tcbsRows.Count > 0)
+{
+    <div class="ts-panel broker-cashflow-panel">
+        <h2 class="ts-panel-title">Sao kê TCBS</h2>
+        <p>Số dư tiền mặt: @BrokerFormat.Vnd(_tcbsCash?.CashBalance) · đầu ngày @BrokerFormat.Vnd(_tcbsCash?.BodBalance)</p>
+        @foreach (var row in _tcbsRows.Take(8))
+        {
+            <div>@(row.Date == DateTime.MinValue ? "—" : row.Date.ToString("dd/MM")) @row.Name @BrokerFormat.Vnd(row.Debit - row.Credit)</div>
+        }
+    </div>
 }
 
 @if (report.HasData)
@@ -93,6 +106,22 @@
 
     private bool _expanded;
     private string _monthFilter = "";
+    private TcbsCash? _tcbsCash;
+    private List<TcbsStatementRow> _tcbsRows = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var status = await Tcbs.GetStatusAsync();
+        if (!status.Connected) return;
+        var q = string.IsNullOrWhiteSpace(status.AccountNo) ? "" : "?accountNo=" + Uri.EscapeDataString(status.AccountNo);
+        var cash = await Tcbs.GetAsync("cash" + q);
+        var from = DateTime.Today.AddMonths(-1).ToString("yyyy-MM-dd");
+        var to = DateTime.Today.ToString("yyyy-MM-dd");
+        var joiner = string.IsNullOrEmpty(q) ? "?" : "&";
+        var statement = await Tcbs.GetAsync($"statement{q}{joiner}fromDate={from}&toDate={to}");
+        if (cash.Ok) _tcbsCash = TcbsMapper.ReadCash(cash.Json);
+        if (statement.Ok) _tcbsRows = TcbsMapper.ReadStatement(statement.Json);
+    }
 
     private List<BrokerCashFlowEntry> AllEntries =>
         BrokerCashFlowCalculator.Compute(Portfolio).Entries;

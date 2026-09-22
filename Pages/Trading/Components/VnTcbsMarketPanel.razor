@@ -1,0 +1,111 @@
+@inject ITcbsApiClient Tcbs
+
+<section class="vd-panel tcbs-panel">
+    <h2 class="vd-section-title">Thị trường TCBS</h2>
+    <p class="ts-muted">Thỏa thuận, tra cứu mã và cung cầu trong phiên. Cần kết nối TCBS ở Broker desk.</p>
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="vd-alert vd-alert-error">@_error</div>
+    }
+
+    <div class="vd-controls">
+        <label class="ts-label" for="tcbs-mkt-symbol">Mã</label>
+        <input id="tcbs-mkt-symbol" class="vd-input" @bind="_symbol" />
+        <button type="button" class="vd-btn vd-btn-primary vd-btn-sm" @onclick="LoadSymbol" disabled="@_busy">Tải</button>
+        <label class="ts-label" for="tcbs-floor">Sàn thỏa thuận</label>
+        <select id="tcbs-floor" class="vd-select" @bind="_floor">
+            <option value="1">HOSE</option>
+            <option value="2">HNX</option>
+            <option value="3">UPCOM</option>
+        </select>
+        <button type="button" class="vd-btn vd-btn-sm" @onclick="LoadPutThrough" disabled="@_busy">Thỏa thuận</button>
+    </div>
+
+    <h3 class="vd-section-title">Cung cầu 15 phút</h3>
+    @if (_supply.Count == 0)
+    {
+        <p class="ts-muted">Chưa có dữ liệu cung cầu.</p>
+    }
+    else
+    {
+        <div class="tcbs-bars" aria-label="Cung cầu trong phiên">
+            @foreach (var p in _supply.TakeLast(16))
+            {
+                var buy = Math.Max(0, (double)p.Buy);
+                var sell = Math.Max(0, (double)p.Sell);
+                var max = Math.Max(1, Math.Max(buy, sell));
+                <div class="tcbs-bar-col" title="@p.Time mua @p.Buy bán @p.Sell">
+                    <span class="tcbs-bar buy" style="height:@(buy / max * 72)px"></span>
+                    <span class="tcbs-bar sell" style="height:@(sell / max * 72)px"></span>
+                    <span class="tcbs-bar-time">@Short(p.Time)</span>
+                </div>
+            }
+        </div>
+    }
+
+    <h3 class="vd-section-title">Tra cứu @_symbol</h3>
+    <pre class="tcbs-raw">@_security</pre>
+
+    <h3 class="vd-section-title">Giao dịch thỏa thuận</h3>
+    <div class="broker-table-scroll">
+        <table class="ts-table">
+            <thead><tr><th>Loại</th><th>Mã</th><th>Chiều</th><th>Giá</th><th>KL</th><th>Giờ</th></tr></thead>
+            <tbody>
+                @foreach (var row in _puts.Take(40))
+                {
+                    <tr>
+                        <td>@row.Kind</td>
+                        <td>@row.Symbol</td>
+                        <td>@row.Side</td>
+                        <td class="broker-num">@row.Price.ToString("N2")</td>
+                        <td class="broker-num">@row.Volume.ToString("N0")</td>
+                        <td>@row.Time</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <TcbsStreamBadge Symbol="@_symbol" />
+</section>
+
+@code {
+    [Parameter] public string Symbol { get; set; } = "VNM";
+    private string _symbol = "VNM";
+    private string _floor = "1";
+    private string? _error;
+    private string _security = "";
+    private bool _busy;
+    private List<TcbsSupplyPoint> _supply = [];
+    private List<TcbsPutThrough> _puts = [];
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrWhiteSpace(Symbol)) _symbol = Symbol.Trim().ToUpperInvariant();
+    }
+
+    private async Task LoadSymbol()
+    {
+        _busy = true;
+        _error = null;
+        _symbol = _symbol.Trim().ToUpperInvariant();
+        var status = await Tcbs.GetStatusAsync();
+        if (!status.Connected) { _error = "Chưa kết nối TCBS."; _busy = false; return; }
+        var supply = await Tcbs.GetAsync($"market/supply-demand?ticker={_symbol}&window=15");
+        var security = await Tcbs.GetAsync($"market/security?symbol={_symbol}");
+        _supply = supply.Ok ? TcbsMapper.ReadSupply(supply.Json) : [];
+        _security = security.Ok ? (security.Json.Length > 2000 ? security.Json[..2000] : security.Json) : security.Error ?? "";
+        if (!supply.Ok) _error = supply.Error;
+        _busy = false;
+    }
+
+    private async Task LoadPutThrough()
+    {
+        _busy = true;
+        var call = await Tcbs.GetAsync($"market/put-through?floor={_floor}");
+        _puts = call.Ok ? TcbsMapper.ReadPutThrough(call.Json) : [];
+        if (!call.Ok) _error = call.Error;
+        _busy = false;
+    }
+
+    private static string Short(string time) => time.Length >= 5 ? time[..5] : time;
+}

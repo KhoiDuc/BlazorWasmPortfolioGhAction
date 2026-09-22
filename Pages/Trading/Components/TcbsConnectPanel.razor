@@ -1,0 +1,100 @@
+@inject ITcbsApiClient Tcbs
+
+<section class="ts-panel tcbs-panel">
+    <div class="tcbs-head">
+        <h2 class="ts-panel-title">Kết nối TCBS</h2>
+        <span class="tcbs-pill @(_status?.Connected == true ? "on" : "")">@(_status?.Connected == true ? "Đã nối" : "Chưa nối")</span>
+    </div>
+    <p class="ts-muted">API key và iOTP chỉ gửi lên broker-api để đổi JWT. Trình duyệt không lưu key. Chỉ chứng khoán cơ sở, không phái sinh.</p>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="ts-alert ts-alert-error" role="alert">@_error</div>
+    }
+    @if (_status?.NeedsReauth == true)
+    {
+        <div class="ts-alert ts-alert-info" role="status">Phiên TCBS hết hạn. Nhập lại iOTP.</div>
+    }
+
+    @if (_status?.Connected == true)
+    {
+        <p>Tiểu khoản <strong>@_status.AccountNo</strong> · lưu ký @_status.CustodyCode</p>
+        <label class="tcbs-check">
+            <input type="checkbox" checked="@_status.ReadOnly" @onchange="ToggleReadOnly" disabled="@_busy" />
+            Chế độ chỉ đọc (bật thì không gửi lệnh)
+        </label>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="Disconnect" disabled="@_busy">Ngắt TCBS</button>
+    }
+    else
+    {
+        <div class="broker-form-row broker-form-row-2">
+            <div class="broker-field">
+                <label class="broker-field-label" for="tcbs-key">API key TCInvest</label>
+                <input id="tcbs-key" class="ts-input" type="password" autocomplete="off" @bind="_apiKey" />
+            </div>
+            <div class="broker-field">
+                <label class="broker-field-label" for="tcbs-otp">iOTP</label>
+                <input id="tcbs-otp" class="ts-input" inputmode="numeric" maxlength="8" autocomplete="one-time-code" @bind="_otp" />
+            </div>
+        </div>
+        <div class="broker-field">
+            <label class="broker-field-label" for="tcbs-custody">Số lưu ký <span class="broker-optional">(nếu JWT không có)</span></label>
+            <input id="tcbs-custody" class="ts-input" @bind="_custody" placeholder="105C..." />
+        </div>
+        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="Connect" disabled="@_busy">@(_busy ? "Đang nối…" : "Kết nối")</button>
+    }
+</section>
+
+@code {
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    private TcbsStatus? _status;
+    private string _apiKey = "";
+    private string _otp = "";
+    private string _custody = "";
+    private string? _error;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync() => await Reload();
+
+    public async Task Reload()
+    {
+        _status = await Tcbs.GetStatusAsync();
+    }
+
+    private async Task Connect()
+    {
+        _busy = true;
+        _error = null;
+        var call = await Tcbs.ConnectAsync(_apiKey, _otp, string.IsNullOrWhiteSpace(_custody) ? null : _custody.Trim());
+        _busy = false;
+        if (!call.Ok)
+        {
+            _error = call.Error ?? "Không kết nối được TCBS.";
+            return;
+        }
+        _apiKey = "";
+        _otp = "";
+        await Reload();
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task Disconnect()
+    {
+        _busy = true;
+        await Tcbs.DisconnectAsync();
+        _busy = false;
+        await Reload();
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task ToggleReadOnly(ChangeEventArgs e)
+    {
+        var readOnly = e.Value is bool b && b;
+        _busy = true;
+        var call = await Tcbs.SetReadOnlyAsync(readOnly);
+        _busy = false;
+        if (!call.Ok) _error = call.Error;
+        await Reload();
+    }
+}
