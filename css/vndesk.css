@@ -74,15 +74,18 @@
 .vd-nav {
     display: flex;
     gap: 0.25rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     padding: 0.25rem;
     background: var(--color-bg-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-full);
     margin-bottom: 0.85rem;
     overflow-x: auto;
+    overflow-y: hidden;
     scrollbar-width: none;
     max-width: 100%;
+    scroll-padding-inline: 0.75rem;
+    -webkit-overflow-scrolling: touch;
 }
 .vd-nav::-webkit-scrollbar { display: none; }
 .vd-nav-item {
@@ -99,11 +102,16 @@
     cursor: pointer;
     white-space: nowrap;
     transition: background var(--transition-fast), color var(--transition-fast);
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
 }
 .vd-nav-item:hover { color: var(--color-nav-link-hover); background: var(--color-bg-surface-elevated); }
 .vd-nav-item.active {
     background: var(--gradient-accent);
     color: #fff;
+    z-index: 2;
+    scroll-margin-inline: 0.75rem;
 }
 
 /* Two-row tab groups (VN + Macro) */
@@ -165,7 +173,8 @@
         right: 0;
         top: 0;
         bottom: 0;
-        width: 1.5rem;
+        width: 1.25rem;
+        z-index: 0;
         pointer-events: none;
         background: linear-gradient(to right, transparent, var(--color-bg-surface));
     }
