@@ -12,8 +12,8 @@ public interface IVnMarketClient
 {
     Task<List<MarketIndex>> FetchIndicesAsync(CancellationToken ct = default);
     Task<List<string>> FetchSymbolsAsync(CancellationToken ct = default);
-    Task<List<StockData>> GetHistoricalAsync(string symbol, int sessions = 250, string timeframe = "daily", CancellationToken ct = default);
-    Task<List<StockData>> GetLatestManyAsync(IReadOnlyList<string> symbols, IProgress<int>? progress = null, int maxParallel = 12, CancellationToken ct = default);
+    Task<List<StockData>> GetHistoricalAsync(string symbol, int sessions = 250, string timeframe = "daily", CancellationToken ct = default, bool forceRefresh = false);
+    Task<List<StockData>> GetLatestManyAsync(IReadOnlyList<string> symbols, IProgress<int>? progress = null, int maxParallel = 12, CancellationToken ct = default, bool forceRefresh = false);
     Task<List<IntradayData>> FetchIntradayAsync(string symbol, CancellationToken ct = default);
     Task<List<StockData>> GetMarketIndexHistoryAsync(string indexCode = "VNINDEX", int sessions = 250, CancellationToken ct = default);
     void ClearCache();
@@ -78,10 +78,10 @@ public sealed class VnMarketClient : IVnMarketClient
         }
     }
 
-    public async Task<List<StockData>> GetHistoricalAsync(string symbol, int sessions = 250, string timeframe = "daily", CancellationToken ct = default)
+    public async Task<List<StockData>> GetHistoricalAsync(string symbol, int sessions = 250, string timeframe = "daily", CancellationToken ct = default, bool forceRefresh = false)
     {
         var cacheKey = $"{symbol}_{timeframe}_{sessions}";
-        if (_cache.TryGetValue(cacheKey, out var cached) && cached.Count > 0)
+        if (!forceRefresh && _cache.TryGetValue(cacheKey, out var cached) && cached.Count > 0)
             return cached.OrderBy(d => d.Date).TakeLast(sessions).ToList();
 
         try
@@ -119,7 +119,7 @@ public sealed class VnMarketClient : IVnMarketClient
         }
     }
 
-    public async Task<List<StockData>> GetLatestManyAsync(IReadOnlyList<string> symbols, IProgress<int>? progress = null, int maxParallel = 12, CancellationToken ct = default)
+    public async Task<List<StockData>> GetLatestManyAsync(IReadOnlyList<string> symbols, IProgress<int>? progress = null, int maxParallel = 12, CancellationToken ct = default, bool forceRefresh = false)
     {
         var bag = new ConcurrentBag<StockData>();
         using var sem = new SemaphoreSlim(maxParallel);
@@ -129,7 +129,7 @@ public sealed class VnMarketClient : IVnMarketClient
             await sem.WaitAsync(ct);
             try
             {
-                var data = await GetHistoricalAsync(symbol, 1, "summary", ct);
+                var data = await GetHistoricalAsync(symbol, 1, "summary", ct, forceRefresh);
                 var first = data.FirstOrDefault();
                 if (first is not null)
                     bag.Add(first);

@@ -290,6 +290,7 @@
                                   Position="Selected"
                                   CurrentPrice="@Quote(Selected.Symbol)"
                                   OnSync="OnEditorSync"
+                                  OnLevelsChanged="RefreshPriceAlerts"
                                   OnDeleted="DeleteSelected"
                                   OnClosed="OnPositionClosed"
                                   OnReopen="OnPositionReopened"
@@ -323,6 +324,7 @@
     private int _priceProgressTotal;
     private Timer? _persistTimer;
     private Timer? _flashTimer;
+    private bool _activeSlTpFlash;
     private CancellationTokenSource? _priceCts;
 
     private string _newSymbol = "";
@@ -559,13 +561,23 @@
                 _ => (false, $"Unknown sync action: {action.GetType().Name}")
             };
 
-            if (ok) _dirty = false;
+            if (ok)
+            {
+                _dirty = false;
+                RefreshPriceAlerts();
+            }
             else Flash($"Sync fail: {error}", error: true);
         }
         catch (Exception ex)
         {
             Flash($"Sync exception: {ex.GetType().Name}: {ex.Message}", error: true);
         }
+    }
+
+    private void RefreshPriceAlerts()
+    {
+        CheckAlerts();
+        StateHasChanged();
     }
 
     private async Task FlushPendingSavesAsync()
@@ -932,9 +944,11 @@
                     // Component may be disposed.
                 }
             });
-            var rows = await Market.GetLatestManyAsync(symbols, progress, ct: ct);
+            var rows = await Market.GetLatestManyAsync(symbols, progress, ct: ct, forceRefresh: true);
+            var updated = new Dictionary<string, decimal>(_quotes, StringComparer.OrdinalIgnoreCase);
             foreach (var row in rows.GroupBy(s => s.Symbol, StringComparer.OrdinalIgnoreCase))
-                _quotes[row.Key] = row.First().Close;
+                updated[row.Key] = row.First().Close;
+            _quotes = updated;
             _priceUpdatedAt = DateTime.Now;
         }
         catch (OperationCanceledException)
@@ -951,6 +965,7 @@
             _priceProgressDone = 0;
             _priceProgressTotal = 0;
             CheckAlerts();
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -969,7 +984,15 @@
         }
 
         if (alerts.Count > 0)
+        {
+            _activeSlTpFlash = true;
             Flash(string.Join(" · ", alerts), error: alerts.Count > 0 && !alerts.All(a => a.Contains("mục tiêu")));
+        }
+        else if (_activeSlTpFlash)
+        {
+            _activeSlTpFlash = false;
+            DismissMessage();
+        }
     }
 
     private void Flash(string text, bool error = false)
@@ -1002,6 +1025,8 @@
     {
         _flashTimer?.Dispose();
         _message = null;
+        _messageError = false;
+        _activeSlTpFlash = false;
     }
 
     public override void Dispose()
