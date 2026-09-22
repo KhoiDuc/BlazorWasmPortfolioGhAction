@@ -64,7 +64,7 @@
                 {
                     var s = r;
                     <tr class="mf-row @(_detail?.Symbol == s.Symbol ? "mf-row-active" : "")"
-                        @onclick="() => SelectDetail(s)">
+                        @onclick="() => OnRowClick(s)">
                         <td><strong>@s.Symbol</strong></td>
                         <td>@s.LastClose.ToString("N2")</td>
                         <td class="@(s.PercentChange >= 0 ? "vd-pos" : "vd-neg")">@s.PercentChange.ToString("F2")%</td>
@@ -145,7 +145,7 @@
         <div class="mf-chart-head">
             <h3 class="mf-chart-title">@L["Trading_MF_ChartTitle"]</h3>
             <label class="mf-strd-toggle">
-                <input type="checkbox" @bind="_showStrd" @bind:after="MarkChartDirty" />
+                <input type="checkbox" @bind="_showStrd" @bind:after="OnStrdToggled" />
                 STRD
             </label>
         </div>
@@ -179,11 +179,21 @@
     private int _progressTotal;
     private string? _loadedInitial;
     private bool _chartDirty;
+    private bool _disposed;
+    private CancellationTokenSource? _scanCts;
 
     protected override async Task OnInitializedAsync()
     {
-        var lists = await Screener.GetListsAsync();
-        _listKeys = lists.Keys.OrderBy(k => k).ToList();
+        try
+        {
+            var lists = await Screener.GetListsAsync();
+            _listKeys = lists.Keys.OrderBy(k => k).ToList();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            _listKeys = [];
+        }
     }
 
     protected override async Task OnParametersSetAsync()
@@ -195,19 +205,36 @@
         await LoadDetailOnly(sym);
     }
 
+    private CancellationToken BeginScan()
+    {
+        _scanCts?.Cancel();
+        _scanCts?.Dispose();
+        _scanCts = new CancellationTokenSource();
+        return _scanCts.Token;
+    }
+
     private async Task RunScan()
     {
         _error = null;
         _busy = true;
         _progressDone = 0;
-        StateHasChanged();
+        var ct = BeginScan();
+        await InvokeAsync(StateHasChanged);
 
         try
         {
             var symbols = await ResolveSymbolsAsync();
+            if (symbols.Count == 0)
+            {
+                _error = L["Trading_MF_NoData"].Value;
+                return;
+            }
+
             _progressTotal = symbols.Count;
-            var progress = new Progress<int>(n => { _progressDone = n; InvokeAsync(StateHasChanged); });
-            _rows = await ScanService.ScanManyAsync(symbols, progress);
+            var progress = new Progress<int>(n => ReportProgress(n));
+            _rows = await ScanService.ScanManyAsync(symbols, progress, ct);
+
+            if (_disposed || ct.IsCancellationRequested) return;
 
             if (_rows.Count == 0)
             {
@@ -221,13 +248,19 @@
                 : _rows[0];
             await SelectDetail(pick);
         }
+        catch (OperationCanceledException)
+        {
+            // tab switched or new scan started
+        }
         catch (Exception ex)
         {
-            _error = ex.Message;
+            if (!_disposed)
+                _error = ex.Message;
         }
         finally
         {
-            _busy = false;
+            if (!_disposed)
+                _busy = false;
         }
     }
 
@@ -235,17 +268,30 @@
     {
         _busy = true;
         _error = null;
+        var ct = BeginScan();
         try
         {
-            _detail = await ScanService.ScanSymbolAsync(symbol);
+            _detail = await ScanService.ScanSymbolAsync(symbol, ct);
+            if (_disposed || ct.IsCancellationRequested) return;
+
             if (_detail is null)
                 _error = L["Trading_MF_NoData"].Value;
             else if (_rows.All(r => !r.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase)))
                 _rows = [_detail];
         }
+        catch (OperationCanceledException)
+        {
+            // ignored
+        }
+        catch (Exception ex)
+        {
+            if (!_disposed)
+                _error = ex.Message;
+        }
         finally
         {
-            _busy = false;
+            if (!_disposed)
+                _busy = false;
         }
 
         MarkChartDirty();
@@ -253,14 +299,51 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_chartDirty)
+        if (!_chartDirty || _disposed) return;
+
+        _chartDirty = false;
+        try
         {
-            _chartDirty = false;
             await RenderChart();
+        }
+        catch (Exception ex)
+        {
+            if (!_disposed)
+                _error = ex.Message;
+        }
+    }
+
+    private void ReportProgress(int n)
+    {
+        if (_disposed) return;
+        _progressDone = n;
+        _ = InvokeAsync(() =>
+        {
+            if (_disposed) return Task.CompletedTask;
+            StateHasChanged();
+            return Task.CompletedTask;
+        });
+    }
+
+    private async Task OnRowClick(MoneyFlowSnapshot snap)
+    {
+        try
+        {
+            await SelectDetail(snap);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
         }
     }
 
     private void MarkChartDirty() => _chartDirty = true;
+
+    private void OnStrdToggled()
+    {
+        _chartDirty = true;
+        StateHasChanged();
+    }
 
     private async Task SelectDetail(MoneyFlowSnapshot snap)
     {
@@ -270,9 +353,13 @@
             return;
         }
 
-        _detail = snap.Series.Count > 0
-            ? snap
-            : await ScanService.ScanSymbolAsync(snap.Symbol) ?? snap;
+        if (snap.Series.Count > 0)
+            _detail = snap;
+        else
+        {
+            var ct = _scanCts?.Token ?? CancellationToken.None;
+            _detail = await ScanService.ScanSymbolAsync(snap.Symbol, ct) ?? snap;
+        }
 
         MarkChartDirty();
     }
@@ -284,31 +371,67 @@
         var series = _detail.Series.TakeLast(50).ToList();
         if (series.Count == 0) return;
 
-        await JS.InvokeVoidAsync("scriptLoader.loadChartJs");
-        var labels = series.Select(p => p.Date.ToString("dd/MM")).ToArray();
-        var datasets = new List<object>
+        try
         {
-            new { label = $"Maker ({_detail.Maker:F2})", data = series.Select(p => p.Maker).ToArray(), color = "#8b5cf6" },
-            new { label = $"SLong ({_detail.SLong:F2})", data = series.Select(p => p.SLong).ToArray(), color = "#f59e0b" },
-            new { label = $"Score ({_detail.Score:F2})", data = series.Select(p => p.Score).ToArray(), color = "#3b82f6" }
-        };
+            await JS.InvokeVoidAsync("scriptLoader.loadChartJs");
+            var labels = series.Select(p => p.Date.ToString("dd/MM")).ToArray();
+            var datasets = new List<object>
+            {
+                new { label = $"Maker ({_detail.Maker:F2})", data = series.Select(p => ChartVal(p.Maker)).ToArray(), color = "#8b5cf6" },
+                new { label = $"SLong ({_detail.SLong:F2})", data = series.Select(p => ChartVal(p.SLong)).ToArray(), color = "#f59e0b" },
+                new { label = $"Score ({_detail.Score:F2})", data = series.Select(p => ChartVal(p.Score)).ToArray(), color = "#3b82f6" }
+            };
 
-        if (_showStrd)
-        {
-            datasets.Add(new { label = "Maker STRD", data = series.Select(p => p.MakerStrd ?? double.NaN).ToArray(), color = "#c4b5fd" });
-            datasets.Add(new { label = "SLong STRD", data = series.Select(p => p.SLongStrd ?? double.NaN).ToArray(), color = "#fcd34d" });
-            datasets.Add(new { label = "Score STRD", data = series.Select(p => p.ScoreStrd ?? double.NaN).ToArray(), color = "#93c5fd" });
-            datasets.Add(new { label = "Maker Δ STRD", data = series.Select(p => p.MakerDeltaStrd ?? double.NaN).ToArray(), color = "#a78bfa" });
-            datasets.Add(new { label = "SLong Δ STRD", data = series.Select(p => p.SLongDeltaStrd ?? double.NaN).ToArray(), color = "#fbbf24" });
-            datasets.Add(new { label = "Score Δ STRD", data = series.Select(p => p.ScoreDeltaStrd ?? double.NaN).ToArray(), color = "#60a5fa" });
+            if (_showStrd)
+            {
+                datasets.Add(new { label = "Maker STRD", data = series.Select(p => ChartVal(p.MakerStrd)).ToArray(), color = "#c4b5fd" });
+                datasets.Add(new { label = "SLong STRD", data = series.Select(p => ChartVal(p.SLongStrd)).ToArray(), color = "#fcd34d" });
+                datasets.Add(new { label = "Score STRD", data = series.Select(p => ChartVal(p.ScoreStrd)).ToArray(), color = "#93c5fd" });
+                datasets.Add(new { label = "Maker Δ STRD", data = series.Select(p => ChartVal(p.MakerDeltaStrd)).ToArray(), color = "#a78bfa" });
+                datasets.Add(new { label = "SLong Δ STRD", data = series.Select(p => ChartVal(p.SLongDeltaStrd)).ToArray(), color = "#fbbf24" });
+                datasets.Add(new { label = "Score Δ STRD", data = series.Select(p => ChartVal(p.ScoreDeltaStrd)).ToArray(), color = "#60a5fa" });
+            }
+
+            double? yMin = null;
+            double? yMax = null;
+            if (!_showStrd)
+            {
+                var min = _detail.ChartMin;
+                var max = _detail.ChartMax;
+                if (double.IsFinite(min) && double.IsFinite(max))
+                {
+                    var pad = Math.Max((max - min) * 0.05, 0.5);
+                    yMin = min - pad;
+                    yMax = max + pad;
+                    if (Math.Abs(yMax.Value - yMin.Value) < 1e-6)
+                    {
+                        yMin = yMin.Value - 1;
+                        yMax = yMax.Value + 1;
+                    }
+                }
+            }
+
+            await JS.InvokeVoidAsync("tradingCharts.lines", _chartCanvasId, labels, datasets, yMin, yMax);
         }
-
-        var pad = (_detail.ChartMax - _detail.ChartMin) * 0.05;
-        var yMin = _detail.ChartMin - pad;
-        var yMax = _detail.ChartMax + pad;
-
-        await JS.InvokeVoidAsync("tradingCharts.lines", _chartCanvasId, labels, datasets, yMin, yMax);
+        catch (TaskCanceledException)
+        {
+            // navigation / disconnect
+        }
+        catch (JSException ex)
+        {
+            if (!_disposed)
+                _error = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            if (!_disposed)
+                _error = ex.Message;
+        }
     }
+
+    /// <summary>Chart.js / JSON interop cannot use NaN — use null for gaps.</summary>
+    private static double? ChartVal(double v) => double.IsFinite(v) ? v : null;
+    private static double? ChartVal(double? v) => v is { } n && double.IsFinite(n) ? n : null;
 
     private async Task<List<string>> ResolveSymbolsAsync()
     {
@@ -331,6 +454,11 @@
 
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
+        _scanCts?.Cancel();
+        _scanCts?.Dispose();
+        _scanCts = null;
+
         try
         {
             await JS.InvokeVoidAsync("tradingCharts.destroy", _chartCanvasId);

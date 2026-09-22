@@ -152,13 +152,17 @@ window.tradingCharts = {
         if (!canvas || !window.Chart) return;
         if (canvas._chart) canvas._chart.destroy();
         var mapped = (datasets || []).map(function (d) {
+            var points = (d.data || []).map(function (v) {
+                return typeof v === 'number' && isFinite(v) ? v : null;
+            });
             return {
                 label: d.label || '',
-                data: d.data || [],
+                data: points,
                 borderColor: d.color || '#3b82f6',
                 backgroundColor: 'transparent',
                 borderWidth: 2,
                 pointRadius: 0,
+                spanGaps: false,
                 tension: 0.25
             };
         });
@@ -173,8 +177,8 @@ window.tradingCharts = {
                 scales: {
                     x: { ticks: { maxTicksLimit: 8 } },
                     y: {
-                        min: typeof yMin === 'number' ? yMin : undefined,
-                        max: typeof yMax === 'number' ? yMax : undefined
+                        min: typeof yMin === 'number' && isFinite(yMin) ? yMin : undefined,
+                        max: typeof yMax === 'number' && isFinite(yMax) ? yMax : undefined
                     }
                 }
             }

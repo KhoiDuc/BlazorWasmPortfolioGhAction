@@ -185,7 +185,8 @@ public static class MoneyFlowCalculator
         var mean = slice.Average();
         var std = StdDev(slice, mean);
         if (std < 1e-9) return 0;
-        return (values[index] - mean) / std;
+        var z = (values[index] - mean) / std;
+        return double.IsFinite(z) ? z : null;
     }
 
     private static double? DeltaZScoreAt(IReadOnlyList<double> values, int index, int deltaLookback, int window)
@@ -203,7 +204,8 @@ public static class MoneyFlowCalculator
         var mean = deltas.Average();
         var std = StdDev(deltas, mean);
         if (std < 1e-9) return 0;
-        return (current - mean) / std;
+        var z = (current - mean) / std;
+        return double.IsFinite(z) ? z : null;
     }
 
     private static double StdDev(IReadOnlyList<double> values, double mean)
