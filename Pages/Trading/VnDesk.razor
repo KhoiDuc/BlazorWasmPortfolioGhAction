@@ -6,6 +6,7 @@
 @using BlazorWasmPortfolioGhAction.Services.Localization
 @using Microsoft.AspNetCore.WebUtilities
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 @inject IStringLocalizer<SharedResources> L
 
 <div class="vd-page">
@@ -166,12 +167,28 @@
     private string _chartSource = "vietstock";
     private bool _chartCollapsed;
     private VnAnalysisPanel? _analysis;
+    private string? _navScrollKey;
 
     private readonly string[] _popular = ["VNM", "FPT", "HPG", "VCB", "MWG"];
 
     protected override void OnParametersSet()
     {
         ApplyQuery();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var key = $"{_group}:{_tab}";
+        if (_navScrollKey == key && !firstRender) return;
+        _navScrollKey = key;
+        try
+        {
+            await JS.InvokeVoidAsync("tradingVndesk.scrollActiveNav");
+        }
+        catch
+        {
+            // ignore disconnect during prerender/navigation
+        }
     }
 
     private void ApplyQuery()

@@ -235,3 +235,17 @@ window.tradingSignals = {
         if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
     }
 };
+
+window.tradingVndesk = {
+    scrollActiveNav: function () {
+        document.querySelectorAll('.vd-nav').forEach(function (nav) {
+            var active = nav.querySelector('.vd-nav-item.active');
+            if (!active) return;
+            try {
+                active.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'auto' });
+            } catch (e) {
+                active.scrollIntoView(false);
+            }
+        });
+    }
+};
