@@ -59,6 +59,7 @@ public static class TradingServiceExtensions
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.PositionService>();
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.BacktestService>();
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.SectorQuantService>();
+        services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.MoneyFlowScanService>();
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.IVnFundamentalsClient,
             BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.VnFundamentalsClient>();
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.VnDesk.MarketContextService>();

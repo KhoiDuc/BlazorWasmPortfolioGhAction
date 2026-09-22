@@ -723,9 +723,13 @@ public static class BrokerPnlSummaryCalculator
             return new BrokerPnlSummary();
 
         var winners = entries.Where(e => e.PnlAmount > 0)
-            .OrderByDescending(e => e.PnlAmount).ToList();
+            .OrderByDescending(e => e.PnlPct ?? decimal.MinValue)
+            .ThenByDescending(e => e.PnlAmount)
+            .ToList();
         var losers = entries.Where(e => e.PnlAmount < 0)
-            .OrderBy(e => e.PnlAmount).ToList();
+            .OrderBy(e => e.PnlPct ?? decimal.MaxValue)
+            .ThenBy(e => e.PnlAmount)
+            .ToList();
         var flat = entries.Count(e => e.PnlAmount == 0);
 
         var sectorBreakdown = entries

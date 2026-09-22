@@ -146,6 +146,46 @@ window.tradingCharts = {
             },
             options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
         });
+    },
+    lines: function (canvasId, labels, datasets, yMin, yMax) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas || !window.Chart) return;
+        if (canvas._chart) canvas._chart.destroy();
+        var mapped = (datasets || []).map(function (d) {
+            return {
+                label: d.label || '',
+                data: d.data || [],
+                borderColor: d.color || '#3b82f6',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0.25
+            };
+        });
+        canvas._chart = new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: { labels: labels || [], datasets: mapped },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'bottom' } },
+                scales: {
+                    x: { ticks: { maxTicksLimit: 8 } },
+                    y: {
+                        min: typeof yMin === 'number' ? yMin : undefined,
+                        max: typeof yMax === 'number' ? yMax : undefined
+                    }
+                }
+            }
+        });
+    },
+    destroy: function (canvasId) {
+        var canvas = document.getElementById(canvasId);
+        if (canvas && canvas._chart) {
+            canvas._chart.destroy();
+            canvas._chart = null;
+        }
     }
 };
 

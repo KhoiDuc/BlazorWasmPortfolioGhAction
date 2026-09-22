@@ -294,6 +294,54 @@ public class PotentialStock
     public string Reason { get; set; } = "";
 }
 
+// --- Per-symbol money flow (CLV-based; not Finlens) ---
+public sealed class MoneyFlowDayPoint
+{
+    public DateTime Date { get; set; }
+    public double Maker { get; set; }
+    public double Score { get; set; }
+    public double SLong { get; set; }
+    public double? MakerStrd { get; set; }
+    public double? ScoreStrd { get; set; }
+    public double? SLongStrd { get; set; }
+    public double? MakerDeltaStrd { get; set; }
+    public double? ScoreDeltaStrd { get; set; }
+    public double? SLongDeltaStrd { get; set; }
+}
+
+public sealed class MediumWaveCondition
+{
+    public string Key { get; set; } = "";
+    public bool Met { get; set; }
+    public string Detail { get; set; } = "";
+}
+
+public sealed class MoneyFlowSnapshot
+{
+    public string Symbol { get; set; } = "";
+    public bool HasData { get; set; }
+    public decimal LastClose { get; set; }
+    public decimal PercentChange { get; set; }
+    public double Maker { get; set; }
+    public double Score { get; set; }
+    public double SLong { get; set; }
+    public double DeltaMaker { get; set; }
+    public double DeltaScore { get; set; }
+    public double DeltaSLong { get; set; }
+    public double Heat30D { get; set; }
+    public double? Heat30Percentile { get; set; }
+    public double ChartMin { get; set; }
+    public double ChartMax { get; set; }
+    public bool MediumWaveSignal { get; set; }
+    public List<MediumWaveCondition> WaveConditions { get; set; } = [];
+    public List<MoneyFlowDayPoint> Series { get; set; } = [];
+}
+
+public sealed class MoneyFlowScanRow
+{
+    public MoneyFlowSnapshot Snapshot { get; set; } = new();
+}
+
 public class PositionResult
 {
     public string Symbol { get; set; } = "";

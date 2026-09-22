@@ -1,0 +1,343 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@inject MoneyFlowScanService ScanService
+@inject VnScreenerService Screener
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResources> L
+@implements IAsyncDisposable
+
+<div class="vd-panel mf-panel">
+    <p class="ts-muted mf-disclaimer">@L["Trading_MF_Disclaimer"]</p>
+    <div class="vd-controls mf-controls">
+        <label class="ts-label" for="mf-list">@L["Trading_Screener_List"]</label>
+        <select id="mf-list" class="vd-select" @bind="_listKey" disabled="@_busy">
+            <option value="">@L["Trading_MF_Manual"]</option>
+            <option value="VN30">VN30</option>
+            @foreach (var k in _listKeys.Where(k => k != "VN30"))
+            {
+                <option value="@k">@k</option>
+            }
+        </select>
+        @if (string.IsNullOrEmpty(_listKey))
+        {
+            <input class="vd-input mf-symbols" @bind="_symbolsInput" placeholder="VOS, VNM, FPT..." disabled="@_busy" />
+        }
+        <button type="button" class="vd-btn vd-btn-primary vd-btn-sm" @onclick="RunScan" disabled="@_busy">
+            @L["Trading_MF_ScanBtn"]
+        </button>
+        @if (_busy)
+        {
+            <span class="vd-spinner" role="status"></span>
+            @if (_progressTotal > 0)
+            {
+                <span class="ts-muted" style="font-size:0.82rem">@_progressDone / @_progressTotal</span>
+            }
+        }
+    </div>
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="vd-alert vd-alert-error mt-2">@_error</div>
+    }
+</div>
+
+@if (_rows.Count > 0)
+{
+    <div class="vd-panel mf-table-panel">
+        <table class="vd-grid mf-grid">
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Giá</th>
+                    <th>%</th>
+                    <th>Maker</th>
+                    <th>Score</th>
+                    <th>SLong</th>
+                    <th>Heat 30D</th>
+                    <th>Δ Maker</th>
+                    <th>Δ Score</th>
+                    <th>Δ SLong</th>
+                    <th>@L["Trading_MF_WaveCol"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in _rows)
+                {
+                    var s = r;
+                    <tr class="mf-row @(_detail?.Symbol == s.Symbol ? "mf-row-active" : "")"
+                        @onclick="() => SelectDetail(s)">
+                        <td><strong>@s.Symbol</strong></td>
+                        <td>@s.LastClose.ToString("N2")</td>
+                        <td class="@(s.PercentChange >= 0 ? "vd-pos" : "vd-neg")">@s.PercentChange.ToString("F2")%</td>
+                        <td>@s.Maker.ToString("F2")</td>
+                        <td>@s.Score.ToString("F2")</td>
+                        <td>@s.SLong.ToString("F2")</td>
+                        <td>
+                            @s.Heat30D.ToString("F1")
+                            @if (s.Heat30Percentile is not null)
+                            {
+                                <span class="ts-muted" style="font-size:0.72rem"> (P@(s.Heat30Percentile.Value.ToString("F0")))</span>
+                            }
+                        </td>
+                        <td class="@DeltaClass(s.DeltaMaker)">@FormatDelta(s.DeltaMaker)</td>
+                        <td class="@DeltaClass(s.DeltaScore)">@FormatDelta(s.DeltaScore)</td>
+                        <td class="@DeltaClass(s.DeltaSLong)">@FormatDelta(s.DeltaSLong)</td>
+                        <td>
+                            @if (s.MediumWaveSignal)
+                            {
+                                <span class="mf-wave-badge mf-wave-yes">@L["Trading_MF_WaveYes"]</span>
+                            }
+                            else
+                            {
+                                <span class="mf-wave-badge mf-wave-no">—</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (_detail is not null && _detail.HasData)
+{
+    var d = _detail;
+    var chartSeries = d.Series.TakeLast(50).ToList();
+    <div class="vd-panel mf-detail">
+        <div class="mf-detail-head">
+            <div>
+                <h2 class="vd-section-title">@L["Trading_MF_DetailTitle", d.Symbol]</h2>
+                <p class="ts-muted mf-detail-sub">@L["Trading_MF_DetailSub"]</p>
+            </div>
+            <button type="button" class="vd-btn vd-btn-sm" @onclick="() => OnSymbolSelected.InvokeAsync(d.Symbol)">
+                @L["Trading_VnDesk_Analyze"]
+            </button>
+        </div>
+
+        <div class="mf-metrics">
+            <div class="vd-metric-card mf-metric mf-metric-maker">
+                <div class="vd-metric-label">Maker</div>
+                <div class="vd-metric-value">@d.Maker.ToString("F2")</div>
+            </div>
+            <div class="vd-metric-card mf-metric mf-metric-score">
+                <div class="vd-metric-label">Score</div>
+                <div class="vd-metric-value">@d.Score.ToString("F2")</div>
+            </div>
+            <div class="vd-metric-card mf-metric mf-metric-slong">
+                <div class="vd-metric-label">SLong</div>
+                <div class="vd-metric-value">@d.SLong.ToString("F2")</div>
+            </div>
+        </div>
+
+        @if (d.MediumWaveSignal)
+        {
+            <div class="mf-wave-banner" role="status">@L["Trading_MF_WaveBanner"]</div>
+        }
+
+        <ul class="mf-conditions">
+            @foreach (var c in d.WaveConditions)
+            {
+                <li class="@(c.Met ? "mf-cond-ok" : "mf-cond-fail")">
+                    <span aria-hidden="true">@(c.Met ? "✓" : "○")</span> @c.Detail
+                </li>
+            }
+        </ul>
+
+        <div class="mf-chart-head">
+            <h3 class="mf-chart-title">@L["Trading_MF_ChartTitle"]</h3>
+            <label class="mf-strd-toggle">
+                <input type="checkbox" @bind="_showStrd" @bind:after="MarkChartDirty" />
+                STRD
+            </label>
+        </div>
+        <div class="mf-chart-wrap">
+            <canvas id="@_chartCanvasId" aria-label="@L["Trading_MF_ChartTitle"]"></canvas>
+        </div>
+
+        <div class="mf-footer-stats">
+            <span>Range: @d.ChartMin.ToString("F0") / @d.ChartMax.ToString("F0")</span>
+            <span>Δ Maker: @FormatDelta(d.DeltaMaker)</span>
+            <span>Δ SLong: @FormatDelta(d.DeltaSLong)</span>
+            <span>Δ Score: @FormatDelta(d.DeltaScore)</span>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string? InitialSymbol { get; set; }
+    [Parameter] public EventCallback<string> OnSymbolSelected { get; set; }
+
+    private readonly string _chartCanvasId = $"mf-chart-{Guid.NewGuid():N}";
+    private List<string> _listKeys = [];
+    private string _listKey = "VN30";
+    private string _symbolsInput = "VOS,VNM,FPT,HPG";
+    private List<MoneyFlowSnapshot> _rows = [];
+    private MoneyFlowSnapshot? _detail;
+    private bool _busy;
+    private bool _showStrd;
+    private string? _error;
+    private int _progressDone;
+    private int _progressTotal;
+    private string? _loadedInitial;
+    private bool _chartDirty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var lists = await Screener.GetListsAsync();
+        _listKeys = lists.Keys.OrderBy(k => k).ToList();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(InitialSymbol)) return;
+        var sym = InitialSymbol.Trim().ToUpperInvariant();
+        if (sym == _loadedInitial) return;
+        _loadedInitial = sym;
+        await LoadDetailOnly(sym);
+    }
+
+    private async Task RunScan()
+    {
+        _error = null;
+        _busy = true;
+        _progressDone = 0;
+        StateHasChanged();
+
+        try
+        {
+            var symbols = await ResolveSymbolsAsync();
+            _progressTotal = symbols.Count;
+            var progress = new Progress<int>(n => { _progressDone = n; InvokeAsync(StateHasChanged); });
+            _rows = await ScanService.ScanManyAsync(symbols, progress);
+
+            if (_rows.Count == 0)
+            {
+                _error = L["Trading_MF_NoData"].Value;
+                _detail = null;
+                return;
+            }
+
+            var pick = !string.IsNullOrWhiteSpace(InitialSymbol)
+                ? _rows.FirstOrDefault(r => r.Symbol.Equals(InitialSymbol, StringComparison.OrdinalIgnoreCase)) ?? _rows[0]
+                : _rows[0];
+            await SelectDetail(pick);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task LoadDetailOnly(string symbol)
+    {
+        _busy = true;
+        _error = null;
+        try
+        {
+            _detail = await ScanService.ScanSymbolAsync(symbol);
+            if (_detail is null)
+                _error = L["Trading_MF_NoData"].Value;
+            else if (_rows.All(r => !r.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase)))
+                _rows = [_detail];
+        }
+        finally
+        {
+            _busy = false;
+        }
+
+        MarkChartDirty();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_chartDirty)
+        {
+            _chartDirty = false;
+            await RenderChart();
+        }
+    }
+
+    private void MarkChartDirty() => _chartDirty = true;
+
+    private async Task SelectDetail(MoneyFlowSnapshot snap)
+    {
+        if (_detail?.Symbol == snap.Symbol && _detail.Series.Count > 0)
+        {
+            MarkChartDirty();
+            return;
+        }
+
+        _detail = snap.Series.Count > 0
+            ? snap
+            : await ScanService.ScanSymbolAsync(snap.Symbol) ?? snap;
+
+        MarkChartDirty();
+    }
+
+    private async Task RenderChart()
+    {
+        if (_detail is null || !_detail.HasData) return;
+
+        var series = _detail.Series.TakeLast(50).ToList();
+        if (series.Count == 0) return;
+
+        await JS.InvokeVoidAsync("scriptLoader.loadChartJs");
+        var labels = series.Select(p => p.Date.ToString("dd/MM")).ToArray();
+        var datasets = new List<object>
+        {
+            new { label = $"Maker ({_detail.Maker:F2})", data = series.Select(p => p.Maker).ToArray(), color = "#8b5cf6" },
+            new { label = $"SLong ({_detail.SLong:F2})", data = series.Select(p => p.SLong).ToArray(), color = "#f59e0b" },
+            new { label = $"Score ({_detail.Score:F2})", data = series.Select(p => p.Score).ToArray(), color = "#3b82f6" }
+        };
+
+        if (_showStrd)
+        {
+            datasets.Add(new { label = "Maker STRD", data = series.Select(p => p.MakerStrd ?? double.NaN).ToArray(), color = "#c4b5fd" });
+            datasets.Add(new { label = "SLong STRD", data = series.Select(p => p.SLongStrd ?? double.NaN).ToArray(), color = "#fcd34d" });
+            datasets.Add(new { label = "Score STRD", data = series.Select(p => p.ScoreStrd ?? double.NaN).ToArray(), color = "#93c5fd" });
+            datasets.Add(new { label = "Maker Δ STRD", data = series.Select(p => p.MakerDeltaStrd ?? double.NaN).ToArray(), color = "#a78bfa" });
+            datasets.Add(new { label = "SLong Δ STRD", data = series.Select(p => p.SLongDeltaStrd ?? double.NaN).ToArray(), color = "#fbbf24" });
+            datasets.Add(new { label = "Score Δ STRD", data = series.Select(p => p.ScoreDeltaStrd ?? double.NaN).ToArray(), color = "#60a5fa" });
+        }
+
+        var pad = (_detail.ChartMax - _detail.ChartMin) * 0.05;
+        var yMin = _detail.ChartMin - pad;
+        var yMax = _detail.ChartMax + pad;
+
+        await JS.InvokeVoidAsync("tradingCharts.lines", _chartCanvasId, labels, datasets, yMin, yMax);
+    }
+
+    private async Task<List<string>> ResolveSymbolsAsync()
+    {
+        if (!string.IsNullOrEmpty(_listKey))
+        {
+            var lists = await Screener.GetListsAsync();
+            if (lists.TryGetValue(_listKey, out var syms))
+                return syms;
+        }
+
+        return _symbolsInput
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(s => s.ToUpperInvariant())
+            .Distinct()
+            .ToList();
+    }
+
+    private static string FormatDelta(double d) => d >= 0 ? $"+{d:F1}" : d.ToString("F1");
+    private static string DeltaClass(double d) => d >= 0 ? "vd-pos" : "vd-neg";
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("tradingCharts.destroy", _chartCanvasId);
+        }
+        catch
+        {
+            // component may be disconnected
+        }
+    }
+}

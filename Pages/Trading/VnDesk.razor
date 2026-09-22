@@ -105,16 +105,21 @@
         else if (_group == "vn" && _tab == "screen")
         {
             <div class="vd-subtabs">
-                <button type="button" class="vd-subtab @(_screenSub == "basic" ? "active" : "")" @onclick='() => _screenSub = "basic"'>@L["Trading_VnDesk_ScreenBasic"]</button>
-                <button type="button" class="vd-subtab @(_screenSub == "multi" ? "active" : "")" @onclick='() => _screenSub = "multi"'>@L["Trading_VnDesk_ScreenMulti"]</button>
+                <button type="button" class="vd-subtab @(_screenSub == "basic" ? "active" : "")" @onclick='() => SetScreenSub("basic")'>@L["Trading_VnDesk_ScreenBasic"]</button>
+                <button type="button" class="vd-subtab @(_screenSub == "multi" ? "active" : "")" @onclick='() => SetScreenSub("multi")'>@L["Trading_VnDesk_ScreenMulti"]</button>
+                <button type="button" class="vd-subtab @(_screenSub == "flow" ? "active" : "")" @onclick='() => SetScreenSub("flow")'>@L["Trading_VnDesk_ScreenFlow"]</button>
             </div>
             @if (_screenSub == "basic")
             {
                 <VnScreenerPanel OnSymbolSelected="OnSymbolFromScreener" />
             }
-            else
+            else if (_screenSub == "multi")
             {
                 <VnMultiScreenerPanel OnSymbolSelected="OnSymbolFromScreener" />
+            }
+            else
+            {
+                <VnMoneyFlowPanel InitialSymbol="@_activeSymbol" OnSymbolSelected="OnSymbolFromScreener" />
             }
         }
         else if (_group == "vn" && _tab == "backtest")
@@ -150,6 +155,9 @@
     [SupplyParameterFromQuery(Name = "symbol")]
     public string? QuerySymbol { get; set; }
 
+    [SupplyParameterFromQuery(Name = "screen")]
+    public string? QueryScreen { get; set; }
+
     private string _group = "vn";
     private string _tab = "market";
     private string _symbolInput = "VNM";
@@ -182,6 +190,13 @@
                 _activeSymbol = sym;
                 _symbolInput = sym;
             }
+        }
+
+        if (_tab == "screen" && !string.IsNullOrWhiteSpace(QueryScreen))
+        {
+            var scr = QueryScreen.Trim().ToLowerInvariant();
+            if (scr is "basic" or "multi" or "flow")
+                _screenSub = scr;
         }
     }
 
@@ -239,6 +254,12 @@
         Go("vn", "analyze");
     }
 
+    private void SetScreenSub(string sub)
+    {
+        _screenSub = sub;
+        UpdateUrl();
+    }
+
     private void OnSymbolKey(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
@@ -260,6 +281,8 @@
         };
         if (_group == "vn" && !string.IsNullOrWhiteSpace(_activeSymbol))
             query["symbol"] = _activeSymbol;
+        if (_group == "vn" && _tab == "screen" && _screenSub is "multi" or "flow")
+            query["screen"] = _screenSub;
 
         var path = CulturePath.Combine(CultureService.UrlLang, "trading/vndesk");
         var url = QueryHelpers.AddQueryString(path, query);

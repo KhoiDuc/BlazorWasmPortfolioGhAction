@@ -7,8 +7,11 @@
 @inject IBrokerDeskStore Store
 @inject IVnMarketClient Market
 @inject VnSectorService Sectors
+@inject MoneyFlowScanService MoneyFlowScan
 @inject IJSRuntime JS
 @inject IStringLocalizer<SharedResources> L
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using Microsoft.AspNetCore.WebUtilities
 
 <div class="ts-page broker-page">
     <div class="ts-panel broker-hero">
@@ -28,6 +31,9 @@
             {
                 <span class="broker-price-progress" role="status">@L["Trading_BrokerPriceProgress", _priceProgressDone, _priceProgressTotal]</span>
             }
+            <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ScanPortfolioMoneyFlow" disabled="@_moneyFlowBusy">
+                @( _moneyFlowBusy ? L["Trading_RefreshingPrices"] : L["Trading_MF_ScanHoldings"] )
+            </button>
             <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ExportCsv">@L["Trading_BrokerExportCsv"]</button>
             <label class="ts-btn ts-btn-outline ts-btn-sm broker-file-btn" for="broker-import-json">@L["Trading_BrokerImportJson"]</label>
             <InputFile @key="_importInputKey"
@@ -213,6 +219,8 @@
                                   Quotes="_quotes"
                                   SelectedSymbol="@_selected"
                                   PriceBusy="_priceBusy"
+                                  MoneyFlowBySymbol="_moneyFlowBySymbol"
+                                  MoneyFlowScanned="_moneyFlowScanned"
                                   OnSelect="SelectSymbol"
                                   OnSelectClosed="SelectClosed"
                                   OnQuickSell="OpenQuickSell" />
@@ -336,6 +344,9 @@
     private decimal? _targetInput;
     private string _newNote = "";
     private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, MoneyFlowSnapshot> _moneyFlowBySymbol = new(StringComparer.OrdinalIgnoreCase);
+    private bool _moneyFlowScanned;
+    private bool _moneyFlowBusy;
 
     private BrokerPosition? Selected =>
         string.IsNullOrEmpty(_selected)
@@ -910,6 +921,42 @@
         finally
         {
             _importInputKey++;
+        }
+    }
+
+    private async Task ScanPortfolioMoneyFlow()
+    {
+        var symbols = _portfolio.Positions?
+            .Select(p => p.Symbol)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList() ?? [];
+
+        if (symbols.Count == 0)
+        {
+            Flash("Chưa có mã trong danh mục.", error: false);
+            return;
+        }
+
+        _moneyFlowBusy = true;
+        StateHasChanged();
+        try
+        {
+            var results = await MoneyFlowScan.ScanManyAsync(symbols);
+            _moneyFlowBySymbol = results.ToDictionary(r => r.Symbol, r => r, StringComparer.OrdinalIgnoreCase);
+            _moneyFlowScanned = true;
+            var waveCount = results.Count(r => r.MediumWaveSignal);
+            Flash(waveCount > 0
+                ? $"Đo xong {results.Count} mã — {waveCount} mã có sóng trung hạn."
+                : $"Đo xong {results.Count} mã — chưa có sóng trung hạn.", error: false);
+        }
+        catch (Exception ex)
+        {
+            Flash(ex.Message, error: true);
+        }
+        finally
+        {
+            _moneyFlowBusy = false;
         }
     }
 

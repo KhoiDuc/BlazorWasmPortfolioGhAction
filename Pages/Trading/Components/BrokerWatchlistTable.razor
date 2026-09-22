@@ -1,7 +1,11 @@
 @using BlazorWasmPortfolioGhAction.Utils
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Localization
 @using Blazored.LocalStorage
+@using Microsoft.AspNetCore.WebUtilities
 @inject IStringLocalizer<SharedResources> L
 @inject ILocalStorageService LocalStorage
+@inject ICultureService CultureService
 
 <div class="ts-panel ts-table-wrap broker-watchlist">
     <div class="broker-table-head">
@@ -323,6 +327,19 @@
                                 @onkeydown='(e) => OnRowKeydown(e, p.Symbol)'>
                                 <td class="broker-col-symbol">
                                     <span class="broker-symbol">@p.Symbol</span>
+                                    @if (TryGetMoneyFlow(p.Symbol, out var mf))
+                                    {
+                                        <a class="broker-mf-badge @(mf.MediumWaveSignal ? "broker-mf-wave" : "broker-mf-muted")"
+                                           href="@MoneyFlowUrl(p.Symbol)"
+                                           title="@L["Trading_MF_OpenFlow"]"
+                                           @onclick:stopPropagation="true">
+                                            @(mf.MediumWaveSignal ? L["Trading_MF_WaveYes"].Value : "—")
+                                        </a>
+                                    }
+                                    else if (MoneyFlowScanned)
+                                    {
+                                        <span class="broker-mf-badge broker-mf-muted" title="@L["Trading_MF_NoData"]">—</span>
+                                    }
                                     @if (p.HasPartialQtyLots)
                                     {
                                         <span class="broker-partial-qty-warn" title="@L["Trading_BrokerPartialQtyHint"]">⚠</span>
@@ -524,6 +541,8 @@
     [Parameter] public Dictionary<string, decimal> Quotes { get; set; } = new();
     [Parameter] public string? SelectedSymbol { get; set; }
     [Parameter] public bool PriceBusy { get; set; }
+    [Parameter] public IReadOnlyDictionary<string, MoneyFlowSnapshot>? MoneyFlowBySymbol { get; set; }
+    [Parameter] public bool MoneyFlowScanned { get; set; }
     [Parameter] public EventCallback<string> OnSelect { get; set; }
     [Parameter] public EventCallback<string> OnSelectClosed { get; set; }
     [Parameter] public EventCallback<string> OnQuickSell { get; set; }
@@ -761,6 +780,32 @@
 
     private static string DisplaySector(string sector) =>
         string.IsNullOrWhiteSpace(sector) ? "—" : sector;
+
+    private bool TryGetMoneyFlow(string symbol, out MoneyFlowSnapshot snap)
+    {
+        snap = null!;
+        if (MoneyFlowBySymbol is not null
+            && MoneyFlowBySymbol.TryGetValue(symbol, out var found)
+            && found.HasData)
+        {
+            snap = found;
+            return true;
+        }
+
+        return false;
+    }
+
+    private string MoneyFlowUrl(string symbol)
+    {
+        var path = CulturePath.Combine(CultureService.UrlLang, "trading/vndesk");
+        return QueryHelpers.AddQueryString(path, new Dictionary<string, string?>
+        {
+            ["group"] = "vn",
+            ["tab"] = "screen",
+            ["screen"] = "flow",
+            ["symbol"] = symbol.Trim().ToUpperInvariant()
+        });
+    }
 
     private static string LotLabel(BrokerLot lot, int index)
     {
