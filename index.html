@@ -161,14 +161,33 @@
     <script src="js/customRefresh.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Blazor framework (MUST COME LAST BEFORE SERVICE WORKER) -->
+    <!-- Drop a controlling service worker once. An old worker plus cached
+         framework files leaves returning visitors stuck on the 99% loader. -->
+    <script>
+        (function () {
+            if (!('serviceWorker' in navigator)) return;
+            var flag = 'portfolio-sw-removed';
+            try { if (localStorage.getItem(flag) === '1') return; } catch (e) { return; }
+            var hadController = !!navigator.serviceWorker.controller;
+            var regs = navigator.serviceWorker.getRegistrations().then(function (list) {
+                return Promise.all(list.map(function (r) { return r.unregister(); }));
+            });
+            var cachesCleared = window.caches
+                ? caches.keys().then(function (keys) {
+                    return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+                })
+                : Promise.resolve();
+            Promise.all([regs, cachesCleared]).then(function () {
+                try { localStorage.setItem(flag, '1'); } catch (e) {}
+                if (hadController) location.reload();
+            }).catch(function () {});
+        })();
+    </script>
+
     <script src="_framework/blazor.webassembly.js"></script>
 
     <!-- Portfolio motion animations -->
     <script src="js/animations.js"></script>
-
-    <!-- Service Worker Registration -->
-    <script>navigator.serviceWorker.register('service-worker.js');</script>
 </body>
 
 </html>
