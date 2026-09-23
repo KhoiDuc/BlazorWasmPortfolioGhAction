@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Security.Claims;
 using Blazored.LocalStorage;
 using BlazorWasmPortfolioGhAction.Services.Trading.Broker;
@@ -6,60 +7,79 @@ using Microsoft.AspNetCore.Components.Authorization;
 namespace BlazorWasmPortfolioGhAction.Services.Auth;
 
 /// <summary>
-/// Local auth for wiki admin and Broker desk JWT sessions.
+/// Wiki admin and the broker desk share the broker-api JWT. There is no local password.
 /// </summary>
 public sealed class CustomAuthStateProvider : AuthenticationStateProvider
 {
-    private const string AdminStorageKey = "portfolio-admin-session";
     private readonly ILocalStorageService _localStorage;
+    private readonly HttpClient _http;
+    private readonly IConfiguration _config;
 
-    public CustomAuthStateProvider(ILocalStorageService localStorage)
+    public CustomAuthStateProvider(ILocalStorageService localStorage, HttpClient http, IConfiguration config)
     {
         _localStorage = localStorage;
+        _http = http;
+        _config = config;
     }
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        var claims = new List<Claim>();
-
-        var isAdmin = await _localStorage.GetItemAsync<bool?>(AdminStorageKey) == true;
-        if (isAdmin)
-        {
-            claims.Add(new Claim(ClaimTypes.Name, "admin"));
-            claims.Add(new Claim(ClaimTypes.Role, "Admin"));
-        }
-
         var brokerToken = await _localStorage.GetItemAsync<string?>(BrokerAuthService.TokenKey);
-        if (!string.IsNullOrWhiteSpace(brokerToken))
-        {
-            var brokerUsername = await _localStorage.GetItemAsync<string?>(BrokerAuthService.UsernameKey);
-            claims.Add(new Claim(ClaimTypes.Name, string.IsNullOrWhiteSpace(brokerUsername) ? "broker" : brokerUsername));
-            claims.Add(new Claim(ClaimTypes.Role, "Broker"));
-        }
-
-        if (claims.Count == 0)
+        if (string.IsNullOrWhiteSpace(brokerToken))
             return Anonymous();
 
+        var brokerUsername = await _localStorage.GetItemAsync<string?>(BrokerAuthService.UsernameKey);
+        var name = string.IsNullOrWhiteSpace(brokerUsername) ? "broker" : brokerUsername;
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Name, name),
+            new(ClaimTypes.Role, "Broker"),
+            new(ClaimTypes.Role, "Admin"),
+        };
         var identity = new ClaimsIdentity(claims, authenticationType: "PortfolioAuth");
         return new AuthenticationState(new ClaimsPrincipal(identity));
     }
 
-    public async Task<bool> LoginAsync(string username, string password)
+    public async Task<(bool Ok, string? Error)> LoginAsync(string username, string password)
     {
-        if (!string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase)
-            || password != "admin")
-        {
-            return false;
-        }
+        var baseUrl = _config["BrokerApi:BaseUrl"]?.Trim().TrimEnd('/');
+        if (string.IsNullOrWhiteSpace(baseUrl))
+            return (false, "BrokerApi:BaseUrl is not configured.");
 
-        await _localStorage.SetItemAsync(AdminStorageKey, true);
-        NotifyAuthStateChanged();
-        return true;
+        try
+        {
+            using var resp = await _http.PostAsJsonAsync($"{baseUrl}/api/auth/login", new { username = username.Trim(), password });
+            if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                return (false, null);
+            if (resp.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                return (false, "Too many login attempts.");
+            if (!resp.IsSuccessStatusCode)
+                return (false, $"HTTP {(int)resp.StatusCode}");
+
+            var result = await resp.Content.ReadFromJsonAsync<BrokerLoginResponse>();
+            if (string.IsNullOrWhiteSpace(result?.Token))
+                return (false, "Invalid login response.");
+
+            await _localStorage.SetItemAsync(BrokerAuthService.TokenKey, result.Token);
+            await _localStorage.SetItemAsync(BrokerAuthService.UsernameKey, result.Username ?? username.Trim());
+            if (!string.IsNullOrWhiteSpace(result.ExpiresAt))
+                await _localStorage.SetItemAsync(BrokerAuthService.ExpiresAtKey, result.ExpiresAt);
+            await _localStorage.RemoveItemAsync("portfolio-admin-session");
+            NotifyAuthStateChanged();
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
     }
 
     public async Task LogoutAsync()
     {
-        await _localStorage.RemoveItemAsync(AdminStorageKey);
+        await _localStorage.RemoveItemAsync(BrokerAuthService.TokenKey);
+        await _localStorage.RemoveItemAsync(BrokerAuthService.UsernameKey);
+        await _localStorage.RemoveItemAsync(BrokerAuthService.ExpiresAtKey);
+        await _localStorage.RemoveItemAsync("portfolio-admin-session");
         NotifyAuthStateChanged();
     }
 
@@ -68,4 +88,11 @@ public sealed class CustomAuthStateProvider : AuthenticationStateProvider
 
     private static AuthenticationState Anonymous() =>
         new(new ClaimsPrincipal(new ClaimsIdentity()));
+
+    private sealed class BrokerLoginResponse
+    {
+        public string? Token { get; set; }
+        public string? Username { get; set; }
+        public string? ExpiresAt { get; set; }
+    }
 }

@@ -9,7 +9,7 @@
         <div class="tool-field">
             <label class="tool-label" for="ts-sitekey">Site key</label>
             <input id="ts-sitekey" class="tool-input" @bind="_siteKey" />
-            <p class="tool-hint">Testing key <code>1x00000000000000000000AA</code> always passes.</p>
+            <p class="tool-hint">Paste a Cloudflare Turnstile site key. The widget stays idle until one is set.</p>
         </div>
 
         <div class="tool-field">
@@ -65,7 +65,7 @@
 
 @code {
     private Turnstile? _turnstile;
-    private string _siteKey = "1x00000000000000000000AA";
+    private string _siteKey = "";
     private string _theme = "auto";
     private string _size = "normal";
     private TurnstileOptions? _options;
@@ -95,6 +95,14 @@
 
     private void Render()
     {
+        if (string.IsNullOrWhiteSpace(_siteKey))
+        {
+            _error = "A site key is required.";
+            _state = "Idle";
+            _render = false;
+            return;
+        }
+
         _token = null;
         _error = null;
         _expired = false;

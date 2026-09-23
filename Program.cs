@@ -7,7 +7,6 @@ using BlazorWasmPortfolioGhAction.Store.Services;
 using BlazorComponentBus;
 using BlazorWasmPortfolioGhAction.Contexts;
 using BlazorWasmPortfolioGhAction.Pages;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using BlazorWasmPortfolioGhAction.Shared.Model;
 using ManuHub.Blazor.Wasm.BrowserStorage;
@@ -23,20 +22,9 @@ using Microsoft.JSInterop;
 using Blazored.LocalStorage;
 using Soenneker.Blazor.CreditCards.Registrars;
 using Soenneker.Blazor.Turnstile.Registrars;
-// using Microsoft.Authentication.WebAssembly.Msal; // MSAL — disabled (learning/demo only)
 
 public static partial class Program
 {
-    /// <summary>
-    /// FIXME: This is required for EF Core 6.0 as it is not compatible with trimming.
-    ///
-    /// For more information:
-    ///   [.NET 6] Migrate API - Could not find method 'AddYears' on type 'System.DateOnly'
-    ///   https://github.com/dotnet/efcore/issues/26860
-    /// </summary>
-    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
-    private static Type _keepDateOnly = typeof(DateOnly);
-
     public static async Task Main(string[] args)
     {
 #if DEBUG

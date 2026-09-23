@@ -45,6 +45,9 @@ jobs:
       - name: Restore NuGet packages
         run: dotnet restore ${{ env.PROJECT_NAME }}.csproj
 
+      - name: Test
+        run: dotnet test tests/BlazorWasmPortfolioGhAction.Tests/BlazorWasmPortfolioGhAction.Tests.csproj --configuration Release
+
       - name: Build .NET Core Project
         run: dotnet build ${{ env.PROJECT_NAME }}.csproj --configuration Release --nologo
 
@@ -90,11 +93,8 @@ jobs:
           npx serve health-check -l 3000 &
           sleep 5
 
-          # Verify accessibility at BASE_HREF
+          # Verify accessibility at BASE_HREF. The app unregisters its service worker, so that file is not part of the health check.
           curl --retry 5 --retry-delay 3 --fail http://localhost:3000${{ env.BASE_HREF }}
-
-          # Verify service-worker.js is accessible
-          curl --retry 5 --retry-delay 3 --fail http://localhost:3000${{ env.BASE_HREF }}service-worker.js
 
       - name: Verify Deployment
         run: |

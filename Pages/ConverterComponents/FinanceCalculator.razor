@@ -1,0 +1,77 @@
+@inherits ConverterBase
+
+<div class="tool-card calc-panel" id="calculator-@InstanceId">
+    <button type="button" class="calc-close-btn" @onclick="Close" aria-label="Close calculator">&times;</button>
+    <div class="tool-header">
+        <h3>@Name</h3>
+    </div>
+    <div class="tool-field">
+        <label class="tool-label" for="fin-mode-@InstanceId">Calculator</label>
+        <select id="fin-mode-@InstanceId" class="tool-input" @bind="_mode">
+            <option value="compound">Compound interest</option>
+            <option value="loan">Loan payment</option>
+            <option value="size">Position size</option>
+            <option value="break">Break-even after fee and tax</option>
+            <option value="inflation">Inflation</option>
+        </select>
+    </div>
+    <div class="tool-field">
+        <label class="tool-label" for="fin-a-@InstanceId">@_labelA</label>
+        <input id="fin-a-@InstanceId" class="tool-input" type="number" @bind="_a" />
+    </div>
+    <div class="tool-field">
+        <label class="tool-label" for="fin-b-@InstanceId">@_labelB</label>
+        <input id="fin-b-@InstanceId" class="tool-input" type="number" @bind="_b" />
+    </div>
+    <div class="tool-field">
+        <label class="tool-label" for="fin-c-@InstanceId">@_labelC</label>
+        <input id="fin-c-@InstanceId" class="tool-input" type="number" @bind="_c" />
+    </div>
+    <button type="button" class="tool-btn tool-btn-primary" @onclick="Calculate">Calculate</button>
+    @if (!string.IsNullOrEmpty(Result))
+    {
+        <p role="status">@Result</p>
+    }
+</div>
+
+@code {
+    public override string Name => "Finance calculator";
+    private string _mode = "compound";
+    private double _a = 100_000_000;
+    private double _b = 0.08;
+    private double _c = 5;
+
+    private string _labelA => _mode switch
+    {
+        "size" => "Account equity",
+        "break" => "Entry price",
+        "inflation" => "Amount today",
+        _ => "Principal"
+    };
+    private string _labelB => _mode switch
+    {
+        "size" => "Risk fraction (0.01 = 1%)",
+        "break" => "Fee rate each side",
+        _ => "Annual rate"
+    };
+    private string _labelC => _mode switch
+    {
+        "loan" => "Months",
+        "size" => "Risk per share (entry minus stop)",
+        "break" => "Sell tax rate",
+        "inflation" => "Years",
+        _ => "Years"
+    };
+
+    private void Calculate()
+    {
+        Result = _mode switch
+        {
+            "loan" => $"Payment: {FinanceMath.LoanPayment(_a, _b, (int)_c):N0}",
+            "size" => $"Shares: {FinanceMath.PositionShares(_a, _b, _c, 0)}",
+            "break" => $"Break-even: {FinanceMath.BreakEven(_a, _b, _c):N2}",
+            "inflation" => $"Real value: {FinanceMath.InflationAdjusted(_a, _b, (int)_c):N0}",
+            _ => $"Future value: {FinanceMath.Compound(_a, _b, (int)_c):N0}"
+        };
+    }
+}

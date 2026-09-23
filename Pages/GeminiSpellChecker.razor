@@ -1,9 +1,8 @@
-﻿@using System.Text.Json
-@using BlazorWasmPortfolioGhAction.Components.ToolShell
+﻿@using BlazorWasmPortfolioGhAction.Components.ToolShell
 @using BlazorWasmPortfolioGhAction.Services.Trading.Broker
 @using BlazorWasmPortfolioGhAction.Shared
 @inject ApiKeyModel ApiKeyService
-@inject HttpClient Http
+@inject IBrokerGeminiClient Gemini
 @inject IStringLocalizer<SharedResources> L
 
 <ToolShell Title="Gemini Spell Checker" Icon="bi-spellcheck" Description="Vietnamese spelling correction powered by Google Gemini API.">
@@ -11,8 +10,7 @@
     {
         <div class="tool-form">
             <div class="tool-field">
-                <label class="tool-label" for="api-key-input">Gemini API key</label>
-                <input type="password" @bind="ApiKey" id="api-key-input" class="tool-input" placeholder="Enter API key" autocomplete="off" />
+                <p class="tool-hint">Sign in on the broker desk. The Gemini key stays on broker-api.</p>
             </div>
             <div class="tool-field">
                 <label class="tool-label" for="model-select">Model</label>
@@ -26,7 +24,7 @@
             <div class="tool-actions">
                 <button type="button" @onclick="SaveApiKey" class="tool-btn tool-btn-primary">Continue</button>
             </div>
-            <p class="tool-hint">Your key and model are stored in memory for this session only.</p>
+            <p class="tool-hint">The model choice stays in this session. The API key is not sent from the browser.</p>
         </div>
     }
     else
@@ -73,7 +71,6 @@
     private string InputText { get; set; } = string.Empty;
     private string CorrectedText { get; set; } = string.Empty;
     private string Corrections { get; set; } = string.Empty;
-    private string ApiKey { get; set; } = string.Empty;
     private string SelectedModel { get; set; } = GeminiModels.DefaultId;
 
     private EnumPage enumPage = EnumPage.FirstPage;
@@ -83,9 +80,8 @@
 
     private void SaveApiKey()
     {
-        if (string.IsNullOrEmpty(ApiKey)) return;
-        ApiKeyService.ApiKey = ApiKey;
         ApiKeyService.Model = SelectedModel;
+        Gemini.UserModel = SelectedModel;
         enumPage = EnumPage.SecondPage;
     }
 
@@ -103,43 +99,24 @@
         _isLoading = true;
         try
         {
-            var apiKey = ApiKeyService.ApiKey;
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                CorrectedText = "API key not provided.";
-                Corrections = string.Empty;
-                return;
-            }
-
-            var requestUri = $"https://generativelanguage.googleapis.com/v1beta/models/{ApiKeyService.Model ?? GeminiModels.DefaultId}:generateContent?key={apiKey}";
+            Gemini.UserModel = SelectedModel;
             var prompt = $"Correct the spelling of the following Vietnamese text. Return the result in this format:\n" +
                          $"Corrected: [corrected text here]\n" +
                          $"Fixes: [list each correction as 'original -> corrected', separated by commas, or 'None' if no changes]\n\n" +
                          $"Text: {InputText}";
 
-            var requestBody = new
+            var result = await Gemini.ExplainAsync(prompt);
+            if (!string.IsNullOrWhiteSpace(result.Text))
             {
-                contents = new[] { new { parts = new[] { new { text = prompt } } } },
-                generationConfig = new { temperature = 0.1, maxOutputTokens = 500 }
-            };
-
-            var response = await Http.PostAsJsonAsync(requestUri, requestBody);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var jsonResponse = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<GeminiResponse>(jsonResponse,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                var rawResponse = result?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text?.Trim() ?? InputText;
-                CorrectedText = ExtractCorrectedText(rawResponse) ?? InputText;
-                Corrections = ExtractCorrections(rawResponse) ?? "No changes needed.";
+                CorrectedText = ExtractCorrectedText(result.Text) ?? InputText;
+                Corrections = ExtractCorrections(result.Text) ?? "No changes needed.";
             }
             else
             {
-                CorrectedText = $"An error occurred while checking. (Error: {response.StatusCode})";
+                CorrectedText = result.Error ?? "Gemini request failed.";
                 Corrections = string.Empty;
             }
+
         }
         catch (Exception ex)
         {
@@ -173,8 +150,4 @@
         return corrections == "None" ? "No corrections required." : corrections;
     }
 
-    private class GeminiResponse { public Candidate[]? Candidates { get; set; } }
-    private class Candidate { public Content? Content { get; set; } }
-    private class Content { public Part[]? Parts { get; set; } }
-    private class Part { public string? Text { get; set; } }
 }

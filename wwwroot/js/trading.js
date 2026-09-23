@@ -11,6 +11,15 @@ window.tradingAuth = {
     confirm: function (message) {
         return confirm(message);
     },
+    downloadText: function (filename, content, mimeType) {
+        var blob = new Blob([content], { type: mimeType || 'text/plain' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    },
     _savedFocus: null,
     trapFocus: function (dialogSelector) {
         this._savedFocus = document.activeElement;

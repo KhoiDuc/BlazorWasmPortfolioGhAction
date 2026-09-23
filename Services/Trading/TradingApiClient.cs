@@ -19,6 +19,8 @@ public class TradingApiClient : ITradingApiClient
     private readonly TradingEndpointResolver _endpoints;
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
 
+    public string? LastError { get; private set; }
+
     public TradingApiClient(HttpClient http, TradingEndpointResolver endpoints)
     {
         _http = http;
@@ -52,8 +54,9 @@ public class TradingApiClient : ITradingApiClient
             if (!resp.IsSuccessStatusCode) return null;
             return await resp.Content.ReadFromJsonAsync<JsonElement>(JsonOpts, ct);
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.Message;
             return null;
         }
     }

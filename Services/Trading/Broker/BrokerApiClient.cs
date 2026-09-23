@@ -45,6 +45,10 @@ public interface IBrokerApiClient
 
     // Legacy — kept temporarily for backward compat
     Task<(bool Ok, string? Error)> SavePortfolioAsync(BrokerPortfolio portfolio, CancellationToken ct = default);
+
+    string? LastError { get; }
+    Task<(bool Ok, string? Body, string? Error)> GetTextAsync(string path, CancellationToken ct = default);
+    Task<(bool Ok, string? Body, string? Error)> SendTextAsync(HttpMethod method, string path, string? body, string? contentType, CancellationToken ct = default);
 }
 
 public sealed class BrokerApiClient : IBrokerApiClient
@@ -74,33 +78,82 @@ public sealed class BrokerApiClient : IBrokerApiClient
 
     private string? BaseUrl => _config["BrokerApi:BaseUrl"]?.Trim().TrimEnd('/');
 
+    public string? LastError { get; private set; }
+
     public async Task<BrokerPortfolio?> GetPortfolioAsync(CancellationToken ct = default)
     {
+        LastError = null;
         if (string.IsNullOrWhiteSpace(BaseUrl))
+        {
+            LastError = _L["Trading_BrokerApi_BaseUrlMissing"];
             return null;
+        }
 
         try
         {
             using var request = await CreateAuthorizedRequestAsync(HttpMethod.Get, $"/api/portfolio?v={DateTime.UtcNow.Ticks}", ct);
             if (request is null)
+            {
+                LastError = _L["Trading_BrokerApi_TokenMissing"];
                 return null;
+            }
 
             using var resp = await _http.SendAsync(request, ct);
             if (await HandleUnauthorizedAsync(resp))
+            {
+                LastError = _L["Trading_BrokerApi_Unauthorized"];
                 return null;
+            }
 
             if (!resp.IsSuccessStatusCode)
+            {
+                LastError = $"HTTP {(int)resp.StatusCode}";
                 return null;
+            }
 
             var json = await resp.Content.ReadAsStringAsync(ct);
             if (string.IsNullOrWhiteSpace(json))
+            {
+                LastError = "Empty portfolio response.";
                 return null;
+            }
 
             return JsonSerializer.Deserialize<BrokerPortfolio>(json, BrokerJson.Options);
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.Message;
             return null;
+        }
+    }
+
+    public Task<(bool Ok, string? Body, string? Error)> GetTextAsync(string path, CancellationToken ct = default) =>
+        SendTextAsync(HttpMethod.Get, path, null, null, ct);
+
+    public async Task<(bool Ok, string? Body, string? Error)> SendTextAsync(HttpMethod method, string path, string? body, string? contentType, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(BaseUrl))
+            return (false, null, _L["Trading_BrokerApi_BaseUrlMissing"]);
+
+        try
+        {
+            using var request = await CreateAuthorizedRequestAsync(method, path, ct);
+            if (request is null)
+                return (false, null, _L["Trading_BrokerApi_TokenMissing"]);
+            if (body is not null)
+                request.Content = new StringContent(body, System.Text.Encoding.UTF8, contentType ?? "application/json");
+
+            using var resp = await _http.SendAsync(request, ct);
+            var text = await resp.Content.ReadAsStringAsync(ct);
+            if (await HandleUnauthorizedAsync(resp))
+                return (false, text, _L["Trading_BrokerApi_Unauthorized"]);
+            if (!resp.IsSuccessStatusCode)
+                return (false, text, $"HTTP {(int)resp.StatusCode} — {TruncateBody(text)}");
+            return (true, text, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, null, ex.Message);
         }
     }
 

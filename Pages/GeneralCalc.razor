@@ -1,4 +1,6 @@
 ﻿@page "/generalCalc"
+@page "/{lang:regex(^(en|vn)$)}/generalCalc"
+@inherits CultureAwareComponent
 @using BlazorWasmPortfolioGhAction.Pages.ConverterComponents
 @using BlazorWasmPortfolioGhAction.Services
 @inject IScriptLoaderService ScriptLoader
@@ -142,11 +144,13 @@
                 "Finance",
                 new List<CalculatorInfo>
                 {
-                    Calc("Loan Repayment Calculator", typeof(PlaceholderCalculator), placeholder: true),
-                    Calc("Compound Interest Calculator", typeof(PlaceholderCalculator), placeholder: true),
+                    Calc("Loan Repayment Calculator", typeof(FinanceCalculator)),
+                    Calc("Compound Interest Calculator", typeof(FinanceCalculator)),
                     Calc("Currency Converter", typeof(PlaceholderCalculator), placeholder: true),
-                    Calc("Retirement Savings Calculator", typeof(PlaceholderCalculator), placeholder: true),
-                    Calc("Inflation Calculator", typeof(PlaceholderCalculator), placeholder: true),
+                    Calc("Retirement Savings Calculator", typeof(FinanceCalculator)),
+                    Calc("Inflation Calculator", typeof(FinanceCalculator)),
+                    Calc("Position Size Calculator", typeof(FinanceCalculator)),
+                    Calc("Break-even Calculator", typeof(FinanceCalculator)),
                 }
             },
             {

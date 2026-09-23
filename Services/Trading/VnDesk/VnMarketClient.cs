@@ -18,6 +18,7 @@ public interface IVnMarketClient
     Task<List<IntradayData>> FetchIntradayAsync(string symbol, CancellationToken ct = default);
     Task<List<StockData>> GetMarketIndexHistoryAsync(string indexCode = "VNINDEX", int sessions = 250, CancellationToken ct = default);
     void ClearCache();
+    string? LastError { get; }
 }
 
 public sealed class VnMarketClient : IVnMarketClient
@@ -28,6 +29,7 @@ public sealed class VnMarketClient : IVnMarketClient
     private readonly VnDeskOptions _options;
     private readonly ITcbsApiClient _tcbs;
     private readonly ConcurrentDictionary<string, List<StockData>> _cache = new();
+    public string? LastError { get; private set; }
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
 
     public VnMarketClient(
@@ -53,15 +55,17 @@ public sealed class VnMarketClient : IVnMarketClient
             var json = await _cafefHttp.GetStringAsync(url, ct);
             return JsonSerializer.Deserialize<List<MarketIndex>>(json, JsonOpts) ?? [];
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.Message;
             try
             {
                 var json = await _cafefHttp.GetStringAsync(_options.CafefIndexUrl, ct);
                 return JsonSerializer.Deserialize<List<MarketIndex>>(json, JsonOpts) ?? [];
             }
-            catch
+            catch (Exception inner)
             {
+                LastError = inner.Message;
                 return [];
             }
         }
@@ -76,8 +80,9 @@ public sealed class VnMarketClient : IVnMarketClient
             var types = JsonSerializer.Deserialize<List<CafeFStockType>>(json, JsonOpts);
             return types?.Select(x => x.Symbol).Where(s => !string.IsNullOrWhiteSpace(s)).ToList() ?? [];
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.Message;
             return [];
         }
     }
@@ -117,8 +122,9 @@ public sealed class VnMarketClient : IVnMarketClient
             _cache[cacheKey] = history;
             return history.TakeLast(sessions).ToList();
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.Message;
             return FallbackCache(cacheKey, sessions);
         }
     }
@@ -177,8 +183,9 @@ public sealed class VnMarketClient : IVnMarketClient
                 PercentChange = q.ChangePercent
             }).ToList();
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.Message;
             return [];
         }
     }
@@ -218,8 +225,9 @@ public sealed class VnMarketClient : IVnMarketClient
             _cache[cacheKey] = history;
             return history.TakeLast(sessions).ToList();
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.Message;
             return FallbackCache(cacheKey, sessions);
         }
     }
@@ -243,8 +251,9 @@ public sealed class VnMarketClient : IVnMarketClient
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.Message;
             /* fall through to the public TCBS bar endpoint */
         }
 
@@ -271,8 +280,9 @@ public sealed class VnMarketClient : IVnMarketClient
             }
             return list;
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.Message;
             return [];
         }
     }

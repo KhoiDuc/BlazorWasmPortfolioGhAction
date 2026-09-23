@@ -5,7 +5,8 @@ A feature-rich personal portfolio and developer utility suite built with **Blazo
 ## Key Features
 
 - **Personal Resume & CV**: Interactive multi-lingual resume (English & Vietnamese).
-- **Developer Utilities**: JWT debugger, converters, QR generator, SQLite Wasm, WebGL, Gemini spell checker, and 30+ tools.
+- **Developer Utilities**: JWT debugger, converters, QR generator, WebGL, Gemini spell checker, and 30+ tools.
+- **Trading desk**: VN market tools, broker portfolio, and TCBS via [broker-api](https://github.com/KhoiDuc/BROKER-API).
 - **Wiki CMS**: Knowledge base with read-only and authenticated edit modes.
 - **State Management**: Fluxor with Redux DevTools support (DEBUG).
 - **GitHub Integration**: REST DevOps tools + GraphQL user search.
@@ -14,9 +15,9 @@ A feature-rich personal portfolio and developer utility suite built with **Blazo
 
 - **Framework**: Blazor WebAssembly (.NET 10)
 - **State**: [Fluxor](https://github.com/mrpmorris/Fluxor)
-- **Database**: EF Core + SQLite Wasm
 - **UI**: Bootstrap 5 + Bootstrap Icons + CSS isolation (`.tool-*` design system)
-- **Auth**: Local admin login at `/admin` (wiki edit only; demo credentials)
+- **Auth**: broker-api JWT. The same sign-in unlocks the broker desk and wiki editing. `ALLOWED_ORIGINS` on the API must include `https://khoiduc.github.io`.
+- **Nested folders**: `Survey/`, `Trading-Signals/`, `StockPrj/`, `ZxmsToolbox/`, and `Meziantou.OnlineTools/` are not part of the WASM build.
 - **Deploy**: GitHub Pages CI/CD
 
 ## Getting Started

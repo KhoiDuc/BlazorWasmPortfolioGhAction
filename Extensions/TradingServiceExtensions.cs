@@ -91,9 +91,10 @@ public static class TradingServiceExtensions
         {
             var factory = sp.GetRequiredService<IHttpClientFactory>();
             var http = factory.CreateClient(nameof(BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerGeminiClient));
-            var opts = sp.GetRequiredService<BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerOptions>();
+            var config = sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+            var auth = sp.GetRequiredService<BlazorWasmPortfolioGhAction.Services.Trading.Broker.IBrokerAuthService>();
             var L = sp.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<BlazorWasmPortfolioGhAction.Resources.SharedResources>>();
-            return new BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerGeminiClient(http, opts, L);
+            return new BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerGeminiClient(http, config, auth, L);
         });
         services.AddHttpClient(nameof(BlazorWasmPortfolioGhAction.Services.Trading.Broker.BrokerGeminiClient), client =>
         {

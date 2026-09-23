@@ -72,12 +72,12 @@
         _busy = true;
         _error = null;
 
-        var ok = await AuthStateProvider.LoginAsync(_model.Username.Trim(), _model.Password);
+        var (ok, err) = await AuthStateProvider.LoginAsync(_model.Username.Trim(), _model.Password);
         _busy = false;
 
         if (!ok)
         {
-            _error = L["Admin_Invalid"];
+            _error = string.IsNullOrWhiteSpace(err) ? L["Admin_Invalid"] : err;
             return;
         }
 

@@ -11,6 +11,7 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
 public interface IBrokerDeskStore
 {
     Task<BrokerPortfolio> LoadAsync(CancellationToken ct = default);
+    string? LastLoadError { get; }
     Task<BrokerPortfolio?> LoadFromApiAsync(CancellationToken ct = default);
     Task SaveDraftAsync(BrokerPortfolio portfolio, CancellationToken ct = default);
     Task DownloadJsonAsync(BrokerPortfolio portfolio);
@@ -82,20 +83,27 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
         return new BrokerPortfolio();
     }
 
+    public string? LastLoadError { get; private set; }
+
     public async Task<BrokerPortfolio?> LoadFromApiAsync(CancellationToken ct = default)
     {
+        LastLoadError = null;
         try
         {
             var fromApi = await _api.GetPortfolioAsync(ct);
             if (fromApi is null)
+            {
+                LastLoadError = _api.LastError;
                 return null;
+            }
 
             var normalized = NormalizePortfolio(fromApi);
             await SaveDraftAsync(normalized, ct);
             return normalized;
         }
-        catch
+        catch (Exception ex)
         {
+            LastLoadError = ex.Message;
             return null;
         }
     }

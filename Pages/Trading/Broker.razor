@@ -62,6 +62,7 @@
     }
 
     <TcbsConnectPanel />
+    <BrokerInsights />
     <div class="tcbs-tabs" role="tablist" aria-label="Broker desk">
         <button type="button" class="ts-btn ts-btn-sm @(_deskTab == "portfolio" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _deskTab = "portfolio"'>Danh mục</button>
         <button type="button" class="ts-btn ts-btn-sm @(_deskTab == "account" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _deskTab = "account"'>Tài khoản TCBS</button>
@@ -930,7 +931,7 @@
             var fromApi = await Store.LoadFromApiAsync();
             if (fromApi is null)
             {
-                Flash(L["Trading_BrokerReloadFailed"], error: true);
+                Flash(Store.LastLoadError ?? L["Trading_BrokerReloadFailed"], error: true);
                 return;
             }
 

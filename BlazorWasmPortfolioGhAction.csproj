@@ -5,9 +5,14 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<!-- NU1903: AutoMapper 14.0.0, GHSA-rvv3-g6hj-g44x. No patched 14.x release is available; upgrading is a breaking major. The portfolio maps DTOs only and does not deserialize untrusted mapping plans. -->
 		<NoWarn>NU1903</NoWarn>
 		<InvariantGlobalization>false</InvariantGlobalization>
-		<BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+		<BlazorWebAssemblyLoadAllGlobalizationData>false</BlazorWebAssemblyLoadAllGlobalizationData>
+		<BlazorIcuDataFileName>icudt_no_CJK.dat</BlazorIcuDataFileName>
+		<PublishTrimmed>true</PublishTrimmed>
+		<BlazorEnableCompression>true</BlazorEnableCompression>
+		<!-- AOT stays off: Fluxor and AutoMapper need reflection, and AOT publish time is large on GitHub Actions. -->
 		<BlazorRoutingEnableRegexConstraint>true</BlazorRoutingEnableRegexConstraint>
 	</PropertyGroup>
 
@@ -20,6 +25,7 @@
 	  <Compile Remove="FontView\**" />
 	  <Compile Remove="Meziantou.OnlineTools\**" />
 	  <Compile Remove="ZxmsToolbox\**" />
+	  <Compile Remove="tests\**" />
 	  <Content Remove="Layout\**" />
 	  <Content Remove="StockPrj\**" />
 	  <Content Remove="Tools\**" />
@@ -28,6 +34,7 @@
 	  <Content Remove="FontView\**" />
 	  <Content Remove="Meziantou.OnlineTools\**" />
 	  <Content Remove="ZxmsToolbox\**" />
+	  <Content Remove="tests\**" />
 	  <EmbeddedResource Remove="Layout\**" />
 	  <EmbeddedResource Remove="StockPrj\**" />
 	  <None Remove="Layout\**" />
@@ -37,6 +44,7 @@
 	  <None Remove="FontView\**" />
 	  <None Remove="Meziantou.OnlineTools\**" />
 	  <None Remove="ZxmsToolbox\**" />
+	  <None Remove="tests\**" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -75,9 +83,6 @@
 		<PackageReference Include="Soenneker.Blazor.CreditCards" Version="4.0.543" />
 		<PackageReference Include="Soenneker.Blazor.Turnstile" Version="4.0.2778" />
 		<PackageReference Include="ZXing.Net" Version="0.16.11" />
-		<!-- MSAL disabled — was for learning only
-		<PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="9.0.2" />
-		-->
 		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />

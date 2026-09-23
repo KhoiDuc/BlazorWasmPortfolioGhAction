@@ -1,0 +1,172 @@
+@inject IBrokerApiClient Api
+@inject ITcbsApiClient Tcbs
+@inject IJSRuntime JS
+
+<section class="ts-panel broker-insights">
+    <h2>NAV, alerts, CSV</h2>
+    @if (!string.IsNullOrEmpty(_message))
+    {
+        <p role="status">@_message</p>
+    }
+    <div class="tool-actions">
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="LoadSnapshots">Load NAV</button>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="TakeSnapshot">Record snapshot</button>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="DownloadServerCsv">Download server CSV</button>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="LoadAudit">TCBS audit</button>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="RefreshToken">Refresh TCBS token</button>
+    </div>
+
+    @if (_snapshots.Count > 0)
+    {
+        <ul>
+            @foreach (var row in _snapshots.TakeLast(12))
+            {
+                <li>@row.TakenAt: NAV @row.Nav.ToString("N0") · realized @row.RealizedPnl.ToString("N0") · dividends @row.DividendIncome.ToString("N0")</li>
+            }
+        </ul>
+    }
+
+    <h3>Price alert</h3>
+    <div class="tool-actions">
+        <input class="ts-input" @bind="_symbol" aria-label="Symbol" placeholder="VNM" />
+        <select class="ts-input" @bind="_direction" aria-label="Direction">
+            <option value="above">above</option>
+            <option value="below">below</option>
+        </select>
+        <input class="ts-input" type="number" @bind="_price" aria-label="Price" />
+        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="CreateAlert">Add alert</button>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="LoadAlerts">Refresh</button>
+    </div>
+    <ul>
+        @foreach (var alert in _alerts)
+        {
+            <li>
+                @alert.Symbol @alert.Direction @alert.Price
+                <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => DeleteAlert(alert.Id)">Delete</button>
+            </li>
+        }
+    </ul>
+
+    <h3>CSV preview</h3>
+    <textarea class="tool-textarea" rows="4" @bind="_csv" aria-label="CSV to preview"></textarea>
+    <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="PreviewCsv">Preview diff</button>
+    @if (!string.IsNullOrEmpty(_diff))
+    {
+        <pre>@_diff</pre>
+    }
+    @if (!string.IsNullOrEmpty(_audit))
+    {
+        <h3>Audit</h3>
+        <pre>@_audit</pre>
+    }
+    <div class="tool-field">
+        <label class="tool-label" for="tcbs-refresh-otp">TCBS iOTP</label>
+        <input id="tcbs-refresh-otp" class="ts-input" @bind="_otp" autocomplete="one-time-code" />
+    </div>
+</section>
+
+@code {
+    private string? _message;
+    private string _symbol = "";
+    private string _direction = "above";
+    private decimal _price;
+    private string _csv = "";
+    private string? _diff;
+    private string? _audit;
+    private string _otp = "";
+    private List<SnapshotRow> _snapshots = [];
+    private List<AlertRow> _alerts = [];
+
+    protected override async Task OnInitializedAsync() => await LoadAlerts();
+
+    private async Task LoadSnapshots()
+    {
+        var call = await Api.GetTextAsync("/api/portfolio/snapshots");
+        _message = call.Error;
+        if (!call.Ok || string.IsNullOrWhiteSpace(call.Body)) return;
+        _snapshots = System.Text.Json.JsonSerializer.Deserialize<List<SnapshotRow>>(call.Body, JsonOpts) ?? [];
+    }
+
+    private async Task TakeSnapshot()
+    {
+        var call = await Api.SendTextAsync(HttpMethod.Post, "/api/portfolio/snapshots", "{}", "application/json");
+        _message = call.Ok ? "Snapshot recorded." : call.Error;
+        if (call.Ok) await LoadSnapshots();
+    }
+
+    private async Task DownloadServerCsv()
+    {
+        var call = await Api.GetTextAsync("/api/portfolio/export");
+        if (!call.Ok || call.Body is null)
+        {
+            _message = call.Error;
+            return;
+        }
+        await JS.InvokeVoidAsync("tradingAuth.downloadText", "portfolio-server.csv", call.Body, "text/csv");
+    }
+
+    private async Task PreviewCsv()
+    {
+        var call = await Api.SendTextAsync(HttpMethod.Post, "/api/portfolio/import?dryRun=true", _csv, "text/csv");
+        _diff = call.Ok ? call.Body : call.Error;
+        _message = call.Error;
+    }
+
+    private async Task LoadAlerts()
+    {
+        var call = await Api.GetTextAsync("/api/alerts");
+        if (!call.Ok || string.IsNullOrWhiteSpace(call.Body))
+        {
+            _message = call.Error;
+            return;
+        }
+        _alerts = System.Text.Json.JsonSerializer.Deserialize<List<AlertRow>>(call.Body, JsonOpts) ?? [];
+    }
+
+    private async Task CreateAlert()
+    {
+        var body = System.Text.Json.JsonSerializer.Serialize(new { symbol = _symbol, direction = _direction, price = _price, channel = "discord" });
+        var call = await Api.SendTextAsync(HttpMethod.Post, "/api/alerts", body, "application/json");
+        _message = call.Ok ? "Alert saved." : call.Error;
+        if (call.Ok) await LoadAlerts();
+    }
+
+    private async Task DeleteAlert(string id)
+    {
+        var call = await Api.SendTextAsync(HttpMethod.Delete, $"/api/alerts/{id}", null, null);
+        _message = call.Error;
+        await LoadAlerts();
+    }
+
+    private async Task LoadAudit()
+    {
+        var call = await Tcbs.GetAsync("audit");
+        _audit = call.Ok ? call.Json : call.Error;
+        _message = call.Ok ? null : call.Error;
+    }
+
+    private async Task RefreshToken()
+    {
+        var call = await Tcbs.SendAsync(HttpMethod.Post, "refresh", new { otp = _otp });
+        _message = call.Ok ? "TCBS token refreshed." : call.Error;
+        _otp = "";
+    }
+
+    private static readonly System.Text.Json.JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
+
+    private sealed class SnapshotRow
+    {
+        public string TakenAt { get; set; } = "";
+        public decimal Nav { get; set; }
+        public decimal RealizedPnl { get; set; }
+        public decimal DividendIncome { get; set; }
+    }
+
+    private sealed class AlertRow
+    {
+        public string Id { get; set; } = "";
+        public string Symbol { get; set; } = "";
+        public string Direction { get; set; } = "";
+        public decimal Price { get; set; }
+    }
+}
