@@ -6664,12 +6664,18 @@
     display: none !important;
 }
 
-/* 640px — compact toggle menu on small screens */
+/* 640px — compact toggle menu; hide Stop/Target/Note until the user saves a choice */
 @media (max-width: 640px) {
     .broker-col-toggle-menu[b-2hq3uo42kk] {
         right: auto;
         left: 0;
         min-width: 9rem;
+    }
+
+    .broker-watchlist:not(.cols-custom)[b-2hq3uo42kk]  .broker-col-stop,
+    .broker-watchlist:not(.cols-custom)[b-2hq3uo42kk]  .broker-col-target,
+    .broker-watchlist:not(.cols-custom)[b-2hq3uo42kk]  .broker-col-note {
+        display: none !important;
     }
 }
 /* /Pages/Trading/Components/StockAiChat.razor.rz.scp.css */
