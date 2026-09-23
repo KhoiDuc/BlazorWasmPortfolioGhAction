@@ -39,10 +39,6 @@ const offlineAssetsInclude = [
 ];
 
 const cacheFirstAssets = [
-    // _content folder
-    `${basePath}/_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/*`,
-    `${basePath}/_content/Microsoft.Authentication.WebAssembly.Msal/*`,
-
     // css folders
     `${basePath}/css/bootstrap/*`,
     `${basePath}/css/open-iconic/*`,
