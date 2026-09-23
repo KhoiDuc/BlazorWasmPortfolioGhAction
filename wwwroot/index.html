@@ -184,7 +184,30 @@
         })();
     </script>
 
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
+    <script>
+        // GitHub Pages sometimes answers 503 while Blazor downloads many .wasm files.
+        // With cache:force-cache that error body stays cached, fails SRI, and the
+        // loader sits at 99% on later visits. Incognito has an empty cache, so it works.
+        function fetchBootResource(uri, integrity) {
+            function once(cache) {
+                var opts = { cache: cache };
+                if (integrity) opts.integrity = integrity;
+                return fetch(uri, opts).then(function (response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response;
+                });
+            }
+            return once('default').catch(function () { return once('reload'); });
+        }
+
+        Blazor.start({
+            loadBootResource: function (type, name, defaultUri, integrity) {
+                if (type === 'dotnetjs' || type === 'manifest' || !defaultUri) return undefined;
+                return fetchBootResource(defaultUri, integrity);
+            }
+        });
+    </script>
 
     <!-- Portfolio motion animations -->
     <script src="js/animations.js"></script>
