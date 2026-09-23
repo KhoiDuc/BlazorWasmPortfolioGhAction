@@ -2,6 +2,7 @@
 @using System.Text.RegularExpressions
 @inject ITradingApiClient Api
 @inject HttpClient Http
+@inject IPriceAlertService Alerts
 @inject IStringLocalizer<SharedResources> L
 
 <div class="ts-panel">
@@ -183,6 +184,7 @@ else
             var worldVnd = worldUsd * TaelOzFactor * usdVnd;
             var spread = sjc.Sell - worldVnd;
             _goldSpread = BuildSpread("Vàng SJC", sjc.Buy, sjc.Sell, worldUsd, worldVnd, spread, usdVnd, "lượng", "oz");
+            Alerts.RememberPrice("XAUUSD", worldUsd);
         }
         finally { _goldSpreadLoading = false; await InvokeAsync(StateHasChanged); }
     }
@@ -219,6 +221,7 @@ else
             var worldVnd = worldUsd * TaelOzFactor * usdVnd;
             var spread = sell.Value - worldVnd;
             _silverSpread = BuildSpread("Bạc Phú Quý", buy.Value, sell.Value, worldUsd, worldVnd, spread, usdVnd, "lượng", "oz");
+            Alerts.RememberPrice("XAGUSD", worldUsd);
         }
         finally { _silverSpreadLoading = false; await InvokeAsync(StateHasChanged); }
     }

@@ -43,6 +43,7 @@
 @if (_sub == "screen" && _screenResults.Count > 0)
 {
     <div class="vd-panel">
+        <div class="vd-grid-wrap">
         <table class="vd-grid">
             <thead><tr><th>Mã</th><th>Giá</th><th>%</th><th>Score</th><th>@L["Trading_Screener_Reason"]</th></tr></thead>
             <tbody>
@@ -58,6 +59,7 @@
                 }
             </tbody>
         </table>
+        </div>
     </div>
 }
 else if (_sub == "watch" && _watchScores.Count > 0)
@@ -66,6 +68,7 @@ else if (_sub == "watch" && _watchScores.Count > 0)
         <p class="ts-muted" style="font-size:0.82rem">@L["Trading_Screener_Criteria"] @string.Join(" | ", _criteria.Select(c => L[c].Value))</p>
     </div>
     <div class="vd-panel">
+        <div class="vd-grid-wrap">
         <table class="vd-grid">
             <thead><tr><th>Mã</th><th>LQ</th><th>Trend</th><th>RSI</th><th>Support</th><th>Vol</th><th>Tổng</th><th></th></tr></thead>
             <tbody>
@@ -84,6 +87,7 @@ else if (_sub == "watch" && _watchScores.Count > 0)
                 }
             </tbody>
         </table>
+        </div>
     </div>
 }
 

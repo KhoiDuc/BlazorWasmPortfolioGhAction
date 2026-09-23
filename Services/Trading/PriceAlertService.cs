@@ -1,165 +1,167 @@
-using System.Net.Http.Json;
 using System.Text.Json;
 using BlazorWasmPortfolioGhAction.Models.Trading;
+using BlazorWasmPortfolioGhAction.Services.Trading.Broker;
 using Microsoft.JSInterop;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading;
 
 /// <summary>
-/// Client-side price alert service: localStorage persistence + Discord webhook delivery.
-/// ponytail: no real-time price feed — relies on caller passing current price via CheckAlertsAsync.
-/// Upgrade: wire to live ticker (Binance WebSocket / VnMarket poll) for auto-trigger.
+/// Price alerts stored on broker-api. Stock alerts are checked by the server cron.
+/// Gold, silver, and oil are checked in the browser, then fired through the API.
 /// </summary>
 public interface IPriceAlertService
 {
     Task<List<PriceAlert>> LoadAsync();
-    Task SaveAsync(List<PriceAlert> alerts);
     Task<PriceAlert> AddAsync(string symbol, string assetType, double threshold, AlertOperator op);
-    Task RemoveAsync(Guid id);
-    Task DismissAsync(Guid id);
+    Task RemoveAsync(string id);
     Task<int> CheckAlertsAsync(string symbol, double currentPrice);
+    void RememberPrice(string symbol, double price);
+    bool TryGetPrice(string symbol, out double price);
     bool IsDiscordConfigured { get; }
 }
 
 public class PriceAlertService : IPriceAlertService
 {
     private readonly IJSRuntime _js;
-    private readonly HttpClient _http;
-    private readonly IConfiguration _config;
-    private List<PriceAlert> _cache = new();
+    private readonly IBrokerApiClient _api;
+    private List<PriceAlert> _cache = [];
     private bool _loaded;
+    private readonly Dictionary<string, double> _prices = new(StringComparer.OrdinalIgnoreCase);
 
     private const string StorageKey = "priceAlerts";
     private static readonly JsonSerializerOptions JsonOpts = new()
-    { PropertyNameCaseInsensitive = true, WriteIndented = false };
+    {
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
 
-    public PriceAlertService(IJSRuntime js, HttpClient http, IConfiguration config)
+    public PriceAlertService(IJSRuntime js, IBrokerApiClient api)
     {
         _js = js;
-        _http = http;
-        _config = config;
+        _api = api;
     }
 
-    public bool IsDiscordConfigured =>
-        !string.IsNullOrWhiteSpace(_config["DevOps:DiscordWebhookUrl"]);
+    public bool IsDiscordConfigured => true;
+
+    public void RememberPrice(string symbol, double price)
+    {
+        if (!string.IsNullOrWhiteSpace(symbol) && price > 0)
+            _prices[symbol.Trim().ToUpperInvariant()] = price;
+    }
+
+    public bool TryGetPrice(string symbol, out double price) =>
+        _prices.TryGetValue(symbol.Trim().ToUpperInvariant(), out price);
 
     public async Task<List<PriceAlert>> LoadAsync()
     {
         if (_loaded) return _cache;
-        try
+        await MigrateLocalAsync();
+        var call = await _api.GetTextAsync("/api/alerts");
+        if (!call.Ok || string.IsNullOrWhiteSpace(call.Body))
         {
-            var json = await _js.InvokeAsync<string>("localStorage.getItem", StorageKey);
-            if (!string.IsNullOrWhiteSpace(json))
-                _cache = JsonSerializer.Deserialize<List<PriceAlert>>(json, JsonOpts) ?? new();
+            _cache = [];
+            return _cache;
         }
-        catch { _cache = new(); }
+        var rows = JsonSerializer.Deserialize<List<ServerAlert>>(call.Body, JsonOpts) ?? [];
+        _cache = rows.Select(Map).ToList();
         _loaded = true;
         return _cache;
     }
 
-    public async Task SaveAsync(List<PriceAlert> alerts)
-    {
-        _cache = alerts;
-        var json = JsonSerializer.Serialize(alerts, JsonOpts);
-        await _js.InvokeVoidAsync("localStorage.setItem", StorageKey, json);
-    }
-
     public async Task<PriceAlert> AddAsync(string symbol, string assetType, double threshold, AlertOperator op)
     {
-        var alerts = await LoadAsync();
-        // ponytail: dedup exact match only. Upgrade: allow multiple alerts same symbol different thresholds.
-        if (alerts.Any(a => a.Symbol == symbol && a.AssetType == assetType
-            && a.Threshold == threshold && a.Operator == op && a.Status == AlertStatus.Active))
-            return alerts.First(a => a.Symbol == symbol && a.AssetType == assetType
-                && a.Threshold == threshold && a.Operator == op && a.Status == AlertStatus.Active);
-
-        var alert = new PriceAlert
+        var body = JsonSerializer.Serialize(new
         {
-            Symbol = symbol,
-            AssetType = assetType,
-            Threshold = threshold,
-            Operator = op,
-            Status = AlertStatus.Active,
-            CreatedAt = DateTime.UtcNow
-        };
-        alerts.Add(alert);
-        await SaveAsync(alerts);
-        return alert;
-    }
-
-    public async Task RemoveAsync(Guid id)
-    {
+            symbol,
+            assetType,
+            direction = op == AlertOperator.Above ? "above" : "below",
+            price = threshold,
+            channel = "discord",
+        }, JsonOpts);
+        var call = await _api.SendTextAsync(HttpMethod.Post, "/api/alerts", body, "application/json");
+        if (!call.Ok) throw new InvalidOperationException(call.Error ?? "Không lưu được cảnh báo.");
+        _loaded = false;
         var alerts = await LoadAsync();
-        alerts.RemoveAll(a => a.Id == id);
-        await SaveAsync(alerts);
+        return alerts.FirstOrDefault(a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase)
+            && Math.Abs(a.Threshold - threshold) < 0.0001
+            && a.Status == AlertStatus.Active) ?? Map(JsonSerializer.Deserialize<ServerAlert>(call.Body!, JsonOpts)!);
     }
 
-    public async Task DismissAsync(Guid id)
+    public async Task RemoveAsync(string id)
     {
-        var alerts = await LoadAsync();
-        var a = alerts.FirstOrDefault(x => x.Id == id);
-        if (a != null) { a.Status = AlertStatus.Dismissed; await SaveAsync(alerts); }
+        await _api.SendTextAsync(HttpMethod.Delete, $"/api/alerts/{id}", null, null);
+        _cache.RemoveAll(a => a.Id == id);
     }
 
-    /// <summary>
-    /// Check active alerts for a symbol against current price. Fire Discord for each newly triggered.
-    /// Returns count of newly triggered alerts.
-    /// </summary>
     public async Task<int> CheckAlertsAsync(string symbol, double currentPrice)
     {
+        RememberPrice(symbol, currentPrice);
         var alerts = await LoadAsync();
-        var active = alerts.Where(a => a.Symbol == symbol && a.Status == AlertStatus.Active).ToList();
-        if (active.Count == 0) return 0;
-
-        var triggered = new List<PriceAlert>();
-        foreach (var a in active)
+        var active = alerts.Where(a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase)
+            && a.Status == AlertStatus.Active
+            && !a.AssetType.Equals("stock", StringComparison.OrdinalIgnoreCase)).ToList();
+        var fired = 0;
+        foreach (var alert in active)
         {
-            var hit = a.Operator == AlertOperator.Above
-                ? currentPrice >= a.Threshold
-                : currentPrice <= a.Threshold;
+            var hit = alert.Operator == AlertOperator.Above
+                ? currentPrice >= alert.Threshold
+                : currentPrice <= alert.Threshold;
             if (!hit) continue;
-            a.Status = AlertStatus.Triggered;
-            a.TriggeredPrice = currentPrice;
-            a.TriggeredAt = DateTime.UtcNow;
-            triggered.Add(a);
+            var body = JsonSerializer.Serialize(new { price = currentPrice }, JsonOpts);
+            var call = await _api.SendTextAsync(HttpMethod.Post, $"/api/alerts/{alert.Id}/fire", body, "application/json");
+            if (!call.Ok) continue;
+            alert.Status = AlertStatus.Triggered;
+            alert.TriggeredPrice = currentPrice;
+            alert.TriggeredAt = DateTime.UtcNow;
+            fired++;
         }
-
-        if (triggered.Count > 0)
-        {
-            await SaveAsync(alerts);
-            foreach (var a in triggered)
-                _ = SendDiscordAsync(a);
-        }
-        return triggered.Count;
+        return fired;
     }
 
-    private async Task SendDiscordAsync(PriceAlert alert)
+    private async Task MigrateLocalAsync()
     {
-        var webhookUrl = _config["DevOps:DiscordWebhookUrl"];
-        if (string.IsNullOrWhiteSpace(webhookUrl)) return;
-
-        var dir = alert.Operator == AlertOperator.Above ? "↑ crossed above" : "↓ crossed below";
-        var title = $"Price Alert: {alert.Symbol}";
-        var desc = $"{alert.Symbol} {dir} **{alert.Threshold:N2}**\n" +
-                   $"Current: **{alert.TriggeredPrice:N2}** ({alert.AssetType})\n" +
-                   $"Time: {alert.TriggeredAt:yyyy-MM-dd HH:mm} UTC";
-
-        var payload = new
+        string? json;
+        try { json = await _js.InvokeAsync<string>("localStorage.getItem", StorageKey); }
+        catch { return; }
+        if (string.IsNullOrWhiteSpace(json)) return;
+        var local = JsonSerializer.Deserialize<List<PriceAlert>>(json, JsonOpts) ?? [];
+        foreach (var alert in local.Where(a => a.Status == AlertStatus.Active && a.Threshold > 0))
         {
-            embeds = new[]
+            var body = JsonSerializer.Serialize(new
             {
-                new
-                {
-                    title = title,
-                    description = desc,
-                    color = alert.Operator == AlertOperator.Above ? 0x00FF00 : 0xFF0000,
-                    footer = new { text = "Blazor Portfolio Price Alert" },
-                    timestamp = alert.TriggeredAt?.ToString("O")
-                }
-            }
-        };
+                symbol = alert.Symbol,
+                assetType = string.IsNullOrWhiteSpace(alert.AssetType) ? "stock" : alert.AssetType,
+                direction = alert.Operator == AlertOperator.Above ? "above" : "below",
+                price = alert.Threshold,
+                channel = "discord",
+            }, JsonOpts);
+            await _api.SendTextAsync(HttpMethod.Post, "/api/alerts", body, "application/json");
+        }
+        try { await _js.InvokeVoidAsync("localStorage.removeItem", StorageKey); }
+        catch { /* already copied */ }
+    }
 
-        try { await _http.PostAsJsonAsync(webhookUrl, payload); }
-        catch { /* swallow — alert already recorded locally */ }
+    private static PriceAlert Map(ServerAlert row) => new()
+    {
+        Id = row.Id,
+        Symbol = row.Symbol,
+        AssetType = row.AssetType ?? "stock",
+        Threshold = row.Price,
+        Operator = row.Direction == "below" ? AlertOperator.Below : AlertOperator.Above,
+        Status = row.Active ? AlertStatus.Active : AlertStatus.Triggered,
+        TriggeredPrice = row.TriggeredPrice,
+        TriggeredAt = row.TriggeredAt,
+    };
+
+    private sealed class ServerAlert
+    {
+        public string Id { get; set; } = "";
+        public string Symbol { get; set; } = "";
+        public string Direction { get; set; } = "above";
+        public double Price { get; set; }
+        public string? AssetType { get; set; }
+        public bool Active { get; set; }
+        public double? TriggeredPrice { get; set; }
+        public DateTime? TriggeredAt { get; set; }
     }
 }

@@ -41,6 +41,22 @@
                 <label class="ts-label" for="bt-sl">Stop Loss %</label>
                 <input id="bt-sl" type="number" class="vd-input vd-input-narrow" @bind="_slPct" />
             </div>
+            <div>
+                <label class="ts-label" for="bt-fee">Phí %</label>
+                <input id="bt-fee" type="number" class="vd-input vd-input-narrow" step="0.01" @bind="_feePct" />
+            </div>
+            <div>
+                <label class="ts-label" for="bt-tax">Thuế bán %</label>
+                <input id="bt-tax" type="number" class="vd-input vd-input-narrow" step="0.01" @bind="_taxPct" />
+            </div>
+            <div>
+                <label class="ts-label" for="bt-slip">Trượt giá (bps)</label>
+                <input id="bt-slip" type="number" class="vd-input vd-input-narrow" @bind="_slipBps" />
+            </div>
+            <div>
+                <label class="ts-label" for="bt-capital">Vốn mỗi lệnh</label>
+                <input id="bt-capital" type="number" class="vd-input vd-input-narrow" @bind="_capital" />
+            </div>
         </div>
         <div>
             <button type="button" class="vd-btn vd-btn-primary" @onclick="RunBacktest" disabled="@_busy">@L["Trading_Backtest_RunBtn"]</button>
@@ -75,14 +91,19 @@
                 <div class="vd-metric-label">@L["Trading_Backtest_TotalPnl"]</div>
                 <div class="vd-metric-value @(_result.TotalPnl >= 0 ? "vd-pos" : "vd-neg")">@(_result.TotalPnl > 0 ? "+" : "")@_result.TotalPnl.ToString("N2")</div>
             </div>
+            <div class="vd-metric-card">
+                <div class="vd-metric-label">PnL ròng (VND)</div>
+                <div class="vd-metric-value @(_result.TotalNetPnl >= 0 ? "vd-pos" : "vd-neg")">@_result.TotalNetPnl.ToString("N0")</div>
+            </div>
         </div>
     </div>
 
     @if (_result.Trades.Count > 0)
     {
         <div class="vd-panel">
-            <table class="vd-grid">
-                <thead><tr><th>Mã</th><th>Vào lệnh</th><th>Giá vào</th><th>Thoát</th><th>Giá thoát</th><th>Giữ</th><th>PnL%</th><th>KQ</th></tr></thead>
+            <div class="vd-grid-wrap">
+        <table class="vd-grid">
+                <thead><tr><th>Mã</th><th>Vào lệnh</th><th class="vd-num">Giá vào</th><th>Thoát</th><th class="vd-num">Giá thoát</th><th class="vd-num">Giữ</th><th class="vd-num">PnL%</th><th class="vd-num">PnL ròng</th><th>KQ</th></tr></thead>
                 <tbody>
                     @foreach (var t in _result.Trades.Take(100))
                     {
@@ -93,12 +114,14 @@
                             <td>@(t.Exit?.ToString("dd/MM/yyyy") ?? "-")</td>
                             <td>@(t.ExitPrice?.ToString("N2") ?? "-")</td>
                             <td>@t.HoldDays @L["Trading_Backtest_Days"]</td>
-                            <td class="@(t.PnlPct >= 0 ? "vd-pos" : "vd-neg")">@t.PnlPct.ToString("F2")%</td>
+                            <td class="vd-num @(t.PnlPct >= 0 ? "vd-pos" : "vd-neg")">@t.PnlPct.ToString("F2")%</td>
+                            <td class="vd-num @(t.NetPnl >= 0 ? "vd-pos" : "vd-neg")">@t.NetPnl.ToString("N0")</td>
                             <td>@(t.IsWin ? "✓" : "✗")</td>
                         </tr>
                     }
                 </tbody>
             </table>
+        </div>
         </div>
     }
 }
@@ -110,6 +133,10 @@
     private string _symbols = "VNM,FPT,MWG";
     private decimal _tpPct = 10m;
     private decimal _slPct = 7m;
+    private decimal _feePct = 0.15m;
+    private decimal _taxPct = 0.1m;
+    private decimal _slipBps;
+    private decimal _capital = 100_000_000m;
     private BacktestResult? _result;
     private string? _error;
     private bool _busy;
@@ -136,7 +163,8 @@
                 return;
             }
             var req = new BacktestRequest(_indicator, symbols,
-                DateTime.Today.AddYears(-2), DateTime.Today, _tpPct, _slPct);
+                DateTime.Today.AddYears(-2), DateTime.Today, _tpPct, _slPct,
+                _feePct / 100m, _taxPct / 100m, _slipBps, _capital);
             _result = await BacktestSvc.BacktestAsync(req);
             if (_result.TotalTrades == 0)
                 _error = L["Trading_Backtest_NoTrades"];

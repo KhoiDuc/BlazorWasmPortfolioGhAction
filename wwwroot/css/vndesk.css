@@ -341,16 +341,27 @@
 .vd-delta-down { color: var(--color-danger-text); font-weight: 600; }
 .vd-delta-flat { color: var(--color-nav-link); }
 
-/* Data grid (tables) */
+/* Data grid (tables). Scroll lives on the wrapper so thead and tbody share one column grid. */
+.vd-grid-wrap {
+    overflow-x: auto;
+    max-height: 70vh;
+    -webkit-overflow-scrolling: touch;
+    background:
+        linear-gradient(to right, var(--color-bg-surface) 30%, transparent),
+        linear-gradient(to left, var(--color-bg-surface) 30%, transparent) 100% 0,
+        radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.14), transparent),
+        radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.14), transparent) 100% 0;
+    background-repeat: no-repeat;
+    background-size: 2.5rem 100%, 2.5rem 100%, 0.85rem 100%, 0.85rem 100%;
+    background-attachment: local, local, scroll, scroll;
+}
 .vd-grid {
-    width: 100%;
+    width: max-content;
+    min-width: 100%;
     border-collapse: collapse;
     font-size: 0.85rem;
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    font-variant-numeric: tabular-nums;
 }
-.vd-grid thead, .vd-grid tbody { display: table; width: max-content; min-width: 100%; }
 .vd-grid th {
     text-align: left;
     padding: 0.5rem 0.65rem;
@@ -362,10 +373,22 @@
     background: var(--color-bg-surface-elevated);
     position: sticky;
     top: 0;
+    z-index: 2;
+    white-space: nowrap;
+}
+.vd-grid th.vd-num,
+.vd-grid td.vd-num,
+.vd-grid td.vd-pos,
+.vd-grid td.vd-neg,
+.vd-grid td.vd-delta-up,
+.vd-grid td.vd-delta-down,
+.vd-grid td.vd-delta-flat {
+    text-align: right;
 }
 .vd-grid td {
     padding: 0.5rem 0.65rem;
     border-bottom: 1px solid var(--color-border-subtle);
+    white-space: nowrap;
 }
 .vd-grid tr { cursor: pointer; }
 .vd-grid tr:hover td { background: var(--color-bg-surface-elevated); }
@@ -750,6 +773,20 @@
 
     .vd-grid td {
         padding: 0.4rem 0.5rem;
+    }
+
+    .vd-grid th:first-child,
+    .vd-grid td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background: var(--color-bg-surface);
+        box-shadow: 2px 0 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .vd-grid th:first-child {
+        z-index: 3;
+        background: var(--color-bg-surface-elevated);
     }
 
     .vd-split {

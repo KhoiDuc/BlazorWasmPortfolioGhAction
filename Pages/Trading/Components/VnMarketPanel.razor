@@ -37,55 +37,61 @@ else if (_sub == "overview" && _market is not null)
 {
     <div class="vd-panel">
         <h2 class="vd-section-title">@L["Trading_Market_Indices"]</h2>
+        <div class="vd-grid-wrap">
         <table class="vd-grid">
-            <thead><tr><th>Chỉ số</th><th>Giá trị</th><th>+/-</th><th>%</th></tr></thead>
+            <thead><tr><th>Chỉ số</th><th class="vd-num">Giá trị</th><th class="vd-num">+/-</th><th class="vd-num">%</th></tr></thead>
             <tbody>
                 @foreach (var idx in _market.Indices)
                 {
                     <tr>
                         <td><strong>@idx.Name</strong></td>
-                        <td>@idx.Index</td>
+                        <td class="vd-num">@idx.Index</td>
                         <td class="@(idx.ParsedChange >= 0 ? "vd-pos" : "vd-neg")">@idx.Change</td>
                         <td class="@(idx.ParsedPercent >= 0 ? "vd-pos" : "vd-neg")">@idx.Percent%</td>
                     </tr>
                 }
             </tbody>
         </table>
+        </div>
         <p class="ts-updated mt-2">Cập nhật: @_market.LoadedAt.ToLocalTime().ToString("HH:mm:ss")</p>
     </div>
     <div class="vd-panel">
         <h2 class="vd-section-title">@L["Trading_Market_TopGainers"]</h2>
+        <div class="vd-grid-wrap">
         <table class="vd-grid">
-            <thead><tr><th>Mã</th><th>Giá</th><th>%</th><th>KL</th></tr></thead>
+            <thead><tr><th>Mã</th><th class="vd-num">Giá</th><th class="vd-num">%</th><th class="vd-num">KL</th></tr></thead>
             <tbody>
                 @foreach (var s in _market.Stocks.OrderByDescending(x => x.PercentChange).Take(10))
                 {
                     <tr @onclick="() => OnSymbolSelected.InvokeAsync(s.Symbol)">
                         <td><strong>@s.Symbol</strong></td>
-                        <td>@s.Close.ToString("N2")</td>
+                        <td class="vd-num">@s.Close.ToString("N2")</td>
                         <td class="vd-pos">@s.PercentChange.ToString("F2")%</td>
-                        <td>@s.Volume.ToString("N0")</td>
+                        <td class="vd-num">@s.Volume.ToString("N0")</td>
                     </tr>
                 }
             </tbody>
         </table>
+        </div>
     </div>
     <div class="vd-panel">
         <h2 class="vd-section-title">@L["Trading_Market_TopLosers"]</h2>
+        <div class="vd-grid-wrap">
         <table class="vd-grid">
-            <thead><tr><th>Mã</th><th>Giá</th><th>%</th><th>KL</th></tr></thead>
+            <thead><tr><th>Mã</th><th class="vd-num">Giá</th><th class="vd-num">%</th><th class="vd-num">KL</th></tr></thead>
             <tbody>
                 @foreach (var s in _market.Stocks.OrderBy(x => x.PercentChange).Take(10))
                 {
                     <tr @onclick="() => OnSymbolSelected.InvokeAsync(s.Symbol)">
                         <td><strong>@s.Symbol</strong></td>
-                        <td>@s.Close.ToString("N2")</td>
+                        <td class="vd-num">@s.Close.ToString("N2")</td>
                         <td class="vd-neg">@s.PercentChange.ToString("F2")%</td>
-                        <td>@s.Volume.ToString("N0")</td>
+                        <td class="vd-num">@s.Volume.ToString("N0")</td>
                     </tr>
                 }
             </tbody>
         </table>
+        </div>
     </div>
 }
 else if (_sub == "sector" && _sectorData?.Count > 0)
@@ -95,16 +101,17 @@ else if (_sub == "sector" && _sectorData?.Count > 0)
         : _sectorData.Where(kv => kv.Key.Contains(_sectorFilter, StringComparison.OrdinalIgnoreCase)
             || kv.Value.TopGainer?.Symbol?.Contains(_sectorFilter, StringComparison.OrdinalIgnoreCase) == true);
     <div class="vd-panel">
+        <div class="vd-grid-wrap">
         <table class="vd-grid">
-            <thead><tr><th>Ngành</th><th>Tăng</th><th>Giảm</th><th>TB %</th><th>Top</th><th>Bottom</th></tr></thead>
+            <thead><tr><th>Ngành</th><th class="vd-num">Tăng</th><th class="vd-num">Giảm</th><th class="vd-num">TB %</th><th>Top</th><th>Bottom</th></tr></thead>
             <tbody>
                 @foreach (var kv in filtered)
                 {
                     var s = kv.Value;
                     <tr>
                         <td><strong>@s.Name</strong> <span class="ts-muted">(@s.StockCount)</span></td>
-                        <td class="vd-pos">@s.UpCount</td>
-                        <td class="vd-neg">@s.DownCount</td>
+                        <td class="vd-num vd-pos">@s.UpCount</td>
+                        <td class="vd-num vd-neg">@s.DownCount</td>
                         <td class="@(s.AverageChange >= 0 ? "vd-pos" : "vd-neg")">@s.AverageChange.ToString("F2")%</td>
                         <td>@(s.TopGainer is null ? "-" : $"{s.TopGainer.Symbol} {s.TopGainer.PercentChange:F1}%")</td>
                         <td>@(s.TopLoser is null ? "-" : $"{s.TopLoser.Symbol} {s.TopLoser.PercentChange:F1}%")</td>
@@ -112,6 +119,7 @@ else if (_sub == "sector" && _sectorData?.Count > 0)
                 }
             </tbody>
         </table>
+        </div>
     </div>
 }
 else if (_sub == "overview" && _market is null && !_busy)

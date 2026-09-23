@@ -1,3 +1,4 @@
+@using BlazorWasmPortfolioGhAction.Services.Trading
 @using BlazorWasmPortfolioGhAction.Utils
 @inject IStringLocalizer<SharedResources> L
 @inject ITcbsApiClient Tcbs
@@ -54,6 +55,40 @@
                 <span class="broker-stat-card-value">@BrokerFormat.Vnd(report.NetCashFlow)</span>
             </div>
         </div>
+
+        @{
+            var calendar = VnSettlementCalendar.Build(Portfolio, DateTime.Now);
+        }
+        @if (calendar.Count > 0)
+        {
+            <h3 class="ts-panel-title">Lịch về tiền và cổ phiếu</h3>
+            <div class="broker-table-scroll">
+                <table class="ts-table broker-cashflow-table">
+                    <thead>
+                        <tr>
+                            <th>Ngày</th>
+                            <th class="broker-num">Tổng tiền</th>
+                            <th>Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var day in calendar)
+                        {
+                            <tr>
+                                <td>@day.Day.ToString("dd/MM/yyyy")</td>
+                                <td class="broker-num">@BrokerFormat.Vnd(day.Total)</td>
+                                <td>
+                                    @foreach (var row in day.Rows)
+                                    {
+                                        <div>@row.Symbol · @row.Kind · @BrokerFormat.Vnd(row.Amount) @row.Note</div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
 
         @if (_expanded)
         {

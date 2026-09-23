@@ -89,11 +89,17 @@
     display: none !important;
 }
 
-/* 640px — compact toggle menu on small screens */
+/* 640px — compact toggle menu; hide Stop/Target/Note until the user saves a choice */
 @media (max-width: 640px) {
     .broker-col-toggle-menu {
         right: auto;
         left: 0;
         min-width: 9rem;
+    }
+
+    .broker-watchlist:not(.cols-custom) ::deep .broker-col-stop,
+    .broker-watchlist:not(.cols-custom) ::deep .broker-col-target,
+    .broker-watchlist:not(.cols-custom) ::deep .broker-col-note {
+        display: none !important;
     }
 }

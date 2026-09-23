@@ -1,4 +1,3 @@
-@inject ITcbsApiClient Tcbs
 @inject IPriceAlertService Alerts
 @implements IDisposable
 
@@ -19,17 +18,17 @@
         {
             try
             {
-                var status = await Tcbs.GetStatusAsync(ct);
-                if (!status.Connected) continue;
                 var alerts = await Alerts.LoadAsync();
-                var symbols = alerts.Where(a => a.Status == AlertStatus.Active && a.AssetType == "stock")
+                var symbols = alerts.Where(a => a.Status == AlertStatus.Active
+                        && !a.AssetType.Equals("stock", StringComparison.OrdinalIgnoreCase))
                     .Select(a => a.Symbol)
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
-                if (symbols.Count == 0) continue;
-                var quotes = await Tcbs.GetQuotesAsync(symbols, ct);
-                foreach (var q in quotes.Where(q => q.MatchPrice > 0))
-                    await Alerts.CheckAlertsAsync(q.Symbol, (double)q.MatchPrice);
+                foreach (var symbol in symbols)
+                {
+                    if (Alerts.TryGetPrice(symbol, out var price))
+                        await Alerts.CheckAlertsAsync(symbol, price);
+                }
             }
             catch (OperationCanceledException)
             {

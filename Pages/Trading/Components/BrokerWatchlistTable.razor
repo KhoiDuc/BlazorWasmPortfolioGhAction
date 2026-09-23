@@ -7,7 +7,7 @@
 @inject ILocalStorageService LocalStorage
 @inject ICultureService CultureService
 
-<div class="ts-panel ts-table-wrap broker-watchlist">
+<div class="ts-panel ts-table-wrap broker-watchlist @(_colsCustom ? "cols-custom" : "")">
     <div class="broker-table-head">
         <div>
             <h2 class="ts-panel-title broker-table-title">@L["Trading_BrokerWatchlistTitle"]</h2>
@@ -236,7 +236,7 @@
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColSector"] @SortIcon(SortColumn.Sector)</span>
                             </th>
                             <th class="broker-col-buys"><span class="broker-dt-th-inner">@L["Trading_BrokerColBuys"]</span></th>
-                            <th class="broker-dt-sortable broker-col-quantity @SortClass(SortColumn.Quantity)"
+                            <th class="broker-num broker-dt-sortable broker-col-quantity @SortClass(SortColumn.Quantity)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.Quantity)"
                                 @onclick='() => ToggleSort(SortColumn.Quantity)'
@@ -244,7 +244,7 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColQty"] @SortIcon(SortColumn.Quantity)</span>
                             </th>
-                            <th class="broker-dt-sortable broker-col-soldqty @SortClass(SortColumn.SoldQty)"
+                            <th class="broker-num broker-dt-sortable broker-col-soldqty @SortClass(SortColumn.SoldQty)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.SoldQty)"
                                 @onclick='() => ToggleSort(SortColumn.SoldQty)'
@@ -252,7 +252,7 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColSoldQty"] @SortIcon(SortColumn.SoldQty)</span>
                             </th>
-                            <th class="broker-dt-sortable broker-col-remaining @SortClass(SortColumn.Remaining)"
+                            <th class="broker-num broker-dt-sortable broker-col-remaining @SortClass(SortColumn.Remaining)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.Remaining)"
                                 @onclick='() => ToggleSort(SortColumn.Remaining)'
@@ -260,7 +260,7 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColRemaining"] @SortIcon(SortColumn.Remaining)</span>
                             </th>
-                            <th class="broker-dt-sortable broker-col-avgbuy @SortClass(SortColumn.AvgBuy)"
+                            <th class="broker-num broker-dt-sortable broker-col-avgbuy @SortClass(SortColumn.AvgBuy)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.AvgBuy)"
                                 @onclick='() => ToggleSort(SortColumn.AvgBuy)'
@@ -268,7 +268,7 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColAvgBuy"] @SortIcon(SortColumn.AvgBuy)</span>
                             </th>
-                            <th class="broker-dt-sortable broker-col-current @SortClass(SortColumn.Current)"
+                            <th class="broker-num broker-dt-sortable broker-col-current @SortClass(SortColumn.Current)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.Current)"
                                 @onclick='() => ToggleSort(SortColumn.Current)'
@@ -276,7 +276,7 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColCurrent"] @SortIcon(SortColumn.Current)</span>
                             </th>
-                            <th class="broker-dt-sortable broker-col-pnlpct @SortClass(SortColumn.PnlPct)"
+                            <th class="broker-num broker-dt-sortable broker-col-pnlpct @SortClass(SortColumn.PnlPct)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.PnlPct)"
                                 @onclick='() => ToggleSort(SortColumn.PnlPct)'
@@ -284,7 +284,7 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColPnlPct"] @SortIcon(SortColumn.PnlPct)</span>
                             </th>
-                            <th class="broker-dt-sortable broker-col-pnlamt @SortClass(SortColumn.PnlAmount)"
+                            <th class="broker-num broker-dt-sortable broker-col-pnlamt @SortClass(SortColumn.PnlAmount)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.PnlAmount)"
                                 @onclick='() => ToggleSort(SortColumn.PnlAmount)'
@@ -292,8 +292,8 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColPnlAmt"] @SortIcon(SortColumn.PnlAmount)</span>
                             </th>
-                            <th class="broker-col-stop"><span class="broker-dt-th-inner">@L["Trading_BrokerStop"]</span></th>
-                            <th class="broker-col-target"><span class="broker-dt-th-inner">@L["Trading_BrokerTarget"]</span></th>
+                            <th class="broker-num broker-col-stop"><span class="broker-dt-th-inner">@L["Trading_BrokerStop"]</span></th>
+                            <th class="broker-num broker-col-target"><span class="broker-dt-th-inner">@L["Trading_BrokerTarget"]</span></th>
                             <th class="broker-col-tag"><span class="broker-dt-th-inner">Tag</span></th>
                             <th class="broker-dt-sortable broker-col-status @SortClass(SortColumn.Status)"
                                 tabindex="0"
@@ -339,6 +339,10 @@
                                     else if (MoneyFlowScanned)
                                     {
                                         <span class="broker-mf-badge broker-mf-muted" title="@L["Trading_MF_NoData"]">—</span>
+                                    }
+                                    @if (p.PendingQuantity > 0)
+                                    {
+                                        <span class="broker-mf-badge broker-mf-muted" title="Chưa đến hạn T+2">chờ @BrokerFormat.Quantity(p.PendingQuantity)</span>
                                     }
                                     @if (p.HasPartialQtyLots)
                                     {
@@ -557,12 +561,7 @@
     private HashSet<BrokerCol> _hiddenCols = new();
 
     private const string ColStorageKey = "broker-watchlist-hidden-cols";
-
-    // ponytail: default hidden columns for all viewports — upgrade by adding per-breakpoint defaults
-    private static readonly BrokerCol[] DefaultMobileHidden =
-    [
-        BrokerCol.Stop, BrokerCol.Target, BrokerCol.Note
-    ];
+    private bool _colsCustom;
 
     private decimal _closedRealized =>
         (Portfolio.ClosedPositions ?? []).Sum(p => p.RealizedPnl ?? 0m);
@@ -572,14 +571,15 @@
         try
         {
             var saved = await LocalStorage.GetItemAsync<List<BrokerCol>>(ColStorageKey);
-            if (saved is { Count: > 0 })
+            if (saved is not null)
+            {
                 _hiddenCols = [.. saved];
-            else
-                _hiddenCols = [.. DefaultMobileHidden];
+                _colsCustom = true;
+            }
         }
         catch
         {
-            _hiddenCols = [.. DefaultMobileHidden];
+            _hiddenCols = [];
         }
     }
 
@@ -608,14 +608,17 @@
 
     private async Task ResetCols()
     {
-        _hiddenCols = [.. DefaultMobileHidden];
-        await SaveCols();
+        _hiddenCols = [];
+        _colsCustom = false;
+        try { await LocalStorage.RemoveItemAsync(ColStorageKey); }
+        catch { /* localStorage unavailable */ }
     }
 
     private void ToggleColMenu() => _colToggleOpen = !_colToggleOpen;
 
     private async Task SaveCols()
     {
+        _colsCustom = true;
         try { await LocalStorage.SetItemAsync(ColStorageKey, _hiddenCols.ToList()); }
         catch { /* localStorage unavailable */ }
     }

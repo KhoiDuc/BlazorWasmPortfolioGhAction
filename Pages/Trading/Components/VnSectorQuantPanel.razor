@@ -128,7 +128,8 @@ else if (_board is not null)
     {
         <div class="vd-panel">
             <h2 class="vd-section-title">@L["Trading_SQ_MomentumTitle"]</h2>
-            <table class="vd-grid">
+            <div class="vd-grid-wrap">
+        <table class="vd-grid">
                 <thead><tr><th>#</th><th>Ngành</th><th>Score</th><th>ΔRank</th><th>Breadth</th><th>Avg %</th><th>VolR</th><th>Maker</th></tr></thead>
                 <tbody>
                     @foreach (var c in _board.Sectors.OrderByDescending(x => x.DeltaRank).ThenByDescending(x => x.Score))
@@ -148,6 +149,7 @@ else if (_board is not null)
                 </tbody>
             </table>
         </div>
+        </div>
     }
     else if (_tab == "comparison")
     {
@@ -164,7 +166,8 @@ else if (_board is not null)
         {
             var selected = _board.Sectors.Where(x => _compareSelected.Contains(x.Name)).ToList();
             <div class="vd-panel">
-                <table class="vd-grid">
+                <div class="vd-grid-wrap">
+        <table class="vd-grid">
                     <thead><tr><th>Metric</th>@foreach (var c in selected) { <th>@c.Name</th> }</tr></thead>
                     <tbody>
                         <tr><td>Score</td>@foreach (var c in selected) { <td>@c.Score.ToString("F1")</td> }</tr>
@@ -177,6 +180,7 @@ else if (_board is not null)
                         <tr><td>Top mã</td>@foreach (var c in selected) { <td>@(c.TopGainerSymbol ?? "-") @(c.TopGainerPct is null ? "" : c.TopGainerPct.Value.ToString("F1") + "%")</td> }</tr>
                     </tbody>
                 </table>
+        </div>
             </div>
         }
     }
@@ -184,7 +188,8 @@ else if (_board is not null)
     {
         <div class="vd-panel">
             <h2 class="vd-section-title">@L["Trading_SQ_LiquidityTitle"]</h2>
-            <table class="vd-grid">
+            <div class="vd-grid-wrap">
+        <table class="vd-grid">
                 <thead><tr><th>#</th><th>Ngành</th><th>VolR</th><th>Thanh khoản</th><th>Tổng KL</th><th>Score</th></tr></thead>
                 <tbody>
                     @foreach (var c in _board.Sectors.OrderByDescending(x => x.VolR))
@@ -201,6 +206,7 @@ else if (_board is not null)
                     }
                 </tbody>
             </table>
+        </div>
         </div>
     }
 }

@@ -1,4 +1,5 @@
 @inject IBrokerApiClient Api
+@inject IBrokerDeskStore Store
 @inject ITcbsApiClient Tcbs
 @inject IJSRuntime JS
 
@@ -49,10 +50,17 @@
 
     <h3>CSV preview</h3>
     <textarea class="tool-textarea" rows="4" @bind="_csv" aria-label="CSV to preview"></textarea>
-    <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="PreviewCsv">Preview diff</button>
-    @if (!string.IsNullOrEmpty(_diff))
+    <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="PreviewCsv">Xem diff</button>
+    @if (_import?.Diff is not null)
     {
-        <pre>@_diff</pre>
+        <p>Thêm: @string.Join(", ", _import.Diff.Added) · Gỡ: @string.Join(", ", _import.Diff.Removed)</p>
+        <ul>
+            @foreach (var row in _import.Diff.Details)
+            {
+                <li>@row.Symbol: mua @row.Before.Buys → @row.After.Buys, bán @row.Before.Sells → @row.After.Sells, cổ tức @row.Before.Dividends → @row.After.Dividends</li>
+            }
+        </ul>
+        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="ApplyCsv">Áp dụng</button>
     }
     @if (!string.IsNullOrEmpty(_audit))
     {
@@ -71,7 +79,7 @@
     private string _direction = "above";
     private decimal _price;
     private string _csv = "";
-    private string? _diff;
+    private ImportPreview? _import;
     private string? _audit;
     private string _otp = "";
     private List<SnapshotRow> _snapshots = [];
@@ -107,9 +115,27 @@
 
     private async Task PreviewCsv()
     {
+        _import = null;
         var call = await Api.SendTextAsync(HttpMethod.Post, "/api/portfolio/import?dryRun=true", _csv, "text/csv");
-        _diff = call.Ok ? call.Body : call.Error;
-        _message = call.Error;
+        if (!call.Ok || string.IsNullOrWhiteSpace(call.Body))
+        {
+            _message = call.Error;
+            return;
+        }
+        _import = System.Text.Json.JsonSerializer.Deserialize<ImportPreview>(call.Body, JsonOpts);
+        _message = _import is null ? "Không đọc được diff." : null;
+    }
+
+    private async Task ApplyCsv()
+    {
+        if (_import?.PreviewHash is null) return;
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Ghi đè toàn bộ danh mục theo CSV này?");
+        if (!confirmed) return;
+        var call = await Api.SendTextAsync(HttpMethod.Post, $"/api/portfolio/import?dryRun=false&previewHash={Uri.EscapeDataString(_import.PreviewHash)}", _csv, "text/csv");
+        _message = call.Ok ? "Đã ghi danh mục." : call.Error;
+        if (!call.Ok) return;
+        await Store.LoadFromApiAsync();
+        _import = null;
     }
 
     private async Task LoadAlerts()
@@ -160,6 +186,33 @@
         public decimal Nav { get; set; }
         public decimal RealizedPnl { get; set; }
         public decimal DividendIncome { get; set; }
+    }
+
+    private sealed class ImportPreview
+    {
+        public string? PreviewHash { get; set; }
+        public ImportDiff Diff { get; set; } = new();
+    }
+
+    private sealed class ImportDiff
+    {
+        public List<string> Added { get; set; } = [];
+        public List<string> Removed { get; set; } = [];
+        public List<ImportDetail> Details { get; set; } = [];
+    }
+
+    private sealed class ImportDetail
+    {
+        public string Symbol { get; set; } = "";
+        public ImportCounts Before { get; set; } = new();
+        public ImportCounts After { get; set; } = new();
+    }
+
+    private sealed class ImportCounts
+    {
+        public int Buys { get; set; }
+        public int Sells { get; set; }
+        public int Dividends { get; set; }
     }
 
     private sealed class AlertRow

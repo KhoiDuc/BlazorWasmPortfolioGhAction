@@ -15,6 +15,11 @@
             {
                 <div class="broker-qs-summary">
                     <span>KL còn lại: <strong>@BrokerFormat.Quantity(Position.RemainingQuantity)</strong></span>
+                    <span>KL được bán: <strong>@BrokerFormat.Quantity(Position.SellableQuantity)</strong></span>
+                    @if (Position.PendingQuantity > 0)
+                    {
+                        <span>Chờ về (T+2): <strong>@BrokerFormat.Quantity(Position.PendingQuantity)</strong></span>
+                    }
                     @if (CurrentPrice is not null)
                     {
                         <span>Giá hiện tại: <strong>@CurrentPrice.Value.ToString("N2")</strong></span>
@@ -81,7 +86,7 @@
         Position = position;
         CurrentPrice = currentPrice;
         _price = currentPrice;
-        _qty = position.RemainingQuantity;
+        _qty = position.SellableQuantity;
         _date = DateTime.Today;
         _note = "";
         _err = null;
@@ -120,9 +125,15 @@
         }
 
         var remaining = Position.RemainingQuantity ?? 0m;
+        var sellable = Position.SellableQuantity;
         if (_qty.Value > remaining)
         {
             _err = $"KL bán vượt quá KL còn lại ({BrokerFormat.Quantity(remaining)}).";
+            return;
+        }
+        if (_qty.Value > sellable)
+        {
+            _err = $"Chỉ {BrokerFormat.Quantity(sellable)} cổ đã về T+2. {BrokerFormat.Quantity(Position.PendingQuantity)} cổ còn chờ.";
             return;
         }
 

@@ -1,3 +1,4 @@
+@using BlazorWasmPortfolioGhAction.Services.Trading
 @inject ITcbsApiClient Tcbs
 @inject IBrokerDeskStore Store
 
@@ -28,20 +29,33 @@
     </div>
     <div class="broker-form-row broker-form-row-2">
         <div class="broker-field">
-            <label class="broker-field-label" for="tcbs-price">Giá (nghìn đồng)</label>
-            <input id="tcbs-price" class="ts-input" type="number" step="0.1" min="0.1" @bind="_price" @bind:after="RefreshPower" />
+            <label class="broker-field-label" for="tcbs-exch">Sàn</label>
+            <select id="tcbs-exch" class="ts-select" @bind="_exchange" @bind:after="SyncPriceType">
+                <option>HOSE</option><option>HNX</option><option>UPCOM</option>
+            </select>
         </div>
         <div class="broker-field">
-            <label class="broker-field-label" for="tcbs-qty">Khối lượng (lô 100)</label>
-            <input id="tcbs-qty" class="ts-input" type="number" step="100" min="100" @bind="_qty" />
+            <label class="broker-field-label" for="tcbs-ptype">Loại giá</label>
+            <select id="tcbs-ptype" class="ts-select" @bind="_priceType">
+                @foreach (var type in PriceTypes)
+                {
+                    <option>@type</option>
+                }
+            </select>
         </div>
     </div>
-    <div class="broker-field">
-        <label class="broker-field-label" for="tcbs-ptype">Loại giá</label>
-        <select id="tcbs-ptype" class="ts-select" @bind="_priceType">
-            <option>LO</option><option>ATO</option><option>ATC</option><option>MP</option><option>MTL</option>
-        </select>
+    <p class="ts-muted">Phiên @VnMarketRules.SessionLabel(_session) · bước giá @_tick.ToString("0.###") (nghìn đồng)</p>
+    <div class="broker-form-row broker-form-row-2">
+        <div class="broker-field">
+            <label class="broker-field-label" for="tcbs-price">Giá (nghìn đồng)</label>
+            <input id="tcbs-price" class="ts-input" type="number" step="@_tick" min="0.01" @bind="_price" @bind:after="RefreshPower" />
+        </div>
+        <div class="broker-field">
+            <label class="broker-field-label" for="tcbs-qty">Khối lượng</label>
+            <input id="tcbs-qty" class="ts-input" type="number" step="1" min="1" @bind="_qty" />
+        </div>
     </div>
+    <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="RoundPrice">Làm tròn bước giá</button>
     @if (_quote is not null)
     {
         <p>Trần @_quote.CeilPrice.ToString("N2") · Sàn @_quote.FloorPrice.ToString("N2") · Tham chiếu @_quote.RefPrice.ToString("N2") · Khớp @_quote.MatchPrice.ToString("N2")</p>
@@ -78,9 +92,13 @@
 
     private string _symbol = "";
     private string _side = "NB";
+    private string _exchange = "HOSE";
     private string _priceType = "LO";
     private decimal _price = 10;
     private int _qty = 100;
+    private VnSession _session = VnSession.Closed;
+    private decimal _tick = 0.1m;
+    private IReadOnlyList<string> PriceTypes => VnMarketRules.PriceTypes(_exchange, _session);
     private TcbsQuote? _quote;
     private TcbsBuyingPower? _power;
     private TcbsOrderPreview? _preview;
@@ -98,7 +116,22 @@
         if (!string.IsNullOrWhiteSpace(InitialSide)) _side = InitialSide;
         if (InitialPrice is > 0) _price = InitialPrice.Value;
         if (InitialQty is > 0) _qty = (int)InitialQty.Value;
+        SyncPriceType();
         await RefreshQuote();
+    }
+
+    private void SyncPriceType()
+    {
+        _session = VnMarketRules.SessionAt(_exchange, DateTime.Now);
+        _tick = VnMarketRules.TickDesk(_exchange, _price);
+        if (!PriceTypes.Contains(_priceType, StringComparer.OrdinalIgnoreCase))
+            _priceType = PriceTypes[0];
+    }
+
+    private void RoundPrice()
+    {
+        _price = VnMarketRules.RoundToTick(_exchange, _price);
+        SyncPriceType();
     }
 
     private async Task RefreshQuote()
@@ -124,11 +157,27 @@
         _error = null;
         _info = null;
         _symbol = _symbol.Trim().ToUpperInvariant();
-        if (_qty <= 0 || _qty % 100 != 0) { _error = "Khối lượng phải là bội số của 100."; return; }
-        if (_quote is not null && _priceType == "LO" && _quote.FloorPrice > 0 && _quote.CeilPrice > 0 && (_price < _quote.FloorPrice || _price > _quote.CeilPrice))
+        SyncPriceType();
+        var qtyError = VnMarketRules.QuantityError(_qty, _priceType);
+        if (qtyError is not null) { _error = qtyError; return; }
+        if (_priceType == "LO")
         {
-            _error = $"Giá phải trong sàn {_quote.FloorPrice:N2} – trần {_quote.CeilPrice:N2}.";
-            return;
+            if (!VnMarketRules.OnTick(_exchange, _price))
+            {
+                _error = $"Giá phải khớp bước {_tick:0.###}.";
+                return;
+            }
+            var floor = _quote?.FloorPrice ?? 0;
+            var ceil = _quote?.CeilPrice ?? 0;
+            if (floor <= 0 || ceil <= 0)
+            {
+                (floor, ceil) = VnMarketRules.Band(_exchange, _quote?.RefPrice > 0 ? _quote.RefPrice : _price);
+            }
+            if (_quote is not null && (_price < floor || _price > ceil))
+            {
+                _error = $"Giá phải trong sàn {floor:N2} – trần {ceil:N2}.";
+                return;
+            }
         }
         var status = await Tcbs.GetStatusAsync();
         _busy = true;
@@ -140,6 +189,10 @@
             priceType = _priceType,
             price = _price,
             quantity = _qty,
+            exchange = _exchange,
+            floorPrice = _quote?.FloorPrice,
+            ceilPrice = _quote?.CeilPrice,
+            refPrice = _quote?.RefPrice,
         });
         _busy = false;
         if (_preview is null) _error = "Không tạo được bản xem lại.";

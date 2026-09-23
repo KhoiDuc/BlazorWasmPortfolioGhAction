@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using BlazorWasmPortfolioGhAction.Services.Trading;
 
 namespace BlazorWasmPortfolioGhAction.Models.Trading.Broker;
 
@@ -83,6 +84,26 @@ public class BrokerPosition
         {
             var rem = (TotalQuantity ?? 0m) - (SoldQuantity ?? 0m);
             return rem > 0 ? rem : 0m;
+        }
+    }
+
+    [JsonIgnore]
+    public decimal SellableQuantity
+    {
+        get
+        {
+            var lots = Buys.Where(b => b.Quantity is > 0).Select(b => (b.BoughtAt, b.Quantity!.Value));
+            return VnMarketRules.SellableQuantity(lots, SoldQuantity ?? 0m, DateTime.Now);
+        }
+    }
+
+    [JsonIgnore]
+    public decimal PendingQuantity
+    {
+        get
+        {
+            var lots = Buys.Where(b => b.Quantity is > 0).Select(b => (b.BoughtAt, b.Quantity!.Value));
+            return VnMarketRules.PendingQuantity(lots, DateTime.Now);
         }
     }
 

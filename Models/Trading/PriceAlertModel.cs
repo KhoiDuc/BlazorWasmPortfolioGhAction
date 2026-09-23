@@ -8,7 +8,7 @@ public enum AlertStatus { Active, Triggered, Dismissed }
 
 public class PriceAlert
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Id { get; set; } = "";
     public string Symbol { get; set; } = "";
     public string AssetType { get; set; } = "";
     public double Threshold { get; set; }

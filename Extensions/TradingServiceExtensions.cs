@@ -111,16 +111,7 @@ public static class TradingServiceExtensions
         });
 
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.IPriceAlertService,
-            BlazorWasmPortfolioGhAction.Services.Trading.PriceAlertService>(sp =>
-        {
-            var factory = sp.GetRequiredService<IHttpClientFactory>();
-            var http = factory.CreateClient(nameof(BlazorWasmPortfolioGhAction.Services.Trading.PriceAlertService));
-            return new BlazorWasmPortfolioGhAction.Services.Trading.PriceAlertService(
-                sp.GetRequiredService<IJSRuntime>(),
-                http,
-                sp.GetRequiredService<IConfiguration>());
-        });
-        services.AddHttpClient(nameof(BlazorWasmPortfolioGhAction.Services.Trading.PriceAlertService));
+            BlazorWasmPortfolioGhAction.Services.Trading.PriceAlertService>();
 
         return services;
     }

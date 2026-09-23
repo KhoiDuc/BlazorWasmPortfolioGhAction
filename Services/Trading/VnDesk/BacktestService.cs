@@ -35,7 +35,7 @@ public sealed class BacktestService
             trades.AddRange(tradesForSym);
         }
 
-        return Aggregate(req.Indicator, trades);
+        return Aggregate(req, trades);
     }
 
     /// <summary>Rank symbols by win-rate for a given indicator.</summary>
@@ -266,14 +266,22 @@ public sealed class BacktestService
         return trades;
     }
 
-    private static BacktestResult Aggregate(string indicator, List<BacktestTrade> trades)
+    private static BacktestResult Aggregate(BacktestRequest req, List<BacktestTrade> trades)
     {
-        var wins = trades.Count(t => t.IsWin);
-        var losses = trades.Count - wins;
-        var winRate = trades.Count > 0 ? (double)wins / trades.Count * 100 : 0;
-        var avgTp = trades.Count > 0 ? trades.Average(t => t.PnlPct) : 0;
-        var avgHold = trades.Count > 0 ? trades.Average(t => t.HoldDays) : 0;
-        var totalPnl = trades.Sum(t => t.Pnl);
-        return new BacktestResult(indicator, trades.Count, wins, losses, winRate, avgTp, avgHold, totalPnl, trades);
+        var costs = new BacktestCostOptions(req.FeeRate, req.SellTaxRate, req.SlippageBps, 100, req.CapitalPerTrade);
+        var priced = trades.Select(trade =>
+        {
+            if (trade.ExitPrice is not decimal exit) return trade;
+            var (net, pct, _) = BacktestCosts.Apply(trade.EntryPrice, exit, costs);
+            return trade with { NetPnl = net, NetPnlPct = pct };
+        }).ToList();
+        var wins = priced.Count(t => t.IsWin);
+        var losses = priced.Count - wins;
+        var winRate = priced.Count > 0 ? (double)wins / priced.Count * 100 : 0;
+        var avgTp = priced.Count > 0 ? priced.Average(t => t.PnlPct) : 0;
+        var avgHold = priced.Count > 0 ? priced.Average(t => t.HoldDays) : 0;
+        var totalPnl = priced.Sum(t => t.Pnl);
+        var totalNet = priced.Sum(t => t.NetPnl);
+        return new BacktestResult(req.Indicator, priced.Count, wins, losses, winRate, avgTp, avgHold, totalPnl, priced, totalNet);
     }
 }

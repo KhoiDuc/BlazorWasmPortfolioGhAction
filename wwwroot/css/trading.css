@@ -1378,6 +1378,14 @@
     -webkit-overflow-scrolling: touch;
     margin: 0 -0.25rem;
     padding: 0 0.25rem;
+    background:
+        linear-gradient(to right, var(--color-bg-surface) 30%, transparent),
+        linear-gradient(to left, var(--color-bg-surface) 30%, transparent) 100% 0,
+        radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.14), transparent),
+        radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.14), transparent) 100% 0;
+    background-repeat: no-repeat;
+    background-size: 2.5rem 100%, 2.5rem 100%, 0.85rem 100%, 0.85rem 100%;
+    background-attachment: local, local, scroll, scroll;
 }
 
 .broker-table {
@@ -1404,51 +1412,37 @@
     text-overflow: ellipsis;
 }
 
-/* Column widths — scoped to watchlist only (closed/perf tables have different column counts) */
-.broker-watchlist .broker-table th:nth-child(1),
-.broker-watchlist .broker-table td:nth-child(1) { min-width: 70px; } /* Symbol */
+/* Column widths — keyed by column class so adding Tag does not shift later columns */
+.broker-watchlist .broker-col-symbol { min-width: 70px; }
+.broker-watchlist .broker-col-sector { min-width: 90px; }
+.broker-watchlist .broker-col-buys { min-width: 75px; }
+.broker-watchlist .broker-col-quantity { min-width: 70px; }
+.broker-watchlist .broker-col-soldqty { min-width: 85px; }
+.broker-watchlist .broker-col-remaining { min-width: 90px; }
+.broker-watchlist .broker-col-avgbuy { min-width: 85px; }
+.broker-watchlist .broker-col-current { min-width: 80px; }
+.broker-watchlist .broker-col-pnlpct { min-width: 75px; }
+.broker-watchlist .broker-col-pnlamt { min-width: 90px; }
+.broker-watchlist .broker-col-stop { min-width: 80px; }
+.broker-watchlist .broker-col-target { min-width: 80px; }
+.broker-watchlist .broker-col-tag { min-width: 90px; }
+.broker-watchlist .broker-col-status { min-width: 90px; }
+.broker-watchlist .broker-col-note { min-width: 120px; }
+.broker-watchlist .broker-col-action { min-width: 100px; text-align: center; }
 
-.broker-watchlist .broker-table th:nth-child(2),
-.broker-watchlist .broker-table td:nth-child(2) { min-width: 90px; } /* Sector */
-
-.broker-watchlist .broker-table th:nth-child(3),
-.broker-watchlist .broker-table td:nth-child(3) { min-width: 75px; } /* Buys */
-
-.broker-watchlist .broker-table th:nth-child(4),
-.broker-watchlist .broker-table td:nth-child(4) { min-width: 70px; } /* Qty */
-
-.broker-watchlist .broker-table th:nth-child(5),
-.broker-watchlist .broker-table td:nth-child(5) { min-width: 85px; } /* Sold Qty */
-
-.broker-watchlist .broker-table th:nth-child(6),
-.broker-watchlist .broker-table td:nth-child(6) { min-width: 90px; } /* Remaining Qty */
-
-.broker-watchlist .broker-table th:nth-child(7),
-.broker-watchlist .broker-table td:nth-child(7) { min-width: 85px; } /* Avg Buy */
-
-.broker-watchlist .broker-table th:nth-child(8),
-.broker-watchlist .broker-table td:nth-child(8) { min-width: 80px; } /* Current */
-
-.broker-watchlist .broker-table th:nth-child(9),
-.broker-watchlist .broker-table td:nth-child(9) { min-width: 75px; } /* % P/L */
-
-.broker-watchlist .broker-table th:nth-child(10),
-.broker-watchlist .broker-table td:nth-child(10) { min-width: 90px; } /* P/L (đ) */
-
-.broker-watchlist .broker-table th:nth-child(11),
-.broker-watchlist .broker-table td:nth-child(11) { min-width: 80px; } /* Stop */
-
-.broker-watchlist .broker-table th:nth-child(12),
-.broker-watchlist .broker-table td:nth-child(12) { min-width: 80px; } /* Target */
-
-.broker-watchlist .broker-table th:nth-child(13),
-.broker-watchlist .broker-table td:nth-child(13) { min-width: 75px; } /* Status */
-
-.broker-watchlist .broker-table th:nth-child(14),
-.broker-watchlist .broker-table td:nth-child(14) { min-width: 120px; } /* Note */
-
-.broker-watchlist .broker-table th:nth-child(15),
-.broker-watchlist .broker-table td:nth-child(15) { min-width: 100px; } /* Action */
+.broker-table th.broker-num,
+.broker-table td.broker-num,
+.broker-watchlist .broker-col-quantity,
+.broker-watchlist .broker-col-soldqty,
+.broker-watchlist .broker-col-remaining,
+.broker-watchlist .broker-col-avgbuy,
+.broker-watchlist .broker-col-current,
+.broker-watchlist .broker-col-pnlpct,
+.broker-watchlist .broker-col-pnlamt,
+.broker-watchlist .broker-col-stop,
+.broker-watchlist .broker-col-target {
+    text-align: right;
+}
 
 .broker-dt-th-inner {
     display: inline-flex;
@@ -1483,6 +1477,7 @@
 .broker-num {
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+    text-align: right;
 }
 
 .broker-qty { font-weight: 600; }
@@ -1899,8 +1894,8 @@
 .broker-perf-stat { font-size: 0.85rem; color: var(--color-text-muted); }
 .broker-perf-stat.ts-positive { color: var(--color-success-text); font-weight: 600; }
 .broker-perf-stat.ts-negative { color: var(--color-danger-text); font-weight: 600; }
-.broker-perf-table .broker-table th,
-.broker-perf-table .broker-table td { font-size: 0.82rem; }
+.broker-perf-table th,
+.broker-perf-table td { font-size: 0.82rem; }
 
 .broker-stat-card-realized { border-left: 3px solid #818cf8; }
 .broker-stat-card-realized.positive { background: rgba(16, 185, 129, 0.08); }
@@ -2454,6 +2449,22 @@
     /* Shrink symbol and price columns */
     .broker-symbol { font-size: 0.75rem; }
     .broker-num { font-size: 0.7rem; }
+
+    .broker-watchlist .broker-col-symbol,
+    .broker-closed-table th:first-child,
+    .broker-closed-table td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        background: var(--color-bg-surface);
+        box-shadow: 2px 0 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .broker-watchlist thead .broker-col-symbol,
+    .broker-closed-table thead th:first-child {
+        z-index: 3;
+        background: var(--color-bg-surface-elevated);
+    }
 
     .lot-fields > *,
     .lot-levels > * {
