@@ -74,7 +74,7 @@
                 <span class="broker-kpi-value">@BrokerFormat.Quantity(Position.SoldQuantity)</span>
             </div>
             <div class="broker-kpi broker-kpi-pnl broker-kpi-realized">
-                <span class="broker-kpi-label">Realized</span>
+                <span class="broker-kpi-label">@L["Trading_BrokerRealized"]</span>
                 <span class="broker-kpi-value @(Position.RealizedPnl is > 0 ? "ts-positive" : Position.RealizedPnl is < 0 ? "ts-negative" : "")">
                     @BrokerFormat.Vnd(Position.RealizedPnl)
                 </span>
@@ -94,6 +94,7 @@
         </div>
         <div class="broker-kpi">
             <span class="broker-kpi-label">@L["Trading_BrokerDetail_KpiStop"]</span>
+            <span class="broker-kpi-value broker-stop">@BrokerLevelHelper.FormatDisplay(Position.StopLoss, Position.StopLossMode, Position.StopLossInput, isStop: true)</span>
         </div>
         <div class="broker-kpi">
             <span class="broker-kpi-label">@L["Trading_BrokerDetail_KpiTarget"]</span>
@@ -111,9 +112,9 @@
         <button type="button" role="tab" id="tab-dividends" aria-selected="@(_tab == "dividends")" aria-controls="panel-dividends"
                 class="broker-tab @(_tab == "dividends" ? "active" : "")" @onclick='() => _tab = "dividends"'>@L["Trading_BrokerDetail_TabDividends"] (@(Position.Dividends?.Count ?? 0))</button>
         <button type="button" role="tab" id="tab-timeline" aria-selected="@(_tab == "timeline")" aria-controls="panel-timeline"
-                class="broker-tab @(_tab == "timeline" ? "active" : "")" @onclick='() => _tab = "timeline"'>Timeline</button>
+                class="broker-tab @(_tab == "timeline" ? "active" : "")" @onclick='() => _tab = "timeline"'>@L["Trading_BrokerDetail_TabTimeline"]</button>
         <button type="button" role="tab" id="tab-notes" aria-selected="@(_tab == "notes")" aria-controls="panel-notes"
-                class="broker-tab @(_tab == "notes" ? "active" : "")" @onclick='() => _tab = "notes"'>Note (@Position.Notes.Count)</button>
+                class="broker-tab @(_tab == "notes" ? "active" : "")" @onclick='() => _tab = "notes"'>@L["Trading_BrokerDetail_TabNotes"] (@Position.Notes.Count)</button>
     </div>
 
     <div class="broker-inner broker-detail-body" role="tabpanel" id="panel-info" aria-labelledby="tab-info">

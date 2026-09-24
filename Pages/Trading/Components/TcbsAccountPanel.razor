@@ -1,10 +1,11 @@
 @using BlazorWasmPortfolioGhAction.Utils
 @inject ITcbsApiClient Tcbs
+@inject IStringLocalizer<SharedResources> L
 
 <section class="ts-panel tcbs-panel">
     <div class="tcbs-head">
-        <h2 class="ts-panel-title">Tài khoản TCBS</h2>
-        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="Load" disabled="@_busy">@(_busy ? "Đang tải…" : "Tải lại")</button>
+        <h2 class="ts-panel-title">@L["Trading_Tcbs_AccountTitle"]</h2>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="Load" disabled="@_busy">@(_busy ? L["Trading_Tcbs_Loading"] : L["Trading_Tcbs_Reload"])</button>
     </div>
     @if (!string.IsNullOrEmpty(_error))
     {
@@ -12,7 +13,7 @@
     }
     @if (_accounts.Count > 0)
     {
-        <label class="broker-field-label" for="tcbs-acct">Tiểu khoản cơ sở</label>
+        <label class="broker-field-label" for="tcbs-acct">@L["Trading_Tcbs_SubAccount"]</label>
         <select id="tcbs-acct" class="ts-select" @bind="_accountNo" @bind:after="Load">
             @foreach (var a in _accounts)
             {
@@ -23,23 +24,23 @@
 
     <div class="broker-portfolio-stats">
         <div class="broker-stat-card">
-            <span class="broker-stat-card-label">Tiền mặt</span>
+            <span class="broker-stat-card-label">@L["Trading_Tcbs_Cash"]</span>
             <span class="broker-stat-card-value">@Money(_cash?.CashBalance)</span>
         </div>
         <div class="broker-stat-card">
-            <span class="broker-stat-card-label">Tiền đầu ngày</span>
+            <span class="broker-stat-card-label">@L["Trading_Tcbs_Bod"]</span>
             <span class="broker-stat-card-value">@Money(_cash?.BodBalance)</span>
         </div>
         <div class="broker-stat-card">
-            <span class="broker-stat-card-label">Nợ gốc (margin)</span>
+            <span class="broker-stat-card-label">@L["Trading_Tcbs_MarginDebt"]</span>
             <span class="broker-stat-card-value">@_riskText</span>
         </div>
     </div>
 
-    <h3 class="ts-panel-title">Tài sản cổ phiếu</h3>
+    <h3 class="ts-panel-title">@L["Trading_Tcbs_Holdings"]</h3>
     <div class="broker-table-scroll">
         <table class="ts-table">
-            <thead><tr><th>Mã</th><th>KL</th><th>Giá TB</th><th>Giá trị TT</th></tr></thead>
+            <thead><tr><th>@L["Trading_Tcbs_Symbol"]</th><th>@L["Trading_Tcbs_Qty"]</th><th>@L["Trading_Tcbs_Avg"]</th><th>@L["Trading_Tcbs_MarketValue"]</th></tr></thead>
             <tbody>
                 @foreach (var a in _assets)
                 {
@@ -54,10 +55,10 @@
         </table>
     </div>
 
-    <h3 class="ts-panel-title">Sao kê tiền</h3>
+    <h3 class="ts-panel-title">@L["Trading_Tcbs_Statement"]</h3>
     <div class="broker-table-scroll">
         <table class="ts-table">
-            <thead><tr><th>Ngày</th><th>Loại</th><th>Tăng</th><th>Giảm</th><th>Mô tả</th></tr></thead>
+            <thead><tr><th>@L["Trading_BrokerCash_Date"]</th><th>@L["Trading_Tcbs_Kind"]</th><th>@L["Trading_Tcbs_Debit"]</th><th>@L["Trading_Tcbs_Credit"]</th><th>@L["Trading_Tcbs_Desc"]</th></tr></thead>
             <tbody>
                 @foreach (var row in _statement.Take(40))
                 {
@@ -73,9 +74,9 @@
         </table>
     </div>
 
-    <h3 class="ts-panel-title">Nợ và gói vay</h3>
+    <h3 class="ts-panel-title">@L["Trading_Tcbs_Debt"]</h3>
     <pre class="tcbs-raw">@_debtRaw</pre>
-    <h3 class="ts-panel-title">Hạn mức, rủi ro, gói bổ trợ, lãi suất</h3>
+    <h3 class="ts-panel-title">@L["Trading_Tcbs_Limits"]</h3>
     <pre class="tcbs-raw">@_marginRaw</pre>
 </section>
 

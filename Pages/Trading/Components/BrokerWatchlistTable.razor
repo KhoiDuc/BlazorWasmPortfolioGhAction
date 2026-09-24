@@ -92,7 +92,7 @@
             @if (stats.HasRealized)
             {
                 <div class="broker-stat-card broker-stat-card-realized @(stats.TotalRealized > 0 ? "positive" : stats.TotalRealized < 0 ? "negative" : "")">
-                    <span class="broker-stat-card-label">Realized tổng</span>
+                    <span class="broker-stat-card-label">@L["Trading_BrokerWatchlist_RealizedTotal"]</span>
                     <span class="broker-stat-card-value">@BrokerFormat.Vnd(stats.TotalRealized)</span>
                     <span class="broker-stat-card-sub">@stats.ClosedCount vị thế đã đóng</span>
                 </div>
@@ -111,9 +111,9 @@
                        @bind:after="ResetPage" />
             </div>
             <div class="broker-dt-toolbar-right">
-                <label class="broker-dt-label" for="broker-dt-tag">Tag</label>
+                <label class="broker-dt-label" for="broker-dt-tag">@L["Trading_BrokerWatchlist_Tag"]</label>
                 <select id="broker-dt-tag" class="ts-select broker-dt-tag-filter" @bind="_tagFilter" @bind:after="ResetPage">
-                    <option value="">Tất cả</option>
+                    <option value="">@L["Trading_Filter_All"]</option>
                     @foreach (var t in AllTags)
                     {
                         <option value="@t">@t</option>
@@ -124,7 +124,7 @@
                     <option value="10">10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>
-                    <option value="0">Tất cả</option>
+                    <option value="0">@L["Trading_Filter_All"]</option>
                 </select>
                 <span class="broker-dt-label">dòng</span>
                 <div class="broker-col-toggle-wrap">
@@ -190,7 +190,7 @@
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Tag)" @onchange="@(e => ToggleCol(BrokerCol.Tag, e.Value))" />
-                                Tag
+                                @L["Trading_BrokerWatchlist_Tag"]
                             </label>
                             <label class="broker-col-toggle-item">
                                 <input type="checkbox" checked="@IsColVisible(BrokerCol.Status)" @onchange="@(e => ToggleCol(BrokerCol.Status, e.Value))" />
@@ -294,7 +294,7 @@
                             </th>
                             <th class="broker-num broker-col-stop"><span class="broker-dt-th-inner">@L["Trading_BrokerStop"]</span></th>
                             <th class="broker-num broker-col-target"><span class="broker-dt-th-inner">@L["Trading_BrokerTarget"]</span></th>
-                            <th class="broker-col-tag"><span class="broker-dt-th-inner">Tag</span></th>
+                            <th class="broker-col-tag"><span class="broker-dt-th-inner">@L["Trading_BrokerWatchlist_Tag"]</span></th>
                             <th class="broker-dt-sortable broker-col-status @SortClass(SortColumn.Status)"
                                 tabindex="0"
                                 aria-sort="@SortAria(SortColumn.Status)"
@@ -304,7 +304,7 @@
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColStatus"] @SortIcon(SortColumn.Status)</span>
                             </th>
                             <th class="broker-col-note"><span class="broker-dt-th-inner">@L["Trading_BrokerNote"]</span></th>
-                            <th class="broker-col-action"><span class="broker-dt-th-inner">Thao tác</span></th>
+                            <th class="broker-col-action"><span class="broker-dt-th-inner">@L["Trading_BrokerColAction"]</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -342,7 +342,7 @@
                                     }
                                     @if (p.PendingQuantity > 0)
                                     {
-                                        <span class="broker-mf-badge broker-mf-muted" title="Chưa đến hạn T+2">chờ @BrokerFormat.Quantity(p.PendingQuantity)</span>
+                                        <span class="broker-mf-badge broker-mf-muted" title="@L["Trading_BrokerWatchlist_PendingTitle"]">@L["Trading_BrokerPendingT2", BrokerFormat.Quantity(p.PendingQuantity)]</span>
                                     }
                                     @if (p.HasPartialQtyLots)
                                     {
@@ -420,27 +420,27 @@
 
             <div class="broker-dt-toolbar broker-dt-footer">
                 <span class="broker-dt-info">
-                    Hiển thị @rangeStart–@rangeEnd / @totalRows mã
+                    @L["Trading_BrokerWatchlist_Range", rangeStart, rangeEnd, totalRows]
                     @if (!string.IsNullOrWhiteSpace(_search))
                     {
-                        <text> (lọc từ @Portfolio.Positions!.Count)</text>
+                        <text> @L["Trading_BrokerWatchlist_Filtered", Portfolio.Positions!.Count]</text>
                     }
                 </span>
                 <div class="broker-dt-pager">
                     <button type="button"
                             class="ts-btn ts-btn-outline ts-btn-sm broker-dt-page-btn"
                             disabled="@(effectivePage <= 1)"
-                            @onclick="PrevPage">Trước</button>
-                    <span class="broker-dt-info">Trang @effectivePage / @totalPages</span>
+                            @onclick="PrevPage">@L["Trading_BrokerWatchlist_Prev"]</button>
+                    <span class="broker-dt-info">@L["Trading_BrokerWatchlist_Page", effectivePage, totalPages]</span>
                     <button type="button"
                             class="ts-btn ts-btn-outline ts-btn-sm broker-dt-page-btn"
                             disabled="@(effectivePage >= totalPages)"
-                            @onclick="NextPage">Sau</button>
+                            @onclick="NextPage">@L["Trading_BrokerWatchlist_Next"]</button>
                 </div>
             </div>
         }
 
-        <p class="broker-table-foot">Giá CP theo nghìn đồng (×1.000 đ) · Lãi/Lỗ (đ) = (giá hiện tại − giá TB) × KL × 1.000 · Cần KL để tính tiền.</p>
+        <p class="broker-table-foot">@L["Trading_BrokerWatchlist_Foot"]</p>
 
         @if ((Portfolio.ClosedPositions?.Count ?? 0) > 0)
         {
@@ -448,10 +448,10 @@
                 <div class="broker-sold-panel-head">
                     <div class="broker-sold-panel-title">
                         <h2 class="ts-panel-title">@L["Trading_BrokerClosedPanelTitle"]</h2>
-                        <span class="broker-sold-panel-count">@Portfolio.ClosedPositions!.Count vị thế · lịch sử giao dịch đã chốt</span>
+                        <span class="broker-sold-panel-count">@L["Trading_BrokerWatchlist_ClosedCount", Portfolio.ClosedPositions!.Count]</span>
                     </div>
                     <div class="broker-sold-panel-realized @(_closedRealized >= 0 ? "ts-positive" : "ts-negative")">
-                        <span class="broker-sold-panel-realized-label">Tổng realized</span>
+                        <span class="broker-sold-panel-realized-label">@L["Trading_BrokerWatchlist_ClosedRealized"]</span>
                         <span class="broker-sold-panel-realized-value">@BrokerFormat.Vnd(_closedRealized)</span>
                     </div>
                 </div>
@@ -460,14 +460,14 @@
                     <table class="ts-table broker-table">
                         <thead>
                             <tr>
-                                <th><span class="broker-dt-th-inner">Mã</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_Tcbs_Symbol"]</span></th>
                                 <th><span class="broker-dt-th-inner">@L["Trading_BrokerColSector"]</span></th>
-                                <th><span class="broker-dt-th-inner">Lần mua</span></th>
-                                <th><span class="broker-dt-th-inner">Lần bán</span></th>
-                                <th><span class="broker-dt-th-inner">KL bán</span></th>
-                                <th><span class="broker-dt-th-inner">Giá TB</span></th>
-                                <th><span class="broker-dt-th-inner">Ngày đóng</span></th>
-                                <th><span class="broker-dt-th-inner">Realized</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerWatchlist_BuyCount"]</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerWatchlist_SellCount"]</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerDetail_SellQty"]</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerWatchlist_Avg"]</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerWatchlist_ClosedDate"]</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerRealized"]</span></th>
                                 <th><span class="broker-dt-th-inner">%</span></th>
                             </tr>
                         </thead>

@@ -1,0 +1,137 @@
+@page "/trading/tcbs"
+@page "/{lang:regex(^(en|vn)$)}/trading/tcbs"
+@layout TradingLayout
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Broker")]
+@inherits CultureAwareComponent
+@inject IBrokerDeskStore Store
+@inject IStringLocalizer<SharedResources> L
+
+<div class="ts-page broker-page">
+    <div class="ts-panel broker-hero">
+        <div class="broker-hero-text">
+            <h1>@L["TradingNav_Tcbs"]</h1>
+            <p>@L["Trading_Tcbs_PageLead"]</p>
+        </div>
+        <div class="broker-header-actions">
+            <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="OpenSync" disabled="@_loading">@L["Trading_BrokerSyncTcbs"]</button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_message))
+    {
+        <div class="ts-alert @(_messageError ? "ts-alert-error" : "ts-alert-info") broker-alert" role="@(_messageError ? "alert" : "status")">
+            @_message
+        </div>
+    }
+
+    <TcbsConnectPanel />
+
+    <div class="tcbs-tabs" role="tablist" aria-label="@L["TradingNav_Tcbs"]">
+        <button type="button" class="ts-btn ts-btn-sm @(_section == "account" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _section = "account"'>@L["Trading_BrokerDeskTab_Account"]</button>
+        <button type="button" class="ts-btn ts-btn-sm @(_section == "orders" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _section = "orders"'>@L["Trading_BrokerDeskTab_Orders"]</button>
+        <button type="button" class="ts-btn ts-btn-sm @(_section == "ticket" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _section = "ticket"'>@L["Trading_BrokerDeskTab_Ticket"]</button>
+        <button type="button" class="ts-btn ts-btn-sm @(_section == "market" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _section = "market"'>@L["Trading_VnDesk_TabMarket"]</button>
+    </div>
+
+    @if (_section == "orders")
+    {
+        <TcbsOrderBook OnAmend="StartAmend" />
+    }
+    else if (_section == "ticket")
+    {
+        <TcbsOrderTicket @key="_ticketKey" InitialSymbol="@_ticketSymbol" InitialSide="@_ticketSide" InitialPrice="@_ticketPrice" InitialQty="@_ticketQty" AmendOrderId="@_amendId" />
+    }
+    else if (_section == "market")
+    {
+        <VnTcbsMarketPanel Symbol="@(_ticketSymbol ?? "VNM")" />
+    }
+    else
+    {
+        <TcbsAccountPanel />
+    }
+
+    <TcbsSyncDialog @ref="_sync" OnApply="ApplySync" />
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "section")] public string? QuerySection { get; set; }
+    [SupplyParameterFromQuery(Name = "symbol")] public string? QuerySymbol { get; set; }
+    [SupplyParameterFromQuery(Name = "side")] public string? QuerySide { get; set; }
+    [SupplyParameterFromQuery(Name = "price")] public string? QueryPrice { get; set; }
+    [SupplyParameterFromQuery(Name = "qty")] public string? QueryQty { get; set; }
+    [SupplyParameterFromQuery(Name = "amend")] public string? QueryAmend { get; set; }
+
+    private string _section = "account";
+    private string? _ticketSymbol;
+    private string _ticketSide = "NB";
+    private decimal? _ticketPrice;
+    private decimal? _ticketQty;
+    private string? _amendId;
+    private int _ticketKey;
+    private string _applied = "";
+    private BrokerPortfolio _portfolio = new();
+    private TcbsSyncDialog? _sync;
+    private bool _loading = true;
+    private bool _messageError;
+    private string? _message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _portfolio = await Store.LoadAsync();
+        _loading = false;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (QuerySection is "account" or "orders" or "ticket" or "market")
+            _section = QuerySection;
+
+        var key = $"{QuerySymbol}|{QuerySide}|{QueryPrice}|{QueryQty}|{QueryAmend}";
+        if (key == _applied) return;
+        _applied = key;
+        if (!string.IsNullOrWhiteSpace(QuerySymbol))
+            _ticketSymbol = QuerySymbol.Trim().ToUpperInvariant();
+        if (!string.IsNullOrWhiteSpace(QuerySide))
+            _ticketSide = QuerySide;
+        if (decimal.TryParse(QueryPrice, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var price))
+            _ticketPrice = price;
+        if (decimal.TryParse(QueryQty, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var qty))
+            _ticketQty = qty;
+        _amendId = string.IsNullOrWhiteSpace(QueryAmend) ? null : QueryAmend;
+        if (!string.IsNullOrWhiteSpace(QuerySymbol) || !string.IsNullOrWhiteSpace(QueryAmend))
+        {
+            _section = "ticket";
+            _ticketKey++;
+        }
+    }
+
+    private async Task OpenSync()
+    {
+        if (_sync is null) return;
+        var error = await _sync.Open(_portfolio);
+        if (!string.IsNullOrEmpty(error))
+        {
+            _message = error;
+            _messageError = true;
+        }
+    }
+
+    private async Task ApplySync(BrokerPortfolio portfolio)
+    {
+        _portfolio = portfolio;
+        var (ok, err) = await Store.ImportAsync(portfolio);
+        _messageError = !ok;
+        _message = ok ? L["Trading_BrokerFlash_TcbsSynced"] : L["Trading_BrokerFlash_SyncFail", err ?? ""];
+    }
+
+    private void StartAmend(TcbsOrder order)
+    {
+        _ticketSymbol = order.Symbol;
+        _ticketSide = order.ExecType is "NS" or "S" ? "NS" : "NB";
+        _ticketPrice = order.Price;
+        _ticketQty = order.Quantity;
+        _amendId = order.OrderId;
+        _ticketKey++;
+        _section = "ticket";
+    }
+}

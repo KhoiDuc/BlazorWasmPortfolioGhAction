@@ -1,17 +1,18 @@
 @inject ITcbsApiClient Tcbs
+@inject IStringLocalizer<SharedResources> L
 
 <section class="ts-panel tcbs-panel">
     <div class="tcbs-head">
-        <h2 class="ts-panel-title">Sổ lệnh cơ sở</h2>
-        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="Load" disabled="@_busy">Tải sổ lệnh</button>
+        <h2 class="ts-panel-title">@L["Trading_Tcbs_BookTitle"]</h2>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="Load" disabled="@_busy">@L["Trading_Tcbs_LoadBook"]</button>
     </div>
     <div class="broker-form-row broker-form-row-2">
         <div class="broker-field">
-            <label class="broker-field-label" for="tcbs-order-status">Trạng thái</label>
+            <label class="broker-field-label" for="tcbs-order-status">@L["Trading_Tcbs_Status"]</label>
             <input id="tcbs-order-status" class="ts-input" @bind="_statusFilter" placeholder="FILLED, 2, 4…" />
         </div>
         <div class="broker-field">
-            <label class="broker-field-label" for="tcbs-order-symbol">Mã</label>
+            <label class="broker-field-label" for="tcbs-order-symbol">@L["Trading_Tcbs_Symbol"]</label>
             <input id="tcbs-order-symbol" class="ts-input" @bind="_symbolFilter" />
         </div>
     </div>
@@ -22,7 +23,7 @@
     <div class="broker-table-scroll">
         <table class="ts-table">
             <thead>
-                <tr><th>Mã</th><th>Chiều</th><th>Giá</th><th>KL</th><th>Khớp</th><th>TT</th><th></th></tr>
+                <tr><th>@L["Trading_Tcbs_Symbol"]</th><th>@L["Trading_Tcbs_Side"]</th><th>@L["Trading_BrokerInsights_Price"]</th><th>@L["Trading_Tcbs_Qty"]</th><th>@L["Trading_Tcbs_Filled"]</th><th>@L["Trading_Tcbs_Status"]</th><th></th></tr>
             </thead>
             <tbody>
                 @foreach (var o in Filtered)
@@ -35,9 +36,9 @@
                         <td class="broker-num">@o.ExecQuantity.ToString("N0")</td>
                         <td>@o.Status</td>
                         <td>
-                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => Show(o)">Chi tiết</button>
-                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => OnAmend.InvokeAsync(o)">Sửa</button>
-                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => Cancel(o)">Huỷ</button>
+                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => Show(o)">@L["Trading_Tcbs_Detail"]</button>
+                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => OnAmend.InvokeAsync(o)">@L["Trading_Tcbs_Amend"]</button>
+                            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => Cancel(o)">@L["Trading_Tcbs_Cancel"]</button>
                         </td>
                     </tr>
                 }
@@ -49,10 +50,10 @@
         <pre class="tcbs-raw">@_detail</pre>
     }
 
-    <h3 class="ts-panel-title">Khớp lệnh</h3>
+    <h3 class="ts-panel-title">@L["Trading_Tcbs_Matches"]</h3>
     <div class="broker-table-scroll">
         <table class="ts-table">
-            <thead><tr><th>Mã</th><th>Chiều</th><th>KL</th><th>Giá</th><th>Thời gian</th></tr></thead>
+            <thead><tr><th>@L["Trading_Tcbs_Symbol"]</th><th>@L["Trading_Tcbs_Side"]</th><th>@L["Trading_Tcbs_Qty"]</th><th>@L["Trading_BrokerInsights_Price"]</th><th>@L["Trading_Tcbs_Time"]</th></tr></thead>
             <tbody>
                 @foreach (var m in _matches.Take(50))
                 {

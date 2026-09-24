@@ -9,15 +9,15 @@
 {
     <div class="ts-panel broker-alert-board">
         <div class="broker-alert-head">
-            <h3 class="ts-panel-title">Cảnh báo giá</h3>
-            <span class="broker-alert-count">@alerts.Count cảnh báo</span>
+            <h2 class="ts-panel-title">@L["Trading_BrokerAlert_Title"]</h2>
+            <span class="broker-alert-count">@L["Trading_BrokerAlert_Count", alerts.Count]</span>
         </div>
 
         <div class="broker-alert-groups">
             @if (alerts.Any(a => a.Level == "hit-sl"))
             {
                 <div class="broker-alert-group broker-alert-group-sl">
-                    <h3 class="broker-alert-group-title">🔴 Chạm cắt lỗ</h3>
+                    <h3 class="broker-alert-group-title">@L["Trading_BrokerAlert_HitStop"]</h3>
                     <div class="broker-alert-cards">
                         @foreach (var a in alerts.Where(a => a.Level == "hit-sl"))
                         {
@@ -29,9 +29,9 @@
                                 </div>
                                 <div class="broker-alert-card-actions">
                                     <button type="button" class="ts-btn ts-btn-outline ts-btn-sm"
-                                            @onclick="() => OnSelect.InvokeAsync(a.Symbol)">Chi tiết</button>
+                                            @onclick="() => OnSelect.InvokeAsync(a.Symbol)">@L["Trading_BrokerAlert_Detail"]</button>
                                     <button type="button" class="ts-btn ts-btn-primary ts-btn-sm"
-                                            @onclick="() => OnQuickSell.InvokeAsync(a.Symbol)">Bán nhanh</button>
+                                            @onclick="() => OnQuickSell.InvokeAsync(a.Symbol)">@L["Trading_BrokerAlert_QuickSell"]</button>
                                 </div>
                             </div>
                         }
@@ -42,7 +42,7 @@
             @if (alerts.Any(a => a.Level == "hit-tp"))
             {
                 <div class="broker-alert-group broker-alert-group-tp">
-                    <h3 class="broker-alert-group-title">🟢 Chạm mục tiêu</h3>
+                    <h3 class="broker-alert-group-title">@L["Trading_BrokerAlert_HitTarget"]</h3>
                     <div class="broker-alert-cards">
                         @foreach (var a in alerts.Where(a => a.Level == "hit-tp"))
                         {
@@ -54,9 +54,9 @@
                                 </div>
                                 <div class="broker-alert-card-actions">
                                     <button type="button" class="ts-btn ts-btn-outline ts-btn-sm"
-                                            @onclick="() => OnSelect.InvokeAsync(a.Symbol)">Chi tiết</button>
+                                            @onclick="() => OnSelect.InvokeAsync(a.Symbol)">@L["Trading_BrokerAlert_Detail"]</button>
                                     <button type="button" class="ts-btn ts-btn-primary ts-btn-sm"
-                                            @onclick="() => OnQuickSell.InvokeAsync(a.Symbol)">Bán nhanh</button>
+                                            @onclick="() => OnQuickSell.InvokeAsync(a.Symbol)">@L["Trading_BrokerAlert_QuickSell"]</button>
                                 </div>
                             </div>
                         }
@@ -67,7 +67,7 @@
             @if (alerts.Any(a => a.Level == "near-sl" || a.Level == "near-tp"))
             {
                 <div class="broker-alert-group broker-alert-group-near">
-                    <h3 class="broker-alert-group-title">🟡 Gần chạm (trong 2%)</h3>
+                    <h3 class="broker-alert-group-title">@L["Trading_BrokerAlert_Near"]</h3>
                     <div class="broker-alert-cards">
                         @foreach (var a in alerts.Where(a => a.Level == "near-sl" || a.Level == "near-tp"))
                         {
@@ -79,7 +79,7 @@
                                 </div>
                                 <div class="broker-alert-card-actions">
                                     <button type="button" class="ts-btn ts-btn-outline ts-btn-sm"
-                                            @onclick="() => OnSelect.InvokeAsync(a.Symbol)">Chi tiết</button>
+                                            @onclick="() => OnSelect.InvokeAsync(a.Symbol)">@L["Trading_BrokerAlert_Detail"]</button>
                                 </div>
                             </div>
                         }

@@ -1,80 +1,70 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading
 @inject IPriceAlertService AlertSvc
+@inject IStringLocalizer<SharedResources> L
 @implements IDisposable
 
 <div class="ts-panel">
-    <h2 style="margin:0 0 0.75rem;font-size:0.95rem;">
-        <i class="bi bi-bell"></i> Price Alert — @Symbol
+    <h2 class="ts-panel-title">
+        @L["Trading_PriceAlert_Title", Symbol]
         @if (_triggeredCount > 0)
         {
-            <span class="badge bg-danger ms-1">@_triggeredCount</span>
+            <span class="broker-alert-count">@_triggeredCount</span>
         }
     </h2>
 
-    <p class="ts-muted" style="font-size:0.8rem;">
-        Cảnh báo lưu trên server. Cổ phiếu do cron kiểm tra. Vàng, bạc và dầu được kiểm tra khi trang này đang mở.
-    </p>
+    <p class="ts-muted">@L["Trading_PriceAlert_Hint"]</p>
 
-    <div class="ts-field">
-        <label class="ts-label">Alert price</label>
+    <div class="broker-field">
+        <label class="broker-field-label">@L["Trading_PriceAlert_Price"]</label>
         <input type="number" class="ts-input" @bind="_threshold" step="any" min="0" />
     </div>
-    <div class="ts-field">
-        <label class="ts-label">Condition</label>
+    <div class="broker-field">
+        <label class="broker-field-label">@L["Trading_PriceAlert_Condition"]</label>
         <select class="ts-select" @bind="_operator">
-            <option value="@AlertOperator.Above">Price above</option>
-            <option value="@AlertOperator.Below">Price below</option>
+            <option value="@AlertOperator.Above">@L["Trading_PriceAlert_Above"]</option>
+            <option value="@AlertOperator.Below">@L["Trading_PriceAlert_Below"]</option>
         </select>
     </div>
-    <div class="ts-field">
-        <label class="ts-label">Current price (for test)</label>
-        <input type="number" class="ts-input" @bind="_currentPrice" step="any" min="0" placeholder="Optional — enter to test trigger" />
+    <div class="broker-field">
+        <label class="broker-field-label">@L["Trading_PriceAlert_TestPrice"]</label>
+        <input type="number" class="ts-input" @bind="_currentPrice" step="any" min="0" placeholder="@L["Trading_PriceAlert_TestPlaceholder"]" />
     </div>
 
-    <div class="d-flex gap-2 mt-2">
-        <button class="ts-btn ts-btn-primary" @onclick="CreateAlert" disabled="@(_busy || _threshold <= 0)">
-            <i class="bi bi-plus-circle"></i> Set Alert
+    <div class="broker-header-actions">
+        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="CreateAlert" disabled="@(_busy || _threshold <= 0)">
+            @L["Trading_PriceAlert_Set"]
         </button>
         @if (_currentPrice > 0)
         {
-            <button class="ts-btn ts-btn-outline" @onclick="CheckNow" disabled="@_busy">
-                <i class="bi bi-lightning"></i> Test
+            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="CheckNow" disabled="@_busy">
+                @L["Trading_PriceAlert_Test"]
             </button>
         }
     </div>
 
     @if (!string.IsNullOrEmpty(_message))
     {
-        <p class="ts-alert ts-alert-info mt-2 mb-0">@_message</p>
+        <div class="ts-alert ts-alert-info" role="status">@_message</div>
     }
     @if (!string.IsNullOrEmpty(_error))
     {
-        <p class="ts-alert ts-alert-danger mt-2 mb-0">@_error</p>
+        <div class="ts-alert ts-alert-error" role="alert">@_error</div>
     }
 
     @if (_alerts.Count > 0)
     {
-        <ul style="margin-top:1rem;padding-left:1.2rem;font-size:0.85rem;">
+        <ul>
             @foreach (var a in _alerts.Where(x => x.Symbol == Symbol && x.AssetType == AssetType && x.Status != AlertStatus.Dismissed))
             {
                 <li style="@(a.IsTriggered ? "opacity:0.6;text-decoration:line-through;" : "")">
-                    @if (a.Operator == AlertOperator.Above)
-                    {
-                        <i class="bi bi-arrow-up text-success"></i>
-                    }
-                    else
-                    {
-                        <i class="bi bi-arrow-down text-danger"></i>
-                    }
-                    @a.Threshold:N2
+                    @(a.Operator == AlertOperator.Above ? "↑" : "↓")
+                    @a.Threshold.ToString("N2")
                     @if (a.IsTriggered && a.TriggeredPrice.HasValue)
                     {
-                        <span class="text-muted"> → hit @a.TriggeredPrice:N2</span>
+                        <span class="ts-muted">@L["Trading_PriceAlert_Hit", a.TriggeredPrice.Value.ToString("N2")]</span>
                     }
-                    —
-                    <button class="ts-btn ts-btn-outline" style="padding:2px 8px;font-size:0.75rem"
-                            @onclick="() => RemoveAlert(a.Id)">
-                        Remove
+                    <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => RemoveAlert(a.Id)">
+                        @L["Trading_PriceAlert_Remove"]
                     </button>
                 </li>
             }
@@ -125,17 +115,17 @@
         {
             if (_threshold <= 0)
             {
-                _error = "Price must be positive.";
+                _error = L["Trading_PriceAlert_NeedPrice"];
                 return;
             }
             await AlertSvc.AddAsync(Symbol, AssetType, _threshold, _operator);
             _alerts = await AlertSvc.LoadAsync();
-            _message = "Đã lưu cảnh báo trên server.";
+            _message = L["Trading_PriceAlert_Saved"];
             _threshold = 0;
         }
         catch (Exception ex)
         {
-            _error = $"Failed: {ex.Message}";
+            _error = L["Trading_PriceAlert_Failed", ex.Message];
         }
         finally
         {
@@ -153,12 +143,12 @@
             _alerts = await AlertSvc.LoadAsync();
             UpdateTriggeredCount();
             _message = fired > 0
-                ? $"{fired} cảnh báo đã gửi từ server."
-                : "No alerts triggered at current price.";
+                ? L["Trading_PriceAlert_Fired", fired]
+                : L["Trading_PriceAlert_None"];
         }
         catch (Exception ex)
         {
-            _error = $"Check failed: {ex.Message}";
+            _error = L["Trading_PriceAlert_CheckFailed", ex.Message];
         }
         finally
         {
@@ -176,7 +166,7 @@
         }
         catch (Exception ex)
         {
-            _error = $"Remove failed: {ex.Message}";
+            _error = L["Trading_PriceAlert_RemoveFailed", ex.Message];
         }
     }
 

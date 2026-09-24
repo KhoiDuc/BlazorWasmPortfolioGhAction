@@ -9,6 +9,7 @@
 @inject VnSectorService Sectors
 @inject MoneyFlowScanService MoneyFlowScan
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResources> L
 @using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
 @using Microsoft.AspNetCore.WebUtilities
@@ -32,7 +33,7 @@
                 <span class="broker-price-progress" role="status">@L["Trading_BrokerPriceProgress", _priceProgressDone, _priceProgressTotal]</span>
             }
             <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ScanPortfolioMoneyFlow" disabled="@_moneyFlowBusy">
-                @( _moneyFlowBusy ? L["Trading_RefreshingPrices"] : L["Trading_MF_ScanHoldings"] )
+                @( _moneyFlowBusy ? L["Trading_MF_Scanning"] : L["Trading_MF_ScanHoldings"] )
             </button>
             <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ExportCsv">@L["Trading_BrokerExportCsv"]</button>
             <label class="ts-btn ts-btn-outline ts-btn-sm broker-file-btn" for="broker-import-json">@L["Trading_BrokerImportJson"]</label>
@@ -42,7 +43,6 @@
                        OnChange="ImportJson"
                        accept=".json,application/json" />
             <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ReloadFromServer" disabled="@_loading">@L["Trading_BrokerReloadFile"]</button>
-            <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="OpenTcbsSync" disabled="@_loading">Đồng bộ từ TCBS</button>
             <button class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ExportJson">@L["Trading_SaveJson"]</button>
         </div>
     </div>
@@ -61,29 +61,13 @@
         </div>
     }
 
-    <TcbsConnectPanel />
-    <BrokerInsights />
-    <div class="tcbs-tabs" role="tablist" aria-label="Broker desk">
-        <button type="button" class="ts-btn ts-btn-sm @(_deskTab == "portfolio" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _deskTab = "portfolio"'>Danh mục</button>
-        <button type="button" class="ts-btn ts-btn-sm @(_deskTab == "account" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _deskTab = "account"'>Tài khoản TCBS</button>
-        <button type="button" class="ts-btn ts-btn-sm @(_deskTab == "orders" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _deskTab = "orders"'>Sổ lệnh</button>
-        <button type="button" class="ts-btn ts-btn-sm @(_deskTab == "ticket" ? "ts-btn-primary" : "ts-btn-outline")" @onclick='() => _deskTab = "ticket"'>Đặt lệnh</button>
+    <div class="broker-header-actions">
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" aria-expanded="@_toolsOpen" aria-controls="broker-tools" @onclick="() => _toolsOpen = !_toolsOpen">@L["Trading_BrokerTools"]</button>
     </div>
-
-    @if (_deskTab == "account")
+    @if (_toolsOpen)
     {
-        <TcbsAccountPanel />
+        <BrokerInsights />
     }
-    else if (_deskTab == "orders")
-    {
-        <TcbsOrderBook OnAmend="StartAmend" />
-    }
-    else if (_deskTab == "ticket")
-    {
-        <TcbsOrderTicket @key="_ticketKey" InitialSymbol="@_ticketSymbol" InitialSide="@_ticketSide" InitialPrice="@_ticketPrice" InitialQty="@_ticketQty" AmendOrderId="@_amendId" />
-    }
-    else
-    {
     <div class="broker-stack">
         <section class="ts-panel broker-form-card">
             <div class="broker-form-card-head">
@@ -233,9 +217,8 @@
 
         @if (_loading)
         {
-            <div class="vd-loading-overlay" role="status" aria-live="polite">
-                <div class="vd-loading-bars"><span></span><span></span><span></span><span></span></div>
-                <span class="vd-loading-label">Đang tải danh mục…</span>
+            <div class="broker-loading" role="status" aria-live="polite">
+                <span>@L["Trading_BrokerLoading"]</span>
             </div>
         }
         else
@@ -258,13 +241,13 @@
         {
             <div class="broker-perf-panel ts-panel">
                 <div class="broker-perf-head">
-                    <h2 class="ts-panel-title">Hiệu suất theo tháng</h2>
+                    <h2 class="ts-panel-title">@L["Trading_BrokerPerf_Title"]</h2>
                     <div class="broker-perf-summary">
                         <span class="broker-perf-stat @(perf.TotalRealized >= 0 ? "ts-positive" : "ts-negative")">
-                            Tổng realized: @BrokerFormat.Vnd(perf.TotalRealized)
+                            @L["Trading_BrokerPerf_Total", BrokerFormat.Vnd(perf.TotalRealized)]
                         </span>
-                        <span class="broker-perf-stat">Win rate: @perf.WinRate.ToString("N1")%</span>
-                        <span class="broker-perf-stat">@perf.TotalTrades lệnh · @perf.TotalWins thắng / @perf.TotalLosses thua</span>
+                        <span class="broker-perf-stat">@L["Trading_BrokerPerf_WinRate", perf.WinRate.ToString("N1")]</span>
+                        <span class="broker-perf-stat">@L["Trading_BrokerPerf_Trades", perf.TotalTrades, perf.TotalWins, perf.TotalLosses]</span>
                     </div>
                 </div>
 
@@ -272,15 +255,15 @@
                     <table class="ts-table broker-perf-table">
                         <thead>
                             <tr>
-                                <th><span class="broker-dt-th-inner">Kỳ</span></th>
-                                <th><span class="broker-dt-th-inner">Lệnh</span></th>
-                                <th><span class="broker-dt-th-inner">Thắng</span></th>
-                                <th><span class="broker-dt-th-inner">Thua</span></th>
-                                <th><span class="broker-dt-th-inner">Realized</span></th>
-                                <th><span class="broker-dt-th-inner">Avg thắng</span></th>
-                                <th><span class="broker-dt-th-inner">Avg thua</span></th>
-                                <th><span class="broker-dt-th-inner">Tốt nhất</span></th>
-                                <th><span class="broker-dt-th-inner">Tệ nhất</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerPerf_Period"]</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerPerf_Orders"]</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerPerf_Wins"]</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerPerf_Losses"]</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerRealized"]</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerPerf_AvgWin"]</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerPerf_AvgLoss"]</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerPerf_Best"]</span></th>
+                                <th><span class="broker-dt-th-inner">@L["Trading_BrokerPerf_Worst"]</span></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -310,14 +293,12 @@
 
         <BrokerAiExplain Portfolio="_portfolio" />
     </div>
-    }
 
     <BrokerQuickSellModal @ref="_quickSellModal"
                           Position="@(_quickSellPosition)"
                           CurrentPrice="@(_quickSellPosition is not null ? Quote(_quickSellPosition.Symbol) : null)"
                           OnSubmitSell="SubmitQuickSell"
                           OnPlaceOrder="PlaceFromQuickSell" />
-    <TcbsSyncDialog @ref="_tcbsSync" OnApply="ApplyTcbsSync" />
 
     @if (Selected is not null)
     {
@@ -375,14 +356,7 @@
     private Dictionary<string, MoneyFlowSnapshot> _moneyFlowBySymbol = new(StringComparer.OrdinalIgnoreCase);
     private bool _moneyFlowScanned;
     private bool _moneyFlowBusy;
-    private string _deskTab = "portfolio";
-    private string? _ticketSymbol;
-    private string _ticketSide = "NB";
-    private decimal? _ticketPrice;
-    private decimal? _ticketQty;
-    private string? _amendId;
-    private int _ticketKey;
-    private TcbsSyncDialog? _tcbsSync;
+    private bool _toolsOpen;
 
     private BrokerPosition? Selected =>
         string.IsNullOrEmpty(_selected)
@@ -429,9 +403,7 @@
         _selected = null;
         await SyncArchivePosition(pos, isArchived: true, BrokerPositionStatus.DaDong);
         var realized = pos.RealizedPnl ?? 0m;
-        Flash(realized >= 0
-            ? $"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}"
-            : $"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}");
+        Flash(L["Trading_BrokerFlash_Closed", pos.Symbol, BrokerFormat.Vnd(realized)]);
         await Task.CompletedTask;
     }
 
@@ -444,14 +416,14 @@
         _portfolio.ClosedPositions.Remove(pos);
         _portfolio.Positions.Add(pos);
         await SyncArchivePosition(pos, isArchived: false, BrokerPositionStatus.NamGiu);
-        Flash($"Đã mở lại {pos.Symbol} — có thể sửa lệnh bán rồi đóng lại.");
+        Flash(L["Trading_BrokerFlash_Reopened", pos.Symbol]);
         await Task.CompletedTask;
     }
 
     private async Task DeleteClosedSelected()
     {
         if (Selected is null) return;
-        if (!await JS.InvokeAsync<bool>("tradingAuth.confirm", $"Xóa vĩnh viễn vị thế đã đóng {Selected.Symbol}? Hành động này không thể hoàn tác."))
+        if (!await JS.InvokeAsync<bool>("tradingAuth.confirm", L["Trading_BrokerFlash_DeleteClosed", Selected.Symbol].Value))
             return;
         var symbol = Selected.Symbol;
         _portfolio.ClosedPositions?.Remove(Selected);
@@ -459,55 +431,32 @@
         MarkDirty();
         var (ok, error) = await Store.DeletePositionAsync(symbol);
         if (ok) _dirty = false;
-        else Flash($"Sync fail: {error}", error: true);
-    }
-
-    private async Task OpenTcbsSync()
-    {
-        if (_tcbsSync is null) return;
-        var error = await _tcbsSync.Open(_portfolio);
-        if (!string.IsNullOrEmpty(error)) Flash(error, error: true);
-    }
-
-    private async Task ApplyTcbsSync(BrokerPortfolio portfolio)
-    {
-        _portfolio = portfolio;
-        var (ok, err) = await Store.ImportAsync(portfolio);
-        Flash(ok ? "Đã ghi danh mục đồng bộ từ TCBS." : $"Sync fail: {err}", error: !ok);
+        else Flash(L["Trading_BrokerFlash_SyncFail", error ?? ""], error: true);
     }
 
     private void PlaceFromRecommendation(string symbol)
     {
         var pos = _portfolio.Positions.FirstOrDefault(p => p.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
-        _ticketSymbol = symbol;
-        _ticketSide = "NB";
-        _ticketPrice = pos?.EntryLow ?? pos?.AvgBuy;
-        _ticketQty = 100;
-        _amendId = null;
-        _ticketKey++;
-        _deskTab = "ticket";
+        GoTcbsTicket(symbol, "NB", pos?.EntryLow ?? pos?.AvgBuy, 100, null);
     }
 
     private void PlaceFromQuickSell(BrokerPosition pos)
     {
-        _ticketSymbol = pos.Symbol;
-        _ticketSide = "NS";
-        _ticketPrice = Quote(pos.Symbol) ?? pos.AvgBuy;
-        _ticketQty = pos.RemainingQuantity;
-        _amendId = null;
-        _ticketKey++;
-        _deskTab = "ticket";
+        GoTcbsTicket(pos.Symbol, "NS", Quote(pos.Symbol) ?? pos.AvgBuy, pos.RemainingQuantity, null);
     }
 
-    private void StartAmend(TcbsOrder order)
+    private void GoTcbsTicket(string symbol, string side, decimal? price, decimal? qty, string? amend)
     {
-        _ticketSymbol = order.Symbol;
-        _ticketSide = order.ExecType is "NS" or "S" ? "NS" : "NB";
-        _ticketPrice = order.Price;
-        _ticketQty = order.Quantity;
-        _amendId = order.OrderId;
-        _ticketKey++;
-        _deskTab = "ticket";
+        var query = new List<string>
+        {
+            "section=ticket",
+            "side=" + Uri.EscapeDataString(side),
+            "symbol=" + Uri.EscapeDataString(symbol)
+        };
+        if (price is > 0) query.Add("price=" + price.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        if (qty is > 0) query.Add("qty=" + qty.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        if (!string.IsNullOrWhiteSpace(amend)) query.Add("amend=" + Uri.EscapeDataString(amend));
+        Navigation.NavigateTo(CulturePath.AppRouteWithQuery(CultureService.UrlLang, "trading/tcbs", string.Join("&", query)));
     }
 
     private async Task OpenQuickSell(string symbol)
@@ -527,7 +476,7 @@
 
         var (ok, error) = await Store.AddSellAsync(pos.Symbol, sell);
         if (ok) _dirty = false;
-        else Flash($"Sync fail: {error}", error: true);
+        else Flash(L["Trading_BrokerFlash_SyncFail", error ?? ""], error: true);
 
         if (pos.RemainingQuantity is null or 0)
         {
@@ -536,7 +485,7 @@
         else
         {
             var realized = pos.RealizedPnl ?? 0m;
-            Flash($"Đã ghi lệnh bán {pos.Symbol} @ {sell.Price:N2} ×{sell.Quantity}. Realized: {BrokerFormat.Vnd(realized)}");
+            Flash(L["Trading_BrokerFlash_Sold", pos.Symbol, sell.Price.ToString("N2"), sell.Quantity ?? 0, BrokerFormat.Vnd(realized)]);
         }
         _quickSellPosition = null;
         await Task.CompletedTask;
@@ -552,7 +501,7 @@
             _selected = null;
         await SyncArchivePosition(pos, isArchived: true, BrokerPositionStatus.DaDong);
         var realized = pos.RealizedPnl ?? 0m;
-        Flash($"Đã đóng {pos.Symbol}, realized {BrokerFormat.Vnd(realized)}");
+        Flash(L["Trading_BrokerFlash_Closed", pos.Symbol, BrokerFormat.Vnd(realized)]);
         await Task.CompletedTask;
     }
 
@@ -598,7 +547,7 @@
         MarkDirty();
         var (ok, error) = await Store.UpdatePositionAsync(pos.Symbol, pos);
         if (ok) _dirty = false;
-        else Flash($"Sync fail: {error}", error: true);
+        else Flash(L["Trading_BrokerFlash_SyncFail", error ?? ""], error: true);
     }
 
     private async Task SyncArchivePosition(BrokerPosition pos, bool isArchived, BrokerPositionStatus status)
@@ -606,7 +555,7 @@
         MarkDirty();
         var (ok, error) = await Store.ArchivePositionAsync(pos.Symbol, isArchived, status);
         if (ok) _dirty = false;
-        else Flash($"Sync fail: {error}", error: true);
+        else Flash(L["Trading_BrokerFlash_SyncFail", error ?? ""], error: true);
     }
 
     private async Task OnEditorSync(BrokerSyncAction action)
@@ -661,11 +610,11 @@
                 _dirty = false;
                 RefreshPriceAlerts();
             }
-            else Flash($"Sync fail: {error}", error: true);
+            else Flash(L["Trading_BrokerFlash_SyncFail", error ?? ""], error: true);
         }
         catch (Exception ex)
         {
-            Flash($"Sync exception: {ex.GetType().Name}: {ex.Message}", error: true);
+            Flash(L["Trading_BrokerFlash_SyncException", ex.GetType().Name, ex.Message], error: true);
         }
     }
 
@@ -859,21 +808,21 @@
             {
                 var (ok, error) = await Store.CreatePositionAsync(existing);
                 if (ok) _dirty = false;
-                else Flash($"Sync fail: {error}", error: true);
+                else Flash(L["Trading_BrokerFlash_SyncFail", error ?? ""], error: true);
             }
             else
             {
                 var allOk = true;
                 var (ok, error) = await Store.AddLotAsync(symbol, lot);
-                if (!ok) { allOk = false; Flash($"Sync fail: {error}", error: true); }
+                if (!ok) { allOk = false; Flash(L["Trading_BrokerFlash_SyncFail", error ?? ""], error: true); }
                 if (newNote is not null)
                 {
                     var (okN, errN) = await Store.AddNoteAsync(symbol, newNote);
-                    if (!okN) { allOk = false; Flash($"Sync note fail: {errN}", error: true); }
+                    if (!okN) { allOk = false; Flash(L["Trading_BrokerFlash_SyncNote", errN ?? ""], error: true); }
                 }
                 // Update position-level stop/target/sector/status
                 var (okP, errP) = await Store.UpdatePositionAsync(symbol, existing);
-                if (!okP) { allOk = false; Flash($"Sync position fail: {errP}", error: true); }
+                if (!okP) { allOk = false; Flash(L["Trading_BrokerFlash_SyncPosition", errP ?? ""], error: true); }
                 if (allOk) _dirty = false;
             }
 
@@ -903,7 +852,7 @@
         MarkDirty();
         var (ok, error) = await Store.DeletePositionAsync(symbol);
         if (ok) _dirty = false;
-        else Flash($"Sync fail: {error}", error: true);
+        else Flash(L["Trading_BrokerFlash_SyncFail", error ?? ""], error: true);
     }
 
     private async Task ExportJson()
@@ -1018,7 +967,7 @@
 
         if (symbols.Count == 0)
         {
-            Flash("Chưa có mã trong danh mục.", error: false);
+            Flash(L["Trading_BrokerFlash_NoSymbols"], error: false);
             return;
         }
 
@@ -1103,21 +1052,25 @@
     private void CheckAlerts()
     {
         var alerts = new List<string>();
+        var anyStop = false;
         foreach (var p in _portfolio.Positions)
         {
             if (p.IsClosed) continue;
             if (!_quotes.TryGetValue(p.Symbol, out var current) || current <= 0) continue;
 
             if (p.StopLoss is > 0 && current <= p.StopLoss.Value)
-                alerts.Add($"{p.Symbol} chạm cắt lỗ @ {current:N2} (SL {p.StopLoss.Value:N2})");
+            {
+                anyStop = true;
+                alerts.Add(L["Trading_BrokerFlash_HitStop", p.Symbol, current.ToString("N2"), p.StopLoss.Value.ToString("N2")]);
+            }
             if (p.TargetPrice is > 0 && current >= p.TargetPrice.Value)
-                alerts.Add($"{p.Symbol} chạm mục tiêu @ {current:N2} (TP {p.TargetPrice.Value:N2})");
+                alerts.Add(L["Trading_BrokerFlash_HitTarget", p.Symbol, current.ToString("N2"), p.TargetPrice.Value.ToString("N2")]);
         }
 
         if (alerts.Count > 0)
         {
             _activeSlTpFlash = true;
-            Flash(string.Join(" · ", alerts), error: alerts.Count > 0 && !alerts.All(a => a.Contains("mục tiêu")));
+            Flash(string.Join(" · ", alerts), error: anyStop);
         }
         else if (_activeSlTpFlash)
         {

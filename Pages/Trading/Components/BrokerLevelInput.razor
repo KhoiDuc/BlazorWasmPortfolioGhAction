@@ -1,4 +1,5 @@
 @using BlazorWasmPortfolioGhAction.Models.Trading.Broker
+@inject IStringLocalizer<SharedResources> L
 
 <div class="broker-field @CssClass">
     <div class="broker-field-top">
@@ -7,7 +8,7 @@
             <button type="button"
                     class="broker-mode-btn @(Mode == BrokerLevelInputMode.Price ? "active" : "")"
                     aria-pressed="@(Mode == BrokerLevelInputMode.Price)"
-                    @onclick='() => SetMode(BrokerLevelInputMode.Price)'>Giá</button>
+                    @onclick='() => SetMode(BrokerLevelInputMode.Price)'>@L["Trading_BrokerLevel_Price"]</button>
             <button type="button"
                     class="broker-mode-btn @(Mode == BrokerLevelInputMode.Percent ? "active" : "")"
                     aria-pressed="@(Mode == BrokerLevelInputMode.Percent)"
@@ -35,7 +36,7 @@
             }
             else
             {
-                <p class="broker-field-preview">≈ @ResolvedPrice?.ToString("N2") từ giá @BuyPrice?.ToString("N2")</p>
+                <p class="broker-field-preview">@L["Trading_BrokerLevel_FromPrice", ResolvedPrice?.ToString("N2"), BuyPrice?.ToString("N2")]</p>
             }
         </div>
     }

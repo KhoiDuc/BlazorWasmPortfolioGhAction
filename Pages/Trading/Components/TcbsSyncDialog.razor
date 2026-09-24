@@ -1,29 +1,39 @@
 @inject ITcbsApiClient Tcbs
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResources> L
 
 @if (_open)
 {
-    <div class="tcbs-confirm" role="dialog" aria-modal="true" aria-labelledby="tcbs-sync-title">
-        <h3 id="tcbs-sync-title">Đồng bộ từ TCBS</h3>
-        @if (_rows.Count == 0)
-        {
-            <p>Không có chênh lệch so với sổ tay.</p>
-        }
-        else
-        {
-            <ul>
-                @foreach (var row in _rows)
-                {
-                    <li>
-                        <label>
-                            <input type="checkbox" @bind="row.Selected" />
-                            <strong>@row.Symbol</strong> @row.Action — @row.Detail
-                        </label>
-                    </li>
-                }
-            </ul>
-        }
-        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="Close">Đóng</button>
-        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="Apply" disabled="@(_rows.Count == 0)">Ghi các dòng đã chọn</button>
+    <div class="broker-qs-overlay" @onclick="Close" @onkeydown="OnOverlayKeydown"
+         role="dialog" aria-modal="true" aria-labelledby="tcbs-sync-title">
+        <div class="broker-qs-modal" @onclick:stopPropagation="true">
+            <div class="broker-qs-head">
+                <h2 id="tcbs-sync-title" class="ts-panel-title">@L["Trading_Tcbs_SyncTitle"]</h2>
+                <button type="button" class="broker-lot-remove broker-qs-close" aria-label="@L["Trading_BrokerClose"]" @onclick="Close">×</button>
+            </div>
+            @if (_rows.Count == 0)
+            {
+                <p>@L["Trading_Tcbs_SyncEmpty"]</p>
+            }
+            else
+            {
+                <ul>
+                    @foreach (var row in _rows)
+                    {
+                        <li>
+                            <label>
+                                <input type="checkbox" @bind="row.Selected" />
+                                <strong>@row.Symbol</strong> @row.Action — @row.Detail
+                            </label>
+                        </li>
+                    }
+                </ul>
+            }
+            <div class="broker-header-actions">
+                <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="Close">@L["Trading_BrokerClose"]</button>
+                <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="Apply" disabled="@(_rows.Count == 0)">@L["Trading_Tcbs_SyncApply"]</button>
+            </div>
+        </div>
     </div>
 }
 
@@ -39,26 +49,38 @@
     public async Task<string?> Open(BrokerPortfolio portfolio)
     {
         var status = await Tcbs.GetStatusAsync();
-        if (!status.Connected) return status.NeedsReauth ? "Cần nhập lại iOTP." : "Chưa kết nối TCBS.";
+        if (!status.Connected) return status.NeedsReauth ? L["Trading_Tcbs_NeedOtp"].Value : L["Trading_Tcbs_NotConnected"].Value;
         var q = string.IsNullOrWhiteSpace(status.AccountNo) ? "" : "?accountNo=" + Uri.EscapeDataString(status.AccountNo);
         var assets = await Tcbs.GetAsync("assets" + q);
         var matches = await Tcbs.GetAsync("matches" + q);
-        if (assets.NeedsReauth || matches.NeedsReauth) return "Phiên TCBS hết hạn.";
+        if (assets.NeedsReauth || matches.NeedsReauth) return L["Trading_Tcbs_SessionExpired"].Value;
         if (!assets.Ok) return assets.Error;
         _assets = TcbsMapper.ReadAssets(assets.Json);
         _matches = matches.Ok ? TcbsMapper.ReadMatches(matches.Json) : [];
         _source = portfolio;
         _rows = TcbsPortfolioSync.Preview(portfolio, _assets, _matches);
         _open = true;
+        try { await JS.InvokeVoidAsync("tradingAuth.trapFocus", ".broker-qs-overlay"); }
+        catch { /* JS not ready */ }
         return null;
     }
 
-    private void Close() => _open = false;
+    private async Task Close()
+    {
+        _open = false;
+        try { await JS.InvokeVoidAsync("tradingAuth.releaseFocus"); }
+        catch { /* JS not ready */ }
+    }
+
+    private async Task OnOverlayKeydown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") await Close();
+    }
 
     private async Task Apply()
     {
         TcbsPortfolioSync.Apply(_source, _rows, _assets, _matches);
-        _open = false;
+        await Close();
         await OnApply.InvokeAsync(_source);
     }
 }

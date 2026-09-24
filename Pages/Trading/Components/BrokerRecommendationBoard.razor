@@ -10,15 +10,15 @@
     <div class="ts-panel broker-rec-board">
         <div class="broker-rec-head">
             <div>
-                <h2 class="ts-panel-title">Khuyến nghị broker</h2>
-                <span class="broker-rec-sub">@recs.Count mã đang theo dõi khuyến nghị</span>
+                <h2 class="ts-panel-title">@L["Trading_BrokerRec_Title"]</h2>
+                <span class="broker-rec-sub">@L["Trading_BrokerRec_Count", recs.Count]</span>
             </div>
             <div class="broker-rec-filter-bar">
-                <label class="broker-dt-label" for="rec-filter">Lọc</label>
+                <label class="broker-dt-label" for="rec-filter">@L["Trading_BrokerRec_Filter"]</label>
                 <select id="rec-filter" class="ts-select" @bind="_filter">
-                    <option value="all">Tất cả</option>
-                    <option value="cho-mua">Chờ mua</option>
-                    <option value="bo-theo-doi">Bỏ theo dõi</option>
+                    <option value="all">@L["Trading_Filter_All"]</option>
+                    <option value="cho-mua">@L["Trading_BrokerRec_WaitBuy"]</option>
+                    <option value="bo-theo-doi">@L["Trading_BrokerRec_Dropped"]</option>
                 </select>
             </div>
         </div>
@@ -27,14 +27,14 @@
             <table class="ts-table broker-rec-table">
                 <thead>
                     <tr>
-                        <th><span class="broker-dt-th-inner">Mã</span></th>
-                        <th><span class="broker-dt-th-inner">Ngành</span></th>
-                        <th><span class="broker-dt-th-inner">Vùng mua</span></th>
-                        <th><span class="broker-dt-th-inner">Cắt lỗ</span></th>
-                        <th><span class="broker-dt-th-inner">Mục tiêu</span></th>
-                        <th><span class="broker-dt-th-inner">Note</span></th>
-                        <th><span class="broker-dt-th-inner">Trạng thái</span></th>
-                        <th class="broker-rec-table-actions"><span class="broker-dt-th-inner">Hành động</span></th>
+                        <th><span class="broker-dt-th-inner">@L["Trading_Tcbs_Symbol"]</span></th>
+                        <th><span class="broker-dt-th-inner">@L["Trading_BrokerColSector"]</span></th>
+                        <th><span class="broker-dt-th-inner">@L["Trading_BrokerRec_Zone"]</span></th>
+                        <th><span class="broker-dt-th-inner">@L["Trading_BrokerRec_Stop"]</span></th>
+                        <th><span class="broker-dt-th-inner">@L["Trading_BrokerRec_Target"]</span></th>
+                        <th><span class="broker-dt-th-inner">@L["Trading_BrokerNote"]</span></th>
+                        <th><span class="broker-dt-th-inner">@L["Trading_BrokerRec_Status"]</span></th>
+                        <th class="broker-rec-table-actions"><span class="broker-dt-th-inner">@L["Trading_BrokerRec_Action"]</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -83,16 +83,16 @@
                                 @if (r.StatusBadge != BrokerPositionStatus.BoTheoDoi)
                                 {
                                     <button type="button" class="ts-btn ts-btn-primary ts-btn-xs"
-                                            @onclick="() => OnBuy.InvokeAsync(r.Symbol)" title="Mua">Mua</button>
+                                            @onclick="() => OnBuy.InvokeAsync(r.Symbol)" title="@L["Trading_BrokerRec_Buy"]">@L["Trading_BrokerRec_Buy"]</button>
                                     <button type="button" class="ts-btn ts-btn-outline ts-btn-xs"
-                                            @onclick="() => OnPlaceOrder.InvokeAsync(r.Symbol)">Đặt lệnh</button>
+                                            @onclick="() => OnPlaceOrder.InvokeAsync(r.Symbol)">@L["Trading_BrokerRec_Place"]</button>
                                     <button type="button" class="ts-btn ts-btn-outline ts-btn-xs broker-btn-danger"
-                                            @onclick="() => OnDrop.InvokeAsync(r.Symbol)" title="Bỏ theo dõi">Bỏ</button>
+                                            @onclick="() => OnDrop.InvokeAsync(r.Symbol)" title="@L["Trading_BrokerRec_Dropped"]">@L["Trading_BrokerRec_Drop"]</button>
                                 }
                                 else
                                 {
                                     <button type="button" class="ts-btn ts-btn-outline ts-btn-xs"
-                                            @onclick="() => OnReactivate.InvokeAsync(r.Symbol)" title="Theo dõi lại">Kích hoạt</button>
+                                            @onclick="() => OnReactivate.InvokeAsync(r.Symbol)" title="@L["Trading_BrokerRec_Reactivate"]">@L["Trading_BrokerRec_Reactivate"]</button>
                                 }
                             </td>
                         </tr>

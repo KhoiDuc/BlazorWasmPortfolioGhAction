@@ -7,35 +7,35 @@
          role="dialog" aria-modal="true" aria-labelledby="broker-qs-title">
         <div class="broker-qs-modal" @onclick:stopPropagation="true">
             <div class="broker-qs-head">
-                <h2 id="broker-qs-title" class="ts-panel-title">Bán nhanh @Position?.Symbol</h2>
-                <button type="button" class="broker-lot-remove broker-qs-close" aria-label="Đóng" @onclick="Close">×</button>
+                <h2 id="broker-qs-title" class="ts-panel-title">@L["Trading_BrokerQuickSell_Title", Position?.Symbol]</h2>
+                <button type="button" class="broker-lot-remove broker-qs-close" aria-label="@L["Trading_BrokerClose"]" @onclick="Close">×</button>
             </div>
 
             @if (Position is not null)
             {
                 <div class="broker-qs-summary">
-                    <span>KL còn lại: <strong>@BrokerFormat.Quantity(Position.RemainingQuantity)</strong></span>
-                    <span>KL được bán: <strong>@BrokerFormat.Quantity(Position.SellableQuantity)</strong></span>
+                    <span>@L["Trading_BrokerDetail_KpiRemaining"]: <strong>@BrokerFormat.Quantity(Position.RemainingQuantity)</strong></span>
+                    <span>@L["Trading_BrokerQuickSell_Sellable"]: <strong>@BrokerFormat.Quantity(Position.SellableQuantity)</strong></span>
                     @if (Position.PendingQuantity > 0)
                     {
-                        <span>Chờ về (T+2): <strong>@BrokerFormat.Quantity(Position.PendingQuantity)</strong></span>
+                        <span>@L["Trading_BrokerQuickSell_Pending"]: <strong>@BrokerFormat.Quantity(Position.PendingQuantity)</strong></span>
                     }
                     @if (CurrentPrice is not null)
                     {
-                        <span>Giá hiện tại: <strong>@CurrentPrice.Value.ToString("N2")</strong></span>
+                        <span>@L["Trading_BrokerDetail_KpiCurrent"]: <strong>@CurrentPrice.Value.ToString("N2")</strong></span>
                     }
                 </div>
 
                 <div class="broker-qs-form">
                     <div class="broker-form-row broker-form-row-2 broker-form-row-align">
                         <div class="broker-field">
-                            <label class="broker-field-label" for="qs-price">Giá bán</label>
+                            <label class="broker-field-label" for="qs-price">@L["Trading_BrokerDetail_SellPrice"]</label>
                             <input id="qs-price" class="ts-input @(_err is not null ? "ts-input-invalid" : "")"
                                    type="number" min="0.0001" step="any" placeholder="60.5"
                                    @bind="_price" @bind:after='() => _err = null' />
                         </div>
                         <div class="broker-field">
-                            <label class="broker-field-label" for="qs-qty">KL bán</label>
+                            <label class="broker-field-label" for="qs-qty">@L["Trading_BrokerDetail_SellQty"]</label>
                             <input id="qs-qty" class="ts-input @(_err is not null ? "ts-input-invalid" : "")"
                                    type="number" min="0.0001" step="any"
                                    placeholder="@BrokerFormat.Quantity(Position.RemainingQuantity)"
@@ -44,13 +44,13 @@
                     </div>
                     <div class="broker-form-row broker-form-row-2 broker-form-row-align">
                         <div class="broker-field">
-                            <label class="broker-field-label" for="qs-date">Ngày bán</label>
+                            <label class="broker-field-label" for="qs-date">@L["Trading_BrokerDetail_SellDate"]</label>
                             <input id="qs-date" class="ts-input" type="date" @bind="_date" @bind:format="yyyy-MM-dd" />
                         </div>
                         <div class="broker-field">
-                            <label class="broker-field-label" for="qs-note">Note</label>
+                            <label class="broker-field-label" for="qs-note">@L["Trading_BrokerNote"]</label>
                             <input id="qs-note" class="ts-input" maxlength="@BrokerInputValidation.NoteMaxLen"
-                                   placeholder="Chốt lời / cắt lỗ…" @bind="_note" />
+                                   placeholder="@L["Trading_BrokerDetail_SellNotePlaceholder"]" @bind="_note" />
                         </div>
                     </div>
                     @if (!string.IsNullOrEmpty(_err))
@@ -58,9 +58,9 @@
                         <p class="ts-field-error">@_err</p>
                     }
                     <div class="broker-qs-actions">
-                        <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Close">Hủy</button>
-                        <button class="ts-btn ts-btn-primary ts-btn-sm" type="button" @onclick="Submit">Ghi lệnh bán</button>
-                        <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="PlaceTcbs">Đặt lệnh bán TCBS</button>
+                        <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="Close">@L["Trading_BrokerCancel"]</button>
+                        <button class="ts-btn ts-btn-primary ts-btn-sm" type="button" @onclick="Submit">@L["Trading_BrokerDetail_SellAddBtn"]</button>
+                        <button class="ts-btn ts-btn-outline ts-btn-sm" type="button" @onclick="PlaceTcbs">@L["Trading_BrokerQuickSell_PlaceTcbs"]</button>
                     </div>
                 </div>
             }
@@ -115,12 +115,12 @@
         if (Position is null) return;
         if (_price is not > 0)
         {
-            _err = "Giá bán phải > 0.";
+            _err = L["Trading_BrokerDetail_ValSellPrice"];
             return;
         }
         if (_qty is not > 0)
         {
-            _err = "KL bán phải > 0.";
+            _err = L["Trading_BrokerDetail_ValSellQty"];
             return;
         }
 
@@ -128,12 +128,12 @@
         var sellable = Position.SellableQuantity;
         if (_qty.Value > remaining)
         {
-            _err = $"KL bán vượt quá KL còn lại ({BrokerFormat.Quantity(remaining)}).";
+            _err = L["Trading_BrokerDetail_ValSellQtyExceed", BrokerFormat.Quantity(remaining)];
             return;
         }
         if (_qty.Value > sellable)
         {
-            _err = $"Chỉ {BrokerFormat.Quantity(sellable)} cổ đã về T+2. {BrokerFormat.Quantity(Position.PendingQuantity)} cổ còn chờ.";
+            _err = L["Trading_BrokerDetail_ValSellQtyT2", BrokerFormat.Quantity(sellable), BrokerFormat.Quantity(Position.PendingQuantity)];
             return;
         }
 

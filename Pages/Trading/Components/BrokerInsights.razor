@@ -2,19 +2,20 @@
 @inject IBrokerDeskStore Store
 @inject ITcbsApiClient Tcbs
 @inject IJSRuntime JS
+@inject IStringLocalizer<SharedResources> L
 
-<section class="ts-panel broker-insights">
-    <h2>NAV, alerts, CSV</h2>
+<section id="broker-tools" class="ts-panel broker-insights">
+    <h2 class="ts-panel-title">@L["Trading_BrokerInsights_Title"]</h2>
     @if (!string.IsNullOrEmpty(_message))
     {
-        <p role="status">@_message</p>
+        <div class="ts-alert ts-alert-info" role="status">@_message</div>
     }
-    <div class="tool-actions">
-        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="LoadSnapshots">Load NAV</button>
-        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="TakeSnapshot">Record snapshot</button>
-        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="DownloadServerCsv">Download server CSV</button>
-        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="LoadAudit">TCBS audit</button>
-        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="RefreshToken">Refresh TCBS token</button>
+    <div class="broker-header-actions">
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="LoadSnapshots">@L["Trading_BrokerInsights_LoadNav"]</button>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="TakeSnapshot">@L["Trading_BrokerInsights_Record"]</button>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="DownloadServerCsv">@L["Trading_BrokerInsights_DownloadCsv"]</button>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="LoadAudit">@L["Trading_BrokerInsights_Audit"]</button>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="RefreshToken">@L["Trading_BrokerInsights_Refresh"]</button>
     </div>
 
     @if (_snapshots.Count > 0)
@@ -22,53 +23,65 @@
         <ul>
             @foreach (var row in _snapshots.TakeLast(12))
             {
-                <li>@row.TakenAt: NAV @row.Nav.ToString("N0") · realized @row.RealizedPnl.ToString("N0") · dividends @row.DividendIncome.ToString("N0")</li>
+                <li>@L["Trading_BrokerInsights_Line", row.TakenAt, row.Nav.ToString("N0"), row.RealizedPnl.ToString("N0"), row.DividendIncome.ToString("N0")]</li>
             }
         </ul>
     }
 
-    <h3>Price alert</h3>
-    <div class="tool-actions">
-        <input class="ts-input" @bind="_symbol" aria-label="Symbol" placeholder="VNM" />
-        <select class="ts-input" @bind="_direction" aria-label="Direction">
-            <option value="above">above</option>
-            <option value="below">below</option>
-        </select>
-        <input class="ts-input" type="number" @bind="_price" aria-label="Price" />
-        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="CreateAlert">Add alert</button>
-        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="LoadAlerts">Refresh</button>
+    <h3 class="ts-panel-title">@L["Trading_BrokerInsights_PriceAlert"]</h3>
+    <div class="broker-header-actions">
+        <div class="broker-field">
+            <label class="broker-field-label" for="insights-symbol">@L["Trading_BrokerInsights_Symbol"]</label>
+            <input id="insights-symbol" class="ts-input" @bind="_symbol" placeholder="VNM" />
+        </div>
+        <div class="broker-field">
+            <label class="broker-field-label" for="insights-dir">@L["Trading_BrokerInsights_Direction"]</label>
+            <select id="insights-dir" class="ts-select" @bind="_direction">
+                <option value="above">@L["Trading_BrokerInsights_Above"]</option>
+                <option value="below">@L["Trading_BrokerInsights_Below"]</option>
+            </select>
+        </div>
+        <div class="broker-field">
+            <label class="broker-field-label" for="insights-price">@L["Trading_BrokerInsights_Price"]</label>
+            <input id="insights-price" class="ts-input" type="number" @bind="_price" />
+        </div>
+        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="CreateAlert">@L["Trading_BrokerInsights_Add"]</button>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="LoadAlerts">@L["Trading_BrokerInsights_RefreshList"]</button>
     </div>
     <ul>
         @foreach (var alert in _alerts)
         {
             <li>
                 @alert.Symbol @alert.Direction @alert.Price
-                <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => DeleteAlert(alert.Id)">Delete</button>
+                <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => DeleteAlert(alert.Id)">@L["Trading_BrokerInsights_Delete"]</button>
             </li>
         }
     </ul>
 
-    <h3>CSV preview</h3>
-    <textarea class="tool-textarea" rows="4" @bind="_csv" aria-label="CSV to preview"></textarea>
-    <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="PreviewCsv">Xem diff</button>
+    <h3 class="ts-panel-title">@L["Trading_BrokerInsights_Csv"]</h3>
+    <div class="broker-field">
+        <label class="broker-field-label" for="insights-csv">CSV</label>
+        <textarea id="insights-csv" class="ts-input" rows="4" @bind="_csv"></textarea>
+    </div>
+    <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="PreviewCsv">@L["Trading_BrokerInsights_Preview"]</button>
     @if (_import?.Diff is not null)
     {
-        <p>Thêm: @string.Join(", ", _import.Diff.Added) · Gỡ: @string.Join(", ", _import.Diff.Removed)</p>
+        <p>@L["Trading_BrokerInsights_AddedRemoved", string.Join(", ", _import.Diff.Added), string.Join(", ", _import.Diff.Removed)]</p>
         <ul>
             @foreach (var row in _import.Diff.Details)
             {
-                <li>@row.Symbol: mua @row.Before.Buys → @row.After.Buys, bán @row.Before.Sells → @row.After.Sells, cổ tức @row.Before.Dividends → @row.After.Dividends</li>
+                <li>@L["Trading_BrokerInsights_Detail", row.Symbol, row.Before.Buys, row.After.Buys, row.Before.Sells, row.After.Sells, row.Before.Dividends, row.After.Dividends]</li>
             }
         </ul>
-        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="ApplyCsv">Áp dụng</button>
+        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="ApplyCsv">@L["Trading_BrokerInsights_Apply"]</button>
     }
     @if (!string.IsNullOrEmpty(_audit))
     {
-        <h3>Audit</h3>
+        <h3 class="ts-panel-title">@L["Trading_BrokerInsights_Audit"]</h3>
         <pre>@_audit</pre>
     }
-    <div class="tool-field">
-        <label class="tool-label" for="tcbs-refresh-otp">TCBS iOTP</label>
+    <div class="broker-field">
+        <label class="broker-field-label" for="tcbs-refresh-otp">@L["Trading_BrokerInsights_Otp"]</label>
         <input id="tcbs-refresh-otp" class="ts-input" @bind="_otp" autocomplete="one-time-code" />
     </div>
 </section>
@@ -98,7 +111,7 @@
     private async Task TakeSnapshot()
     {
         var call = await Api.SendTextAsync(HttpMethod.Post, "/api/portfolio/snapshots", "{}", "application/json");
-        _message = call.Ok ? "Snapshot recorded." : call.Error;
+        _message = call.Ok ? L["Trading_BrokerInsights_SnapshotOk"] : call.Error;
         if (call.Ok) await LoadSnapshots();
     }
 
@@ -123,16 +136,16 @@
             return;
         }
         _import = System.Text.Json.JsonSerializer.Deserialize<ImportPreview>(call.Body, JsonOpts);
-        _message = _import is null ? "Không đọc được diff." : null;
+        _message = _import is null ? L["Trading_BrokerInsights_DiffFail"] : null;
     }
 
     private async Task ApplyCsv()
     {
         if (_import?.PreviewHash is null) return;
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Ghi đè toàn bộ danh mục theo CSV này?");
+        var confirmed = await JS.InvokeAsync<bool>("confirm", L["Trading_BrokerInsights_Confirm"].Value);
         if (!confirmed) return;
         var call = await Api.SendTextAsync(HttpMethod.Post, $"/api/portfolio/import?dryRun=false&previewHash={Uri.EscapeDataString(_import.PreviewHash)}", _csv, "text/csv");
-        _message = call.Ok ? "Đã ghi danh mục." : call.Error;
+        _message = call.Ok ? L["Trading_BrokerInsights_Applied"] : call.Error;
         if (!call.Ok) return;
         await Store.LoadFromApiAsync();
         _import = null;
@@ -153,7 +166,7 @@
     {
         var body = System.Text.Json.JsonSerializer.Serialize(new { symbol = _symbol, direction = _direction, price = _price, channel = "discord" });
         var call = await Api.SendTextAsync(HttpMethod.Post, "/api/alerts", body, "application/json");
-        _message = call.Ok ? "Alert saved." : call.Error;
+        _message = call.Ok ? L["Trading_BrokerInsights_AlertOk"] : call.Error;
         if (call.Ok) await LoadAlerts();
     }
 
@@ -174,7 +187,7 @@
     private async Task RefreshToken()
     {
         var call = await Tcbs.SendAsync(HttpMethod.Post, "refresh", new { otp = _otp });
-        _message = call.Ok ? "TCBS token refreshed." : call.Error;
+        _message = call.Ok ? L["Trading_BrokerInsights_TokenOk"] : call.Error;
         _otp = "";
     }
 

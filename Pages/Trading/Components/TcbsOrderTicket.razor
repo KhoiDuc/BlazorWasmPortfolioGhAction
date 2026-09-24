@@ -1,10 +1,11 @@
 @using BlazorWasmPortfolioGhAction.Services.Trading
 @inject ITcbsApiClient Tcbs
 @inject IBrokerDeskStore Store
+@inject IStringLocalizer<SharedResources> L
 
 <section class="ts-panel tcbs-panel">
-    <h2 class="ts-panel-title">Đặt lệnh cơ sở</h2>
-    <p class="ts-muted">Lệnh chỉ gửi sau khi xem lại. Mặc định tài khoản đang chỉ đọc cho đến khi tắt ở phần kết nối. Không đặt phái sinh.</p>
+    <h2 class="ts-panel-title">@L["Trading_Tcbs_TicketTitle"]</h2>
+    <p class="ts-muted">@L["Trading_Tcbs_TicketLead"]</p>
     @if (!string.IsNullOrEmpty(_error))
     {
         <div class="ts-alert ts-alert-error" role="alert">@_error</div>
@@ -16,26 +17,26 @@
 
     <div class="broker-form-row broker-form-row-2">
         <div class="broker-field">
-            <label class="broker-field-label" for="tcbs-sym">Mã</label>
+            <label class="broker-field-label" for="tcbs-sym">@L["Trading_Tcbs_Symbol"]</label>
             <input id="tcbs-sym" class="ts-input" @bind="_symbol" @bind:after="RefreshQuote" />
         </div>
         <div class="broker-field">
-            <label class="broker-field-label" for="tcbs-side">Chiều</label>
+            <label class="broker-field-label" for="tcbs-side">@L["Trading_Tcbs_Side"]</label>
             <select id="tcbs-side" class="ts-select" @bind="_side">
-                <option value="NB">Mua (NB)</option>
-                <option value="NS">Bán (NS)</option>
+                <option value="NB">@L["Trading_Tcbs_Buy"]</option>
+                <option value="NS">@L["Trading_Tcbs_Sell"]</option>
             </select>
         </div>
     </div>
     <div class="broker-form-row broker-form-row-2">
         <div class="broker-field">
-            <label class="broker-field-label" for="tcbs-exch">Sàn</label>
+            <label class="broker-field-label" for="tcbs-exch">@L["Trading_Tcbs_Exchange"]</label>
             <select id="tcbs-exch" class="ts-select" @bind="_exchange" @bind:after="SyncPriceType">
                 <option>HOSE</option><option>HNX</option><option>UPCOM</option>
             </select>
         </div>
         <div class="broker-field">
-            <label class="broker-field-label" for="tcbs-ptype">Loại giá</label>
+            <label class="broker-field-label" for="tcbs-ptype">@L["Trading_Tcbs_PriceType"]</label>
             <select id="tcbs-ptype" class="ts-select" @bind="_priceType">
                 @foreach (var type in PriceTypes)
                 {
@@ -44,41 +45,41 @@
             </select>
         </div>
     </div>
-    <p class="ts-muted">Phiên @VnMarketRules.SessionLabel(_session) · bước giá @_tick.ToString("0.###") (nghìn đồng)</p>
+    <p class="ts-muted">@L["Trading_Tcbs_SessionLine", SessionText, _tick.ToString("0.###")]</p>
     <div class="broker-form-row broker-form-row-2">
         <div class="broker-field">
-            <label class="broker-field-label" for="tcbs-price">Giá (nghìn đồng)</label>
+            <label class="broker-field-label" for="tcbs-price">@L["Trading_Tcbs_Price"]</label>
             <input id="tcbs-price" class="ts-input" type="number" step="@_tick" min="0.01" @bind="_price" @bind:after="RefreshPower" />
         </div>
         <div class="broker-field">
-            <label class="broker-field-label" for="tcbs-qty">Khối lượng</label>
+            <label class="broker-field-label" for="tcbs-qty">@L["Trading_Tcbs_Qty"]</label>
             <input id="tcbs-qty" class="ts-input" type="number" step="1" min="1" @bind="_qty" />
         </div>
     </div>
-    <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="RoundPrice">Làm tròn bước giá</button>
+    <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="RoundPrice">@L["Trading_Tcbs_Round"]</button>
     @if (_quote is not null)
     {
-        <p>Trần @_quote.CeilPrice.ToString("N2") · Sàn @_quote.FloorPrice.ToString("N2") · Tham chiếu @_quote.RefPrice.ToString("N2") · Khớp @_quote.MatchPrice.ToString("N2")</p>
+        <p>@L["Trading_Tcbs_Quote", _quote.CeilPrice.ToString("N2"), _quote.FloorPrice.ToString("N2"), _quote.RefPrice.ToString("N2"), _quote.MatchPrice.ToString("N2")]</p>
     }
     @if (_power is not null)
     {
-        <p>Sức mua @_power.PurchasingPower.ToString("N0") · KL tối đa @_power.MaxQuantity.ToString("N0")</p>
+        <p>@L["Trading_Tcbs_Power", _power.PurchasingPower.ToString("N0"), _power.MaxQuantity.ToString("N0")]</p>
     }
-    <button type="button" class="ts-btn ts-btn-primary" @onclick="Preview" disabled="@_busy">Xem lại lệnh</button>
+    <button type="button" class="ts-btn ts-btn-primary" @onclick="Preview" disabled="@_busy">@L["Trading_Tcbs_Preview"]</button>
 
     @if (_preview is not null)
     {
         <div class="tcbs-confirm" role="dialog" aria-modal="true" aria-labelledby="tcbs-confirm-title">
-            <h3 id="tcbs-confirm-title">Xác nhận @(string.IsNullOrWhiteSpace(AmendOrderId) ? "lệnh mới" : "sửa " + AmendOrderId) @_preview.ExecType @_preview.Symbol</h3>
-            <p>@_preview.Quantity cổ · giá @((_preview.PriceVnd / 1000m).ToString("N2")) · sàn @_preview.Exchange</p>
-            <p>Giá trị @_preview.Notional.ToString("N0") · phí @_preview.Fee.ToString("N0") · thuế @_preview.Tax.ToString("N0")</p>
-            <p>Tổng ước tính @_preview.Total.ToString("N0") VND. Đây không phải tư vấn đầu tư.</p>
+            <h3 id="tcbs-confirm-title">@(string.IsNullOrWhiteSpace(AmendOrderId) ? L["Trading_Tcbs_ConfirmNew", _preview.ExecType, _preview.Symbol] : L["Trading_Tcbs_ConfirmAmend", AmendOrderId, _preview.ExecType, _preview.Symbol])</h3>
+            <p>@L["Trading_Tcbs_PreviewShares", _preview.Quantity, (_preview.PriceVnd / 1000m).ToString("N2"), _preview.Exchange]</p>
+            <p>@L["Trading_Tcbs_PreviewFees", _preview.Notional.ToString("N0"), _preview.Fee.ToString("N0"), _preview.Tax.ToString("N0")]</p>
+            <p>@L["Trading_Tcbs_PreviewTotal", _preview.Total.ToString("N0")]</p>
             @if (_preview.ReadOnly)
             {
-                <p role="alert">Đang chỉ đọc. Tắt chế độ chỉ đọc trước khi gửi.</p>
+                <p role="alert">@L["Trading_Tcbs_ReadOnlyBlock"]</p>
             }
-            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => _preview = null">Quay lại</button>
-            <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="Place" disabled="@(_busy || _preview.ReadOnly)">Gửi lệnh</button>
+            <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="() => _preview = null">@L["Trading_Tcbs_Back"]</button>
+            <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="Place" disabled="@(_busy || _preview.ReadOnly)">@L["Trading_Tcbs_Send"]</button>
         </div>
     }
 </section>
@@ -99,6 +100,15 @@
     private VnSession _session = VnSession.Closed;
     private decimal _tick = 0.1m;
     private IReadOnlyList<string> PriceTypes => VnMarketRules.PriceTypes(_exchange, _session);
+    private string SessionText => _session switch
+    {
+        VnSession.Ato => "ATO",
+        VnSession.Continuous => L["Trading_Tcbs_SessionContinuous"],
+        VnSession.Atc => "ATC",
+        VnSession.Plo => "PLO",
+        VnSession.Lunch => L["Trading_Tcbs_SessionLunch"],
+        _ => L["Trading_Tcbs_SessionClosed"],
+    };
     private TcbsQuote? _quote;
     private TcbsBuyingPower? _power;
     private TcbsOrderPreview? _preview;
@@ -164,7 +174,7 @@
         {
             if (!VnMarketRules.OnTick(_exchange, _price))
             {
-                _error = $"Giá phải khớp bước {_tick:0.###}.";
+                _error = L["Trading_Tcbs_TickError", _tick.ToString("0.###")];
                 return;
             }
             var floor = _quote?.FloorPrice ?? 0;
@@ -175,7 +185,7 @@
             }
             if (_quote is not null && (_price < floor || _price > ceil))
             {
-                _error = $"Giá phải trong sàn {floor:N2} – trần {ceil:N2}.";
+                _error = L["Trading_Tcbs_BandError", floor.ToString("N2"), ceil.ToString("N2")];
                 return;
             }
         }
@@ -195,7 +205,7 @@
             refPrice = _quote?.RefPrice,
         });
         _busy = false;
-        if (_preview is null) _error = "Không tạo được bản xem lại.";
+        if (_preview is null) _error = L["Trading_Tcbs_PreviewFail"];
     }
 
     private async Task Place()
@@ -214,7 +224,7 @@
             });
             _busy = false;
             if (!amended.Ok) { _error = amended.Error; return; }
-            _info = $"Đã gửi sửa lệnh {AmendOrderId}.";
+            _info = L["Trading_Tcbs_Amended", AmendOrderId];
             _preview = null;
             return;
         }
@@ -231,9 +241,9 @@
         }, Guid.NewGuid().ToString("N"));
         _busy = false;
         if (!call.Ok) { _error = call.Error; return; }
-        var note = $"Lệnh TCBS {_preview.ExecType} {_preview.Symbol} {_preview.Quantity} @ {_preview.PriceVnd}.";
+        var note = L["Trading_Tcbs_PlacedNote", _preview.ExecType, _preview.Symbol, _preview.Quantity, _preview.PriceVnd].Value;
         await Store.AddNoteAsync(_preview.Symbol, new BrokerNote { Kind = BrokerNoteKind.Self, Text = note });
-        _info = note + " Đã ghi vào note của mã nếu mã có trong danh mục.";
+        _info = note;
         _preview = null;
     }
 }

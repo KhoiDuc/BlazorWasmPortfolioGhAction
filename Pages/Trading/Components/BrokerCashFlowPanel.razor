@@ -10,8 +10,8 @@
 @if (_tcbsCash is not null || _tcbsRows.Count > 0)
 {
     <div class="ts-panel broker-cashflow-panel">
-        <h2 class="ts-panel-title">Sao kê TCBS</h2>
-        <p>Số dư tiền mặt: @BrokerFormat.Vnd(_tcbsCash?.CashBalance) · đầu ngày @BrokerFormat.Vnd(_tcbsCash?.BodBalance)</p>
+        <h2 class="ts-panel-title">@L["Trading_BrokerCash_Statement"]</h2>
+        <p>@L["Trading_BrokerCash_BalanceLine", BrokerFormat.Vnd(_tcbsCash?.CashBalance), BrokerFormat.Vnd(_tcbsCash?.BodBalance)]</p>
         @foreach (var row in _tcbsRows.Take(8))
         {
             <div>@(row.Date == DateTime.MinValue ? "—" : row.Date.ToString("dd/MM")) @row.Name @BrokerFormat.Vnd(row.Debit - row.Credit)</div>
@@ -23,35 +23,35 @@
 {
     <div class="ts-panel broker-cashflow-panel">
         <div class="broker-cashflow-head">
-            <h2 class="ts-panel-title">Dòng tiền</h2>
+            <h2 class="ts-panel-title">@L["Trading_BrokerCash_Title"]</h2>
             <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="ToggleExpand">
-                @(_expanded ? "Thu gọn" : "Mở rộng")
+                @(_expanded ? L["Trading_BrokerPnl_Collapse"] : L["Trading_BrokerPnl_Expand"])
             </button>
         </div>
 
         <div class="broker-cashflow-stats">
             <div class="broker-stat-card">
-                <span class="broker-stat-card-label">Tổng đầu tư</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerCash_Invested"]</span>
                 <span class="broker-stat-card-value">@BrokerFormat.VndPlain(report.TotalInvested)</span>
             </div>
             <div class="broker-stat-card">
-                <span class="broker-stat-card-label">Tổng thu về</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerCash_Received"]</span>
                 <span class="broker-stat-card-value">@BrokerFormat.VndPlain(report.TotalReceived)</span>
             </div>
             <div class="broker-stat-card">
-                <span class="broker-stat-card-label">Phí giao dịch</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerCash_Fee"]</span>
                 <span class="broker-stat-card-value">@BrokerFormat.VndPlain(report.TotalFees)</span>
             </div>
             <div class="broker-stat-card">
-                <span class="broker-stat-card-label">Thuế</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerCash_Tax"]</span>
                 <span class="broker-stat-card-value">@BrokerFormat.VndPlain(report.TotalTaxes)</span>
             </div>
             <div class="broker-stat-card">
-                <span class="broker-stat-card-label">Cổ tức</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerCash_Dividend"]</span>
                 <span class="broker-stat-card-value ts-positive">@BrokerFormat.VndPlain(report.TotalDividends)</span>
             </div>
             <div class="broker-stat-card broker-stat-card-primary @(report.NetCashFlow >= 0 ? "positive" : "negative")">
-                <span class="broker-stat-card-label">Dòng tiền ròng</span>
+                <span class="broker-stat-card-label">@L["Trading_BrokerCash_Net"]</span>
                 <span class="broker-stat-card-value">@BrokerFormat.Vnd(report.NetCashFlow)</span>
             </div>
         </div>
@@ -61,14 +61,14 @@
         }
         @if (calendar.Count > 0)
         {
-            <h3 class="ts-panel-title">Lịch về tiền và cổ phiếu</h3>
+            <h3 class="ts-panel-title">@L["Trading_BrokerCash_Calendar"]</h3>
             <div class="broker-table-scroll">
                 <table class="ts-table broker-cashflow-table">
                     <thead>
                         <tr>
-                            <th>Ngày</th>
-                            <th class="broker-num">Tổng tiền</th>
-                            <th>Chi tiết</th>
+                            <th>@L["Trading_BrokerCash_Date"]</th>
+                            <th class="broker-num">@L["Trading_BrokerCash_DayTotal"]</th>
+                            <th>@L["Trading_BrokerCash_Detail"]</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -80,7 +80,7 @@
                                 <td>
                                     @foreach (var row in day.Rows)
                                     {
-                                        <div>@row.Symbol · @row.Kind · @BrokerFormat.Vnd(row.Amount) @row.Note</div>
+                                        <div>@row.Symbol · @CalendarKind(row.Kind) · @BrokerFormat.Vnd(row.Amount) @row.Note</div>
                                     }
                                 </td>
                             </tr>
@@ -93,9 +93,9 @@
         @if (_expanded)
         {
             <div class="broker-cashflow-filter">
-                <label class="broker-dt-label" for="cashflow-month">Lọc theo tháng</label>
+                <label class="broker-dt-label" for="cashflow-month">@L["Trading_BrokerCash_Month"]</label>
                 <select id="cashflow-month" class="ts-select" @bind="_monthFilter">
-                    <option value="">Tất cả</option>
+                    <option value="">@L["Trading_Filter_All"]</option>
                     @foreach (var m in AvailableMonths)
                     {
                         <option value="@m">@m</option>
@@ -107,11 +107,11 @@
                 <table class="ts-table broker-cashflow-table">
                     <thead>
                         <tr>
-                            <th><span class="broker-dt-th-inner">Ngày</span></th>
-                            <th><span class="broker-dt-th-inner">Mã</span></th>
-                            <th><span class="broker-dt-th-inner">Loại</span></th>
-                            <th><span class="broker-dt-th-inner">Số tiền</span></th>
-                            <th><span class="broker-dt-th-inner">Ghi chú</span></th>
+                            <th><span class="broker-dt-th-inner">@L["Trading_BrokerCash_Date"]</span></th>
+                            <th><span class="broker-dt-th-inner">@L["Trading_BrokerCash_Symbol"]</span></th>
+                            <th><span class="broker-dt-th-inner">@L["Trading_BrokerCash_Kind"]</span></th>
+                            <th><span class="broker-dt-th-inner">@L["Trading_BrokerCash_Amount"]</span></th>
+                            <th><span class="broker-dt-th-inner">@L["Trading_BrokerNote"]</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -175,13 +175,21 @@
 
     private void ToggleExpand() => _expanded = !_expanded;
 
-    private static string KindLabel(CashFlowKind kind) => kind switch
+    private string CalendarKind(string kind) => kind switch
     {
-        CashFlowKind.Buy => "Mua",
-        CashFlowKind.Sell => "Bán",
-        CashFlowKind.Fee => "Phí",
-        CashFlowKind.Tax => "Thuế",
-        CashFlowKind.Dividend => "Cổ tức",
+        "Hàng về" => L["Trading_BrokerCash_SettleShares"],
+        "Tiền bán về" => L["Trading_BrokerCash_SettleCash"],
+        "Cổ tức" => L["Trading_BrokerDetail_TlDividend"],
+        _ => kind
+    };
+
+    private string KindLabel(CashFlowKind kind) => kind switch
+    {
+        CashFlowKind.Buy => L["Trading_BrokerDetail_TlBuy"],
+        CashFlowKind.Sell => L["Trading_BrokerDetail_TlSell"],
+        CashFlowKind.Fee => L["Trading_BrokerDetail_TlFee"],
+        CashFlowKind.Tax => L["Trading_BrokerDetail_TlTax"],
+        CashFlowKind.Dividend => L["Trading_BrokerDetail_TlDividend"],
         _ => kind.ToString()
     };
 }

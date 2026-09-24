@@ -1,11 +1,12 @@
 @inject ITcbsApiClient Tcbs
+@inject IStringLocalizer<SharedResources> L
 
 <section class="ts-panel tcbs-panel">
     <div class="tcbs-head">
-        <h2 class="ts-panel-title">Kết nối TCBS</h2>
-        <span class="tcbs-pill @(_status?.Connected == true ? "on" : "")">@(_status?.Connected == true ? "Đã nối" : "Chưa nối")</span>
+        <h2 class="ts-panel-title">@L["Trading_Tcbs_ConnectTitle"]</h2>
+        <span class="tcbs-pill @(_status?.Connected == true ? "on" : "")">@(_status?.Connected == true ? L["Trading_Tcbs_On"] : L["Trading_Tcbs_Off"])</span>
     </div>
-    <p class="ts-muted">API key và iOTP chỉ gửi lên broker-api để đổi JWT. Trình duyệt không lưu key. Chỉ chứng khoán cơ sở, không phái sinh.</p>
+    <p class="ts-muted">@L["Trading_Tcbs_Lead"]</p>
 
     @if (!string.IsNullOrEmpty(_error))
     {
@@ -13,23 +14,23 @@
     }
     @if (_status?.NeedsReauth == true)
     {
-        <div class="ts-alert ts-alert-info" role="status">Phiên TCBS hết hạn. Nhập lại iOTP.</div>
+        <div class="ts-alert ts-alert-info" role="status">@L["Trading_Tcbs_Reauth"]</div>
     }
 
     @if (_status?.Connected == true)
     {
-        <p>Tiểu khoản <strong>@_status.AccountNo</strong> · lưu ký @_status.CustodyCode</p>
+        <p>@L["Trading_Tcbs_AccountLine", _status.AccountNo, _status.CustodyCode]</p>
         <label class="tcbs-check">
             <input type="checkbox" checked="@_status.ReadOnly" @onchange="ToggleReadOnly" disabled="@_busy" />
-            Chế độ chỉ đọc (bật thì không gửi lệnh)
+            @L["Trading_Tcbs_ReadOnly"]
         </label>
-        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="Disconnect" disabled="@_busy">Ngắt TCBS</button>
+        <button type="button" class="ts-btn ts-btn-outline ts-btn-sm" @onclick="Disconnect" disabled="@_busy">@L["Trading_Tcbs_Disconnect"]</button>
     }
     else
     {
         <div class="broker-form-row broker-form-row-2">
             <div class="broker-field">
-                <label class="broker-field-label" for="tcbs-key">API key TCInvest</label>
+                <label class="broker-field-label" for="tcbs-key">@L["Trading_Tcbs_ApiKey"]</label>
                 <input id="tcbs-key" class="ts-input" type="password" autocomplete="off" @bind="_apiKey" />
             </div>
             <div class="broker-field">
@@ -38,10 +39,10 @@
             </div>
         </div>
         <div class="broker-field">
-            <label class="broker-field-label" for="tcbs-custody">Số lưu ký <span class="broker-optional">(nếu JWT không có)</span></label>
+            <label class="broker-field-label" for="tcbs-custody">@L["Trading_Tcbs_Custody"] <span class="broker-optional">@L["Trading_Tcbs_CustodyHint"]</span></label>
             <input id="tcbs-custody" class="ts-input" @bind="_custody" placeholder="105C..." />
         </div>
-        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="Connect" disabled="@_busy">@(_busy ? "Đang nối…" : "Kết nối")</button>
+        <button type="button" class="ts-btn ts-btn-primary ts-btn-sm" @onclick="Connect" disabled="@_busy">@(_busy ? L["Trading_Tcbs_Connecting"] : L["Trading_Tcbs_Connect"])</button>
     }
 </section>
 
@@ -70,7 +71,7 @@
         _busy = false;
         if (!call.Ok)
         {
-            _error = call.Error ?? "Không kết nối được TCBS.";
+            _error = call.Error ?? L["Trading_Tcbs_ConnectFail"];
             return;
         }
         _apiKey = "";
