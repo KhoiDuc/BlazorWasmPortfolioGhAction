@@ -3,6 +3,7 @@ using Bogus;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
+using Microsoft.Extensions.Logging;
 using OneOf.Types;
 using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
@@ -87,10 +88,12 @@ namespace BlazorWasmPortfolioGhAction.Store.Services
     public class GitHubService : IGitHubGraphQLQueryService
     {
         private readonly IGraphQLClient _graphQlClient;
+        private readonly ILogger<GitHubService> _logger;
 
-        public GitHubService(IGraphQLClient graphQlClient)
+        public GitHubService(IGraphQLClient graphQlClient, ILogger<GitHubService> logger)
         {
             _graphQlClient = graphQlClient;
+            _logger = logger;
         }
 
         public async Task<Result<List<GitHubUser>>> SearchUsersAsync(string searchText, string accessToken)
@@ -123,6 +126,7 @@ namespace BlazorWasmPortfolioGhAction.Store.Services
             }
             catch (GraphQLHttpRequestException ex)
             {
+                _logger.LogError(ex, "GitHub user search failed");
                 return Result<List<GitHubUser>>.Failure("Failed to search users: " + ex.Message);
             }
         }
@@ -160,6 +164,7 @@ namespace BlazorWasmPortfolioGhAction.Store.Services
             }
             catch (GraphQLHttpRequestException ex)
             {
+                _logger.LogError(ex, "GitHub user lookup failed for {Login}", login);
                 return Result<GitHubUserDetail>.Failure("Failed to fetch user details: " + ex.Message);
             }
         }
@@ -210,6 +215,7 @@ namespace BlazorWasmPortfolioGhAction.Store.Services
             }
             catch (GraphQLHttpRequestException ex)
             {
+                _logger.LogError(ex, "GitHub repository lookup failed for {Login}", login);
                 return Result<GitHubRepositoryConnection>.Failure("Failed to fetch repositories: " + ex.Message);
             }
         }
@@ -236,6 +242,7 @@ namespace BlazorWasmPortfolioGhAction.Store.Services
             }
             catch (GraphQLHttpRequestException ex)
             {
+                _logger.LogError(ex, "GitHub rate limit lookup failed");
                 return Result<GitHubRateLimit>.Failure("Failed to fetch rate limit: " + ex.Message);
             }
         }

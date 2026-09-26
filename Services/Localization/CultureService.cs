@@ -1,4 +1,5 @@
 using System.Globalization;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 
 namespace BlazorWasmPortfolioGhAction.Services.Localization;
@@ -10,9 +11,14 @@ public sealed class CultureService : ICultureService
     public const string DefaultUrlLang = "vn";
 
     private readonly IJSRuntime _js;
+    private readonly ILogger<CultureService> _logger;
     private CultureInfo _current = new(DefaultCultureName);
 
-    public CultureService(IJSRuntime js) => _js = js;
+    public CultureService(IJSRuntime js, ILogger<CultureService> logger)
+    {
+        _js = js;
+        _logger = logger;
+    }
 
     public CultureInfo Current => _current;
     public string UrlLang => IsEnglish ? "en" : "vn";
@@ -37,9 +43,9 @@ public sealed class CultureService : ICultureService
         {
             saved = await _js.InvokeAsync<string?>("cultureManager.get");
         }
-        catch
+        catch (Exception ex)
         {
-            // JS not ready; keep current
+            _logger.LogDebug(ex, "Saved culture was not readable; keeping the current culture");
         }
 
         if (!string.IsNullOrEmpty(saved))
@@ -71,8 +77,9 @@ public sealed class CultureService : ICultureService
         {
             culture = CultureInfo.GetCultureInfo(cultureName);
         }
-        catch (CultureNotFoundException)
+        catch (CultureNotFoundException ex)
         {
+            _logger.LogWarning(ex, "Culture {Culture} is not available; using {Fallback}", cultureName, DefaultCultureName);
             culture = CultureInfo.GetCultureInfo(DefaultCultureName);
         }
 
@@ -95,9 +102,9 @@ public sealed class CultureService : ICultureService
         {
             await _js.InvokeVoidAsync("cultureManager.set", cultureName);
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore
+            _logger.LogWarning(ex, "Failed to persist culture {Culture}", cultureName);
         }
     }
 
@@ -107,9 +114,9 @@ public sealed class CultureService : ICultureService
         {
             await _js.InvokeVoidAsync("cultureManager.setDocumentLang", _current.TwoLetterISOLanguageName);
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore
+            _logger.LogDebug(ex, "Failed to set document language");
         }
     }
 

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using BlazorWasmPortfolioGhAction.Models.Trading;
 using BlazorWasmPortfolioGhAction.Services.Trading.Broker;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading;
@@ -24,6 +25,7 @@ public class PriceAlertService : IPriceAlertService
 {
     private readonly IJSRuntime _js;
     private readonly IBrokerApiClient _api;
+    private readonly ILogger<PriceAlertService> _logger;
     private List<PriceAlert> _cache = [];
     private bool _loaded;
     private readonly Dictionary<string, double> _prices = new(StringComparer.OrdinalIgnoreCase);
@@ -35,10 +37,11 @@ public class PriceAlertService : IPriceAlertService
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
 
-    public PriceAlertService(IJSRuntime js, IBrokerApiClient api)
+    public PriceAlertService(IJSRuntime js, IBrokerApiClient api, ILogger<PriceAlertService> logger)
     {
         _js = js;
         _api = api;
+        _logger = logger;
     }
 
     public bool IsDiscordConfigured => true;
@@ -122,7 +125,11 @@ public class PriceAlertService : IPriceAlertService
     {
         string? json;
         try { json = await _js.InvokeAsync<string>("localStorage.getItem", StorageKey); }
-        catch { return; }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Local price-alert storage was not readable");
+            return;
+        }
         if (string.IsNullOrWhiteSpace(json)) return;
         var local = JsonSerializer.Deserialize<List<PriceAlert>>(json, JsonOpts) ?? [];
         foreach (var alert in local.Where(a => a.Status == AlertStatus.Active && a.Threshold > 0))
@@ -138,7 +145,10 @@ public class PriceAlertService : IPriceAlertService
             await _api.SendTextAsync(HttpMethod.Post, "/api/alerts", body, "application/json");
         }
         try { await _js.InvokeVoidAsync("localStorage.removeItem", StorageKey); }
-        catch { /* already copied */ }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Migrated price alerts but could not clear local storage");
+        }
     }
 
     private static PriceAlert Map(ServerAlert row) => new()

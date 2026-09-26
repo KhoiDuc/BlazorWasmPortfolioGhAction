@@ -116,6 +116,9 @@
             1.0f, 0.0f, 1.0f, 1.0f,
     };
 
+    private WebGLContext Gl => _gl ?? throw new InvalidOperationException("WebGL context is not ready.");
+    private ProgramInfo ShaderProgram => _programInfo ?? throw new InvalidOperationException("WebGL program is not ready.");
+
     private bool _isDragging = false;
     private bool _isRightDragging = false;
     
@@ -125,10 +128,12 @@
     {
         if (firstRender)
         {
+            if (_canvasReference is null) return;
             _gl = await _canvasReference.CreateWebGLAsync();
+            if (_gl is null) return;
             _programInfo = new ProgramInfo();
 
-            await _gl.ClearColorAsync(0.8f, 0.8f, 0.8f, 1.0f);
+            await Gl.ClearColorAsync(0.8f, 0.8f, 0.8f, 1.0f);
 
 
             await InitializeShadersAsync();
@@ -159,43 +164,43 @@
       gl_FragColor = vColor;
     }");
 
-        _programInfo.Program = await CreateProgramAsync(vertexShader, fragmentShader);
+        ShaderProgram.Program = await CreateProgramAsync(vertexShader, fragmentShader);
 
-        _programInfo.AttribLocations.VertexPosition = await _gl.GetAttribLocationAsync(_programInfo.Program, "aVertexPosition");
-        _programInfo.AttribLocations.VertexColor = await _gl.GetAttribLocationAsync(_programInfo.Program, "aVertexColor");
+        ShaderProgram.AttribLocations.VertexPosition = await Gl.GetAttribLocationAsync(ShaderProgram.Program, "aVertexPosition");
+        ShaderProgram.AttribLocations.VertexColor = await Gl.GetAttribLocationAsync(ShaderProgram.Program, "aVertexColor");
 
-        _programInfo.UniformLocations.ModelViewMatrix = await _gl.GetUniformLocationAsync(_programInfo.Program, "uModelViewMatrix");
-        _programInfo.UniformLocations.ProjectionMatrix = await _gl.GetUniformLocationAsync(_programInfo.Program, "uProjectionMatrix");
+        ShaderProgram.UniformLocations.ModelViewMatrix = await Gl.GetUniformLocationAsync(ShaderProgram.Program, "uModelViewMatrix");
+        ShaderProgram.UniformLocations.ProjectionMatrix = await Gl.GetUniformLocationAsync(ShaderProgram.Program, "uProjectionMatrix");
     }
 
     private async Task InitializeBuffersAsync()
     {
-        _buffers.Position = await _gl.CreateBufferAsync();
-        await _gl.BindBufferAsync(BufferType.ARRAY_BUFFER, _buffers.Position);
-        await _gl.BufferDataAsync(BufferType.ARRAY_BUFFER, _positions, BufferUsageHint.STATIC_DRAW);
+        _buffers.Position = await Gl.CreateBufferAsync();
+        await Gl.BindBufferAsync(BufferType.ARRAY_BUFFER, _buffers.Position);
+        await Gl.BufferDataAsync(BufferType.ARRAY_BUFFER, _positions, BufferUsageHint.STATIC_DRAW);
 
-        _buffers.Indices = await _gl.CreateBufferAsync();
-        await _gl.BindBufferAsync(BufferType.ELEMENT_ARRAY_BUFFER, _buffers.Indices);
-        await _gl.BufferDataAsync(BufferType.ELEMENT_ARRAY_BUFFER, _indices, BufferUsageHint.STATIC_DRAW);
+        _buffers.Indices = await Gl.CreateBufferAsync();
+        await Gl.BindBufferAsync(BufferType.ELEMENT_ARRAY_BUFFER, _buffers.Indices);
+        await Gl.BufferDataAsync(BufferType.ELEMENT_ARRAY_BUFFER, _indices, BufferUsageHint.STATIC_DRAW);
 
-        _buffers.Color = await _gl.CreateBufferAsync();
-        await _gl.BindBufferAsync(BufferType.ARRAY_BUFFER, _buffers.Color);
-        await _gl.BufferDataAsync(BufferType.ARRAY_BUFFER, _colors, BufferUsageHint.STATIC_DRAW);
+        _buffers.Color = await Gl.CreateBufferAsync();
+        await Gl.BindBufferAsync(BufferType.ARRAY_BUFFER, _buffers.Color);
+        await Gl.BufferDataAsync(BufferType.ARRAY_BUFFER, _colors, BufferUsageHint.STATIC_DRAW);
     }
 
     public async Task DrawSceneAsync(float cubeRotation = 0.5f)
     {
-        await _gl.BeginBatchAsync(); // begin the explicit batch
+        await Gl.BeginBatchAsync(); // begin the explicit batch
 
-        await _gl.ClearColorAsync(0f, 0f, 0f, 1f); // Clear to black
-        await _gl.ClearDepthAsync(1f);            // Clear everything
-        await _gl.EnableAsync(EnableCap.DEPTH_TEST);
-        await _gl.DepthFuncAsync(CompareFunction.LEQUAL);
-        await _gl.ClearAsync(BufferBits.COLOR_BUFFER_BIT | BufferBits.DEPTH_BUFFER_BIT);
+        await Gl.ClearColorAsync(0f, 0f, 0f, 1f); // Clear to black
+        await Gl.ClearDepthAsync(1f);            // Clear everything
+        await Gl.EnableAsync(EnableCap.DEPTH_TEST);
+        await Gl.DepthFuncAsync(CompareFunction.LEQUAL);
+        await Gl.ClearAsync(BufferBits.COLOR_BUFFER_BIT | BufferBits.DEPTH_BUFFER_BIT);
 
         // // Perspective matrix
         // float fieldOfView = (float)(45 * Math.PI / 180);
-        // float aspect = _gl.DrawingBufferWidth / (float)_gl.DrawingBufferHeight;
+        // float aspect = Gl.DrawingBufferWidth / (float)Gl.DrawingBufferHeight;
         float zNear = 0.1f;
         float zFar = 100.0f;
         // Matrix4x4 projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fieldOfView, aspect, zNear, zFar);
@@ -216,10 +221,10 @@
         await SetColorAttributeAsync();
 
         // Bind indices buffer
-        await _gl.BindBufferAsync(BufferType.ELEMENT_ARRAY_BUFFER, _buffers.Indices);
+        await Gl.BindBufferAsync(BufferType.ELEMENT_ARRAY_BUFFER, _buffers.Indices);
 
         // Use program
-        await _gl.UseProgramAsync(_programInfo.Program);
+        await Gl.UseProgramAsync(ShaderProgram.Program);
 
         // Set uniforms
         float[] fProjMatrix = new float[]
@@ -238,13 +243,13 @@
             modelViewMatrix.M41, modelViewMatrix.M42, modelViewMatrix.M43, modelViewMatrix.M44
         };
 
-        await _gl.UniformMatrixAsync(_programInfo.UniformLocations.ProjectionMatrix, false, fProjMatrix);
-        await _gl.UniformMatrixAsync(_programInfo.UniformLocations.ModelViewMatrix, false, fmodelViewMatrix);
+        await Gl.UniformMatrixAsync(ShaderProgram.UniformLocations.ProjectionMatrix, false, fProjMatrix);
+        await Gl.UniformMatrixAsync(ShaderProgram.UniformLocations.ModelViewMatrix, false, fmodelViewMatrix);
 
         // Draw elements
-        await _gl.DrawElementsAsync(Primitive.TRIANGLES, 36, DataType.UNSIGNED_SHORT, 0);
+        await Gl.DrawElementsAsync(Primitive.TRIANGLES, 36, DataType.UNSIGNED_SHORT, 0);
 
-        await _gl.EndBatchAsync(); // execute all currently batched calls
+        await Gl.EndBatchAsync(); // execute all currently batched calls
     }
 
     private async Task SetPositionAttributeAsync()
@@ -254,9 +259,9 @@
         int stride = 0;
         int offset = 0;
 
-        await _gl.BindBufferAsync(BufferType.ARRAY_BUFFER, _buffers.Position);
-        await _gl.VertexAttribPointerAsync((uint)_programInfo.AttribLocations.VertexPosition, numComponents, DataType.FLOAT, normalize, stride, offset);
-        await _gl.EnableVertexAttribArrayAsync((uint)_programInfo.AttribLocations.VertexPosition);
+        await Gl.BindBufferAsync(BufferType.ARRAY_BUFFER, _buffers.Position);
+        await Gl.VertexAttribPointerAsync((uint)ShaderProgram.AttribLocations.VertexPosition, numComponents, DataType.FLOAT, normalize, stride, offset);
+        await Gl.EnableVertexAttribArrayAsync((uint)ShaderProgram.AttribLocations.VertexPosition);
     }
 
     private async Task SetColorAttributeAsync()
@@ -266,21 +271,21 @@
         int stride = 0;
         int offset = 0;
 
-        await _gl.BindBufferAsync(BufferType.ARRAY_BUFFER, _buffers.Color);
-        await _gl.VertexAttribPointerAsync((uint)_programInfo.AttribLocations.VertexColor, numComponents, DataType.FLOAT, normalize, stride, offset);
-        await _gl.EnableVertexAttribArrayAsync((uint)_programInfo.AttribLocations.VertexColor);
+        await Gl.BindBufferAsync(BufferType.ARRAY_BUFFER, _buffers.Color);
+        await Gl.VertexAttribPointerAsync((uint)ShaderProgram.AttribLocations.VertexColor, numComponents, DataType.FLOAT, normalize, stride, offset);
+        await Gl.EnableVertexAttribArrayAsync((uint)ShaderProgram.AttribLocations.VertexColor);
     }         
 
     private async Task<WebGLShader> CreateShaderAsync(ShaderType type, string source)
     {
-        var shader = await _gl.CreateShaderAsync(type);
-        await _gl.ShaderSourceAsync(shader, source);
-        await _gl.CompileShaderAsync(shader);
+        var shader = await Gl.CreateShaderAsync(type);
+        await Gl.ShaderSourceAsync(shader, source);
+        await Gl.CompileShaderAsync(shader);
 
-        var success = await _gl.GetShaderParameterAsync<bool>(shader, ShaderParameter.COMPILE_STATUS);
+        var success = await Gl.GetShaderParameterAsync<bool>(shader, ShaderParameter.COMPILE_STATUS);
         if (!success)
         {
-            var info = await _gl.GetShaderInfoLogAsync(shader);
+            var info = await Gl.GetShaderInfoLogAsync(shader);
             throw new Exception($"Shader compilation failed: {info}");
         }
 
@@ -289,15 +294,15 @@
 
     private async Task<WebGLProgram> CreateProgramAsync(WebGLShader vertexShader, WebGLShader fragmentShader)
     {
-        var program = await _gl.CreateProgramAsync();
-        await _gl.AttachShaderAsync(program, vertexShader);
-        await _gl.AttachShaderAsync(program, fragmentShader);
-        await _gl.LinkProgramAsync(program);
+        var program = await Gl.CreateProgramAsync();
+        await Gl.AttachShaderAsync(program, vertexShader);
+        await Gl.AttachShaderAsync(program, fragmentShader);
+        await Gl.LinkProgramAsync(program);
 
-        var success = await _gl.GetProgramParameterAsync<bool>(program, ProgramParameter.LINK_STATUS);
+        var success = await Gl.GetProgramParameterAsync<bool>(program, ProgramParameter.LINK_STATUS);
         if (!success)
         {
-            var info = await _gl.GetProgramInfoLogAsync(program);
+            var info = await Gl.GetProgramInfoLogAsync(program);
             throw new Exception($"Program linking failed: {info}");
         }
 

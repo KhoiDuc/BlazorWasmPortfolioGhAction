@@ -1,5 +1,6 @@
 ﻿using BlazorWasmPortfolioGhAction.Store.Services;
 using Fluxor;
+using Microsoft.Extensions.Logging;
 using static BlazorWasmPortfolioGhAction.Store.Actions.DissertationAction;
 
 namespace BlazorWasmPortfolioGhAction.Store.Effects
@@ -8,11 +9,13 @@ namespace BlazorWasmPortfolioGhAction.Store.Effects
     {
         private readonly HttpClient _http;
         private readonly IMobileDetectionService _mobileService;
+        private readonly ILogger<DissertationEffects> _logger;
 
-        public DissertationEffects(HttpClient http, IMobileDetectionService mobileService)
+        public DissertationEffects(HttpClient http, IMobileDetectionService mobileService, ILogger<DissertationEffects> logger)
         {
             _http = http;
             _mobileService = mobileService;
+            _logger = logger;
         }
 
         [EffectMethod]
@@ -50,13 +53,15 @@ namespace BlazorWasmPortfolioGhAction.Store.Effects
                     var response = await _http.GetAsync(path);
                     dispatcher.Dispatch(new FileExistsResultAction(response.IsSuccessStatusCode));
                 }
-                catch
+                catch (Exception ex)
                 {
+                    _logger.LogWarning(ex, "Document existence check failed for {Path}", path);
                     dispatcher.Dispatch(new FileExistsResultAction(false));
                 }
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to load document {File}", action.File);
                 dispatcher.Dispatch(new FileErrorAction($"Error loading document: {ex.Message}"));
             }
         }
@@ -69,8 +74,9 @@ namespace BlazorWasmPortfolioGhAction.Store.Effects
                 var response = await _http.GetAsync(action.FilePath);
                 dispatcher.Dispatch(new FileExistsResultAction(response.IsSuccessStatusCode));
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogWarning(ex, "Document existence check failed for {Path}", action.FilePath);
                 dispatcher.Dispatch(new FileExistsResultAction(false));
             }
         }

@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Blazored.LocalStorage;
 using BlazorWasmPortfolioGhAction.Services.Trading.Broker;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmPortfolioGhAction.Services.Auth;
 
@@ -14,12 +15,18 @@ public sealed class CustomAuthStateProvider : AuthenticationStateProvider
     private readonly ILocalStorageService _localStorage;
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
+    private readonly ILogger<CustomAuthStateProvider> _logger;
 
-    public CustomAuthStateProvider(ILocalStorageService localStorage, HttpClient http, IConfiguration config)
+    public CustomAuthStateProvider(
+        ILocalStorageService localStorage,
+        HttpClient http,
+        IConfiguration config,
+        ILogger<CustomAuthStateProvider> logger)
     {
         _localStorage = localStorage;
         _http = http;
         _config = config;
+        _logger = logger;
     }
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -70,6 +77,7 @@ public sealed class CustomAuthStateProvider : AuthenticationStateProvider
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Portfolio login failed for {Username}", username.Trim());
             return (false, ex.Message);
         }
     }

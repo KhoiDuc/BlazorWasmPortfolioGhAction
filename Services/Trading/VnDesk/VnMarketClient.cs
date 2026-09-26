@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using BlazorWasmPortfolioGhAction.Extensions;
 using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk;
 using BlazorWasmPortfolioGhAction.Services.Trading.Tcbs;
+using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk;
 
@@ -28,6 +29,7 @@ public sealed class VnMarketClient : IVnMarketClient
     private readonly TradingEndpointResolver _endpoints;
     private readonly VnDeskOptions _options;
     private readonly ITcbsApiClient _tcbs;
+    private readonly ILogger<VnMarketClient> _logger;
     private readonly ConcurrentDictionary<string, List<StockData>> _cache = new();
     public string? LastError { get; private set; }
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
@@ -36,11 +38,13 @@ public sealed class VnMarketClient : IVnMarketClient
         IHttpClientFactory factory,
         TradingEndpointResolver endpoints,
         VnDeskOptions options,
-        ITcbsApiClient tcbs)
+        ITcbsApiClient tcbs,
+        ILogger<VnMarketClient> logger)
     {
         _endpoints = endpoints;
         _options = options;
         _tcbs = tcbs;
+        _logger = logger;
         _vndHttp = factory.CreateClient(TradingServiceExtensions.VnMarketClientName);
         _cafefHttp = factory.CreateClient(TradingServiceExtensions.VnCafeFClientName);
     }
@@ -57,6 +61,7 @@ public sealed class VnMarketClient : IVnMarketClient
         }
         catch (Exception ex)
         {
+            _logger.LogWarning(ex, "CafeF index fetch failed; trying fallback URL");
             LastError = ex.Message;
             try
             {
@@ -65,6 +70,7 @@ public sealed class VnMarketClient : IVnMarketClient
             }
             catch (Exception inner)
             {
+                _logger.LogError(inner, "CafeF index fallback failed");
                 LastError = inner.Message;
                 return [];
             }
@@ -82,6 +88,7 @@ public sealed class VnMarketClient : IVnMarketClient
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "CafeF symbol list fetch failed");
             LastError = ex.Message;
             return [];
         }
@@ -124,6 +131,7 @@ public sealed class VnMarketClient : IVnMarketClient
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Historical prices failed for {Symbol} {Timeframe}", symbol, timeframe);
             LastError = ex.Message;
             return FallbackCache(cacheKey, sessions);
         }
@@ -185,6 +193,7 @@ public sealed class VnMarketClient : IVnMarketClient
         }
         catch (Exception ex)
         {
+            _logger.LogWarning(ex, "TCBS quote fallback failed");
             LastError = ex.Message;
             return [];
         }
@@ -227,6 +236,7 @@ public sealed class VnMarketClient : IVnMarketClient
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Index history failed for {Index}", indexCode);
             LastError = ex.Message;
             return FallbackCache(cacheKey, sessions);
         }
@@ -253,8 +263,8 @@ public sealed class VnMarketClient : IVnMarketClient
         }
         catch (Exception ex)
         {
+            _logger.LogWarning(ex, "TCBS matches failed for {Symbol}; trying bar endpoint", symbol);
             LastError = ex.Message;
-            /* fall through to the public TCBS bar endpoint */
         }
 
         try
@@ -282,6 +292,7 @@ public sealed class VnMarketClient : IVnMarketClient
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Intraday bars failed for {Symbol}", symbol);
             LastError = ex.Message;
             return [];
         }

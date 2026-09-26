@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.Extensions.Logging;
 using ZXing;
 using ZXing.Common;
 using ZXing.PDF417.Internal;
@@ -44,6 +45,10 @@ public sealed class BarcodeDecodeHit
 
 public sealed class BarcodeZxingService
 {
+    private readonly ILogger<BarcodeZxingService> _logger;
+
+    public BarcodeZxingService(ILogger<BarcodeZxingService> logger) => _logger = logger;
+
     private static readonly BarcodeFormat[] Formats =
     [
         BarcodeFormat.AZTEC,
@@ -96,6 +101,7 @@ public sealed class BarcodeZxingService
         }
         catch (Exception ex)
         {
+            _logger.LogDebug(ex, "Barcode generation rejected content for {Format}", options.Format);
             return new BarcodeGenerateResult
             {
                 ErrorMessage = $"{ex.Message} Check that the content is valid for the selected format."

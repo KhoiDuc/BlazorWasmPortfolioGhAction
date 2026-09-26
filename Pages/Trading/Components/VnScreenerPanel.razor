@@ -7,6 +7,8 @@
 @inject WatchlistScorer Scorer
 @inject IVnDeskStore Store
 @inject IStringLocalizer<SharedResources> L
+@inject ILogger<VnScreenerPanel> Logger
+@using Microsoft.Extensions.Logging
 
 <div class="vd-panel">
     <div class="vd-subtabs">
@@ -130,7 +132,11 @@ else if (_sub == "watch" && _watchScores.Count > 0)
             }
             _screenResults = Screener.Scan(histAll);
         }
-        catch (Exception ex) { _error = ex.Message; }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Screener scan failed for {List}", _listKey);
+            _error = ex.Message;
+        }
         finally { _busy = false; _progress = 0; await InvokeAsync(StateHasChanged); }
     }
 
@@ -159,7 +165,11 @@ else if (_sub == "watch" && _watchScores.Count > 0)
             state.UpdatedAt = DateTime.Now;
             await Store.SaveWatchlistAsync(state);
         }
-        catch (Exception ex) { _error = ex.Message; }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Watchlist scoring failed");
+            _error = ex.Message;
+        }
         finally { _busy = false; await InvokeAsync(StateHasChanged); }
     }
 }

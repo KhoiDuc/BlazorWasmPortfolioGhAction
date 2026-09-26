@@ -124,12 +124,12 @@
     [Parameter] public bool matchTypeSectionsSubSections { get; set; }
     [Parameter] public bool matchTypeSections { get; set; }
     [Parameter] public bool matchType { get; set; }
-    [Parameter] public string type { get; set; }
-    [Parameter] public string sections { get; set; }
-    [Parameter] public string subSections { get; set; }
+    [Parameter] public string type { get; set; } = "";
+    [Parameter] public string sections { get; set; } = "";
+    [Parameter] public string subSections { get; set; } = "";
     [Parameter] public int count { get; set; }
     [Parameter] public int indexParsed { get; set; }
-    [Parameter] public string username { get; set; }
+    [Parameter] public string username { get; set; } = "";
 
     private ContentHolder? tempContent;
 
@@ -272,20 +272,21 @@
 
     private void ClearContent(int globalSectionNo)
     {
+        if (tempContent is null) return;
         tempContent.content = "";
         Dispatcher.Dispatch(new UpdateIsEditingAction(globalSectionNo, false));
     }
 
     private ContentHolder CloneContentHolder(ContentHolder original)
     {
-        return JsonConvert.DeserializeObject<ContentHolder>(JsonConvert.SerializeObject(original));
+        return JsonConvert.DeserializeObject<ContentHolder>(JsonConvert.SerializeObject(original)) ?? new ContentHolder();
     }
 
     private void Save(bool newSec)
     {
         Dispatcher.Dispatch(new ResetIsEditingAction());
 
-        if (!newSec)
+        if (!newSec && tempContent is not null)
         {
             Dispatcher.Dispatch(new SaveContentAction(username, indexParsed, tempContent));
 
@@ -293,7 +294,12 @@
             var updatedContent = currentState.Contents[indexParsed];
             var matchingSectionContents = currentState.Contents.Where(ch => ch.page == updatedContent.page && ch.section == updatedContent.section).ToList();
 
-            Dispatcher.Dispatch(new UpdateGitHubContentAction(matchingSectionContents, $"Content change made by: {username}", updatedContent.page, updatedContent.section, currentState.ShaDictionary));
+            Dispatcher.Dispatch(new UpdateGitHubContentAction(
+                matchingSectionContents,
+                $"Content change made by: {username}",
+                updatedContent.page ?? "",
+                updatedContent.section ?? "",
+                currentState.ShaDictionary));
         }
 
         tempContent = CloneContentHolder(contentState.Value.Contents![indexParsed]);

@@ -73,15 +73,9 @@
         catch { }
     }
 
-    protected virtual void Dispose(bool disposing)
+    public override void Dispose()
     {
-        if (disposing)
-            Navigation.LocationChanged -= OnLocationChanged;
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        Navigation.LocationChanged -= OnLocationChanged;
+        base.Dispose();
     }
 }

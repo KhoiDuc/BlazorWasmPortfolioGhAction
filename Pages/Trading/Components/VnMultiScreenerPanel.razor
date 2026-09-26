@@ -4,6 +4,8 @@
 @inject IndicatorService Indicators
 @inject VnScreenerService Screener
 @inject IStringLocalizer<SharedResources> L
+@inject ILogger<VnMultiScreenerPanel> Logger
+@using Microsoft.Extensions.Logging
 
 <div class="vd-panel">
     <div class="vd-section">
@@ -145,7 +147,11 @@ else if (!_busy && _scanned)
             }
             _scanned = true;
         }
-        catch (Exception ex) { _error = ex.Message; }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Multi-screener scan failed");
+            _error = ex.Message;
+        }
         finally { _busy = false; _progress = ""; await InvokeAsync(StateHasChanged); }
     }
 

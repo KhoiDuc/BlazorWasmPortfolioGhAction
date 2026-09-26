@@ -4,6 +4,8 @@
 @inject BacktestService BacktestSvc
 @inject VnDeskOptions Options
 @inject IStringLocalizer<SharedResources> L
+@inject ILogger<BacktestPanel> Logger
+@using Microsoft.Extensions.Logging
 
 <div class="vd-panel">
     <div class="vd-alert vd-alert-info" style="font-size:0.85rem">
@@ -169,7 +171,11 @@
             if (_result.TotalTrades == 0)
                 _error = L["Trading_Backtest_NoTrades"];
         }
-        catch (Exception ex) { _error = ex.Message; }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Backtest failed");
+            _error = ex.Message;
+        }
         finally { _busy = false; await InvokeAsync(StateHasChanged); }
     }
 }

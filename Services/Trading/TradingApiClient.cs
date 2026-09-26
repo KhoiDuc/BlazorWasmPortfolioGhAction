@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading;
 
@@ -17,14 +18,16 @@ public class TradingApiClient : ITradingApiClient
 {
     private readonly HttpClient _http;
     private readonly TradingEndpointResolver _endpoints;
+    private readonly ILogger<TradingApiClient> _logger;
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
 
     public string? LastError { get; private set; }
 
-    public TradingApiClient(HttpClient http, TradingEndpointResolver endpoints)
+    public TradingApiClient(HttpClient http, TradingEndpointResolver endpoints, ILogger<TradingApiClient> logger)
     {
         _http = http;
         _endpoints = endpoints;
+        _logger = logger;
     }
 
     public string ProxyUrl(string path) => _endpoints.ResolveProxyUrl(path);
@@ -56,6 +59,7 @@ public class TradingApiClient : ITradingApiClient
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Trading fetch failed for {Url}", absoluteUrl);
             LastError = ex.Message;
             return null;
         }

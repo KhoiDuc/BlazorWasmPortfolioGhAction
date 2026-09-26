@@ -7,6 +7,7 @@ using BlazorWasmPortfolioGhAction.Models.Trading.Broker;
 using BlazorWasmPortfolioGhAction.Services.Localization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
 
@@ -59,6 +60,7 @@ public sealed class BrokerApiClient : IBrokerApiClient
     private readonly IBrokerAuthService _auth;
     private readonly NavigationManager _navigation;
     private readonly ICultureService _culture;
+    private readonly ILogger<BrokerApiClient> _logger;
 
     public BrokerApiClient(
         HttpClient http,
@@ -66,7 +68,8 @@ public sealed class BrokerApiClient : IBrokerApiClient
         IStringLocalizer<SharedResources> L,
         IBrokerAuthService auth,
         NavigationManager navigation,
-        ICultureService culture)
+        ICultureService culture,
+        ILogger<BrokerApiClient> logger)
     {
         _http = http;
         _config = config;
@@ -74,6 +77,7 @@ public sealed class BrokerApiClient : IBrokerApiClient
         _auth = auth;
         _navigation = navigation;
         _culture = culture;
+        _logger = logger;
     }
 
     private string? BaseUrl => _config["BrokerApi:BaseUrl"]?.Trim().TrimEnd('/');
@@ -122,6 +126,7 @@ public sealed class BrokerApiClient : IBrokerApiClient
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Broker portfolio load failed");
             LastError = ex.Message;
             return null;
         }
@@ -153,6 +158,7 @@ public sealed class BrokerApiClient : IBrokerApiClient
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Broker request {Method} {Path} failed", method, path);
             return (false, null, ex.Message);
         }
     }
@@ -247,14 +253,17 @@ public sealed class BrokerApiClient : IBrokerApiClient
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
         {
+            _logger.LogError(ex, "Broker portfolio save timed out");
             return (false, _L["Trading_BrokerApi_Timeout", _http.Timeout.TotalSeconds, ex.Message].Value);
         }
         catch (HttpRequestException ex)
         {
+            _logger.LogError(ex, "Broker portfolio save failed");
             return (false, $"HttpRequestException: {ex.Message}");
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Broker portfolio save failed");
             return (false, $"{ex.GetType().Name}: {ex.Message}");
         }
     }
@@ -286,14 +295,17 @@ public sealed class BrokerApiClient : IBrokerApiClient
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
         {
+            _logger.LogError(ex, "Broker {Method} {Path} timed out", method, path);
             return (false, _L["Trading_BrokerApi_Timeout", _http.Timeout.TotalSeconds, ex.Message].Value);
         }
         catch (HttpRequestException ex)
         {
+            _logger.LogError(ex, "Broker {Method} {Path} failed", method, path);
             return (false, $"HttpRequestException: {ex.Message}");
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Broker {Method} {Path} failed", method, path);
             return (false, $"{ex.GetType().Name}: {ex.Message}");
         }
     }
@@ -321,14 +333,17 @@ public sealed class BrokerApiClient : IBrokerApiClient
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
         {
+            _logger.LogError(ex, "Broker {Method} {Path} timed out", method, path);
             return (false, _L["Trading_BrokerApi_Timeout", _http.Timeout.TotalSeconds, ex.Message].Value);
         }
         catch (HttpRequestException ex)
         {
+            _logger.LogError(ex, "Broker {Method} {Path} failed", method, path);
             return (false, $"HttpRequestException: {ex.Message}");
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Broker {Method} {Path} failed", method, path);
             return (false, $"{ex.GetType().Name}: {ex.Message}");
         }
     }

@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using BlazorWasmPortfolioGhAction.Resources;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
 
@@ -21,13 +22,20 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
     private readonly IConfiguration _config;
     private readonly IBrokerAuthService _auth;
     private readonly IStringLocalizer<SharedResources> _L;
+    private readonly ILogger<BrokerGeminiClient> _logger;
 
-    public BrokerGeminiClient(HttpClient http, IConfiguration config, IBrokerAuthService auth, IStringLocalizer<SharedResources> L)
+    public BrokerGeminiClient(
+        HttpClient http,
+        IConfiguration config,
+        IBrokerAuthService auth,
+        IStringLocalizer<SharedResources> L,
+        ILogger<BrokerGeminiClient> logger)
     {
         _http = http;
         _config = config;
         _auth = auth;
         _L = L;
+        _logger = logger;
     }
 
     public bool HasDirectKey => false;
@@ -58,6 +66,7 @@ public sealed class BrokerGeminiClient : IBrokerGeminiClient
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Gemini chat request failed");
             return new GeminiExplainResult(null, ex.Message);
         }
     }

@@ -42,23 +42,24 @@ By default `MockApi: true` returns fake GraphQL data for user search. For REST t
 
 1. Set `"MockApi": false` for GraphQL user search (optional).
 2. Add a GitHub Personal Access Token to `"DevOps:GitHubToken"`.
-3. Never commit tokens — use user secrets locally or GitHub Actions secrets in CI.
+3. Do not publish that token. `wwwroot/appsettings.json` is shipped to the browser, so a value committed there is visible to anyone who loads the site.
 
 ### Wiki CMS (GitHub commit)
 
-Fill the `Wiki` section with your repo owner/name. Editing requires `DevOps:GitHubToken` with `repo` scope.
+Fill the `Wiki` section with your repo owner/name. Saving edits calls the GitHub API from the browser and needs `DevOps:GitHubToken` with `repo` scope. Treat that token as public if it is in the published app.
 
 ### EmailJS
 
 Fill `EmailJs:ServiceId`, `TemplateId`, and `PublicKey` to enable send from the Email Composer utility.
 
-### Wiki admin login
+### Wiki and broker sign-in
 
-Wiki edit mode uses a **local demo login** (not production-grade):
+Wiki editing and the broker desk share one broker-api account. There is no local `admin` / `admin` password.
 
-1. Open `/admin`
-2. Sign in with `admin` / `admin`
-3. Use **Edit wiki** or navigate to `/wiki/edit/...`
+1. Set `BrokerApi:BaseUrl` in `wwwroot/appsettings.json`.
+2. Open `/admin` for wiki editing, or `/trading/login` for the broker desk.
+3. Sign in with the broker-api username and password. The same JWT unlocks both.
+4. From `/admin`, use **Edit wiki**, or open `/wiki/edit/...` directly after signing in.
 
 Login is **not shown in the navbar**. Microsoft/Azure AD (MSAL) was removed — it was only used for learning.
 

@@ -4,6 +4,7 @@ using System.Text.Json;
 using BlazorWasmPortfolioGhAction.Models.Trading.Broker;
 using BlazorWasmPortfolioGhAction.Resources;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
@@ -55,12 +56,14 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
     private readonly IJSRuntime _js;
     private readonly IBrokerApiClient _api;
     private readonly IStringLocalizer<SharedResources> _L;
+    private readonly ILogger<BrokerDeskStore> _logger;
 
-    public BrokerDeskStore(IJSRuntime js, IBrokerApiClient api, IStringLocalizer<SharedResources> L)
+    public BrokerDeskStore(IJSRuntime js, IBrokerApiClient api, IStringLocalizer<SharedResources> L, ILogger<BrokerDeskStore> logger)
     {
         _js = js;
         _api = api;
         _L = L;
+        _logger = logger;
     }
 
     public async Task<BrokerPortfolio> LoadAsync(CancellationToken ct = default)
@@ -75,9 +78,9 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
             if (!string.IsNullOrWhiteSpace(draft))
                 return NormalizePortfolio(ParseJson(draft));
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore localStorage errors.
+            _logger.LogWarning(ex, "Broker draft could not be loaded from local storage");
         }
 
         return new BrokerPortfolio();
@@ -103,6 +106,7 @@ public sealed class BrokerDeskStore : IBrokerDeskStore
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Broker portfolio load from API failed");
             LastLoadError = ex.Message;
             return null;
         }

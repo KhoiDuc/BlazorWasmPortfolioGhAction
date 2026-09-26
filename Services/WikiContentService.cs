@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using BlazorWasmPortfolioGhAction.Shared.Model;
+using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmPortfolioGhAction.Services;
 
@@ -24,11 +25,13 @@ public class WikiContentService : IWikiContentService
 {
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
+    private readonly ILogger<WikiContentService> _logger;
 
-    public WikiContentService(HttpClient http, IConfiguration config)
+    public WikiContentService(HttpClient http, IConfiguration config, ILogger<WikiContentService> logger)
     {
         _http = http;
         _config = config;
+        _logger = logger;
     }
 
     public async Task<IReadOnlyList<string>> GetManifestFilesAsync(CancellationToken cancellationToken = default)
@@ -38,8 +41,9 @@ public class WikiContentService : IWikiContentService
             var manifest = await _http.GetFromJsonAsync<WikiManifest>("wiki/manifest.json", cancellationToken);
             return manifest?.Files ?? [];
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to load wiki manifest");
             return [];
         }
     }
@@ -52,8 +56,9 @@ public class WikiContentService : IWikiContentService
                 $"wiki/{fileNameWithoutSuffix}.json", cancellationToken);
             return contents ?? [];
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to load wiki file {File}", fileNameWithoutSuffix);
             return [];
         }
     }
@@ -105,10 +110,13 @@ public class WikiContentService : IWikiContentService
             request.Headers.Add("User-Agent", "BlazorPortfolio");
 
             var response = await _http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                _logger.LogWarning("Wiki update failed with HTTP {Status} for {Path}", (int)response.StatusCode, path);
             return response.IsSuccessStatusCode;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to update wiki file {Path}", path);
             return false;
         }
     }
@@ -139,10 +147,13 @@ public class WikiContentService : IWikiContentService
             request.Headers.Add("User-Agent", "BlazorPortfolio");
 
             var response = await _http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                _logger.LogWarning("Wiki delete failed with HTTP {Status} for {Path}", (int)response.StatusCode, path);
             return response.IsSuccessStatusCode;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to delete wiki file {Path}", path);
             return false;
         }
     }
@@ -175,8 +186,9 @@ public class WikiContentService : IWikiContentService
             using var doc = JsonDocument.Parse(json);
             return doc.RootElement.TryGetProperty("sha", out var shaEl) ? shaEl.GetString() : null;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to read wiki SHA for {Path}", path);
             return null;
         }
     }

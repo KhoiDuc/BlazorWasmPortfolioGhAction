@@ -2,6 +2,8 @@
 @using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
 @inject SectorQuantService Quant
 @inject IStringLocalizer<SharedResources> L
+@inject ILogger<VnSectorQuantPanel> Logger
+@using Microsoft.Extensions.Logging
 
 <div class="vd-panel">
     <div class="vd-controls">
@@ -255,7 +257,11 @@ else if (!_busy)
             _phase2Done = null;
             await InvokeAsync(StateHasChanged);
         }
-        catch (Exception ex) { _error = ex.Message; }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Sector quant board load failed");
+            _error = ex.Message;
+        }
         finally { _busy = false; await InvokeAsync(StateHasChanged); }
     }
 

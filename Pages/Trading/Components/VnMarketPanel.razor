@@ -3,6 +3,8 @@
 @inject IVnMarketClient Market
 @inject VnSectorService Sectors
 @inject IStringLocalizer<SharedResources> L
+@inject ILogger<VnMarketPanel> Logger
+@using Microsoft.Extensions.Logging
 
 <div class="vd-panel">
     <div class="vd-subtabs">
@@ -171,7 +173,11 @@ else if (_sub == "sector" && (_sectorData is null || _sectorData.Count == 0) && 
             if (indices.Count == 0 && stocks.Count == 0 && _sectorData.Count == 0)
                 _error = "Không tải được dữ liệu (CORS hoặc API). Thử lại sau.";
         }
-        catch (Exception ex) { _error = ex.Message; }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Market snapshot load failed");
+            _error = ex.Message;
+        }
         finally { _busy = false; await InvokeAsync(StateHasChanged); }
     }
 }

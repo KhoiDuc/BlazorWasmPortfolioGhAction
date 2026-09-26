@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 
 namespace BlazorWasmPortfolioGhAction.Services.OnlineTools;
@@ -18,9 +19,10 @@ public sealed class LocalFontInfo
     public string Style { get; set; } = "";
 }
 
-public sealed class LocalFontService(IJSRuntime js)
+public sealed class LocalFontService(IJSRuntime js, ILogger<LocalFontService> logger)
 {
     private readonly IJSRuntime _js = js;
+    private readonly ILogger<LocalFontService> _logger = logger;
 
     public ValueTask<bool> IsSupportedAsync() =>
         _js.InvokeAsync<bool>("localFontTools.isSupported");
@@ -31,8 +33,9 @@ public sealed class LocalFontService(IJSRuntime js)
         {
             return await _js.InvokeAsync<string>("localFontTools.getPermission");
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogDebug(ex, "Local font permission query failed");
             return "prompt";
         }
     }

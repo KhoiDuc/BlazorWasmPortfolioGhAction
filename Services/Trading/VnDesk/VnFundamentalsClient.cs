@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using BlazorWasmPortfolioGhAction.Extensions;
 using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk;
+using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk;
 
@@ -25,11 +26,13 @@ public sealed class VnFundamentalsClient : IVnFundamentalsClient
 
     private readonly HttpClient _http;
     private readonly TradingEndpointResolver _endpoints;
+    private readonly ILogger<VnFundamentalsClient> _logger;
     private readonly ConcurrentDictionary<string, FundamentalSnapshot> _cache = new();
 
-    public VnFundamentalsClient(IHttpClientFactory factory, TradingEndpointResolver endpoints)
+    public VnFundamentalsClient(IHttpClientFactory factory, TradingEndpointResolver endpoints, ILogger<VnFundamentalsClient> logger)
     {
         _endpoints = endpoints;
+        _logger = logger;
         _http = factory.CreateClient(TradingServiceExtensions.VnMarketClientName);
     }
 
@@ -84,8 +87,9 @@ public sealed class VnFundamentalsClient : IVnFundamentalsClient
             _cache[symbol] = snapshot;
             return snapshot;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Fundamentals fetch failed for {Symbol}", symbol);
             return null;
         }
     }

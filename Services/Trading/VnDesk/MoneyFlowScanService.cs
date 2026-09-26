@@ -1,5 +1,6 @@
 using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk;
 using BlazorWasmPortfolioGhAction.Services.Trading.Tcbs;
+using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk;
 
@@ -10,11 +11,13 @@ public sealed class MoneyFlowScanService
 
     private readonly IVnMarketClient _market;
     private readonly ITcbsApiClient _tcbs;
+    private readonly ILogger<MoneyFlowScanService> _logger;
 
-    public MoneyFlowScanService(IVnMarketClient market, ITcbsApiClient tcbs)
+    public MoneyFlowScanService(IVnMarketClient market, ITcbsApiClient tcbs, ILogger<MoneyFlowScanService> logger)
     {
         _market = market;
         _tcbs = tcbs;
+        _logger = logger;
     }
 
     public async Task<MoneyFlowSnapshot?> ScanSymbolAsync(string symbol, CancellationToken ct = default)
@@ -30,8 +33,9 @@ public sealed class MoneyFlowScanService
             await AttachTcbsAsync(snap, ct);
             return snap;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Money-flow scan failed for {Symbol}", symbol);
             return null;
         }
     }
@@ -101,9 +105,9 @@ public sealed class MoneyFlowScanService
             if (snap.BuySellRatio is not null || snap.ForeignNet is not null)
                 snap.TcbsFlowNote = $"Cung cầu {snap.BuySellRatio:N2} · NN {snap.ForeignNet:N0}";
         }
-        catch
+        catch (Exception ex)
         {
-            /* quote overlay is optional */
+            _logger.LogDebug(ex, "TCBS flow overlay skipped for {Symbol}", snap.Symbol);
         }
     }
 }

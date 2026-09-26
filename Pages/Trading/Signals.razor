@@ -121,9 +121,10 @@
         return Task.CompletedTask;
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         _ = JS.InvokeVoidAsync("tradingSignals.disposeEsc", _escRef);
         _escRef?.Dispose();
+        base.Dispose();
     }
 }

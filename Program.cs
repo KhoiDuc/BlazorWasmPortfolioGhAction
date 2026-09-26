@@ -18,6 +18,7 @@ using BlazorWasmPortfolioGhAction.Services.Auth;
 using BlazorWasmPortfolioGhAction.Services.Jwt;
 using BlazorWasmPortfolioGhAction.Services.Localization;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using Blazored.LocalStorage;
 using Soenneker.Blazor.CreditCards.Registrars;
@@ -122,9 +123,11 @@ public static partial class Program
             {
                 saved = await js.InvokeAsync<string?>("cultureManager.get");
             }
-            catch
+            catch (Exception ex)
             {
-                // JS bridge may not be ready; keep Vietnamese default
+                scope.ServiceProvider.GetRequiredService<ILoggerFactory>()
+                    .CreateLogger("Startup")
+                    .LogDebug(ex, "Saved culture was not readable at startup");
             }
         }
 
@@ -147,9 +150,11 @@ public static partial class Program
             await js.InvokeVoidAsync("cultureManager.set", cultureName);
             await js.InvokeVoidAsync("cultureManager.setDocumentLang", culture.TwoLetterISOLanguageName);
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore
+            scope.ServiceProvider.GetRequiredService<ILoggerFactory>()
+                .CreateLogger("Startup")
+                .LogDebug(ex, "Could not persist startup culture");
         }
     }
 }

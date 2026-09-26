@@ -1,6 +1,7 @@
 using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk;
 using BlazorWasmPortfolioGhAction.Resources;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk;
 
@@ -10,13 +11,20 @@ public sealed class SectorQuantService
     private readonly VnSectorService _sectors;
     private readonly IVnDeskStore _store;
     private readonly IStringLocalizer<SharedResources> _L;
+    private readonly ILogger<SectorQuantService> _logger;
 
-    public SectorQuantService(IVnMarketClient market, VnSectorService sectors, IVnDeskStore store, IStringLocalizer<SharedResources> L)
+    public SectorQuantService(
+        IVnMarketClient market,
+        VnSectorService sectors,
+        IVnDeskStore store,
+        IStringLocalizer<SharedResources> L,
+        ILogger<SectorQuantService> logger)
     {
         _market = market;
         _sectors = sectors;
         _store = store;
         _L = L;
+        _logger = logger;
     }
 
     /// <summary>Phase 1: latest quotes → Breadth/Maker/Score (VolR = 1 placeholder).</summary>
@@ -96,7 +104,10 @@ public sealed class SectorQuantService
                     if (avgVol <= 0) continue;
                     volrs.Add((double)(hist[^1].Volume / avgVol));
                 }
-                catch { /* skip */ }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Sector volume ratio skipped for {Symbol}", sym);
+                }
             }
             if (volrs.Count > 0)
             {

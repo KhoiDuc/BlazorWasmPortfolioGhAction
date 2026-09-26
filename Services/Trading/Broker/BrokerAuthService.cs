@@ -1,6 +1,7 @@
 using Blazored.LocalStorage;
 using BlazorWasmPortfolioGhAction.Services.Auth;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.Broker;
@@ -23,17 +24,20 @@ public sealed class BrokerAuthService : IBrokerAuthService
     private readonly IConfiguration _config;
     private readonly ILocalStorageService _localStorage;
     private readonly AuthenticationStateProvider _authStateProvider;
+    private readonly ILogger<BrokerAuthService> _logger;
 
     public BrokerAuthService(
         HttpClient http,
         IConfiguration config,
         ILocalStorageService localStorage,
-        AuthenticationStateProvider authStateProvider)
+        AuthenticationStateProvider authStateProvider,
+        ILogger<BrokerAuthService> logger)
     {
         _http = http;
         _config = config;
         _localStorage = localStorage;
         _authStateProvider = authStateProvider;
+        _logger = logger;
     }
 
     private string? BaseUrl => _config["BrokerApi:BaseUrl"]?.Trim().TrimEnd('/');
@@ -75,6 +79,7 @@ public sealed class BrokerAuthService : IBrokerAuthService
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Broker login failed for {Username}", username.Trim());
             return (false, ex.Message);
         }
     }

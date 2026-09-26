@@ -2,6 +2,7 @@
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
+using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmPortfolioGhAction.Extensions
 {
@@ -31,7 +32,11 @@ namespace BlazorWasmPortfolioGhAction.Extensions
                 var configuration = sp.GetRequiredService<IConfiguration>();
                 _ = bool.TryParse(configuration[SectionNames.MockApi], out var mockApi);
 
-                return mockApi ? new GitHubGraphQLQueryServiceMock() : new GitHubService(sp.GetRequiredService<IGraphQLClient>());
+                return mockApi
+                    ? new GitHubGraphQLQueryServiceMock()
+                    : new GitHubService(
+                        sp.GetRequiredService<IGraphQLClient>(),
+                        sp.GetRequiredService<ILogger<GitHubService>>());
             });
 
             return services;

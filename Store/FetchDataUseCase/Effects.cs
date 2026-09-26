@@ -1,5 +1,6 @@
 ﻿using BlazorWasmPortfolioGhAction.Shared.Model;
 using Fluxor;
+using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 
 namespace BlazorWasmPortfolioGhAction.Store.FetchDataUseCase
@@ -7,10 +8,12 @@ namespace BlazorWasmPortfolioGhAction.Store.FetchDataUseCase
     public class Effects
     {
         private readonly HttpClient _httpClient;
+        private readonly ILogger<Effects> _logger;
 
-        public Effects(HttpClient httpClient)
+        public Effects(HttpClient httpClient, ILogger<Effects> logger)
         {
             _httpClient = httpClient;
+            _logger = logger;
         }
 
         [EffectMethod(typeof(FetchDataAction))]
@@ -23,6 +26,7 @@ namespace BlazorWasmPortfolioGhAction.Store.FetchDataUseCase
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to load weather sample data");
                 dispatcher.Dispatch(new FetchDataErrorAction(ex.Message));
             }
         }

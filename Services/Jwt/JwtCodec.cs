@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 
@@ -8,8 +9,11 @@ namespace BlazorWasmPortfolioGhAction.Services.Jwt;
 
 public class JwtCodec
 {
+    private readonly ILogger<JwtCodec> _logger;
     private static readonly JsonSerializerOptions PrettyJson = new() { WriteIndented = true };
     private static readonly JsonSerializerOptions CompactJson = new() { WriteIndented = false };
+
+    public JwtCodec(ILogger<JwtCodec> logger) => _logger = logger;
 
     public JwtDecodeResult Decode(string? token)
     {
@@ -40,6 +44,7 @@ public class JwtCodec
         }
         catch (Exception ex)
         {
+            _logger.LogDebug(ex, "JWT decode rejected the token");
             return new JwtDecodeResult(
                 false, null, null, null, null, null, null, ex.Message);
         }
@@ -79,6 +84,7 @@ public class JwtCodec
         }
         catch (Exception ex)
         {
+            _logger.LogDebug(ex, "JWT verification key could not be created");
             return new JwtVerifyResult(false, false, CryptoUnavailableMessage(ex));
         }
 
@@ -110,6 +116,7 @@ public class JwtCodec
         }
         catch (Exception ex)
         {
+            _logger.LogDebug(ex, "JWT signature verification failed");
             return new JwtVerifyResult(false, true, ex.Message);
         }
     }
@@ -155,10 +162,12 @@ public class JwtCodec
         }
         catch (JsonException ex)
         {
+            _logger.LogDebug(ex, "JWT encode rejected invalid JSON");
             return new JwtEncodeResult(false, null, $"Invalid JSON: {ex.Message}");
         }
         catch (Exception ex)
         {
+            _logger.LogWarning(ex, "JWT encode failed");
             return new JwtEncodeResult(false, null, CryptoUnavailableMessage(ex));
         }
     }

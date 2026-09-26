@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using BlazorWasmPortfolioGhAction.Models.Trading.Tcbs;
 using BlazorWasmPortfolioGhAction.Services.Trading.Broker;
+using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmPortfolioGhAction.Services.Trading.Tcbs;
 
@@ -25,14 +26,16 @@ public sealed class TcbsApiClient : ITcbsApiClient
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
     private readonly IBrokerAuthService _auth;
+    private readonly ILogger<TcbsApiClient> _logger;
     private TcbsStatus? _status;
     private DateTime _statusAt;
 
-    public TcbsApiClient(HttpClient http, IConfiguration config, IBrokerAuthService auth)
+    public TcbsApiClient(HttpClient http, IConfiguration config, IBrokerAuthService auth, ILogger<TcbsApiClient> logger)
     {
         _http = http;
         _config = config;
         _auth = auth;
+        _logger = logger;
     }
 
     private string? BaseUrl => _config["BrokerApi:BaseUrl"]?.Trim().TrimEnd('/');
@@ -125,6 +128,7 @@ public sealed class TcbsApiClient : ITcbsApiClient
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
+            _logger.LogError(ex, "TCBS {Method} {Path} failed", method, pathAndQuery);
             return Fail(0, ex.Message);
         }
     }

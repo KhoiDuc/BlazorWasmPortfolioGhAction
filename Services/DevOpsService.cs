@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using BlazorWasmPortfolioGhAction.Models.GitHub;
+using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmPortfolioGhAction.Services;
 
@@ -20,11 +21,13 @@ public class DevOpsService : IDevOpsService
 {
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
+    private readonly ILogger<DevOpsService> _logger;
 
-    public DevOpsService(HttpClient http, IConfiguration config)
+    public DevOpsService(HttpClient http, IConfiguration config, ILogger<DevOpsService> logger)
     {
         _http = http;
         _config = config;
+        _logger = logger;
     }
 
     public async Task<bool> SendSlackMessageAsync(string channel, string message)
@@ -42,10 +45,13 @@ public class DevOpsService : IDevOpsService
         try
         {
             var response = await _http.PostAsJsonAsync(webhookUrl, payload);
+            if (!response.IsSuccessStatusCode)
+                _logger.LogWarning("Slack webhook returned HTTP {Status}", (int)response.StatusCode);
             return response.IsSuccessStatusCode;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Slack webhook failed");
             return false;
         }
     }
@@ -74,10 +80,13 @@ public class DevOpsService : IDevOpsService
         try
         {
             var response = await _http.PostAsJsonAsync(webhookUrl, payload);
+            if (!response.IsSuccessStatusCode)
+                _logger.LogWarning("Discord webhook returned HTTP {Status}", (int)response.StatusCode);
             return response.IsSuccessStatusCode;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Discord webhook failed");
             return false;
         }
     }
@@ -107,10 +116,13 @@ public class DevOpsService : IDevOpsService
         try
         {
             var response = await _http.PostAsJsonAsync(webhookUrl, payload);
+            if (!response.IsSuccessStatusCode)
+                _logger.LogWarning("Teams webhook returned HTTP {Status}", (int)response.StatusCode);
             return response.IsSuccessStatusCode;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Teams webhook failed");
             return false;
         }
     }
@@ -139,13 +151,18 @@ public class DevOpsService : IDevOpsService
             request.Headers.Add("User-Agent", "BlazorPortfolio");
 
             var response = await _http.SendAsync(request);
-            if (!response.IsSuccessStatusCode) return null;
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("GitHub repo search returned HTTP {Status}", (int)response.StatusCode);
+                return null;
+            }
 
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<GitHubSearchResult>(json, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "GitHub repo search failed");
             return null;
         }
     }
@@ -164,13 +181,18 @@ public class DevOpsService : IDevOpsService
             request.Headers.Add("User-Agent", "BlazorPortfolio");
 
             var response = await _http.SendAsync(request);
-            if (!response.IsSuccessStatusCode) return null;
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("GitHub user lookup returned HTTP {Status} for {Username}", (int)response.StatusCode, username);
+                return null;
+            }
 
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<GitHubRestUser>(json, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "GitHub user lookup failed for {Username}", username);
             return null;
         }
     }
@@ -189,13 +211,18 @@ public class DevOpsService : IDevOpsService
             request.Headers.Add("User-Agent", "BlazorPortfolio");
 
             var response = await _http.SendAsync(request);
-            if (!response.IsSuccessStatusCode) return null;
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("GitHub repo lookup returned HTTP {Status} for {Owner}/{Repo}", (int)response.StatusCode, owner, repo);
+                return null;
+            }
 
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<GitHubRestRepo>(json, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "GitHub repo lookup failed for {Owner}/{Repo}", owner, repo);
             return null;
         }
     }
@@ -217,14 +244,19 @@ public class DevOpsService : IDevOpsService
             request.Headers.Add("User-Agent", "BlazorPortfolio");
 
             var response = await _http.SendAsync(request);
-            if (!response.IsSuccessStatusCode) return null;
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("GitHub trending search returned HTTP {Status}", (int)response.StatusCode);
+                return null;
+            }
 
             var json = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<GitHubSearchResult>(json, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
             return result?.Items ?? new();
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "GitHub trending search failed");
             return null;
         }
     }
@@ -257,13 +289,18 @@ public class DevOpsService : IDevOpsService
             request.Headers.Add("User-Agent", "BlazorPortfolio");
 
             var response = await _http.SendAsync(request);
-            if (!response.IsSuccessStatusCode) return null;
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("GitHub gist create returned HTTP {Status}", (int)response.StatusCode);
+                return null;
+            }
 
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<GitHubRestGist>(json, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "GitHub gist create failed");
             return null;
         }
     }

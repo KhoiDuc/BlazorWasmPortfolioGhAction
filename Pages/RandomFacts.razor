@@ -1,5 +1,7 @@
 ﻿@inject RandomFactsService RandomFactsService
 @inject IStringLocalizer<SharedResources> L
+@inject ILogger<RandomFacts> Logger
+@using Microsoft.Extensions.Logging
 @using BlazorWasmPortfolioGhAction.Store.Services
 @using BlazorWasmPortfolioGhAction.Shared
 
@@ -47,7 +49,7 @@
         catch (Exception ex)
         {
             errorMessage = "Failed to load fact. Please try again later.";
-            Console.WriteLine(ex.Message);
+            Logger.LogError(ex, "Random fact page failed to load");
         }
         finally
         {
