@@ -3,295 +3,430 @@
 @inherits CultureAwareComponent
 @inject IStringLocalizer<SharedResources> L
 
-<div class="page-container page-section">
-    <h1 class="section-heading gradient-text">UI Design Catalog</h1>
-    <p class="section-label">Live reference of every design component used in this project.</p>
+<div class="design-catalog">
+    @* ── Hero ── *@
+    <header class="dc-hero">
+        <p class="dc-eyebrow">@L["DC_Eyebrow"]</p>
+        <h1 class="dc-title gradient-text">@L["DC_Title"]</h1>
+        <p class="dc-lead">@L["DC_Lead"]</p>
+    </header>
 
+    @* ── Section nav ── *@
     @{
-        var sections = new (string Title, string Anchor)[]
+        var sections = new (string Label, string Anchor, string Icon)[]
         {
-            ("Buttons", "buttons"),
-            ("Badges", "badges"),
-            ("Fields & Inputs", "fields"),
-            ("Switches & Toggles", "switches"),
-            ("Banners / Alerts", "alerts"),
-            ("Cards", "cards"),
-            ("Tables", "tables"),
-            ("Modals", "modals"),
-            ("Spinners & Progress", "spinners"),
-            ("Code & Result", "code"),
-            ("Stats & Misc", "stats"),
+            ("Buttons",       "buttons",   "bi-hand-index-thumb"),
+            ("Badges",        "badges",    "bi-tag"),
+            ("Fields",        "fields",    "bi-input-cursor-text"),
+            ("Switches",      "switches",  "bi-toggles"),
+            ("Alerts",        "alerts",    "bi-exclamation-triangle"),
+            ("Cards",         "cards",     "bi-card-text"),
+            ("Tables",        "tables",    "bi-table"),
+            ("Modals",        "modals",    "bi-window"),
+            ("Spinners",      "spinners",  "bi-arrow-repeat"),
+            ("Code & Result", "code",      "bi-code-slash"),
+            ("Stats",         "stats",     "bi-bar-chart"),
         };
     }
-    <nav class="tool-link-list" aria-label="Catalog sections">
+    <nav class="dc-nav" aria-label="Catalog sections">
         @foreach (var s in sections)
         {
-            <a href="#@s.Anchor">@s.Title</a>
+            <a href="#@s.Anchor" class="dc-nav-pill">
+                <i class="bi @s.Icon" aria-hidden="true"></i>
+                @s.Label
+            </a>
         }
     </nav>
 
-    @* ────────────────── BUTTONS ────────────────── *@
-    <section id="buttons" class="tool-card-nested">
-        <h4><i class="bi bi-hand-index" aria-hidden="true"></i> Buttons</h4>
-
-        <h5 class="tool-subheading">Variants — <code class="tool-inline-code">.tool-btn</code></h5>
-        <div class="tool-actions">
-            <button class="tool-btn">Default</button>
-            <button class="tool-btn tool-btn-primary">Primary</button>
-            <button class="tool-btn tool-btn-secondary">Secondary</button>
-            <button class="tool-btn tool-btn-success">Success</button>
-            <button class="tool-btn tool-btn-danger">Danger</button>
+    @* ── BUTTONS ── *@
+    <section id="buttons" class="dc-section">
+        <div class="dc-section-head">
+            <span class="dc-section-icon"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i></span>
+            <div>
+                <h2 class="dc-section-title">Buttons</h2>
+                <p class="dc-section-desc">All button variants and interactive states.</p>
+            </div>
         </div>
-
-        <h5 class="tool-subheading">Hero / legacy — <code class="tool-inline-code">.btn-*</code> &amp; <code class="tool-inline-code">.button-*</code></h5>
-        <div class="tool-actions">
-            <button class="btn-primary">Hero Primary</button>
-            <button class="btn-ghost">Ghost</button>
-            <button class="button button-primary">Button Primary</button>
-            <button class="button button-secondary">Button Secondary</button>
+        <div class="dc-demo-grid">
+            <div class="dc-demo">
+                <span class="dc-label">Variants <code>.tool-btn</code></span>
+                <div class="dc-row">
+                    <button class="tool-btn">Default</button>
+                    <button class="tool-btn tool-btn-primary">Primary</button>
+                    <button class="tool-btn tool-btn-secondary">Secondary</button>
+                    <button class="tool-btn tool-btn-success">Success</button>
+                    <button class="tool-btn tool-btn-danger">Danger</button>
+                </div>
+            </div>
+            <div class="dc-demo">
+                <span class="dc-label">Hero / legacy <code>.btn-*</code></span>
+                <div class="dc-row">
+                    <button class="btn-primary">Hero Primary</button>
+                    <button class="btn-ghost">Ghost</button>
+                    <button class="button button-primary">Button Primary</button>
+                    <button class="button button-secondary">Button Secondary</button>
+                </div>
+            </div>
+            <div class="dc-demo">
+                <span class="dc-label">Resume / CTA <code>.resume-btn</code></span>
+                <div class="dc-row">
+                    <button class="resume-btn">Resume</button>
+                    <button class="resume-btn resume-btn-primary">Resume Primary</button>
+                    <button class="resume-btn resume-btn-ghost">Resume Ghost</button>
+                </div>
+            </div>
+            <div class="dc-demo">
+                <span class="dc-label">Icon <code>.tool-icon-btn</code></span>
+                <div class="dc-row">
+                    <button class="tool-icon-btn" aria-label="Copy"><i class="bi bi-clipboard" aria-hidden="true"></i></button>
+                    <button class="tool-icon-btn" aria-label="Delete"><i class="bi bi-trash" aria-hidden="true"></i></button>
+                    <button class="tool-icon-btn" aria-label="Settings"><i class="bi bi-gear" aria-hidden="true"></i></button>
+                </div>
+            </div>
+            <div class="dc-demo">
+                <span class="dc-label">States — Default</span>
+                <div class="dc-row">
+                    <button class="tool-btn">Default</button>
+                    <button class="tool-btn" disabled>Disabled</button>
+                    <button class="tool-btn" aria-busy="true" disabled>
+                        <span class="tool-spinner dc-btn-spinner" role="status" aria-label="Loading"></span>
+                        Loading…
+                    </button>
+                </div>
+            </div>
+            <div class="dc-demo">
+                <span class="dc-label">States — Primary</span>
+                <div class="dc-row">
+                    <button class="tool-btn tool-btn-primary">Default</button>
+                    <button class="tool-btn tool-btn-primary" disabled>Disabled</button>
+                    <button class="tool-btn tool-btn-primary" aria-busy="true" disabled>
+                        <span class="tool-spinner dc-btn-spinner dc-btn-spinner-light" role="status" aria-label="Loading"></span>
+                        Loading…
+                    </button>
+                </div>
+            </div>
+            <div class="dc-demo">
+                <span class="dc-label">States — Disabled variants</span>
+                <div class="dc-row">
+                    <button class="tool-btn tool-btn-danger" disabled>Danger</button>
+                    <button class="tool-btn tool-btn-success" disabled>Success</button>
+                    <button class="tool-btn tool-btn-secondary" disabled>Secondary</button>
+                </div>
+            </div>
+            <div class="dc-demo">
+                <span class="dc-label">As link <code>a.tool-btn</code></span>
+                <div class="dc-row">
+                    <a href="#buttons" class="tool-btn">Link</a>
+                    <a href="#buttons" class="tool-btn tool-btn-primary">Link primary</a>
+                    <a href="#buttons" class="button button-primary">Link hero</a>
+                </div>
+            </div>
         </div>
-
-        <h5 class="tool-subheading">Resume / CTA — <code class="tool-inline-code">.resume-btn</code></h5>
-        <div class="tool-actions">
-            <button class="resume-btn">Resume</button>
-            <button class="resume-btn resume-btn-primary">Resume Primary</button>
-            <button class="resume-btn resume-btn-ghost">Resume Ghost</button>
-        </div>
-
-        <h5 class="tool-subheading">Icon button — <code class="tool-inline-code">.tool-icon-btn</code></h5>
-        <div class="tool-actions">
-            <button class="tool-icon-btn" aria-label="Copy"><i class="bi bi-clipboard" aria-hidden="true"></i></button>
-            <button class="tool-icon-btn" aria-label="Delete"><i class="bi bi-trash" aria-hidden="true"></i></button>
-        </div>
-
-        <h5 class="tool-subheading">States — Default / Hover / Focus / Disabled / Loading</h5>
-        <div class="tool-actions">
-            <button class="tool-btn">Default</button>
-            <button class="tool-btn" style="border-color:var(--color-brand-symbol);color:var(--color-brand-symbol);">Hover (forced)</button>
-            <button class="tool-btn" style="outline:2px solid var(--color-brand-symbol);outline-offset:2px;">Focus (forced)</button>
-            <button class="tool-btn" disabled>Disabled</button>
-            <button class="tool-btn" aria-busy="true" disabled>
-                <span class="tool-spinner" style="width:1rem;height:1rem;border-width:2px;" role="status" aria-label="Loading"></span>
-                Loading…
-            </button>
-        </div>
-
-        <h5 class="tool-subheading">States — Primary variant</h5>
-        <div class="tool-actions">
-            <button class="tool-btn tool-btn-primary">Default</button>
-            <button class="tool-btn tool-btn-primary" style="background-color:var(--color-accent-hover);border-color:var(--color-accent-hover);">Hover (forced)</button>
-            <button class="tool-btn tool-btn-primary" style="outline:2px solid var(--color-brand-symbol);outline-offset:2px;">Focus (forced)</button>
-            <button class="tool-btn tool-btn-primary" disabled>Disabled</button>
-            <button class="tool-btn tool-btn-primary" aria-busy="true" disabled>
-                <span class="tool-spinner" style="width:1rem;height:1rem;border-width:2px;border-color:var(--color-text-on-accent);border-top-color:transparent;" role="status" aria-label="Loading"></span>
-                Loading…
-            </button>
-        </div>
-
-        <h5 class="tool-subheading">States — Danger / Success / Secondary</h5>
-        <div class="tool-actions">
-            <button class="tool-btn tool-btn-danger" disabled>Danger Disabled</button>
-            <button class="tool-btn tool-btn-success" disabled>Success Disabled</button>
-            <button class="tool-btn tool-btn-secondary" disabled>Secondary Disabled</button>
-        </div>
-
-        <h5 class="tool-subheading">As link — <code class="tool-inline-code">a.tool-btn</code></h5>
-        <div class="tool-actions">
-            <a href="#" class="tool-btn">Link button</a>
-            <a href="#" class="tool-btn tool-btn-primary">Link primary</a>
-            <a href="#" class="button button-primary">Link hero</a>
-        </div>
-
-        <p class="tool-hint">Note: hover/focus states shown via inline style forced simulation. Real <code class="tool-inline-code">:hover</code>/<code class="tool-inline-code">:focus</code> apply automatically on interaction.</p>
+        <p class="dc-note">Hover &amp; focus states render on interaction — not forced here.</p>
     </section>
 
-    @* ────────────────── BADGES ────────────────── *@
-    <section id="badges" class="tool-card-nested">
-        <h4><i class="bi bi-tag" aria-hidden="true"></i> Badges</h4>
-        <div class="tool-badge-row">
-            <span class="badge-tech">.NET 8</span>
-            <span class="badge-tech">Blazor WASM</span>
-            <span class="badge-tech">C# 12</span>
+    @* ── BADGES ── *@
+    <section id="badges" class="dc-section">
+        <div class="dc-section-head">
+            <span class="dc-section-icon"><i class="bi bi-tag" aria-hidden="true"></i></span>
+            <div>
+                <h2 class="dc-section-title">Badges</h2>
+                <p class="dc-section-desc">Inline labels, tags, and chips.</p>
+            </div>
         </div>
-        <div class="tool-badge-row">
-            <span class="tool-badge">tool-badge</span>
-            <span class="tool-badge">tag</span>
-            <span class="tool-badge">chip</span>
+        <div class="dc-demo-grid">
+            <div class="dc-demo">
+                <span class="dc-label"><code>.badge-tech</code></span>
+                <div class="dc-row">
+                    <span class="badge-tech">.NET 10</span>
+                    <span class="badge-tech">Blazor WASM</span>
+                    <span class="badge-tech">C# 13</span>
+                    <span class="badge-tech">Fluxor</span>
+                </div>
+            </div>
+            <div class="dc-demo">
+                <span class="dc-label"><code>.tool-badge</code></span>
+                <div class="dc-row">
+                    <span class="tool-badge">tag</span>
+                    <span class="tool-badge">chip</span>
+                    <span class="tool-badge">label</span>
+                    <span class="tool-badge">new</span>
+                </div>
+            </div>
         </div>
     </section>
 
-    @* ────────────────── FIELDS & INPUTS ────────────────── *@
-    <section id="fields" class="tool-card-nested">
-        <h4><i class="bi bi-input-cursor-text" aria-hidden="true"></i> Fields & Inputs</h4>
-        <div class="tool-form">
-            <div class="tool-field">
+    @* ── FIELDS ── *@
+    <section id="fields" class="dc-section">
+        <div class="dc-section-head">
+            <span class="dc-section-icon"><i class="bi bi-input-cursor-text" aria-hidden="true"></i></span>
+            <div>
+                <h2 class="dc-section-title">Fields &amp; Inputs</h2>
+                <p class="dc-section-desc">Form controls — text, textarea, select, search.</p>
+            </div>
+        </div>
+        <div class="dc-fields-grid">
+            <div class="dc-field-demo">
                 <label class="tool-label">Text input</label>
                 <input class="tool-input" placeholder="Placeholder text" />
                 <p class="tool-hint">Helper hint goes here.</p>
             </div>
-            <div class="tool-field">
+            <div class="dc-field-demo">
                 <label class="tool-label">Small input</label>
                 <input class="tool-input tool-input-sm" placeholder=".tool-input-sm" />
             </div>
-            <div class="tool-field">
+            <div class="dc-field-demo">
                 <label class="tool-label">Textarea</label>
                 <textarea class="tool-textarea" rows="2" placeholder="Multi-line"></textarea>
             </div>
-            <div class="tool-field">
+            <div class="dc-field-demo">
                 <label class="tool-label">Select</label>
                 <select class="tool-select">
                     <option>Option A</option>
                     <option>Option B</option>
                 </select>
             </div>
-            <div class="tool-field">
+            <div class="dc-field-demo">
                 <label class="tool-label">Inline search</label>
                 <div class="tool-inline-search">
                     <input class="tool-input" placeholder="Search…" />
                 </div>
             </div>
-            <div class="tool-inline-inputs">
-                <span class="tool-stepper-value">Inline inputs row</span>
+            <div class="dc-field-demo">
+                <label class="tool-label">Disabled input</label>
+                <input class="tool-input" placeholder="Disabled" disabled />
             </div>
         </div>
     </section>
 
-    @* ────────────────── SWITCHES & TOGGLES ────────────────── *@
-    <section id="switches" class="tool-card-nested">
-        <h4><i class="bi bi-toggles" aria-hidden="true"></i> Switches & Toggles</h4>
-        <div class="tool-checkbox-group">
-            <label class="tool-checkbox"><input type="checkbox" checked /> Checkbox A</label>
-            <label class="tool-checkbox"><input type="checkbox" /> Checkbox B</label>
+    @* ── SWITCHES ── *@
+    <section id="switches" class="dc-section">
+        <div class="dc-section-head">
+            <span class="dc-section-icon"><i class="bi bi-toggles" aria-hidden="true"></i></span>
+            <div>
+                <h2 class="dc-section-title">Switches &amp; Toggles</h2>
+                <p class="dc-section-desc">Checkbox, radio, and stepper controls.</p>
+            </div>
         </div>
-        <div class="tool-radio-group" style="margin-top:0.6rem;">
-            <label class="tool-radio"><input type="radio" name="cat-radio" checked /> Radio A</label>
-            <label class="tool-radio"><input type="radio" name="cat-radio" /> Radio B</label>
-        </div>
-        <div class="tool-stepper" style="margin-top:0.6rem;">
-            <span class="tool-stepper-value">Stepper value</span>
+        <div class="dc-demo-grid">
+            <div class="dc-demo">
+                <span class="dc-label"><code>.tool-checkbox</code></span>
+                <div class="tool-checkbox-group">
+                    <label class="tool-checkbox"><input type="checkbox" checked /> Checkbox A</label>
+                    <label class="tool-checkbox"><input type="checkbox" /> Checkbox B</label>
+                    <label class="tool-checkbox"><input type="checkbox" disabled /> Disabled</label>
+                </div>
+            </div>
+            <div class="dc-demo">
+                <span class="dc-label"><code>.tool-radio</code></span>
+                <div class="tool-radio-group">
+                    <label class="tool-radio"><input type="radio" name="cat-radio" checked /> Radio A</label>
+                    <label class="tool-radio"><input type="radio" name="cat-radio" /> Radio B</label>
+                </div>
+            </div>
         </div>
     </section>
 
-    @* ────────────────── BANNERS / ALERTS ────────────────── *@
-    <section id="alerts" class="tool-card-nested">
-        <h4><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Banners / Alerts</h4>
-        <div class="tool-alert tool-alert-success">.tool-alert-success — operation succeeded.</div>
-        <div class="tool-alert tool-alert-info">.tool-alert-info — informational message.</div>
-        <div class="tool-alert tool-alert-warning">.tool-alert-warning — be cautious.</div>
-        <div class="tool-alert tool-alert-danger">.tool-alert-danger — something failed.</div>
-        <div class="tool-rate-limit">.tool-rate-limit — rate limit banner.</div>
+    @* ── ALERTS ── *@
+    <section id="alerts" class="dc-section">
+        <div class="dc-section-head">
+            <span class="dc-section-icon"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i></span>
+            <div>
+                <h2 class="dc-section-title">Banners / Alerts</h2>
+                <p class="dc-section-desc">Feedback messages by severity.</p>
+            </div>
+        </div>
+        <div class="dc-stack">
+            <div class="tool-alert tool-alert-success"><strong>Success</strong> — operation succeeded.</div>
+            <div class="tool-alert tool-alert-info"><strong>Info</strong> — informational message.</div>
+            <div class="tool-alert tool-alert-warning"><strong>Warning</strong> — be cautious.</div>
+            <div class="tool-alert tool-alert-danger"><strong>Danger</strong> — something failed.</div>
+            <div class="tool-rate-limit"><strong>Rate limit</strong> — too many requests.</div>
+        </div>
     </section>
 
-    @* ────────────────── CARDS ────────────────── *@
-    <section id="cards" class="tool-card-nested">
-        <h4><i class="bi bi-card-text" aria-hidden="true"></i> Cards</h4>
-        <div class="tool-grid-2">
+    @* ── CARDS ── *@
+    <section id="cards" class="dc-section">
+        <div class="dc-section-head">
+            <span class="dc-section-icon"><i class="bi bi-card-text" aria-hidden="true"></i></span>
+            <div>
+                <h2 class="dc-section-title">Cards</h2>
+                <p class="dc-section-desc">Surface containers — glass, panel, tool, code.</p>
+            </div>
+        </div>
+        <div class="dc-cards-grid">
             <div class="glass-card">
                 <h3>.glass-card</h3>
                 <p>Glassmorphism surface with blur backdrop.</p>
             </div>
-            <div class="glass-panel" style="padding:1.5rem;">
+            <div class="glass-panel dc-panel-pad">
                 <h3>.glass-panel</h3>
                 <p>Flat glass panel variant.</p>
             </div>
-            <div class="tool-card">
+            <div class="tool-card dc-card-pad">
                 <h3>.tool-card</h3>
                 <p>Tool shell card container.</p>
             </div>
-            <div class="code-card">
+            <div class="code-card dc-card-pad">
                 <h3>.code-card</h3>
                 <p>3D tilt code card.</p>
             </div>
         </div>
     </section>
 
-    @* ────────────────── TABLES ────────────────── *@
-    <section id="tables" class="tool-card-nested">
-        <h4><i class="bi bi-table" aria-hidden="true"></i> Tables</h4>
+    @* ── TABLES ── *@
+    <section id="tables" class="dc-section">
+        <div class="dc-section-head">
+            <span class="dc-section-icon"><i class="bi bi-table" aria-hidden="true"></i></span>
+            <div>
+                <h2 class="dc-section-title">Tables</h2>
+                <p class="dc-section-desc">Data table with hover rows.</p>
+            </div>
+        </div>
         <table class="tool-table">
             <thead>
-                <tr><th>Class</th><th>Usage</th></tr>
+                <tr><th>Class</th><th>Usage</th><th>Hover</th></tr>
             </thead>
             <tbody>
-                <tr><td>.tool-table</td><td>Data table</td></tr>
-                <tr><td>.tool-pagination</td><td>Pagination</td></tr>
+                <tr><td><code>.tool-table</code></td><td>Data table</td><td>Row highlight</td></tr>
+                <tr><td><code>.tool-pagination</code></td><td>Pagination bar</td><td>—</td></tr>
+                <tr><td><code>.tool-table th</code></td><td>Header cell</td><td>Uppercase</td></tr>
             </tbody>
         </table>
-        <div class="tool-pagination" style="margin-top:0.6rem;">.tool-pagination row</div>
     </section>
 
-    @* ────────────────── MODALS ────────────────── *@
-    <section id="modals" class="tool-card-nested">
-        <h4><i class="bi bi-window" aria-hidden="true"></i> Modals</h4>
-        <div class="tool-modal-backdrop" style="position:relative;">
-            <div class="tool-modal" style="position:relative;">
-                <div class="tool-modal-header">
-                    <h3 class="tool-modal-title">.tool-modal-title</h3>
-                    <button class="tool-modal-close" aria-label="Close">&times;</button>
+    @* ── MODALS ── *@
+    <section id="modals" class="dc-section">
+        <div class="dc-section-head">
+            <span class="dc-section-icon"><i class="bi bi-window" aria-hidden="true"></i></span>
+            <div>
+                <h2 class="dc-section-title">Modals</h2>
+                <p class="dc-section-desc">Dialog overlay with header, body, footer.</p>
+            </div>
+        </div>
+        <div class="dc-modal-demo">
+            <div class="tool-modal-backdrop dc-modal-static">
+                <div class="tool-modal dc-modal-static-inner">
+                    <div class="tool-modal-header">
+                        <h3 class="tool-modal-title">Modal title</h3>
+                        <button class="tool-modal-close" aria-label="Close">&times;</button>
+                    </div>
+                    <div class="tool-modal-body">
+                        <p>Modal body content goes here.</p>
+                    </div>
+                    <div class="tool-modal-footer">
+                        <button class="tool-btn tool-btn-secondary">Cancel</button>
+                        <button class="tool-btn tool-btn-primary">OK</button>
+                    </div>
                 </div>
-                <div class="tool-modal-body">
-                    <p>Modal body content.</p>
+            </div>
+        </div>
+    </section>
+
+    @* ── SPINNERS ── *@
+    <section id="spinners" class="dc-section">
+        <div class="dc-section-head">
+            <span class="dc-section-icon"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span>
+            <div>
+                <h2 class="dc-section-title">Spinners &amp; Progress</h2>
+                <p class="dc-section-desc">Loading indicators and progress bars.</p>
+            </div>
+        </div>
+        <div class="dc-demo-grid">
+            <div class="dc-demo">
+                <span class="dc-label"><code>.tool-spinner</code></span>
+                <div class="dc-row dc-center">
+                    <div class="tool-spinner" role="status" aria-label="Loading"></div>
                 </div>
-                <div class="tool-modal-footer">
-                    <button class="tool-btn tool-btn-secondary">Cancel</button>
-                    <button class="tool-btn tool-btn-primary">OK</button>
+            </div>
+            <div class="dc-demo">
+                <span class="dc-label"><code>.skeleton</code></span>
+                <div class="dc-stack">
+                    <div class="skeleton" style="height:0.8rem;width:100%;"></div>
+                    <div class="skeleton" style="height:0.8rem;width:80%;"></div>
+                    <div class="skeleton" style="height:0.8rem;width:60%;"></div>
+                </div>
+            </div>
+            <div class="dc-demo">
+                <span class="dc-label"><code>.skill-meter</code></span>
+                <div class="skill-meter">
+                    <div class="skill-meter-header">
+                        <span class="skill-meter-name">Blazor</span>
+                        <span class="skill-meter-value">90%</span>
+                    </div>
+                    <div class="skill-meter-track">
+                        <div class="skill-meter-fill" style="width:90%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="dc-demo">
+                <span class="dc-label"><code>.route-progress</code></span>
+                <div class="route-progress dc-progress-static">
+                    <div class="route-progress-bar"></div>
                 </div>
             </div>
         </div>
     </section>
 
-    @* ────────────────── SPINNERS & PROGRESS ────────────────── *@
-    <section id="spinners" class="tool-card-nested">
-        <h4><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Spinners & Progress</h4>
-        <div class="tool-spinner" role="status" aria-label="Loading"></div>
-        <div class="skeleton" style="height:1rem;margin-top:0.5rem;width:60%;">.skeleton</div>
-        <div class="route-progress" style="position:relative;margin-top:0.5rem;">
-            <div class="route-progress-bar"></div>
-        </div>
-        <button class="progress" style="position:relative;margin-top:0.5rem;">
-            <i class="bi bi-arrow-up" aria-hidden="true"></i>
-        </button>
-        <div class="skill-meter" style="margin-top:0.5rem;">
-            <div class="skill-meter-header">
-                <span class="skill-meter-name">.skill-meter</span>
-                <span class="skill-meter-value">80%</span>
-            </div>
-            <div class="skill-meter-track">
-                <div class="skill-meter-fill" style="width:80%"></div>
+    @* ── CODE & RESULT ── *@
+    <section id="code" class="dc-section">
+        <div class="dc-section-head">
+            <span class="dc-section-icon"><i class="bi bi-code-slash" aria-hidden="true"></i></span>
+            <div>
+                <h2 class="dc-section-title">Code &amp; Result</h2>
+                <p class="dc-section-desc">Preformatted blocks and result displays.</p>
             </div>
         </div>
-    </section>
-
-    @* ────────────────── CODE & RESULT ────────────────── *@
-    <section id="code" class="tool-card-nested">
-        <h4><i class="bi bi-code-slash" aria-hidden="true"></i> Code & Result</h4>
-        <pre class="tool-code">.tool-code — preformatted block</pre>
-        <code class="tool-inline-code">.tool-inline-code</code>
-        <div class="tool-result">
-            <div class="tool-result-label">.tool-result-label</div>
-            <div class="tool-result-block">
-                <div class="tool-result-header">.tool-result-header</div>
-                <pre class="tool-result-code">.tool-result-code</pre>
+        <div class="dc-stack">
+            <div>
+                <span class="dc-label"><code>.tool-code</code></span>
+                <pre class="tool-code">public static void Main() => Console.WriteLine("Hello");</pre>
+            </div>
+            <div>
+                <span class="dc-label"><code>.tool-inline-code</code></span>
+                <p>Use <code class="tool-inline-code">var x = 42</code> inline.</p>
+            </div>
+            <div>
+                <span class="dc-label"><code>.tool-result</code></span>
+                <div class="tool-result">
+                    <div class="tool-result-label">Output</div>
+                    <div class="tool-result-block">
+                        <div class="tool-result-header">Result header</div>
+                        <pre class="tool-result-code">Hello, World!</pre>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    @* ────────────────── STATS & MISC ────────────────── *@
-    <section id="stats" class="tool-card-nested">
-        <h4><i class="bi bi-bar-chart" aria-hidden="true"></i> Stats & Misc</h4>
-        <div class="tool-stat-grid">
-            <div class="tool-stat-card">
-                <div class="tool-stat-value">42</div>
-                <div class="tool-stat-label">.tool-stat-label</div>
-            </div>
-            <div class="tool-stat-card">
-                <div class="tool-stat-value">7</div>
-                <div class="tool-stat-label">Repos</div>
+    @* ── STATS ── *@
+    <section id="stats" class="dc-section">
+        <div class="dc-section-head">
+            <span class="dc-section-icon"><i class="bi bi-bar-chart" aria-hidden="true"></i></span>
+            <div>
+                <h2 class="dc-section-title">Stats &amp; Misc</h2>
+                <p class="dc-section-desc">Stat cards, dividers, and remaining components.</p>
             </div>
         </div>
-        <hr class="tool-divider" />
-        <div class="loading-spinner-overlay" style="position:relative;">
-            <span class="loading-spinner-label">.loading-spinner-label</span>
+        <div class="dc-stack">
+            <div class="tool-stat-grid">
+                <div class="tool-stat-card">
+                    <div class="tool-stat-value">42</div>
+                    <div class="tool-stat-label">Projects</div>
+                </div>
+                <div class="tool-stat-card">
+                    <div class="tool-stat-value">7</div>
+                    <div class="tool-stat-label">Repos</div>
+                </div>
+                <div class="tool-stat-card">
+                    <div class="tool-stat-value">99%</div>
+                    <div class="tool-stat-label">Uptime</div>
+                </div>
+            </div>
+            <hr class="tool-divider" />
+            <div>
+                <span class="dc-label"><code>.tool-divider</code> above</span>
+            </div>
         </div>
     </section>
 </div>

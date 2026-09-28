@@ -1,0 +1,270 @@
+/* =============================================================================
+   DESIGN CATALOG — DesignCatalog.razor.css
+   ============================================================================= */
+
+.design-catalog {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+}
+
+/* ── Hero ── */
+.dc-hero {
+    margin-bottom: 2rem;
+}
+
+.dc-eyebrow {
+    margin: 0 0 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-brand-symbol);
+}
+
+.dc-title {
+    margin: 0 0 0.5rem;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+}
+
+.dc-lead {
+    margin: 0;
+    max-width: 580px;
+    color: var(--color-text-secondary);
+    font-size: 1rem;
+    line-height: 1.55;
+}
+
+/* ── Section nav ── */
+.dc-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.dc-nav-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: var(--color-bg-surface);
+    color: var(--color-text-secondary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color var(--transition), border-color var(--transition), background var(--transition), transform var(--transition);
+}
+
+.dc-nav-pill i {
+    font-size: 0.85rem;
+}
+
+.dc-nav-pill:hover {
+    color: var(--color-brand-symbol);
+    border-color: var(--color-border-accent);
+    background: color-mix(in srgb, var(--color-brand-symbol) 6%, transparent);
+    transform: translateY(-1px);
+}
+
+/* ── Section ── */
+.dc-section {
+    margin-bottom: 3rem;
+    scroll-margin-top: 5rem;
+}
+
+.dc-section-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+
+.dc-section-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-brand-symbol) 12%, transparent);
+    color: var(--color-brand-symbol);
+    font-size: 1rem;
+}
+
+.dc-section-title {
+    margin: 0 0 0.15rem;
+    font-size: 1.2rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    letter-spacing: -0.01em;
+}
+
+.dc-section-desc {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+/* ── Demo grid ── */
+.dc-demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
+}
+
+.dc-demo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 1.15rem 1.2rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+}
+
+.dc-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+}
+
+.dc-label code {
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.dc-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dc-center {
+    justify-content: center;
+}
+
+.dc-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* ── Fields grid ── */
+.dc-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+
+.dc-field-demo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.15rem 1.2rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+}
+
+/* ── Cards grid ── */
+.dc-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.25rem;
+}
+
+.dc-panel-pad,
+.dc-card-pad {
+    padding: 1.5rem;
+}
+
+.dc-cards-grid h3 {
+    margin: 0 0 0.4rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.dc-cards-grid p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+/* ── Modal demo ── */
+.dc-modal-demo {
+    max-width: 480px;
+}
+
+.dc-modal-static {
+    position: relative;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    overflow: hidden;
+}
+
+.dc-modal-static-inner {
+    position: relative;
+    margin: 0;
+}
+
+/* ── Spinner helpers ── */
+.dc-btn-spinner {
+    width: 1rem;
+    height: 1rem;
+    border-width: 2px;
+}
+
+.dc-btn-spinner-light {
+    border-color: var(--color-text-on-accent);
+    border-top-color: transparent;
+}
+
+/* ── Progress static ── */
+.dc-progress-static {
+    position: relative;
+    height: 4px;
+    border-radius: var(--radius-full);
+    background: var(--color-bg-surface-elevated);
+    overflow: hidden;
+}
+
+.dc-progress-static .route-progress-bar {
+    width: 45%;
+    height: 100%;
+}
+
+/* ── Note ── */
+.dc-note {
+    margin: 1rem 0 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+}
+
+/* ── Responsive ── */
+@media (max-width: 576px) {
+    .dc-demo-grid,
+    .dc-fields-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dc-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
