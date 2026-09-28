@@ -27,13 +27,55 @@
             <table class="ts-table broker-rec-table">
                 <thead>
                     <tr>
-                        <th><span class="broker-dt-th-inner">@L["Trading_Tcbs_Symbol"]</span></th>
-                        <th><span class="broker-dt-th-inner">@L["Trading_BrokerColSector"]</span></th>
-                        <th><span class="broker-dt-th-inner">@L["Trading_BrokerRec_Zone"]</span></th>
-                        <th><span class="broker-dt-th-inner">@L["Trading_BrokerRec_Stop"]</span></th>
-                        <th><span class="broker-dt-th-inner">@L["Trading_BrokerRec_Target"]</span></th>
+                        <th class="broker-dt-sortable @SortClass(SortColumn.Symbol)"
+                            tabindex="0"
+                            aria-sort="@SortAria(SortColumn.Symbol)"
+                            @onclick='() => ToggleSort(SortColumn.Symbol)'
+                            @onkeydown='(e) => OnSortKeydown(e, SortColumn.Symbol)'
+                            @onclick:stopPropagation="true">
+                            <span class="broker-dt-th-inner">@L["Trading_Tcbs_Symbol"] @SortIcon(SortColumn.Symbol)</span>
+                        </th>
+                        <th class="broker-dt-sortable @SortClass(SortColumn.Sector)"
+                            tabindex="0"
+                            aria-sort="@SortAria(SortColumn.Sector)"
+                            @onclick='() => ToggleSort(SortColumn.Sector)'
+                            @onkeydown='(e) => OnSortKeydown(e, SortColumn.Sector)'
+                            @onclick:stopPropagation="true">
+                            <span class="broker-dt-th-inner">@L["Trading_BrokerColSector"] @SortIcon(SortColumn.Sector)</span>
+                        </th>
+                        <th class="broker-dt-sortable @SortClass(SortColumn.Zone)"
+                            tabindex="0"
+                            aria-sort="@SortAria(SortColumn.Zone)"
+                            @onclick='() => ToggleSort(SortColumn.Zone)'
+                            @onkeydown='(e) => OnSortKeydown(e, SortColumn.Zone)'
+                            @onclick:stopPropagation="true">
+                            <span class="broker-dt-th-inner">@L["Trading_BrokerRec_Zone"] @SortIcon(SortColumn.Zone)</span>
+                        </th>
+                        <th class="broker-num broker-dt-sortable @SortClass(SortColumn.Stop)"
+                            tabindex="0"
+                            aria-sort="@SortAria(SortColumn.Stop)"
+                            @onclick='() => ToggleSort(SortColumn.Stop)'
+                            @onkeydown='(e) => OnSortKeydown(e, SortColumn.Stop)'
+                            @onclick:stopPropagation="true">
+                            <span class="broker-dt-th-inner">@L["Trading_BrokerRec_Stop"] @SortIcon(SortColumn.Stop)</span>
+                        </th>
+                        <th class="broker-num broker-dt-sortable @SortClass(SortColumn.Target)"
+                            tabindex="0"
+                            aria-sort="@SortAria(SortColumn.Target)"
+                            @onclick='() => ToggleSort(SortColumn.Target)'
+                            @onkeydown='(e) => OnSortKeydown(e, SortColumn.Target)'
+                            @onclick:stopPropagation="true">
+                            <span class="broker-dt-th-inner">@L["Trading_BrokerRec_Target"] @SortIcon(SortColumn.Target)</span>
+                        </th>
                         <th><span class="broker-dt-th-inner">@L["Trading_BrokerNote"]</span></th>
-                        <th><span class="broker-dt-th-inner">@L["Trading_BrokerRec_Status"]</span></th>
+                        <th class="broker-dt-sortable @SortClass(SortColumn.Status)"
+                            tabindex="0"
+                            aria-sort="@SortAria(SortColumn.Status)"
+                            @onclick='() => ToggleSort(SortColumn.Status)'
+                            @onkeydown='(e) => OnSortKeydown(e, SortColumn.Status)'
+                            @onclick:stopPropagation="true">
+                            <span class="broker-dt-th-inner">@L["Trading_BrokerRec_Status"] @SortIcon(SortColumn.Status)</span>
+                        </th>
                         <th class="broker-rec-table-actions"><span class="broker-dt-th-inner">@L["Trading_BrokerRec_Action"]</span></th>
                     </tr>
                 </thead>
@@ -112,6 +154,54 @@
     [Parameter] public EventCallback<string> OnReactivate { get; set; }
 
     private string _filter = "all";
+    private SortColumn _sortColumn = SortColumn.Symbol;
+    private bool _sortDesc;
+
+    private enum SortColumn
+    {
+        Symbol,
+        Sector,
+        Zone,
+        Stop,
+        Target,
+        Status
+    }
+
+    private string SortClass(SortColumn column) =>
+        _sortColumn == column ? "broker-dt-sorted" : "";
+
+    private string SortAria(SortColumn column)
+    {
+        if (_sortColumn != column) return "none";
+        return _sortDesc ? "descending" : "ascending";
+    }
+
+    private MarkupString SortIcon(SortColumn column)
+    {
+        if (_sortColumn != column)
+            return new MarkupString("");
+
+        return new MarkupString(_sortDesc
+            ? "<span class=\"broker-dt-sort-icon\" aria-hidden=\"true\">▼</span>"
+            : "<span class=\"broker-dt-sort-icon\" aria-hidden=\"true\">▲</span>");
+    }
+
+    private void OnSortKeydown(KeyboardEventArgs e, SortColumn column)
+    {
+        if (e.Key is "Enter" or " ")
+            ToggleSort(column);
+    }
+
+    private void ToggleSort(SortColumn column)
+    {
+        if (_sortColumn == column)
+            _sortDesc = !_sortDesc;
+        else
+        {
+            _sortColumn = column;
+            _sortDesc = false;
+        }
+    }
 
     private record RecEntry(
         string Symbol,
@@ -137,7 +227,7 @@
                                        || !string.IsNullOrWhiteSpace(p.RecommendationText)))
         };
 
-        return filtered
+        var entries = filtered
             .Select(p => new RecEntry(
                 p.Symbol,
                 p.Sector,
@@ -147,8 +237,22 @@
                 p.StopLoss,
                 p.TargetPrice,
                 p.RecommendationText))
-            .OrderByDescending(p => p.StatusBadge == BrokerPositionStatus.ChoMua)
-            .ThenBy(p => p.Symbol, StringComparer.OrdinalIgnoreCase)
             .ToList();
+
+        Func<RecEntry, object> keySelector = _sortColumn switch
+        {
+            SortColumn.Sector => r => (object)(r.Sector ?? ""),
+            SortColumn.Zone => r => (object)(r.EntryLow ?? 0m),
+            SortColumn.Stop => r => (object)(r.StopLoss ?? 0m),
+            SortColumn.Target => r => (object)(r.TargetPrice ?? 0m),
+            SortColumn.Status => r => (object)(int)r.StatusBadge,
+            _ => r => (object)r.Symbol
+        };
+
+        var ordered = _sortDesc
+            ? entries.OrderByDescending(keySelector)
+            : entries.OrderBy(keySelector);
+
+        return ordered.ToList();
     }
 }
