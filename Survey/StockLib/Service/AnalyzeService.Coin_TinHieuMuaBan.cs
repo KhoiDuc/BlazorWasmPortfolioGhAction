@@ -413,7 +413,7 @@ namespace StockLib.Service
         //            foreach (var item in lDanZVolume.Take(10))
         //            {
         //                var indicator = item.indicator.FirstOrDefault(x => x.ty == (int)EIndicator.SuperTrend);
-        //                sBuilder.AppendLine($"{item.s}(TP trung bình: {indicator.avg}%|Nam giu: {indicator.num}| Win/Loss: {indicator.win}%/{indicator.loss}%)");
+        //                sBuilder.AppendLine($"{item.s}(TP trung bình: {indicator.avg}%|Nắm giữ: {indicator.num}| Win/Loss: {indicator.win}%/{indicator.loss}%)");
         //            }
         //        }
 
@@ -425,7 +425,7 @@ namespace StockLib.Service
         //            foreach (var item in lSuperTrend.Take(10))
         //            {
         //                var indicator = item.indicator.FirstOrDefault(x => x.ty == (int)EIndicator.SuperTrend);
-        //                sBuilder.AppendLine($"{item.s}(TP trung bình: {indicator.avg}%|Nam giu: {indicator.num}| Win/Loss: {indicator.win}%/{indicator.loss}%)");
+        //                sBuilder.AppendLine($"{item.s}(TP trung bình: {indicator.avg}%|Nắm giữ: {indicator.num}| Win/Loss: {indicator.win}%/{indicator.loss}%)");
         //            }
         //        }
 
@@ -437,7 +437,7 @@ namespace StockLib.Service
         //            foreach (var item in lSuperTrendPhrase2.Take(10))
         //            {
         //                var indicator = item.indicator.FirstOrDefault(x => x.ty == (int)EIndicator.SuperTrendPhrase2);
-        //                sBuilder.AppendLine($"{item.s}(TP trung bình: {indicator.avg}%|Nam giu: {indicator.num}| Win/Loss: {indicator.win}%/{indicator.loss}%)");
+        //                sBuilder.AppendLine($"{item.s}(TP trung bình: {indicator.avg}%|Nắm giữ: {indicator.num}| Win/Loss: {indicator.win}%/{indicator.loss}%)");
         //            }
         //        }
 

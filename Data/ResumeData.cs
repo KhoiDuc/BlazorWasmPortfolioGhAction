@@ -82,8 +82,8 @@ public static class ResumeData
 {
     public static Resume Current => new(
         Profile: new Profile(
-            Name: new LocalizedText(Vi: "Khoi Duc", En: "Khoi Duc"),
-            FullName: "Nguyen Minh Duc Khoi",
+            Name: new LocalizedText(Vi: "Khôi Đức", En: "Khoi Duc"),
+            FullName: "Nguyễn Minh Đức Khôi",
             Role: new LocalizedText(Vi: "Lập trình viên", En: "Developer"),
             PhoneNumbers: new[] { "+84938751116", "+84384223897" },
             Emails: new[] { "khoi.duc.dev@gmail.com", "khoimessi99@gmail.com" },

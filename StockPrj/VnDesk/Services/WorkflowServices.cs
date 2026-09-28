@@ -73,41 +73,41 @@ public static class PromptLibrary
         Task: {task}
         Output format: {outputFormat}
         Verification: {verification}
-        Dung ngon ngu trung lap. Khong du doan chac chan. Khong khuyen mua/ban. Nguoi dung tu quyet dinh.
+        Dùng ngôn ngữ trung lập. Không dự đoán chắc chắn. Không khuyến mua/bán. Người dùng tự quyết định.
         """;
 
     public static string News(string raw) => Wrap(
-        "Tro ly nghien cuu thi truong VN, khong ra tin hieu giao dich",
-        "Tach van ban tin thanh Facts / Sources / Implications",
+        "Trợ lý nghiên cứu thị trường VN, không ra tín hiệu giao dịch",
+        "Tách văn bản tin thành Facts / Sources / Implications",
         raw,
-        "Ba muc: FACTS, SOURCES, IMPLICATIONS. Ngan gon.",
-        "Gan 'chua verify nguon'. Khong them tin khong co trong input.");
+        "Ba mục: FACTS, SOURCES, IMPLICATIONS. Ngắn gọn.",
+        "Gắn 'chưa verify nguồn'. Không thêm tin không có trong input.");
 
     public static string Thesis(string symbol, string numbers, string notes) => Wrap(
-        "Nguoi soan thesis, khong thay the phan doan",
-        $"Viet nhap thesis cho {symbol}: assumptions, evidence, invalidation",
-        $"So lieu app:\n{numbers}\nGhi chu:\n{notes}",
+        "Người soạn thesis, không thay thế phán đoán",
+        $"Viết nhập thesis cho {symbol}: assumptions, evidence, invalidation",
+        $"Số liệu app:\n{numbers}\nGhi chú:\n{notes}",
         "ASSUMPTIONS / EVIDENCE / INVALIDATION",
-        "Moi claim phai gan so lieu nguon. Khong them tin hieu mua/ban.");
+        "Mỗi claim phải gắn số liệu nguồn. Không thêm tín hiệu mua/bán.");
 
     public static string NeutralChecklist(string symbol, string numbers, string notes) => Wrap(
-        "Nguoi mo ta setup ky thuat trung lap",
-        $"Mo ta observation vs interpretation vs invalidation cho {symbol}",
+        "Người mô tả setup kỹ thuật trung lập",
+        $"Mô tả observation vs interpretation vs invalidation cho {symbol}",
         $"{numbers}\n{notes}",
         "CONTEXT / CONFIRM-INVALIDATE / RISK / VERIFY",
-        "Khong hype, khong chac chan, khong ra lenh.");
+        "Không hype, không chắc chắn, không ra lệnh.");
 
     public static string StructurePlan(string symbol, string draft) => Wrap(
-        "Bien tap ke hoach giao dich",
-        $"Cau truc lai chu cho {symbol} thanh Entry / Exit / Risk / Thesis / Invalidation. Khong them tin hieu moi.",
+        "Biên tập kế hoạch giao dịch",
+        $"Cấu trúc lại chữ cho {symbol} thành Entry / Exit / Risk / Thesis / Invalidation. Không thêm tín hiệu mới.",
         draft,
         "ENTRY LOGIC / EXIT CRITERIA / RISK PARAMETERS / THESIS SUMMARY / INVALIDATION CONDITIONS",
-        "Chi sap xep lai. Khong them muc tieu gia khong co trong input.");
+        "Chỉ sắp xếp lại. Không thêm mục tiêu giá không có trong input.");
 
     public static string Journal(string symbol, string notes) => Wrap(
-        "Tro ly journal",
-        $"Soan nhap post-trade review cho {symbol}",
+        "Trợ lý journal",
+        $"Soạn nhập post-trade review cho {symbol}",
         notes,
         "FACTS / JUDGMENT / NEXT PROCESS",
-        "Nguoi dung se sua truoc khi luu. Khong khen/che cam xuc.");
+        "Người dùng sẽ sửa trước khi lưu. Không khen/chê cảm xúc.");
 }
