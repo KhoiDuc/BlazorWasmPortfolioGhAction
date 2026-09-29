@@ -292,8 +292,22 @@
                                 @onclick:stopPropagation="true">
                                 <span class="broker-dt-th-inner">@L["Trading_BrokerColPnlAmt"] @SortIcon(SortColumn.PnlAmount)</span>
                             </th>
-                            <th class="broker-num broker-col-stop"><span class="broker-dt-th-inner">@L["Trading_BrokerStop"]</span></th>
-                            <th class="broker-num broker-col-target"><span class="broker-dt-th-inner">@L["Trading_BrokerTarget"]</span></th>
+                            <th class="broker-num broker-dt-sortable broker-col-stop @SortClass(SortColumn.Stop)"
+                                tabindex="0"
+                                aria-sort="@SortAria(SortColumn.Stop)"
+                                @onclick='() => ToggleSort(SortColumn.Stop)'
+                                @onkeydown='(e) => OnSortKeydown(e, SortColumn.Stop)'
+                                @onclick:stopPropagation="true">
+                                <span class="broker-dt-th-inner">@L["Trading_BrokerStop"] @SortIcon(SortColumn.Stop)</span>
+                            </th>
+                            <th class="broker-num broker-dt-sortable broker-col-target @SortClass(SortColumn.Target)"
+                                tabindex="0"
+                                aria-sort="@SortAria(SortColumn.Target)"
+                                @onclick='() => ToggleSort(SortColumn.Target)'
+                                @onkeydown='(e) => OnSortKeydown(e, SortColumn.Target)'
+                                @onclick:stopPropagation="true">
+                                <span class="broker-dt-th-inner">@L["Trading_BrokerTarget"] @SortIcon(SortColumn.Target)</span>
+                            </th>
                             <th class="broker-col-tag"><span class="broker-dt-th-inner">@L["Trading_BrokerWatchlist_Tag"]</span></th>
                             <th class="broker-dt-sortable broker-col-status @SortClass(SortColumn.Status)"
                                 tabindex="0"
@@ -518,6 +532,8 @@
         Current,
         PnlPct,
         PnlAmount,
+        Stop,
+        Target,
         Status
     }
 
@@ -689,6 +705,8 @@
             SortColumn.Current => OrderBy(source, p => Quote(p.Symbol)),
             SortColumn.PnlPct => OrderBy(source, p => p.PnlPct(Quote(p.Symbol))),
             SortColumn.PnlAmount => OrderBy(source, p => p.PnlAmount(Quote(p.Symbol))),
+            SortColumn.Stop => OrderBy(source, p => p.StopLoss ?? decimal.MaxValue),
+            SortColumn.Target => OrderBy(source, p => p.TargetPrice ?? decimal.MaxValue),
             SortColumn.Status => OrderBy(source, p => (int)p.Status),
             _ => OrderBy(source, p => p.Symbol, StringComparer.OrdinalIgnoreCase)
         };
