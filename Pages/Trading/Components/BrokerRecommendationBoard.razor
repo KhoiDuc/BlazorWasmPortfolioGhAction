@@ -203,6 +203,17 @@
         }
     }
 
+    private IOrderedEnumerable<RecEntry> SortDecimal(
+        List<RecEntry> entries, Func<RecEntry, decimal?> key)
+    {
+        static decimal SortKey(RecEntry r, Func<RecEntry, decimal?> k, bool desc) =>
+            k(r) is { } v && v > 0 ? v : (desc ? decimal.MinValue : decimal.MaxValue);
+
+        return _sortDesc
+            ? entries.OrderByDescending(r => SortKey(r, key, true))
+            : entries.OrderBy(r => SortKey(r, key, false));
+    }
+
     private record RecEntry(
         string Symbol,
         string Sector,
@@ -239,19 +250,21 @@
                 p.RecommendationText))
             .ToList();
 
-        Func<RecEntry, object> keySelector = _sortColumn switch
+        IOrderedEnumerable<RecEntry> ordered = _sortColumn switch
         {
-            SortColumn.Sector => r => (object)(r.Sector ?? ""),
-            SortColumn.Zone => r => (object)(r.EntryLow ?? 0m),
-            SortColumn.Stop => r => (object)(r.StopLoss ?? 0m),
-            SortColumn.Target => r => (object)(r.TargetPrice ?? 0m),
-            SortColumn.Status => r => (object)(int)r.StatusBadge,
-            _ => r => (object)r.Symbol
+            SortColumn.Sector => _sortDesc
+                ? entries.OrderByDescending(r => r.Sector ?? "", StringComparer.OrdinalIgnoreCase)
+                : entries.OrderBy(r => r.Sector ?? "", StringComparer.OrdinalIgnoreCase),
+            SortColumn.Zone => SortDecimal(entries, r => r.EntryLow),
+            SortColumn.Stop => SortDecimal(entries, r => r.StopLoss),
+            SortColumn.Target => SortDecimal(entries, r => r.TargetPrice),
+            SortColumn.Status => _sortDesc
+                ? entries.OrderByDescending(r => (int)r.StatusBadge)
+                : entries.OrderBy(r => (int)r.StatusBadge),
+            _ => _sortDesc
+                ? entries.OrderByDescending(r => r.Symbol, StringComparer.OrdinalIgnoreCase)
+                : entries.OrderBy(r => r.Symbol, StringComparer.OrdinalIgnoreCase)
         };
-
-        var ordered = _sortDesc
-            ? entries.OrderByDescending(keySelector)
-            : entries.OrderBy(keySelector);
 
         return ordered.ToList();
     }
