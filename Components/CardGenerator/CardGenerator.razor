@@ -1,0 +1,138 @@
+@using BlazorWasmPortfolioGhAction.Utils
+
+<ToolShell ResourceKey="cardgenerator"
+           Title="Card Generator"
+           Icon="bi-credit-card-2-front"
+           Description="Generate Luhn-valid test card numbers from BIN (6/8-digit) or account range.">
+
+    <div class="cardgen-grid">
+        <div class="tool-field">
+            <label class="tool-label" for="cardgen-mode">Mode</label>
+            <select id="cardgen-mode" class="tool-input" @bind="mode" @bind:event="onchange">
+                <option value="bin">BIN / Prefix</option>
+                <option value="range">Account Range</option>
+            </select>
+        </div>
+
+        @if (mode == "bin")
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="cardgen-prefix">BIN / Prefix (digits)</label>
+                <input id="cardgen-prefix" class="tool-input" placeholder="524842" maxlength="10" @bind="prefix" @bind:event="oninput" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label" for="cardgen-len">Total length</label>
+                <select id="cardgen-len" class="tool-input" @bind="totalLength" @bind:event="onchange">
+                    <option value="16">16</option>
+                    <option value="15">15 (Amex)</option>
+                    <option value="19">19</option>
+                </select>
+            </div>
+        }
+        else
+        {
+            <div class="tool-field">
+                <label class="tool-label" for="cardgen-min">Range min (digits)</label>
+                <input id="cardgen-min" class="tool-input" placeholder="5248420000000000" @bind="rangeMin" @bind:event="oninput" />
+            </div>
+            <div class="tool-field">
+                <label class="tool-label" for="cardgen-max">Range max (digits)</label>
+                <input id="cardgen-max" class="tool-input" placeholder="5248429999999999" @bind="rangeMax" @bind:event="oninput" />
+            </div>
+        }
+
+        <div class="tool-field">
+            <label class="tool-label" for="cardgen-count">Count</label>
+            <input id="cardgen-count" type="number" class="tool-input" min="1" max="1000" @bind="count" @bind:event="oninput" />
+        </div>
+
+        <div class="tool-actions cardgen-actions">
+            <button class="tool-btn tool-btn-success" @onclick="Generate">
+                <i class="bi bi-shuffle" aria-hidden="true"></i> Generate
+            </button>
+            <button class="tool-btn tool-btn-secondary" @onclick="ClearResults" disabled="@(!results.Any())">
+                <i class="bi bi-trash" aria-hidden="true"></i> Clear
+            </button>
+            <button class="tool-btn tool-btn-secondary" @onclick="CopyAll" disabled="@(!results.Any())">
+                <i class="bi bi-clipboard" aria-hidden="true"></i> Copy
+            </button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <div class="tool-alert tool-alert-danger">@error</div>
+        }
+
+        @if (results.Any())
+        {
+            <div class="cardgen-results">
+                <div class="cardgen-results-header">
+                    <span>@results.Count PAN@(results.Count == 1 ? "" : "s") - all Luhn-valid</span>
+                </div>
+                <textarea class="tool-input cardgen-output" readonly>@OutputText</textarea>
+            </div>
+        }
+    </div>
+</ToolShell>
+
+@code {
+    private string mode = "bin";
+    private string prefix = "524842";
+    private int totalLength = 16;
+    private string rangeMin = "5248420000000000";
+    private string rangeMax = "5248429999999999";
+    private int count = 10;
+    private string error = "";
+    private List<string> results = new();
+    private Random rng = new();
+
+    private string OutputText => string.Join(Environment.NewLine, results);
+
+    private void Generate()
+    {
+        error = "";
+        results.Clear();
+        var n = Math.Clamp(count, 1, 1000);
+        try
+        {
+            if (mode == "bin")
+            {
+                var p = new string(prefix.Where(char.IsDigit).ToArray());
+                if (p.Length == 0) { error = "Prefix must contain digits."; return; }
+                if (p.Length >= totalLength) { error = "Prefix must be shorter than total length."; return; }
+                results.AddRange(CardGeneratorUtils.GenerateMany(p, totalLength, n, rng).Distinct().Take(n));
+            }
+            else
+            {
+                var lo = new string(rangeMin.Where(char.IsDigit).ToArray());
+                var hi = new string(rangeMax.Where(char.IsDigit).ToArray());
+                if (lo.Length != hi.Length || lo.Length < 2) { error = "Min/max must be same length (>= 2 digits)."; return; }
+                var seen = new HashSet<string>();
+                var guard = 0;
+                while (seen.Count < n && guard < n * 4)
+                {
+                    seen.Add(CardGeneratorUtils.GenerateInRange(lo, hi, rng));
+                    guard++;
+                }
+                results.AddRange(seen.Take(n));
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+
+    private void ClearResults() => results.Clear();
+
+    private async Task CopyAll()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", OutputText);
+        }
+        catch { }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+}
