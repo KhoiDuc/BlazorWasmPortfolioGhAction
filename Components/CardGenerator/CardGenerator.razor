@@ -33,11 +33,11 @@
         {
             <div class="tool-field">
                 <label class="tool-label" for="cardgen-min">Range min (digits)</label>
-                <input id="cardgen-min" class="tool-input" placeholder="5248420000000000" @bind="rangeMin" @bind:event="oninput" />
+                <input id="cardgen-min" class="tool-input" placeholder="52484200000" @bind="rangeMin" @bind:event="oninput" />
             </div>
             <div class="tool-field">
                 <label class="tool-label" for="cardgen-max">Range max (digits)</label>
-                <input id="cardgen-max" class="tool-input" placeholder="5248429999999999" @bind="rangeMax" @bind:event="oninput" />
+                <input id="cardgen-max" class="tool-input" placeholder="52484299999" @bind="rangeMax" @bind:event="oninput" />
             </div>
         }
 
@@ -79,8 +79,8 @@
     private string mode = "bin";
     private string prefix = "524842";
     private int totalLength = 16;
-    private string rangeMin = "5248420000000000";
-    private string rangeMax = "5248429999999999";
+    private string rangeMin = "52484200000";
+    private string rangeMax = "52484299999";
     private int count = 10;
     private string error = "";
     private List<string> results = new();
@@ -107,11 +107,12 @@
                 var lo = new string(rangeMin.Where(char.IsDigit).ToArray());
                 var hi = new string(rangeMax.Where(char.IsDigit).ToArray());
                 if (lo.Length != hi.Length || lo.Length < 2) { error = "Min/max must be same length (>= 2 digits)."; return; }
+                if (totalLength < lo.Length + 2) { error = $"Total length must be >= range length + 2 ({lo.Length + 2})."; return; }
                 var seen = new HashSet<string>();
                 var guard = 0;
                 while (seen.Count < n && guard < n * 4)
                 {
-                    seen.Add(CardGeneratorUtils.GenerateInRange(lo, hi, rng));
+                    seen.Add(CardGeneratorUtils.GenerateInRange(lo, hi, totalLength, rng));
                     guard++;
                 }
                 results.AddRange(seen.Take(n));

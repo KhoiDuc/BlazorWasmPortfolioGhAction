@@ -29,21 +29,33 @@ public static class CardGeneratorUtils
             yield return Generate(prefix, totalLength, rng);
     }
 
-    /// <summary>Generate a PAN whose number falls within [min, max] (inclusive, same digit length).</summary>
-    public static string GenerateInRange(string min, string max, Random rng)
+    /// <summary>
+    /// Generate a Luhn-valid PAN from an account range [min, max] (same-length digit strings,
+    /// e.g. 11-digit "52484200000".."52484299999"). The range forms the leading prefix of the
+    /// PAN; remaining middle digits are random; final digit is the Luhn check digit.
+    /// totalLength must exceed range length by at least 2 (>=1 middle + 1 check digit).
+    /// </summary>
+    public static string GenerateInRange(string min, string max, int totalLength, Random rng)
     {
         if (min.Length != max.Length || !min.All(char.IsDigit) || !max.All(char.IsDigit))
             throw new ArgumentException("min/max must be same-length digit strings.");
         if (string.CompareOrdinal(min, max) > 0)
             (min, max) = (max, min);
+        if (totalLength < min.Length + 2)
+            throw new ArgumentException("totalLength must exceed range length by at least 2.", nameof(totalLength));
 
-        var len = min.Length;
-        // Work on the payload (len-1 digits); check digit computed after.
-        var lo = long.Parse(min[..^1]);
-        var hi = long.Parse(max[..1]);
-        var payload = lo + (long)(rng.NextDouble() * (hi - lo + 1));
-        var payloadStr = payload.ToString(new string('0', len - 1));
-        return payloadStr + LuhnCheckDigit(payloadStr);
+        // Pick a random value within the range (inclusive).
+        var lo = long.Parse(min);
+        var hi = long.Parse(max);
+        var rangeVal = lo + (long)(rng.NextDouble() * (hi - lo + 1));
+        var rangeStr = rangeVal.ToString(new string('0', min.Length));
+
+        // Build payload: range prefix + random middle digits (check digit computed last).
+        var middleLen = totalLength - min.Length - 1;
+        Span<char> payload = stackalloc char[totalLength - 1];
+        for (var i = 0; i < rangeStr.Length; i++) payload[i] = rangeStr[i];
+        for (var i = 0; i < middleLen; i++) payload[rangeStr.Length + i] = (char)('0' + rng.Next(10));
+        return new string(payload) + LuhnCheckDigit(payload);
     }
 
     /// <summary>Compute the Luhn check digit for a payload (no check digit appended).</summary>
