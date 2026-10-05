@@ -72,6 +72,37 @@
                 <textarea class="tool-input cardgen-output" readonly>@OutputText</textarea>
             </div>
         }
+
+        <details class="cardgen-formula">
+            <summary><i class="bi bi-info-circle" aria-hidden="true"></i> Formula &amp; example</summary>
+            <div class="cardgen-formula-body">
+                @if (mode == "bin")
+                {
+                    <p><strong>BIN mode</strong> - PAN = <code>[BIN]</code> + <code>[random middle]</code> + <code>[Luhn check digit]</code></p>
+                    <p>Structure (@totalLength digits): <code>@(new string('B', Math.Min(prefix.Length, totalLength-1)))@(new string('R', totalLength - prefix.Length - 1))C</code></p>
+                    <ul>
+                        <li><code>B</code> = BIN/prefix (<span>@prefix.Length</span> digits, you provide)</li>
+                        <li><code>R</code> = random middle (<span>@(totalLength - prefix.Length - 1)</span> digits)</li>
+                        <li><code>C</code> = Luhn check digit (1 digit, computed from B+R)</li>
+                    </ul>
+                    <p>Example: BIN <code>@prefix</code>, length @(totalLength) &rarr; <code>@prefix</code> + <code>@(new string('R', totalLength - prefix.Length - 1))</code> + <code>C</code></p>
+                }
+                else
+                {
+                    var rangeLen = new string(rangeMin.Where(char.IsDigit).ToArray()).Length;
+                    <p><strong>Account Range mode</strong> - PAN = <code>[range value]</code> + <code>[random middle]</code> + <code>[Luhn check digit]</code></p>
+                    <p>Structure (@totalLength digits): <code>@(new string('R', rangeLen))@(new string('X', totalLength - rangeLen - 1))C</code></p>
+                    <ul>
+                        <li><code>R</code> = account range value (<span>@rangeLen</span> digits = BIN + account, picked randomly within [min, max])</li>
+                        <li><code>X</code> = random middle (<span>@(totalLength - rangeLen - 1)</span> digits)</li>
+                        <li><code>C</code> = Luhn check digit (1 digit, computed from R+X)</li>
+                    </ul>
+                    <p>Example: range <code>@rangeMin</code>&ndash;<code>@rangeMax</code>, length @(totalLength): pick 11-digit value <code>@(rangeMin[..^1])</code>...<code>5</code> &rarr; <code>524842XXXXX</code> + <code>@(new string('Y', totalLength - rangeLen - 1))</code> + <code>C</code></p>
+                    <p><small>Mastercard structure: 6-digit BIN + 5-digit account range + 4 random + 1 Luhn = 16 digits.</small></p>
+                }
+                <p class="cardgen-formula-luhn"><strong>Luhn (Mod 10) check digit:</strong> from rightmost payload digit, double every second digit; if &gt;9 subtract 9; sum all; check digit = <code>(10 &minus; sum mod 10) mod 10</code>.</p>
+            </div>
+        </details>
     </div>
 </ToolShell>
 
