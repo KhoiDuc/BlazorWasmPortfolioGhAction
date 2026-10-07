@@ -27,6 +27,29 @@ public class WatchlistScore
     public string Note { get; set; } = "";
 }
 
+public enum RsiZone
+{
+    Neutral,
+    OverboughtStrong,
+    OverboughtMild,
+    OversoldMild,
+    OversoldStrong
+}
+
+public class RsiScanRow
+{
+    public string Symbol { get; set; } = "";
+    public decimal Rsi { get; set; }
+    public decimal PreviousRsi { get; set; }
+    public RsiZone Zone { get; set; }
+    public decimal LastPrice { get; set; }
+    public decimal PriceChange { get; set; }
+    public TrendDirection Trend { get; set; }
+    public string TrendLabel { get; set; } = "";
+    public string Signal { get; set; } = "";
+    public decimal VolumeRatio { get; set; }
+}
+
 public class NewsBrief
 {
     public string Facts { get; set; } = "";

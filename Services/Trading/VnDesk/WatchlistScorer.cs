@@ -24,4 +24,31 @@ public sealed class WatchlistScorer
         s.Note = s.Pass ? _L["Trading_Score_Pass"].Value : _L["Trading_Score_Fail"].Value;
         return s;
     }
+
+    public static RsiZone ClassifyRsi(decimal rsi) => rsi switch
+    {
+        >= 80 => RsiZone.OverboughtStrong,
+        >= 70 => RsiZone.OverboughtMild,
+        <= 20 => RsiZone.OversoldStrong,
+        <= 30 => RsiZone.OversoldMild,
+        _ => RsiZone.Neutral
+    };
+
+    public RsiScanRow RsiScan(TechnicalIndicators ind)
+    {
+        var zone = ClassifyRsi(ind.RSI);
+        return new RsiScanRow
+        {
+            Symbol = ind.Symbol,
+            Rsi = ind.RSI,
+            PreviousRsi = ind.PreviousRSI,
+            Zone = zone,
+            LastPrice = ind.LatestClose,
+            PriceChange = ind.PreviousClose > 0 ? (ind.LatestClose - ind.PreviousClose) / ind.PreviousClose * 100 : 0,
+            Trend = ind.Trend,
+            TrendLabel = _L[IndicatorService.TrendLabel(ind.Trend)].Value,
+            Signal = ind.TradingSignal.Action,
+            VolumeRatio = ind.VolumeRatio
+        };
+    }
 }

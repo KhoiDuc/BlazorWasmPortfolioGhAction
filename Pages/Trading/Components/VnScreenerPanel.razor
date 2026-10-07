@@ -14,6 +14,7 @@
     <div class="vd-subtabs">
         <button class="vd-subtab @(_sub == "screen" ? "active" : "")" @onclick='() => _sub = "screen"'>@L["Trading_Screener_TabScreen"]</button>
         <button class="vd-subtab @(_sub == "watch" ? "active" : "")" @onclick='() => _sub = "watch"'>@L["Trading_Screener_TabWatch"]</button>
+        <button class="vd-subtab @(_sub == "rsi" ? "active" : "")" @onclick='() => _sub = "rsi"'>@L["Trading_Screener_TabRsi"]</button>
     </div>
     @if (_sub == "screen")
     {
@@ -34,9 +35,24 @@
     {
         <div class="vd-section">
             <label class="ts-label">@L["Trading_Screener_WatchSymbols"]</label>
-            <input class="vd-input" @bind="_watchSymbols" placeholder="VNM,FPT,MWG..." disabled="@_busy" />
+            <input class="vd-input" @bind="_watchSymbols" placeholder="VNM,FPT,MWB..." disabled="@_busy" />
         </div>
         <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="RunWatchlist" disabled="@_busy">@L["Trading_Screener_ScoreBtn"]</button>
+    }
+    @if (_sub == "rsi")
+    {
+        <div class="vd-controls">
+            <label class="ts-label">@L["Trading_Screener_List"]</label>
+            <select class="vd-select" @bind="_rsiListKey" disabled="@_busy">
+                <option value="VN30">VN30</option>
+                <option value="HOSE">HOSE</option>
+                <option value="HNX30">HNX30</option>
+                <option value="UPCOM">UPCOM</option>
+                <option value="NganHang">Ngân hàng</option>
+            </select>
+            <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="RunRsiScan" disabled="@_busy">@L["Trading_Screener_RsiScanBtn", _rsiListKey]</button>
+        </div>
+        @if (_progress > 0) { <p class="ts-muted mt-1" style="font-size:0.82rem">@_progress / @_progressTotal</p> }
     }
     @if (_busy) { <span class="vd-spinner mt-2"></span> }
     @if (!string.IsNullOrEmpty(_error)) { <div class="vd-alert vd-alert-error mt-2">@_error</div> }
@@ -92,15 +108,62 @@ else if (_sub == "watch" && _watchScores.Count > 0)
         </div>
     </div>
 }
+else if (_sub == "rsi" && _rsiRows.Count > 0)
+{
+    var groups = new (string Label, RsiZone Zone, string Css)[]
+    {
+        (L["Trading_Rsi_OverboughtStrong"].Value, RsiZone.OverboughtStrong, "vd-neg"),
+        (L["Trading_Rsi_OverboughtMild"].Value, RsiZone.OverboughtMild, "vd-neg"),
+        (L["Trading_Rsi_OversoldMild"].Value, RsiZone.OversoldMild, "vd-pos"),
+        (L["Trading_Rsi_OversoldStrong"].Value, RsiZone.OversoldStrong, "vd-pos")
+    };
+    foreach (var g in groups)
+    {
+        var rows = _rsiRows.Where(r => r.Zone == g.Zone).OrderBy(r => r.Rsi).ToList();
+        if (rows.Count == 0) continue;
+        <div class="vd-panel">
+            <h2 class="vd-section-title">@g.Label <span class="vd-badge">@rows.Count</span></h2>
+            <div class="vd-grid-wrap">
+            <table class="vd-grid">
+                <thead><tr><th>Mã</th><th>RSI</th><th>RSI trước</th><th>Giá</th><th>%</th><th>Trend</th><th>Signal</th><th>Vol xTB</th></tr></thead>
+                <tbody>
+                    @foreach (var r in rows)
+                    {
+                        <tr @onclick="() => OnSymbolSelected.InvokeAsync(r.Symbol)">
+                            <td><strong>@r.Symbol</strong></td>
+                            <td class="@g.Css">@r.Rsi.ToString("F1")</td>
+                            <td>@r.PreviousRsi.ToString("F1")</td>
+                            <td>@r.LastPrice.ToString("N2")</td>
+                            <td class="@(r.PriceChange >= 0 ? "vd-pos" : "vd-neg")">@r.PriceChange.ToString("F2")%</td>
+                            <td>@r.TrendLabel</td>
+                            <td><span class="ts-signal">@r.Signal</span></td>
+                            <td>@r.VolumeRatio.ToString("F2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            </div>
+        </div>
+    }
+    var neutral = _rsiRows.Where(r => r.Zone == RsiZone.Neutral).ToList();
+    if (neutral.Count > 0)
+    {
+        <div class="vd-panel">
+            <p class="ts-muted" style="font-size:0.82rem">@L["Trading_Rsi_Neutral"].Value (@neutral.Count)</p>
+        </div>
+    }
+}
 
 @code {
     [Parameter] public EventCallback<string> OnSymbolSelected { get; set; }
 
     private string _sub = "screen";
     private string _listKey = "VN30";
+    private string _rsiListKey = "VN30";
     private string _watchSymbols = "";
     private List<PotentialStock> _screenResults = [];
     private List<WatchlistScore> _watchScores = [];
+    private List<RsiScanRow> _rsiRows = [];
     private List<string> _criteria = [];
     private int _progress;
     private int _progressTotal;
@@ -171,5 +234,40 @@ else if (_sub == "watch" && _watchScores.Count > 0)
             _error = ex.Message;
         }
         finally { _busy = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private async Task RunRsiScan()
+    {
+        _busy = true;
+        _error = null;
+        _rsiRows = [];
+        _progress = 0;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var lists = await Screener.GetListsAsync();
+            if (!lists.TryGetValue(_rsiListKey, out var symbols) || symbols.Count == 0)
+            {
+                _error = L["Trading_Screener_Empty"];
+                return;
+            }
+            _progressTotal = symbols.Count;
+            foreach (var sym in symbols)
+            {
+                var hist = await Market.GetHistoricalAsync(sym, Options.ScreenerDays);
+                var ta = Indicators.Calculate(sym, hist);
+                if (ta is not null)
+                    _rsiRows.Add(Scorer.RsiScan(ta));
+                _progress++;
+                if (_progress % 5 == 0) await InvokeAsync(StateHasChanged);
+            }
+            _rsiRows = _rsiRows.OrderByDescending(r => r.Zone).ThenBy(r => r.Rsi).ToList();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "RSI scan failed for {List}", _rsiListKey);
+            _error = ex.Message;
+        }
+        finally { _busy = false; _progress = 0; await InvokeAsync(StateHasChanged); }
     }
 }
