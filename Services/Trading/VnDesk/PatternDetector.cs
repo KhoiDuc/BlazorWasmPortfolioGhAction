@@ -436,7 +436,7 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk {
         private static void DetectTweezerPatterns(StockData latest, StockData previous, List<CandlestickPattern> patterns)
         {
             // Tweezer Bottoms (đáy nhíp - hai nến có mức thấp gần nhau)
-            if (Math.Abs(latest.Low - previous.Low) / previous.Low < TWEEZER_THRESHOLD)
+            if (previous.Low > 0 && Math.Abs(latest.Low - previous.Low) / previous.Low < TWEEZER_THRESHOLD)
             {
                 if (previous.IsBearish && latest.IsBullish)
                     patterns.Add(new CandlestickPattern(
@@ -446,7 +446,7 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk {
                         Direction.Bullish));
             }
             // Tweezer Tops (đỉnh nhíp - hai nến có mức cao gần nhau)
-            if (Math.Abs(latest.High - previous.High) / previous.High < TWEEZER_THRESHOLD)
+            if (previous.High > 0 && Math.Abs(latest.High - previous.High) / previous.High < TWEEZER_THRESHOLD)
             {
                 if (previous.IsBullish && latest.IsBearish)
                     patterns.Add(new CandlestickPattern(
@@ -633,7 +633,7 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk {
         private static void DetectMatchingPatterns(StockData latest, StockData previous, List<CandlestickPattern> patterns)
         {
             // Matching Low (hỗ trợ tiềm năng)
-            if (previous.IsBearish && latest.IsBearish &&
+            if (previous.IsBearish && latest.IsBearish && latest.Close > 0 &&
                 Math.Abs(previous.Close - latest.Close) / latest.Close < 0.001m)
             {
                 patterns.Add(new CandlestickPattern(
@@ -643,7 +643,7 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk {
             }
 
             // Matching High (kháng cự tiềm năng)
-            if (previous.IsBullish && latest.IsBullish &&
+            if (previous.IsBullish && latest.IsBullish && latest.Close > 0 &&
                 Math.Abs(previous.Close - latest.Close) / latest.Close < 0.001m)
             {
                 patterns.Add(new CandlestickPattern(
@@ -709,7 +709,7 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk {
                     Direction.Bullish));
 
                 // Biến thể Morning Doji Star
-                if (previous.BodySize / previous.Range < DOJI_THRESHOLD)
+                if (previous.Range > 0.0001m && previous.BodySize / previous.Range < DOJI_THRESHOLD)
                 {
                     patterns.Add(new CandlestickPattern(
                         "Morning Doji Star",
@@ -733,7 +733,7 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk {
                     Direction.Bearish));
 
                 // Biến thể Evening Doji Star
-                if (previous.BodySize / previous.Range < DOJI_THRESHOLD)
+                if (previous.Range > 0.0001m && previous.BodySize / previous.Range < DOJI_THRESHOLD)
                 {
                     patterns.Add(new CandlestickPattern(
                         "Evening Doji Star",
@@ -778,7 +778,7 @@ namespace BlazorWasmPortfolioGhAction.Services.Trading.VnDesk {
         private static void DetectAbandonedBaby(StockData latest, StockData previous, StockData twoDaysAgo, List<CandlestickPattern> patterns)
         {
             // Kiểm tra nếu nến giữa là Doji
-            if (Math.Abs(previous.BodySize / previous.Range) < DOJI_THRESHOLD)
+            if (previous.Range > 0.0001m && Math.Abs(previous.BodySize / previous.Range) < DOJI_THRESHOLD)
             {
                 // Abandoned Baby Bullish
                 if (twoDaysAgo.IsBearish && latest.IsBullish &&
