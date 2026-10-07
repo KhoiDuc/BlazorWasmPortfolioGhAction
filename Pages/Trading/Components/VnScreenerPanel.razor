@@ -110,14 +110,15 @@ else if (_sub == "watch" && _watchScores.Count > 0)
 }
 else if (_sub == "rsi" && _rsiRows.Count > 0)
 {
-    var groups = new (string Label, RsiZone Zone, string Css)[]
+    var zoneGroups = new (string Label, RsiZone Zone, string Css)[]
     {
         (L["Trading_Rsi_OverboughtStrong"].Value, RsiZone.OverboughtStrong, "vd-neg"),
         (L["Trading_Rsi_OverboughtMild"].Value, RsiZone.OverboughtMild, "vd-neg"),
+        (L["Trading_Rsi_Neutral"].Value, RsiZone.Neutral, ""),
         (L["Trading_Rsi_OversoldMild"].Value, RsiZone.OversoldMild, "vd-pos"),
         (L["Trading_Rsi_OversoldStrong"].Value, RsiZone.OversoldStrong, "vd-pos")
     };
-    foreach (var g in groups)
+    foreach (var g in zoneGroups)
     {
         var rows = _rsiRows.Where(r => r.Zone == g.Zone).OrderBy(r => r.Rsi).ToList();
         if (rows.Count == 0) continue;
@@ -145,19 +146,6 @@ else if (_sub == "rsi" && _rsiRows.Count > 0)
             </div>
         </div>
     }
-    var neutral = _rsiRows.Where(r => r.Zone == RsiZone.Neutral).ToList();
-    if (neutral.Count > 0)
-    {
-        <div class="vd-panel">
-            <p class="ts-muted" style="font-size:0.82rem">@L["Trading_Rsi_Neutral"].Value (@neutral.Count)</p>
-        </div>
-    }
-}
-else if (_sub == "rsi" && !_busy && string.IsNullOrEmpty(_error) && _rsiScanned)
-{
-    <div class="vd-panel">
-        <p class="ts-muted" style="font-size:0.82rem">RSI scan hoàn tất — không có mã nào thỏa điều kiện quá mua/quá bán.</p>
-    </div>
 }
 
 @code {
