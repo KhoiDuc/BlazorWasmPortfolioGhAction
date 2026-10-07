@@ -57,6 +57,10 @@
     {
         <div class="ts-alert @(_messageError ? "ts-alert-error" : "ts-alert-info") broker-alert broker-alert-flash" role="@(_messageError ? "alert" : "status")">
             <span>@_message</span>
+            @if (_undoSellEntry is not null)
+            {
+                <button type="button" class="broker-alert-undo" @onclick="UndoLastSell">@L["Trading_BrokerUndoSell"]</button>
+            }
             <button type="button" class="broker-alert-close" aria-label="@L["Trading_BrokerDismiss"]" @onclick="DismissMessage">×</button>
         </div>
     }
@@ -344,6 +348,11 @@
     private bool _activeSlTpFlash;
     private CancellationTokenSource? _priceCts;
 
+    // Undo last sell (5s window)
+    private BrokerPosition? _undoSellPos;
+    private BrokerSell? _undoSellEntry;
+    private Timer? _undoTimer;
+
     private string _newSymbol = "";
     private decimal? _newPrice;
     private decimal? _newQty;
@@ -485,10 +494,64 @@
         else
         {
             var realized = pos.RealizedPnl ?? 0m;
+            SetupUndoSell(pos, sell);
             Flash(L["Trading_BrokerFlash_Sold", pos.Symbol, sell.Price.ToString("N2"), sell.Quantity ?? 0, BrokerFormat.Vnd(realized)]);
         }
         _quickSellPosition = null;
         await Task.CompletedTask;
+    }
+
+    private void SetupUndoSell(BrokerPosition pos, BrokerSell sell)
+    {
+        _undoSellPos = pos;
+        _undoSellEntry = sell;
+        _undoTimer?.Dispose();
+        _undoTimer = new Timer(_ =>
+        {
+            try
+            {
+                _ = InvokeAsync(() =>
+                {
+                    _undoSellPos = null;
+                    _undoSellEntry = null;
+                    StateHasChanged();
+                    return Task.CompletedTask;
+                });
+            }
+            catch { /* disposed */ }
+        }, null, 5000, Timeout.Infinite);
+    }
+
+    private async Task UndoLastSell()
+    {
+        if (_undoSellEntry is null || _undoSellPos is null) return;
+        var pos = _undoSellPos;
+        var sell = _undoSellEntry;
+        _undoTimer?.Dispose();
+        _undoSellPos = null;
+        _undoSellEntry = null;
+
+        var wasClosed = pos.IsClosed;
+        pos.Sells.Remove(sell);
+        MarkDirty();
+
+        var (ok, error) = await Store.DeleteSellAsync(pos.Symbol, sell.Id);
+        if (ok)
+        {
+            _dirty = false;
+            if (wasClosed && !_portfolio.Positions.Contains(pos))
+            {
+                _portfolio.ClosedPositions?.Remove(pos);
+                pos.Status = BrokerPositionStatus.NamGiu;
+                _portfolio.Positions.Add(pos);
+                await SyncArchivePosition(pos, isArchived: false, BrokerPositionStatus.NamGiu);
+            }
+            Flash(L["Trading_BrokerFlash_UndoSold", pos.Symbol, sell.Quantity ?? 0]);
+        }
+        else
+        {
+            Flash(L["Trading_BrokerFlash_UndoFail", error ?? ""], error: true);
+        }
     }
 
     private async Task OnPositionClosedCore(BrokerPosition pos)
@@ -1108,6 +1171,9 @@
     private void DismissMessage()
     {
         _flashTimer?.Dispose();
+        _undoTimer?.Dispose();
+        _undoSellPos = null;
+        _undoSellEntry = null;
         _message = null;
         _messageError = false;
         _activeSlTpFlash = false;
@@ -1117,6 +1183,7 @@
     {
         _persistTimer?.Dispose();
         _flashTimer?.Dispose();
+        _undoTimer?.Dispose();
         _priceCts?.Cancel();
         _priceCts?.Dispose();
 
