@@ -27,10 +27,10 @@ public sealed class WatchlistScorer
 
     public static RsiZone ClassifyRsi(decimal rsi) => rsi switch
     {
-        >= 80 => RsiZone.OverboughtStrong,
-        >= 70 => RsiZone.OverboughtMild,
-        <= 20 => RsiZone.OversoldStrong,
-        <= 30 => RsiZone.OversoldMild,
+        >= 75 => RsiZone.OverboughtStrong,
+        >= 65 => RsiZone.OverboughtMild,
+        <= 25 => RsiZone.OversoldStrong,
+        <= 35 => RsiZone.OversoldMild,
         _ => RsiZone.Neutral
     };
 
