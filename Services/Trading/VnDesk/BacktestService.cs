@@ -89,7 +89,7 @@ public sealed class BacktestService
                 {
                     var exit = data[i].Close;
                     var pnl = exit - openTrade.EntryPrice;
-                    var pnlPct = (double)(pnl / openTrade.EntryPrice * 100);
+                    var pnlPct = (double)(pnl / (openTrade.EntryPrice == 0 ? 1 : openTrade.EntryPrice) * 100);
                     trades.Add(openTrade with
                     {
                         Exit = data[i].Date,
@@ -129,7 +129,7 @@ public sealed class BacktestService
                 {
                     var exit = data[i].Close;
                     var pnl = exit - openTrade.EntryPrice;
-                    var pnlPct = (double)(pnl / openTrade.EntryPrice * 100);
+                    var pnlPct = (double)(pnl / (openTrade.EntryPrice == 0 ? 1 : openTrade.EntryPrice) * 100);
                     trades.Add(openTrade with
                     {
                         Exit = data[i].Date,
@@ -165,7 +165,7 @@ public sealed class BacktestService
                 {
                     var pnl = data[j].Close - entry;
                     trades.Add(new BacktestTrade(symbol, data[i].Date, entry, data[j].Date, data[j].Close,
-                        tp, sl, (data[j].Date - data[i].Date).Days, pnl, (double)(pnl / entry * 100), pnl > 0));
+                        tp, sl, (data[j].Date - data[i].Date).Days, pnl, (double)(pnl / (entry == 0 ? 1 : entry) * 100), pnl > 0));
                     break;
                 }
             }
@@ -204,7 +204,7 @@ public sealed class BacktestService
                     {
                         var pnl = data[j].Close - entry;
                         trades.Add(new BacktestTrade(symbol, data[i + 1].Date, entry, data[j].Date, data[j].Close,
-                            tp, sl, (data[j].Date - data[i + 1].Date).Days, pnl, (double)(pnl / entry * 100), pnl > 0));
+                            tp, sl, (data[j].Date - data[i + 1].Date).Days, pnl, (double)(pnl / (entry == 0 ? 1 : entry) * 100), pnl > 0));
                         break;
                     }
                 }
@@ -231,7 +231,7 @@ public sealed class BacktestService
                 {
                     var pnl = data[j].Close - entry;
                     trades.Add(new BacktestTrade(symbol, data[i + 1].Date, entry, data[j].Date, data[j].Close,
-                        tp, sl, (data[j].Date - data[i + 1].Date).Days, pnl, (double)(pnl / entry * 100), pnl > 0));
+                        tp, sl, (data[j].Date - data[i + 1].Date).Days, pnl, (double)(pnl / (entry == 0 ? 1 : entry) * 100), pnl > 0));
                     break;
                 }
             }
@@ -258,7 +258,7 @@ public sealed class BacktestService
                 {
                     var pnl = data[j].Close - entry;
                     trades.Add(new BacktestTrade(symbol, data[i + 1].Date, entry, data[j].Date, data[j].Close,
-                        tp, sl, (data[j].Date - data[i + 1].Date).Days, pnl, (double)(pnl / entry * 100), pnl > 0));
+                        tp, sl, (data[j].Date - data[i + 1].Date).Days, pnl, (double)(pnl / (entry == 0 ? 1 : entry) * 100), pnl > 0));
                     break;
                 }
             }

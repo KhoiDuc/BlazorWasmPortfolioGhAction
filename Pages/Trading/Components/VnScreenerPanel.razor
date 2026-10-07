@@ -250,10 +250,17 @@ else if (_sub == "rsi" && _rsiRows.Count > 0)
             _progressTotal = symbols.Count;
             foreach (var sym in symbols)
             {
-                var hist = await Market.GetHistoricalAsync(sym, 250);
-                var ta = Indicators.Calculate(sym, hist);
-                if (ta is not null)
-                    _rsiRows.Add(Scorer.RsiScan(ta));
+                try
+                {
+                    var hist = await Market.GetHistoricalAsync(sym, 250);
+                    var ta = Indicators.Calculate(sym, hist);
+                    if (ta is not null)
+                        _rsiRows.Add(Scorer.RsiScan(ta));
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(ex, "RSI scan skipped {Symbol}", sym);
+                }
                 _progress++;
                 if (_progress % 5 == 0) await InvokeAsync(StateHasChanged);
             }

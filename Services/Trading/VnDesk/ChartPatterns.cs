@@ -44,7 +44,7 @@ public static class ChartPatterns
         var pivotSlice = ordered.Skip(i + 1 - pivotLength).Take(pivotLength).ToList();
         var pivotHigh = pivotSlice.Max(d => d.High);
         var pivotLow = pivotSlice.Min(d => d.Low);
-        var pivotWidth = (pivotHigh - pivotLow) / cur.Close;
+        var pivotWidth = cur.Close > 0 ? (pivotHigh - pivotLow) / cur.Close : 0;
         var pivotStartHp = ordered[i + 1 - pivotLength].High;
         var isPivot = pivotWidth < pvLimit && pivotHigh == pivotStartHp;
 

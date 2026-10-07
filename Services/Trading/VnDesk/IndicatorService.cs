@@ -21,7 +21,7 @@ public sealed partial class IndicatorService
         var highs = historyData.Select(d => d.High).ToArray();
         var lows = historyData.Select(d => d.Low).ToArray();
         var volumes = historyData.Select(d => d.Volume).ToArray();
-        if (closes.Any(c => c <= 0) || volumes.Any(v => v < 0))
+        if (closes.Any(c => c <= 0) || volumes.Any(v => v < 0) || highs.Any(h => h <= 0) || lows.Any(l => l < 0))
             return null;
 
         var rsiHistory = CalculateRsiHistory(closes);
@@ -381,7 +381,7 @@ public sealed partial class IndicatorService
     private static List<decimal> FilterClose(List<decimal> levels, decimal threshold)
     {
         var filtered = new List<decimal>();
-        foreach (var lv in levels.OrderBy(x => x))
+        foreach (var lv in levels.OrderBy(x => x).Where(x => x > 0))
         {
             if (filtered.Count == 0 || Math.Abs(lv - filtered.Last()) / filtered.Last() > threshold)
                 filtered.Add(lv);
@@ -419,7 +419,7 @@ public sealed partial class IndicatorService
         var prev200 = closes.Length >= 201 ? closes.TakeLast(201).Take(200).Average() : 0;
         bool volOk = latestVolume > volumeAverage * 1.3m;
         bool rsiUp = rsi > 55, rsiDn = rsi < 45;
-        bool sideways = atr / latest < 0.02m || (bbMiddle != 0 && (bbUpper - bbLower) / bbMiddle < 0.04m);
+        bool sideways = latest > 0 && atr / latest < 0.02m || (bbMiddle != 0 && (bbUpper - bbLower) / bbMiddle < 0.04m);
         bool sma20Up = sma20 > prev20;
 
         if (closes.Length >= 200 && prev200 > 0)
@@ -640,12 +640,12 @@ public sealed partial class IndicatorService
 
         var recentLows = lows.TakeLast(20).ToArray();
         var lowIdx = recentLows.Select((v, i) => new { v, i }).OrderBy(x => x.v).Take(2).OrderBy(x => x.i).ToArray();
-        if (lowIdx.Length == 2 && Math.Abs(lowIdx[0].v - lowIdx[1].v) / lowIdx[0].v <= tolerance && lowIdx[1].i - lowIdx[0].i >= 3)
+        if (lowIdx.Length == 2 && lowIdx[0].v > 0 && Math.Abs(lowIdx[0].v - lowIdx[1].v) / lowIdx[0].v <= tolerance && lowIdx[1].i - lowIdx[0].i >= 3)
             patterns.Add($"Double Bottom ({_L["Trading_Pattern_Observation"].Value})");
 
         var recentHighs = highs.TakeLast(20).ToArray();
         var highIdx = recentHighs.Select((v, i) => new { v, i }).OrderByDescending(x => x.v).Take(2).OrderBy(x => x.i).ToArray();
-        if (highIdx.Length == 2 && Math.Abs(highIdx[0].v - highIdx[1].v) / highIdx[0].v <= tolerance && highIdx[1].i - highIdx[0].i >= 3)
+        if (highIdx.Length == 2 && highIdx[0].v > 0 && Math.Abs(highIdx[0].v - highIdx[1].v) / highIdx[0].v <= tolerance && highIdx[1].i - highIdx[0].i >= 3)
             patterns.Add($"Double Top ({_L["Trading_Pattern_Observation"].Value})");
 
         return patterns.Count > 0 ? patterns : [_L["Trading_Pattern_None"].Value];

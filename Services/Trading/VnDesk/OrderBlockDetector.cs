@@ -35,7 +35,7 @@ public static class OrderBlockDetector
             var len = item.High - item.Low;
 
             // TopPinbar: upper wick ≥ 60% range, range ≥ 1.3× avg
-            if (uplen / len >= 0.6m && len >= 1.3m * avg)
+            if (len > 0 && uplen / len >= 0.6m && len >= 1.3m * avg)
             {
                 var entry = item.High - uplen / 4m;
                 var sl = entry + uplen;
@@ -71,7 +71,7 @@ public static class OrderBlockDetector
             var len = item.High - item.Low;
 
             // BotPinbar: lower wick ≥ 60% range, range ≥ 1.3× avg
-            if (downlen / len >= 0.6m && len >= 1.3m * avg)
+            if (len > 0 && downlen / len >= 0.6m && len >= 1.3m * avg)
             {
                 var entry = downlen / 4m + item.Low;
                 var sl = entry - downlen;
