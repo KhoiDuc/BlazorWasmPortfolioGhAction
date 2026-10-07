@@ -250,7 +250,7 @@ else if (_sub == "rsi" && _rsiRows.Count > 0)
             _progressTotal = symbols.Count;
             foreach (var sym in symbols)
             {
-                var hist = await Market.GetHistoricalAsync(sym, Options.ScreenerDays);
+                var hist = await Market.GetHistoricalAsync(sym, 250);
                 var ta = Indicators.Calculate(sym, hist);
                 if (ta is not null)
                     _rsiRows.Add(Scorer.RsiScan(ta));
