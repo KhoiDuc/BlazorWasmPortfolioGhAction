@@ -31,7 +31,7 @@
         </div>
         @if (_progress > 0) { <p class="ts-muted mt-1" style="font-size:0.82rem">@_progress / @_progressTotal</p> }
     }
-    else
+    else if (_sub == "watch")
     {
         <div class="vd-section">
             <label class="ts-label">@L["Trading_Screener_WatchSymbols"]</label>
@@ -39,7 +39,7 @@
         </div>
         <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="RunWatchlist" disabled="@_busy">@L["Trading_Screener_ScoreBtn"]</button>
     }
-    @if (_sub == "rsi")
+    else if (_sub == "rsi")
     {
         <div class="vd-controls">
             <label class="ts-label">@L["Trading_Screener_List"]</label>
@@ -80,6 +80,12 @@
         </div>
     </div>
 }
+else if (_sub == "screen" && _screenScanned && !_busy)
+{
+    <div class="vd-panel">
+        <p class="ts-muted" style="font-size:0.82rem">Scan hoàn tất — không có mã nào thỏa điều kiện.</p>
+    </div>
+}
 else if (_sub == "watch" && _watchScores.Count > 0)
 {
     <div class="vd-panel">
@@ -106,6 +112,12 @@ else if (_sub == "watch" && _watchScores.Count > 0)
             </tbody>
         </table>
         </div>
+    </div>
+}
+else if (_sub == "watch" && _watchScanned && !_busy)
+{
+    <div class="vd-panel">
+        <p class="ts-muted" style="font-size:0.82rem">Score hoàn tất — không có mã nào hợp lệ (cần ≥ 200 phiên data).</p>
     </div>
 }
 else if (_sub == "rsi" && _rsiRows.Count > 0)
@@ -164,12 +176,16 @@ else if (_sub == "rsi" && _rsiRows.Count > 0)
     private string? _error;
     private bool _busy;
     private bool _rsiScanned;
+    private bool _screenScanned;
+    private bool _watchScanned;
 
     private async Task RunScreener()
     {
         _busy = true;
         _error = null;
         _screenResults = [];
+        _screenScanned = false;
+        _progress = 0;
         await InvokeAsync(StateHasChanged);
         try
         {
@@ -186,9 +202,10 @@ else if (_sub == "rsi" && _rsiRows.Count > 0)
                 var h = await Market.GetHistoricalAsync(sym, Options.ScreenerDays);
                 histAll.AddRange(h);
                 _progress++;
-                await InvokeAsync(StateHasChanged);
+                if (_progress % 3 == 0) await InvokeAsync(StateHasChanged);
             }
             _screenResults = Screener.Scan(histAll);
+            _screenScanned = true;
         }
         catch (Exception ex)
         {
@@ -203,6 +220,7 @@ else if (_sub == "rsi" && _rsiRows.Count > 0)
         _busy = true;
         _error = null;
         _watchScores = [];
+        _watchScanned = false;
         await InvokeAsync(StateHasChanged);
         try
         {
@@ -212,23 +230,35 @@ else if (_sub == "rsi" && _rsiRows.Count > 0)
                 ? (await Screener.GetListsAsync()).GetValueOrDefault("VN30")?.Take(10).ToList() ?? []
                 : _watchSymbols.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                     .Select(s => s.ToUpperInvariant()).Take(10).ToList();
+            _progressTotal = symbols.Count;
+            _progress = 0;
             foreach (var sym in symbols)
             {
-                var hist = await Market.GetHistoricalAsync(sym, 250);
-                var ta = Indicators.Calculate(sym, hist);
-                if (ta is not null)
-                    _watchScores.Add(Scorer.Score(ta));
+                try
+                {
+                    var hist = await Market.GetHistoricalAsync(sym, 250);
+                    var ta = Indicators.Calculate(sym, hist);
+                    if (ta is not null)
+                        _watchScores.Add(Scorer.Score(ta));
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(ex, "Watchlist score skipped {Symbol}", sym);
+                }
+                _progress++;
+                await InvokeAsync(StateHasChanged);
             }
             state.LastScores = _watchScores;
             state.UpdatedAt = DateTime.Now;
             await Store.SaveWatchlistAsync(state);
+            _watchScanned = true;
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Watchlist scoring failed");
             _error = ex.Message;
         }
-        finally { _busy = false; await InvokeAsync(StateHasChanged); }
+        finally { _busy = false; _progress = 0; await InvokeAsync(StateHasChanged); }
     }
 
     private async Task RunRsiScan()
