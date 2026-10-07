@@ -153,6 +153,12 @@ else if (_sub == "rsi" && _rsiRows.Count > 0)
         </div>
     }
 }
+else if (_sub == "rsi" && !_busy && string.IsNullOrEmpty(_error) && _rsiScanned)
+{
+    <div class="vd-panel">
+        <p class="ts-muted" style="font-size:0.82rem">RSI scan hoàn tất — không có mã nào thỏa điều kiện quá mua/quá bán.</p>
+    </div>
+}
 
 @code {
     [Parameter] public EventCallback<string> OnSymbolSelected { get; set; }
@@ -169,6 +175,7 @@ else if (_sub == "rsi" && _rsiRows.Count > 0)
     private int _progressTotal;
     private string? _error;
     private bool _busy;
+    private bool _rsiScanned;
 
     private async Task RunScreener()
     {
@@ -242,6 +249,7 @@ else if (_sub == "rsi" && _rsiRows.Count > 0)
         _error = null;
         _rsiRows = [];
         _progress = 0;
+        _rsiScanned = false;
         await InvokeAsync(StateHasChanged);
         try
         {
@@ -262,6 +270,7 @@ else if (_sub == "rsi" && _rsiRows.Count > 0)
                 if (_progress % 5 == 0) await InvokeAsync(StateHasChanged);
             }
             _rsiRows = _rsiRows.OrderByDescending(r => r.Zone).ThenBy(r => r.Rsi).ToList();
+            _rsiScanned = true;
         }
         catch (Exception ex)
         {
