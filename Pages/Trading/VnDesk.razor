@@ -38,6 +38,7 @@
             <button type="button" class="vd-nav-item @(_tab == "screen" ? "active" : "")" @onclick='() => Go("screen")'>@L["Trading_VnDesk_TabScreen"]</button>
             <button type="button" class="vd-nav-item @(_tab == "macro" ? "active" : "")" @onclick='() => Go("macro")'>@L["Trading_VnDesk_GroupMacro"]</button>
             <button type="button" class="vd-nav-item @(_tab == "backtest" ? "active" : "")" @onclick='() => Go("backtest")'>@L["Trading_VnDesk_TabBacktest"]</button>
+            <button type="button" class="vd-nav-item @(_tab == "signals" ? "active" : "")" @onclick='() => Go("signals")'>@L["TradingNav_Signals"]</button>
         </nav>
     </div>
 
@@ -158,6 +159,10 @@
         {
             <BacktestPanel InitialSymbol="@_activeSymbol" />
         }
+        else if (_tab == "signals")
+        {
+            <SignalsPanel />
+        }
     </div>
 </div>
 
@@ -222,7 +227,7 @@
         }
     }
 
-    private static bool IsValidTab(string tab) => tab is "analyze" or "screen" or "macro" or "backtest";
+    private static bool IsValidTab(string tab) => tab is "analyze" or "screen" or "macro" or "backtest" or "signals";
 
     private void Go(string tab) { _tab = tab; UpdateUrl(); }
     private void GoBacktest() => Go("backtest");
