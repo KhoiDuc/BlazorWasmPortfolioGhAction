@@ -1,0 +1,125 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.Broker
+@using BlazorWasmPortfolioGhAction.Utils
+@inject IBrokerGeminiClient Gemini
+@inject IVnMarketClient Market
+@inject IndicatorService Indicators
+@inject IStringLocalizer<SharedResources> L
+
+<div class="vd-panel">
+    <div class="vd-subtabs">
+        <button class="vd-subtab @(_sub == "news" ? "active" : "")" @onclick='() => _sub = "news"'>@L["Trading_AiPanel_News"]</button>
+        <button class="vd-subtab @(_sub == "thesis" ? "active" : "")" @onclick='() => _sub = "thesis"'>@L["Trading_AiPanel_Thesis"]</button>
+        <button class="vd-subtab @(_sub == "chat" ? "active" : "")" @onclick='() => _sub = "chat"'>@L["Trading_AiPanel_Chat"]</button>
+    </div>
+    <p class="ts-muted" style="font-size:0.82rem">@L["Trading_AiPanel_Lead"]</p>
+</div>
+
+@if (_sub == "news")
+{
+    <div class="vd-panel">
+        <textarea class="vd-input" rows="6" @bind="_newsRaw" placeholder="@L["Trading_AiPanel_NewsPlaceholder"]" style="width:100%"></textarea>
+        <div class="vd-controls mt-2">
+            <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="AnalyzeNews" disabled="@_busy">@L["Trading_AiPanel_AnalyzeNews"]</button>
+            @if (_busy) { <span class="vd-spinner"></span> }
+        </div>
+        @if (_brief is not null)
+        {
+            <div class="mt-3" style="font-size:0.88rem">
+                <p><strong>FACTS</strong><br />@_brief.Facts</p>
+                <p><strong>SOURCES</strong><br />@_brief.Sources</p>
+                <p><strong>IMPLICATIONS</strong><br />@_brief.Implications</p>
+                <label><input type="checkbox" @bind="_briefVerified" /> @L["Trading_AiPanel_Verified"]</label>
+            </div>
+        }
+    </div>
+}
+else if (_sub == "thesis")
+{
+    <div class="vd-panel">
+        <div class="vd-section">
+            <label class="ts-label">@L["Trading_AiPanel_Symbol"]</label>
+            <input class="vd-input" value="@_symbol" @oninput="OnSymbolInput" disabled="@_busy" />
+        </div>
+        <div class="vd-section">
+            <label class="ts-label">@L["Trading_AiPanel_Notes"]</label>
+            <textarea class="vd-input" rows="3" @bind="_notes" placeholder="@L["Trading_AiPanel_NotesPlaceholder"]" style="width:100%"></textarea>
+        </div>
+        <div class="vd-controls">
+            <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="DraftThesis" disabled="@_busy">@L["Trading_AiPanel_DraftBtn"]</button>
+            @if (_busy) { <span class="vd-spinner"></span> }
+        </div>
+        @if (!string.IsNullOrEmpty(_thesisText))
+        {
+            <pre class="mt-3" style="font-size:0.82rem;white-space:pre-wrap">@_thesisText</pre>
+            <button class="vd-btn vd-btn-sm mt-2" @onclick="() => OnThesisReady.InvokeAsync(_thesisText)">@L["Trading_AiPanel_CopyToAnalysis"]</button>
+        }
+    </div>
+}
+else if (_sub == "chat")
+{
+    <StockAiChat />
+}
+@if (!string.IsNullOrEmpty(_error)) { <div class="vd-alert vd-alert-error mt-2">@_error</div> }
+
+@code {
+    [Parameter] public string Symbol { get; set; } = "VNM";
+    [Parameter] public EventCallback<string> OnThesisReady { get; set; }
+
+    private string _sub = "news";
+    private string _symbol = "VNM";
+    private string _newsRaw = "";
+    private string _notes = "";
+    private string? _thesisText;
+    private NewsBrief? _brief;
+    private bool _briefVerified;
+    private string? _error;
+    private bool _busy;
+
+    protected override void OnParametersSet() => _symbol = Symbol;
+
+    private void OnSymbolInput(Microsoft.AspNetCore.Components.ChangeEventArgs e) =>
+        _symbol = e.Value?.ToString() ?? "";
+
+    private async Task AnalyzeNews()
+    {
+        if (string.IsNullOrWhiteSpace(_newsRaw)) return;
+        _busy = true;
+        _error = null;
+        var result = await Gemini.ExplainAsync(PromptLibrary.News(_newsRaw));
+        var text = result.Text;
+        _brief = new NewsBrief { Raw = _newsRaw };
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _brief.Facts = _newsRaw;
+            _brief.Sources = result.Error ?? L["Trading_AiPanel_AiUnavailable"];
+            _error = L["Trading_AiPanel_AiSkip"];
+        }
+        else ParseNews(text, _brief);
+        _busy = false;
+    }
+
+    private async Task DraftThesis()
+    {
+        _busy = true;
+        _error = null;
+        var sym = _symbol.Trim().ToUpperInvariant();
+        var hist = await Market.GetHistoricalAsync(sym, 250);
+        var ta = Indicators.Calculate(sym, hist);
+        var numbers = ta is null
+            ? "(không có chỉ báo)"
+            : $"{ta.Symbol} close={ta.LatestClose:N2} trend={L[IndicatorService.TrendLabel(ta.Trend)].Value} RSI={ta.RSI:N1} signal={ta.TradingSignal.Action}";
+        var result = await Gemini.ExplainAsync(PromptLibrary.Thesis(sym, numbers, _notes));
+        _thesisText = result.Text ?? (result.Error ?? L["Trading_AiPanel_AiUnavailable"]);
+        _busy = false;
+    }
+
+    private static void ParseNews(string text, NewsBrief brief)
+    {
+        brief.Facts = TextUtils.Slice(text, "FACTS", "SOURCES");
+        brief.Sources = TextUtils.Slice(text, "SOURCES", "IMPLICATIONS");
+        brief.Implications = TextUtils.Slice(text, "IMPLICATIONS", null);
+        if (string.IsNullOrWhiteSpace(brief.Facts)) brief.Facts = text;
+    }
+}

@@ -1,0 +1,120 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@inject IVnMarketClient Market
+@inject VnScreenerService Screener
+@inject VnDeskOptions Options
+@inject IndicatorService Indicators
+@inject WatchlistScorer Scorer
+@inject IStringLocalizer<SharedResources> L
+@inject ILogger<VnRsiScanPanel> Logger
+@using Microsoft.Extensions.Logging
+
+<div class="vd-panel">
+    <div class="vd-controls">
+        <label class="ts-label">@L["Trading_Screener_List"]</label>
+        <select class="vd-select" @bind="_listKey" disabled="@_busy">
+            <option value="VN30">VN30</option>
+            <option value="HOSE">HOSE</option>
+            <option value="HNX30">HNX30</option>
+            <option value="UPCOM">UPCOM</option>
+            <option value="NganHang">Ngân hàng</option>
+        </select>
+        <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="RunRsiScan" disabled="@_busy">@L["Trading_Screener_RsiScanBtn", _listKey]</button>
+    </div>
+    @if (_progress > 0) { <p class="ts-muted mt-1" style="font-size:0.82rem">@_progress / @_progressTotal</p> }
+    @if (_busy) { <span class="vd-spinner mt-2"></span> }
+    @if (!string.IsNullOrEmpty(_error)) { <div class="vd-alert vd-alert-error mt-2">@_error</div> }
+</div>
+
+@if (_rsiRows.Count > 0)
+{
+    var zoneGroups = new (string Label, RsiZone Zone, string Css)[]
+    {
+        (L["Trading_Rsi_OverboughtStrong"].Value, RsiZone.OverboughtStrong, "vd-neg"),
+        (L["Trading_Rsi_OverboughtMild"].Value, RsiZone.OverboughtMild, "vd-neg"),
+        (L["Trading_Rsi_Neutral"].Value, RsiZone.Neutral, ""),
+        (L["Trading_Rsi_OversoldMild"].Value, RsiZone.OversoldMild, "vd-pos"),
+        (L["Trading_Rsi_OversoldStrong"].Value, RsiZone.OversoldStrong, "vd-pos")
+    };
+    foreach (var g in zoneGroups)
+    {
+        var rows = _rsiRows.Where(r => r.Zone == g.Zone).OrderBy(r => r.Rsi).ToList();
+        if (rows.Count == 0) continue;
+        <div class="vd-panel">
+            <h2 class="vd-section-title">@g.Label <span class="vd-badge">@rows.Count</span></h2>
+            <div class="vd-grid-wrap">
+            <table class="vd-grid">
+                <thead><tr><th>Mã</th><th>RSI</th><th>RSI trước</th><th>Giá</th><th>%</th><th>Trend</th><th>Signal</th><th>Vol xTB</th></tr></thead>
+                <tbody>
+                    @foreach (var r in rows)
+                    {
+                        <tr @onclick="() => OnSymbolSelected.InvokeAsync(r.Symbol)">
+                            <td><strong>@r.Symbol</strong></td>
+                            <td class="@g.Css">@r.Rsi.ToString("F1")</td>
+                            <td>@r.PreviousRsi.ToString("F1")</td>
+                            <td>@r.LastPrice.ToString("N2")</td>
+                            <td class="@(r.PriceChange >= 0 ? "vd-pos" : "vd-neg")">@r.PriceChange.ToString("F2")%</td>
+                            <td>@r.TrendLabel</td>
+                            <td><span class="ts-signal">@r.Signal</span></td>
+                            <td>@r.VolumeRatio.ToString("F2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public EventCallback<string> OnSymbolSelected { get; set; }
+
+    private string _listKey = "VN30";
+    private List<RsiScanRow> _rsiRows = [];
+    private int _progress;
+    private int _progressTotal;
+    private string? _error;
+    private bool _busy;
+
+    private async Task RunRsiScan()
+    {
+        _busy = true;
+        _error = null;
+        _rsiRows = [];
+        _progress = 0;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var lists = await Screener.GetListsAsync();
+            if (!lists.TryGetValue(_listKey, out var symbols) || symbols.Count == 0)
+            {
+                _error = L["Trading_Screener_Empty"];
+                return;
+            }
+            _progressTotal = symbols.Count;
+            foreach (var sym in symbols)
+            {
+                try
+                {
+                    var hist = await Market.GetHistoricalAsync(sym, 250);
+                    var ta = Indicators.Calculate(sym, hist);
+                    if (ta is not null)
+                        _rsiRows.Add(Scorer.RsiScan(ta));
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(ex, "RSI scan skipped {Symbol}", sym);
+                }
+                _progress++;
+                if (_progress % 5 == 0) await InvokeAsync(StateHasChanged);
+            }
+            _rsiRows = _rsiRows.OrderByDescending(r => r.Zone).ThenBy(r => r.Rsi).ToList();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "RSI scan failed for {List}", _listKey);
+            _error = ex.Message;
+        }
+        finally { _busy = false; _progress = 0; await InvokeAsync(StateHasChanged); }
+    }
+}

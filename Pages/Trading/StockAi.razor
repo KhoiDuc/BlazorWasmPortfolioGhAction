@@ -1,18 +1,14 @@
 @page "/trading/stock-ai"
 @page "/{lang:regex(^(en|vn)$)}/trading/stock-ai"
-@layout TradingLayout
-@inherits CultureAwareComponent
-@inject IStringLocalizer<SharedResources> L
+@inject NavigationManager Nav
+@inject ICultureService CultureService
 
-<div class="ts-page">
-    <div class="ts-panel">
-        <div class="ts-header">
-            <div>
-                <h1>@L["Trading_StockAiTitle"]</h1>
-                <p>@L["Trading_StockAiLead"]</p>
-            </div>
-        </div>
-    </div>
+@code {
+    [Parameter] public string? Lang { get; set; }
 
-    <StockAiChat />
-</div>
+    protected override void OnInitialized()
+    {
+        var prefix = Lang ?? CultureService.UrlLang;
+        Nav.NavigateTo($"{prefix}/trading/vndesk?tab=analyze&sub=ai", replace: true);
+    }
+}

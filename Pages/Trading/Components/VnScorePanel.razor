@@ -1,0 +1,197 @@
+@using BlazorWasmPortfolioGhAction.Models.Trading.VnDesk
+@using BlazorWasmPortfolioGhAction.Services.Trading.VnDesk
+@inject IVnMarketClient Market
+@inject IndicatorService Indicators
+@inject IVnFundamentalsClient Fundamentals
+@inject MarketContextService MarketContext
+@inject TradeScoreService Scorer
+@inject VnScreenerService Screener
+@inject IStringLocalizer<SharedResources> L
+@inject ILogger<VnScorePanel> Logger
+@using Microsoft.Extensions.Logging
+
+<div class="vd-panel">
+    <div class="vd-subtabs">
+        <button class="vd-subtab @(_sub == "single" ? "active" : "")" @onclick='() => _sub = "single"'>@L["Trading_Score_Single"]</button>
+        <button class="vd-subtab @(_sub == "batch" ? "active" : "")" @onclick='() => _sub = "batch"'>@L["Trading_Score_Batch"]</button>
+    </div>
+    @if (_sub == "single")
+    {
+        <p class="ts-muted mb-0" style="font-size:0.82rem">@L["Trading_Score_SingleHint", Symbol]</p>
+    }
+    else
+    {
+        <div class="vd-controls">
+            <input class="vd-input" value="@_batchSymbols" @oninput="OnBatchInput" placeholder="VNM,FPT,MWG..." disabled="@_busy" />
+            <button class="vd-btn vd-btn-primary vd-btn-sm" @onclick="RunBatch" disabled="@_busy">@L["Trading_Score_BatchBtn"]</button>
+            @if (_progress > 0) { <span class="ts-muted" style="font-size:0.82rem">@_progress / @_progressTotal</span> }
+        </div>
+    }
+    @if (_busy) { <span class="vd-spinner mt-2"></span> }
+    @if (!string.IsNullOrEmpty(_error)) { <div class="vd-alert vd-alert-error mt-2">@_error</div> }
+</div>
+
+@if (_sub == "single" && _ta is not null)
+{
+    <VnTradeScorePanel Ta="_ta" Symbol="@Symbol" />
+}
+else if (_sub == "single" && !_busy && _singleScanned && _ta is null)
+{
+    <div class="vd-panel"><p class="ts-muted" style="font-size:0.82rem">@L["Trading_Analysis_NotEnoughData"]</p></div>
+}
+
+@if (_sub == "batch" && _batchResults.Count > 0)
+{
+    <div class="vd-panel">
+        <div class="vd-grid-wrap">
+        <table class="vd-grid">
+            <thead><tr><th>Mã</th><th class="vd-num">Giá</th><th class="vd-num">Score</th><th>/100</th><th>Khuyến nghị</th><th>Ghi chú</th></tr></thead>
+            <tbody>
+                @foreach (var r in _batchResults.OrderByDescending(x => x.Score))
+                {
+                    var recClass = r.Recommendation switch
+                    {
+                        TradeScoreRecommendation.StrongBuy or TradeScoreRecommendation.Buy => "vd-pos",
+                        TradeScoreRecommendation.Watch => "",
+                        _ => "vd-neg"
+                    };
+                    <tr @onclick="() => OnSymbolSelected.InvokeAsync(r.Symbol)">
+                        <td><strong>@r.Symbol</strong></td>
+                        <td class="vd-num">@r.Price.ToString("N2")</td>
+                        <td class="vd-num @recClass"><strong>@r.Score</strong></td>
+                        <td class="vd-num" style="font-size:0.75rem;color:var(--ts-muted)">@r.Breakdown</td>
+                        <td><span class="ts-signal @recClass">@r.RecLabel</span></td>
+                        <td style="font-size:0.72rem">@r.TopNote</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        </div>
+    </div>
+}
+else if (_sub == "batch" && _batchScanned && !_busy && _batchResults.Count == 0)
+{
+    <div class="vd-panel"><p class="ts-muted" style="font-size:0.82rem">@L["Trading_Score_BatchEmpty"]</p></div>
+}
+
+@code {
+    [Parameter] public string Symbol { get; set; } = "VNM";
+    [Parameter] public EventCallback<string> OnSymbolSelected { get; set; }
+
+    private string _sub = "single";
+    private string _batchSymbols = "";
+    private TechnicalIndicators? _ta;
+    private bool _busy;
+    private bool _singleScanned;
+    private bool _batchScanned;
+    private string? _error;
+    private int _progress;
+    private int _progressTotal;
+    private string _loadedSymbol = "";
+    private List<BatchScoreRow> _batchResults = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_sub != "single") return;
+        var sym = (Symbol ?? "").Trim().ToUpperInvariant();
+        if (sym.Length < 3 || sym == _loadedSymbol) return;
+        await LoadSingleAsync(sym);
+    }
+
+    private async Task LoadSingleAsync(string sym)
+    {
+        _busy = true;
+        _error = null;
+        _ta = null;
+        _singleScanned = false;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var hist = await Market.GetHistoricalAsync(sym, 250);
+            _ta = Indicators.Calculate(sym, hist);
+            _loadedSymbol = sym;
+            _singleScanned = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Score single failed for {Symbol}", sym);
+            _error = ex.Message;
+        }
+        finally { _busy = false; await InvokeAsync(StateHasChanged); }
+    }
+
+    private void OnBatchInput(Microsoft.AspNetCore.Components.ChangeEventArgs e) =>
+        _batchSymbols = e.Value?.ToString() ?? "";
+
+    private async Task RunBatch()
+    {
+        _busy = true;
+        _error = null;
+        _batchResults = [];
+        _batchScanned = false;
+        _progress = 0;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var symbols = string.IsNullOrWhiteSpace(_batchSymbols)
+                ? (await Screener.GetListsAsync()).GetValueOrDefault("VN30")?.Take(10).ToList() ?? []
+                : _batchSymbols.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(s => s.ToUpperInvariant()).Take(15).ToList();
+            _progressTotal = symbols.Count;
+            foreach (var sym in symbols)
+            {
+                try
+                {
+                    var hist = await Market.GetHistoricalAsync(sym, 250);
+                    var ta = Indicators.Calculate(sym, hist);
+                    if (ta is null) { _progress++; continue; }
+                    var fundamentals = await Fundamentals.GetAsync(sym);
+                    var context = await MarketContext.GetAsync(sym);
+                    var score = Scorer.Score(ta, fundamentals, context);
+                    _batchResults.Add(new BatchScoreRow
+                    {
+                        Symbol = score.Symbol,
+                        Price = score.Price,
+                        Score = score.TotalScore,
+                        Breakdown = $"{score.TechnicalScore}+{score.FundamentalScore}+{score.MarketScore}+{score.RiskScore}",
+                        Recommendation = score.Recommendation,
+                        RecLabel = RecLabel(score.Recommendation),
+                        TopNote = score.Technical.Notes.FirstOrDefault() ?? ""
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(ex, "Batch score skipped {Symbol}", sym);
+                }
+                _progress++;
+                if (_progress % 2 == 0) await InvokeAsync(StateHasChanged);
+            }
+            _batchScanned = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Batch score failed");
+            _error = ex.Message;
+        }
+        finally { _busy = false; _progress = 0; await InvokeAsync(StateHasChanged); }
+    }
+
+    private string RecLabel(TradeScoreRecommendation rec) => rec switch
+    {
+        TradeScoreRecommendation.StrongBuy => "Strong Buy",
+        TradeScoreRecommendation.Buy => "Buy",
+        TradeScoreRecommendation.Watch => "Watch",
+        _ => "Avoid"
+    };
+
+    private class BatchScoreRow
+    {
+        public string Symbol { get; set; } = "";
+        public decimal Price { get; set; }
+        public int Score { get; set; }
+        public string Breakdown { get; set; } = "";
+        public TradeScoreRecommendation Recommendation { get; set; }
+        public string RecLabel { get; set; } = "";
+        public string TopNote { get; set; } = "";
+    }
+}

@@ -157,6 +157,10 @@ else if (!string.IsNullOrEmpty(_error))
 {
     <div class="vd-panel"><div class="vd-alert vd-alert-error">@_error</div></div>
 }
+else
+{
+    <div class="vd-panel"><p class="ts-muted" style="font-size:0.82rem">@L["Trading_Analysis_NotEnoughData"]</p></div>
+}
 
 @code {
     [Parameter, EditorRequired] public TechnicalIndicators Ta { get; set; } = null!;
@@ -169,6 +173,7 @@ else if (!string.IsNullOrEmpty(_error))
 
     protected override async Task OnParametersSetAsync()
     {
+        if (Ta is null) return;
         var sym = (Symbol ?? Ta.Symbol).Trim().ToUpperInvariant();
         var key = $"{sym}_{Ta.LatestClose:F2}_{Ta.Date:yyyyMMdd}";
         if (key == _loadedFor && _score is not null) return;

@@ -17,104 +17,115 @@
         </div>
     </div>
 
-    @if (_group == "vn")
-    {
-        <div class="vd-symbol-bar">
-            <div class="vd-symbol-row">
-                <label class="ts-label" for="desk-symbol">@L["Trading_SymbolLabel"]</label>
-                <input id="desk-symbol" class="vd-symbol-input" @bind="_symbolInput" @bind:event="oninput"
-                       placeholder="VNM, FPT, HPG..." @onkeydown="OnSymbolKey" />
-                @if (_popular.Length > 0)
+    <div class="vd-symbol-bar">
+        <div class="vd-symbol-row">
+            <label class="ts-label" for="desk-symbol">@L["Trading_SymbolLabel"]</label>
+            <input id="desk-symbol" class="vd-symbol-input" @bind="_symbolInput" @bind:event="oninput"
+                   placeholder="VNM, FPT, HPG..." @onkeydown="OnSymbolKey" />
+            <div class="vd-chips">
+                @foreach (var p in _popular)
                 {
-                    <div class="vd-chips">
-                        @foreach (var p in _popular)
-                        {
-                            <button type="button" class="vd-chip @(_activeSymbol == p ? "active" : "")" @onclick='() => PickSymbol(p)'>@p</button>
-                        }
-                    </div>
+                    <button type="button" class="vd-chip @(_activeSymbol == p ? "active" : "")" @onclick='() => PickSymbol(p)'>@p</button>
                 }
-                <button type="button" class="vd-btn vd-btn-primary vd-btn-sm" @onclick="CommitAndAnalyze">@L["Trading_VnDesk_Analyze"]</button>
             </div>
-        </div>
-    }
-
-    <div class="vd-nav-groups">
-        <div class="vd-nav-group">
-            <span class="vd-nav-group-label">@L["Trading_VnDesk_GroupVn"]</span>
-            <nav class="vd-nav" aria-label="@L["Trading_VnDesk_GroupVn"]">
-                <button type="button" class="vd-nav-item @(_group == "vn" && _tab == "market" ? "active" : "")" @onclick='() => Go("vn", "market")'>@L["Trading_VnDesk_TabMarket"]</button>
-                <button type="button" class="vd-nav-item @(_group == "vn" && _tab == "analyze" ? "active" : "")" @onclick='() => Go("vn", "analyze")'>@L["Trading_VnDesk_TabAnalyze"]</button>
-                <button type="button" class="vd-nav-item @(_group == "vn" && _tab == "screen" ? "active" : "")" @onclick='() => Go("vn", "screen")'>@L["Trading_VnDesk_TabScreen"]</button>
-                <button type="button" class="vd-nav-item @(_group == "vn" && _tab == "backtest" ? "active" : "")" @onclick='() => Go("vn", "backtest")'>@L["Trading_VnDesk_TabBacktest"]</button>
-                <button type="button" class="vd-nav-item @(_group == "vn" && _tab == "ai" ? "active" : "")" @onclick='() => Go("vn", "ai")'>@L["Trading_VnDesk_TabAi"]</button>
-            </nav>
-        </div>
-        <div class="vd-nav-group">
-            <span class="vd-nav-group-label">@L["Trading_VnDesk_GroupMacro"]</span>
-            <nav class="vd-nav" aria-label="@L["Trading_VnDesk_GroupMacro"]">
-                <button type="button" class="vd-nav-item @(_group == "macro" && _tab == "commodities" ? "active" : "")" @onclick='() => Go("macro", "commodities")'>@L["Trading_VnDesk_TabCommodities"]</button>
-                <button type="button" class="vd-nav-item @(_group == "macro" && _tab == "central-banks" ? "active" : "")" @onclick='() => Go("macro", "central-banks")'>@L["Trading_VnDesk_TabCentralBanks"]</button>
-                <button type="button" class="vd-nav-item @(_group == "macro" && _tab == "forex-sessions" ? "active" : "")" @onclick='() => Go("macro", "forex-sessions")'>@L["Trading_VnDesk_TabForexSessions"]</button>
-            </nav>
+            <button type="button" class="vd-btn vd-btn-primary vd-btn-sm" @onclick="CommitAndAnalyze">@L["Trading_VnDesk_Analyze"]</button>
         </div>
     </div>
 
+    <div class="vd-nav-groups">
+        <nav class="vd-nav" aria-label="VnDesk tabs">
+            <button type="button" class="vd-nav-item @(_tab == "analyze" ? "active" : "")" @onclick='() => Go("analyze")'>@L["Trading_VnDesk_TabAnalyze"]</button>
+            <button type="button" class="vd-nav-item @(_tab == "screen" ? "active" : "")" @onclick='() => Go("screen")'>@L["Trading_VnDesk_TabScreen"]</button>
+            <button type="button" class="vd-nav-item @(_tab == "macro" ? "active" : "")" @onclick='() => Go("macro")'>@L["Trading_VnDesk_GroupMacro"]</button>
+            <button type="button" class="vd-nav-item @(_tab == "backtest" ? "active" : "")" @onclick='() => Go("backtest")'>@L["Trading_VnDesk_TabBacktest"]</button>
+        </nav>
+    </div>
+
     <div class="vd-content">
-        @if (_group == "vn" && _tab == "market")
+        @if (_tab == "analyze")
         {
-            <VnMarketPanel OnSymbolSelected="OnSymbolFromMarket" />
-        }
-        else if (_group == "vn" && _tab == "analyze")
-        {
-            <div class="vd-analyze-layout">
-                <div class="vd-analyze-main">
-                    <VnAnalysisPanel @ref="_analysis" Symbol="@_activeSymbol" OnBacktestRequested="GoBacktest" />
-                </div>
-                <div class="vd-chart-dock @(_chartCollapsed ? "collapsed" : "")">
-                    <div class="vd-chart-dock-head">
-                        <span class="vd-chart-dock-title">@_activeSymbol</span>
-                        <div class="vd-controls">
-                            <div class="vd-chart-source-toggle" role="group" aria-label="@L["Trading_VnDesk_ChartSource"]">
-                                <button type="button" class="vd-btn vd-btn-sm @(_chartSource == "vietstock" ? "vd-btn-primary" : "")" @onclick='() => SetChartSource("vietstock")'>@L["Trading_VnDesk_ChartVietstock"]</button>
-                                <button type="button" class="vd-btn vd-btn-sm @(_chartSource == "tradingview" ? "vd-btn-primary" : "")" @onclick='() => SetChartSource("tradingview")'>@L["Trading_VnDesk_ChartTradingView"]</button>
-                            </div>
-                            <button type="button" class="vd-btn vd-btn-sm" @onclick="GoBacktest">@L["Trading_VnDesk_Backtest"]</button>
-                            <button type="button" class="vd-btn vd-btn-sm" @onclick="ToggleChart" aria-label="@(_chartCollapsed ? L["Trading_VnDesk_ChartExpand"] : L["Trading_VnDesk_ChartCollapse"])">@(_chartCollapsed ? L["Trading_VnDesk_ChartExpand"] : L["Trading_VnDesk_ChartCollapse"])</button>
-                        </div>
+            <div class="vd-subtabs">
+                <button type="button" class="vd-subtab @(_analyzeSub == "overview" ? "active" : "")" @onclick='() => SetAnalyzeSub("overview")'>@L["Trading_VnDesk_SubOverview"]</button>
+                <button type="button" class="vd-subtab @(_analyzeSub == "indicators" ? "active" : "")" @onclick='() => SetAnalyzeSub("indicators")'>@L["Trading_VnDesk_SubIndicators"]</button>
+                <button type="button" class="vd-subtab @(_analyzeSub == "score" ? "active" : "")" @onclick='() => SetAnalyzeSub("score")'>@L["Trading_VnDesk_SubScore"]</button>
+                <button type="button" class="vd-subtab @(_analyzeSub == "ai" ? "active" : "")" @onclick='() => SetAnalyzeSub("ai")'>@L["Trading_VnDesk_TabAi"]</button>
+            </div>
+
+            @if (_analyzeSub == "overview")
+            {
+                <VnMarketPanel OnSymbolSelected="OnSymbolFromScreener" />
+            }
+            else
+            {
+                <div class="vd-analyze-layout">
+                    <div class="vd-analyze-main">
+                        @if (_analyzeSub == "indicators")
+                        {
+                            <VnAnalysisPanel @ref="_analysis" Symbol="@_activeSymbol" OnBacktestRequested="GoBacktest" />
+                        }
+                        else if (_analyzeSub == "score")
+                        {
+                            <VnScorePanel Symbol="@_activeSymbol" OnSymbolSelected="OnSymbolFromScreener" />
+                        }
+                        else if (_analyzeSub == "ai")
+                        {
+                            <VnAiUnifiedPanel Symbol="@_activeSymbol" OnThesisReady="OnThesisReady" />
+                        }
                     </div>
-                    @if (!_chartCollapsed)
+                    @if (_analyzeSub is "indicators" or "score")
                     {
-                        <div class="vd-chart-dock-body">
-                            @if (_chartSource == "vietstock")
+                        <div class="vd-chart-dock @(_chartCollapsed ? "collapsed" : "")">
+                            <div class="vd-chart-dock-head">
+                                <span class="vd-chart-dock-title">@_activeSymbol</span>
+                                <div class="vd-controls">
+                                    <div class="vd-chart-source-toggle" role="group" aria-label="@L["Trading_VnDesk_ChartSource"]">
+                                        <button type="button" class="vd-btn vd-btn-sm @(_chartSource == "vietstock" ? "vd-btn-primary" : "")" @onclick='() => SetChartSource("vietstock")'>@L["Trading_VnDesk_ChartVietstock"]</button>
+                                        <button type="button" class="vd-btn vd-btn-sm @(_chartSource == "tradingview" ? "vd-btn-primary" : "")" @onclick='() => SetChartSource("tradingview")'>@L["Trading_VnDesk_ChartTradingView"]</button>
+                                    </div>
+                                    <button type="button" class="vd-btn vd-btn-sm" @onclick="GoBacktest">@L["Trading_VnDesk_Backtest"]</button>
+                                    <button type="button" class="vd-btn vd-btn-sm" @onclick="ToggleChart" aria-label="@(_chartCollapsed ? L["Trading_VnDesk_ChartExpand"] : L["Trading_VnDesk_ChartCollapse"])">@(_chartCollapsed ? L["Trading_VnDesk_ChartExpand"] : L["Trading_VnDesk_ChartCollapse"])</button>
+                                </div>
+                            </div>
+                            @if (!_chartCollapsed)
                             {
-                                <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={_activeSymbol}")"
-                                        class="vd-chart-iframe" title="Vietstock chart"></iframe>
+                                <div class="vd-chart-dock-body">
+                                    @if (_chartSource == "vietstock")
+                                    {
+                                        <iframe src="@($"https://stockchart.vietstock.vn/?stockcode={_activeSymbol}")"
+                                                class="vd-chart-iframe" title="Vietstock chart"></iframe>
+                                    }
+                                    else
+                                    {
+                                        <TradingViewChart Symbol="@_activeSymbol" />
+                                    }
+                                    <details class="vd-alert-collapse">
+                                        <summary>@L["Trading_VnDesk_PriceAlert", _activeSymbol]</summary>
+                                        <PriceAlertWidget Symbol="@_activeSymbol" AssetType="stock" />
+                                    </details>
+                                </div>
                             }
-                            else
-                            {
-                                <TradingViewChart Symbol="@_activeSymbol" />
-                            }
-                            <details class="vd-alert-collapse">
-                                <summary>@L["Trading_VnDesk_PriceAlert", _activeSymbol]</summary>
-                                <PriceAlertWidget Symbol="@_activeSymbol" AssetType="stock" />
-                            </details>
                         </div>
                     }
                 </div>
-            </div>
+            }
         }
-        else if (_group == "vn" && _tab == "screen")
+        else if (_tab == "screen")
         {
             <div class="vd-subtabs">
                 <button type="button" class="vd-subtab @(_screenSub == "basic" ? "active" : "")" @onclick='() => SetScreenSub("basic")'>@L["Trading_VnDesk_ScreenBasic"]</button>
-                <button type="button" class="vd-subtab @(_screenSub == "multi" ? "active" : "")" @onclick='() => SetScreenSub("multi")'>@L["Trading_VnDesk_ScreenMulti"]</button>
+                <button type="button" class="vd-subtab @(_screenSub == "rsi" ? "active" : "")" @onclick='() => SetScreenSub("rsi")'>@L["Trading_VnDesk_ScreenRsi"]</button>
+                <button type="button" class="vd-subtab @(_screenSub == "pattern" ? "active" : "")" @onclick='() => SetScreenSub("pattern")'>@L["Trading_VnDesk_ScreenPattern"]</button>
                 <button type="button" class="vd-subtab @(_screenSub == "flow" ? "active" : "")" @onclick='() => SetScreenSub("flow")'>@L["Trading_VnDesk_ScreenFlow"]</button>
             </div>
             @if (_screenSub == "basic")
             {
                 <VnScreenerPanel OnSymbolSelected="OnSymbolFromScreener" />
             }
-            else if (_screenSub == "multi")
+            else if (_screenSub == "rsi")
+            {
+                <VnRsiScanPanel OnSymbolSelected="OnSymbolFromScreener" />
+            }
+            else if (_screenSub == "pattern")
             {
                 <VnMultiScreenerPanel OnSymbolSelected="OnSymbolFromScreener" />
             }
@@ -123,47 +134,49 @@
                 <VnMoneyFlowPanel InitialSymbol="@_activeSymbol" OnSymbolSelected="OnSymbolFromScreener" />
             }
         }
-        else if (_group == "vn" && _tab == "backtest")
+        else if (_tab == "macro")
+        {
+            <div class="vd-subtabs">
+                <button type="button" class="vd-subtab @(_macroSub == "commodities" ? "active" : "")" @onclick='() => SetMacroSub("commodities")'>@L["Trading_VnDesk_TabCommodities"]</button>
+                <button type="button" class="vd-subtab @(_macroSub == "central-banks" ? "active" : "")" @onclick='() => SetMacroSub("central-banks")'>@L["Trading_VnDesk_TabCentralBanks"]</button>
+                <button type="button" class="vd-subtab @(_macroSub == "forex" ? "active" : "")" @onclick='() => SetMacroSub("forex")'>@L["Trading_VnDesk_TabForexSessions"]</button>
+            </div>
+            @if (_macroSub == "commodities")
+            {
+                <CommoditiesPanel />
+            }
+            else if (_macroSub == "central-banks")
+            {
+                <CentralBanksPanel />
+            }
+            else
+            {
+                <ForexSessionsPanel />
+            }
+        }
+        else if (_tab == "backtest")
         {
             <BacktestPanel InitialSymbol="@_activeSymbol" />
-        }
-        else if (_group == "vn" && _tab == "ai")
-        {
-            <VnAiPanel Symbol="@_activeSymbol" OnThesisReady="OnThesisReady" />
-        }
-        else if (_group == "macro" && _tab == "commodities")
-        {
-            <CommoditiesPanel />
-        }
-        else if (_group == "macro" && _tab == "central-banks")
-        {
-            <CentralBanksPanel />
-        }
-        else if (_group == "macro" && _tab == "forex-sessions")
-        {
-            <ForexSessionsPanel />
         }
     </div>
 </div>
 
 @code {
-    [SupplyParameterFromQuery(Name = "group")]
-    public string? QueryGroup { get; set; }
-
     [SupplyParameterFromQuery(Name = "tab")]
     public string? QueryTab { get; set; }
 
     [SupplyParameterFromQuery(Name = "symbol")]
     public string? QuerySymbol { get; set; }
 
-    [SupplyParameterFromQuery(Name = "screen")]
-    public string? QueryScreen { get; set; }
+    [SupplyParameterFromQuery(Name = "sub")]
+    public string? QuerySub { get; set; }
 
-    private string _group = "vn";
-    private string _tab = "market";
+    private string _tab = "analyze";
+    private string _analyzeSub = "overview";
+    private string _screenSub = "basic";
+    private string _macroSub = "commodities";
     private string _symbolInput = "VNM";
     private string _activeSymbol = "VNM";
-    private string _screenSub = "basic";
     private string _chartSource = "vietstock";
     private bool _chartCollapsed;
     private VnAnalysisPanel? _analysis;
@@ -171,38 +184,20 @@
 
     private readonly string[] _popular = ["VNM", "FPT", "HPG", "VCB", "MWG"];
 
-    protected override void OnParametersSet()
-    {
-        ApplyQuery();
-    }
+    protected override void OnParametersSet() => ApplyQuery();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var key = $"{_group}:{_tab}";
+        var key = $"{_tab}:{_analyzeSub}:{_screenSub}:{_macroSub}";
         if (_navScrollKey == key && !firstRender) return;
         _navScrollKey = key;
-        try
-        {
-            await JS.InvokeVoidAsync("tradingVndesk.scrollActiveNav");
-        }
-        catch
-        {
-            // ignore disconnect during prerender/navigation
-        }
+        try { await JS.InvokeVoidAsync("tradingVndesk.scrollActiveNav"); }
+        catch { }
     }
 
     private void ApplyQuery()
     {
-        if (string.Equals(QueryTab, "tcbs", StringComparison.OrdinalIgnoreCase))
-        {
-            Nav.NavigateTo(CulturePath.AppRoute(CultureService.UrlLang, "trading/tcbs"));
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(QueryGroup) && IsValidGroup(QueryGroup))
-            _group = QueryGroup.Trim().ToLowerInvariant();
-
-        if (!string.IsNullOrWhiteSpace(QueryTab) && IsValidTab(_group, QueryTab))
+        if (!string.IsNullOrWhiteSpace(QueryTab) && IsValidTab(QueryTab))
             _tab = QueryTab.Trim().ToLowerInvariant();
 
         if (!string.IsNullOrWhiteSpace(QuerySymbol))
@@ -215,46 +210,34 @@
             }
         }
 
-        if (_tab == "screen" && !string.IsNullOrWhiteSpace(QueryScreen))
+        if (!string.IsNullOrWhiteSpace(QuerySub))
         {
-            var scr = QueryScreen.Trim().ToLowerInvariant();
-            if (scr is "basic" or "multi" or "flow")
-                _screenSub = scr;
+            var sub = QuerySub.Trim().ToLowerInvariant();
+            switch (_tab)
+            {
+                case "analyze" when sub is "overview" or "indicators" or "score" or "ai": _analyzeSub = sub; break;
+                case "screen" when sub is "basic" or "rsi" or "pattern" or "flow": _screenSub = sub; break;
+                case "macro" when sub is "commodities" or "central-banks" or "forex": _macroSub = sub; break;
+            }
         }
     }
 
-    private static bool IsValidGroup(string group) => group is "vn" or "macro";
+    private static bool IsValidTab(string tab) => tab is "analyze" or "screen" or "macro" or "backtest";
 
-    private static bool IsValidTab(string group, string tab) => group switch
-    {
-        "vn" => tab is "market" or "analyze" or "screen" or "backtest" or "ai",
-        "macro" => tab is "commodities" or "central-banks" or "forex-sessions",
-        _ => false
-    };
-
-    private void Go(string group, string tab)
-    {
-        _group = group;
-        _tab = tab;
-        UpdateUrl();
-    }
-
-    private void GoBacktest() => Go("vn", "backtest");
-
+    private void Go(string tab) { _tab = tab; UpdateUrl(); }
+    private void GoBacktest() => Go("backtest");
     private void ToggleChart() => _chartCollapsed = !_chartCollapsed;
+    private void SetChartSource(string source) { if (_chartSource != source) _chartSource = source; }
 
-    private void SetChartSource(string source)
-    {
-        if (_chartSource == source) return;
-        _chartSource = source;
-    }
+    private void SetAnalyzeSub(string sub) { _analyzeSub = sub; UpdateUrl(); }
+    private void SetScreenSub(string sub) { _screenSub = sub; UpdateUrl(); }
+    private void SetMacroSub(string sub) { _macroSub = sub; UpdateUrl(); }
 
     private void PickSymbol(string sym)
     {
         _symbolInput = sym.Trim().ToUpperInvariant();
         _activeSymbol = _symbolInput;
-        if (_group == "vn")
-            UpdateUrl();
+        UpdateUrl();
     }
 
     private void CommitAndAnalyze()
@@ -262,50 +245,44 @@
         if (string.IsNullOrWhiteSpace(_symbolInput)) return;
         _activeSymbol = _symbolInput.Trim().ToUpperInvariant();
         _symbolInput = _activeSymbol;
-        Go("vn", "analyze");
-    }
-
-    private void OnSymbolFromMarket(string sym)
-    {
-        PickSymbol(sym);
-        Go("vn", "analyze");
+        _analyzeSub = "indicators";
+        Go("analyze");
     }
 
     private void OnSymbolFromScreener(string sym)
     {
         PickSymbol(sym);
-        Go("vn", "analyze");
-    }
-
-    private void SetScreenSub(string sub)
-    {
-        _screenSub = sub;
+        _analyzeSub = "indicators";
+        _tab = "analyze";
         UpdateUrl();
     }
 
     private void OnSymbolKey(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter")
-            CommitAndAnalyze();
+        if (e.Key == "Enter") CommitAndAnalyze();
     }
 
     private Task OnThesisReady(string _)
     {
-        Go("vn", "analyze");
+        _analyzeSub = "indicators";
+        UpdateUrl();
         return Task.CompletedTask;
     }
 
     private void UpdateUrl()
     {
-        var query = new Dictionary<string, string?>
-        {
-            ["group"] = _group,
-            ["tab"] = _tab
-        };
-        if (_group == "vn" && !string.IsNullOrWhiteSpace(_activeSymbol))
+        var query = new Dictionary<string, string?> { ["tab"] = _tab };
+        if (!string.IsNullOrWhiteSpace(_activeSymbol))
             query["symbol"] = _activeSymbol;
-        if (_group == "vn" && _tab == "screen" && _screenSub is "multi" or "flow")
-            query["screen"] = _screenSub;
+
+        var sub = _tab switch
+        {
+            "analyze" => _analyzeSub,
+            "screen" => _screenSub,
+            "macro" => _macroSub,
+            _ => null
+        };
+        if (sub is not null) query["sub"] = sub;
 
         var path = CulturePath.Combine(CultureService.UrlLang, "trading/vndesk");
         var url = QueryHelpers.AddQueryString(path, query);
