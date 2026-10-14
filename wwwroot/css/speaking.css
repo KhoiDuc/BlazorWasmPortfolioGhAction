@@ -994,13 +994,205 @@
     gap: 0.35rem;
 }
 
-/* Flashcard bottom controls */
+/* ── Flashcard Back Details ── */
+.fc-back-meaning {
+    font-size: 2rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0 0 1.25rem;
+    text-align: center;
+}
+
+.fc-back-meaning.en {
+    color: var(--color-brand-symbol);
+}
+
+.fc-example-card {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-brand-symbol);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.fc-ex-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: 0.45rem;
+}
+
+.fc-ex-header i {
+    color: var(--color-brand-symbol);
+}
+
+.fc-speak-link {
+    background: transparent;
+    border: none;
+    color: var(--color-brand-symbol);
+    font-size: 0.78rem;
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-xs);
+    transition: all var(--transition);
+}
+
+.fc-speak-link:hover {
+    background: var(--color-bg-glass-active);
+    color: var(--color-brand-symbol-hover);
+}
+
+.fc-example-text {
+    font-size: 1rem;
+    color: var(--color-text);
+    margin: 0;
+    line-height: 1.5;
+    font-style: italic;
+}
+
+/* ── Flashcard Empty State ── */
+.fc-empty-state {
+    text-align: center;
+    padding: 3.5rem 1.5rem;
+    background: var(--color-bg-surface);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-xl);
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.fc-empty-state i {
+    font-size: 3rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1rem;
+}
+
+.fc-empty-state h3 {
+    margin: 0 0 0.5rem;
+    color: var(--color-text-primary);
+}
+
+.fc-empty-state p {
+    margin: 0;
+    color: var(--color-text-secondary);
+}
+
+/* ── Flashcard Bottom Navigation & Action Bar ── */
+.fc-control-bar,
 .fc-bottom-controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1.25rem;
-    margin-top: 1rem;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+    flex-wrap: wrap;
+}
+
+.fc-nav-btn {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    padding: 0.75rem 1.35rem;
+    border-radius: var(--radius-full);
+    font-size: 0.92rem;
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition: all var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.fc-nav-btn:hover:not(:disabled) {
+    background: var(--color-bg-glass-hover);
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.fc-nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.fc-action-btn {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-full);
+    font-size: 0.92rem;
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.fc-action-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.fc-action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Specific: Lật thẻ button */
+.fc-flip-trigger {
+    background: var(--color-bg-glass-active);
+    border-color: var(--color-border-accent);
+    color: var(--color-brand-symbol);
+}
+
+.fc-flip-trigger:hover:not(:disabled) {
+    background: var(--color-brand-symbol);
+    color: var(--color-text-on-accent);
+    box-shadow: var(--shadow-glow-primary);
+}
+
+/* Specific: Đánh dấu đã thuộc button */
+.fc-master-btn {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.fc-master-btn:hover:not(:disabled) {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: var(--color-success-text);
+}
+
+.fc-master-btn.is-learned {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: var(--color-success);
+    color: var(--color-success-text);
+    font-weight: var(--font-weight-bold);
+}
+
+.fc-master-btn.is-learned:hover:not(:disabled) {
+    background: rgba(16, 185, 129, 0.25);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
 }
 
 .fc-nav-arrow {
