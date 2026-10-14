@@ -1,0 +1,132 @@
+@using BlazorWasmPortfolioGhAction.Pages
+
+<div class="toeic-grammar-tab">
+    <!-- Header -->
+    <div class="toeic-section-header">
+        <h2 class="toeic-section-title">
+            <i class="bi bi-diagram-3-fill text-warning"></i>
+            Ngữ Pháp Trọng Tâm & Mini Quiz Tương Tác
+        </h2>
+        <p class="toeic-section-desc">
+            Nắm vững bản chất quy tắc vị trí từ loại, kỹ thuật rút gọn mệnh đề quan hệ và làm bài kiểm tra mini có đáp án giải thích chi tiết.
+        </p>
+    </div>
+
+    @foreach (var topic in Data.GrammarTopics)
+    {
+        <div class="toeic-grammar-block">
+            <h3 class="toeic-grammar-title">@topic.Title</h3>
+            <div class="toeic-grammar-formula">
+                <i class="bi bi-code-slash me-2"></i>@topic.Formula
+            </div>
+
+            <ul class="toeic-rules-list">
+                @foreach (var rule in topic.Rules)
+                {
+                    <li>@rule</li>
+                }
+            </ul>
+
+            <!-- Cheat Table -->
+            <div class="toeic-table-responsive">
+                <table class="toeic-cheat-table">
+                    <thead>
+                        <tr>
+                            <th>Vị Trí & Trường Hợp</th>
+                            <th>Mẫu Cấu Trúc</th>
+                            <th>Ví Dụ Minh Họa</th>
+                            <th>Ghi Chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in topic.CheatTable)
+                        {
+                            <tr>
+                                <td style="font-weight: 700; color: var(--color-text-primary);">@row.Label</td>
+                                <td><code>@row.Patterns</code></td>
+                                <td>@row.Examples</td>
+                                <td style="font-size: 0.8rem; color: var(--color-text-muted);">@row.Note</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mini Quiz -->
+            <div class="toeic-quiz-box">
+                <div class="toeic-quiz-title">
+                    <i class="bi bi-patch-question-fill"></i> Thử Thách Phản Xạ Nhanh (Mini Quiz)
+                </div>
+
+                @for (int i = 0; i < topic.MiniQuiz.Count; i++)
+                {
+                    var qIndex = i;
+                    var q = topic.MiniQuiz[qIndex];
+                    var qKey = $"{topic.Id}-{qIndex}";
+                    var userChoice = _userAnswers.ContainsKey(qKey) ? _userAnswers[qKey] : (int?)null;
+
+                    <div style="margin-bottom: 1.25rem;">
+                        <div class="toeic-quiz-q">
+                            Câu @(qIndex + 1): @q.Question
+                        </div>
+
+                        <div class="toeic-quiz-options">
+                            @for (int optIdx = 0; optIdx < q.Options.Count; optIdx++)
+                            {
+                                var currentOpt = optIdx;
+                                var isChosen = userChoice == currentOpt;
+                                var isCorrect = q.CorrectIndex == currentOpt;
+
+                                var btnClass = "";
+                                if (userChoice.HasValue)
+                                {
+                                    if (isCorrect) btnClass = "correct";
+                                    else if (isChosen) btnClass = "wrong";
+                                }
+
+                                <button type="button"
+                                        class="toeic-quiz-opt-btn @btnClass"
+                                        disabled="@userChoice.HasValue"
+                                        @onclick="() => SelectAnswer(qKey, currentOpt)">
+                                    <span>
+                                        <b>@((char)('A' + currentOpt)).</b> @q.Options[currentOpt]
+                                    </span>
+
+                                    @if (userChoice.HasValue)
+                                    {
+                                        if (isCorrect)
+                                        {
+                                            <i class="bi bi-check-lg text-success"></i>
+                                        }
+                                        else if (isChosen)
+                                        {
+                                            <i class="bi bi-x-lg text-danger"></i>
+                                        }
+                                    }
+                                </button>
+                            }
+                        </div>
+
+                        @if (userChoice.HasValue)
+                        {
+                            <div class="toeic-quiz-explanation">
+                                <b><i class="bi bi-info-circle-fill me-1"></i> Giải thích chi tiết:</b> @q.Explanation
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ToeicData Data { get; set; } = default!;
+
+    private Dictionary<string, int> _userAnswers = new();
+
+    private void SelectAnswer(string qKey, int choice)
+    {
+        _userAnswers[qKey] = choice;
+    }
+}

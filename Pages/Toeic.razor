@@ -1,0 +1,222 @@
+@page "/toeic"
+@page "/{lang:regex(^(en|vn)$)}/toeic"
+@inherits CultureAwareComponent
+@inject HttpClient Http
+@inject IJSRuntime JS
+@using System.Text.Json
+@using BlazorWasmPortfolioGhAction.Pages.ToeicTabs
+@using BlazorWasmPortfolioGhAction.Pages.ToeicComponents
+
+<div class="toeic-master-app">
+    <div class="toeic-wrapper">
+        <!-- Top Hero Banner -->
+        <header class="toeic-top-hero">
+            <div class="toeic-ambient-glow" aria-hidden="true"></div>
+            <div class="toeic-brand-row">
+                <span class="toeic-brand-pill">
+                    <span class="toeic-live-dot"></span> TOEIC MASTERY HUB
+                </span>
+                <span class="toeic-brand-pill outline">
+                    4-SKILLS PREPARATION
+                </span>
+            </div>
+
+            <h1 class="toeic-title">Bứt Phá Điểm Số TOEIC 4 Kỹ Năng</h1>
+            <p class="toeic-subtitle">
+                Bộ cẩm nang thực chiến cho <b>Khôi</b> · Tích hợp 28 Infographic Mindmap chuyên sâu, tổng hợp bẫy Part 1–7, mẹo phản xạ 5 giây, từ vựng Paraphrase và xưởng luyện Speaking/Writing.
+            </p>
+
+            @if (_data != null)
+            {
+                <div class="toeic-stats-ticker">
+                    <div class="toeic-ticker-item">
+                        <span class="toeic-ticker-val">@_data.Infographics.Count</span>
+                        <span class="toeic-ticker-lbl">Infographic Gốc</span>
+                    </div>
+                    <div class="toeic-ticker-sep"></div>
+                    <div class="toeic-ticker-item">
+                        <span class="toeic-ticker-val">@_data.Traps.Count</span>
+                        <span class="toeic-ticker-lbl">Bẫy Đề Thi</span>
+                    </div>
+                    <div class="toeic-ticker-sep"></div>
+                    <div class="toeic-ticker-item">
+                        <span class="toeic-ticker-val">@_data.QuickTricks.Count</span>
+                        <span class="toeic-ticker-lbl">Mẹo Tốc Độ</span>
+                    </div>
+                    <div class="toeic-ticker-sep"></div>
+                    <div class="toeic-ticker-item highlight">
+                        <span class="toeic-ticker-val">@_masteredTraps.Count</span>
+                        <span class="toeic-ticker-lbl">Bẫy Đã Thành Thạo</span>
+                    </div>
+                </div>
+            }
+        </header>
+
+        @if (_loadError)
+        {
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 2rem; text-align: center; color: #ef4444;">
+                <i class="bi bi-exclamation-triangle-fill" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                <h4 style="margin: 0 0 0.5rem;">Không tải được dữ liệu TOEIC</h4>
+                <p style="margin: 0; color: var(--color-text-secondary);">Vui lòng kiểm tra lại đường truyền hoặc thử tải lại trang (Ctrl + F5).</p>
+            </div>
+        }
+        else if (_data == null)
+        {
+            <div style="text-align: center; padding: 4rem 1rem; color: var(--color-text-muted);">
+                <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem; margin-bottom: 1rem;"></div>
+                <p>Đang tải tài liệu TOEIC 4-Skills...</p>
+            </div>
+        }
+        else
+        {
+            <!-- Tab Navigation Bar -->
+            <nav class="toeic-tab-bar" role="tablist" aria-label="Các chuyên đề TOEIC">
+                @foreach (var tab in _tabs)
+                {
+                    var isActive = _activeTab == tab.Key;
+                    <button type="button"
+                            role="tab"
+                            aria-selected="@isActive"
+                            class="toeic-nav-btn @(isActive ? "active" : "")"
+                            @onclick="() => SwitchTab(tab.Key)">
+                        <i class="bi @tab.Icon" aria-hidden="true"></i>
+                        <span>@tab.Label</span>
+                        @if (!string.IsNullOrEmpty(tab.Badge))
+                        {
+                            <span class="toeic-nav-btn-badge">@tab.Badge</span>
+                        }
+                    </button>
+                }
+            </nav>
+
+            <!-- Main Tab Viewport -->
+            <main class="toeic-viewport">
+                @switch (_activeTab)
+                {
+                    case "overview":
+                        <ToeicOverviewTab Data="@_data" OnSelectInfographic="OpenModal" />
+                        break;
+
+                    case "traps":
+                        <ToeicTrapsTab Data="@_data" MasteredTraps="@_masteredTraps" OnToggleTrap="ToggleTrapMastered" />
+                        break;
+
+                    case "vocab":
+                        <ToeicVocabTab Data="@_data" OnSpeak="SpeakText" />
+                        break;
+
+                    case "grammar":
+                        <ToeicGrammarTab Data="@_data" />
+                        break;
+
+                    case "speaking":
+                        <ToeicSpeakingTab Data="@_data" OnSpeak="SpeakText" />
+                        break;
+
+                    case "writing":
+                        <ToeicWritingTab Data="@_data" />
+                        break;
+                }
+            </main>
+        }
+    </div>
+</div>
+
+<!-- Modal Viewer for High-Res Infographics -->
+<ToeicImageViewerModal Item="@_selectedInfographic" OnClose="CloseModal" />
+
+@code {
+    private ToeicData? _data;
+    private bool _loadError;
+    private string _activeTab = "overview";
+    private ToeicInfographic? _selectedInfographic;
+    private HashSet<string> _masteredTraps = new();
+
+    private readonly List<(string Key, string Label, string Icon, string Badge)> _tabs = new()
+    {
+        ("overview", "Tổng Quan & 28 Infographic", "bi-grid-fill", "28"),
+        ("traps", "Bẫy Đề Thi & Mẹo 5s", "bi-shield-exclamation", "Part 1-7"),
+        ("vocab", "Từ Vựng & Paraphrase", "bi-journal-bookmark-fill", "Matrix"),
+        ("grammar", "Ngữ Pháp & Mini Quiz", "bi-diagram-3-fill", "Quiz"),
+        ("speaking", "Luyện Nói (Speaking)", "bi-mic-fill", "Timer"),
+        ("writing", "Luyện Viết (Writing)", "bi-pen-fill", "Blueprint"),
+    };
+
+    private static readonly JsonSerializerOptions _jsonOpts = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _data = await Http.GetFromJsonAsync<ToeicData>("sample-data/toeic.json", _jsonOpts);
+            if (_data is null) _loadError = true;
+        }
+        catch
+        {
+            _loadError = true;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var stored = await JS.InvokeAsync<string?>("localStorage.getItem", "toeic_mastered_traps");
+                if (!string.IsNullOrEmpty(stored))
+                {
+                    var list = JsonSerializer.Deserialize<List<string>>(stored);
+                    if (list != null && list.Any())
+                    {
+                        _masteredTraps = new HashSet<string>(list);
+                        StateHasChanged();
+                    }
+                }
+            }
+            catch { }
+        }
+    }
+
+    private void SwitchTab(string key) => _activeTab = key;
+
+    private void OpenModal(ToeicInfographic item)
+    {
+        _selectedInfographic = item;
+    }
+
+    private void CloseModal()
+    {
+        _selectedInfographic = null;
+    }
+
+    private void ToggleTrapMastered(string trapId)
+    {
+        if (!_masteredTraps.Remove(trapId)) _masteredTraps.Add(trapId);
+        _ = SaveMasteredTrapsAsync();
+    }
+
+    private async Task SaveMasteredTrapsAsync()
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(_masteredTraps);
+            await JS.InvokeVoidAsync("localStorage.setItem", "toeic_mastered_traps", json);
+        }
+        catch { }
+    }
+
+    private async Task SpeakText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+        try
+        {
+            await JS.InvokeVoidAsync("eval", $"speechSynthesis.cancel();var u=new SpeechSynthesisUtterance({JsonSerializer.Serialize(text)});u.lang='en-US';u.rate=0.88;speechSynthesis.speak(u)");
+        }
+        catch { }
+    }
+}

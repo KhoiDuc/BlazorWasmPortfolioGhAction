@@ -1,0 +1,219 @@
+@using BlazorWasmPortfolioGhAction.Pages
+@implements IDisposable
+
+<div class="toeic-speaking-tab">
+    <!-- Header -->
+    <div class="toeic-section-header">
+        <h2 class="toeic-section-title">
+            <i class="bi bi-mic-fill text-warning"></i>
+            Phòng Luyện Nói TOEIC Speaking (Part 2, 3, 5)
+        </h2>
+        <p class="toeic-section-desc">
+            Luyện tập phản xạ với đồng hồ đếm ngược chuẩn phòng thi ETS, công thức khung sườn (Blueprint) và bài mẫu điểm tối đa có âm thanh phát âm.
+        </p>
+    </div>
+
+    <!-- Active Timer Widget -->
+    <div class="toeic-timer-widget">
+        <div class="toeic-timer-display">
+            <div class="toeic-timer-clock">@FormatTime(_secondsRemaining)</div>
+            <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                <span class="toeic-timer-mode-pill">
+                    @(_isPrepPhase ? "Thời gian chuẩn bị (Prep)" : "Thời gian trả lời (Speak)")
+                </span>
+                <span style="font-size: 0.78rem; color: var(--color-text-muted);">
+                    @(_timerRunning ? (_isPrepPhase ? "Hãy suy nghĩ dàn ý..." : "Bắt đầu nói to rõ ràng!") : "Nhấn Bắt đầu khi sẵn sàng")
+                </span>
+            </div>
+        </div>
+
+        <div class="toeic-timer-controls">
+            @if (!_timerRunning)
+            {
+                <button type="button" class="toeic-timer-btn primary" @onclick="StartTimer">
+                    <i class="bi bi-play-fill"></i> Bắt đầu làm bài
+                </button>
+            }
+            else
+            {
+                <button type="button" class="toeic-timer-btn secondary" @onclick="PauseTimer">
+                    <i class="bi bi-pause-fill"></i> Tạm dừng
+                </button>
+            }
+            <button type="button" class="toeic-timer-btn secondary" @onclick="ResetTimer">
+                <i class="bi bi-arrow-counterclockwise"></i> Đặt lại
+            </button>
+        </div>
+    </div>
+
+    <!-- Speaking Prompts List -->
+    @foreach (var prompt in Data.SpeakingPrompts)
+    {
+        <div class="toeic-speaking-card">
+            <div class="toeic-speaking-header">
+                <div>
+                    <span class="toeic-spk-part-badge me-2">@prompt.Part</span>
+                    <span style="font-size: 1.15rem; font-weight: 800; color: var(--color-text-primary);">
+                        @prompt.Title
+                    </span>
+                </div>
+
+                <button type="button"
+                        class="toeic-filter-chip"
+                        @onclick="() => LoadPromptTimer(prompt)">
+                    <i class="bi bi-stopwatch me-1"></i> Nạp thời gian thi: @(prompt.TimePrepSeconds)s Prep / @(prompt.TimeResponseSeconds)s Speak
+                </button>
+            </div>
+
+            <!-- Prompt Box -->
+            <div class="toeic-prompt-box">
+                <i class="bi bi-chat-left-quote-fill me-2 text-warning"></i>
+                @prompt.PromptText
+            </div>
+
+            <!-- Blueprint -->
+            <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--color-text-primary); margin: 0 0 0.75rem;">
+                <i class="bi bi-signpost-split me-1 text-primary"></i> Khung Sườn Trả Lời (Blueprint):
+            </h4>
+            <div class="toeic-blueprint-flow">
+                @foreach (var step in prompt.Blueprint)
+                {
+                    <div class="toeic-blueprint-step">
+                        @step
+                    </div>
+                }
+            </div>
+
+            <!-- High Scoring Phrases -->
+            <div style="margin-bottom: 1rem;">
+                <h5 style="font-size: 0.85rem; font-weight: 700; color: var(--color-brand-symbol, #ca8a04); margin: 0 0 0.4rem;">
+                    Cụm từ ghi điểm cao:
+                </h5>
+                <div class="toeic-connectors-row">
+                    @foreach (var phrase in prompt.HighScorePhrases)
+                    {
+                        <span class="toeic-connector-pill">@phrase</span>
+                    }
+                </div>
+            </div>
+
+            <!-- Sample Answer -->
+            <div class="toeic-sample-answer-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <span style="font-size: 0.88rem; font-weight: 800; color: #22c55e;">
+                        <i class="bi bi-patch-check-fill me-1"></i> Bài Mẫu Điểm Tuyệt Đối
+                    </span>
+                    <button type="button"
+                            class="toeic-tool-btn"
+                            @onclick="() => PlayAudio(prompt.SampleAnswer)">
+                        <i class="bi bi-volume-up-fill text-warning me-1"></i> Nghe phát âm bài mẫu
+                    </button>
+                </div>
+                <div class="toeic-sample-answer-text">
+                    @prompt.SampleAnswer
+                </div>
+            </div>
+
+            <!-- Tip -->
+            <div style="font-size: 0.82rem; color: var(--color-text-muted); font-style: italic;">
+                <i class="bi bi-lightbulb-fill text-warning me-1"></i> Lời khuyên: @prompt.Tips
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ToeicData Data { get; set; } = default!;
+    [Parameter] public EventCallback<string> OnSpeak { get; set; }
+
+    private System.Threading.Timer? _timer;
+    private bool _timerRunning;
+    private bool _isPrepPhase = true;
+    private int _prepTime = 45;
+    private int _speakTime = 30;
+    private int _secondsRemaining = 45;
+
+    protected override void OnInitialized()
+    {
+        if (Data.SpeakingPrompts.Any())
+        {
+            var p = Data.SpeakingPrompts.First();
+            _prepTime = p.TimePrepSeconds;
+            _speakTime = p.TimeResponseSeconds;
+            _secondsRemaining = _prepTime;
+        }
+    }
+
+    private void LoadPromptTimer(ToeicSpeakingPrompt prompt)
+    {
+        PauseTimer();
+        _isPrepPhase = true;
+        _prepTime = prompt.TimePrepSeconds;
+        _speakTime = prompt.TimeResponseSeconds;
+        _secondsRemaining = _prepTime;
+    }
+
+    private void StartTimer()
+    {
+        _timerRunning = true;
+        _timer?.Dispose();
+        _timer = new System.Threading.Timer(TimerTick, null, 1000, 1000);
+    }
+
+    private void PauseTimer()
+    {
+        _timerRunning = false;
+        _timer?.Dispose();
+        _timer = null;
+    }
+
+    private void ResetTimer()
+    {
+        PauseTimer();
+        _isPrepPhase = true;
+        _secondsRemaining = _prepTime;
+    }
+
+    private void TimerTick(object? state)
+    {
+        InvokeAsync(() =>
+        {
+            if (_secondsRemaining > 0)
+            {
+                _secondsRemaining--;
+                StateHasChanged();
+            }
+            else
+            {
+                if (_isPrepPhase)
+                {
+                    _isPrepPhase = false;
+                    _secondsRemaining = _speakTime;
+                    StateHasChanged();
+                }
+                else
+                {
+                    PauseTimer();
+                    StateHasChanged();
+                }
+            }
+        });
+    }
+
+    private string FormatTime(int sec)
+    {
+        int m = sec / 60;
+        int s = sec % 60;
+        return $"{m:D2}:{s:D2}";
+    }
+
+    private async Task PlayAudio(string text)
+    {
+        await OnSpeak.InvokeAsync(text);
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}

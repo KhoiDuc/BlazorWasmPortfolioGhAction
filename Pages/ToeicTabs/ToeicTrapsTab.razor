@@ -1,0 +1,141 @@
+@using BlazorWasmPortfolioGhAction.Pages
+
+<div class="toeic-traps-container">
+    <!-- Header Summary -->
+    <div class="toeic-section-header">
+        <h2 class="toeic-section-title">
+            <i class="bi bi-shield-exclamation text-warning"></i>
+            Chiến Lược Phá Bẫy Đề Thi TOEIC (Part 1 – Part 7)
+        </h2>
+        <p class="toeic-section-desc">
+            Nhận diện ngay 10+ chiêu trò gài bẫy kinh điển của ETS và mẹo tiết kiệm 15–30 giây mỗi câu.
+        </p>
+    </div>
+
+    <!-- Quick Tricks Grid -->
+    <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0 0 1rem; color: var(--color-text-primary);">
+        <i class="bi bi-lightning-charge-fill" style="color: #eab308;"></i> Mẹo Tốc Độ Vàng (Quick Tricks)
+    </h3>
+    <div class="toeic-quick-tricks-grid">
+        @foreach (var trick in Data.QuickTricks)
+        {
+            <div class="toeic-trick-card">
+                <div class="toeic-trick-header">
+                    <span class="toeic-trick-part">@trick.Part</span>
+                    <span class="toeic-trick-timesave">
+                        <i class="bi bi-stopwatch"></i> Tiết kiệm ~@trick.TimeSaveSeconds s
+                    </span>
+                </div>
+                <h4 class="toeic-trick-title">@trick.Title</h4>
+                <div class="toeic-trick-rule">@trick.Rule</div>
+                <div class="toeic-trick-example">
+                    <code>@trick.Example</code>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Filter by Part -->
+    <div class="toeic-filter-pills" style="margin-bottom: 1.5rem;">
+        <button type="button"
+                class="toeic-filter-chip @(_selectedPart == "All" ? "active" : "")"
+                @onclick='() => _selectedPart = "All"'>
+            Tất cả các phần (@Data.Traps.Count)
+        </button>
+        @foreach (var p in new[] { "Part 1", "Part 2", "Part 3 & 4", "Part 5", "Part 6", "Part 7" })
+        {
+            <button type="button"
+                    class="toeic-filter-chip @(_selectedPart == p ? "active" : "")"
+                    @onclick="() => _selectedPart = p">
+                @p
+            </button>
+        }
+    </div>
+
+    <!-- Traps List -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        @foreach (var trap in FilteredTraps)
+        {
+            var isMastered = MasteredTraps.Contains(trap.Id);
+            <div class="toeic-trap-card @(isMastered ? "mastered" : "")">
+                <div class="toeic-trap-top-meta">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="toeic-trap-part-badge">@trap.Part</span>
+                        <span class="toeic-tag">@trap.Skill</span>
+                    </div>
+
+                    <span class="toeic-trap-danger-badge @trap.DangerLevel.ToLowerInvariant()">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Mức độ bẫy: @trap.DangerLevel
+                    </span>
+                </div>
+
+                <h3 class="toeic-trap-name">@trap.Name</h3>
+                <p class="toeic-trap-desc">@trap.Description</p>
+
+                <!-- Comparison -->
+                <div class="toeic-trap-compare-grid">
+                    <div class="toeic-compare-pane trap">
+                        <div class="toeic-compare-title">
+                            <i class="bi bi-x-circle-fill"></i> Đáp án gài bẫy (Dễ chọn nhầm)
+                        </div>
+                        <div style="font-weight: 600; color: #ef4444; margin-bottom: 0.35rem;">
+                            @trap.TrapChoice
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--color-text-muted);">
+                            Hỏi: <em>@trap.ExampleQuestion</em>
+                        </div>
+                    </div>
+
+                    <div class="toeic-compare-pane correct">
+                        <div class="toeic-compare-title">
+                            <i class="bi bi-check-circle-fill"></i> Đáp án chuẩn xác
+                        </div>
+                        <div style="font-weight: 600; color: #16a34a; margin-bottom: 0.35rem;">
+                            @trap.CorrectChoice
+                        </div>
+                        <div style="font-size: 0.82rem; color: var(--color-text-secondary);">
+                            @trap.Explanation
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pro Tip -->
+                <div class="toeic-trap-protip">
+                    <b><i class="bi bi-lightbulb-fill text-warning me-1"></i> Mẹo phản xạ nhanh:</b> @trap.ProTip
+                </div>
+
+                <!-- Actions -->
+                <div class="toeic-trap-actions">
+                    <button type="button"
+                            class="toeic-check-master-btn @(isMastered ? "mastered" : "")"
+                            @onclick="() => ToggleTrapMastered(trap.Id)">
+                        <i class="bi @(isMastered ? "bi-check2-all" : "bi-check2")"></i>
+                        @(isMastered ? "Đã thành thạo bẫy này" : "Đánh dấu đã hiểu bẫy này")
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public ToeicData Data { get; set; } = default!;
+    [Parameter] public HashSet<string> MasteredTraps { get; set; } = new();
+    [Parameter] public EventCallback<string> OnToggleTrap { get; set; }
+
+    private string _selectedPart = "All";
+
+    private IEnumerable<ToeicTrap> FilteredTraps
+    {
+        get
+        {
+            if (_selectedPart == "All") return Data.Traps;
+            return Data.Traps.Where(t => t.Part == _selectedPart);
+        }
+    }
+
+    private async Task ToggleTrapMastered(string trapId)
+    {
+        await OnToggleTrap.InvokeAsync(trapId);
+    }
+}

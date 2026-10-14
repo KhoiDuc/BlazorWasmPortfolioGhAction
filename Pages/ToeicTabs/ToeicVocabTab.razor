@@ -1,0 +1,143 @@
+@using BlazorWasmPortfolioGhAction.Pages
+
+<div class="toeic-vocab-tab">
+    <!-- Header -->
+    <div class="toeic-section-header">
+        <h2 class="toeic-section-title">
+            <i class="bi bi-journal-bookmark-fill text-warning"></i>
+            Kho Từ Vựng Trọng Điểm & Ma Trận Paraphrase
+        </h2>
+        <p class="toeic-section-desc">
+            Từ vựng phân theo 4 nhóm chuyên đề công sở và các cặp từ đồng nghĩa (Paraphrase) quyết định điểm số Part 3, 4, 7.
+        </p>
+    </div>
+
+    <!-- Sub-navigation: Vocab Categories vs Paraphrase Matrix -->
+    <div class="toeic-filter-pills" style="margin-bottom: 2rem;">
+        <button type="button"
+                class="toeic-filter-chip @(_vocabMode == "vocab" ? "active" : "")"
+                @onclick='() => _vocabMode = "vocab"'>
+            <i class="bi bi-card-text me-1"></i> Từ Vựng Cốt Lõi Theo Chủ Đề
+        </button>
+        <button type="button"
+                class="toeic-filter-chip @(_vocabMode == "paraphrase" ? "active" : "")"
+                @onclick='() => _vocabMode = "paraphrase"'>
+            <i class="bi bi-arrow-left-right me-1"></i> Ma Trận Paraphrase (Verbs & Nouns)
+        </button>
+    </div>
+
+    @if (_vocabMode == "vocab")
+    {
+        <!-- Category Selector -->
+        <div class="toeic-filter-pills" style="margin-bottom: 1.5rem;">
+            @foreach (var cat in Data.VocabCategories)
+            {
+                <button type="button"
+                        class="toeic-filter-chip @(_selectedCatId == cat.Id ? "active" : "")"
+                        @onclick="() => _selectedCatId = cat.Id">
+                    <i class="bi @cat.Icon me-1"></i> @cat.Name
+                </button>
+            }
+        </div>
+
+        var currentCat = Data.VocabCategories.FirstOrDefault(c => c.Id == _selectedCatId) ?? Data.VocabCategories.First();
+        <div class="toeic-vocab-section">
+            <div style="margin-bottom: 1rem;">
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--color-brand-symbol, #ca8a04); margin: 0 0 0.25rem;">
+                    @currentCat.NameVi
+                </h3>
+                <span style="font-size: 0.85rem; color: var(--color-text-muted);">
+                    @currentCat.Items.Count từ vựng bắt buộc phải biết
+                </span>
+            </div>
+
+            <div class="toeic-vocab-grid">
+                @foreach (var word in currentCat.Items)
+                {
+                    <div class="toeic-word-card">
+                        <div class="toeic-word-top-row">
+                            <span class="toeic-word-en">@word.En</span>
+                            <span class="toeic-word-pos">@word.Pos</span>
+                        </div>
+
+                        <div class="toeic-word-ipa-row">
+                            <span class="toeic-word-ipa">@word.Ipa</span>
+                            <button type="button"
+                                    class="toeic-tts-btn"
+                                    title="Phát âm tiếng Anh chuẩn"
+                                    @onclick="() => PlayAudio(word.En)">
+                                <i class="bi bi-volume-up-fill"></i>
+                            </button>
+                        </div>
+
+                        <div class="toeic-word-vi">@word.Vi</div>
+
+                        @if (!string.IsNullOrEmpty(word.Collocation))
+                        {
+                            <div class="toeic-word-colloc">
+                                <i class="bi bi-link-45deg me-1"></i> @word.Collocation
+                            </div>
+                        }
+
+                        <div class="toeic-word-example">
+                            "@word.Example"
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Paraphrase Matrix -->
+        <div class="toeic-paraphrase-grid">
+            @foreach (var group in Data.Paraphrases)
+            {
+                <div class="toeic-paraphrase-card">
+                    <h3 class="toeic-paraphrase-header">
+                        <i class="bi @(group.Type == "Verbs" ? "bi-play-circle" : "bi-box") me-1 text-warning"></i>
+                        @group.Title
+                    </h3>
+
+                    @foreach (var pair in group.Pairs)
+                    {
+                        <div class="toeic-para-item">
+                            <div>
+                                <span class="toeic-para-orig">@pair.Original</span>
+                                <span class="toeic-para-arrow">&rarr;</span>
+                            </div>
+
+                            <div class="toeic-para-synonyms">
+                                @foreach (var syn in pair.Paraphrases)
+                                {
+                                    <span class="toeic-para-pill">@syn</span>
+                                }
+                            </div>
+
+                            <div class="toeic-para-vi">
+                                <b>Nghĩa:</b> @pair.Vi
+                            </div>
+
+                            <div style="font-size: 0.78rem; color: var(--color-text-muted); margin-top: 0.25rem;">
+                                <i class="bi bi-info-circle me-1"></i> @pair.Context
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ToeicData Data { get; set; } = default!;
+    [Parameter] public EventCallback<string> OnSpeak { get; set; }
+
+    private string _vocabMode = "vocab";
+    private string _selectedCatId = "cat-business";
+
+    private async Task PlayAudio(string text)
+    {
+        await OnSpeak.InvokeAsync(text);
+    }
+}

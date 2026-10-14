@@ -1,0 +1,117 @@
+@using BlazorWasmPortfolioGhAction.Pages
+
+@if (Item != null)
+{
+    <div class="toeic-modal-backdrop" @onclick="OnClose">
+        <div class="toeic-modal-dialog" @onclick:stopPropagation="true">
+            <!-- Header -->
+            <div class="toeic-modal-header">
+                <div class="toeic-modal-title">
+                    <span class="toeic-card-num-badge" style="position:static;">@Item.Num</span>
+                    <span>@Item.Title</span>
+                </div>
+
+                <div class="toeic-modal-tools">
+                    <button type="button" class="toeic-tool-btn" @onclick="ZoomOut" title="Thu nhỏ">
+                        <i class="bi bi-zoom-out"></i>
+                    </button>
+                    <span class="toeic-tag" style="font-family:monospace;">@(_zoomLevel.ToString("0.0"))x</span>
+                    <button type="button" class="toeic-tool-btn" @onclick="ZoomIn" title="Phóng to">
+                        <i class="bi bi-zoom-in"></i>
+                    </button>
+                    <button type="button" class="toeic-tool-btn" @onclick="ResetZoom" title="Đặt lại kích thước">
+                        <i class="bi bi-arrow-counterclockwise"></i> 1x
+                    </button>
+                    <a href="images/toeic/@Item.FileName" download="@Item.FileName" target="_blank" class="toeic-tool-btn" title="Tải ảnh gốc về máy">
+                        <i class="bi bi-download"></i> Tải về
+                    </a>
+                    <button type="button" class="toeic-modal-close-btn" @onclick="OnClose" aria-label="Đóng">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body Split -->
+            <div class="toeic-modal-body-split">
+                <!-- Image Viewport -->
+                <div class="toeic-modal-img-viewport">
+                    <img src="images/toeic/@Item.FileName"
+                         alt="@Item.Title"
+                         class="toeic-modal-img"
+                         style="transform: scale(@_zoomLevel);" />
+                </div>
+
+                <!-- Side Notes -->
+                <div class="toeic-modal-side-notes">
+                    <div>
+                        <h4 class="toeic-notes-title">@Item.TitleVi</h4>
+                        <p style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; margin: 0;">
+                            @Item.Summary
+                        </p>
+                    </div>
+
+                    @if (Item.Highlights.Any())
+                    {
+                        <div>
+                            <h5 class="toeic-notes-title" style="font-size: 0.9rem; color: var(--color-brand-symbol, #ca8a04);">
+                                <i class="bi bi-star-fill me-1"></i> Điểm Nhấn Trọng Tâm
+                            </h5>
+                            <ul class="toeic-notes-list">
+                                @foreach (var hl in Item.Highlights)
+                                {
+                                    <li>@hl</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    @if (Item.KeyPoints.Any())
+                    {
+                        <div>
+                            <h5 class="toeic-notes-title" style="font-size: 0.9rem; color: #22c55e;">
+                                <i class="bi bi-check2-circle me-1"></i> Công Thức & Ví Dụ Vàng
+                            </h5>
+                            <ul class="toeic-notes-list">
+                                @foreach (var kp in Item.KeyPoints)
+                                {
+                                    <li><code>@kp</code></li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--color-border-subtle);">
+                        <div class="toeic-card-tags">
+                            @foreach (var tag in Item.Tags)
+                            {
+                                <span class="toeic-tag">#@tag</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public ToeicInfographic? Item { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private double _zoomLevel = 1.0;
+
+    private void ZoomIn()
+    {
+        if (_zoomLevel < 3.0) _zoomLevel = Math.Round(_zoomLevel + 0.25, 2);
+    }
+
+    private void ZoomOut()
+    {
+        if (_zoomLevel > 0.75) _zoomLevel = Math.Round(_zoomLevel - 0.25, 2);
+    }
+
+    private void ResetZoom()
+    {
+        _zoomLevel = 1.0;
+    }
+}

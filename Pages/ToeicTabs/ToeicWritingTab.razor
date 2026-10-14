@@ -1,0 +1,102 @@
+@using BlazorWasmPortfolioGhAction.Pages
+
+<div class="toeic-writing-tab">
+    <!-- Header -->
+    <div class="toeic-section-header">
+        <h2 class="toeic-section-title">
+            <i class="bi bi-pen-fill text-warning"></i>
+            Xưởng Luyện Viết TOEIC Writing (Task 1 – Task 3)
+        </h2>
+        <p class="toeic-section-desc">
+            Bí quyết viết câu phức theo tranh (Task 1), sườn trả lời email 3 yêu cầu (Task 2) và dàn ý bài luận 300+ từ chuẩn mực (Task 3).
+        </p>
+    </div>
+
+    @foreach (var template in Data.WritingTemplates)
+    {
+        <div class="toeic-writing-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                <span class="toeic-wri-task-badge">@template.Task</span>
+                <span style="font-size: 1.15rem; font-weight: 800; color: var(--color-text-primary);">
+                    @template.Title
+                </span>
+            </div>
+
+            <!-- Scenario Box -->
+            <div class="toeic-prompt-box">
+                <b><i class="bi bi-file-earmark-text me-1 text-warning"></i> Tình huống đề bài:</b> @template.Scenario
+            </div>
+
+            <!-- Required Points -->
+            <div style="margin-bottom: 1.25rem;">
+                <h4 style="font-size: 0.92rem; font-weight: 700; color: var(--color-text-primary); margin: 0 0 0.5rem;">
+                    <i class="bi bi-list-check me-1 text-primary"></i> Yêu cầu bắt buộc để đạt điểm tối đa:
+                </h4>
+                <ul class="toeic-notes-list">
+                    @foreach (var req in template.RequiredPoints)
+                    {
+                        <li>@req</li>
+                    }
+                </ul>
+            </div>
+
+            <!-- Structure Blueprint -->
+            <div style="margin-bottom: 1.25rem;">
+                <h4 style="font-size: 0.92rem; font-weight: 700; color: var(--color-brand-symbol, #ca8a04); margin: 0 0 0.5rem;">
+                    <i class="bi bi-diagram-2 me-1"></i> Khung Cấu Trúc Blueprint:
+                </h4>
+                <div class="toeic-blueprint-flow">
+                    @foreach (var step in template.StructureBlueprint)
+                    {
+                        <div class="toeic-blueprint-step" style="border-left-color: var(--color-brand-symbol, #ca8a04);">
+                            @step
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- High Scoring Connectors -->
+            <div style="margin-bottom: 1.25rem;">
+                <h4 style="font-size: 0.88rem; font-weight: 700; color: #0284c7; margin: 0 0 0.4rem;">
+                    <i class="bi bi-link me-1"></i> Từ nối & Mẫu câu ăn điểm cao:
+                </h4>
+                <div class="toeic-connectors-row">
+                    @foreach (var conn in template.Connectors)
+                    {
+                        <span class="toeic-connector-pill">@conn</span>
+                    }
+                </div>
+            </div>
+
+            <!-- Full Model Response -->
+            <div>
+                <h4 style="font-size: 0.92rem; font-weight: 800; color: #16a34a; margin: 0 0 0.5rem;">
+                    <i class="bi bi-award-fill me-1"></i> Bài Viết Mẫu Hoàn Chỉnh (High-Score Model):
+                </h4>
+                <div class="toeic-full-response-box">
+                    @template.SampleFullResponse
+                </div>
+            </div>
+
+            <!-- Common Mistakes -->
+            @if (template.CommonMistakes.Any())
+            {
+                <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+                    <h5 style="font-size: 0.85rem; font-weight: 800; color: #ef4444; margin: 0 0 0.4rem;">
+                        <i class="bi bi-exclamation-octagon-fill me-1"></i> Cảnh giác các lỗi dễ mất điểm:
+                    </h5>
+                    <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.82rem; color: var(--color-text-secondary); line-height: 1.6;">
+                        @foreach (var mistake in template.CommonMistakes)
+                        {
+                            <li>@mistake</li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ToeicData Data { get; set; } = default!;
+}
