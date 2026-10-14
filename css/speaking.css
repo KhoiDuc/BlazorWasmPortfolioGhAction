@@ -161,16 +161,20 @@
 .studio-tab-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    gap: 0.35rem;
+    width: max-content;
+    max-width: 100%;
+    margin: 0 auto 2rem;
     background: var(--color-bg-glass-heavy);
     backdrop-filter: var(--blur-glass);
     border: 1px solid var(--color-border);
-    padding: 0.45rem;
+    padding: 0.35rem 0.6rem;
     border-radius: var(--radius-full);
-    margin-bottom: 2rem;
     overflow-x: auto;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: var(--shadow-sm);
+    box-sizing: border-box;
 }
 
 .studio-tab-bar::-webkit-scrollbar { display: none; }
@@ -178,21 +182,22 @@
 .studio-nav-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.45rem;
     background: transparent;
     border: none;
     color: var(--color-text-secondary);
-    padding: 0.65rem 1.25rem;
+    padding: 0.55rem 1rem;
     border-radius: var(--radius-full);
-    font-size: var(--font-size-sm);
+    font-size: 0.88rem;
     font-weight: var(--font-weight-medium);
     cursor: pointer;
     transition: all var(--transition-base);
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .studio-nav-btn i {
-    font-size: 1.05rem;
+    font-size: 1rem;
     transition: transform 0.2s ease;
 }
 
@@ -208,18 +213,24 @@
 }
 
 .studio-nav-btn.active i {
-    transform: scale(1.1);
+    transform: scale(1.08);
 }
 
 .nav-btn-badge {
     font-size: 0.65rem;
     font-weight: var(--font-weight-bold);
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.22);
     color: inherit;
     padding: 0.15rem 0.45rem;
     border-radius: var(--radius-full);
     margin-left: 0.15rem;
     letter-spacing: 0.03em;
+}
+
+.studio-nav-btn:not(.active) .nav-btn-badge {
+    background: var(--color-bg-glass-active);
+    color: var(--color-brand-symbol);
+    border: 1px solid var(--color-border-accent);
 }
 
 /* ── Loading & Alerts ── */
@@ -2732,7 +2743,7 @@
     .studio-stats-ticker { gap: 0.85rem; padding: 0.45rem 1rem; }
     .ticker-val { font-size: 1.05rem; }
     .ticker-lbl { font-size: 0.65rem; }
-    .studio-tab-bar { justify-content: flex-start; padding: 0.35rem; }
+    .studio-tab-bar { width: 100%; border-radius: var(--radius-lg); padding: 0.35rem; }
 
     .studio-prompter-card,
     .script-stage-card,
