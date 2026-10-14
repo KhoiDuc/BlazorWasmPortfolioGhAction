@@ -8,16 +8,42 @@
 <div class="page-section speaking-page">
     <div class="container">
         <header class="speaking-hero">
-            <div>
-                <p class="section-label">SPEAKING 1–1</p>
-                <h1>Nói rõ ý. Nói tự nhiên.</h1>
-                <p class="speaking-lead muted">
-                    Dành cho Khôi · từ giao tiếp hằng ngày đến công việc, thể thao, AI và TikTok.
-                    @if (_data != null)
-                    {
-                        <span>@_data.Topics.Count chủ đề · @_data.Vocab.Count từ/cụm · @_data.Frames.Count mẫu câu · bài nói cá nhân hóa.</span>
-                    }
+            <div class="speaking-hero-glow" aria-hidden="true"></div>
+            <div class="speaking-hero-content">
+                <div class="speaking-badge-row">
+                    <span class="speaking-pill-badge">
+                        <i class="bi bi-stars"></i> SPEAKING 1–1 COACH
+                    </span>
+                    <span class="speaking-pill-badge accent">A–R–E–A FRAMEWORK</span>
+                </div>
+                <h1 class="speaking-hero-title">Nói rõ ý. Nói tự nhiên.</h1>
+                <p class="speaking-lead">
+                    Lộ trình phản xạ tiếng Anh cá nhân hóa cho Khôi · từ giao tiếp đời thường đến Web, DevOps, thể thao & AI.
                 </p>
+                @if (_data != null)
+                {
+                    <div class="speaking-hero-stats">
+                        <div class="speaking-stat-item">
+                            <span class="stat-num">@_data.Topics.Count</span>
+                            <span class="stat-label">Chủ đề</span>
+                        </div>
+                        <div class="speaking-stat-divider" aria-hidden="true"></div>
+                        <div class="speaking-stat-item">
+                            <span class="stat-num">@_data.Vocab.Count</span>
+                            <span class="stat-label">Từ & cụm</span>
+                        </div>
+                        <div class="speaking-stat-divider" aria-hidden="true"></div>
+                        <div class="speaking-stat-item">
+                            <span class="stat-num">@_data.Frames.Count</span>
+                            <span class="stat-label">Mẫu câu</span>
+                        </div>
+                        <div class="speaking-stat-divider" aria-hidden="true"></div>
+                        <div class="speaking-stat-item highlight">
+                            <span class="stat-num">@_learned.Count</span>
+                            <span class="stat-label">Đã thuộc</span>
+                        </div>
+                    </div>
+                }
             </div>
         </header>
 
@@ -37,7 +63,10 @@
                     <button type="button" role="tab"
                             aria-selected="@(_activeTab == tab.Key)"
                             class="speaking-tab @(_activeTab == tab.Key ? "active" : "")"
-                            @onclick="() => SwitchTab(tab.Key)">@tab.Label</button>
+                            @onclick="() => SwitchTab(tab.Key)">
+                        <i class="bi @tab.Icon" aria-hidden="true"></i>
+                        <span>@tab.Label</span>
+                    </button>
                 }
             </nav>
 
@@ -66,16 +95,16 @@
     private string _currentVocabGroup = "all";
     private HashSet<string> _learned = new();
 
-    private readonly List<(string Key, string Label)> _tabs = new()
+    private readonly List<(string Key, string Label, string Icon)> _tabs = new()
     {
-        ("overview", "Lộ trình"),
-        ("personal", "Bài mẫu của Khôi"),
-        ("topics", "Theo chủ đề"),
-        ("vocab", "Từ vựng"),
-        ("frames", "Mẫu câu"),
-        ("cards", "Thẻ nhớ"),
-        ("practice", "Thi thử"),
-        ("notes", "Lưu ý"),
+        ("overview", "Lộ trình", "bi-compass"),
+        ("personal", "Bài mẫu của Khôi", "bi-person-badge"),
+        ("topics", "Theo chủ đề", "bi-collection"),
+        ("vocab", "Từ vựng", "bi-journal-text"),
+        ("frames", "Mẫu câu", "bi-chat-quote"),
+        ("cards", "Thẻ nhớ", "bi-card-heading"),
+        ("practice", "Thi thử", "bi-mic"),
+        ("notes", "Lưu ý", "bi-info-circle"),
     };
 
     private static readonly JsonSerializerOptions _jsonOpts = new()
