@@ -1,0 +1,228 @@
+@* VocabHubTab.razor — Kho từ vựng & ma trận tra cứu thông minh phong cách Studio *@
+
+<div class="vocab-hub-container">
+    <!-- Hub Header & Filters -->
+    <div class="vocab-hub-toolbar">
+        <div class="vocab-search-box">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search"
+                   placeholder="Tìm từ vựng, nghĩa tiếng Việt, ví dụ..."
+                   @bind="_search"
+                   @bind:event="oninput"
+                   aria-label="Tìm từ vựng" />
+            @if (!string.IsNullOrWhiteSpace(_search))
+            {
+                <button type="button" class="vocab-clear-btn" @onclick='() => _search = ""' aria-label="Xóa tìm kiếm">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
+            }
+        </div>
+
+        <div class="vocab-select-group">
+            <select @bind="_selectedGroup" class="vocab-select" aria-label="Lọc theo chủ đề">
+                <option value="all">Tất cả chủ đề (@Data.Vocab.Count từ)</option>
+                @foreach (var g in _groupLabels)
+                {
+                    <option value="@g.Key">@g.Value</option>
+                }
+            </select>
+
+            <select @bind="_selectedFilter" class="vocab-select" aria-label="Lọc theo nhóm">
+                <option value="all">Toàn bộ kho từ (@Data.Vocab.Count)</option>
+                <option value="common">🔥 Đời thường thông dụng (@Data.Vocab.Count(v => v.Common))</option>
+                <option value="priority">⭐ Chuyên đề ưu tiên (@Data.Vocab.Count(v => v.Priority))</option>
+                <option value="extra">💻 IT & DevOps (@Data.Vocab.Count(v => v.Extra))</option>
+                <option value="unlearned">⏳ Chưa thuộc (@Data.Vocab.Count(v => !Learned.Contains(v.En)))</option>
+                <option value="learned">✓ Đã thuộc (@Data.Vocab.Count(v => Learned.Contains(v.En)))</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Quick Category Chips -->
+    <div class="vocab-chips-bar">
+        <button type="button" class="vocab-chip @(_selectedGroup == "all" ? "active" : "")" @onclick='() => _selectedGroup = "all"'>
+            Tất cả
+        </button>
+        @foreach (var g in _quickChips)
+        {
+            <button type="button" class="vocab-chip @(_selectedGroup == g.Key ? "active" : "")" @onclick="() => _selectedGroup = g.Key">
+                @g.Value
+            </button>
+        }
+    </div>
+
+    <!-- Summary Stats Bar -->
+    <div class="vocab-meta-bar">
+        <div class="vocab-count-info">
+            Hiển thị <b>@FilteredVocab.Count</b> / @Data.Vocab.Count từ vựng
+            @if (_selectedFilter == "learned" || Learned.Any())
+            {
+                <span class="vocab-learned-badge">· Tiến độ: @Learned.Count/@Data.Vocab.Count (@(Data.Vocab.Count > 0 ? (Learned.Count * 100 / Data.Vocab.Count) : 0)%)</span>
+            }
+        </div>
+    </div>
+
+    <!-- Vocab Matrix Grid -->
+    <div class="vocab-grid">
+        @if (FilteredVocab.Any())
+        {
+            @foreach (var item in FilteredVocab)
+            {
+                var isLearned = Learned.Contains(item.En);
+                <div class="vocab-card @(isLearned ? "is-learned" : "")">
+                    <div class="vocab-card-header">
+                        <div class="vocab-card-badges">
+                            <span class="vocab-group-tag">@_groupLabels.GetValueOrDefault(item.Group, item.Group)</span>
+                            <span class="vocab-kind-tag">@item.Kind</span>
+                            @if (item.Common)
+                            {
+                                <span class="vocab-badge-fire" title="Từ vựng đời thường quen thuộc"><i class="bi bi-fire"></i> Common</span>
+                            }
+                            @if (item.Priority)
+                            {
+                                <span class="vocab-badge-star" title="Từ vựng ưu tiên"><i class="bi bi-star-fill"></i> Priority</span>
+                            }
+                            @if (item.Extra)
+                            {
+                                <span class="vocab-badge-tech" title="Thuật ngữ Web & DevOps"><i class="bi bi-cpu"></i> Tech</span>
+                            }
+                        </div>
+
+                        <button type="button"
+                                class="vocab-learn-check @(isLearned ? "active" : "")"
+                                @onclick="() => ToggleLearn(item.En)"
+                                title="@(isLearned ? "Đã thuộc (Bấm để hủy)" : "Đánh dấu đã thuộc")">
+                            <i class="bi @(isLearned ? "bi-check-circle-fill" : "bi-circle")"></i>
+                        </button>
+                    </div>
+
+                    <div class="vocab-card-main">
+                        <div class="vocab-word-row">
+                            <h3 class="vocab-en-text" lang="en">@item.En</h3>
+                            @if (Speak != null)
+                            {
+                                <button type="button" class="vocab-tts-btn" @onclick="() => Speak(item.En)" title="Nghe phát âm từ này">
+                                    <i class="bi bi-volume-up-fill"></i>
+                                </button>
+                            }
+                        </div>
+                        <p class="vocab-vi-text">@item.Vi</p>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(item.Ex))
+                    {
+                        <div class="vocab-example-box">
+                            <div class="vocab-example-header">
+                                <span>Ví dụ giao tiếp thực tế:</span>
+                                @if (Speak != null)
+                                {
+                                    <button type="button" class="vocab-tts-btn sm" @onclick="() => Speak(item.Ex)" title="Nghe cả câu">
+                                        <i class="bi bi-play-circle"></i> Nghe
+                                    </button>
+                                }
+                            </div>
+                            <p class="vocab-ex-text" lang="en">“@item.Ex”</p>
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="vocab-empty-box">
+                <i class="bi bi-search"></i>
+                <p>Không tìm thấy từ vựng nào khớp với bộ lọc "<b>@_search</b>".</p>
+                <button type="button" class="vocab-reset-btn" @onclick="ResetFilters">Xóa bộ lọc tìm kiếm</button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+    [Parameter] public string? InitialGroup { get; set; }
+    [Parameter] public HashSet<string> Learned { get; set; } = new();
+    [Parameter] public Action<string> ToggleLearn { get; set; } = default!;
+    [Parameter] public Func<string, Task>? Speak { get; set; }
+
+    private string _search = "";
+    private string _selectedGroup = "all";
+    private string _selectedFilter = "all";
+
+    private readonly Dictionary<string, string> _groupLabels = new()
+    {
+        ["work"] = "Công việc & DevOps",
+        ["daily"] = "Thói quen hàng ngày",
+        ["tech"] = "Công nghệ & AI",
+        ["hobbies"] = "Cầu lông & Thể thao",
+        ["free-time"] = "Thời gian rảnh & TikTok",
+        ["family"] = "Gia đình & Nhà cửa",
+        ["food"] = "Ăn uống & Cà phê",
+        ["travel"] = "Du lịch & Di chuyển",
+        ["study"] = "Học tập & Tiếng Anh",
+        ["friends"] = "Bạn bè & Đồng nghiệp",
+        ["future"] = "Kế hoạch tương lai",
+        ["money"] = "Tài chính & Mua sắm",
+        ["health"] = "Sức khỏe & Lối sống",
+        ["weather"] = "Thời tiết & Môi trường",
+        ["home"] = "Không gian sống",
+        ["challenges"] = "Thử thách & Giải quyết",
+        ["interview"] = "Phỏng vấn & Giới thiệu",
+    };
+
+    private readonly List<KeyValuePair<string, string>> _quickChips = new()
+    {
+        new("work", "💼 Công việc & DevOps"),
+        new("daily", "☀️ Thói quen"),
+        new("hobbies", "🏸 Cầu lông"),
+        new("free-time", "📱 TikTok & Rảnh"),
+        new("tech", "🤖 AI & Công nghệ"),
+        new("food", "☕ Ăn uống"),
+        new("interview", "🎯 Phỏng vấn"),
+    };
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(InitialGroup) && _groupLabels.ContainsKey(InitialGroup))
+        {
+            _selectedGroup = InitialGroup;
+        }
+    }
+
+    private List<VocabItem> FilteredVocab
+    {
+        get
+        {
+            var q = Data.Vocab.AsEnumerable();
+
+            if (_selectedGroup != "all")
+            {
+                q = q.Where(v => v.Group == _selectedGroup);
+            }
+
+            if (_selectedFilter == "common") q = q.Where(v => v.Common);
+            else if (_selectedFilter == "priority") q = q.Where(v => v.Priority);
+            else if (_selectedFilter == "extra") q = q.Where(v => v.Extra);
+            else if (_selectedFilter == "learned") q = q.Where(v => Learned.Contains(v.En));
+            else if (_selectedFilter == "unlearned") q = q.Where(v => !Learned.Contains(v.En));
+
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var s = _search.Trim().ToLowerInvariant();
+                q = q.Where(v =>
+                    v.En.ToLowerInvariant().Contains(s) ||
+                    v.Vi.ToLowerInvariant().Contains(s) ||
+                    v.Ex.ToLowerInvariant().Contains(s));
+            }
+
+            return q.ToList();
+        }
+    }
+
+    private void ResetFilters()
+    {
+        _search = "";
+        _selectedGroup = "all";
+        _selectedFilter = "all";
+    }
+}

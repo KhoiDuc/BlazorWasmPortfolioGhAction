@@ -1,0 +1,481 @@
+@* MockTestTab.razor — Phòng thi thử 1-1 tương tác 3 phần với giám khảo ảo *@
+@implements IDisposable
+
+<div class="mock-test-container">
+    <!-- Test Header & Flow Stepper -->
+    <div class="mock-header-card">
+        <div class="mock-stepper">
+            <button type="button" class="mock-step-btn @(_currentStage == 1 ? "active" : _currentStage > 1 ? "completed" : "")" @onclick="() => SetStage(1)">
+                <span class="step-badge">1</span>
+                <span class="step-title">Part 1: Phỏng vấn ngắn</span>
+            </button>
+            <div class="step-connector @(_currentStage > 1 ? "completed" : "")"></div>
+            <button type="button" class="mock-step-btn @(_currentStage == 2 ? "active" : _currentStage > 2 ? "completed" : "")" @onclick="() => SetStage(2)">
+                <span class="step-badge">2</span>
+                <span class="step-title">Part 2: Thuyết trình 2 phút</span>
+            </button>
+            <div class="step-connector @(_currentStage > 2 ? "completed" : "")"></div>
+            <button type="button" class="mock-step-btn @(_currentStage == 3 ? "active" : "")" @onclick="() => SetStage(3)">
+                <span class="step-badge">3</span>
+                <span class="step-title">Part 3: Thảo luận sâu</span>
+            </button>
+        </div>
+
+        <div class="mock-test-actions">
+            <button type="button" class="mock-btn-outline" @onclick="GenerateNewTest" title="Đổi đề thi mới">
+                <i class="bi bi-arrow-repeat"></i> Đổi đề thi mới
+            </button>
+        </div>
+    </div>
+
+    @if (_selectedTopic != null)
+    {
+        <!-- Stage 1: Part 1 Quick Questions -->
+        @if (_currentStage == 1)
+        {
+            <div class="mock-stage-pane">
+                <div class="examiner-intro-box">
+                    <div class="examiner-avatar"><i class="bi bi-robot"></i></div>
+                    <div class="examiner-speech">
+                        <div class="examiner-name">Virtual Examiner · Part 1 Warm-up</div>
+                        <p>“Chào Khôi! Trong phần 1, tôi sẽ hỏi bạn một số câu hỏi ngắn về chủ đề <b>@_selectedTopic.Name (@_selectedTopic.En)</b>. Hãy trả lời tự nhiên trong khoảng 30–45 giây.”</p>
+                    </div>
+                </div>
+
+                @if (_selectedTopic.Quick.Any())
+                {
+                    var q = _selectedTopic.Quick[_part1Idx % _selectedTopic.Quick.Count];
+                    var qText = q.Count > 0 ? q[0] : "";
+                    var qHint = q.Count > 1 ? q[1] : "";
+                    var qAns = q.Count > 2 ? q[2] : "";
+
+                    <div class="mock-question-card">
+                        <div class="mock-q-meta">
+                            <span>Câu hỏi @(_part1Idx + 1) / @_selectedTopic.Quick.Count</span>
+                            @if (Speak != null && !string.IsNullOrWhiteSpace(qText))
+                            {
+                                <button type="button" class="mock-audio-btn" @onclick="() => Speak(qText)">
+                                    <i class="bi bi-volume-up-fill"></i> Giám khảo đọc
+                                </button>
+                            }
+                        </div>
+
+                        <h2 class="mock-question-heading" lang="en">@qText</h2>
+
+                        <!-- Countdown Timer for Part 1 -->
+                        <div class="mock-timer-row">
+                            <div class="mock-timer-display @(_isTimerRunning ? "active" : "")">
+                                <i class="bi bi-stopwatch"></i> @_timerDisplay
+                            </div>
+                            <button type="button" class="mock-timer-btn @(_isTimerRunning ? "btn-stop" : "btn-start")" @onclick="ToggleTimer">
+                                @(_isTimerRunning ? "Tạm dừng" : "Bắt đầu trả lời (45s)")
+                            </button>
+                            <button type="button" class="mock-reset-btn" @onclick='() => ResetTimer(45)'>
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                        </div>
+
+                        <!-- Reveal Sample Hint -->
+                        <details class="mock-details-box">
+                            <summary><i class="bi bi-lightbulb"></i> Xem gợi ý dàn ý & bài mẫu tham khảo</summary>
+                            <div class="mock-details-content">
+                                <p><strong>Dàn ý:</strong> @qHint</p>
+                                <p class="mock-sample-en" lang="en">@qAns</p>
+                                @if (Speak != null && !string.IsNullOrWhiteSpace(qAns))
+                                {
+                                    <button type="button" class="mock-small-listen" @onclick="() => Speak(qAns)">
+                                        <i class="bi bi-play-circle"></i> Nghe đọc mẫu
+                                    </button>
+                                }
+                            </div>
+                        </details>
+
+                        <div class="mock-nav-btns">
+                            @if (_part1Idx > 0)
+                            {
+                                <button type="button" class="mock-btn-prev" @onclick="PrevPart1">
+                                    <i class="bi bi-arrow-left"></i> Câu trước
+                                </button>
+                            }
+                            @if (_part1Idx < _selectedTopic.Quick.Count - 1)
+                            {
+                                <button type="button" class="mock-btn-next" @onclick="NextPart1">
+                                    Câu tiếp theo <i class="bi bi-arrow-right"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" class="mock-btn-next highlight" @onclick="() => SetStage(2)">
+                                    Chuyển sang Part 2 <i class="bi bi-arrow-right-circle-fill"></i>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        <!-- Stage 2: Part 2 Cue Card -->
+        else if (_currentStage == 2)
+        {
+            <div class="mock-stage-pane">
+                <div class="examiner-intro-box">
+                    <div class="examiner-avatar"><i class="bi bi-robot"></i></div>
+                    <div class="examiner-speech">
+                        <div class="examiner-name">Virtual Examiner · Part 2 Long Turn</div>
+                        <p>“Bạn có <b>1 phút chuẩn bị</b> ghi chép các ý chính, sau đó có <b>2 phút để nói liên tục</b> về chủ đề này. Tôi sẽ bấm giờ cho bạn.”</p>
+                    </div>
+                </div>
+
+                <div class="mock-cue-card">
+                    <div class="cue-card-header">
+                        <span class="cue-tag">CUE CARD TOPIC</span>
+                        @if (Speak != null && !string.IsNullOrWhiteSpace(_selectedTopic.Cue))
+                        {
+                            <button type="button" class="mock-audio-btn" @onclick="() => Speak(_selectedTopic.Cue)">
+                                <i class="bi bi-volume-up-fill"></i> Nghe đề bài
+                            </button>
+                        }
+                    </div>
+
+                    <h2 class="cue-card-title" lang="en">@_selectedTopic.Cue</h2>
+
+                    @if (_selectedTopic.Points.Any())
+                    {
+                        <div class="cue-points-box">
+                            <strong>You should say:</strong>
+                            <ul lang="en">
+                                @foreach (var pt in _selectedTopic.Points)
+                                {
+                                    <li><i class="bi bi-dot"></i> @pt</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <!-- Prep vs Speaking Dual Timers -->
+                    <div class="cue-timer-dashboard">
+                        <div class="timer-card-block @(_prepMode ? "active" : "")">
+                            <span class="timer-title"><i class="bi bi-pencil"></i> Chuẩn bị 1 phút</span>
+                            <span class="timer-digits">@_timerDisplay</span>
+                            <div class="timer-btns">
+                                <button type="button" class="cue-t-btn" @onclick="Start1MinPrep">
+                                    <i class="bi bi-stopwatch"></i> Bắt đầu 1p chuẩn bị
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="timer-card-block @(!_prepMode && _isTimerRunning ? "active" : "")">
+                            <span class="timer-title"><i class="bi bi-mic"></i> Nói liên tục 2 phút</span>
+                            <span class="timer-digits">@(_prepMode ? "02:00" : _timerDisplay)</span>
+                            <div class="timer-btns">
+                                <button type="button" class="cue-t-btn highlight" @onclick="Start2MinSpeech">
+                                    <i class="bi bi-mic-fill"></i> Bắt đầu nói 2 phút
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scratchpad Notepad for Taking Quick Notes -->
+                    <div class="cue-scratchpad">
+                        <label for="mockNotes"><i class="bi bi-journal-text"></i> Nháp nhanh từ khóa trong 1 phút chuẩn bị:</label>
+                        <textarea id="mockNotes" @bind="_cueNotes" rows="3" placeholder="- Ý 1: ...&#10;- Ý 2: ...&#10;- Cụm từ hay muốn dùng: ..."></textarea>
+                    </div>
+
+                    <!-- Sample Answer -->
+                    <details class="mock-details-box">
+                        <summary><i class="bi bi-lightbulb"></i> Xem bài nói mẫu 2 phút & dàn ý chi tiết</summary>
+                        <div class="mock-details-content">
+                            <p><strong>Dàn ý:</strong> @_selectedTopic.Outline</p>
+                            <p class="mock-sample-en" lang="en">@_selectedTopic.Long</p>
+                            @if (Speak != null && !string.IsNullOrWhiteSpace(_selectedTopic.Long))
+                            {
+                                <button type="button" class="mock-small-listen" @onclick="() => Speak(_selectedTopic.Long)">
+                                    <i class="bi bi-play-circle"></i> Nghe bài nói mẫu 2 phút
+                                </button>
+                            }
+                        </div>
+                    </details>
+
+                    <div class="mock-nav-btns">
+                        <button type="button" class="mock-btn-prev" @onclick="() => SetStage(1)">
+                            <i class="bi bi-arrow-left"></i> Quay lại Part 1
+                        </button>
+                        <button type="button" class="mock-btn-next highlight" @onclick="() => SetStage(3)">
+                            Chuyển sang Part 3 <i class="bi bi-arrow-right-circle-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+        <!-- Stage 3: Part 3 Discussion -->
+        else if (_currentStage == 3)
+        {
+            <div class="mock-stage-pane">
+                <div class="examiner-intro-box">
+                    <div class="examiner-avatar"><i class="bi bi-robot"></i></div>
+                    <div class="examiner-speech">
+                        <div class="examiner-name">Virtual Examiner · Part 3 In-depth Discussion</div>
+                        <p>“Trong phần 3, chúng ta sẽ mở rộng thảo luận sâu hơn về các vấn đề xã hội liên quan đến <b>@_selectedTopic.Name</b>. Hãy nêu quan điểm, phân tích lý do và đưa ra ví dụ.”</p>
+                    </div>
+                </div>
+
+                @if (_selectedTopic.Discuss.Any())
+                {
+                    var dq = _selectedTopic.Discuss[_part3Idx % _selectedTopic.Discuss.Count];
+                    var dqText = dq.Count > 0 ? dq[0] : "";
+                    var dqHint = dq.Count > 1 ? dq[1] : "";
+                    var dqAns = dq.Count > 2 ? dq[2] : "";
+
+                    <div class="mock-question-card">
+                        <div class="mock-q-meta">
+                            <span>Câu hỏi thảo luận @(_part3Idx + 1) / @_selectedTopic.Discuss.Count</span>
+                            @if (Speak != null && !string.IsNullOrWhiteSpace(dqText))
+                            {
+                                <button type="button" class="mock-audio-btn" @onclick="() => Speak(dqText)">
+                                    <i class="bi bi-volume-up-fill"></i> Giám khảo đọc
+                                </button>
+                            }
+                        </div>
+
+                        <h2 class="mock-question-heading" lang="en">@dqText</h2>
+
+                        <!-- Countdown Timer for Part 3 -->
+                        <div class="mock-timer-row">
+                            <div class="mock-timer-display @(_isTimerRunning ? "active" : "")">
+                                <i class="bi bi-stopwatch"></i> @_timerDisplay
+                            </div>
+                            <button type="button" class="mock-timer-btn @(_isTimerRunning ? "btn-stop" : "btn-start")" @onclick="ToggleTimer">
+                                @(_isTimerRunning ? "Tạm dừng" : "Bắt đầu trả lời (60s)")
+                            </button>
+                            <button type="button" class="mock-reset-btn" @onclick='() => ResetTimer(60)'>
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                        </div>
+
+                        <!-- Sample Answer -->
+                        <details class="mock-details-box">
+                            <summary><i class="bi bi-lightbulb"></i> Xem gợi ý phân tích 2 chiều & bài mẫu</summary>
+                            <div class="mock-details-content">
+                                <p><strong>Dàn ý mở rộng:</strong> @dqHint</p>
+                                <p class="mock-sample-en" lang="en">@dqAns</p>
+                                @if (Speak != null && !string.IsNullOrWhiteSpace(dqAns))
+                                {
+                                    <button type="button" class="mock-small-listen" @onclick="() => Speak(dqAns)">
+                                        <i class="bi bi-play-circle"></i> Nghe đọc mẫu
+                                    </button>
+                                }
+                            </div>
+                        </details>
+
+                        <div class="mock-nav-btns">
+                            @if (_part3Idx > 0)
+                            {
+                                <button type="button" class="mock-btn-prev" @onclick="PrevPart3">
+                                    <i class="bi bi-arrow-left"></i> Câu trước
+                                </button>
+                            }
+                            @if (_part3Idx < _selectedTopic.Discuss.Count - 1)
+                            {
+                                <button type="button" class="mock-btn-next" @onclick="NextPart3">
+                                    Câu tiếp theo <i class="bi bi-arrow-right"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" class="mock-btn-next highlight" @onclick="CompleteTest">
+                                    Hoàn thành bài thi! <i class="bi bi-trophy-fill"></i>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (_testCompleted)
+                {
+                    <!-- Test Scorecard / Review Summary -->
+                    <div class="mock-scorecard-card">
+                        <div class="scorecard-header">
+                            <i class="bi bi-patch-check-fill"></i>
+                            <h3>Chúc mừng bạn đã hoàn thành bài thi thử Speaking 1–1!</h3>
+                        </div>
+                        <div class="scorecard-grid">
+                            <div class="score-item">
+                                <strong>Fluency & Coherence</strong>
+                                <p>Trả lời thẳng câu hỏi, ngắt nghỉ theo cụm ý, dùng liên từ chuyển tiếp mượt mà.</p>
+                            </div>
+                            <div class="score-item">
+                                <strong>Lexical Resource</strong>
+                                <p>Vận dụng từ vựng đời thường tự nhiên kết hợp các thuật ngữ Web & DevOps quen thuộc.</p>
+                            </div>
+                            <div class="score-item">
+                                <strong>Grammar Accuracy</strong>
+                                <p>Chia thì chuẩn xác giữa hiện tại (thói quen) và quá khứ/tương lai (dự án, mục tiêu).</p>
+                            </div>
+                            <div class="score-item">
+                                <strong>Pronunciation</strong>
+                                <p>Phát âm rõ âm đuôi (ending sounds), nhấn đúng trọng âm từ và ngữ điệu tự tin.</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+    [Parameter] public Func<string, Task>? Speak { get; set; }
+
+    private int _currentStage = 1;
+    private Topic? _selectedTopic;
+    private int _part1Idx = 0;
+    private int _part3Idx = 0;
+    private string _cueNotes = "";
+    private bool _testCompleted = false;
+
+    // Timer states
+    private int _remaining = 45;
+    private string _timerDisplay = "00:45";
+    private bool _isTimerRunning;
+    private bool _prepMode = false;
+    private System.Threading.CancellationTokenSource? _cts;
+    private static readonly Random _rng = new();
+
+    protected override void OnInitialized()
+    {
+        GenerateNewTest();
+    }
+
+    private void GenerateNewTest()
+    {
+        if (Data.Topics.Any())
+        {
+            _selectedTopic = Data.Topics[_rng.Next(Data.Topics.Count)];
+            _currentStage = 1;
+            _part1Idx = 0;
+            _part3Idx = 0;
+            _cueNotes = "";
+            _testCompleted = false;
+            ResetTimer(45);
+        }
+    }
+
+    private void SetStage(int stage)
+    {
+        StopTimer();
+        _currentStage = stage;
+        if (stage == 1) ResetTimer(45);
+        else if (stage == 2)
+        {
+            _prepMode = true;
+            ResetTimer(60);
+        }
+        else if (stage == 3) ResetTimer(60);
+    }
+
+    private void NextPart1()
+    {
+        _part1Idx++;
+        ResetTimer(45);
+    }
+
+    private void PrevPart1()
+    {
+        if (_part1Idx > 0) _part1Idx--;
+        ResetTimer(45);
+    }
+
+    private void NextPart3()
+    {
+        _part3Idx++;
+        ResetTimer(60);
+    }
+
+    private void PrevPart3()
+    {
+        if (_part3Idx > 0) _part3Idx--;
+        ResetTimer(60);
+    }
+
+    private void Start1MinPrep()
+    {
+        _prepMode = true;
+        ResetTimer(60);
+        StartTimer();
+    }
+
+    private void Start2MinSpeech()
+    {
+        _prepMode = false;
+        ResetTimer(120);
+        StartTimer();
+    }
+
+    private void CompleteTest()
+    {
+        StopTimer();
+        _testCompleted = true;
+    }
+
+    private void ToggleTimer()
+    {
+        if (_isTimerRunning) StopTimer();
+        else StartTimer();
+    }
+
+    private void ResetTimer(int seconds)
+    {
+        StopTimer();
+        _remaining = seconds;
+        UpdateTimerDisplay();
+    }
+
+    private void StartTimer()
+    {
+        if (_isTimerRunning) return;
+        _isTimerRunning = true;
+        _cts = new System.Threading.CancellationTokenSource();
+        _ = RunTimerLoopAsync(_cts.Token);
+    }
+
+    private void StopTimer()
+    {
+        _isTimerRunning = false;
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+    }
+
+    private async Task RunTimerLoopAsync(System.Threading.CancellationToken ct)
+    {
+        try
+        {
+            while (!ct.IsCancellationRequested && _remaining > 0)
+            {
+                await Task.Delay(1000, ct);
+                _remaining--;
+                UpdateTimerDisplay();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (TaskCanceledException) { }
+        finally
+        {
+            _isTimerRunning = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void UpdateTimerDisplay()
+    {
+        int mins = _remaining / 60;
+        int secs = _remaining % 60;
+        _timerDisplay = $"{mins:D2}:{secs:D2}";
+    }
+
+    public void Dispose()
+    {
+        StopTimer();
+    }
+}

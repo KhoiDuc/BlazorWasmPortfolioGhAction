@@ -1,0 +1,133 @@
+@* FramesStudioTab.razor — Bộ khung mẫu câu A-R-E-A phản xạ phong cách Studio *@
+
+<div class="frames-studio-container">
+    <!-- AREA Interactive Formula Banner -->
+    <div class="area-formula-card">
+        <div class="area-title-row">
+            <span class="area-badge"><i class="bi bi-diagram-3-fill"></i> NGUYÊN TẮC VÀNG A–R–E–A</span>
+            <h3>Bí quyết trả lời mọi câu hỏi Speaking tự nhiên trong 30s</h3>
+        </div>
+        <div class="area-steps-grid">
+            <div class="area-step-card step-a1">
+                <span class="step-letter">A</span>
+                <span class="step-name">Answer</span>
+                <p>Trả lời thẳng vào trọng tâm câu hỏi trong 5 giây đầu.</p>
+            </div>
+            <div class="area-step-card step-r">
+                <span class="step-letter">R</span>
+                <span class="step-name">Reason</span>
+                <p>Nêu 1 lý do cụ thể vì sao lại như vậy.</p>
+            </div>
+            <div class="area-step-card step-e">
+                <span class="step-letter">E</span>
+                <span class="step-name">Example</span>
+                <p>Đưa ra 1 ví dụ thực tế từ công việc hoặc đời sống.</p>
+            </div>
+            <div class="area-step-card step-a2">
+                <span class="step-letter">A</span>
+                <span class="step-name">Add / Conclude</span>
+                <p>Chốt lại cảm nghĩ hoặc kế hoạch tương lai.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="frames-toolbar">
+        <div class="frames-search-box">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" placeholder="Tìm mẫu câu, nghĩa tiếng Việt hoặc ví dụ..."
+                   @bind="_search" @bind:event="oninput" aria-label="Tìm mẫu câu" />
+        </div>
+
+        <div class="frames-category-chips">
+            <button type="button" class="frames-chip @(_group == "all" ? "active" : "")" @onclick='() => _group = "all"'>
+                Tất cả (@Data.Frames.Count)
+            </button>
+            @foreach (var g in _frameLabels)
+            {
+                <button type="button" class="frames-chip @(_group == g.Key ? "active" : "")" @onclick="() => _group = g.Key">
+                    @g.Value
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Frames Grid -->
+    <div class="frames-grid">
+        @if (FilteredFrames.Any())
+        {
+            @foreach (var f in FilteredFrames)
+            {
+                <div class="frame-card">
+                    <div class="frame-card-top">
+                        <span class="frame-tag">@_frameLabels.GetValueOrDefault(f.Group, f.Group)</span>
+                        @if (Speak != null)
+                        {
+                            <button type="button" class="frame-audio-btn" @onclick="() => Speak(f.En)" title="Nghe mẫu câu">
+                                <i class="bi bi-volume-up-fill"></i>
+                            </button>
+                        }
+                    </div>
+
+                    <h3 class="frame-pattern" lang="en">“@f.En”</h3>
+                    <p class="frame-vi">@f.Vi</p>
+
+                    @if (!string.IsNullOrWhiteSpace(f.Ex))
+                    {
+                        <div class="frame-example-box">
+                            <div class="example-meta">
+                                <span>Ví dụ áp dụng:</span>
+                                @if (Speak != null)
+                                {
+                                    <button type="button" class="frame-audio-btn sm" @onclick="() => Speak(f.Ex)" title="Nghe câu ví dụ">
+                                        <i class="bi bi-play-circle"></i> Nghe
+                                    </button>
+                                }
+                            </div>
+                            <p class="example-text" lang="en">@f.Ex</p>
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="frames-empty-box">
+                <i class="bi bi-chat-quote"></i>
+                <p>Không tìm thấy mẫu câu nào phù hợp với bộ lọc.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+    [Parameter] public Func<string, Task>? Speak { get; set; }
+
+    private string _search = "";
+    private string _group = "all";
+
+    private readonly Dictionary<string, string> _frameLabels = new()
+    {
+        ["habit"] = "☀️ Thói quen & Sở thích",
+        ["reason"] = "💡 Lý do & Ví dụ",
+        ["opinion"] = "💬 Quan điểm & So sánh",
+        ["time"] = "⏳ Quá khứ & Kế hoạch",
+        ["repair"] = "🛡️ Câu giờ & Sửa ý",
+    };
+
+    private List<FrameItem> FilteredFrames
+    {
+        get
+        {
+            var s = _search.Trim().ToLowerInvariant();
+            return Data.Frames.Where(f =>
+                (_group == "all" || f.Group == _group)
+                && (string.IsNullOrEmpty(s) ||
+                    f.En.ToLowerInvariant().Contains(s) ||
+                    f.Vi.ToLowerInvariant().Contains(s) ||
+                    f.Ex.ToLowerInvariant().Contains(s))
+            ).ToList();
+        }
+    }
+}

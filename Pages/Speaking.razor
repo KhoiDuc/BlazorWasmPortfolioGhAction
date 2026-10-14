@@ -5,42 +5,47 @@
 @inject IJSRuntime JS
 @using System.Text.Json
 
-<div class="page-section speaking-page">
-    <div class="container">
-        <header class="speaking-hero">
-            <div class="speaking-hero-glow" aria-hidden="true"></div>
-            <div class="speaking-hero-content">
-                <div class="speaking-badge-row">
-                    <span class="speaking-pill-badge">
-                        <i class="bi bi-stars"></i> SPEAKING 1–1 COACH
+<div class="speaking-studio-app">
+    <div class="speaking-studio-wrapper">
+        <!-- Studio Top Hero / Header -->
+        <header class="studio-top-hero">
+            <div class="studio-ambient-glow" aria-hidden="true"></div>
+            <div class="studio-hero-content">
+                <div class="studio-brand-row">
+                    <span class="studio-brand-pill">
+                        <span class="live-dot"></span> SPEAKING STUDIO
                     </span>
-                    <span class="speaking-pill-badge accent">A–R–E–A FRAMEWORK</span>
+                    <span class="studio-brand-pill outline">
+                        A–R–E–A FRAMEWORK
+                    </span>
                 </div>
-                <h1 class="speaking-hero-title">Nói rõ ý. Nói tự nhiên.</h1>
-                <p class="speaking-lead">
-                    Lộ trình phản xạ tiếng Anh cá nhân hóa cho Khôi · từ giao tiếp đời thường đến Web, DevOps, thể thao & AI.
+
+                <h1 class="studio-title">Nói Tự Nhiên. Phản Xạ Nhanh.</h1>
+                <p class="studio-subtitle">
+                    Phòng luyện nói chuẩn hóa cho <b>Khôi</b> · Tích hợp 450+ từ vựng đời thường, Web & DevOps, AI, thể thao với âm thanh tương tác.
                 </p>
+
                 @if (_data != null)
                 {
-                    <div class="speaking-hero-stats">
-                        <div class="speaking-stat-item">
-                            <span class="stat-num">@_data.Topics.Count</span>
-                            <span class="stat-label">Chủ đề</span>
+                    <div class="studio-stats-ticker">
+                        <div class="ticker-item">
+                            <span class="ticker-val">@_data.Topics.Count</span>
+                            <span class="ticker-lbl">Chủ đề thực tế</span>
                         </div>
-                        <div class="speaking-stat-divider" aria-hidden="true"></div>
-                        <div class="speaking-stat-item">
-                            <span class="stat-num">@_data.Vocab.Count</span>
-                            <span class="stat-label">Từ & cụm</span>
+                        <div class="ticker-sep"></div>
+                        <div class="ticker-item">
+                            <span class="ticker-val">@_data.Vocab.Count</span>
+                            <span class="ticker-lbl">Từ vựng & Cụm từ</span>
                         </div>
-                        <div class="speaking-stat-divider" aria-hidden="true"></div>
-                        <div class="speaking-stat-item">
-                            <span class="stat-num">@_data.Frames.Count</span>
-                            <span class="stat-label">Mẫu câu</span>
+                        <div class="ticker-sep"></div>
+                        <div class="ticker-item">
+                            <span class="ticker-val">@_data.Frames.Count</span>
+                            <span class="ticker-lbl">Mẫu câu phản xạ</span>
                         </div>
-                        <div class="speaking-stat-divider" aria-hidden="true"></div>
-                        <div class="speaking-stat-item highlight">
-                            <span class="stat-num">@_learned.Count</span>
-                            <span class="stat-label">Đã thuộc</span>
+                        <div class="ticker-sep"></div>
+                        <div class="ticker-item highlight">
+                            <span class="ticker-val">@_learned.Count</span>
+                            <span class="ticker-lbl">Từ đã thuộc</span>
                         </div>
                     </div>
                 }
@@ -49,40 +54,72 @@
 
         @if (_loadError)
         {
-            <div class="tool-alert tool-alert-danger">Không tải được dữ liệu speaking.json.</div>
+            <div class="studio-alert-error">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div>
+                    <h4>Không tải được dữ liệu</h4>
+                    <p>Vui lòng kiểm tra lại đường truyền hoặc thử làm mới trang (Ctrl + F5).</p>
+                </div>
+            </div>
         }
         else if (_data == null)
         {
-            <LoadingSpinner LabelKey="Common_LoadingData" />
+            <div class="studio-loading-box">
+                <div class="studio-spinner"></div>
+                <p>Đang tải Speaking Studio...</p>
+            </div>
         }
         else
         {
-            <nav class="speaking-tabs" role="tablist" aria-label="Các phần ôn tập">
-                @foreach (var tab in _tabs)
+            <!-- Studio Floating Tab Bar -->
+            <nav class="studio-tab-bar" role="tablist" aria-label="Các phòng luyện tập">
+                @foreach (var tab in _studioTabs)
                 {
-                    <button type="button" role="tab"
-                            aria-selected="@(_activeTab == tab.Key)"
-                            class="speaking-tab @(_activeTab == tab.Key ? "active" : "")"
+                    var isActive = _activeTab == tab.Key;
+                    <button type="button"
+                            role="tab"
+                            aria-selected="@isActive"
+                            class="studio-nav-btn @(isActive ? "active" : "")"
                             @onclick="() => SwitchTab(tab.Key)">
                         <i class="bi @tab.Icon" aria-hidden="true"></i>
-                        <span>@tab.Label</span>
+                        <span class="nav-btn-label">@tab.Label</span>
+                        @if (!string.IsNullOrEmpty(tab.Badge))
+                        {
+                            <span class="nav-btn-badge">@tab.Badge</span>
+                        }
                     </button>
                 }
             </nav>
 
-            <div class="speaking-content">
+            <!-- Studio Tab Viewport -->
+            <main class="studio-viewport">
                 @switch (_activeTab)
                 {
-                    case "overview": <OverviewTab Data="@_data" OpenTopic="@OpenTopic" />; break;
-                    case "personal": <PersonalTab Data="@_data" Speak="@SpeakText" />; break;
-                    case "topics": <TopicsTab Data="@_data" InitialTopicId="@_currentTopicId" Speak="@SpeakText" PracticeTopic="@PracticeTopic" VocabTopic="@VocabTopic" />; break;
-                    case "vocab": <VocabTab Data="@_data" InitialGroup="@_currentVocabGroup" Learned="@_learned" ToggleLearn="@ToggleLearn" Speak="@SpeakText" />; break;
-                    case "frames": <FramesTab Data="@_data" />; break;
-                    case "cards": <CardsTab Data="@_data" InitialGroup="@_currentTopicId" Learned="@_learned" ToggleLearn="@ToggleLearn" Speak="@SpeakText" />; break;
-                    case "practice": <PracticeTab Data="@_data" InitialTopicId="@_currentTopicId" Speak="@SpeakText" />; break;
-                    case "notes": <NotesTab Data="@_data" />; break;
+                    case "studio":
+                        <StudioTab Data="@_data" InitialTopicId="@_currentTopicId" Speak="@SpeakText" />
+                        break;
+
+                    case "cards":
+                        <FlashcardTab Data="@_data" InitialGroup="@_currentTopicId" Learned="@_learned" ToggleLearn="@ToggleLearn" Speak="@SpeakText" />
+                        break;
+
+                    case "vocab":
+                        <VocabHubTab Data="@_data" InitialGroup="@_currentVocabGroup" Learned="@_learned" ToggleLearn="@ToggleLearn" Speak="@SpeakText" />
+                        break;
+
+                    case "personal":
+                        <PersonalScriptTab Data="@_data" Speak="@SpeakText" />
+                        break;
+
+                    case "frames":
+                        <FramesStudioTab Data="@_data" Speak="@SpeakText" />
+                        break;
+
+                    case "mock":
+                        <MockTestTab Data="@_data" Speak="@SpeakText" />
+                        break;
                 }
-            </div>
+            </main>
         }
     </div>
 </div>
@@ -90,21 +127,19 @@
 @code {
     private SpeakingData? _data;
     private bool _loadError;
-    private string _activeTab = "overview";
+    private string _activeTab = "studio";
     private string _currentTopicId = "";
     private string _currentVocabGroup = "all";
     private HashSet<string> _learned = new();
 
-    private readonly List<(string Key, string Label, string Icon)> _tabs = new()
+    private readonly List<(string Key, string Label, string Icon, string Badge)> _studioTabs = new()
     {
-        ("overview", "Lộ trình", "bi-compass"),
-        ("personal", "Bài mẫu của Khôi", "bi-person-badge"),
-        ("topics", "Theo chủ đề", "bi-collection"),
-        ("vocab", "Từ vựng", "bi-journal-text"),
-        ("frames", "Mẫu câu", "bi-chat-quote"),
-        ("cards", "Thẻ nhớ", "bi-card-heading"),
-        ("practice", "Thi thử", "bi-mic"),
-        ("notes", "Lưu ý", "bi-info-circle"),
+        ("studio", "Studio Luyện Nói", "bi-broadcast", "Live"),
+        ("cards", "Thẻ Nhớ 3D", "bi-card-heading", "3D"),
+        ("vocab", "Kho Từ Vựng 450+", "bi-journal-bookmark", "450+"),
+        ("personal", "Bài Mẫu Của Khôi", "bi-person-badge", "VIP"),
+        ("frames", "Mẫu Câu A-R-E-A", "bi-chat-quote", ""),
+        ("mock", "Thi Thử 1–1", "bi-mic", "Mock"),
     };
 
     private static readonly JsonSerializerOptions _jsonOpts = new()
@@ -149,25 +184,6 @@
     }
 
     private void SwitchTab(string key) => _activeTab = key;
-
-    private void OpenTopic(string topicId)
-    {
-        _currentTopicId = topicId;
-        SwitchTab("topics");
-    }
-
-    private void PracticeTopic(string topicId)
-    {
-        _currentTopicId = topicId;
-        SwitchTab("practice");
-    }
-
-    private void VocabTopic(string topicId)
-    {
-        _currentTopicId = topicId;
-        _currentVocabGroup = topicId;
-        SwitchTab("vocab");
-    }
 
     private void ToggleLearn(string en)
     {

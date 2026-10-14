@@ -1,0 +1,299 @@
+@* StudioTab.razor — Phòng luyện nói Speaking Studio phong cách Elsa Speak / Speak AI *@
+@implements IDisposable
+
+<div class="studio-container">
+    <!-- Top Studio Controls -->
+    <div class="studio-header-bar">
+        <div class="studio-filter-group">
+            <div class="studio-select-wrapper">
+                <i class="bi bi-collection-play" aria-hidden="true"></i>
+                <select value="@_selectedTopicId" @onchange="OnTopicChanged" aria-label="Chọn chủ đề luyện">
+                    <option value="all">Tất cả 17 chủ đề</option>
+                    @foreach (var t in Data.Topics)
+                    {
+                        <option value="@t.Id">@t.Name (@t.En)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="studio-pill-group" role="radiogroup" aria-label="Phần luyện">
+                <button type="button" class="studio-pill @(_selectedPart == "quick" ? "active" : "")" @onclick='() => ChangePart("quick")'>
+                    <i class="bi bi-chat-dots"></i> Part 1 (Ngắn)
+                </button>
+                <button type="button" class="studio-pill @(_selectedPart == "long" ? "active" : "")" @onclick='() => ChangePart("long")'>
+                    <i class="bi bi-card-text"></i> Part 2 (Nói dài)
+                </button>
+                <button type="button" class="studio-pill @(_selectedPart == "discuss" ? "active" : "")" @onclick='() => ChangePart("discuss")'>
+                    <i class="bi bi-people"></i> Part 3 (Thảo luận)
+                </button>
+            </div>
+        </div>
+
+        <div class="studio-action-group">
+            <button type="button" class="studio-btn studio-btn-random" @onclick="PickRandomQuestion" title="Đổi câu hỏi ngẫu nhiên">
+                <i class="bi bi-shuffle"></i> Đổi câu hỏi khác
+            </button>
+        </div>
+    </div>
+
+    @if (_currentQ != null)
+    {
+        <!-- Main Prompter Stage -->
+        <div class="studio-prompter-card">
+            <div class="prompter-meta-bar">
+                <span class="prompter-badge">
+                    <i class="bi bi-mic-fill"></i> @_currentQ.TopicName · @(_selectedPart == "quick" ? "Part 1 · Trả lời 30–45s" : _selectedPart == "long" ? "Part 2 · Nói dài 1–2 phút" : "Part 3 · Thảo luận quan điểm")
+                </span>
+                <button type="button" class="prompter-audio-btn" @onclick="() => Speak(_currentQ.Question)" title="Nghe giám khảo đọc câu hỏi">
+                    <i class="bi bi-volume-up-fill"></i> <span>Nghe câu hỏi</span>
+                </button>
+            </div>
+
+            <h2 class="prompter-question-text" lang="en">@_currentQ.Question</h2>
+
+            @if (_currentQ.Points.Any())
+            {
+                <div class="prompter-points-box">
+                    <div class="prompter-points-title">Gợi ý các ý cần nói (You should say):</div>
+                    <ul class="prompter-points-list" lang="en">
+                        @foreach (var pt in _currentQ.Points)
+                        {
+                            <li><i class="bi bi-check2-circle"></i> @pt</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <!-- Timer & Speak Pulse Stage -->
+            <div class="studio-timer-stage @(_isTimerRunning ? "recording" : "")">
+                <div class="timer-visual-circle">
+                    <div class="timer-pulse-ring"></div>
+                    <div class="timer-digits">@_timerDisplay</div>
+                    <div class="timer-status-text">@_timerStatus</div>
+                </div>
+
+                <div class="timer-controls">
+                    <button type="button" class="timer-main-btn @(_isTimerRunning ? "btn-stop" : "btn-start")" @onclick="ToggleTimer">
+                        <i class="bi @(_isTimerRunning ? "bi-pause-fill" : "bi-mic-fill")"></i>
+                        <span>@(_isTimerRunning ? "Tạm dừng" : _remaining == 0 ? "Luyện lại" : "Bắt đầu nói")</span>
+                    </button>
+                    <button type="button" class="timer-sub-btn" @onclick="ResetTimer" title="Đặt lại đồng hồ">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                    <div class="timer-duration-select">
+                        <select @bind="_duration" @bind:after="ResetTimer" aria-label="Thời lượng đếm ngược">
+                            <option value="30">30 giây (Phản xạ)</option>
+                            <option value="45">45 giây (Part 1)</option>
+                            <option value="60">1 phút (Chuẩn bị/Part 3)</option>
+                            <option value="120">2 phút (Part 2 chuẩn)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Coach Assistant (Collapsible / Tabbed) -->
+            <div class="studio-coach-drawer">
+                <div class="coach-tabs">
+                    <button type="button" class="coach-tab @(_activeCoachTab == "hint" ? "active" : "")" @onclick='() => _activeCoachTab = "hint"'>
+                        <i class="bi bi-lightbulb"></i> Gợi ý ý tưởng
+                    </button>
+                    <button type="button" class="coach-tab @(_activeCoachTab == "sample" ? "active" : "")" @onclick='() => _activeCoachTab = "sample"'>
+                        <i class="bi bi-chat-square-quote"></i> Bài nói mẫu & Audio
+                    </button>
+                    <button type="button" class="coach-tab @(_activeCoachTab == "check" ? "active" : "")" @onclick='() => _activeCoachTab = "check"'>
+                        <i class="bi bi-check2-square"></i> Tự chấm 4 tiêu chuẩn
+                    </button>
+                </div>
+
+                <div class="coach-body">
+                    @if (_activeCoachTab == "hint")
+                    {
+                        <div class="coach-pane">
+                            <div class="coach-hint-box">
+                                <strong>Dàn ý phản xạ:</strong>
+                                <p>@_currentQ.Hint</p>
+                            </div>
+                            <div class="coach-area-formula">
+                                <span class="formula-chip"><b>A</b>nswer (Trả lời thẳng)</span>
+                                <span class="formula-chip"><b>R</b>eason (Nêu 1 lý do)</span>
+                                <span class="formula-chip"><b>E</b>xample (Ví dụ thật của Khôi)</span>
+                                <span class="formula-chip"><b>A</b>dd / conclude (Chốt ý)</span>
+                            </div>
+                        </div>
+                    }
+                    else if (_activeCoachTab == "sample")
+                    {
+                        <div class="coach-pane">
+                            <div class="coach-sample-header">
+                                <span>Bài nói mẫu tiếng Anh tự nhiên:</span>
+                                <button type="button" class="coach-listen-btn" @onclick="() => Speak(_currentQ.Answer)">
+                                    <i class="bi bi-play-circle-fill"></i> Nghe giọng đọc AI
+                                </button>
+                            </div>
+                            <p class="coach-sample-text" lang="en">@_currentQ.Answer</p>
+                        </div>
+                    }
+                    else if (_activeCoachTab == "check")
+                    {
+                        <div class="coach-pane">
+                            <div class="coach-checklist">
+                                <label><input type="checkbox" /> Trả lời thẳng vào trọng tâm câu hỏi trong 5 giây đầu.</label>
+                                <label><input type="checkbox" /> Có đưa ra lý do rõ ràng hoặc ví dụ thực tế.</label>
+                                <label><input type="checkbox" /> Sử dụng ít nhất 2–3 từ/cụm tự nhiên đúng ngữ cảnh.</label>
+                                <label><input type="checkbox" /> Nói trôi chảy theo cụm ý, không đọc đều từng từ một.</label>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+    [Parameter] public string? InitialTopicId { get; set; }
+    [Parameter] public Func<string, Task> Speak { get; set; } = default!;
+
+    private string _selectedTopicId = "all";
+    private string _selectedPart = "quick";
+    private string _duration = "45";
+    private string _activeCoachTab = "hint";
+
+    private record QuestionItem(string TopicName, string TopicId, string Question, string Hint, string Answer, List<string> Points);
+
+    private QuestionItem? _currentQ;
+    private string _lastQuestion = "";
+    private static readonly Random _rng = new();
+
+    // ── Timer State ──
+    private int _remaining = 45;
+    private string _timerDisplay = "00:45";
+    private string _timerStatus = "Sẵn sàng";
+    private bool _isTimerRunning;
+    private System.Threading.CancellationTokenSource? _cts;
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(InitialTopicId) && Data.Topics.Any(t => t.Id == InitialTopicId))
+        {
+            _selectedTopicId = InitialTopicId;
+        }
+        PickRandomQuestion();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(InitialTopicId) && InitialTopicId != _selectedTopicId && Data.Topics.Any(t => t.Id == InitialTopicId))
+        {
+            _selectedTopicId = InitialTopicId;
+            PickRandomQuestion();
+        }
+    }
+
+    private void OnTopicChanged(ChangeEventArgs e)
+    {
+        _selectedTopicId = e.Value?.ToString() ?? "all";
+        PickRandomQuestion();
+    }
+
+    private void ChangePart(string part)
+    {
+        _selectedPart = part;
+        _duration = part == "quick" ? "45" : part == "long" ? "120" : "60";
+        PickRandomQuestion();
+    }
+
+    private void PickRandomQuestion()
+    {
+        var topics = Data.Topics.Where(t => _selectedTopicId == "all" || t.Id == _selectedTopicId).ToList();
+        var pool = new List<QuestionItem>();
+
+        foreach (var t in topics)
+        {
+            if (_selectedPart == "long")
+            {
+                pool.Add(new QuestionItem(t.Name, t.Id, t.Cue, t.Outline, t.Long, t.Points));
+            }
+            else
+            {
+                var qs = _selectedPart == "quick" ? t.Quick : t.Discuss;
+                foreach (var q in qs)
+                {
+                    pool.Add(new QuestionItem(t.Name, t.Id, q[0], q[1], q[2], new()));
+                }
+            }
+        }
+
+        var candidates = pool.Where(x => x.Question != _lastQuestion).ToList();
+        if (!candidates.Any()) candidates = pool;
+        if (!candidates.Any()) return;
+
+        _currentQ = candidates[_rng.Next(candidates.Count)];
+        _lastQuestion = _currentQ.Question;
+        ResetTimer();
+    }
+
+    private void ResetTimer()
+    {
+        _cts?.Cancel();
+        _cts = null;
+        _isTimerRunning = false;
+        _remaining = int.TryParse(_duration, out var d) ? d : 45;
+        UpdateTimerDisplay();
+        _timerStatus = "Sẵn sàng";
+    }
+
+    private void UpdateTimerDisplay()
+    {
+        _timerDisplay = $"{_remaining / 60:D2}:{_remaining % 60:D2}";
+    }
+
+    private async Task ToggleTimer()
+    {
+        if (_isTimerRunning)
+        {
+            _cts?.Cancel();
+            _cts = null;
+            _isTimerRunning = false;
+            _timerStatus = "Đã tạm dừng";
+            return;
+        }
+
+        if (_remaining <= 0) ResetTimer();
+        _isTimerRunning = true;
+        _timerStatus = "Đang luyện nói...";
+        _cts = new System.Threading.CancellationTokenSource();
+        var token = _cts.Token;
+        var endAt = DateTime.UtcNow.AddSeconds(_remaining);
+
+        await Task.Run(async () =>
+        {
+            while (!token.IsCancellationRequested)
+            {
+                var left = (int)Math.Ceiling((endAt - DateTime.UtcNow).TotalSeconds);
+                if (left <= 0)
+                {
+                    _remaining = 0;
+                    UpdateTimerDisplay();
+                    _timerStatus = "Hết giờ! Tự đánh giá lượt nói.";
+                    _isTimerRunning = false;
+                    _cts = null;
+                    await InvokeAsync(StateHasChanged);
+                    break;
+                }
+                _remaining = left;
+                UpdateTimerDisplay();
+                await InvokeAsync(StateHasChanged);
+                await Task.Delay(200, token);
+            }
+        }, token);
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+    }
+}

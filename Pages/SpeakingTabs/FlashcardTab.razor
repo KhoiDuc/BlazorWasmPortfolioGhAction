@@ -1,0 +1,261 @@
+@* FlashcardTab.razor — Thẻ nhớ 3D phản xạ Speaking phong cách Quizlet Pro / Anki *@
+@inject IJSRuntime JS
+
+<div class="flashcard-studio-container">
+    <!-- Top Flashcard Toolbar -->
+    <div class="fc-toolbar">
+        <div class="fc-filter-group">
+            <select @bind="_selectedGroup" @bind:after="ResetDeck" class="fc-select" aria-label="Lọc chủ đề">
+                <option value="all">Tất cả chủ đề (@Data.Vocab.Count từ)</option>
+                @foreach (var g in _groupLabels)
+                {
+                    <option value="@g.Key">@g.Value</option>
+                }
+            </select>
+
+            <select @bind="_selectedMode" @bind:after="ResetDeck" class="fc-select" aria-label="Lọc nhóm từ">
+                <option value="common">Từ thông dụng đời thường (@Data.Vocab.Count(v => v.Common) từ)</option>
+                <option value="priority">Cụm chuyên đề ưu tiên (@Data.Vocab.Count(v => v.Priority) từ)</option>
+                <option value="extra">Cụm IT & DevOps (@Data.Vocab.Count(v => v.Extra) từ)</option>
+                <option value="new">Chưa thuộc (@(_deck.Count(v => !Learned.Contains(v.En))) từ)</option>
+                <option value="all">Toàn bộ kho từ (@Data.Vocab.Count từ)</option>
+            </select>
+
+            <div class="fc-direction-toggle">
+                <button type="button" class="fc-dir-btn @(_direction == "en-to-vi" ? "active" : "")" @onclick='() => SetDirection("en-to-vi")'>
+                    Anh → Việt
+                </button>
+                <button type="button" class="fc-dir-btn @(_direction == "vi-to-en" ? "active" : "")" @onclick='() => SetDirection("vi-to-en")'>
+                    Việt → Phản xạ Anh ⚡
+                </button>
+            </div>
+        </div>
+
+        <div class="fc-actions-top">
+            <button type="button" class="fc-tool-btn" @onclick="ShuffleDeck" title="Xáo trộn ngẫu nhiên">
+                <i class="bi bi-shuffle"></i> Trộn thẻ
+            </button>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="fc-progress-wrapper">
+        <div class="fc-progress-meta">
+            <span>Thẻ <b>@(_deck.Any() ? _currentIndex + 1 : 0)</b> / @_deck.Count</span>
+            <span>Đã thuộc <b>@_deck.Count(v => Learned.Contains(v.En))</b> thẻ trong bộ này</span>
+        </div>
+        <div class="fc-progress-track">
+            <div class="fc-progress-fill" style="width: @ProgressPercentage%"></div>
+        </div>
+    </div>
+
+    <!-- 3D Interactive Card Scene -->
+    @if (_deck.Any() && _currentCard != null)
+    {
+        <div class="fc-card-scene" @onclick="FlipCard">
+            <div class="fc-card-3d @(_isFlipped ? "is-flipped" : "")">
+                <!-- Front Side -->
+                <div class="fc-card-face fc-card-front">
+                    <div class="fc-face-header">
+                        <span class="fc-tag-badge">@_groupLabels.GetValueOrDefault(_currentCard.Group, _currentCard.Group)</span>
+                        <span class="fc-kind-badge">@_currentCard.Kind</span>
+                    </div>
+
+                    <div class="fc-face-center">
+                        @if (_direction == "en-to-vi")
+                        {
+                            <h2 class="fc-headword" lang="en">@_currentCard.En</h2>
+                            <p class="fc-subhint">Nói to nghĩa tiếng Việt & đặt 1 câu ví dụ</p>
+                        }
+                        else
+                        {
+                            <h2 class="fc-headword vi">@_currentCard.Vi</h2>
+                            <p class="fc-subhint">Bật ra từ/cụm tiếng Anh tương ứng thành tiếng!</p>
+                        }
+                    </div>
+
+                    <div class="fc-face-footer">
+                        <span class="fc-flip-indicator">
+                            <i class="bi bi-arrow-repeat"></i> Bấm để lật xem đáp án
+                        </span>
+                        @if (Speak != null && _direction == "en-to-vi")
+                        {
+                            <button type="button" class="fc-audio-btn" @onclick:stopPropagation="true" @onclick="() => Speak(_currentCard.En)" title="Nghe phát âm">
+                                <i class="bi bi-volume-up-fill"></i>
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Back Side -->
+                <div class="fc-card-face fc-card-back">
+                    <div class="fc-face-header">
+                        <span class="fc-tag-badge success">Đáp án chuẩn</span>
+                        @if (Speak != null)
+                        {
+                            <button type="button" class="fc-audio-btn sm" @onclick:stopPropagation="true" @onclick="() => Speak(_currentCard.En)" title="Nghe phát âm">
+                                <i class="bi bi-volume-up-fill"></i> Nghe từ
+                            </button>
+                        }
+                    </div>
+
+                    <div class="fc-face-center">
+                        @if (_direction == "en-to-vi")
+                        {
+                            <h3 class="fc-back-meaning">@_currentCard.Vi</h3>
+                        }
+                        else
+                        {
+                            <h3 class="fc-back-meaning en" lang="en">@_currentCard.En</h3>
+                        }
+
+                        <div class="fc-example-card">
+                            <div class="fc-ex-header">
+                                <span><i class="bi bi-chat-quote-fill"></i> Ví dụ ngữ cảnh:</span>
+                                @if (Speak != null)
+                                {
+                                    <button type="button" class="fc-speak-link" @onclick:stopPropagation="true" @onclick="() => Speak(_currentCard.Ex)">
+                                        <i class="bi bi-volume-up"></i> Nghe câu ví dụ
+                                    </button>
+                                }
+                            </div>
+                            <p class="fc-example-text" lang="en">"@_currentCard.Ex"</p>
+                        </div>
+                    </div>
+
+                    <div class="fc-face-footer">
+                        <span class="fc-flip-indicator">
+                            <i class="bi bi-arrow-repeat"></i> Bấm để lật lại mặt trước
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="fc-empty-state">
+            <i class="bi bi-folder-x"></i>
+            <h3>Không có thẻ nào phù hợp</h3>
+            <p>Hãy thử chọn chủ đề khác hoặc đổi bộ lọc.</p>
+        </div>
+    }
+
+    <!-- Bottom Controls & Navigation -->
+    <div class="fc-control-bar">
+        <button type="button" class="fc-nav-btn" @onclick="() => MoveCard(-1)" disabled="@(!_deck.Any())">
+            <i class="bi bi-arrow-left"></i> Thẻ trước
+        </button>
+
+        <button type="button" class="fc-action-btn fc-flip-trigger" @onclick="FlipCard" disabled="@(!_deck.Any())">
+            <i class="bi bi-arrow-repeat"></i> Lật thẻ
+        </button>
+
+        <button type="button" class="fc-action-btn fc-master-btn @(Learned.Contains(_currentCard?.En ?? "") ? "is-learned" : "")"
+                @onclick="ToggleMastered" disabled="@(!_deck.Any())">
+            <i class="bi @(Learned.Contains(_currentCard?.En ?? "") ? "bi-check-circle-fill" : "bi-check-circle")"></i>
+            <span>@(Learned.Contains(_currentCard?.En ?? "") ? "Đã thuộc" : "Đánh dấu đã thuộc")</span>
+        </button>
+
+        <button type="button" class="fc-nav-btn" @onclick="() => MoveCard(1)" disabled="@(!_deck.Any())">
+            Thẻ tiếp <i class="bi bi-arrow-right"></i>
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+    [Parameter] public string? InitialGroup { get; set; }
+    [Parameter] public HashSet<string> Learned { get; set; } = default!;
+    [Parameter] public Action<string> ToggleLearn { get; set; } = default!;
+    [Parameter] public Func<string, Task>? Speak { get; set; }
+
+    private string _selectedGroup = "all";
+    private string _selectedMode = "common";
+    private string _direction = "en-to-vi";
+    private List<VocabItem> _deck = new();
+    private int _currentIndex = 0;
+    private bool _isFlipped = false;
+    private Dictionary<string, string> _groupLabels = new();
+    private static readonly Random _rng = new();
+
+    private double ProgressPercentage => _deck.Count == 0 ? 0 : Math.Round((double)(_currentIndex + 1) / _deck.Count * 100, 1);
+    private VocabItem? _currentCard => _deck.Count > 0 && _currentIndex < _deck.Count ? _deck[_currentIndex] : null;
+
+    protected override void OnInitialized()
+    {
+        _groupLabels = Data.Topics.ToDictionary(t => t.Id, t => t.Name);
+        _groupLabels["sign"] = "Chuyển ý & câu cứu nguy";
+        if (!string.IsNullOrEmpty(InitialGroup) && (_groupLabels.ContainsKey(InitialGroup) || InitialGroup == "all"))
+        {
+            _selectedGroup = InitialGroup;
+        }
+        ResetDeck();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_groupLabels.Count == 0 && Data.Topics.Any())
+        {
+            _groupLabels = Data.Topics.ToDictionary(t => t.Id, t => t.Name);
+            _groupLabels["sign"] = "Chuyển ý & câu cứu nguy";
+        }
+        if (!string.IsNullOrEmpty(InitialGroup) && InitialGroup != _selectedGroup && _groupLabels.ContainsKey(InitialGroup))
+        {
+            _selectedGroup = InitialGroup;
+            ResetDeck();
+        }
+    }
+
+    private void ResetDeck()
+    {
+        _deck = Data.Vocab.Where(v =>
+            (_selectedGroup == "all" || v.Group == _selectedGroup)
+            && _selectedMode switch
+            {
+                "common" => v.Common,
+                "priority" => v.Priority,
+                "extra" => v.Extra,
+                "new" => !Learned.Contains(v.En),
+                _ => true,
+            }
+        ).ToList();
+
+        _currentIndex = 0;
+        _isFlipped = false;
+    }
+
+    private void FlipCard() => _isFlipped = !_isFlipped;
+
+    private void MoveCard(int delta)
+    {
+        if (!_deck.Any()) return;
+        _currentIndex = (_currentIndex + delta + _deck.Count) % _deck.Count;
+        _isFlipped = false;
+    }
+
+    private void ShuffleDeck()
+    {
+        _deck = _deck.OrderBy(_ => _rng.Next()).ToList();
+        _currentIndex = 0;
+        _isFlipped = false;
+    }
+
+    private void SetDirection(string dir)
+    {
+        _direction = dir;
+        _isFlipped = false;
+    }
+
+    private void ToggleMastered()
+    {
+        if (_currentCard == null) return;
+        ToggleLearn(_currentCard.En);
+        if (_selectedMode == "new")
+        {
+            _deck = _deck.Where(v => !Learned.Contains(v.En)).ToList();
+            if (_currentIndex >= _deck.Count) _currentIndex = Math.Max(0, _deck.Count - 1);
+            _isFlipped = false;
+        }
+    }
+}

@@ -1,0 +1,208 @@
+@* PersonalScriptTab.razor — Bài mẫu & kịch bản cá nhân hóa cho Khôi phong cách Studio *@
+
+<div class="personal-studio-container">
+    <!-- Khôi's Profile Identity Banner -->
+    <div class="profile-identity-card">
+        <div class="profile-avatar-box">
+            <div class="avatar-ring">
+                <i class="bi bi-person-workspace"></i>
+            </div>
+            <div class="profile-name-tag">
+                <h3>Khôi Duc</h3>
+                <span class="role-badge">Senior Web & DevOps Engineer</span>
+            </div>
+        </div>
+
+        <div class="profile-tags-grid">
+            <div class="profile-tag-pill">
+                <i class="bi bi-briefcase-fill"></i> 4 năm kinh nghiệm Web/DevOps
+            </div>
+            <div class="profile-tag-pill">
+                <i class="bi bi-activity"></i> Cầu lông & Pickleball
+            </div>
+            <div class="profile-tag-pill">
+                <i class="bi bi-robot"></i> Đam mê AI & Tự động hóa
+            </div>
+            <div class="profile-tag-pill">
+                <i class="bi bi-tiktok"></i> TikTok tech trends
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Topic Selector Grid -->
+    <div class="script-topics-carousel">
+        @foreach (var p in Data.Personal)
+        {
+            var isSelected = _selectedPersonalId == p.Id;
+            <button type="button"
+                    class="script-topic-card @(isSelected ? "active" : "")"
+                    @onclick="() => SelectPersonal(p.Id)">
+                <div class="script-topic-icon">
+                    <i class="bi @GetTopicIcon(p.Id)"></i>
+                </div>
+                <div class="script-topic-meta">
+                    <h4>@p.Title</h4>
+                    <span class="script-topic-preview">@p.Question</span>
+                </div>
+                @if (isSelected)
+                {
+                    <div class="active-dot"><i class="bi bi-check-circle-fill"></i></div>
+                }
+            </button>
+        }
+    </div>
+
+    @if (_current != null)
+    {
+        <!-- Main Script Stage -->
+        <div class="script-stage-card">
+            <div class="script-stage-header">
+                <div class="script-stage-title-wrap">
+                    <span class="stage-kicker">KỊCH BẢN CHUẨN ĐƯỢC THIẾT KẾ RIÊNG</span>
+                    <h2>@_current.Title</h2>
+                    <h3 class="stage-english-q" lang="en">“@_current.Question”</h3>
+                </div>
+
+                <!-- 30s vs 2min switcher -->
+                <div class="script-mode-switcher" role="radiogroup" aria-label="Độ dài bài nói">
+                    <button type="button"
+                            class="mode-switch-btn @(_viewMode == "short" ? "active" : "")"
+                            @onclick='() => _viewMode = "short"'>
+                        <i class="bi bi-lightning-charge-fill"></i> Phản xạ nhanh (30s)
+                    </button>
+                    <button type="button"
+                            class="mode-switch-btn @(_viewMode == "long" ? "active" : "")"
+                            @onclick='() => _viewMode = "long"'>
+                        <i class="bi bi-mic-fill"></i> Mở rộng sâu (1–2 phút)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Outline Checklist -->
+            <div class="script-outline-bar">
+                <span class="outline-label"><i class="bi bi-list-check"></i> 4 ý cốt lõi cần nhớ:</span>
+                <span class="outline-content">@_current.Outline</span>
+            </div>
+
+            <!-- Focus Keywords Pills -->
+            <div class="script-focus-chips">
+                @foreach (var f in _current.Focus)
+                {
+                    <span class="focus-chip"><i class="bi bi-hash"></i> @f</span>
+                }
+            </div>
+
+            <!-- Speech Content Box -->
+            <div class="script-speech-box">
+                <div class="speech-box-header">
+                    <span class="speech-ver-badge @(_viewMode == "short" ? "short" : "long")">
+                        @(_viewMode == "short" ? "⚡ Bản ngắn phản xạ 30–45s (Dành cho Part 1 & Trả lời nhanh)" : "🎙️ Bản mở rộng 1–2 phút (Dành cho Part 2 & Phỏng vấn chi tiết)")
+                    </span>
+
+                    @if (Speak != null)
+                    {
+                        var textToSpeak = _viewMode == "short" ? _current.Short : _current.Long;
+                        <button type="button" class="speech-play-btn" @onclick="() => Speak(textToSpeak)">
+                            <i class="bi bi-volume-up-fill"></i> Nghe giọng bản ngữ đọc mẫu
+                        </button>
+                    }
+                </div>
+
+                <p class="speech-text-content" lang="en">
+                    @(_viewMode == "short" ? _current.Short : _current.Long)
+                </p>
+
+                <div class="speech-vietnamese-expl">
+                    <strong><i class="bi bi-translate"></i> Ý nghĩa & thông điệp tự nhiên:</strong>
+                    <p>@_current.Vi</p>
+                </div>
+            </div>
+
+            <!-- Strategy Tip Drawer -->
+            <div class="script-strategy-box">
+                <div class="strategy-title"><i class="bi bi-lightbulb-fill"></i> 4 bước làm chủ bài nói này:</div>
+                <div class="strategy-steps">
+                    <div class="step-card">
+                        <span class="step-num">1</span>
+                        <p>Nhớ <b>4 ý chính</b> trong dàn ý, không học vẹt từng chữ.</p>
+                    </div>
+                    <div class="step-card">
+                        <span class="step-num">2</span>
+                        <p>Bấm nghe audio 2 lần để bắt chước <b>ngữ điệu và ngắt nghỉ</b>.</p>
+                    </div>
+                    <div class="step-card">
+                        <span class="step-num">3</span>
+                        <p>Tự bấm giờ nói thử <b>bản 30s</b> xem có bật ra phản xạ tự nhiên không.</p>
+                    </div>
+                    <div class="step-card">
+                        <span class="step-num">4</span>
+                        <p>Thử thách tiếp <b>bản mở rộng 1-2 phút</b> với ví dụ thực tế của riêng bạn.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Quick Reflex Blitz Section -->
+    <div class="quick-reflex-blitz">
+        <div class="blitz-header">
+            <h3><i class="bi bi-lightning-fill"></i> Phản xạ nhanh tình huống đời thường</h3>
+            <p>12 câu hỏi quen thuộc về bạn — bấm vào để xem câu trả lời ăn điểm</p>
+        </div>
+
+        <div class="blitz-grid">
+            @foreach (var q in Data.PersonalQuick)
+            {
+                <div class="blitz-card">
+                    <div class="blitz-q-row">
+                        <span class="blitz-q" lang="en">“@q.Q”</span>
+                        @if (Speak != null)
+                        {
+                            <button type="button" class="blitz-audio-btn" @onclick="() => Speak(q.Answer)" title="Nghe câu trả lời">
+                                <i class="bi bi-volume-up"></i>
+                            </button>
+                        }
+                    </div>
+                    <p class="blitz-a" lang="en">@q.Answer</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+    [Parameter] public Func<string, Task>? Speak { get; set; }
+
+    private string _selectedPersonalId = "";
+    private string _viewMode = "short"; // "short" or "long"
+    private PersonalItem? _current;
+
+    protected override void OnInitialized()
+    {
+        if (Data.Personal.Any())
+        {
+            _selectedPersonalId = Data.Personal[0].Id;
+            _current = Data.Personal[0];
+        }
+    }
+
+    private void SelectPersonal(string id)
+    {
+        _selectedPersonalId = id;
+        _current = Data.Personal.FirstOrDefault(p => p.Id == id);
+    }
+
+    private string GetTopicIcon(string id) => id switch
+    {
+        "intro" => "bi-person-circle",
+        "web-devops" => "bi-hdd-network",
+        "badminton" => "bi-trophy",
+        "pickleball" => "bi-dribbble",
+        "ai" => "bi-cpu",
+        "tiktok" => "bi-play-btn",
+        "weekend" => "bi-cup-hot",
+        "goals" => "bi-rocket-takeoff",
+        _ => "bi-chat-left-text"
+    };
+}
