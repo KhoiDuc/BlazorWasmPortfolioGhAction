@@ -20,7 +20,7 @@
 
         <div class="vocab-select-group">
             <select @bind="_selectedGroup" class="vocab-select" aria-label="Lọc theo chủ đề">
-                <option value="all">Tất cả 18 chủ đề (@Data.Vocab.Count từ)</option>
+                <option value="all">Tất cả chủ đề (@Data.Vocab.Count từ)</option>
                 @foreach (var g in _groupLabels)
                 {
                     <option value="@g.Key">@g.Value</option>
@@ -31,7 +31,7 @@
                 <option value="all">Tất cả tính chất (@Data.Vocab.Count)</option>
                 <option value="common">🔥 Đời thường quen thuộc (@Data.Vocab.Count(v => v.Common))</option>
                 <option value="priority">⭐ Cụm ưu tiên Speaking (@Data.Vocab.Count(v => v.Priority))</option>
-                <option value="extra">💻 Web & DevOps (@Data.Vocab.Count(v => v.Extra))</option>
+                <option value="extra">💻 Tech (Web, DevOps, AI) (@Data.Vocab.Count(v => v.Extra))</option>
                 <option value="unlearned">⏳ Chưa thuộc (@Data.Vocab.Count(v => !Learned.Contains(v.En)))</option>
                 <option value="learned">✓ Đã thuộc (@Data.Vocab.Count(v => Learned.Contains(v.En)))</option>
             </select>
@@ -169,31 +169,37 @@
 
     private readonly Dictionary<string, string> _groupLabels = new()
     {
-        ["routine"] = "☀️ Sinh hoạt & Cuối tuần (25)",
-        ["work"] = "💼 Công việc & Thể thao (25)",
-        ["tech"] = "🤖 AI & DevOps trong IT (50)",
-        ["food"] = "🍜 Ăn uống & Nấu ăn (26)",
-        ["travel"] = "✈️ Du lịch & Đi lại (25)",
-        ["shopping"] = "💳 Mua sắm & Tiền bạc (25)",
-        ["family"] = "👨‍👩‍👧 Gia đình & Bạn bè (25)",
-        ["home"] = "🏡 Nhà ở & Không gian sống (24)",
-        ["health"] = "🏃 Sức khỏe & Lối sống (25)",
-        ["weather"] = "🌤️ Thời tiết & Ngoài trời (25)",
-        ["entertainment"] = "🎬 Giải trí, Phim & Nhạc (25)",
-        ["english"] = "📚 Học tập & Tiếng Anh (24)",
-        ["plans"] = "🎯 Kế hoạch & Mục tiêu tương lai (25)",
-        ["communication"] = "🗣️ Giao tiếp & Làm việc nhóm (25)",
-        ["short"] = "📱 Video ngắn & TikTok (16)",
-        ["life"] = "🌐 AI tác động đời sống (16)",
-        ["focus"] = "🧠 Tập trung & Năng suất (24)",
-        ["sign"] = "⚡ Mẫu câu nối & Cứu nguy (20)",
+        ["routine"] = "☀️ Sinh hoạt & Cuối tuần",
+        ["work"] = "💼 Công việc & Văn phòng",
+        ["sports"] = "🏸 Thể thao & Cầu lông",
+        ["web"] = "💻 Web Development & .NET",
+        ["devops"] = "☁️ DevOps & CI/CD",
+        ["ai"] = "🤖 Trí tuệ nhân tạo (AI)",
+        ["food"] = "🍜 Ăn uống & Nấu ăn",
+        ["travel"] = "✈️ Du lịch & Đi lại",
+        ["shopping"] = "💳 Mua sắm & Tiền bạc",
+        ["family"] = "👨‍👩‍👧 Gia đình & Bạn bè",
+        ["home"] = "🏡 Nhà ở & Không gian sống",
+        ["health"] = "🏃 Sức khỏe & Lối sống",
+        ["weather"] = "🌤️ Thời tiết & Ngoài trời",
+        ["entertainment"] = "🎬 Giải trí, Phim & Nhạc",
+        ["english"] = "📚 Học tập & Tiếng Anh",
+        ["plans"] = "🎯 Kế hoạch & Mục tiêu tương lai",
+        ["communication"] = "🗣️ Giao tiếp & Làm việc nhóm",
+        ["short"] = "📱 Video ngắn & TikTok",
+        ["life"] = "🌐 AI tác động đời sống",
+        ["focus"] = "🧠 Tập trung & Năng suất",
+        ["sign"] = "⚡ Mẫu câu nối & Cứu nguy",
     };
 
     private readonly List<KeyValuePair<string, string>> _quickChips = new()
     {
         new("routine", "☀️ Sinh hoạt"),
         new("work", "💼 Công việc"),
-        new("tech", "🤖 AI & IT"),
+        new("sports", "🏸 Thể thao"),
+        new("web", "💻 Web Dev"),
+        new("devops", "☁️ DevOps"),
+        new("ai", "🤖 AI"),
         new("food", "🍜 Ăn uống"),
         new("travel", "✈️ Du lịch"),
         new("shopping", "💳 Mua sắm"),
