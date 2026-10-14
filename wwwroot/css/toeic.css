@@ -293,141 +293,194 @@
     box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.15);
 }
 
-/* Gallery Grid */
-.toeic-gallery-grid {
+/* Native Interactive Modules Grid */
+.toeic-modules-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
     gap: 1.5rem;
 }
 
-.toeic-info-card {
+.toeic-module-card {
     background: var(--color-bg-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl, 1rem);
-    overflow: hidden;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow-sm);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
+    overflow: hidden;
 }
 
-.toeic-info-card:hover {
+.toeic-module-card:hover {
     transform: translateY(-4px);
-    border-color: var(--color-border-accent);
+    border-color: var(--color-border-hover);
     box-shadow: var(--shadow-lg);
 }
 
-.toeic-card-thumb-wrap {
-    position: relative;
-    width: 100%;
-    height: 190px;
+/* Color Accent Bars */
+.toeic-module-card.accent-gold {
+    border-top: 4px solid #ca8a04;
+}
+.toeic-module-card.accent-emerald {
+    border-top: 4px solid #16a34a;
+}
+.toeic-module-card.accent-blue {
+    border-top: 4px solid #0284c7;
+}
+.toeic-module-card.accent-purple {
+    border-top: 4px solid #9333ea;
+}
+.toeic-module-card.accent-crimson {
+    border-top: 4px solid #e11d48;
+}
+
+/* Header */
+.toeic-mod-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.toeic-mod-icon-badge {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
     background: var(--color-bg-surface-elevated);
-    overflow: hidden;
-    cursor: pointer;
-}
-
-.toeic-card-thumb {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top center;
-    transition: transform 0.4s ease;
-}
-
-.toeic-info-card:hover .toeic-card-thumb {
-    transform: scale(1.04);
-}
-
-.toeic-card-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(10, 10, 15, 0.55);
-    backdrop-filter: blur(2px);
+    border: 1px solid var(--color-border);
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0;
-    transition: opacity 0.2s ease;
+    font-size: 1.35rem;
+    color: var(--color-brand-symbol, #ca8a04);
+    flex-shrink: 0;
 }
 
-.toeic-info-card:hover .toeic-card-overlay {
-    opacity: 1;
-}
-
-.toeic-zoom-hint-btn {
-    background: var(--color-brand-symbol, #ca8a04);
-    color: #fff;
-    padding: 0.5rem 1rem;
-    border-radius: 9999px;
-    font-size: 0.82rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-.toeic-card-num-badge {
-    position: absolute;
-    top: 0.75rem;
-    left: 0.75rem;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(4px);
-    color: #facc15;
-    font-family: var(--font-family-mono, monospace);
-    font-weight: 800;
-    font-size: 0.75rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: 6px;
-    border: 1px solid rgba(250, 204, 21, 0.3);
-}
-
-.toeic-card-skill-badge {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(4px);
-    color: #ffffff;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 0.2rem 0.6rem;
-    border-radius: 9999px;
-    text-transform: uppercase;
-}
-
-.toeic-card-body {
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
+.toeic-mod-meta {
     flex: 1;
 }
 
-.toeic-card-title {
-    font-size: 1.1rem;
+.toeic-mod-num {
+    font-size: 0.75rem;
+    font-family: var(--font-family-mono, monospace);
+    font-weight: 800;
+    color: var(--color-text-muted);
+}
+
+.toeic-mod-skill-badge {
+    font-size: 0.7rem;
     font-weight: 700;
-    margin: 0 0 0.35rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-elevated);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    border: 1px solid var(--color-border);
+}
+
+.toeic-mod-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin: 0.25rem 0 0.15rem;
     color: var(--color-text-primary);
-    line-height: 1.4;
+    line-height: 1.35;
 }
 
-.toeic-card-title-vi {
+.toeic-mod-title-vi {
     font-size: 0.88rem;
-    color: var(--color-brand-symbol, #ca8a04);
     font-weight: 600;
-    margin: 0 0 0.75rem;
+    color: var(--color-brand-symbol, #ca8a04);
 }
 
-.toeic-card-summary {
+.toeic-mod-summary {
+    font-size: 0.88rem;
+    color: var(--color-text-secondary);
+    line-height: 1.55;
+    margin-bottom: 1.25rem;
+}
+
+/* Sections inside card */
+.toeic-mod-section {
+    background: var(--color-bg-surface-elevated);
+    border-radius: var(--radius-lg, 0.75rem);
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.toeic-mod-section-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    margin: 0 0 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.toeic-mod-list {
+    margin: 0;
+    padding-left: 1.2rem;
     font-size: 0.84rem;
     color: var(--color-text-secondary);
-    line-height: 1.5;
+    line-height: 1.6;
+}
+
+.toeic-mod-keypoints {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
     margin-bottom: 1rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+}
+
+.toeic-keypoint-item {
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.toeic-keypoint-item code {
+    background: var(--color-bg-surface-elevated);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    color: var(--color-text-primary);
+    font-family: var(--font-family-mono, monospace);
+    font-size: 0.82rem;
+}
+
+/* Expandable Cheat Table */
+.toeic-cheat-toggle-wrap {
+    margin-bottom: 1rem;
+}
+
+.toeic-cheat-toggle-btn {
+    width: 100%;
+    padding: 0.45rem;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px dashed var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.toeic-cheat-toggle-btn:hover {
+    background: var(--color-bg-glass-hover);
+    color: var(--color-text-primary);
+    border-color: var(--color-border-accent);
+}
+
+.toeic-mod-cheat-table-wrap {
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    animation: toeicFadeIn 0.2s ease;
 }
 
 .toeic-card-tags {
@@ -1213,159 +1266,13 @@
     font-weight: 600;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   MODAL LIGHTBOX (Deep Zoom & Pan for High-Res Infographics)
-   ═══════════════════════════════════════════════════════════════════════════ */
-.toeic-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(5, 5, 10, 0.85);
-    backdrop-filter: blur(8px);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    animation: toeicModalFade 0.2s ease;
-}
-
-@keyframes toeicModalFade {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.toeic-modal-dialog {
-    background: var(--color-bg-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-xl, 1rem);
-    width: 95vw;
-    max-width: 1300px;
-    height: 90vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-}
-
-.toeic-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--color-border);
-    background: var(--color-bg-glass);
-}
-
-.toeic-modal-title {
-    font-size: 1.15rem;
-    font-weight: 800;
-    margin: 0;
-    color: var(--color-text-primary);
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-}
-
-.toeic-modal-tools {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.toeic-tool-btn {
-    background: var(--color-bg-surface-elevated);
-    border: 1px solid var(--color-border);
-    color: var(--color-text);
-    padding: 0.4rem 0.75rem;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-}
-
-.toeic-tool-btn:hover {
-    background: var(--color-bg-glass-hover);
-    border-color: var(--color-border-accent);
-}
-
-.toeic-modal-close-btn {
-    background: none;
-    border: none;
-    color: var(--color-text-muted);
-    font-size: 1.4rem;
-    cursor: pointer;
-    padding: 0.2rem 0.5rem;
-    line-height: 1;
-    border-radius: 6px;
-    transition: color 0.15s;
-}
-
-.toeic-modal-close-btn:hover {
-    color: #ef4444;
-}
-
-.toeic-modal-body-split {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    flex: 1;
-    overflow: hidden;
-}
-
+/* ── Responsive rules ── */
 @media (max-width: 992px) {
-    .toeic-modal-body-split {
-        grid-template-columns: 1fr;
-        grid-template-rows: 1fr auto;
+    .toeic-modules-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     }
 }
 
-.toeic-modal-img-viewport {
-    background: #09090e;
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    position: relative;
-    user-select: none;
-}
-
-.toeic-modal-img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 6px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    transition: transform 0.2s ease-out;
-}
-
-.toeic-modal-side-notes {
-    background: var(--color-bg-surface);
-    border-left: 1px solid var(--color-border);
-    padding: 1.5rem;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.toeic-notes-title {
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--color-text-primary);
-    margin: 0 0 0.5rem;
-}
-
-.toeic-notes-list {
-    margin: 0;
-    padding-left: 1.25rem;
-    color: var(--color-text-secondary);
-    font-size: 0.85rem;
-    line-height: 1.6;
-}
-
-/* ── Responsive rules ── */
 @media (max-width: 768px) {
     .toeic-title {
         font-size: 1.75rem;
@@ -1377,7 +1284,7 @@
     .toeic-ticker-val {
         font-size: 1.05rem;
     }
-    .toeic-gallery-grid {
+    .toeic-modules-grid {
         grid-template-columns: 1fr;
     }
 }

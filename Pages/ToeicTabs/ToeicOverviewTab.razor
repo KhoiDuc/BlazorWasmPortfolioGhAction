@@ -7,32 +7,32 @@
             <button type="button"
                     class="toeic-filter-chip @(_selectedCategory == "All" ? "active" : "")"
                     @onclick='() => SetCategory("All")'>
-                Tất cả (28)
+                Tất cả (28 Chuyên đề)
             </button>
             <button type="button"
                     class="toeic-filter-chip @(_selectedCategory == "Traps" ? "active" : "")"
                     @onclick='() => SetCategory("Traps")'>
-                Bẫy Đề Thi (Part 1–7)
+                <i class="bi bi-shield-exclamation me-1"></i> Bẫy Đề Thi (Part 1–7)
             </button>
             <button type="button"
                     class="toeic-filter-chip @(_selectedCategory == "Vocab" ? "active" : "")"
                     @onclick='() => SetCategory("Vocab")'>
-                Từ Vựng & Paraphrase
+                <i class="bi bi-journal-text me-1"></i> Từ Vựng & Paraphrase
             </button>
             <button type="button"
                     class="toeic-filter-chip @(_selectedCategory == "Grammar" ? "active" : "")"
                     @onclick='() => SetCategory("Grammar")'>
-                Ngữ Pháp Trọng Tâm
+                <i class="bi bi-diagram-3 me-1"></i> Ngữ Pháp Trọng Tâm
             </button>
             <button type="button"
                     class="toeic-filter-chip @(_selectedCategory == "Speaking" ? "active" : "")"
                     @onclick='() => SetCategory("Speaking")'>
-                Speaking (Part 2–5)
+                <i class="bi bi-mic me-1"></i> Speaking (Part 2–5)
             </button>
             <button type="button"
                     class="toeic-filter-chip @(_selectedCategory == "Writing" ? "active" : "")"
                     @onclick='() => SetCategory("Writing")'>
-                Writing (Task 1–3)
+                <i class="bi bi-pen me-1"></i> Writing (Task 1–3)
             </button>
         </div>
 
@@ -40,49 +40,117 @@
             <i class="bi bi-search" aria-hidden="true"></i>
             <input type="text"
                    class="toeic-search-input"
-                   placeholder="Tìm kiếm mẹo, chủ đề, từ khóa..."
+                   placeholder="Tìm mẹo, từ vựng, công thức..."
                    @bind="_searchTerm"
                    @bind:event="oninput" />
         </div>
     </div>
 
-    <!-- Gallery Grid -->
+    <!-- Interactive Knowledge Cards Grid -->
     @if (!FilteredList.Any())
     {
         <div style="text-align: center; padding: 4rem 1rem; color: var(--color-text-muted);">
             <i class="bi bi-search" style="font-size: 2.5rem; display: block; margin-bottom: 1rem; opacity: 0.5;"></i>
-            <h4>Không tìm thấy tài liệu phù hợp</h4>
+            <h4>Không tìm thấy chuyên đề phù hợp</h4>
             <p>Vui lòng thử đổi từ khóa tìm kiếm hoặc chọn danh mục khác.</p>
         </div>
     }
     else
     {
-        <div class="toeic-gallery-grid">
-            @foreach (var item in FilteredList)
+        <div class="toeic-modules-grid">
+            @foreach (var mod in FilteredList)
             {
-                <div class="toeic-info-card" @onclick="() => OnSelectInfographic.InvokeAsync(item)">
-                    <div class="toeic-card-thumb-wrap">
-                        <img src="images/toeic/@item.FileName" alt="@item.Title" class="toeic-card-thumb" loading="lazy" />
-                        <span class="toeic-card-num-badge">#@item.Num</span>
-                        <span class="toeic-card-skill-badge">@item.Skill</span>
-                        <div class="toeic-card-overlay">
-                            <span class="toeic-zoom-hint-btn">
-                                <i class="bi bi-arrows-fullscreen"></i> Phóng to & Chi tiết
-                            </span>
+                var isExpanded = _expandedModIds.Contains(mod.Id);
+                <div class="toeic-module-card accent-@mod.Accent">
+                    <!-- Card Top Header -->
+                    <div class="toeic-mod-header">
+                        <div class="toeic-mod-icon-badge">
+                            <i class="bi @mod.Icon"></i>
+                        </div>
+                        <div class="toeic-mod-meta">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
+                                <span class="toeic-mod-num">Chuyên đề #@mod.Num</span>
+                                <span class="toeic-mod-skill-badge">@mod.Skill</span>
+                            </div>
+                            <h3 class="toeic-mod-title">@mod.Title</h3>
+                            <div class="toeic-mod-title-vi">@mod.TitleVi</div>
                         </div>
                     </div>
 
-                    <div class="toeic-card-body">
-                        <h3 class="toeic-card-title">@item.Title</h3>
-                        <div class="toeic-card-title-vi">@item.TitleVi</div>
-                        <p class="toeic-card-summary">@item.Summary</p>
+                    <!-- Summary -->
+                    <p class="toeic-mod-summary">@mod.Summary</p>
 
-                        <div class="toeic-card-tags">
-                            @foreach (var tag in item.Tags.Take(4))
+                    <!-- Key Highlights -->
+                    <div class="toeic-mod-section">
+                        <h5 class="toeic-mod-section-title">
+                            <i class="bi bi-star-fill text-warning me-1"></i> Điểm Nhấn Trọng Tâm
+                        </h5>
+                        <ul class="toeic-mod-list">
+                            @foreach (var hl in mod.Highlights)
                             {
-                                <span class="toeic-tag">#@tag</span>
+                                <li>@hl</li>
+                            }
+                        </ul>
+                    </div>
+
+                    <!-- Formulas / Key Points -->
+                    @if (mod.KeyPoints.Any())
+                    {
+                        <div class="toeic-mod-keypoints">
+                            @foreach (var kp in mod.KeyPoints)
+                            {
+                                <div class="toeic-keypoint-item">
+                                    <i class="bi bi-check2-circle me-1 text-success"></i>
+                                    <code>@kp</code>
+                                </div>
                             }
                         </div>
+                    }
+
+                    <!-- Expandable Cheat Table -->
+                    @if (mod.CheatItems.Any())
+                    {
+                        <div class="toeic-cheat-toggle-wrap">
+                            <button type="button"
+                                    class="toeic-cheat-toggle-btn"
+                                    @onclick="() => ToggleCheat(mod.Id)">
+                                <i class="bi @(isExpanded ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                                @(isExpanded ? "Thu gọn bảng công thức" : $"Xem bảng tóm tắt nhanh ({mod.CheatItems.Count} mục)")
+                            </button>
+                        </div>
+
+                        @if (isExpanded)
+                        {
+                            <div class="toeic-mod-cheat-table-wrap">
+                                <table class="toeic-cheat-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Khái niệm / Thuật ngữ</th>
+                                            <th>Ý nghĩa</th>
+                                            <th>Công thức / Ví dụ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in mod.CheatItems)
+                                        {
+                                            <tr>
+                                                <td><b style="color: var(--color-text-primary);">@item.Term</b></td>
+                                                <td>@item.Meaning</td>
+                                                <td><code>@item.FormulaOrExample</code></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    }
+
+                    <!-- Tags Footer -->
+                    <div class="toeic-card-tags">
+                        @foreach (var tag in mod.Tags)
+                        {
+                            <span class="toeic-tag">#@tag</span>
+                        }
                     </div>
                 </div>
             }
@@ -92,21 +160,26 @@
 
 @code {
     [Parameter] public ToeicData Data { get; set; } = default!;
-    [Parameter] public EventCallback<ToeicInfographic> OnSelectInfographic { get; set; }
 
     private string _selectedCategory = "All";
     private string _searchTerm = "";
+    private HashSet<string> _expandedModIds = new();
 
     private void SetCategory(string cat)
     {
         _selectedCategory = cat;
     }
 
-    private IEnumerable<ToeicInfographic> FilteredList
+    private void ToggleCheat(string id)
+    {
+        if (!_expandedModIds.Remove(id)) _expandedModIds.Add(id);
+    }
+
+    private IEnumerable<ToeicTopicModule> FilteredList
     {
         get
         {
-            var list = Data.Infographics.AsEnumerable();
+            var list = Data.Modules.AsEnumerable();
 
             if (_selectedCategory != "All")
             {
@@ -120,7 +193,8 @@
                     x.Title.ToLowerInvariant().Contains(term) ||
                     x.TitleVi.ToLowerInvariant().Contains(term) ||
                     x.Summary.ToLowerInvariant().Contains(term) ||
-                    x.Tags.Any(t => t.ToLowerInvariant().Contains(term))
+                    x.Tags.Any(t => t.ToLowerInvariant().Contains(term)) ||
+                    x.CheatItems.Any(c => c.Term.ToLowerInvariant().Contains(term) || c.Meaning.ToLowerInvariant().Contains(term))
                 );
             }
 

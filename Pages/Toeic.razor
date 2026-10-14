@@ -5,7 +5,6 @@
 @inject IJSRuntime JS
 @using System.Text.Json
 @using BlazorWasmPortfolioGhAction.Pages.ToeicTabs
-@using BlazorWasmPortfolioGhAction.Pages.ToeicComponents
 
 <div class="toeic-master-app">
     <div class="toeic-wrapper">
@@ -17,21 +16,21 @@
                     <span class="toeic-live-dot"></span> TOEIC MASTERY HUB
                 </span>
                 <span class="toeic-brand-pill outline">
-                    4-SKILLS PREPARATION
+                    100% NATIVE INTERACTIVE
                 </span>
             </div>
 
             <h1 class="toeic-title">Bứt Phá Điểm Số TOEIC 4 Kỹ Năng</h1>
             <p class="toeic-subtitle">
-                Bộ cẩm nang thực chiến cho <b>Khôi</b> · Tích hợp 28 Infographic Mindmap chuyên sâu, tổng hợp bẫy Part 1–7, mẹo phản xạ 5 giây, từ vựng Paraphrase và xưởng luyện Speaking/Writing.
+                Bộ cẩm nang thực chiến cho <b>Khôi</b> · Tích hợp 28 chuyên đề kiến thức tương tác, bóc tách bẫy Part 1–7, mẹo phản xạ 5 giây, từ vựng Paraphrase và xưởng luyện Speaking/Writing.
             </p>
 
             @if (_data != null)
             {
                 <div class="toeic-stats-ticker">
                     <div class="toeic-ticker-item">
-                        <span class="toeic-ticker-val">@_data.Infographics.Count</span>
-                        <span class="toeic-ticker-lbl">Infographic Gốc</span>
+                        <span class="toeic-ticker-val">@_data.Modules.Count</span>
+                        <span class="toeic-ticker-lbl">Chuyên Đề Tương Tác</span>
                     </div>
                     <div class="toeic-ticker-sep"></div>
                     <div class="toeic-ticker-item">
@@ -94,7 +93,7 @@
                 @switch (_activeTab)
                 {
                     case "overview":
-                        <ToeicOverviewTab Data="@_data" OnSelectInfographic="OpenModal" />
+                        <ToeicOverviewTab Data="@_data" />
                         break;
 
                     case "traps":
@@ -122,19 +121,15 @@
     </div>
 </div>
 
-<!-- Modal Viewer for High-Res Infographics -->
-<ToeicImageViewerModal Item="@_selectedInfographic" OnClose="CloseModal" />
-
 @code {
     private ToeicData? _data;
     private bool _loadError;
     private string _activeTab = "overview";
-    private ToeicInfographic? _selectedInfographic;
     private HashSet<string> _masteredTraps = new();
 
     private readonly List<(string Key, string Label, string Icon, string Badge)> _tabs = new()
     {
-        ("overview", "Tổng Quan & 28 Infographic", "bi-grid-fill", "28"),
+        ("overview", "28 Chuyên Đề Tương Tác", "bi-grid-fill", "28"),
         ("traps", "Bẫy Đề Thi & Mẹo 5s", "bi-shield-exclamation", "Part 1-7"),
         ("vocab", "Từ Vựng & Paraphrase", "bi-journal-bookmark-fill", "Matrix"),
         ("grammar", "Ngữ Pháp & Mini Quiz", "bi-diagram-3-fill", "Quiz"),
@@ -183,16 +178,6 @@
     }
 
     private void SwitchTab(string key) => _activeTab = key;
-
-    private void OpenModal(ToeicInfographic item)
-    {
-        _selectedInfographic = item;
-    }
-
-    private void CloseModal()
-    {
-        _selectedInfographic = null;
-    }
 
     private void ToggleTrapMastered(string trapId)
     {

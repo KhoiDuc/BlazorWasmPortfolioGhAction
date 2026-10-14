@@ -4,7 +4,7 @@ namespace BlazorWasmPortfolioGhAction.Pages;
 
 public class ToeicData
 {
-    [JsonPropertyName("infographics")] public List<ToeicInfographic> Infographics { get; set; } = new();
+    [JsonPropertyName("modules")] public List<ToeicTopicModule> Modules { get; set; } = new();
     [JsonPropertyName("traps")] public List<ToeicTrap> Traps { get; set; } = new();
     [JsonPropertyName("quickTricks")] public List<ToeicQuickTrick> QuickTricks { get; set; } = new();
     [JsonPropertyName("vocabCategories")] public List<ToeicVocabCategory> VocabCategories { get; set; } = new();
@@ -14,7 +14,7 @@ public class ToeicData
     [JsonPropertyName("writingTemplates")] public List<ToeicWritingTemplate> WritingTemplates { get; set; } = new();
 }
 
-public class ToeicInfographic
+public class ToeicTopicModule
 {
     [JsonPropertyName("id")] public string Id { get; set; } = "";
     [JsonPropertyName("num")] public string Num { get; set; } = "";
@@ -22,11 +22,20 @@ public class ToeicInfographic
     [JsonPropertyName("titleVi")] public string TitleVi { get; set; } = "";
     [JsonPropertyName("category")] public string Category { get; set; } = ""; // Traps, Vocab, Grammar, Speaking, Writing, Skills
     [JsonPropertyName("skill")] public string Skill { get; set; } = ""; // Listening, Reading, Speaking, Writing, General
-    [JsonPropertyName("fileName")] public string FileName { get; set; } = "";
+    [JsonPropertyName("icon")] public string Icon { get; set; } = "bi-journal-code";
+    [JsonPropertyName("accent")] public string Accent { get; set; } = "gold"; // gold, blue, emerald, purple, crimson
     [JsonPropertyName("summary")] public string Summary { get; set; } = "";
     [JsonPropertyName("highlights")] public List<string> Highlights { get; set; } = new();
     [JsonPropertyName("keyPoints")] public List<string> KeyPoints { get; set; } = new();
+    [JsonPropertyName("cheatItems")] public List<ToeicCheatEntry> CheatItems { get; set; } = new();
     [JsonPropertyName("tags")] public List<string> Tags { get; set; } = new();
+}
+
+public class ToeicCheatEntry
+{
+    [JsonPropertyName("term")] public string Term { get; set; } = "";
+    [JsonPropertyName("meaning")] public string Meaning { get; set; } = "";
+    [JsonPropertyName("formulaOrExample")] public string FormulaOrExample { get; set; } = "";
 }
 
 public class ToeicTrap
