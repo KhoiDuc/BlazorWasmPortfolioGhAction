@@ -20,20 +20,30 @@
 
         <div class="vocab-select-group">
             <select @bind="_selectedGroup" class="vocab-select" aria-label="Lọc theo chủ đề">
-                <option value="all">Tất cả chủ đề (@Data.Vocab.Count từ)</option>
+                <option value="all">Tất cả 18 chủ đề (@Data.Vocab.Count từ)</option>
                 @foreach (var g in _groupLabels)
                 {
                     <option value="@g.Key">@g.Value</option>
                 }
             </select>
 
-            <select @bind="_selectedFilter" class="vocab-select" aria-label="Lọc theo nhóm">
-                <option value="all">Toàn bộ kho từ (@Data.Vocab.Count)</option>
-                <option value="common">🔥 Đời thường thông dụng (@Data.Vocab.Count(v => v.Common))</option>
-                <option value="priority">⭐ Chuyên đề ưu tiên (@Data.Vocab.Count(v => v.Priority))</option>
-                <option value="extra">💻 IT & DevOps (@Data.Vocab.Count(v => v.Extra))</option>
+            <select @bind="_selectedFilter" class="vocab-select" aria-label="Lọc theo tính chất">
+                <option value="all">Tất cả tính chất (@Data.Vocab.Count)</option>
+                <option value="common">🔥 Đời thường quen thuộc (@Data.Vocab.Count(v => v.Common))</option>
+                <option value="priority">⭐ Cụm ưu tiên Speaking (@Data.Vocab.Count(v => v.Priority))</option>
+                <option value="extra">💻 Web & DevOps (@Data.Vocab.Count(v => v.Extra))</option>
                 <option value="unlearned">⏳ Chưa thuộc (@Data.Vocab.Count(v => !Learned.Contains(v.En)))</option>
                 <option value="learned">✓ Đã thuộc (@Data.Vocab.Count(v => Learned.Contains(v.En)))</option>
+            </select>
+
+            <select @bind="_selectedKind" class="vocab-select" aria-label="Lọc theo loại từ">
+                <option value="all">Tất cả loại từ</option>
+                <option value="idiom">💬 Thành ngữ & Cụm tự nhiên (Idioms)</option>
+                <option value="phrasal verb">⚡ Cụm động từ (Phrasal Verbs)</option>
+                <option value="noun">🏷️ Danh từ & Cụm danh từ</option>
+                <option value="verb">🎯 Động từ & Cụm hành động</option>
+                <option value="adjective">✨ Tính từ miêu tả</option>
+                <option value="signpost">🔗 Câu nối & Cứu nguy phản xạ</option>
             </select>
         </div>
     </div>
@@ -41,12 +51,13 @@
     <!-- Quick Category Chips -->
     <div class="vocab-chips-bar">
         <button type="button" class="vocab-chip @(_selectedGroup == "all" ? "active" : "")" @onclick='() => _selectedGroup = "all"'>
-            Tất cả
+            ✨ Tất cả (@Data.Vocab.Count)
         </button>
         @foreach (var g in _quickChips)
         {
+            var count = Data.Vocab.Count(v => v.Group == g.Key);
             <button type="button" class="vocab-chip @(_selectedGroup == g.Key ? "active" : "")" @onclick="() => _selectedGroup = g.Key">
-                @g.Value
+                @g.Value (@count)
             </button>
         }
     </div>
@@ -55,6 +66,12 @@
     <div class="vocab-meta-bar">
         <div class="vocab-count-info">
             Hiển thị <b>@FilteredVocab.Count</b> / @Data.Vocab.Count từ vựng
+            @if (_selectedGroup != "all" || _selectedFilter != "all" || _selectedKind != "all" || !string.IsNullOrWhiteSpace(_search))
+            {
+                <button type="button" class="vocab-chip-reset" @onclick="ResetFilters">
+                    <i class="bi bi-arrow-counterclockwise"></i> Đặt lại tất cả lọc
+                </button>
+            }
             @if (_selectedFilter == "learned" || Learned.Any())
             {
                 <span class="vocab-learned-badge">· Tiến độ: @Learned.Count/@Data.Vocab.Count (@(Data.Vocab.Count > 0 ? (Learned.Count * 100 / Data.Vocab.Count) : 0)%)</span>
@@ -131,8 +148,8 @@
         {
             <div class="vocab-empty-box">
                 <i class="bi bi-search"></i>
-                <p>Không tìm thấy từ vựng nào khớp với bộ lọc "<b>@_search</b>".</p>
-                <button type="button" class="vocab-reset-btn" @onclick="ResetFilters">Xóa bộ lọc tìm kiếm</button>
+                <p>Không tìm thấy từ vựng nào khớp với bộ lọc đã chọn.</p>
+                <button type="button" class="vocab-reset-btn" @onclick="ResetFilters">Xóa toàn bộ bộ lọc</button>
             </div>
         }
     </div>
@@ -148,37 +165,49 @@
     private string _search = "";
     private string _selectedGroup = "all";
     private string _selectedFilter = "all";
+    private string _selectedKind = "all";
 
     private readonly Dictionary<string, string> _groupLabels = new()
     {
-        ["work"] = "Công việc & DevOps",
-        ["daily"] = "Thói quen hàng ngày",
-        ["tech"] = "Công nghệ & AI",
-        ["hobbies"] = "Cầu lông & Thể thao",
-        ["free-time"] = "Thời gian rảnh & TikTok",
-        ["family"] = "Gia đình & Nhà cửa",
-        ["food"] = "Ăn uống & Cà phê",
-        ["travel"] = "Du lịch & Di chuyển",
-        ["study"] = "Học tập & Tiếng Anh",
-        ["friends"] = "Bạn bè & Đồng nghiệp",
-        ["future"] = "Kế hoạch tương lai",
-        ["money"] = "Tài chính & Mua sắm",
-        ["health"] = "Sức khỏe & Lối sống",
-        ["weather"] = "Thời tiết & Môi trường",
-        ["home"] = "Không gian sống",
-        ["challenges"] = "Thử thách & Giải quyết",
-        ["interview"] = "Phỏng vấn & Giới thiệu",
+        ["routine"] = "☀️ Sinh hoạt & Cuối tuần (25)",
+        ["work"] = "💼 Công việc & Thể thao (25)",
+        ["tech"] = "🤖 AI & DevOps trong IT (50)",
+        ["food"] = "🍜 Ăn uống & Nấu ăn (26)",
+        ["travel"] = "✈️ Du lịch & Đi lại (25)",
+        ["shopping"] = "💳 Mua sắm & Tiền bạc (25)",
+        ["family"] = "👨‍👩‍👧 Gia đình & Bạn bè (25)",
+        ["home"] = "🏡 Nhà ở & Không gian sống (24)",
+        ["health"] = "🏃 Sức khỏe & Lối sống (25)",
+        ["weather"] = "🌤️ Thời tiết & Ngoài trời (25)",
+        ["entertainment"] = "🎬 Giải trí, Phim & Nhạc (25)",
+        ["english"] = "📚 Học tập & Tiếng Anh (24)",
+        ["plans"] = "🎯 Kế hoạch & Mục tiêu tương lai (25)",
+        ["communication"] = "🗣️ Giao tiếp & Làm việc nhóm (25)",
+        ["short"] = "📱 Video ngắn & TikTok (16)",
+        ["life"] = "🌐 AI tác động đời sống (16)",
+        ["focus"] = "🧠 Tập trung & Năng suất (24)",
+        ["sign"] = "⚡ Mẫu câu nối & Cứu nguy (20)",
     };
 
     private readonly List<KeyValuePair<string, string>> _quickChips = new()
     {
-        new("work", "💼 Công việc & DevOps"),
-        new("daily", "☀️ Thói quen"),
-        new("hobbies", "🏸 Cầu lông"),
-        new("free-time", "📱 TikTok & Rảnh"),
-        new("tech", "🤖 AI & Công nghệ"),
-        new("food", "☕ Ăn uống"),
-        new("interview", "🎯 Phỏng vấn"),
+        new("routine", "☀️ Sinh hoạt"),
+        new("work", "💼 Công việc"),
+        new("tech", "🤖 AI & IT"),
+        new("food", "🍜 Ăn uống"),
+        new("travel", "✈️ Du lịch"),
+        new("shopping", "💳 Mua sắm"),
+        new("entertainment", "🎬 Giải trí"),
+        new("family", "👨‍👩‍👧 Gia đình"),
+        new("health", "🏃 Sức khỏe"),
+        new("short", "📱 TikTok"),
+        new("english", "📚 Tiếng Anh"),
+        new("communication", "🗣️ Giao tiếp"),
+        new("plans", "🎯 Kế hoạch"),
+        new("focus", "🧠 Tập trung"),
+        new("home", "🏡 Nhà cửa"),
+        new("weather", "🌤️ Thời tiết"),
+        new("sign", "⚡ Câu cứu nguy"),
     };
 
     protected override void OnInitialized()
@@ -206,13 +235,19 @@
             else if (_selectedFilter == "learned") q = q.Where(v => Learned.Contains(v.En));
             else if (_selectedFilter == "unlearned") q = q.Where(v => !Learned.Contains(v.En));
 
+            if (_selectedKind != "all")
+            {
+                var k = _selectedKind.ToLowerInvariant();
+                q = q.Where(v => (v.Kind ?? "").ToLowerInvariant().Contains(k));
+            }
+
             if (!string.IsNullOrWhiteSpace(_search))
             {
                 var s = _search.Trim().ToLowerInvariant();
                 q = q.Where(v =>
                     v.En.ToLowerInvariant().Contains(s) ||
                     v.Vi.ToLowerInvariant().Contains(s) ||
-                    v.Ex.ToLowerInvariant().Contains(s));
+                    (v.Ex ?? "").ToLowerInvariant().Contains(s));
             }
 
             return q.ToList();
@@ -224,5 +259,6 @@
         _search = "";
         _selectedGroup = "all";
         _selectedFilter = "all";
+        _selectedKind = "all";
     }
 }

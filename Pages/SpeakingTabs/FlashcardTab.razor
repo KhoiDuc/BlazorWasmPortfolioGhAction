@@ -14,11 +14,11 @@
             </select>
 
             <select @bind="_selectedMode" @bind:after="ResetDeck" class="fc-select" aria-label="Lọc nhóm từ">
+                <option value="all">Toàn bộ kho từ (@Data.Vocab.Count từ)</option>
                 <option value="common">Từ thông dụng đời thường (@Data.Vocab.Count(v => v.Common) từ)</option>
                 <option value="priority">Cụm chuyên đề ưu tiên (@Data.Vocab.Count(v => v.Priority) từ)</option>
                 <option value="extra">Cụm IT & DevOps (@Data.Vocab.Count(v => v.Extra) từ)</option>
-                <option value="new">Chưa thuộc (@(_deck.Count(v => !Learned.Contains(v.En))) từ)</option>
-                <option value="all">Toàn bộ kho từ (@Data.Vocab.Count từ)</option>
+                <option value="new">Chưa thuộc (@Data.Vocab.Count(v => !Learned.Contains(v.En)) từ)</option>
             </select>
 
             <div class="fc-direction-toggle">
@@ -171,12 +171,32 @@
     [Parameter] public Func<string, Task>? Speak { get; set; }
 
     private string _selectedGroup = "all";
-    private string _selectedMode = "common";
+    private string _selectedMode = "all";
     private string _direction = "en-to-vi";
     private List<VocabItem> _deck = new();
     private int _currentIndex = 0;
     private bool _isFlipped = false;
-    private Dictionary<string, string> _groupLabels = new();
+    private Dictionary<string, string> _groupLabels = new()
+    {
+        ["routine"] = "☀️ Sinh hoạt & Cuối tuần",
+        ["work"] = "💼 Công việc & Thể thao",
+        ["tech"] = "🤖 AI & DevOps trong IT",
+        ["food"] = "🍜 Ăn uống & Nấu ăn",
+        ["travel"] = "✈️ Du lịch & Đi lại",
+        ["shopping"] = "💳 Mua sắm & Tiền bạc",
+        ["family"] = "👨‍👩‍👧 Gia đình & Bạn bè",
+        ["home"] = "🏡 Nhà ở & Không gian sống",
+        ["health"] = "🏃 Sức khỏe & Lối sống",
+        ["weather"] = "🌤️ Thời tiết & Ngoài trời",
+        ["entertainment"] = "🎬 Giải trí, Phim & Nhạc",
+        ["english"] = "📚 Học tập & Tiếng Anh",
+        ["plans"] = "🎯 Kế hoạch & Mục tiêu",
+        ["communication"] = "🗣️ Giao tiếp & Làm việc nhóm",
+        ["short"] = "📱 Video ngắn & TikTok",
+        ["life"] = "🌐 AI trong đời sống",
+        ["focus"] = "🧠 Tập trung & Năng suất",
+        ["sign"] = "⚡ Mẫu câu nối & Cứu nguy",
+    };
     private static readonly Random _rng = new();
 
     private double ProgressPercentage => _deck.Count == 0 ? 0 : Math.Round((double)(_currentIndex + 1) / _deck.Count * 100, 1);
@@ -184,8 +204,6 @@
 
     protected override void OnInitialized()
     {
-        _groupLabels = Data.Topics.ToDictionary(t => t.Id, t => t.Name);
-        _groupLabels["sign"] = "Chuyển ý & câu cứu nguy";
         if (!string.IsNullOrEmpty(InitialGroup) && (_groupLabels.ContainsKey(InitialGroup) || InitialGroup == "all"))
         {
             _selectedGroup = InitialGroup;
@@ -195,11 +213,6 @@
 
     protected override void OnParametersSet()
     {
-        if (_groupLabels.Count == 0 && Data.Topics.Any())
-        {
-            _groupLabels = Data.Topics.ToDictionary(t => t.Id, t => t.Name);
-            _groupLabels["sign"] = "Chuyển ý & câu cứu nguy";
-        }
         if (!string.IsNullOrEmpty(InitialGroup) && InitialGroup != _selectedGroup && _groupLabels.ContainsKey(InitialGroup))
         {
             _selectedGroup = InitialGroup;
