@@ -1,0 +1,72 @@
+@* OverviewTab *@
+<div class="speaking-section-head">
+    <div>
+        <h2>Một công thức, nhiều câu trả lời</h2>
+        <p class="muted">A–R–E–A là khung gợi ý, không phải quy định bắt buộc của bài thi.</p>
+    </div>
+</div>
+
+<div class="speaking-area-grid">
+    <div class="speaking-card"><div class="speaking-step"><b>A</b><h3>Answer</h3></div><p>Trả lời thẳng câu hỏi.</p></div>
+    <div class="speaking-card"><div class="speaking-step"><b>R</b><h3>Reason</h3></div><p>Nêu một lý do rõ ràng.</p></div>
+    <div class="speaking-card"><div class="speaking-step"><b>E</b><h3>Example</h3></div><p>Cho ví dụ thật của bạn.</p></div>
+    <div class="speaking-card"><div class="speaking-step"><b>A</b><h3>Add / conclude</h3></div><p>Thêm cảm nhận hoặc kết luận.</p></div>
+</div>
+
+<div class="speaking-grid">
+    <div class="speaking-card soft">
+        <div class="speaking-label">MẪU NGẮN · SPORTS</div>
+        <h3>Do you like playing sports?</h3>
+        <p><b>A</b> — Yes, I enjoy playing badminton.<br><b>R</b> — It helps me blow off steam after work.<br><b>E</b> — I usually play with my friends twice a week.<br><b>A</b> — It keeps me in shape and helps me relax.</p>
+        <small class="muted">Đổi môn chơi, tần suất và lý do cho đúng với bạn.</small>
+    </div>
+    <div class="speaking-card soft">
+        <div class="speaking-label">KẾ HOẠCH 20 PHÚT</div>
+        <h3>Ôn ít, nhưng nói thật</h3>
+        <ol>
+            <li><b>3 phút:</b> ôn 6–8 cụm từ thông dụng.</li>
+            <li><b>5 phút:</b> trả lời 3 câu ngắn, chưa xem mẫu.</li>
+            <li><b>7 phút:</b> chuẩn bị 1 phút, nói dài 1–2 phút; luyện lại.</li>
+            <li><b>5 phút:</b> trả lời 1 câu thảo luận, tự chấm.</li>
+        </ol>
+    </div>
+</div>
+
+<div class="speaking-divider"></div>
+<h2>@Data.Topics.Count chủ đề để luyện giao tiếp</h2>
+<p class="muted">12 chủ đề đời thường trước, 5 chủ đề công việc/AI/video ngắn sau.</p>
+
+<div class="speaking-grid">
+    @for (var i = 0; i < Data.Topics.Count; i++)
+    {
+        var t = Data.Topics[i];
+        var idx = i;
+        <button type="button" class="speaking-topic-link" @onclick="() => OpenTopic(t.Id)">
+            <span class="speaking-label">0@(idx + 1) / @t.En</span>
+            <strong>@t.Name</strong>
+            <span class="muted small">@t.Hook</span>
+        </button>
+    }
+</div>
+
+<div class="speaking-callout">
+    <b>Học thuộc ý, không học thuộc cả đoạn.</b> Mỗi chủ đề chỉ cần nhớ 3–4 từ khóa và một trải nghiệm thật.
+</div>
+
+<h3>Lộ trình 7 buổi · 20–30 phút mỗi buổi</h3>
+<div class="speaking-card soft">
+    <ol>
+        <li><b>Buổi 1:</b> giới thiệu Khôi, sinh hoạt, gia đình/bạn bè.</li>
+        <li><b>Buổi 2:</b> nhà ở, ăn uống, mua sắm.</li>
+        <li><b>Buổi 3:</b> du lịch, thời tiết, sức khỏe.</li>
+        <li><b>Buổi 4:</b> giải trí, học tiếng Anh, mục tiêu.</li>
+        <li><b>Buổi 5:</b> giao tiếp nhóm, công việc, thể thao.</li>
+        <li><b>Buổi 6:</b> AI trong IT/đời sống, TikTok và tập trung.</li>
+        <li><b>Buổi 7:</b> thi thử, ôn từ chưa thuộc, sửa 3 lỗi thường gặp.</li>
+    </ol>
+</div>
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+    [Parameter] public Action<string> OpenTopic { get; set; } = default!;
+}

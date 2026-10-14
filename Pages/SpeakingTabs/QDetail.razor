@@ -1,0 +1,19 @@
+@* QDetail — reusable question-detail component *@
+<details class="speaking-details">
+    <summary>@(Index + 1). <span lang="en">@Q0</span></summary>
+    <div>
+        <div class="speaking-label">GỢI Ý Ý TƯỞNG</div>
+        <p>@Q1</p>
+        <div class="speaking-label">BÀI MẪU DỄ NÓI</div>
+        <p class="speaking-answer" lang="en">@Q2</p>
+        <button type="button" class="tool-btn" @onclick="() => Speak(Q2)">Nghe mẫu tiếng Anh</button>
+    </div>
+</details>
+
+@code {
+    [Parameter] public int Index { get; set; }
+    [Parameter] public string Q0 { get; set; } = "";
+    [Parameter] public string Q1 { get; set; } = "";
+    [Parameter] public string Q2 { get; set; } = "";
+    [Parameter] public Func<string, Task> Speak { get; set; } = default!;
+}

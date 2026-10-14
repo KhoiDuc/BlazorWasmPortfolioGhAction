@@ -1,0 +1,168 @@
+@page "/speaking"
+@page "/{lang:regex(^(en|vn)$)}/speaking"
+@inherits CultureAwareComponent
+@inject HttpClient Http
+@inject IJSRuntime JS
+@using System.Text.Json
+
+<div class="page-section speaking-page">
+    <div class="container">
+        <header class="speaking-hero">
+            <div>
+                <p class="section-label">SPEAKING 1–1</p>
+                <h1>Nói rõ ý. Nói tự nhiên.</h1>
+                <p class="speaking-lead muted">
+                    Dành cho Khôi · từ giao tiếp hằng ngày đến công việc, thể thao, AI và TikTok.
+                    @if (_data != null)
+                    {
+                        <span>@_data.Topics.Count chủ đề · @_data.Vocab.Count từ/cụm · @_data.Frames.Count mẫu câu · bài nói cá nhân hóa.</span>
+                    }
+                </p>
+            </div>
+        </header>
+
+        @if (_loadError)
+        {
+            <div class="tool-alert tool-alert-danger">Không tải được dữ liệu speaking.json.</div>
+        }
+        else if (_data == null)
+        {
+            <LoadingSpinner LabelKey="Common_LoadingData" />
+        }
+        else
+        {
+            <nav class="speaking-tabs" role="tablist" aria-label="Các phần ôn tập">
+                @foreach (var tab in _tabs)
+                {
+                    <button type="button" role="tab"
+                            aria-selected="@(_activeTab == tab.Key)"
+                            class="speaking-tab @(_activeTab == tab.Key ? "active" : "")"
+                            @onclick="() => SwitchTab(tab.Key)">@tab.Label</button>
+                }
+            </nav>
+
+            <div class="speaking-content">
+                @switch (_activeTab)
+                {
+                    case "overview": <OverviewTab Data="@_data" OpenTopic="@OpenTopic" />; break;
+                    case "personal": <PersonalTab Data="@_data" Speak="@SpeakText" />; break;
+                    case "topics": <TopicsTab Data="@_data" InitialTopicId="@_currentTopicId" Speak="@SpeakText" PracticeTopic="@PracticeTopic" VocabTopic="@VocabTopic" />; break;
+                    case "vocab": <VocabTab Data="@_data" InitialGroup="@_currentVocabGroup" Learned="@_learned" ToggleLearn="@ToggleLearn" Speak="@SpeakText" />; break;
+                    case "frames": <FramesTab Data="@_data" />; break;
+                    case "cards": <CardsTab Data="@_data" InitialGroup="@_currentTopicId" Learned="@_learned" ToggleLearn="@ToggleLearn" Speak="@SpeakText" />; break;
+                    case "practice": <PracticeTab Data="@_data" InitialTopicId="@_currentTopicId" Speak="@SpeakText" />; break;
+                    case "notes": <NotesTab Data="@_data" />; break;
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private SpeakingData? _data;
+    private bool _loadError;
+    private string _activeTab = "overview";
+    private string _currentTopicId = "";
+    private string _currentVocabGroup = "all";
+    private HashSet<string> _learned = new();
+
+    private readonly List<(string Key, string Label)> _tabs = new()
+    {
+        ("overview", "Lộ trình"),
+        ("personal", "Bài mẫu của Khôi"),
+        ("topics", "Theo chủ đề"),
+        ("vocab", "Từ vựng"),
+        ("frames", "Mẫu câu"),
+        ("cards", "Thẻ nhớ"),
+        ("practice", "Thi thử"),
+        ("notes", "Lưu ý"),
+    };
+
+    private static readonly JsonSerializerOptions _jsonOpts = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _data = await Http.GetFromJsonAsync<SpeakingData>("sample-data/speaking.json", _jsonOpts);
+            if (_data is null) _loadError = true;
+            else if (_data.Topics.Any()) _currentTopicId = _data.Topics[0].Id;
+        }
+        catch
+        {
+            _loadError = true;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var stored = await JS.InvokeAsync<string?>("localStorage.getItem", "speaking_learned_words");
+                if (!string.IsNullOrEmpty(stored))
+                {
+                    var list = JsonSerializer.Deserialize<List<string>>(stored);
+                    if (list != null && list.Any())
+                    {
+                        _learned = new HashSet<string>(list);
+                        StateHasChanged();
+                    }
+                }
+            }
+            catch { }
+        }
+    }
+
+    private void SwitchTab(string key) => _activeTab = key;
+
+    private void OpenTopic(string topicId)
+    {
+        _currentTopicId = topicId;
+        SwitchTab("topics");
+    }
+
+    private void PracticeTopic(string topicId)
+    {
+        _currentTopicId = topicId;
+        SwitchTab("practice");
+    }
+
+    private void VocabTopic(string topicId)
+    {
+        _currentTopicId = topicId;
+        _currentVocabGroup = topicId;
+        SwitchTab("vocab");
+    }
+
+    private void ToggleLearn(string en)
+    {
+        if (!_learned.Remove(en)) _learned.Add(en);
+        _ = SaveLearnedAsync();
+    }
+
+    private async Task SaveLearnedAsync()
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(_learned);
+            await JS.InvokeVoidAsync("localStorage.setItem", "speaking_learned_words", json);
+        }
+        catch { }
+    }
+
+    private async Task SpeakText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+        try
+        {
+            await JS.InvokeVoidAsync("eval", $"speechSynthesis.cancel();var u=new SpeechSynthesisUtterance({JsonSerializer.Serialize(text)});u.lang='en-US';u.rate=0.88;speechSynthesis.speak(u)");
+        }
+        catch { }
+    }
+}

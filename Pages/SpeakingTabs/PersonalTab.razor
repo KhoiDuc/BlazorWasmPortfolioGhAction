@@ -1,0 +1,143 @@
+@* PersonalTab *@
+<div class="speaking-section-head">
+    <div>
+        <h2>Bài mẫu của Khôi</h2>
+        <p class="muted">Dùng bản ngắn để luyện phản xạ; dùng bản mở rộng để luyện bài nói 1–2 phút.</p>
+    </div>
+</div>
+
+<div class="speaking-card soft">
+    <div class="speaking-label">HỒ SƠ BẠN ĐÃ CUNG CẤP</div>
+    <p><b>Khôi</b> · developer <b>4 năm kinh nghiệm</b> trong <b>web & DevOps</b> · thích tìm hiểu công nghệ · chơi <b>badminton và pickleball</b> · quan tâm <b>AI, TikTok</b>.</p>
+</div>
+
+<div class="speaking-toolbar">
+    <label for="personalSelect">Chọn bài mẫu</label>
+    <select id="personalSelect" value="@_selectedPersonal" @onchange="OnPersonalChanged">
+        @foreach (var p in Data.Personal)
+        {
+            <option value="@p.Id">@p.Title</option>
+        }
+    </select>
+</div>
+
+@if (_current != null)
+{
+    <div>
+        <div class="speaking-label">BÀI NÓI CÁ NHÂN HÓA</div>
+        <h2>@_current.Title</h2>
+        <div class="speaking-cue">
+            <h3 lang="en">@_current.Question</h3>
+            <p><b>4 ý để nhớ:</b> @_current.Outline</p>
+            <div>
+                @foreach (var f in _current.Focus)
+                {
+                    <span class="speaking-tag">@f</span>
+                }
+            </div>
+        </div>
+        <div class="speaking-card">
+            <div class="speaking-label">BẢN NGẮN · 30–45 GIÂY</div>
+            <p class="speaking-answer" lang="en">@_current.Short</p>
+            <div class="speaking-actions">
+                <button type="button" class="tool-btn tool-btn-primary" @onclick="() => Speak(_current.Short)">Nghe bản ngắn</button>
+            </div>
+        </div>
+        <details class="speaking-details">
+            <summary>Bản mở rộng · luyện 1–2 phút</summary>
+            <div>
+                <p class="speaking-answer" lang="en">@_current.Long</p>
+                <div class="speaking-actions">
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="() => Speak(_current.Long)">Nghe bản mở rộng</button>
+                </div>
+            </div>
+        </details>
+        <details class="speaking-details">
+            <summary>Ý nghĩa tiếng Việt & cách luyện</summary>
+            <div>
+                <p>@_current.Vi</p>
+                <ol>
+                    <li>Nhớ 4 ý chính và chọn 3 cụm phù hợp.</li>
+                    <li>Đóng bài mẫu, kể lại bằng lời của bạn.</li>
+                    <li>Bỏ hoặc đổi chi tiết chưa đúng với bản thân.</li>
+                    <li>Nói lại lần hai, ưu tiên rõ nghĩa hơn từ khó.</li>
+                </ol>
+            </div>
+        </details>
+    </div>
+}
+
+<div class="speaking-divider"></div>
+<h3>@Data.PersonalQuick.Count câu trả lời cá nhân hóa để luyện phản xạ</h3>
+
+<div class="speaking-toolbar">
+    <label for="personalQuickGroup">Chọn nhóm phản xạ</label>
+    <select id="personalQuickGroup" value="@_quickCategory" @onchange="OnQuickCategoryChanged">
+        <option value="all">Tất cả @Data.PersonalQuick.Count câu</option>
+        <option value="video-focus">Video ngắn & tập trung</option>
+        <option value="ai-depend">Lệ thuộc AI & tự chủ</option>
+        <option value="profile">Công việc & sở thích</option>
+    </select>
+</div>
+
+@if (_quickList.Any())
+{
+    @for (var i = 0; i < _quickList.Count; i++)
+    {
+        var q = _quickList[i];
+        <details class="speaking-details">
+            <summary>@(i + 1). <span lang="en">@q.Q</span></summary>
+            <div>
+                <div class="speaking-label">GỢI Ý Ý TƯỞNG</div>
+                <p>@q.Hint</p>
+                <div class="speaking-label">BÀI MẪU DỄ NÓI</div>
+                <p class="speaking-answer" lang="en">@q.Answer</p>
+                <button type="button" class="tool-btn" @onclick="() => Speak(q.Answer)">Nghe mẫu tiếng Anh</button>
+            </div>
+        </details>
+    }
+}
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+    [Parameter] public Func<string, Task> Speak { get; set; } = default!;
+
+    private string _selectedPersonal = "";
+    private PersonalItem? _current;
+    private string _quickCategory = "all";
+    private List<PersonalQuickItem> _quickList = new();
+
+    protected override void OnInitialized()
+    {
+        if (Data.Personal.Any())
+        {
+            _selectedPersonal = Data.Personal[0].Id;
+            _current = Data.Personal[0];
+        }
+        UpdateQuick();
+    }
+
+    protected override void OnParametersSet()
+    {
+        _current = Data.Personal.FirstOrDefault(p => p.Id == _selectedPersonal);
+    }
+
+    private void OnPersonalChanged(ChangeEventArgs e)
+    {
+        _selectedPersonal = e.Value?.ToString() ?? "";
+        _current = Data.Personal.FirstOrDefault(p => p.Id == _selectedPersonal);
+    }
+
+    private void UpdateQuick()
+    {
+        _quickList = _quickCategory == "all"
+            ? Data.PersonalQuick.ToList()
+            : Data.PersonalQuick.Where(x => (x.Category ?? "profile") == _quickCategory).ToList();
+    }
+
+    void OnQuickCategoryChanged(ChangeEventArgs e)
+    {
+        _quickCategory = e.Value?.ToString() ?? "all";
+        UpdateQuick();
+    }
+}

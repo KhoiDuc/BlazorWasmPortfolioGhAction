@@ -1,0 +1,314 @@
+@* CardsTab *@
+<h2>Thẻ nhớ & kiểm tra nghĩa</h2>
+<p class="muted">Đọc cụm từ → tự nói thành tiếng → lật thẻ kiểm tra và nghe phát âm chuẩn.</p>
+
+<div class="speaking-toolbar">
+    <select @bind="_group" @bind:after="ResetDeck" aria-label="Chủ đề thẻ nhớ">
+        <option value="all">Tất cả chủ đề</option>
+        @foreach (var g in _groupLabels)
+        {
+            <option value="@g.Key">@g.Value</option>
+        }
+    </select>
+    <select @bind="_mode" @bind:after="ResetDeck" aria-label="Bộ thẻ">
+        <option value="common">@Data.Vocab.Count(v => v.Common) từ/cụm thông dụng</option>
+        <option value="priority">@Data.Vocab.Count(v => v.Priority) cụm chuyên đề ưu tiên</option>
+        <option value="all">Toàn bộ @Data.Vocab.Count từ</option>
+        <option value="extra">@Data.Vocab.Count(v => v.Extra) cụm web/DevOps</option>
+        <option value="new">Chưa thuộc</option>
+    </select>
+    <select @bind="_direction" aria-label="Chiều luyện thẻ">
+        <option value="en-to-vi">Thẻ: Anh → Việt</option>
+        <option value="vi-to-en">Thẻ: Việt → Phản xạ Anh</option>
+    </select>
+    <button type="button" class="tool-btn" @onclick="ShuffleCards">Trộn thẻ</button>
+</div>
+
+<p class="speaking-counter center">Thẻ @(_deck.Any() ? _ci + 1 : 0) / @_deck.Count</p>
+
+@if (_deck.Any() && _currentCard != null)
+{
+    <div class="speaking-flash-wrapper">
+        <button type="button" class="speaking-flash" @onclick="FlipCard">
+            @if (_direction == "en-to-vi")
+            {
+                @if (_back)
+                {
+                    <h3>@_currentCard.Vi</h3>
+                    <p lang="en">@_currentCard.Ex</p>
+                    <p class="speaking-hint">@_currentCard.En · @_currentCard.Kind<br>Bấm để quay lại mặt trước</p>
+                }
+                else
+                {
+                    <h3 lang="en">@_currentCard.En</h3>
+                    <p class="speaking-kind">@_currentCard.Kind</p>
+                    <p class="speaking-hint">Tự nói nghĩa tiếng Việt & đặt 1 câu ví dụ.<br>Bấm thẻ để xem đáp án</p>
+                }
+            }
+            else
+            {
+                @if (_back)
+                {
+                    <h3 lang="en">@_currentCard.En</h3>
+                    <div class="speaking-kind">@_currentCard.Kind</div>
+                    <p lang="en">@_currentCard.Ex</p>
+                    <p class="speaking-hint">@_currentCard.Vi<br>Bấm để quay lại mặt trước</p>
+                }
+                else
+                {
+                    <h3>@_currentCard.Vi</h3>
+                    <p class="speaking-hint">Nói to từ/cụm tiếng Anh tương ứng!<br>Bấm thẻ để xem đáp án</p>
+                }
+            }
+        </button>
+        @if (Speak != null)
+        {
+            <div class="speaking-card-audio-bar">
+                <button type="button" class="tool-btn" title="Nghe phát âm từ" @onclick="() => Speak(_currentCard.En)">
+                    <i class="bi bi-volume-up-fill" aria-hidden="true"></i> Nghe từ vựng
+                </button>
+                <button type="button" class="tool-btn" title="Nghe câu ví dụ" @onclick="() => Speak(_currentCard.Ex)">
+                    <i class="bi bi-volume-up" aria-hidden="true"></i> Nghe câu ví dụ
+                </button>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="speaking-flash"><h3>Không có thẻ trong bộ này</h3><p class="speaking-hint">Đổi chủ đề hoặc chọn Toàn bộ từ.</p></div>
+}
+
+<div class="speaking-actions center">
+    <button type="button" class="tool-btn" @onclick="() => MoveCard(-1)" disabled="@(!_deck.Any())">← Trước</button>
+    <button type="button" class="tool-btn" @onclick="FlipCard" disabled="@(!_deck.Any())">Lật thẻ</button>
+    <button type="button" class="tool-btn" @onclick="MarkCard" disabled="@(!_deck.Any())">
+        @(Learned.Contains(_currentCard?.En ?? "") ? "✓ Đã thuộc · bỏ đánh dấu" : "Đánh dấu đã thuộc")
+    </button>
+    <button type="button" class="tool-btn" @onclick="() => MoveCard(1)" disabled="@(!_deck.Any())">Sau →</button>
+</div>
+
+<div class="speaking-divider"></div>
+<div class="speaking-card">
+    <div class="speaking-section-head">
+        <div>
+            <h3>Kiểm tra nhanh · @(_quizDirection == "en-to-vi" ? "Anh → Việt" : "Việt → Anh")</h3>
+            <p class="muted small">Câu hỏi lấy từ bộ thẻ đang chọn. Chọn một đáp án đúng.</p>
+        </div>
+        <div class="speaking-actions">
+            <select @bind="_quizDirection" aria-label="Chiều trắc nghiệm">
+                <option value="en-to-vi">Anh → Việt</option>
+                <option value="vi-to-en">Việt → Anh</option>
+            </select>
+            <button type="button" class="tool-btn tool-btn-primary" @onclick="StartQuiz">Bắt đầu / Làm lại</button>
+        </div>
+    </div>
+
+    @if (_quizSet.Any() && _quizCurrent != null)
+    {
+        <p class="speaking-counter">Câu @(_qi + 1)/@_quizSet.Count · Đúng @_score</p>
+        @if (_quizDirection == "en-to-vi")
+        {
+            <h3 lang="en">@_quizCurrent.En</h3>
+            <div class="speaking-quiz-options">
+                @foreach (var opt in _quizOptions)
+                {
+                    <button type="button" class="tool-btn @(_quizAnswered && opt.Vi == _quizCurrent.Vi ? "correct" : _quizAnswered && opt.Vi == _quizSelected ? "wrong" : "")"
+                            disabled="@_quizAnswered"
+                            @onclick="() => AnswerQuiz(opt.Vi)">@opt.Vi</button>
+                }
+            </div>
+            @if (_quizAnswered)
+            {
+                <p>
+                    <b>@(_quizCorrect ? "Đúng!" : "Chưa đúng.")</b> @_quizCurrent.Vi<br>
+                    <span lang="en">@_quizCurrent.Ex</span>
+                </p>
+                <div class="speaking-actions">
+                    @if (Speak != null)
+                    {
+                        <button type="button" class="tool-btn" @onclick="() => Speak(_quizCurrent.Ex)">Nghe ví dụ</button>
+                    }
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="NextQuiz">Câu tiếp →</button>
+                </div>
+            }
+        }
+        else
+        {
+            <h3>@_quizCurrent.Vi</h3>
+            <div class="speaking-quiz-options">
+                @foreach (var opt in _quizOptions)
+                {
+                    <button type="button" class="tool-btn @(_quizAnswered && opt.En == _quizCurrent.En ? "correct" : _quizAnswered && opt.En == _quizSelected ? "wrong" : "")"
+                            disabled="@_quizAnswered"
+                            @onclick="() => AnswerQuiz(opt.En)"><span lang="en">@opt.En</span></button>
+                }
+            </div>
+            @if (_quizAnswered)
+            {
+                <p>
+                    <b>@(_quizCorrect ? "Đúng!" : "Chưa đúng.")</b> <span lang="en">@_quizCurrent.En</span> (@_quizCurrent.Kind)<br>
+                    <span lang="en">@_quizCurrent.Ex</span>
+                </p>
+                <div class="speaking-actions">
+                    @if (Speak != null)
+                    {
+                        <button type="button" class="tool-btn" @onclick="() => Speak(_quizCurrent.En)">Nghe phát âm</button>
+                    }
+                    <button type="button" class="tool-btn tool-btn-primary" @onclick="NextQuiz">Câu tiếp →</button>
+                </div>
+            }
+        }
+    }
+    else if (_quizFinished)
+    {
+        <h3>Hoàn thành: @_score/@_quizSet.Count câu đúng</h3>
+        <p>Ôn lại các cụm chưa chắc, rồi đặt câu mới bằng lời của bạn.</p>
+    }
+    else
+    {
+        <p class="muted">Luyện thẻ trước, rồi kiểm tra khả năng nhớ nghĩa.</p>
+    }
+</div>
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+    [Parameter] public string? InitialGroup { get; set; }
+    [Parameter] public HashSet<string> Learned { get; set; } = default!;
+    [Parameter] public Action<string> ToggleLearn { get; set; } = default!;
+    [Parameter] public Func<string, Task>? Speak { get; set; }
+
+    private string _group = "all";
+    private string _mode = "common";
+    private string _direction = "en-to-vi";
+    private string _quizDirection = "en-to-vi";
+    private List<VocabItem> _deck = new();
+    private int _ci;
+    private bool _back;
+    private Dictionary<string, string> _groupLabels = new();
+
+    private static readonly Random _rng = new();
+
+    protected override void OnInitialized()
+    {
+        _groupLabels = Data.Topics.ToDictionary(t => t.Id, t => t.Name);
+        _groupLabels["sign"] = "Chuyển ý & câu cứu nguy";
+        if (!string.IsNullOrEmpty(InitialGroup) && (_groupLabels.ContainsKey(InitialGroup) || InitialGroup == "all"))
+        {
+            _group = InitialGroup;
+        }
+        ResetDeck();
+    }
+
+    private VocabItem? _currentCard => _deck.Count > 0 ? _deck[_ci] : null;
+
+    private void ResetDeck()
+    {
+        _deck = Data.Vocab.Where(v =>
+            (_group == "all" || v.Group == _group)
+            && _mode switch
+            {
+                "common" => v.Common,
+                "priority" => v.Priority,
+                "extra" => v.Extra,
+                "new" => !Learned.Contains(v.En),
+                _ => true,
+            }
+        ).ToList();
+        _ci = 0;
+        _back = false;
+    }
+
+    private void FlipCard() => _back = !_back;
+
+    private void MoveCard(int n)
+    {
+        if (!_deck.Any()) return;
+        _ci = (_ci + n + _deck.Count) % _deck.Count;
+        _back = false;
+    }
+
+    private void ShuffleCards()
+    {
+        _deck = _deck.OrderBy(_ => _rng.Next()).ToList();
+        _ci = 0;
+        _back = false;
+    }
+
+    private void MarkCard()
+    {
+        if (_currentCard == null) return;
+        ToggleLearn(_currentCard.En);
+        if (_mode == "new")
+        {
+            _deck = _deck.Where(v => !Learned.Contains(v.En)).ToList();
+            if (_ci >= _deck.Count) _ci = Math.Max(0, _deck.Count - 1);
+            _back = false;
+        }
+    }
+
+    // ── Quiz ──
+    private List<VocabItem> _quizSet = new();
+    private int _qi;
+    private int _score;
+    private bool _quizAnswered;
+    private bool _quizFinished;
+    private string? _quizSelected;
+    private bool _quizCorrect;
+    private VocabItem? _quizCurrent => _qi < _quizSet.Count ? _quizSet[_qi] : null;
+    private List<VocabItem> _quizOptions = new();
+
+    private void StartQuiz()
+    {
+        if (!_deck.Any()) return;
+        _quizSet = _deck.OrderBy(_ => _rng.Next()).Take(10).ToList();
+        _qi = 0;
+        _score = 0;
+        _quizFinished = false;
+        RenderQuiz();
+    }
+
+    private void RenderQuiz()
+    {
+        _quizAnswered = false;
+        _quizSelected = null;
+        if (_quizCurrent == null)
+        {
+            _quizFinished = true;
+            return;
+        }
+        var wrong = Data.Vocab.Where(x => x.En != _quizCurrent.En && x.Vi != _quizCurrent.Vi).OrderBy(_ => _rng.Next()).Take(3).ToList();
+        _quizOptions = new[] { _quizCurrent! }.Concat(wrong).OrderBy(_ => _rng.Next()).ToList();
+    }
+
+    private void AnswerQuiz(string answer)
+    {
+        if (_quizAnswered || _quizCurrent == null) return;
+        _quizAnswered = true;
+        _quizSelected = answer;
+        _quizCorrect = _quizDirection == "en-to-vi"
+            ? (answer == _quizCurrent.Vi)
+            : (answer == _quizCurrent.En);
+        if (_quizCorrect) _score++;
+    }
+
+    private void NextQuiz()
+    {
+        _qi++;
+        RenderQuiz();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_groupLabels.Count == 0 && Data.Topics.Any())
+        {
+            _groupLabels = Data.Topics.ToDictionary(t => t.Id, t => t.Name);
+            _groupLabels["sign"] = "Chuyển ý & câu cứu nguy";
+        }
+        if (!string.IsNullOrEmpty(InitialGroup) && InitialGroup != _group && _groupLabels.ContainsKey(InitialGroup))
+        {
+            _group = InitialGroup;
+            ResetDeck();
+        }
+    }
+}

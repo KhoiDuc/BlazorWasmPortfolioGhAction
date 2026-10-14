@@ -1,0 +1,110 @@
+@* TopicsTab *@
+<div class="speaking-section-head">
+    <div>
+        <h2>Bài nói theo chủ đề</h2>
+        <p class="muted">@Data.Topics.Count chủ đề · bài mẫu đơn giản, ưu tiên từ thông dụng và câu dễ nói.</p>
+    </div>
+</div>
+
+<div class="speaking-toolbar">
+    <label for="topicSelect" class="small">Chọn chủ đề</label>
+    <select id="topicSelect" value="@_selectedTopic" @onchange="OnTopicChanged">
+        @foreach (var t in Data.Topics)
+        {
+            <option value="@t.Id">@t.Name</option>
+        }
+    </select>
+</div>
+
+@if (_topic != null)
+{
+    @if (_topic.Everyday)
+    {
+        <div class="speaking-callout small"><b>Mẫu đời thường:</b> câu trả lời minh họa để bạn điều chỉnh. Không mặc định đây là thói quen thật của Khôi.</div>
+    }
+    <div class="speaking-label">@_topic.En</div>
+    <h2>@_topic.Name</h2>
+    <p class="muted">@_topic.Hook</p>
+    <div>
+        @foreach (var w in _topic.Words)
+        {
+            <span class="speaking-tag">@w</span>
+        }
+    </div>
+    <div class="speaking-divider"></div>
+
+    <h3>Part 1 · Câu hỏi ngắn</h3>
+    <p class="small muted">Gợi ý: 3–5 câu, khoảng 30–45 giây. Mở bài mẫu sau khi tự trả lời.</p>
+    @for (var i = 0; i < _topic.Quick.Count; i++)
+    {
+        var q = _topic.Quick[i];
+        <QDetail Index="@i" Q0="@q[0]" Q1="@q[1]" Q2="@q[2]" Speak="@Speak" />
+    }
+
+    <div class="speaking-divider"></div>
+    <h3>Part 2 · Bài nói dài</h3>
+    <div class="speaking-cue">
+        <h3 lang="en">@_topic.Cue</h3>
+        <p class="small">You should say:</p>
+        <ul lang="en">
+            @foreach (var p in _topic.Points)
+            {
+                <li>@p</li>
+            }
+        </ul>
+        <div class="speaking-callout"><b>Dàn ý:</b> @_topic.Outline</div>
+    </div>
+    <details class="speaking-details">
+        <summary>Xem bài nói mẫu hoàn chỉnh</summary>
+        <div>
+            <p class="speaking-answer" lang="en">@_topic.Long</p>
+            <button type="button" class="tool-btn" @onclick="() => Speak(_topic.Long)">Nghe mẫu tiếng Anh</button>
+        </div>
+    </details>
+
+    <div class="speaking-divider"></div>
+    <h3>Part 3 · Thảo luận</h3>
+    <p class="small muted">Quan điểm → lý do → ví dụ / mặt khác → kết luận.</p>
+    @for (var i = 0; i < _topic.Discuss.Count; i++)
+    {
+        var q = _topic.Discuss[i];
+        <QDetail Index="@i" Q0="@q[0]" Q1="@q[1]" Q2="@q[2]" Speak="@Speak" />
+    }
+
+    <div class="speaking-actions">
+        <button type="button" class="tool-btn tool-btn-primary" @onclick="() => PracticeTopic(_topic.Id)">Luyện nói chủ đề này</button>
+        <button type="button" class="tool-btn" @onclick="() => VocabTopic(_topic.Id)">Ôn từ vựng chủ đề</button>
+    </div>
+}
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+    [Parameter] public string? InitialTopicId { get; set; }
+    [Parameter] public Func<string, Task> Speak { get; set; } = default!;
+    [Parameter] public Action<string> PracticeTopic { get; set; } = default!;
+    [Parameter] public Action<string> VocabTopic { get; set; } = default!;
+
+    private string _selectedTopic = "";
+    private Topic? _topic;
+
+    protected override void OnInitialized()
+    {
+        _selectedTopic = !string.IsNullOrEmpty(InitialTopicId) ? InitialTopicId : (Data.Topics.FirstOrDefault()?.Id ?? "");
+        _topic = Data.Topics.FirstOrDefault(t => t.Id == _selectedTopic);
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(InitialTopicId) && InitialTopicId != _selectedTopic && Data.Topics.Any(t => t.Id == InitialTopicId))
+        {
+            _selectedTopic = InitialTopicId;
+        }
+        _topic = Data.Topics.FirstOrDefault(t => t.Id == _selectedTopic) ?? Data.Topics.FirstOrDefault();
+    }
+
+    private void OnTopicChanged(ChangeEventArgs e)
+    {
+        _selectedTopic = e.Value?.ToString() ?? "";
+        _topic = Data.Topics.FirstOrDefault(t => t.Id == _selectedTopic);
+    }
+}

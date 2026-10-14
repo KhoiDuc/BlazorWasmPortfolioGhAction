@@ -1,0 +1,73 @@
+@* NotesTab *@
+<h2>Lưu ý trước khi vào phòng thi</h2>
+
+<div class="speaking-grid">
+    <div class="speaking-card">
+        <h3>Ưu tiên cách nói vừa sức</h3>
+        <ul>
+            <li><b>Atrophy</b> → dễ nói hơn: "become weaker".</li>
+            <li><b>Cognitive passivity</b> → "stop thinking for ourselves".</li>
+            <li><b>Erosion of sustained focus</b> → "find it harder to focus".</li>
+            <li><b>Ethical discernment</b> → "ethical judgment".</li>
+        </ul>
+    </div>
+    <div class="speaking-card">
+        <h3>Thì & cấu trúc dùng ngay</h3>
+        <p>
+            <b>Thói quen:</b> I usually… / I tend to…<br>
+            <b>Trải nghiệm:</b> Last week, I…<br>
+            <b>Kế hoạch:</b> I'm planning to… / I aim to…<br>
+            <b>Lý do:</b> The main reason is that…<br>
+            <b>Hai mặt:</b> One benefit is… However,…
+        </p>
+    </div>
+</div>
+
+<div class="speaking-card" style="margin:1rem 0">
+    <h3>Ngữ pháp & phát âm tối thiểu để nói rõ</h3>
+    <ul>
+        <li><b>Thói quen:</b> "I usually play badminton."</li>
+        <li><b>Sở thích:</b> "I enjoy playing…" / "I'm interested in technology."</li>
+        <li><b>Kinh nghiệm:</b> "I have four years of experience."</li>
+        <li><b>Quá khứ:</b> "I started working as a developer four years ago."</li>
+        <li><b>Kế hoạch:</b> "I'm planning to…" / "I'd like to…"</li>
+        <li><b>Giả định:</b> "If I had more time, I would…"</li>
+        <li><b>Chia động từ:</b> "It helps me…", không phải "It help me…".</li>
+        <li><b>Giới từ:</b> "good at", "interested in", "spend time on something".</li>
+        <li><b>Nói theo cụm:</b> Ngắt ở ý, không đọc đều từng từ.</li>
+        <li><b>Tốc độ:</b> ưu tiên nghe rõ, đừng cố bắt chước giọng bản xứ.</li>
+    </ul>
+</div>
+
+<div class="speaking-callout warn">
+    <h3>Các điểm đã chỉnh từ bản chat AI</h3>
+    <ul>
+        <li><b>Doomscrolling</b> thường nói về việc lướt tin tiêu cực liên tục. Lướt video bất kỳ không dừng nên dùng "endless scrolling" hoặc "mindless scrolling".</li>
+        <li><b>"TikTok Brain"</b> là cách gọi phổ thông, không nên trình bày như một chẩn đoán y khoa.</li>
+        <li>Không nhắc như sự thật các số liệu chưa được dẫn nguồn.</li>
+        <li><b>RAG và MCP</b> không tự bảo đảm độ đúng hoặc bảo mật.</li>
+        <li>Cấu trúc Part 1–2–3 ở đây là mô phỏng để luyện, không phải đề thi chính thức.</li>
+    </ul>
+</div>
+
+<div class="speaking-card">
+    <h3>Ngày trước khi thi</h3>
+    <ol>
+        <li>Ôn các cụm thông dụng bạn còn quên; không nhồi thêm nhiều từ khó.</li>
+        <li>Với mỗi chủ đề: nhớ 3–4 ý, chuẩn bị một ví dụ thật.</li>
+        <li>Luyện 1 bộ thi thử; ghi lại 3 lỗi lặp lại nhiều nhất.</li>
+        <li>Kiểm tra thời lượng và yêu cầu của giáo viên.</li>
+    </ol>
+</div>
+
+@if (!string.IsNullOrEmpty(Data.Source))
+{
+    <details class="speaking-details">
+        <summary>Nguồn: toàn bộ nội dung chat đã gửi</summary>
+        <div class="speaking-source">@Data.Source</div>
+    </details>
+}
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+}

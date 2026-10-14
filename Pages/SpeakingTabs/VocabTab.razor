@@ -1,0 +1,123 @@
+@* VocabTab *@
+<div class="speaking-section-head">
+    <div>
+        <h2>Từ vựng & cụm diễn đạt</h2>
+        <p class="muted">@Data.Vocab.Count mục · ưu tiên các từ/cụm thông dụng trước, rồi đến cụm chuyên đề.</p>
+    </div>
+</div>
+
+<div class="speaking-toolbar">
+    <input type="search" placeholder="Tìm tiếng Anh hoặc tiếng Việt…" @bind="_search" @bind:event="oninput" aria-label="Tìm từ vựng" />
+    <select @bind="_group" aria-label="Lọc chủ đề">
+        <option value="all">Tất cả chủ đề</option>
+        @foreach (var g in _groupLabels)
+        {
+            <option value="@g.Key">@g.Value</option>
+        }
+    </select>
+    <select @bind="_mode" aria-label="Lọc mức học">
+        <option value="all">Tất cả từ</option>
+        <option value="common">@Data.Vocab.Count(v => v.Common) từ/cụm thông dụng</option>
+        <option value="priority">@Data.Vocab.Count(v => v.Priority) cụm chuyên đề ưu tiên</option>
+        <option value="extra">@Data.Vocab.Count(v => v.Extra) cụm web/DevOps</option>
+        <option value="new">Chưa thuộc</option>
+        <option value="learned">Đã thuộc</option>
+    </select>
+</div>
+
+<p class="speaking-counter">Hiển thị @_filtered.Count / @Data.Vocab.Count mục · Đã thuộc @Data.Vocab.Count(v => Learned.Contains(v.En)) mục</p>
+
+<div class="speaking-vocab-grid">
+    @if (_filtered.Any())
+    {
+        @foreach (var v in _filtered)
+        {
+            <article class="speaking-word-card @(Learned.Contains(v.En) ? "learned" : "")">
+                <div class="speaking-label">@_groupLabels.GetValueOrDefault(v.Group, v.Group)@(v.Priority ? " · ƯU TIÊN" : v.Extra ? " · IT BỔ SUNG" : v.Common ? " · THÔNG DỤNG" : "")</div>
+                <div class="speaking-word-head">
+                    <h3 lang="en">@v.En</h3>
+                    @if (Speak != null)
+                    {
+                        <button type="button" class="speaking-audio-btn" title="Nghe phát âm từ" @onclick="() => Speak(v.En)" aria-label="Phát âm @v.En">
+                            <i class="bi bi-volume-up-fill" aria-hidden="true"></i>
+                        </button>
+                    }
+                </div>
+                <div class="speaking-kind">@v.Kind</div>
+                <p>@v.Vi</p>
+                <div class="speaking-ex-box">
+                    <p class="speaking-ex" lang="en">@v.Ex</p>
+                    @if (Speak != null)
+                    {
+                        <button type="button" class="speaking-audio-btn sm" title="Nghe câu ví dụ" @onclick="() => Speak(v.Ex)" aria-label="Phát âm câu ví dụ">
+                            <i class="bi bi-volume-up" aria-hidden="true"></i>
+                        </button>
+                    }
+                </div>
+                <button type="button" class="tool-btn" @onclick="() => ToggleLearn(v.En)">
+                    @(Learned.Contains(v.En) ? "✓ Đã thuộc · bỏ đánh dấu" : "Đánh dấu đã thuộc")
+                </button>
+            </article>
+        }
+    }
+    else
+    {
+        <div class="speaking-empty">Không có mục phù hợp. Hãy đổi bộ lọc hoặc từ tìm kiếm.</div>
+    }
+</div>
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+    [Parameter] public string InitialGroup { get; set; } = "all";
+    [Parameter] public HashSet<string> Learned { get; set; } = default!;
+    [Parameter] public Action<string> ToggleLearn { get; set; } = default!;
+    [Parameter] public Func<string, Task>? Speak { get; set; }
+
+    private string _search = "";
+    private string _group = "all";
+    private string _mode = "all";
+
+    private Dictionary<string, string> _groupLabels = new();
+
+    protected override void OnInitialized()
+    {
+        _groupLabels = Data.Topics.ToDictionary(t => t.Id, t => t.Name);
+        _groupLabels["sign"] = "Chuyển ý & câu cứu nguy";
+        if (!string.IsNullOrEmpty(InitialGroup) && (_groupLabels.ContainsKey(InitialGroup) || InitialGroup == "all"))
+        {
+            _group = InitialGroup;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(InitialGroup) && InitialGroup != "all" && _group == "all")
+        {
+            _group = InitialGroup;
+        }
+    }
+
+    private List<VocabItem> _filtered
+    {
+        get
+        {
+            var s = _search.Trim();
+            return Data.Vocab.Where(v =>
+                (_group == "all" || v.Group == _group)
+                && (string.IsNullOrEmpty(s) ||
+                    v.En.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    v.Vi.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    v.Ex.Contains(s, StringComparison.OrdinalIgnoreCase))
+                && (_mode switch
+                {
+                    "common" => v.Common,
+                    "priority" => v.Priority,
+                    "extra" => v.Extra,
+                    "new" => !Learned.Contains(v.En),
+                    "learned" => Learned.Contains(v.En),
+                    _ => true,
+                })
+            ).ToList();
+        }
+    }
+}

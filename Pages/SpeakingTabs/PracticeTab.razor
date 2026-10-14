@@ -1,0 +1,232 @@
+@* PracticeTab *@
+@implements IDisposable
+
+<div class="speaking-section-head">
+    <div>
+        <h2>Phòng luyện Speaking 1–1</h2>
+        <p class="muted">Tự nói thành tiếng. Trang không thu âm hoặc tự chấm phát âm.</p>
+    </div>
+</div>
+
+<div class="speaking-toolbar">
+    <select value="@_group" @onchange="OnGroupChanged" aria-label="Chủ đề thi thử">
+        <option value="all">Tất cả chủ đề</option>
+        @foreach (var t in Data.Topics)
+        {
+            <option value="@t.Id">@t.Name</option>
+        }
+    </select>
+    <select value="@_part" @onchange="OnPartChanged" aria-label="Phần thi">
+        <option value="quick">Part 1 · Trả lời ngắn</option>
+        <option value="long">Part 2 · Nói dài</option>
+        <option value="discuss">Part 3 · Thảo luận</option>
+    </select>
+    <button type="button" class="tool-btn" @onclick="NewQuestion">Đổi câu hỏi</button>
+</div>
+
+@if (_currentQ != null)
+{
+    <div class="speaking-card soft">
+        <div class="speaking-label">@_currentQ.TopicName / @(_part == "quick" ? "Part 1" : _part == "long" ? "Part 2" : "Part 3")</div>
+        <div class="speaking-practice-q" lang="en">@_currentQ.Question</div>
+        @if (_currentQ.Points.Any())
+        {
+            <ul lang="en">
+                @foreach (var p in _currentQ.Points)
+                {
+                    <li>@p</li>
+                }
+            </ul>
+        }
+        <details class="speaking-details">
+            <summary>Xem gợi ý sau khi đã thử nói</summary>
+            <div>
+                <p><b>Dàn ý:</b> @_currentQ.Hint</p>
+                <p class="speaking-answer" lang="en">@_currentQ.Answer</p>
+                <button type="button" class="tool-btn" @onclick="() => Speak(_currentQ.Answer)">Nghe mẫu tiếng Anh</button>
+            </div>
+        </details>
+    </div>
+}
+
+<div class="speaking-grid" style="margin-top:1rem">
+    <div class="speaking-card">
+        <h3>Đồng hồ luyện nói</h3>
+        <div class="speaking-timer-box">
+            <div>
+                <div class="speaking-timer">@_timerDisplay</div>
+                <p class="small muted">@_timerStatus</p>
+            </div>
+            <div class="speaking-actions">
+                <button type="button" class="tool-btn tool-btn-primary" @onclick="ToggleTimer">@_timerBtnLabel</button>
+                <button type="button" class="tool-btn" @onclick="ResetTimer">Đặt lại</button>
+            </div>
+        </div>
+        <div class="speaking-toolbar">
+            <select @bind="_duration" @bind:after="ResetTimer" aria-label="Thời gian luyện">
+                <option value="45">45 giây · câu ngắn</option>
+                <option value="60">60 giây · chuẩn bị / thảo luận</option>
+                <option value="120">2 phút · bài nói dài</option>
+            </select>
+        </div>
+        <small class="muted">Đồng hồ là gợi ý luyện tập, không phải giới hạn thi chính thức.</small>
+    </div>
+    <div class="speaking-card">
+        <h3>Tự chấm sau mỗi lượt</h3>
+        <div class="speaking-checklist">
+            <label><input type="checkbox" /> Tôi trả lời đúng câu hỏi.</label>
+            <label><input type="checkbox" /> Tôi thêm lý do hoặc ví dụ cụ thể.</label>
+            <label><input type="checkbox" /> Tôi dùng 2–3 cụm đúng ngữ cảnh.</label>
+            <label><input type="checkbox" /> Tôi nói rõ và tiếp tục sau khi sửa lỗi.</label>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+    [Parameter] public string? InitialTopicId { get; set; }
+    [Parameter] public Func<string, Task> Speak { get; set; } = default!;
+
+    private string _group = "all";
+    private string _part = "quick";
+    private string _duration = "45";
+
+    private static readonly Random _rng = new();
+
+    private record PracticeQ(string TopicName, string Question, string Hint, string Answer, List<string> Points);
+
+    private PracticeQ? _currentQ;
+    private string _lastQ = "";
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(InitialTopicId) && Data.Topics.Any(t => t.Id == InitialTopicId))
+        {
+            _group = InitialTopicId;
+        }
+        NewQuestion();
+    }
+
+    private void NewQuestion()
+    {
+        var topics = Data.Topics.Where(t => _group == "all" || t.Id == _group).ToList();
+        var pool = new List<PracticeQ>();
+        foreach (var t in topics)
+        {
+            if (_part == "long")
+            {
+                pool.Add(new PracticeQ(t.Name, t.Cue, t.Outline, t.Long, t.Points));
+            }
+            else
+            {
+                var qs = _part == "quick" ? t.Quick : t.Discuss;
+                foreach (var q in qs)
+                {
+                    pool.Add(new PracticeQ(t.Name, q[0], q[1], q[2], new()));
+                }
+            }
+        }
+        var candidates = pool.Where(x => x.Question != _lastQ).ToList();
+        if (!candidates.Any()) candidates = pool;
+        if (!candidates.Any()) return;
+        _currentQ = candidates[_rng.Next(candidates.Count)];
+        _lastQ = _currentQ.Question;
+        _duration = _part == "quick" ? "45" : _part == "long" ? "120" : "60";
+        ResetTimer();
+    }
+
+    // ── Timer ──
+    private int _remaining = 45;
+    private string _timerDisplay = "00:45";
+    private string _timerStatus = "Sẵn sàng";
+    private string _timerBtnLabel = "Bắt đầu";
+    private System.Threading.CancellationTokenSource? _cts;
+
+    private void ResetTimer()
+    {
+        _cts?.Cancel();
+        _cts = null;
+        _remaining = int.TryParse(_duration, out var d) ? d : 45;
+        UpdateDisplay();
+        _timerStatus = "Sẵn sàng";
+        _timerBtnLabel = "Bắt đầu";
+    }
+
+    private void UpdateDisplay()
+    {
+        _timerDisplay = $"{_remaining / 60:D2}:{_remaining % 60:D2}";
+    }
+
+    private async Task ToggleTimer()
+    {
+        if (_cts != null)
+        {
+            _cts.Cancel();
+            _cts = null;
+            _timerStatus = "Đã tạm dừng";
+            _timerBtnLabel = "Tiếp tục";
+            return;
+        }
+
+        if (_remaining <= 0) ResetTimer();
+        _timerStatus = "Đang luyện";
+        _timerBtnLabel = "Tạm dừng";
+        _cts = new System.Threading.CancellationTokenSource();
+        var token = _cts.Token;
+        var endAt = DateTime.UtcNow.AddSeconds(_remaining);
+
+        await Task.Run(async () =>
+        {
+            while (!token.IsCancellationRequested)
+            {
+                var left = (int)Math.Ceiling((endAt - DateTime.UtcNow).TotalSeconds);
+                if (left <= 0)
+                {
+                    _remaining = 0;
+                    UpdateDisplay();
+                    _timerStatus = "Hết giờ — tự chấm rồi luyện lại.";
+                    _timerBtnLabel = "Luyện lại";
+                    _cts = null;
+                    await InvokeAsync(StateHasChanged);
+                    break;
+                }
+                _remaining = left;
+                UpdateDisplay();
+                await InvokeAsync(StateHasChanged);
+                await Task.Delay(200, token);
+            }
+        }, token);
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(InitialTopicId) && InitialTopicId != _group && Data.Topics.Any(t => t.Id == InitialTopicId))
+        {
+            _group = InitialTopicId;
+            NewQuestion();
+        }
+        else if (_currentQ == null)
+        {
+            NewQuestion();
+        }
+    }
+
+    private void OnGroupChanged(ChangeEventArgs e)
+    {
+        _group = e.Value?.ToString() ?? "all";
+        NewQuestion();
+    }
+
+    private void OnPartChanged(ChangeEventArgs e)
+    {
+        _part = e.Value?.ToString() ?? "quick";
+        NewQuestion();
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+    }
+}

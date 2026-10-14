@@ -1,0 +1,77 @@
+@* FramesTab *@
+<div class="speaking-section-head">
+    <div>
+        <h2>40 mẫu câu dùng chung</h2>
+        <p class="muted">Ghép 2–4 mẫu là đủ để tạo một câu trả lời rõ ý. Không cần dùng từ khó.</p>
+    </div>
+</div>
+
+<div class="speaking-callout">
+    <b>Ví dụ ghép:</b>
+    <p lang="en">I enjoy playing badminton because it helps me relax. For example, it gives me a break from screen-based work. Overall, I think sports are a useful part of my routine.</p>
+    <p class="small muted">Sở thích → lý do → ví dụ → kết luận.</p>
+</div>
+
+<div class="speaking-toolbar">
+    <input type="search" placeholder="Tìm mẫu câu hoặc nghĩa tiếng Việt…" @bind="_search" @bind:event="oninput" aria-label="Tìm mẫu câu" />
+    <select @bind="_group" aria-label="Nhóm mẫu câu">
+        <option value="all">Tất cả nhóm</option>
+        <option value="habit">Thói quen & sở thích</option>
+        <option value="reason">Lý do & ví dụ</option>
+        <option value="opinion">Quan điểm & so sánh</option>
+        <option value="time">Quá khứ & kế hoạch</option>
+        <option value="repair">Câu giờ, làm rõ & sửa ý</option>
+    </select>
+</div>
+
+<p class="speaking-counter">Hiển thị @_filtered.Count / @Data.Frames.Count mẫu câu</p>
+
+<div class="speaking-vocab-grid">
+    @if (_filtered.Any())
+    {
+        @foreach (var f in _filtered)
+        {
+            <article class="speaking-word-card">
+                <div class="speaking-label">@_frameLabels.GetValueOrDefault(f.Group, f.Group)</div>
+                <h3 lang="en">@f.En</h3>
+                <p>@f.Vi</p>
+                <p class="speaking-ex" lang="en">@f.Ex</p>
+            </article>
+        }
+    }
+    else
+    {
+        <div class="speaking-empty">Không có mẫu câu phù hợp.</div>
+    }
+</div>
+
+@code {
+    [Parameter] public SpeakingData Data { get; set; } = default!;
+
+    private string _search = "";
+    private string _group = "all";
+
+    private readonly Dictionary<string, string> _frameLabels = new()
+    {
+        ["habit"] = "Thói quen & sở thích",
+        ["reason"] = "Lý do & ví dụ",
+        ["opinion"] = "Quan điểm & so sánh",
+        ["time"] = "Quá khứ & kế hoạch",
+        ["repair"] = "Câu giờ, làm rõ & sửa ý",
+    };
+
+    private List<FrameItem> _filtered
+    {
+        get
+        {
+            var s = _search.Trim();
+            return Data.Frames.Where(f =>
+                (_group == "all" || f.Group == _group)
+                && (string.IsNullOrEmpty(s) ||
+                    f.En.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    f.Vi.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    f.Ex.Contains(s, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
+        }
+    }
+}
