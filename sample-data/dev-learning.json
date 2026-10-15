@@ -3803,6 +3803,598 @@
           ]
         }
       ]
+    },
+    {
+      "id": "jwt-deep-dive-series",
+      "title": "JWT Deep Dive in .NET: Manual RFC 7519 vs System.IdentityModel & Modern Best Practices",
+      "titleVi": "Chuyên Đề JWT Toàn Tập: Tự Viết Thủ Công (RFC 7519) vs Dùng Thư Viện Chuẩn trong .NET",
+      "icon": "bi-shield-lock-fill",
+      "color": "#d97706",
+      "badge": "6 Bài Viết",
+      "description": "Lộ trình chuyên sâu từ bản chất toán học của JSON Web Token, giải thuật Base64Url, tự code HMAC-SHA256 & RSA thủ công bằng C# thuần, so sánh JwtSecurityTokenHandler vs JsonWebTokenHandler, đến Refresh Token Rotation và phòng chống các lỗ hổng bảo mật.",
+      "descriptionVi": "Lộ trình chuyên sâu từ bản chất toán học của JSON Web Token, giải thuật Base64Url, tự code HMAC-SHA256 & RSA thủ công bằng C# thuần, so sánh JwtSecurityTokenHandler vs JsonWebTokenHandler, đến Refresh Token Rotation và phòng chống các lỗ hổng bảo mật.",
+      "articles": [
+        {
+          "id": "jwt-bai-1-ban-chat-rfc7519",
+          "seriesId": "jwt-deep-dive-series",
+          "lessonNumber": "Bài 1",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
+          "title": "Bản Chất JWT (RFC 7519): Giải Phẫu Header, Payload, Signature và Chuẩn Base64Url",
+          "titleVi": "Bản Chất JWT (RFC 7519): Giải Phẫu Header, Payload, Signature và Chuẩn Base64Url",
+          "readingTime": "9 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Khám phá nguyên lý hoạt động của JSON Web Token, tại sao JWT thay thế Session truyền thống, giải phẫu 3 thành phần ngăn cách bởi dấu chấm và phân biệt Base64 thường vs Base64Url.",
+          "summaryVi": "Khám phá nguyên lý hoạt động của JSON Web Token, tại sao JWT thay thế Session truyền thống, giải phẫu 3 thành phần ngăn cách bởi dấu chấm và phân biệt Base64 thường vs Base64Url.",
+          "tags": [
+            "jwt",
+            "rfc7519",
+            "base64url",
+            "authentication",
+            "security"
+          ],
+          "sections": [
+            {
+              "heading": "1. Tại Sao JWT Thay Thế Cookie Session Truyền Thống Trong Microservices?",
+              "headingVi": "1. Tại Sao JWT Thay Thế Cookie Session Truyền Thống Trong Microservices?",
+              "paragraphs": [
+                "Trong kiến trúc Monolith cổ điển, khi người dùng đăng nhập, máy chủ sinh ra một chuỗi `SessionId` lưu trong RAM hoặc Database, sau đó gửi về cho trình duyệt lưu trong Cookie. Khi có 1 triệu người dùng đồng thời, server sẽ bị cạn kiệt RAM để lưu Session.",
+                "Trong kiến trúc Microservices, nếu có 10 service độc lập nằm trên 10 server khác nhau, việc dùng Session đòi hỏi tất cả các service phải liên tục truy vấn vào cụm Redis tập trung chỉ để kiểm tra xem user là ai, gây ra điểm nghẽn cổ chai (Network bottleneck).",
+                "JSON Web Token (RFC 7519) giải quyết triệt để bài toán này bằng kiến trúc Tự Chứa (Self-contained & Stateless): Toàn bộ thông tin định danh của người dùng (`UserId`, `Email`, `Roles`, `Expiration`) được đóng gói ngay bên trong token. Bất kỳ microservice nào cũng có thể tự xác thực tính hợp lệ của token bằng thuật toán mật mã học mà không cần query vào bất kỳ database nào!"
+              ],
+              "paragraphsVi": [
+                "Trong kiến trúc Monolith cổ điển, khi người dùng đăng nhập, máy chủ sinh ra một chuỗi `SessionId` lưu trong RAM hoặc Database, sau đó gửi về cho trình duyệt lưu trong Cookie. Khi có 1 triệu người dùng đồng thời, server sẽ bị cạn kiệt RAM để lưu Session.",
+                "Trong kiến trúc Microservices, nếu có 10 service độc lập nằm trên 10 server khác nhau, việc dùng Session đòi hỏi tất cả các service phải liên tục truy vấn vào cụm Redis tập trung chỉ để kiểm tra xem user là ai, gây ra điểm nghẽn cổ chai (Network bottleneck).",
+                "JSON Web Token (RFC 7519) giải quyết triệt để bài toán này bằng kiến trúc Tự Chứa (Self-contained & Stateless): Toàn bộ thông tin định danh của người dùng (`UserId`, `Email`, `Roles`, `Expiration`) được đóng gói ngay bên trong token. Bất kỳ microservice nào cũng có thể tự xác thực tính hợp lệ của token bằng thuật toán mật mã học mà không cần query vào bất kỳ database nào!"
+              ],
+              "codeTitle": "So sánh State-based Session vs Stateless JWT",
+              "codeLanguage": "text",
+              "codeContent": "┌────────────────────────────────┬────────────────────────────────┐\n│ Stateful Session (Cookie)      │ Stateless Token (JWT)          │\n├────────────────────────────────┼────────────────────────────────┤\n│ Máy chủ phải lưu Session trong RAM│ Máy chủ KHÔNG CẦN LƯU GÌ CẢ    │\n│ Khó scale ngang đa cụm server  │ Scale ngang vô tận (Stateless) │\n│ Dễ bị tấn công CSRF qua Cookie │ Miễn nhiễm CSRF khi lưu Header │\n│ Hủy session dễ dàng ngay lập tức│ Rất khó thu hồi trước khi hết hạn│\n└────────────────────────────────┴────────────────────────────────┘",
+              "calloutType": "tip",
+              "calloutTitle": "Lưu ý then chốt",
+              "calloutTitleVi": "Lưu ý then chốt",
+              "calloutText": "JWT sinh ra để 'Xác Thực Tính Toàn Vẹn' (Tamper-proof) chứ không phải để 'Bảo Mật Bí Mật Nội Dung'. Ai có token cũng có thể đọc được Payload!",
+              "calloutTextVi": "JWT sinh ra để 'Xác Thực Tính Toàn Vẹn' (Tamper-proof) chứ không phải để 'Bảo Mật Bí Mật Nội Dung'. Ai có token cũng có thể đọc được Payload!"
+            },
+            {
+              "heading": "2. Giải Phẫu 3 Phần Của JWT: Header, Payload và Signature",
+              "headingVi": "2. Giải Phẫu 3 Phần Của JWT: Header, Payload và Signature",
+              "paragraphs": [
+                "Một chuỗi JWT hợp lệ luôn có dạng: `xxxxx.yyyyy.zzzzz` gồm 3 phần ngăn cách bởi đúng 2 dấu chấm (`.`):",
+                "1. Header: Chứa thuật toán ký (`alg`: HS256, RS256, ES256) và loại token (`typ: JWT`).",
+                "2. Payload: Chứa các tuyên bố (Claims) về người dùng và siêu dữ liệu hệ thống.",
+                "- Registered Claims chuẩn: `sub` (Subject/UserId), `iss` (Issuer), `aud` (Audience), `exp` (Hạn hết hạn Unix timestamp), `nbf` (Có hiệu lực từ lúc nào), `iat` (Thời điểm sinh token), `jti` (Token UUID duy nhất).",
+                "- Custom Claims: `email`, `role`, `tenantId`, `permissions`.",
+                "3. Signature: Chữ ký mật mã học được tính toán từ `Header` + `Payload` + `SecretKey`. Nếu hacker sửa dù chỉ 1 ký tự trong Payload (ví dụ sửa `role: User` thành `role: Admin`), chữ ký sẽ không còn khớp và bị máy chủ từ chối ngay lập tức."
+              ],
+              "paragraphsVi": [
+                "Một chuỗi JWT hợp lệ luôn có dạng: `xxxxx.yyyyy.zzzzz` gồm 3 phần ngăn cách bởi đúng 2 dấu chấm (`.`):",
+                "1. Header: Chứa thuật toán ký (`alg`: HS256, RS256, ES256) và loại token (`typ: JWT`).",
+                "2. Payload: Chứa các tuyên bố (Claims) về người dùng và siêu dữ liệu hệ thống.",
+                "- Registered Claims chuẩn: `sub` (Subject/UserId), `iss` (Issuer), `aud` (Audience), `exp` (Hạn hết hạn Unix timestamp), `nbf` (Có hiệu lực từ lúc nào), `iat` (Thời điểm sinh token), `jti` (Token UUID duy nhất).",
+                "- Custom Claims: `email`, `role`, `tenantId`, `permissions`.",
+                "3. Signature: Chữ ký mật mã học được tính toán từ `Header` + `Payload` + `SecretKey`. Nếu hacker sửa dù chỉ 1 ký tự trong Payload (ví dụ sửa `role: User` thành `role: Admin`), chữ ký sẽ không còn khớp và bị máy chủ từ chối ngay lập tức."
+              ],
+              "codeTitle": "Cấu trúc JSON chi tiết bên trong Header và Payload",
+              "codeLanguage": "json",
+              "codeContent": "// 1. Header\n{\n  \"alg\": \"HS256\",\n  \"typ\": \"JWT\"\n}\n\n// 2. Payload\n{\n  \"sub\": \"usr_8829104\",\n  \"name\": \"Nguyen Van A\",\n  \"role\": \"SeniorDeveloper\",\n  \"iss\": \"https://auth.mycompany.com\",\n  \"aud\": \"https://api.mycompany.com\",\n  \"exp\": 1760544000,\n  \"iat\": 1760540400\n}\n\n// 3. Signature\n// HMACSHA256(Base64Url(Header) + \".\" + Base64Url(Payload), secret_key)",
+              "calloutType": "info",
+              "calloutTitle": "Định dạng thời gian Unix Timestamp",
+              "calloutTitleVi": "Định dạng thời gian Unix Timestamp",
+              "calloutText": "Trường `exp` và `iat` trong chuẩn RFC 7519 bắt buộc phải là số giây tính từ thời điểm 00:00:00 UTC ngày 01/01/1970 (Unix Epoch), không được dùng chuỗi ISO DateTime.",
+              "calloutTextVi": "Trường `exp` và `iat` trong chuẩn RFC 7519 bắt buộc phải là số giây tính từ thời điểm 00:00:00 UTC ngày 01/01/1970 (Unix Epoch), không được dùng chuỗi ISO DateTime."
+            },
+            {
+              "heading": "3. Phân Biệt Base64 Thường vs Base64Url (RFC 4648 §5)",
+              "headingVi": "3. Phân Biệt Base64 Thường vs Base64Url (RFC 4648 §5)",
+              "paragraphs": [
+                "Tại sao JWT không dùng Base64 tiêu chuẩn mà bắt buộc phải dùng **Base64Url**?",
+                "Trong Base64 thông thường, có 3 ký tự đặc biệt gây xung đột:",
+                "- Ký tự `+`: Khi truyền qua Query Param hoặc Form POST trên trình duyệt, `+` sẽ bị URL Parser tự động biến thành khoảng trắng ` `.",
+                "- Ký tự `/`: Trùng với dấu gạch chéo phân cấp đường dẫn URL (Path separator).",
+                "- Ký tự `=`: Ký tự đệm (Padding) ở cuối chuỗi thường bị trình duyệt hoặc Web Server cắt bỏ.",
+                "Chuẩn Base64Url (RFC 4648 §5) quy định 3 biến đổi đơn giản:",
+                "1. Thay thế tất cả ký tự `+` thành `-` (dấu gạch ngang).",
+                "2. Thay thế tất cả ký tự `/` thành `_` (dấu gạch dưới).",
+                "3. Cắt bỏ hoàn toàn các ký tự đệm `=` ở cuối chuỗi."
+              ],
+              "paragraphsVi": [
+                "Tại sao JWT không dùng Base64 tiêu chuẩn mà bắt buộc phải dùng **Base64Url**?",
+                "Trong Base64 thông thường, có 3 ký tự đặc biệt gây xung đột:",
+                "- Ký tự `+`: Khi truyền qua Query Param hoặc Form POST trên trình duyệt, `+` sẽ bị URL Parser tự động biến thành khoảng trắng ` `.",
+                "- Ký tự `/`: Trùng với dấu gạch chéo phân cấp đường dẫn URL (Path separator).",
+                "- Ký tự `=`: Ký tự đệm (Padding) ở cuối chuỗi thường bị trình duyệt hoặc Web Server cắt bỏ.",
+                "Chuẩn Base64Url (RFC 4648 §5) quy định 3 biến đổi đơn giản:",
+                "1. Thay thế tất cả ký tự `+` thành `-` (dấu gạch ngang).",
+                "2. Thay thế tất cả ký tự `/` thành `_` (dấu gạch dưới).",
+                "3. Cắt bỏ hoàn toàn các ký tự đệm `=` ở cuối chuỗi."
+              ],
+              "codeTitle": "Bảng chuyển đổi ký tự Base64 vs Base64Url",
+              "codeLanguage": "text",
+              "codeContent": "┌──────────────┬────────────────────────┬────────────────────────┐\n│ Ký Tự        │ Base64 Tiêu Chuẩn      │ Base64Url (Chuẩn JWT)  │\n├──────────────┼────────────────────────┼────────────────────────┤\n│ Giá trị 62   │ '+' (Plus)             │ '-' (Minus / Hyphen)   │\n│ Giá trị 63   │ '/' (Slash)            │ '_' (Underscore)       │\n│ Padding cuối │ '=' hoặc '=='          │ Bị loại bỏ hoàn toàn   │\n│ Tính an toàn │ Không an toàn trên URL │ An toàn trên Header/URL│\n└──────────────┴────────────────────────┴────────────────────────┘",
+              "calloutType": "warning",
+              "calloutTitle": "Lỗi 99% người mới mắc phải",
+              "calloutTitleVi": "Lỗi 99% người mới mắc phải",
+              "calloutText": "Nếu bạn dùng `Convert.ToBase64String` trong C# để tạo token, token sinh ra sẽ chứa dấu `+` và `/`. Khi client gửi lên qua URL hoặc Cookie, token sẽ bị lỗi giải mã không hợp lệ ngay lập tức!",
+              "calloutTextVi": "Nếu bạn dùng `Convert.ToBase64String` trong C# để tạo token, token sinh ra sẽ chứa dấu `+` và `/`. Khi client gửi lên qua URL hoặc Cookie, token sẽ bị lỗi giải mã không hợp lệ ngay lập tức!"
+            }
+          ]
+        },
+        {
+          "id": "jwt-bai-2-tu-viet-jwt-thu-cong-csharp",
+          "seriesId": "jwt-deep-dive-series",
+          "lessonNumber": "Bài 2",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Tự Viết JWT Thủ Công Bằng C# Thuần (Zero Thư Viện): Thuật Toán HMAC-SHA256 (HS256) Từ A-Z",
+          "titleVi": "Tự Viết JWT Thủ Công Bằng C# Thuần (Zero Thư Viện): Thuật Toán HMAC-SHA256 (HS256) Từ A-Z",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Tự tay hiện thực thuật toán sinh token và kiểm tra chữ ký HS256 chỉ bằng thư viện chuẩn của .NET, chống tấn công Timing Attack với CryptographicOperations.FixedTimeEquals.",
+          "summaryVi": "Tự tay hiện thực thuật toán sinh token và kiểm tra chữ ký HS256 chỉ bằng thư viện chuẩn của .NET, chống tấn công Timing Attack với CryptographicOperations.FixedTimeEquals.",
+          "tags": [
+            "csharp",
+            "hmacsha256",
+            "manual-jwt",
+            "cryptography",
+            "timing-attack"
+          ],
+          "sections": [
+            {
+              "heading": "1. Xây Dựng Hàm Base64UrlEncode & Base64UrlDecode Tối Ưu Bằng C#",
+              "headingVi": "1. Xây Dựng Hàm Base64UrlEncode & Base64UrlDecode Tối Ưu Bằng C#",
+              "paragraphs": [
+                "Trước khi sinh token, chúng ta cần 2 hàm chuyển đổi chuỗi nhị phân (byte array) sang Base64Url và ngược lại.",
+                "Trong .NET Core / .NET 8/9/10, chúng ta có thể tận dụng lớp `Base64Url` có sẵn hoặc tự viết bằng chuỗi thay thế."
+              ],
+              "paragraphsVi": [
+                "Trước khi sinh token, chúng ta cần 2 hàm chuyển đổi chuỗi nhị phân (byte array) sang Base64Url và ngược lại.",
+                "Trong .NET Core / .NET 8/9/10, chúng ta có thể tận dụng lớp `Base64Url` có sẵn hoặc tự viết bằng chuỗi thay thế."
+              ],
+              "codeTitle": "Hiện thực hàm Base64Url Encoder và Decoder trong C#",
+              "codeLanguage": "csharp",
+              "codeContent": "public static class Base64Url\n{\n    public static string Encode(byte[] input)\n    {\n        // Chuyển sang Base64 thường, sau đó thay thế ký tự theo chuẩn RFC 4648\n        string base64 = Convert.ToBase64String(input);\n        return base64.Replace(\"+\", \"-\").Replace(\"/\", \"_\").TrimEnd('=');\n    }\n\n    public static byte[] Decode(string input)\n    {\n        string base64 = input.Replace(\"-\", \"+\").Replace(\"_\", \"/\");\n        // Bù lại padding '=' nếu thiếu\n        switch (base64.Length % 4)\n        {\n            case 2: base64 += \"==\"; break;\n            case 3: base64 += \"=\"; break;\n        }\n        return Convert.FromBase64String(base64);\n    }\n}",
+              "calloutType": "tip",
+              "calloutTitle": "Lớp Base64Url có sẵn trong .NET 9+",
+              "calloutTitleVi": "Lớp Base64Url có sẵn trong .NET 9+",
+              "calloutText": "Từ .NET 9, Microsoft đã bổ sung chính thức lớp `System.Buffers.Text.Base64Url` giúp mã hóa trực tiếp mà không cần phân bổ chuỗi trung gian, đạt hiệu năng cực cao.",
+              "calloutTextVi": "Từ .NET 9, Microsoft đã bổ sung chính thức lớp `System.Buffers.Text.Base64Url` giúp mã hóa trực tiếp mà không cần phân bổ chuỗi trung gian, đạt hiệu năng cực cao."
+            },
+            {
+              "heading": "2. Tự Tạo JWT Token Bằng HMAC-SHA256 (HS256) Từ Đầu",
+              "headingVi": "2. Tự Tạo JWT Token Bằng HMAC-SHA256 (HS256) Từ Đầu",
+              "paragraphs": [
+                "Quy trình sinh token HS256 thủ công gồm 4 bước đơn giản:",
+                "1. Chuẩn bị JSON Header: `{\"alg\":\"HS256\",\"typ\":\"JWT\"}` $\rightarrow$ Base64UrlEncode.",
+                "2. Chuẩn bị JSON Payload chứa Claims $\rightarrow$ Base64UrlEncode.",
+                "3. Ghép chuỗi cần ký: `string unsignedToken = $\"{headerEncoded}.{payloadEncoded}\"`.",
+                "4. Dùng khóa bí mật (Secret Key) băm chuỗi trên bằng `HMACSHA256` $\rightarrow$ Base64UrlEncode chữ ký và ghép thành token hoàn chỉnh."
+              ],
+              "paragraphsVi": [
+                "Quy trình sinh token HS256 thủ công gồm 4 bước đơn giản:",
+                "1. Chuẩn bị JSON Header: `{\"alg\":\"HS256\",\"typ\":\"JWT\"}` $\rightarrow$ Base64UrlEncode.",
+                "2. Chuẩn bị JSON Payload chứa Claims $\rightarrow$ Base64UrlEncode.",
+                "3. Ghép chuỗi cần ký: `string unsignedToken = $\"{headerEncoded}.{payloadEncoded}\"`.",
+                "4. Dùng khóa bí mật (Secret Key) băm chuỗi trên bằng `HMACSHA256` $\rightarrow$ Base64UrlEncode chữ ký và ghép thành token hoàn chỉnh."
+              ],
+              "codeTitle": "Mã nguồn C# tự sinh JWT Token không dùng thư viện ngoài",
+              "codeLanguage": "csharp",
+              "codeContent": "using System.Security.Cryptography;\nusing System.Text;\nusing System.Text.Json;\n\npublic static class ManualJwtGenerator\n{\n    public static string CreateToken(object payloadData, string secretKey)\n    {\n        var header = new { alg = \"HS256\", typ = \"JWT\" };\n        \n        // 1. Serialize và Base64Url Header\n        byte[] headerBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(header));\n        string headerEncoded = Base64Url.Encode(headerBytes);\n        \n        // 2. Serialize và Base64Url Payload\n        byte[] payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payloadData));\n        string payloadEncoded = Base64Url.Encode(payloadBytes);\n        \n        // 3. Ghép phần Header và Payload\n        string messageToSign = $\"{headerEncoded}.{payloadEncoded}\";\n        byte[] messageBytes = Encoding.UTF8.GetBytes(messageToSign);\n        \n        // 4. Ký HMAC-SHA256 bằng Secret Key\n        byte[] keyBytes = Encoding.UTF8.GetBytes(secretKey);\n        using var hmac = new HMACSHA256(keyBytes);\n        byte[] signatureBytes = hmac.ComputeHash(messageBytes);\n        string signatureEncoded = Base64Url.Encode(signatureBytes);\n        \n        return $\"{messageToSign}.{signatureEncoded}\";\n    }\n}",
+              "calloutType": "info",
+              "calloutTitle": "Độ dài Secret Key tối thiểu",
+              "calloutTitleVi": "Độ dài Secret Key tối thiểu",
+              "calloutText": "Chuẩn RFC 7518 quy định: Khóa bí mật cho HMAC-SHA256 (HS256) bắt buộc phải có độ dài tối thiểu 256 bits (tương đương 32 bytes / 32 ký tự ASCII) để chống tấn công vét cạn (Brute-force).",
+              "calloutTextVi": "Chuẩn RFC 7518 quy định: Khóa bí mật cho HMAC-SHA256 (HS256) bắt buộc phải có độ dài tối thiểu 256 bits (tương đương 32 bytes / 32 ký tự ASCII) để chống tấn công vét cạn (Brute-force)."
+            },
+            {
+              "heading": "3. Xác Thực Token & Chống Tấn Công Timing Attack Với FixedTimeEquals",
+              "headingVi": "3. Xác Thực Token & Chống Tấn Công Timing Attack Với FixedTimeEquals",
+              "paragraphs": [
+                "Khi nhận được token từ client, chúng ta:",
+                "1. Tách chuỗi theo dấu `.` thành 3 phần.",
+                "2. Tính toán lại chữ ký mong đợi (Expected Signature) từ 2 phần đầu.",
+                "3. So sánh chữ ký vừa tính với chữ ký gửi lên trong token.",
+                "ĐIỂM NGUY HIỂM CHẾT NGƯỜI: Tuyệt đối không dùng toán tử so sánh chuỗi `if (signature == expectedSignature)`. Toán tử so sánh chuỗi sẽ dừng ngay ở ký tự sai đầu tiên, khiến thời gian xử lý nhanh hơn vài nano-giây. Hacker có thể đo thời gian phản hồi (Timing Attack) để dò từng ký tự của chữ ký!",
+                "Giải pháp: Bắt buộc dùng `CryptographicOperations.FixedTimeEquals` để so sánh byte với thời gian cố định độc lập với nội dung."
+              ],
+              "paragraphsVi": [
+                "Khi nhận được token từ client, chúng ta:",
+                "1. Tách chuỗi theo dấu `.` thành 3 phần.",
+                "2. Tính toán lại chữ ký mong đợi (Expected Signature) từ 2 phần đầu.",
+                "3. So sánh chữ ký vừa tính với chữ ký gửi lên trong token.",
+                "ĐIỂM NGUY HIỂM CHẾT NGƯỜI: Tuyệt đối không dùng toán tử so sánh chuỗi `if (signature == expectedSignature)`. Toán tử so sánh chuỗi sẽ dừng ngay ở ký tự sai đầu tiên, khiến thời gian xử lý nhanh hơn vài nano-giây. Hacker có thể đo thời gian phản hồi (Timing Attack) để dò từng ký tự của chữ ký!",
+                "Giải pháp: Bắt buộc dùng `CryptographicOperations.FixedTimeEquals` để so sánh byte với thời gian cố định độc lập với nội dung."
+              ],
+              "codeTitle": "Hàm xác thực JWT thủ công an toàn chống Timing Attack",
+              "codeLanguage": "csharp",
+              "codeContent": "public static bool ValidateToken(string token, string secretKey, out JsonDocument? payloadDoc)\n{\n    payloadDoc = null;\n    var parts = token.Split('.');\n    if (parts.Length != 3) return false;\n\n    string messageToSign = $\"{parts[0]}.{parts[1]}\";\n    byte[] expectedSigBytes;\n    using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secretKey)))\n    {\n        expectedSigBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(messageToSign));\n    }\n\n    byte[] actualSigBytes = Base64Url.Decode(parts[2]);\n\n    //  Bắt buộc so sánh an toàn bằng FixedTimeEquals\n    if (!CryptographicOperations.FixedTimeEquals(expectedSigBytes, actualSigBytes))\n    {\n        return false; // Chữ ký bị giả mạo!\n    }\n\n    // Kiểm tra thời hạn hết hạn (exp claim)\n    byte[] payloadBytes = Base64Url.Decode(parts[1]);\n    payloadDoc = JsonDocument.Parse(payloadBytes);\n    if (payloadDoc.RootElement.TryGetProperty(\"exp\", out var expElem))\n    {\n        long exp = expElem.GetInt64();\n        long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();\n        if (now > exp) return false; // Token đã hết hạn!\n    }\n\n    return true;\n}",
+              "calloutType": "tip",
+              "calloutTitle": "Hiểu bản chất",
+              "calloutTitleVi": "Hiểu bản chất",
+              "calloutText": "Khi tự tay code được logic này, bạn sẽ hiểu 100% cơ chế bên trong các thư viện lớn như JwtSecurityTokenHandler mà không còn coi JWT là chiếc hộp đen bí ẩn.",
+              "calloutTextVi": "Khi tự tay code được logic này, bạn sẽ hiểu 100% cơ chế bên trong các thư viện lớn như JwtSecurityTokenHandler mà không còn coi JWT là chiếc hộp đen bí ẩn."
+            }
+          ]
+        },
+        {
+          "id": "jwt-bai-3-ky-bat-doi-xung-rsa-rs256",
+          "seriesId": "jwt-deep-dive-series",
+          "lessonNumber": "Bài 3",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Ký Bất Đối Xứng RSA (RS256) & ECDSA (ES256): Private Key Ký, Public Key Xác Thực",
+          "titleVi": "Ký Bất Đối Xứng RSA (RS256) & ECDSA (ES256): Private Key Ký, Public Key Xác Thực",
+          "readingTime": "13 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Tại sao hệ thống Microservices doanh nghiệp chuộng thuật toán bất đối xứng RS256/ES256 hơn HS256? Cách ký bằng Private Key và phân phối Public Key cho các service con xác thực an toàn.",
+          "summaryVi": "Tại sao hệ thống Microservices doanh nghiệp chuộng thuật toán bất đối xứng RS256/ES256 hơn HS256? Cách ký bằng Private Key và phân phối Public Key cho các service con xác thực an toàn.",
+          "tags": [
+            "asymmetric",
+            "rsa",
+            "rs256",
+            "ecdsa",
+            "public-key"
+          ],
+          "sections": [
+            {
+              "heading": "1. Sự Khác Biệt Chí Mạng Giữa Đối Xứng (HS256) vs Bất Đối Xứng (RS256)",
+              "headingVi": "1. Sự Khác Biệt Chí Mạng Giữa Đối Xứng (HS256) vs Bất Đối Xứng (RS256)",
+              "paragraphs": [
+                "Trong thuật toán đối xứng (Symmetric - HS256): Cả server phát hành token (Identity Server) và server xác thực token (Payment Service, Order Service) đều phải dùng CHUNG MỘT Secret Key.",
+                "Rủi ro bảo mật khổng lồ: Nếu một microservice con cấp thấp bị hacker chiếm đoạt, hacker sẽ lấy được Secret Key này và có thể tự ký ra các token Admin giả mạo để xâm nhập toàn bộ hệ thống!",
+                "Trong thuật toán bất đối xứng (Asymmetric - RS256 / ES256):",
+                "- Khóa bí mật (Private Key): Chỉ duy nhất Identity Server nắm giữ để ký token.",
+                "- Khóa công khai (Public Key): Được phân phối rộng rãi cho tất cả các microservices con hoặc công khai qua endpoint `.well-known/jwks.json`.",
+                "- Các microservices con dùng Public Key để kiểm tra chữ ký nhưng KHÔNG THỂ DÙNG Public Key để tự ký token mới."
+              ],
+              "paragraphsVi": [
+                "Trong thuật toán đối xứng (Symmetric - HS256): Cả server phát hành token (Identity Server) và server xác thực token (Payment Service, Order Service) đều phải dùng CHUNG MỘT Secret Key.",
+                "Rủi ro bảo mật khổng lồ: Nếu một microservice con cấp thấp bị hacker chiếm đoạt, hacker sẽ lấy được Secret Key này và có thể tự ký ra các token Admin giả mạo để xâm nhập toàn bộ hệ thống!",
+                "Trong thuật toán bất đối xứng (Asymmetric - RS256 / ES256):",
+                "- Khóa bí mật (Private Key): Chỉ duy nhất Identity Server nắm giữ để ký token.",
+                "- Khóa công khai (Public Key): Được phân phối rộng rãi cho tất cả các microservices con hoặc công khai qua endpoint `.well-known/jwks.json`.",
+                "- Các microservices con dùng Public Key để kiểm tra chữ ký nhưng KHÔNG THỂ DÙNG Public Key để tự ký token mới."
+              ],
+              "codeTitle": "Mô hình phân phối khóa trong Microservices",
+              "codeLanguage": "text",
+              "codeContent": "[Auth / Identity Server]\n   │ (Giữ Private Key bí mật tuyệt đối: private_key.pem)\n   ▼\n[Phát hành JWT Token RS256]\n   │\n   ├──► [Order Microservice]   ◄── Chỉ cần Public Key (public_key.pem) để Verify\n   ├──► [Payment Microservice] ◄── Chỉ cần Public Key (public_key.pem) để Verify\n   └──► [Frontend / Mobile App]◄── Có thể Verify qua JWKS công khai",
+              "calloutType": "tip",
+              "calloutTitle": "Chuẩn mở JWKS (JSON Web Key Set)",
+              "calloutTitleVi": "Chuẩn mở JWKS (JSON Web Key Set)",
+              "calloutText": "Các dịch vụ Identity Provider lớn (Google, Auth0, Keycloak, Microsoft Entra ID) đều sử dụng thuật toán bất đối xứng RS256 và công khai Public Key qua URL `/.well-known/jwks.json`.",
+              "calloutTextVi": "Các dịch vụ Identity Provider lớn (Google, Auth0, Keycloak, Microsoft Entra ID) đều sử dụng thuật toán bất đối xứng RS256 và công khai Public Key qua URL `/.well-known/jwks.json`."
+            },
+            {
+              "heading": "2. Hiện Thực Ký & Xác Thực RS256 Thủ Công Bằng C# RSA",
+              "headingVi": "2. Hiện Thực Ký & Xác Thực RS256 Thủ Công Bằng C# RSA",
+              "paragraphs": [
+                "Chúng ta sử dụng lớp `System.Security.Cryptography.RSA` chuẩn của .NET để tạo cặp khóa 2048-bit, thực hiện hàm `SignData` với thuật toán băm `HashAlgorithmName.SHA256` và đệm `RSASignaturePadding.Pkcs1`."
+              ],
+              "paragraphsVi": [
+                "Chúng ta sử dụng lớp `System.Security.Cryptography.RSA` chuẩn của .NET để tạo cặp khóa 2048-bit, thực hiện hàm `SignData` với thuật toán băm `HashAlgorithmName.SHA256` và đệm `RSASignaturePadding.Pkcs1`."
+              ],
+              "codeTitle": "Ký và xác thực RS256 bằng RSA trong C#",
+              "codeLanguage": "csharp",
+              "codeContent": "using System.Security.Cryptography;\nusing System.Text;\n\npublic class RsaJwtEngine\n{\n    // 1. Ký bằng Private Key tại Identity Server\n    public static string SignRS256(string messageToSign, RSA privateKeyRsa)\n    {\n        byte[] dataBytes = Encoding.UTF8.GetBytes(messageToSign);\n        byte[] signature = privateKeyRsa.SignData(\n            dataBytes, \n            HashAlgorithmName.SHA256, \n            RSASignaturePadding.Pkcs1);\n            \n        return Base64Url.Encode(signature);\n    }\n\n    // 2. Xác thực bằng Public Key tại Microservices con\n    public static bool VerifyRS256(string messageToSign, string signatureEncoded, RSA publicKeyRsa)\n    {\n        byte[] dataBytes = Encoding.UTF8.GetBytes(messageToSign);\n        byte[] signatureBytes = Base64Url.Decode(signatureEncoded);\n        \n        return publicKeyRsa.VerifyData(\n            dataBytes, \n            signatureBytes, \n            HashAlgorithmName.SHA256, \n            RSASignaturePadding.Pkcs1);\n    }\n}",
+              "calloutType": "info",
+              "calloutTitle": "Lưu trữ khóa dưới dạng PEM",
+              "calloutTitleVi": "Lưu trữ khóa dưới dạng PEM",
+              "calloutText": "Trong .NET, bạn có thể dễ dàng đọc file khóa chuẩn PEM bằng hàm `rsa.ImportFromPem(File.ReadAllText(\"private.pem\"))` hoặc `rsa.ImportFromPem(File.ReadAllText(\"public.pem\"))`.",
+              "calloutTextVi": "Trong .NET, bạn có thể dễ dàng đọc file khóa chuẩn PEM bằng hàm `rsa.ImportFromPem(File.ReadAllText(\"private.pem\"))` hoặc `rsa.ImportFromPem(File.ReadAllText(\"public.pem\"))`."
+            },
+            {
+              "heading": "3. So Sánh RS256 vs ES256 (Đường Cong Elliptic - ECDSA)",
+              "headingVi": "3. So Sánh RS256 vs ES256 (Đường Cong Elliptic - ECDSA)",
+              "paragraphs": [
+                "Mặc dù RS256 là tiêu chuẩn phổ biến nhất, ngày càng nhiều tổ chức chuyển sang **ES256 (ECDSA dùng đường cong P-256)**:",
+                "- Kích thước chữ ký: Chữ ký RS256 dài tới 256 bytes (khoảng 342 ký tự Base64), trong khi chữ ký ES256 chỉ dài 64 bytes (khoảng 86 ký tự Base64), giúp giảm 40% độ dài token gửi qua HTTP Header.",
+                "- Tốc độ xử lý: Ký và kiểm tra ECDSA tốn ít CPU hơn RSA 2048-bit gấp 3 lần.",
+                "- Độ an toàn: Khóa ECDSA 256-bit có độ mạnh tương đương khóa RSA 3072-bit."
+              ],
+              "paragraphsVi": [
+                "Mặc dù RS256 là tiêu chuẩn phổ biến nhất, ngày càng nhiều tổ chức chuyển sang **ES256 (ECDSA dùng đường cong P-256)**:",
+                "- Kích thước chữ ký: Chữ ký RS256 dài tới 256 bytes (khoảng 342 ký tự Base64), trong khi chữ ký ES256 chỉ dài 64 bytes (khoảng 86 ký tự Base64), giúp giảm 40% độ dài token gửi qua HTTP Header.",
+                "- Tốc độ xử lý: Ký và kiểm tra ECDSA tốn ít CPU hơn RSA 2048-bit gấp 3 lần.",
+                "- Độ an toàn: Khóa ECDSA 256-bit có độ mạnh tương đương khóa RSA 3072-bit."
+              ],
+              "codeTitle": "Khởi tạo ECDSA P-256 trong C#",
+              "codeLanguage": "csharp",
+              "codeContent": "// Tạo cặp khóa ECDSA P-256\nusing var ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);\n\n// Ký token ES256\nbyte[] signature = ecdsa.SignData(Encoding.UTF8.GetBytes(messageToSign), HashAlgorithmName.SHA256);",
+              "calloutType": "tip",
+              "calloutTitle": "Lựa chọn thực tế",
+              "calloutTitleVi": "Lựa chọn thực tế",
+              "calloutText": "Nếu hệ thống của bạn giao tiếp giữa các service nội bộ: Dùng ES256 để tối ưu băng thông mạng. Nếu cần tương thích với các thư viện cũ của bên thứ 3: Hãy dùng RS256.",
+              "calloutTextVi": "Nếu hệ thống của bạn giao tiếp giữa các service nội bộ: Dùng ES256 để tối ưu băng thông mạng. Nếu cần tương thích với các thư viện cũ của bên thứ 3: Hãy dùng RS256."
+            }
+          ]
+        },
+        {
+          "id": "jwt-bai-4-thu-vien-dotnet-securitytoken",
+          "seriesId": "jwt-deep-dive-series",
+          "lessonNumber": "Bài 4",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "JWT Bằng Thư Viện Trong .NET: JwtSecurityTokenHandler vs JsonWebTokenHandler Thế Hệ Mới",
+          "titleVi": "JWT Bằng Thư Viện Trong .NET: JwtSecurityTokenHandler vs JsonWebTokenHandler Thế Hệ Mới",
+          "readingTime": "14 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "So sánh chi tiết 2 thư viện chính thức của Microsoft: JwtSecurityTokenHandler truyền thống vs JsonWebTokenHandler hiện đại nhanh gấp 3 lần, cùng cách cấu hình TokenValidationParameters chuẩn xác.",
+          "summaryVi": "So sánh chi tiết 2 thư viện chính thức của Microsoft: JwtSecurityTokenHandler truyền thống vs JsonWebTokenHandler hiện đại nhanh gấp 3 lần, cùng cách cấu hình TokenValidationParameters chuẩn xác.",
+          "tags": [
+            "dotnet",
+            "jwt-handler",
+            "jsonwebtokenhandler",
+            "performance",
+            "tokenvalidation"
+          ],
+          "sections": [
+            {
+              "heading": "1. Cuộc Cách Mạng Hiệu Năng: JwtSecurityTokenHandler vs JsonWebTokenHandler",
+              "headingVi": "1. Cuộc Cách Mạng Hiệu Năng: JwtSecurityTokenHandler vs JsonWebTokenHandler",
+              "paragraphs": [
+                "Nhiều lập trình viên .NET vẫn theo thói quen cũ sử dụng gói `System.IdentityModel.Tokens.Jwt` với lớp `JwtSecurityTokenHandler`.",
+                "Lớp này ra đời từ thời .NET Framework cổ điển. Khi parse token, nó phân bổ rất nhiều đối tượng `Claim`, `ClaimsIdentity` và chuỗi string vào GC Heap, gây áp lực dọn rác Gen 0.",
+                "Microsoft đã viết lại hoàn toàn engine xử lý JWT mới mang tên `Microsoft.IdentityModel.JsonWebTokens` với lớp **`JsonWebTokenHandler`**:",
+                "- Tận dụng `ReadOnlySpan<char>` và memory slicing zero-allocation.",
+                "- Tốc độ xác thực token nhanh hơn từ 2.5 đến 3.2 lần.",
+                "- Giảm tới 60% lượng phân bổ bộ nhớ RAM.",
+                "- Được ASP.NET Core 8/9/10 chọn làm engine mặc định ngầm bên dưới."
+              ],
+              "paragraphsVi": [
+                "Nhiều lập trình viên .NET vẫn theo thói quen cũ sử dụng gói `System.IdentityModel.Tokens.Jwt` với lớp `JwtSecurityTokenHandler`.",
+                "Lớp này ra đời từ thời .NET Framework cổ điển. Khi parse token, nó phân bổ rất nhiều đối tượng `Claim`, `ClaimsIdentity` và chuỗi string vào GC Heap, gây áp lực dọn rác Gen 0.",
+                "Microsoft đã viết lại hoàn toàn engine xử lý JWT mới mang tên `Microsoft.IdentityModel.JsonWebTokens` với lớp **`JsonWebTokenHandler`**:",
+                "- Tận dụng `ReadOnlySpan<char>` và memory slicing zero-allocation.",
+                "- Tốc độ xác thực token nhanh hơn từ 2.5 đến 3.2 lần.",
+                "- Giảm tới 60% lượng phân bổ bộ nhớ RAM.",
+                "- Được ASP.NET Core 8/9/10 chọn làm engine mặc định ngầm bên dưới."
+              ],
+              "codeTitle": "Bảng so sánh Benchmark giữa 2 thư viện Microsoft",
+              "codeLanguage": "text",
+              "codeContent": "┌────────────────────────────────┬──────────────────────────────┬──────────────────────────────┐\n│ Tiêu Chí Đo Lường              │ JwtSecurityTokenHandler (Cũ) │ JsonWebTokenHandler (Mới)    │\n├────────────────────────────────┼──────────────────────────────┼──────────────────────────────┤\n│ Package NuGet                  │ System.IdentityModel.Tokens  │ Microsoft.IdentityModel.Tokens│\n│ Thời gian xác thực (Validate)  │ ~1.85 micro-giây             │ ~0.58 micro-giây (Nhanh x3)  │\n│ Bộ nhớ phân bổ (Heap Allocated)│ 2,140 Bytes / request        │ 860 Bytes / request (-60%)   │\n│ Hỗ trợ Span & UTF8 trực tiếp   │ Không                        │ Có (Zero-Copy)               │\n│ Khuyên dùng cho .NET 8/9/10    │ Bảo trì ứng dụng cũ          │ Bắt buộc cho dự án mới       │\n└────────────────────────────────┴──────────────────────────────┴──────────────────────────────┘",
+              "calloutType": "tip",
+              "calloutTitle": "Cài đặt package mới",
+              "calloutTitleVi": "Cài đặt package mới",
+              "calloutText": "Chạy lệnh `dotnet add package Microsoft.IdentityModel.JsonWebTokens` để tận dụng ngay engine siêu tốc này.",
+              "calloutTextVi": "Chạy lệnh `dotnet add package Microsoft.IdentityModel.JsonWebTokens` để tận dụng ngay engine siêu tốc này."
+            },
+            {
+              "heading": "2. Tạo Token Bằng JsonWebTokenHandler Thế Hệ Mới",
+              "headingVi": "2. Tạo Token Bằng JsonWebTokenHandler Thế Hệ Mới",
+              "paragraphs": [
+                "Cách sử dụng `JsonWebTokenHandler` với đối tượng `SecurityTokenDescriptor` vô cùng mạch lạc và tường minh."
+              ],
+              "paragraphsVi": [
+                "Cách sử dụng `JsonWebTokenHandler` với đối tượng `SecurityTokenDescriptor` vô cùng mạch lạc và tường minh."
+              ],
+              "codeTitle": "Mã nguồn phát hành Token với JsonWebTokenHandler",
+              "codeLanguage": "csharp",
+              "codeContent": "using Microsoft.IdentityModel.JsonWebTokens;\nusing Microsoft.IdentityModel.Tokens;\nusing System.Security.Claims;\nusing System.Text;\n\npublic static class TokenService\n{\n    public static string GenerateJwt(string userId, string email, string role, string secretKey)\n    {\n        var handler = new JsonWebTokenHandler();\n        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));\n        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);\n\n        var tokenDescriptor = new SecurityTokenDescriptor\n        {\n            Issuer = \"https://auth.mycompany.com\",\n            Audience = \"https://api.mycompany.com\",\n            Subject = new ClaimsIdentity(new[]\n            {\n                new Claim(JwtRegisteredClaimNames.Sub, userId),\n                new Claim(JwtRegisteredClaimNames.Email, email),\n                new Claim(ClaimTypes.Role, role),\n                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())\n            }),\n            Expires = DateTime.UtcNow.AddMinutes(30),\n            SigningCredentials = credentials\n        };\n\n        return handler.CreateToken(tokenDescriptor);\n    }\n}",
+              "calloutType": "info",
+              "calloutTitle": "Tự động quản lý UTC",
+              "calloutTitleVi": "Tự động quản lý UTC",
+              "calloutText": "Luôn dùng `DateTime.UtcNow` thay vì `DateTime.Now` để tránh lỗi lệch múi giờ khi server chạy trên các đám mây ở quốc gia khác.",
+              "calloutTextVi": "Luôn dùng `DateTime.UtcNow` thay vì `DateTime.Now` để tránh lỗi lệch múi giờ khi server chạy trên các đám mây ở quốc gia khác."
+            },
+            {
+              "heading": "3. Cấu Hình TokenValidationParameters Chuẩn Xác: Lỗi ClockSkew 5 Phút",
+              "headingVi": "3. Cấu Hình TokenValidationParameters Chuẩn Xác: Lỗi ClockSkew 5 Phút",
+              "paragraphs": [
+                "Rất nhiều lập trình viên ngạc nhiên: 'Tại sao tôi đặt token hết hạn sau 1 phút, nhưng sau 3 phút token vẫn gọi API thành công?'.",
+                "Nguyên nhân: Mặc định Microsoft đặt thuộc tính `ClockSkew = TimeSpan.FromMinutes(5)`. Điều này để phòng ngừa việc đồng hồ giữa máy chủ Auth và máy chủ API bị lệch vài giây.",
+                "Trong môi trường Production hiện đại với đồng bộ thời gian NTP, bạn NÊN đặt `ClockSkew = TimeSpan.Zero` hoặc tối đa 30 giây để token hết hạn đúng chính xác từng giây."
+              ],
+              "paragraphsVi": [
+                "Rất nhiều lập trình viên ngạc nhiên: 'Tại sao tôi đặt token hết hạn sau 1 phút, nhưng sau 3 phút token vẫn gọi API thành công?'.",
+                "Nguyên nhân: Mặc định Microsoft đặt thuộc tính `ClockSkew = TimeSpan.FromMinutes(5)`. Điều này để phòng ngừa việc đồng hồ giữa máy chủ Auth và máy chủ API bị lệch vài giây.",
+                "Trong môi trường Production hiện đại với đồng bộ thời gian NTP, bạn NÊN đặt `ClockSkew = TimeSpan.Zero` hoặc tối đa 30 giây để token hết hạn đúng chính xác từng giây."
+              ],
+              "codeTitle": "Cấu hình xác thực với ClockSkew = TimeSpan.Zero",
+              "codeLanguage": "csharp",
+              "codeContent": "public static async Task<TokenValidationResult> ValidateJwtAsync(string token, string secretKey)\n{\n    var handler = new JsonWebTokenHandler();\n    var validationParameters = new TokenValidationParameters\n    {\n        ValidateIssuer = true,\n        ValidIssuer = \"https://auth.mycompany.com\",\n        \n        ValidateAudience = true,\n        ValidAudience = \"https://api.mycompany.com\",\n        \n        ValidateIssuerSigningKey = true,\n        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),\n        \n        ValidateLifetime = true,\n        ClockSkew = TimeSpan.Zero //  Bắt buộc đặt ClockSkew = Zero để hết hạn chuẩn xác!\n    };\n\n    return await handler.ValidateTokenAsync(token, validationParameters);\n}",
+              "calloutType": "warning",
+              "calloutTitle": "Cảnh báo bảo mật",
+              "calloutTitleVi": "Cảnh báo bảo mật",
+              "calloutText": "Nếu quên `ValidateLifetime = true` hoặc không set `ClockSkew`, một token đã bị lộ dù đã hết hạn từ 3 ngày trước vẫn có thể bị kẻ gian lợi dụng truy cập trái phép.",
+              "calloutTextVi": "Nếu quên `ValidateLifetime = true` hoặc không set `ClockSkew`, một token đã bị lộ dù đã hết hạn từ 3 ngày trước vẫn có thể bị kẻ gian lợi dụng truy cập trái phép."
+            }
+          ]
+        },
+        {
+          "id": "jwt-bai-5-aspnet-core-pipeline-authorization",
+          "seriesId": "jwt-deep-dive-series",
+          "lessonNumber": "Bài 5",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Tích Hợp ASP.NET Core Pipeline, Role-Based & Policy-Based Authorization",
+          "titleVi": "Tích Hợp ASP.NET Core Pipeline, Role-Based & Policy-Based Authorization",
+          "readingTime": "13 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Tích hợp AddJwtBearer vào ASP.NET Core pipeline, phân quyền đa tầng Role-Based vs Policy-Based, và kỹ thuật trích xuất token cho SignalR WebSocket qua Query String.",
+          "summaryVi": "Tích hợp AddJwtBearer vào ASP.NET Core pipeline, phân quyền đa tầng Role-Based vs Policy-Based, và kỹ thuật trích xuất token cho SignalR WebSocket qua Query String.",
+          "tags": [
+            "aspnet-core",
+            "jwtbearer",
+            "policy-based",
+            "signalr",
+            "authorization"
+          ],
+          "sections": [
+            {
+              "heading": "1. Đăng Ký Dịch Vụ AddAuthentication & AddJwtBearer Trong Program.cs",
+              "headingVi": "1. Đăng Ký Dịch Vụ AddAuthentication & AddJwtBearer Trong Program.cs",
+              "paragraphs": [
+                "Trong ASP.NET Core, chúng ta tích hợp xác thực JWT thông qua package `Microsoft.AspNetCore.Authentication.JwtBearer`.",
+                "Thứ tự middleware trong `Program.cs` có ý nghĩa sống còn: `app.UseAuthentication()` BẮT BUỘC phải nằm trước `app.UseAuthorization()`. Nếu đảo ngược thứ tự, hệ thống sẽ luôn trả về lỗi 401 Unauthorized."
+              ],
+              "paragraphsVi": [
+                "Trong ASP.NET Core, chúng ta tích hợp xác thực JWT thông qua package `Microsoft.AspNetCore.Authentication.JwtBearer`.",
+                "Thứ tự middleware trong `Program.cs` có ý nghĩa sống còn: `app.UseAuthentication()` BẮT BUỘC phải nằm trước `app.UseAuthorization()`. Nếu đảo ngược thứ tự, hệ thống sẽ luôn trả về lỗi 401 Unauthorized."
+              ],
+              "codeTitle": "Cấu hình Program.cs chuẩn mực cho Web API",
+              "codeLanguage": "csharp",
+              "codeContent": "using Microsoft.AspNetCore.Authentication.JwtBearer;\nusing Microsoft.IdentityModel.Tokens;\nusing System.Text;\n\nvar builder = WebApplication.CreateBuilder(args);\n\n// 1. Đăng ký Authentication Middleware với Scheme JwtBearer\nbuilder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)\n    .AddJwtBearer(options =>\n    {\n        options.TokenValidationParameters = new TokenValidationParameters\n        {\n            ValidateIssuer = true,\n            ValidIssuer = builder.Configuration[\"Jwt:Issuer\"],\n            ValidateAudience = true,\n            ValidAudience = builder.Configuration[\"Jwt:Audience\"],\n            ValidateIssuerSigningKey = true,\n            IssuerSigningKey = new SymmetricSecurityKey(\n                Encoding.UTF8.GetBytes(builder.Configuration[\"Jwt:Key\"]!)),\n            ValidateLifetime = true,\n            ClockSkew = TimeSpan.Zero\n        };\n        \n        // Hỗ trợ truyền JWT qua Query String cho SignalR WebSockets\n        options.Events = new JwtBearerEvents\n        {\n            OnMessageReceived = context =>\n            {\n                var accessToken = context.Request.Query[\"access_token\"];\n                var path = context.HttpContext.Request.Path;\n                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments(\"/hubs\"))\n                {\n                    context.Token = accessToken;\n                }\n                return Task.CompletedTask;\n            }\n        };\n    });\n\nbuilder.Services.AddAuthorization();\n\nvar app = builder.Build();\n\napp.UseAuthentication(); //  BẮT BUỘC NẰM TRƯỚC\napp.UseAuthorization();\n\napp.MapControllers();\napp.Run();",
+              "calloutType": "tip",
+              "calloutTitle": "Bắt buộc cho SignalR",
+              "calloutTitleVi": "Bắt buộc cho SignalR",
+              "calloutText": "Trình duyệt không cho phép gửi Custom Header `Authorization: Bearer` trong kết nối WebSocket tiêu chuẩn của JavaScript. Sự kiện `OnMessageReceived` đọc từ query `?access_token=` là giải pháp cứu cánh duy nhất.",
+              "calloutTextVi": "Trình duyệt không cho phép gửi Custom Header `Authorization: Bearer` trong kết nối WebSocket tiêu chuẩn của JavaScript. Sự kiện `OnMessageReceived` đọc từ query `?access_token=` là giải pháp cứu cánh duy nhất."
+            },
+            {
+              "heading": "2. Phân Quyền Theo Role vs Phân Quyền Theo Policy (Policy-Based Authorization)",
+              "headingVi": "2. Phân Quyền Theo Role vs Phân Quyền Theo Policy (Policy-Based Authorization)",
+              "paragraphs": [
+                "Cách làm cũ (Role-Based): `[Authorize(Roles = \"Admin,SuperUser\")]`. Cách này nhanh nhưng bị cứng nhắc (hardcoded). Nếu ngày mai doanh nghiệp sinh thêm vai trò 'RegionalManager', bạn phải sửa code và deploy lại toàn bộ ứng dụng.",
+                "Cách làm hiện đại (Policy-Based): Nhóm các điều kiện nghiệp vụ thành một 'Chính sách' (Policy).",
+                "Ví dụ Policy `VipOrManager`: Yêu cầu user vừa phải có role Manager, vừa phải thuộc phòng ban 'Finance' và có tuổi đời tài khoản trên 2 năm."
+              ],
+              "paragraphsVi": [
+                "Cách làm cũ (Role-Based): `[Authorize(Roles = \"Admin,SuperUser\")]`. Cách này nhanh nhưng bị cứng nhắc (hardcoded). Nếu ngày mai doanh nghiệp sinh thêm vai trò 'RegionalManager', bạn phải sửa code và deploy lại toàn bộ ứng dụng.",
+                "Cách làm hiện đại (Policy-Based): Nhóm các điều kiện nghiệp vụ thành một 'Chính sách' (Policy).",
+                "Ví dụ Policy `VipOrManager`: Yêu cầu user vừa phải có role Manager, vừa phải thuộc phòng ban 'Finance' và có tuổi đời tài khoản trên 2 năm."
+              ],
+              "codeTitle": "Đăng ký Policy-Based Authorization và Custom Handler",
+              "codeLanguage": "csharp",
+              "codeContent": "builder.Services.AddAuthorization(options =>\n{\n    // 1. Policy đơn giản theo Claim\n    options.AddPolicy(\"RequireAdminOnly\", policy => policy.RequireRole(\"Admin\"));\n    \n    // 2. Policy phức tạp kết hợp nhiều điều kiện\n    options.AddPolicy(\"SeniorFinancePolicy\", policy =>\n        policy.RequireRole(\"Manager\")\n              .RequireClaim(\"Department\", \"Finance\")\n              .RequireClaim(\"ClearanceLevel\", \"Tier3\"));\n});\n\n// Áp dụng lên Controller hoặc Minimal API:\napp.MapDelete(\"/api/orders/{id}\", (int id) => Results.Ok())\n   .RequireAuthorization(\"SeniorFinancePolicy\");",
+              "calloutType": "info",
+              "calloutTitle": "Lợi ích của Policy",
+              "calloutTitleVi": "Lợi ích của Policy",
+              "calloutText": "Khi thay đổi luật nghiệp vụ, bạn chỉ cần cập nhật định nghĩa Policy tại một file cấu hình duy nhất mà không phải chạm vào từng Controller.",
+              "calloutTextVi": "Khi thay đổi luật nghiệp vụ, bạn chỉ cần cập nhật định nghĩa Policy tại một file cấu hình duy nhất mà không phải chạm vào từng Controller."
+            },
+            {
+              "heading": "3. Đọc Dữ Liệu Claims Từ HttpContext.User Trong Controller",
+              "headingVi": "3. Đọc Dữ Liệu Claims Từ HttpContext.User Trong Controller",
+              "paragraphs": [
+                "Sau khi qua middleware xác thực thành công, ASP.NET Core tự động giải mã toàn bộ Claims trong JWT và nạp vào đối tượng `ClaimsPrincipal` tại `HttpContext.User`.",
+                "Bạn có thể viết các Extension Method để lấy `UserId` hoặc `TenantId` một cách an toàn và dễ đọc."
+              ],
+              "paragraphsVi": [
+                "Sau khi qua middleware xác thực thành công, ASP.NET Core tự động giải mã toàn bộ Claims trong JWT và nạp vào đối tượng `ClaimsPrincipal` tại `HttpContext.User`.",
+                "Bạn có thể viết các Extension Method để lấy `UserId` hoặc `TenantId` một cách an toàn và dễ đọc."
+              ],
+              "codeTitle": "Extension Method lấy User Context từ ClaimsPrincipal",
+              "codeLanguage": "csharp",
+              "codeContent": "public static class ClaimsPrincipalExtensions\n{\n    public static string GetUserId(this ClaimsPrincipal user)\n    {\n        return user.FindFirst(ClaimTypes.NameIdentifier)?.Value \n            ?? user.FindFirst(\"sub\")?.Value \n            ?? throw new UnauthorizedAccessException(\"Token thiếu Claim User Identifier!\");\n    }\n\n    public static string? GetEmail(this ClaimsPrincipal user) =>\n        user.FindFirst(ClaimTypes.Email)?.Value;\n}\n\n// Cách dùng trong Minimal API:\napp.MapGet(\"/api/me\", (ClaimsPrincipal user) => \n{\n    var userId = user.GetUserId();\n    return Results.Ok(new { UserId = userId, Email = user.GetEmail() });\n}).RequireAuthorization();",
+              "calloutType": "tip",
+              "calloutTitle": "Map Inbound Claims",
+              "calloutTitleVi": "Map Inbound Claims",
+              "calloutText": "ASP.NET Core mặc định hay tự động chuyển `sub` thành `http://schemas.xmlsoap.org/.../nameidentifier`. Bạn có thể tắt tính năng mapping phiền toái này bằng lệnh `JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();`.",
+              "calloutTextVi": "ASP.NET Core mặc định hay tự động chuyển `sub` thành `http://schemas.xmlsoap.org/.../nameidentifier`. Bạn có thể tắt tính năng mapping phiền toái này bằng lệnh `JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();`."
+            }
+          ]
+        },
+        {
+          "id": "jwt-bai-6-production-security-refresh-tokens",
+          "seriesId": "jwt-deep-dive-series",
+          "lessonNumber": "Bài 6",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
+          "title": "Bảo Mật Production: Refresh Token Rotation, Thu Hồi Token (Blacklist Redis) & 4 Lỗ Hổng Tử Huyệt",
+          "titleVi": "Bảo Mật Production: Refresh Token Rotation, Thu Hồi Token (Blacklist Redis) & 4 Lỗ Hổng Tử Huyệt",
+          "readingTime": "15 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Giải quyết bài toán thu hồi token trong hệ thống Stateless: Cơ chế Refresh Token Rotation chống rò rỉ, kỹ thuật Token Blacklist trên Redis, và phòng ngừa 4 lỗ hổng bảo mật Alg: None, Key Confusion.",
+          "summaryVi": "Giải quyết bài toán thu hồi token trong hệ thống Stateless: Cơ chế Refresh Token Rotation chống rò rỉ, kỹ thuật Token Blacklist trên Redis, và phòng ngừa 4 lỗ hổng bảo mật Alg: None, Key Confusion.",
+          "tags": [
+            "production",
+            "refresh-token",
+            "redis-blacklist",
+            "security-vulnerabilities",
+            "alg-none"
+          ],
+          "sections": [
+            {
+              "heading": "1. Chiến Lược Refresh Token Rotation (RTR) Chống Đánh Cắp Token",
+              "headingVi": "1. Chiến Lược Refresh Token Rotation (RTR) Chống Đánh Cắp Token",
+              "paragraphs": [
+                "Vì JWT là Stateless nên một khi đã phát hành, máy chủ KHÔNG THỂ HỦY BỎ token đó cho đến khi nó tự hết hạn.",
+                "Nếu bạn cấp một Access Token có hạn 30 ngày: Nếu hacker đánh cắp được token, chúng sẽ tự do hoành hành suốt 30 ngày mà bạn hoàn toàn bất lực!",
+                "Giải pháp chuẩn Enterprise: **Refresh Token Rotation (RTR)**:",
+                "1. Access Token: Thời gian sống cực ngắn (10 đến 15 phút), dùng để gọi API.",
+                "2. Refresh Token: Thời gian sống dài (7 đến 30 ngày), lưu mã băm an toàn trong Database hoặc Redis kèm cờ trạng thái (`IsUsed`, `IsRevoked`).",
+                "3. Cơ chế Rotation: Mỗi khi client gửi Refresh Token lên để xin cấp lại Access Token mới, máy chủ LẬP TỨC HỦY NGAY Refresh Token cũ đó và cấp một Refresh Token hoàn toàn mới.",
+                "4. Phát hiện Token Reuse (Bị hack): Nếu một Refresh Token đã từng bị dùng rồi mà lại có người gửi lên lần thứ 2, hệ thống lập tức phát hiện có kẻ gian đánh cắp token và TỰ ĐỘNG KHÓA TOÀN BỘ phiên đăng nhập của người dùng đó!"
+              ],
+              "paragraphsVi": [
+                "Vì JWT là Stateless nên một khi đã phát hành, máy chủ KHÔNG THỂ HỦY BỎ token đó cho đến khi nó tự hết hạn.",
+                "Nếu bạn cấp một Access Token có hạn 30 ngày: Nếu hacker đánh cắp được token, chúng sẽ tự do hoành hành suốt 30 ngày mà bạn hoàn toàn bất lực!",
+                "Giải pháp chuẩn Enterprise: **Refresh Token Rotation (RTR)**:",
+                "1. Access Token: Thời gian sống cực ngắn (10 đến 15 phút), dùng để gọi API.",
+                "2. Refresh Token: Thời gian sống dài (7 đến 30 ngày), lưu mã băm an toàn trong Database hoặc Redis kèm cờ trạng thái (`IsUsed`, `IsRevoked`).",
+                "3. Cơ chế Rotation: Mỗi khi client gửi Refresh Token lên để xin cấp lại Access Token mới, máy chủ LẬP TỨC HỦY NGAY Refresh Token cũ đó và cấp một Refresh Token hoàn toàn mới.",
+                "4. Phát hiện Token Reuse (Bị hack): Nếu một Refresh Token đã từng bị dùng rồi mà lại có người gửi lên lần thứ 2, hệ thống lập tức phát hiện có kẻ gian đánh cắp token và TỰ ĐỘNG KHÓA TOÀN BỘ phiên đăng nhập của người dùng đó!"
+              ],
+              "codeTitle": "Mô hình xử lý Refresh Token Rotation",
+              "codeLanguage": "text",
+              "codeContent": "[Client] ──► [Gửi RefreshToken_V1] ──► [Auth Server]\n                                             │\n                                             ├── Kiểm tra: Token_V1 chưa dùng?\n                                             ├── Đánh dấu: Token_V1.IsUsed = true\n                                             ├── Sinh mới: AccessToken_Mới + RefreshToken_V2\n                                             └── Trả về cho Client\n\nNẾU HACKER CỐ DÙNG LẠI RefreshToken_V1 LẦN NỮA:\n[Hacker] ──► [Gửi RefreshToken_V1] ──► [Auth Server] ──► PHÁT HIỆN TÁI SỬ DỤNG!\n                                                          └── Thu hồi ngay lập tức RefreshToken_V2 và đổi mật khẩu!",
+              "calloutType": "tip",
+              "calloutTitle": "Lưu trữ Refresh Token phía Client",
+              "calloutTitleVi": "Lưu trữ Refresh Token phía Client",
+              "calloutText": "Luôn lưu Refresh Token bên trong Cookie với cờ `HttpOnly = true`, `Secure = true`, `SameSite = Strict` để JavaScript không thể đọc được, triệt tiêu nguy cơ bị đánh cắp qua tấn công XSS.",
+              "calloutTextVi": "Luôn lưu Refresh Token bên trong Cookie với cờ `HttpOnly = true`, `Secure = true`, `SameSite = Strict` để JavaScript không thể đọc được, triệt tiêu nguy cơ bị đánh cắp qua tấn công XSS."
+            },
+            {
+              "heading": "2. Thu Hồi Token Tức Thì Bằng Danh Sách Đen Redis (Token Blacklisting)",
+              "headingVi": "2. Thu Hồi Token Tức Thì Bằng Danh Sách Đen Redis (Token Blacklisting)",
+              "paragraphs": [
+                "Nếu người dùng bấm nút 'Đăng Xuất' (Logout) hoặc bấm 'Đổi Mật Khẩu', làm sao hủy ngay Access Token 15 phút còn hạn?",
+                "Kỹ thuật Redis Blacklist:",
+                "- Mỗi JWT token khi sinh ra bắt buộc phải có trường `jti` (JWT ID - chuỗi UUID duy nhất).",
+                "- Khi người dùng Logout, lấy `jti` và thời gian còn lại của token (Remaining TTL) rồi lưu vào Redis: `SET token:blacklist:{jti} \"revoked\" EX {remainingSeconds}`.",
+                "- Tại API Gateway hoặc Middleware: Kiểm tra nhanh trong Redis RAM xem `jti` có nằm trong blacklist không (chỉ tốn < 0.5 mili-giây).",
+                "- Sau khi token tự hết hạn (`exp`), Redis cũng tự động dọn rác xóa key này nhờ cơ chế TTL tự nhiên, không bao giờ lo đầy bộ nhớ!"
+              ],
+              "paragraphsVi": [
+                "Nếu người dùng bấm nút 'Đăng Xuất' (Logout) hoặc bấm 'Đổi Mật Khẩu', làm sao hủy ngay Access Token 15 phút còn hạn?",
+                "Kỹ thuật Redis Blacklist:",
+                "- Mỗi JWT token khi sinh ra bắt buộc phải có trường `jti` (JWT ID - chuỗi UUID duy nhất).",
+                "- Khi người dùng Logout, lấy `jti` và thời gian còn lại của token (Remaining TTL) rồi lưu vào Redis: `SET token:blacklist:{jti} \"revoked\" EX {remainingSeconds}`.",
+                "- Tại API Gateway hoặc Middleware: Kiểm tra nhanh trong Redis RAM xem `jti` có nằm trong blacklist không (chỉ tốn < 0.5 mili-giây).",
+                "- Sau khi token tự hết hạn (`exp`), Redis cũng tự động dọn rác xóa key này nhờ cơ chế TTL tự nhiên, không bao giờ lo đầy bộ nhớ!"
+              ],
+              "codeTitle": "Middleware kiểm tra Token Blacklist trong Redis",
+              "codeLanguage": "csharp",
+              "codeContent": "public class JwtBlacklistMiddleware\n{\n    private readonly RequestDelegate _next;\n    private readonly IDistributedCache _cache;\n\n    public JwtBlacklistMiddleware(RequestDelegate next, IDistributedCache cache)\n    {\n        _next = next;\n        _cache = cache;\n    }\n\n    public async Task InvokeAsync(HttpContext context)\n    {\n        if (context.User.Identity?.IsAuthenticated == true)\n        {\n            var jti = context.User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;\n            if (!string.IsNullOrEmpty(jti))\n            {\n                var isBlacklisted = await _cache.GetStringAsync($\"jwt:blacklist:{jti}\");\n                if (!string.IsNullOrEmpty(isBlacklisted))\n                {\n                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;\n                    await context.Response.WriteAsync(\"Token này đã bị thu hồi hoặc đăng xuất!\");\n                    return;\n                }\n            }\n        }\n        await _next(context);\n    }\n}",
+              "calloutType": "info",
+              "calloutTitle": "Đỉnh cao hiệu năng",
+              "calloutTitleVi": "Đỉnh cao hiệu năng",
+              "calloutText": "Redis Blacklist chỉ lưu những token bị hủy trước hạn (thường chiếm < 1% tổng số token), nên chi phí RAM là cực kỳ nhỏ bé so với việc lưu toàn bộ Session.",
+              "calloutTextVi": "Redis Blacklist chỉ lưu những token bị hủy trước hạn (thường chiếm < 1% tổng số token), nên chi phí RAM là cực kỳ nhỏ bé so với việc lưu toàn bộ Session."
+            },
+            {
+              "heading": "3. Bốn Lỗ Hổng Bảo Mật Tử Huyệt Cần Tránh Xa",
+              "headingVi": "3. Bốn Lỗ Hổng Bảo Mật Tử Huyệt Cần Tránh Xa",
+              "paragraphs": [
+                "1. Lỗ hổng `alg: none`: Kẻ tấn công sửa Header thành `{\"alg\":\"none\"}`, xóa bỏ toàn bộ phần chữ ký ở đuôi và gửi lên. Nếu backend không ép buộc kiểm tra thuật toán, server sẽ ngây thơ tin tưởng và cho phép truy cập với quyền Admin! (Luôn cấu hình chỉ chấp nhận các thuật toán hợp lệ).",
+                "2. Lỗ hổng Key Confusion (HMAC vs RSA): Hacker lấy Public Key RSA của server (vốn được công khai), sau đó dùng chính chuỗi Public Key đó làm Secret Key cho thuật toán HMAC-SHA256 để tự ký token. Nếu server không kiểm tra chặt chẽ, server sẽ dùng Public Key để verify và thấy khớp hoàn toàn!",
+                "3. Lộ dữ liệu nhạy cảm trong Payload: Rất nhiều lập trình viên ngây thơ nhét Mật khẩu, Số thẻ tín dụng, Số CCCD vào JWT Payload vì tưởng token đã được mã hóa bí mật. Nhớ rằng Payload chỉ là Base64Url, bất kỳ ai vào trang jwt.io cũng đọc được nguyên văn!",
+                "4. Đặt Secret Key quá ngắn: Dùng các secret key ngớ ngẩn như 'my-secret-key-123' có thể bị bẻ khóa bằng công cụ `hashcat` trên GPU trong vòng 3 giây."
+              ],
+              "paragraphsVi": [
+                "1. Lỗ hổng `alg: none`: Kẻ tấn công sửa Header thành `{\"alg\":\"none\"}`, xóa bỏ toàn bộ phần chữ ký ở đuôi và gửi lên. Nếu backend không ép buộc kiểm tra thuật toán, server sẽ ngây thơ tin tưởng và cho phép truy cập với quyền Admin! (Luôn cấu hình chỉ chấp nhận các thuật toán hợp lệ).",
+                "2. Lỗ hổng Key Confusion (HMAC vs RSA): Hacker lấy Public Key RSA của server (vốn được công khai), sau đó dùng chính chuỗi Public Key đó làm Secret Key cho thuật toán HMAC-SHA256 để tự ký token. Nếu server không kiểm tra chặt chẽ, server sẽ dùng Public Key để verify và thấy khớp hoàn toàn!",
+                "3. Lộ dữ liệu nhạy cảm trong Payload: Rất nhiều lập trình viên ngây thơ nhét Mật khẩu, Số thẻ tín dụng, Số CCCD vào JWT Payload vì tưởng token đã được mã hóa bí mật. Nhớ rằng Payload chỉ là Base64Url, bất kỳ ai vào trang jwt.io cũng đọc được nguyên văn!",
+                "4. Đặt Secret Key quá ngắn: Dùng các secret key ngớ ngẩn như 'my-secret-key-123' có thể bị bẻ khóa bằng công cụ `hashcat` trên GPU trong vòng 3 giây."
+              ],
+              "codeTitle": "Checklist bảo vệ JWT Production vững như bàn thạch",
+              "codeLanguage": "text",
+              "codeContent": "✔ Khóa bí mật HS256 tối thiểu 32 ký tự ngẫu nhiên (hoặc dùng RS256/ES256).\n✔ Luôn bật ValidateLifetime và set ClockSkew = TimeSpan.Zero.\n✔ Ép buộc kiểm tra thuật toán hợp lệ (Chặn hoàn toàn alg: none).\n✔ Không bao giờ lưu mật khẩu hoặc dữ liệu nhạy cảm vào Payload.\n✔ Triển khai Refresh Token Rotation trong Cookie HttpOnly Secure.\n✔ Bổ sung Redis Blacklist cho tính năng Logout và Đổi Mật Khẩu.",
+              "calloutType": "warning",
+              "calloutTitle": "Nguyên tắc vàng của An Ninh Mạng",
+              "calloutTitleVi": "Nguyên tắc vàng của An Ninh Mạng",
+              "calloutText": "Bảo mật không phải là một tính năng, mà là một quy trình kiểm soát liên tục. Áp dụng trọn vẹn 6 nguyên tắc trên sẽ giúp hệ thống của bạn đứng vững trước các đợt kiểm thử thâm nhập (Penetration Testing) gắt gao nhất.",
+              "calloutTextVi": "Bảo mật không phải là một tính năng, mà là một quy trình kiểm soát liên tục. Áp dụng trọn vẹn 6 nguyên tắc trên sẽ giúp hệ thống của bạn đứng vững trước các đợt kiểm thử thâm nhập (Penetration Testing) gắt gao nhất."
+            }
+          ]
+        }
+      ]
     }
   ]
 }
