@@ -4395,6 +4395,592 @@
           ]
         }
       ]
+    },
+    {
+      "id": "app-insights-series",
+      "title": "Azure Application Insights Masterclass in .NET: TelemetryClient, KQL & OpenTelemetry",
+      "titleVi": "Chuyên Đề Azure Application Insights: Giám Sát Hiệu Năng (APM), KQL & OpenTelemetry trong .NET",
+      "icon": "bi-graph-up-arrow",
+      "color": "#0078d4",
+      "badge": "6 Bài Viết",
+      "description": "Lộ trình toàn diện về giải pháp APM số 1 cho .NET: Tự động thu thập Request & SQL Dependency, khai thác TelemetryClient chuyên sâu, viết TelemetryProcessor lọc PII, tối ưu chi phí với Adaptive Sampling, truy vấn KQL thực chiến và tích hợp chuẩn OpenTelemetry.",
+      "descriptionVi": "Lộ trình toàn diện về giải pháp APM số 1 cho .NET: Tự động thu thập Request & SQL Dependency, khai thác TelemetryClient chuyên sâu, viết TelemetryProcessor lọc PII, tối ưu chi phí với Adaptive Sampling, truy vấn KQL thực chiến và tích hợp chuẩn OpenTelemetry.",
+      "articles": [
+        {
+          "id": "ai-bai-1-tong-quan-apm-setup",
+          "seriesId": "app-insights-series",
+          "lessonNumber": "Bài 1",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
+          "title": "Azure Application Insights là gì? Kiến Trúc APM, Connection String và Cài Đặt Đầu Tiên trong .NET 8/9/10",
+          "titleVi": "Azure Application Insights là gì? Kiến Trúc APM, Connection String và Cài Đặt Đầu Tiên trong .NET 8/9/10",
+          "readingTime": "9 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Nắm vững bản chất của công cụ giám sát hiệu năng APM, phân biệt Connection String với Instrumentation Key cũ, và cài đặt gói Microsoft.ApplicationInsights.AspNetCore chỉ với 2 dòng code.",
+          "summaryVi": "Nắm vững bản chất của công cụ giám sát hiệu năng APM, phân biệt Connection String với Instrumentation Key cũ, và cài đặt gói Microsoft.ApplicationInsights.AspNetCore chỉ với 2 dòng code.",
+          "tags": [
+            "azure",
+            "application-insights",
+            "apm",
+            "telemetry",
+            "dotnet"
+          ],
+          "sections": [
+            {
+              "heading": "1. Application Performance Monitoring (APM) Là Gì và Tại Sao Cần Application Insights?",
+              "headingVi": "1. Application Performance Monitoring (APM) Là Gì và Tại Sao Cần Application Insights?",
+              "paragraphs": [
+                "Khi ứng dụng web gặp sự cố trên Production, người dùng thường chỉ phàn nàn: 'Hệ thống bị chậm' hoặc 'Bị lỗi 500'. Nếu bạn chỉ nhìn vào log file thông thường, bạn sẽ rất khó biết được:",
+                "- Request bị chậm ở tầng nào? Ở tầng C# Code, tầng gọi Database SQL, hay do API bên thứ 3 (như cổng thanh toán) phản hồi trễ?",
+                "- Mỗi giây hệ thống đang phục vụ bao nhiêu request? Tỉ lệ lỗi thất bại (Failure Rate) là bao nhiêu %?",
+                "Application Insights là giải pháp APM (Application Performance Monitoring) cao cấp của Microsoft trên nền tảng Azure. Nó tự động cài cắm (Instrumentation) vào nhân runtime của .NET để thu thập toàn bộ dữ liệu đo từ xa (Telemetry):",
+                "1. Requests: Mọi HTTP Request gửi tới API kèm thời gian xử lý và mã HTTP Status.",
+                "2. Dependencies: Mọi câu lệnh SQL truy vấn Database, lời gọi HttpClient ra bên ngoài, Redis Cache, Azure Service Bus.",
+                "3. Exceptions: Mọi ngoại lệ chưa được xử lý (Unhandled) và cả ngoại lệ được bắt (Caught Exceptions) kèm Call Stack chi tiết.",
+                "4. Performance Counters: Mức độ tiêu thụ CPU, RAM bộ nhớ Gen 0/1/2 và tỷ lệ ném ngoại lệ của tiến trình."
+              ],
+              "paragraphsVi": [
+                "Khi ứng dụng web gặp sự cố trên Production, người dùng thường chỉ phàn nàn: 'Hệ thống bị chậm' hoặc 'Bị lỗi 500'. Nếu bạn chỉ nhìn vào log file thông thường, bạn sẽ rất khó biết được:",
+                "- Request bị chậm ở tầng nào? Ở tầng C# Code, tầng gọi Database SQL, hay do API bên thứ 3 (như cổng thanh toán) phản hồi trễ?",
+                "- Mỗi giây hệ thống đang phục vụ bao nhiêu request? Tỉ lệ lỗi thất bại (Failure Rate) là bao nhiêu %?",
+                "Application Insights là giải pháp APM (Application Performance Monitoring) cao cấp của Microsoft trên nền tảng Azure. Nó tự động cài cắm (Instrumentation) vào nhân runtime của .NET để thu thập toàn bộ dữ liệu đo từ xa (Telemetry):",
+                "1. Requests: Mọi HTTP Request gửi tới API kèm thời gian xử lý và mã HTTP Status.",
+                "2. Dependencies: Mọi câu lệnh SQL truy vấn Database, lời gọi HttpClient ra bên ngoài, Redis Cache, Azure Service Bus.",
+                "3. Exceptions: Mọi ngoại lệ chưa được xử lý (Unhandled) và cả ngoại lệ được bắt (Caught Exceptions) kèm Call Stack chi tiết.",
+                "4. Performance Counters: Mức độ tiêu thụ CPU, RAM bộ nhớ Gen 0/1/2 và tỷ lệ ném ngoại lệ của tiến trình."
+              ],
+              "codeTitle": "Mô hình thu thập Telemetry tự động trong .NET",
+              "codeLanguage": "text",
+              "codeContent": "[Client Browser / Mobile]\n   │ (Gửi HTTP POST /api/v1/orders)\n   ▼\n[ASP.NET Core Web API: AppInsights SDK Hooking]\n   ├── (1. Đo thời gian Request: 120ms, Status 200)\n   ├── (2. Đo câu SQL: SELECT * FROM Products - 15ms)\n   ├── (3. Đo HTTP External Call: POST https://api.stripe.com - 95ms)\n   └── (4. Ghi nhận log ILogger và Exception nếu có)\n   │\n   ▼ (Tự động đẩy ngầm về Azure theo lô - Batch Background Async)\n[Azure Monitor / Log Analytics Workspace & Application Map]",
+              "calloutType": "tip",
+              "calloutTitle": "Zero Code Changes",
+              "calloutTitleVi": "Zero Code Changes",
+              "calloutText": "Điểm kỳ diệu của Application Insights là tính năng Auto-Collection: Bạn không cần viết hàm `stopwatch.Start()` quanh các câu SQL hay HTTP Client, SDK sẽ tự động đo đạc 100% các lời gọi này.",
+              "calloutTextVi": "Điểm kỳ diệu của Application Insights là tính năng Auto-Collection: Bạn không cần viết hàm `stopwatch.Start()` quanh các câu SQL hay HTTP Client, SDK sẽ tự động đo đạc 100% các lời gọi này."
+            },
+            {
+              "heading": "2. Phân Biệt Connection String (Khuyên Dùng) vs Instrumentation Key (Cũ)",
+              "headingVi": "2. Phân Biệt Connection String (Khuyên Dùng) vs Instrumentation Key (Cũ)",
+              "paragraphs": [
+                "Trước đây, Azure sử dụng `InstrumentationKey` (dạng chuỗi GUID đơn độc). Cách làm này đã chính thức bị Microsoft khai tử (Deprecated từ ngày 31/03/2025).",
+                "Chuẩn hiện đại bắt buộc phải dùng **Connection String**. Connection String chứa đầy đủ thông tin: Khóa xác thực, Địa chỉ Ingestion Endpoint cụ thể theo khu vực địa lý (Region), và hỗ trợ cơ chế xác thực bảo mật Azure AD / Entra ID mà không cần hardcode secret."
+              ],
+              "paragraphsVi": [
+                "Trước đây, Azure sử dụng `InstrumentationKey` (dạng chuỗi GUID đơn độc). Cách làm này đã chính thức bị Microsoft khai tử (Deprecated từ ngày 31/03/2025).",
+                "Chuẩn hiện đại bắt buộc phải dùng **Connection String**. Connection String chứa đầy đủ thông tin: Khóa xác thực, Địa chỉ Ingestion Endpoint cụ thể theo khu vực địa lý (Region), và hỗ trợ cơ chế xác thực bảo mật Azure AD / Entra ID mà không cần hardcode secret."
+              ],
+              "codeTitle": "Cấu hình Connection String trong appsettings.json",
+              "codeLanguage": "json",
+              "codeContent": "{\n  \"ApplicationInsights\": {\n    \"ConnectionString\": \"InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://eastasia-0.in.applicationinsights.azure.com/;LiveEndpoint=https://eastasia.livediagnostics.monitor.azure.com/\"\n  },\n  \"Logging\": {\n    \"ApplicationInsights\": {\n      \"LogLevel\": {\n        \"Default\": \"Information\",\n        \"Microsoft\": \"Warning\"\n      }\n    }\n  }\n}",
+              "calloutType": "warning",
+              "calloutTitle": "Cảnh báo bảo mật",
+              "calloutTitleVi": "Cảnh báo bảo mật",
+              "calloutText": "Trên môi trường Production, không lưu Connection String trong file git. Hãy truyền qua biến môi trường `APPLICATIONINSIGHTS_CONNECTION_STRING` hoặc qua Azure Key Vault.",
+              "calloutTextVi": "Trên môi trường Production, không lưu Connection String trong file git. Hãy truyền qua biến môi trường `APPLICATIONINSIGHTS_CONNECTION_STRING` hoặc qua Azure Key Vault."
+            },
+            {
+              "heading": "3. Kích Hoạt Application Insights Trong ASP.NET Core Chỉ Với 1 Dòng Lệnh",
+              "headingVi": "3. Kích Hoạt Application Insights Trong ASP.NET Core Chỉ Với 1 Dòng Lệnh",
+              "paragraphs": [
+                "Cài đặt gói NuGet chính thức từ Microsoft:",
+                "`dotnet add package Microsoft.ApplicationInsights.AspNetCore`",
+                "Trong file `Program.cs`, bạn chỉ cần gọi duy nhất một phương thức mở rộng `builder.Services.AddApplicationInsightsTelemetry()`.",
+                "SDK sẽ tự động tìm kiếm chuỗi Connection String trong cấu hình và khởi chạy toàn bộ pipeline thu thập dữ liệu."
+              ],
+              "paragraphsVi": [
+                "Cài đặt gói NuGet chính thức từ Microsoft:",
+                "`dotnet add package Microsoft.ApplicationInsights.AspNetCore`",
+                "Trong file `Program.cs`, bạn chỉ cần gọi duy nhất một phương thức mở rộng `builder.Services.AddApplicationInsightsTelemetry()`.",
+                "SDK sẽ tự động tìm kiếm chuỗi Connection String trong cấu hình và khởi chạy toàn bộ pipeline thu thập dữ liệu."
+              ],
+              "codeTitle": "Cấu hình Program.cs hoàn chỉnh trong .NET 8/9/10",
+              "codeLanguage": "csharp",
+              "codeContent": "var builder = WebApplication.CreateBuilder(args);\n\n// Kích hoạt toàn bộ sức mạnh của Application Insights\nbuilder.Services.AddApplicationInsightsTelemetry();\n\nvar app = builder.Build();\n\napp.MapGet(\"/api/hello\", () => \n{\n    return Results.Ok(new { Message = \"Hello Application Insights!\", Time = DateTime.UtcNow });\n});\n\napp.Run();",
+              "calloutType": "info",
+              "calloutTitle": "Live Metrics Stream",
+              "calloutTitleVi": "Live Metrics Stream",
+              "calloutText": "Ngay khi app khởi chạy, bạn có thể mở Azure Portal -> chọn mục 'Live Metrics' để quan sát lưu lượng truy cập, số lượng request/giây và thời gian phản hồi nhảy theo thời gian thực (độ trễ dưới 1 giây).",
+              "calloutTextVi": "Ngay khi app khởi chạy, bạn có thể mở Azure Portal -> chọn mục 'Live Metrics' để quan sát lưu lượng truy cập, số lượng request/giây và thời gian phản hồi nhảy theo thời gian thực (độ trễ dưới 1 giây)."
+            }
+          ]
+        },
+        {
+          "id": "ai-bai-2-telemetryclient-custom-metrics",
+          "seriesId": "app-insights-series",
+          "lessonNumber": "Bài 2",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Làm Chủ TelemetryClient: TrackEvent, TrackMetric, TrackTrace, TrackException và TrackDependency",
+          "titleVi": "Làm Chủ TelemetryClient: TrackEvent, TrackMetric, TrackTrace, TrackException và TrackDependency",
+          "readingTime": "11 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Tùy biến giám sát theo nghiệp vụ chuyên sâu: Sử dụng TelemetryClient để ghi nhận sự kiện chuyển đổi kinh doanh (Custom Events), đo đạc chỉ số doanh thu (Metrics) và tự đo các Dependency tùy chỉnh.",
+          "summaryVi": "Tùy biến giám sát theo nghiệp vụ chuyên sâu: Sử dụng TelemetryClient để ghi nhận sự kiện chuyển đổi kinh doanh (Custom Events), đo đạc chỉ số doanh thu (Metrics) và tự đo các Dependency tùy chỉnh.",
+          "tags": [
+            "telemetryclient",
+            "custom-metrics",
+            "trackevent",
+            "business-analytics",
+            "csharp"
+          ],
+          "sections": [
+            {
+              "heading": "1. Khi Nào Auto-Instrumentation Là Chưa Đủ?",
+              "headingVi": "1. Khi Nào Auto-Instrumentation Là Chưa Đủ?",
+              "paragraphs": [
+                "Auto-instrumentation rất tuyệt vời để đo kỹ thuật (HTTP status, SQL latency). Nhưng giám đốc kinh doanh hoặc product manager sẽ đặt ra những câu hỏi nghiệp vụ:",
+                "- Hôm nay có bao nhiêu đơn hàng thanh toán bằng MoMo, bao nhiêu đơn bằng thẻ Visa?",
+                "- Giá trị giỏ hàng trung bình của khách hàng VIP là bao nhiêu?",
+                "- Người dùng thường bấm nút 'Hủy giỏ hàng' ở bước nào trong quy trình thanh toán?",
+                "Lớp **`TelemetryClient`** được đăng ký sẵn trong DI container của ASP.NET Core chính là cầu nối giúp bạn gửi các số liệu nghiệp vụ (Custom Business Analytics) lên dashboard của Azure."
+              ],
+              "paragraphsVi": [
+                "Auto-instrumentation rất tuyệt vời để đo kỹ thuật (HTTP status, SQL latency). Nhưng giám đốc kinh doanh hoặc product manager sẽ đặt ra những câu hỏi nghiệp vụ:",
+                "- Hôm nay có bao nhiêu đơn hàng thanh toán bằng MoMo, bao nhiêu đơn bằng thẻ Visa?",
+                "- Giá trị giỏ hàng trung bình của khách hàng VIP là bao nhiêu?",
+                "- Người dùng thường bấm nút 'Hủy giỏ hàng' ở bước nào trong quy trình thanh toán?",
+                "Lớp **`TelemetryClient`** được đăng ký sẵn trong DI container của ASP.NET Core chính là cầu nối giúp bạn gửi các số liệu nghiệp vụ (Custom Business Analytics) lên dashboard của Azure."
+              ],
+              "codeTitle": "Inject TelemetryClient vào Service trong C#",
+              "codeLanguage": "csharp",
+              "codeContent": "public class OrderService\n{\n    private readonly TelemetryClient _telemetry;\n\n    public OrderService(TelemetryClient telemetry)\n    {\n        _telemetry = telemetry;\n    }\n}",
+              "calloutType": "tip",
+              "calloutTitle": "Thread-Safe Singleton",
+              "calloutTitleVi": "Thread-Safe Singleton",
+              "calloutText": "`TelemetryClient` hoàn toàn Thread-Safe. Bạn có thể inject và tái sử dụng nó xuyên suốt toàn bộ ứng dụng mà không lo bị nghẽn luồng hay xung đột dữ liệu.",
+              "calloutTextVi": "`TelemetryClient` hoàn toàn Thread-Safe. Bạn có thể inject và tái sử dụng nó xuyên suốt toàn bộ ứng dụng mà không lo bị nghẽn luồng hay xung đột dữ liệu."
+            },
+            {
+              "heading": "2. Năm Phương Thức Track Quan Trọng Nhất Trong TelemetryClient",
+              "headingVi": "2. Năm Phương Thức Track Quan Trọng Nhất Trong TelemetryClient",
+              "paragraphs": [
+                "1. TrackEvent: Ghi lại các mốc sự kiện của người dùng (ví dụ: 'UserCheckoutCompleted', 'PromoCodeApplied'). Hỗ trợ đính kèm `properties` (dạng text) và `metrics` (dạng số).",
+                "2. TrackMetric: Đo lường một đại lượng thay đổi theo thời gian (ví dụ: kích thước file upload, số lượng item trong giỏ, thời gian xử lý ảnh).",
+                "3. TrackException: Ghi nhận các ngoại lệ đã được `catch` nhưng vẫn cần lưu lại để điều tra, đính kèm `UserId` và `CartId` vào exception.",
+                "4. TrackTrace: Ghi nhận các dòng log chẩn đoán ngữ cảnh (tương tự `ILogger.LogInformation`).",
+                "5. TrackDependency: Tự đo thời gian gọi tới các hệ thống bên thứ ba không hỗ trợ HTTP (ví dụ: gọi qua Socket TCP thô, gRPC tùy chỉnh hoặc thiết bị phần cứng)."
+              ],
+              "paragraphsVi": [
+                "1. TrackEvent: Ghi lại các mốc sự kiện của người dùng (ví dụ: 'UserCheckoutCompleted', 'PromoCodeApplied'). Hỗ trợ đính kèm `properties` (dạng text) và `metrics` (dạng số).",
+                "2. TrackMetric: Đo lường một đại lượng thay đổi theo thời gian (ví dụ: kích thước file upload, số lượng item trong giỏ, thời gian xử lý ảnh).",
+                "3. TrackException: Ghi nhận các ngoại lệ đã được `catch` nhưng vẫn cần lưu lại để điều tra, đính kèm `UserId` và `CartId` vào exception.",
+                "4. TrackTrace: Ghi nhận các dòng log chẩn đoán ngữ cảnh (tương tự `ILogger.LogInformation`).",
+                "5. TrackDependency: Tự đo thời gian gọi tới các hệ thống bên thứ ba không hỗ trợ HTTP (ví dụ: gọi qua Socket TCP thô, gRPC tùy chỉnh hoặc thiết bị phần cứng)."
+              ],
+              "codeTitle": "Ví dụ toàn diện sử dụng TelemetryClient trong nghiệp vụ thanh toán",
+              "codeLanguage": "csharp",
+              "codeContent": "public async Task<bool> ProcessPaymentAsync(OrderDto order)\n{\n    var startTime = DateTime.UtcNow;\n    var timer = Stopwatch.StartNew();\n\n    try\n    {\n        // 1. Ghi nhận Event kinh doanh\n        var properties = new Dictionary<string, string>\n        {\n            { \"OrderId\", order.Id },\n            { \"PaymentMethod\", order.PaymentMethod },\n            { \"CustomerTier\", order.CustomerTier }\n        };\n        var metrics = new Dictionary<string, double>\n        {\n            { \"TotalAmount\", (double)order.Amount },\n            { \"ItemCount\", order.Items.Count }\n        };\n        _telemetry.TrackEvent(\"OrderCheckoutStarted\", properties, metrics);\n\n        // Thực hiện thanh toán...\n        bool success = await _paymentGateway.ChargeAsync(order);\n\n        timer.Stop();\n\n        // 2. Tự ghi nhận Dependency tùy chỉnh\n        _telemetry.TrackDependency(\n            dependencyTypeName: \"PaymentGateway\",\n            dependencyName: \"StripeChargeApi\",\n            data: $\"Charge for order {order.Id}\",\n            startTime: startTime,\n            duration: timer.Elapsed,\n            success: success);\n\n        // 3. Ghi nhận Metric hiệu năng\n        _telemetry.GetMetric(\"PaymentProcessingDurationMs\").TrackValue(timer.ElapsedMilliseconds);\n\n        return success;\n    }\n    catch (Exception ex)\n    {\n        // 4. Ghi nhận Exception kèm thuộc tính điều tra\n        _telemetry.TrackException(ex, new Dictionary<string, string>\n        {\n            { \"FailedOrderId\", order.Id },\n            { \"Amount\", order.Amount.ToString() }\n        });\n        throw;\n    }\n}",
+              "calloutType": "info",
+              "calloutTitle": "Sức mạnh của GetMetric",
+              "calloutTitleVi": "Sức mạnh của GetMetric",
+              "calloutText": "Từ phiên bản 2.x, phương thức `_telemetry.GetMetric(\"MetricName\").TrackValue(...)` được tối ưu hóa tổng hợp số liệu (Pre-aggregation) ngay trong bộ nhớ trước khi gửi về Azure, giảm 90% lượng dữ liệu truyền qua mạng.",
+              "calloutTextVi": "Từ phiên bản 2.x, phương thức `_telemetry.GetMetric(\"MetricName\").TrackValue(...)` được tối ưu hóa tổng hợp số liệu (Pre-aggregation) ngay trong bộ nhớ trước khi gửi về Azure, giảm 90% lượng dữ liệu truyền qua mạng."
+            },
+            {
+              "heading": "3. Tự Động Flush Dữ Liệu Khi Shutdown Ứng Dụng",
+              "headingVi": "3. Tự Động Flush Dữ Liệu Khi Shutdown Ứng Dụng",
+              "paragraphs": [
+                "Application Insights không gửi telemetry tức thì từng cái một (để tránh làm nghẽn mạng), mà gom thành từng lô (Batching) mỗi 30 giây.",
+                "Trong các ứng dụng chạy ngắn như Console App, CLI hoặc Azure Function: Nếu ứng dụng kết thúc trước khi bộ đệm kịp gửi, bạn sẽ bị mất dữ liệu.",
+                "Giải pháp: Bắt buộc gọi `_telemetry.Flush()` và cho ứng dụng ngủ tạm 5 giây trước khi kết thúc process."
+              ],
+              "paragraphsVi": [
+                "Application Insights không gửi telemetry tức thì từng cái một (để tránh làm nghẽn mạng), mà gom thành từng lô (Batching) mỗi 30 giây.",
+                "Trong các ứng dụng chạy ngắn như Console App, CLI hoặc Azure Function: Nếu ứng dụng kết thúc trước khi bộ đệm kịp gửi, bạn sẽ bị mất dữ liệu.",
+                "Giải pháp: Bắt buộc gọi `_telemetry.Flush()` và cho ứng dụng ngủ tạm 5 giây trước khi kết thúc process."
+              ],
+              "codeTitle": "Đẩy dữ liệu khẩn cấp trước khi thoát ứng dụng",
+              "codeLanguage": "csharp",
+              "codeContent": "// Gọi trước khi process thoát:\ntelemetryClient.Flush();\n// Chờ luồng ngầm gửi hết dữ liệu qua mạng\nawait Task.Delay(5000);",
+              "calloutType": "warning",
+              "calloutTitle": "Không lạm dụng Flush()",
+              "calloutTitleVi": "Không lạm dụng Flush()",
+              "calloutText": "Không gọi `Flush()` trong mỗi request của Web API vì nó sẽ làm giảm nghiêm trọng thông lượng của ứng dụng.",
+              "calloutTextVi": "Không gọi `Flush()` trong mỗi request của Web API vì nó sẽ làm giảm nghiêm trọng thông lượng của ứng dụng."
+            }
+          ]
+        },
+        {
+          "id": "ai-bai-3-telemetry-initializer-processor",
+          "seriesId": "app-insights-series",
+          "lessonNumber": "Bài 3",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Làm Chủ TelemetryInitializer & TelemetryProcessor: Bổ Sung Context và Lọc/Mask Dữ Liệu Nhạy Cảm",
+          "titleVi": "Làm Chủ TelemetryInitializer & TelemetryProcessor: Bổ Sung Context và Lọc/Mask Dữ Liệu Nhạy Cảm",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Phân biệt rõ vai trò của TelemetryInitializer (thêm context) và TelemetryProcessor (lọc bỏ rác), kỹ thuật đổi tên RoleName trong Application Map và che giấu dữ liệu thẻ tín dụng PCI-DSS.",
+          "summaryVi": "Phân biệt rõ vai trò của TelemetryInitializer (thêm context) và TelemetryProcessor (lọc bỏ rác), kỹ thuật đổi tên RoleName trong Application Map và che giấu dữ liệu thẻ tín dụng PCI-DSS.",
+          "tags": [
+            "telemetryinitializer",
+            "telemetryprocessor",
+            "cloud-rolename",
+            "security",
+            "pii-filter"
+          ],
+          "sections": [
+            {
+              "heading": "1. TelemetryInitializer: Tự Động Gắn Siêu Dữ Liệu Cho Mọi Dòng Log",
+              "headingVi": "1. TelemetryInitializer: Tự Động Gắn Siêu Dữ Liệu Cho Mọi Dòng Log",
+              "paragraphs": [
+                "`ITelemetryInitializer` là interface cho phép bạn can thiệp vào MỌI telemetry item (Request, Dependency, Trace, Exception) ngay khi nó vừa được sinh ra.",
+                "Tác vụ quan trọng nhất của Initializer trong Microservices là thiết lập **`Cloud_RoleName`**:",
+                "- Mặc định, Application Insights lấy tên máy chủ VPS hoặc tên Pod làm định danh, khiến sơ đồ Application Map hiển thị hàng chục cái tên ngẫu nhiên như `vm-wkr-01`, `pod-99xbb` rất rối mắt.",
+                "- Bằng cách set `telemetry.Context.Cloud.RoleName = \"OrderService\"`, sơ đồ Application Map sẽ hiển thị một khối đại diện đẹp mắt mang tên **OrderService**."
+              ],
+              "paragraphsVi": [
+                "`ITelemetryInitializer` là interface cho phép bạn can thiệp vào MỌI telemetry item (Request, Dependency, Trace, Exception) ngay khi nó vừa được sinh ra.",
+                "Tác vụ quan trọng nhất của Initializer trong Microservices là thiết lập **`Cloud_RoleName`**:",
+                "- Mặc định, Application Insights lấy tên máy chủ VPS hoặc tên Pod làm định danh, khiến sơ đồ Application Map hiển thị hàng chục cái tên ngẫu nhiên như `vm-wkr-01`, `pod-99xbb` rất rối mắt.",
+                "- Bằng cách set `telemetry.Context.Cloud.RoleName = \"OrderService\"`, sơ đồ Application Map sẽ hiển thị một khối đại diện đẹp mắt mang tên **OrderService**."
+              ],
+              "codeTitle": "Xây dựng Custom TelemetryInitializer trong C#",
+              "codeLanguage": "csharp",
+              "codeContent": "using Microsoft.ApplicationInsights.Channel;\nusing Microsoft.ApplicationInsights.Extensibility;\n\npublic class CustomTelemetryInitializer : ITelemetryInitializer\n{\n    private readonly IHttpContextAccessor _httpContextAccessor;\n\n    public CustomTelemetryInitializer(IHttpContextAccessor httpContextAccessor)\n    {\n        _httpContextAccessor = httpContextAccessor;\n    }\n\n    public void Initialize(ITelemetry telemetry)\n    {\n        // 1. Đặt tên cố định cho Service trên Application Map\n        telemetry.Context.Cloud.RoleName = \"PaymentMicroservice\";\n        telemetry.Context.Cloud.RoleInstance = Environment.MachineName;\n\n        // 2. Tự động lấy UserId và TenantId từ Claims nếu người dùng đã đăng nhập\n        var httpContext = _httpContextAccessor.HttpContext;\n        if (httpContext?.User?.Identity?.IsAuthenticated == true)\n        {\n            var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;\n            if (!string.IsNullOrEmpty(userId))\n            {\n                telemetry.Context.User.Id = userId;\n                telemetry.Context.User.AuthenticatedUserId = userId;\n            }\n        }\n    }\n}\n\n// Đăng ký trong Program.cs:\n// builder.Services.AddSingleton<ITelemetryInitializer, CustomTelemetryInitializer>();",
+              "calloutType": "tip",
+              "calloutTitle": "Application Map chuẩn mực",
+              "calloutTitleVi": "Application Map chuẩn mực",
+              "calloutText": "Thiết lập đúng `Cloud.RoleName` giúp đội ngũ vận hành nhìn thấy ngay luồng tương tác giữa Gateway -> OrderService -> PaymentService -> SQL Server với số liệu latency của từng chặng.",
+              "calloutTextVi": "Thiết lập đúng `Cloud.RoleName` giúp đội ngũ vận hành nhìn thấy ngay luồng tương tác giữa Gateway -> OrderService -> PaymentService -> SQL Server với số liệu latency của từng chặng."
+            },
+            {
+              "heading": "2. TelemetryProcessor: Bộ Lọc Client-Side Tiết Kiệm Tiền và Bảo Vệ Dữ Liệu",
+              "headingVi": "2. TelemetryProcessor: Bộ Lọc Client-Side Tiết Kiệm Tiền và Bảo Vệ Dữ Liệu",
+              "paragraphs": [
+                "Khác với Initializer chỉ bổ sung thông tin, `ITelemetryProcessor` hoạt động theo mô hình Chain of Responsibility (chuỗi xử lý): Nó có quyền **HỦY BỎ (DROP)** một telemetry item để ngăn không cho gửi lên Azure.",
+                "Hai kịch bản kinh điển cần dùng Processor:",
+                "1. Lọc bỏ các request rác (HealthCheck Filtering): K8s hoặc Load Balancer cứ mỗi 5 giây lại gửi request `/healthz`. Một tháng bạn tốn hàng triệu record vô nghĩa làm tốn dung lượng ingestion của Azure.",
+                "2. Che giấu thông tin nhạy cảm (PII Masking): Kiểm tra URL hoặc tham số câu query SQL, nếu phát hiện số thẻ tín dụng hoặc mật khẩu thì thay thế bằng `******` trước khi truyền đi."
+              ],
+              "paragraphsVi": [
+                "Khác với Initializer chỉ bổ sung thông tin, `ITelemetryProcessor` hoạt động theo mô hình Chain of Responsibility (chuỗi xử lý): Nó có quyền **HỦY BỎ (DROP)** một telemetry item để ngăn không cho gửi lên Azure.",
+                "Hai kịch bản kinh điển cần dùng Processor:",
+                "1. Lọc bỏ các request rác (HealthCheck Filtering): K8s hoặc Load Balancer cứ mỗi 5 giây lại gửi request `/healthz`. Một tháng bạn tốn hàng triệu record vô nghĩa làm tốn dung lượng ingestion của Azure.",
+                "2. Che giấu thông tin nhạy cảm (PII Masking): Kiểm tra URL hoặc tham số câu query SQL, nếu phát hiện số thẻ tín dụng hoặc mật khẩu thì thay thế bằng `******` trước khi truyền đi."
+              ],
+              "codeTitle": "Xây dựng TelemetryProcessor lọc bỏ HealthCheck và Masking nhạy cảm",
+              "codeLanguage": "csharp",
+              "codeContent": "using Microsoft.ApplicationInsights.Channel;\nusing Microsoft.ApplicationInsights.DataContracts;\nusing Microsoft.ApplicationInsights.Extensibility;\n\npublic class HealthCheckFilterTelemetryProcessor : ITelemetryProcessor\n{\n    private readonly ITelemetryProcessor _next;\n\n    public HealthCheckFilterTelemetryProcessor(ITelemetryProcessor next)\n    {\n        _next = next;\n    }\n\n    public void Process(ITelemetry item)\n    {\n        // 1. Nếu là HTTP Request gọi tới endpoint /healthz hoặc /metrics -> DROP NGAY\n        if (item is RequestTelemetry request)\n        {\n            if (request.Url.AbsolutePath.StartsWith(\"/health\", StringComparison.OrdinalIgnoreCase) ||\n                request.Url.AbsolutePath.StartsWith(\"/metrics\", StringComparison.OrdinalIgnoreCase))\n            {\n                return; // Không gọi _next.Process(item) -> Telemetry bị hủy bỏ!\n            }\n        }\n\n        // 2. Nếu là Dependency SQL có chứa thẻ tín dụng -> Mask lại\n        if (item is DependencyTelemetry dependency && dependency.Type == \"SQL\")\n        {\n            if (dependency.Data.Contains(\"card_number\", StringComparison.OrdinalIgnoreCase))\n            {\n                dependency.Data = \"[REDACTED_SENSITIVE_SQL_QUERY]\";\n            }\n        }\n\n        // Chuyển tiếp cho processor kế tiếp trong chuỗi\n        _next.Process(item);\n    }\n}\n\n// Đăng ký trong Program.cs:\n// builder.Services.AddApplicationInsightsTelemetryProcessor<HealthCheckFilterTelemetryProcessor>();",
+              "calloutType": "warning",
+              "calloutTitle": "Lợi ích tiết kiệm chi phí",
+              "calloutTitleVi": "Lợi ích tiết kiệm chi phí",
+              "calloutText": "Chỉ riêng việc lọc bỏ request `/healthz` đã có thể giúp các cụm K8s microservices giảm từ 20% đến 40% chi phí hóa đơn Azure Ingestion hàng tháng!",
+              "calloutTextVi": "Chỉ riêng việc lọc bỏ request `/healthz` đã có thể giúp các cụm K8s microservices giảm từ 20% đến 40% chi phí hóa đơn Azure Ingestion hàng tháng!"
+            },
+            {
+              "heading": "3. Thứ Tự Thực Thi Trong Telemetry Pipeline",
+              "headingVi": "3. Thứ Tự Thực Thi Trong Telemetry Pipeline",
+              "paragraphs": [
+                "Hiểu đúng luồng di chuyển của dữ liệu:",
+                "`1. Auto Collection sinh Telemetry` $\rightarrow$ `2. Chạy toàn bộ ITelemetryInitializer (Gắn thêm thuộc tính)` $\rightarrow$ `3. Chạy qua chuỗi ITelemetryProcessor (Lọc / Sửa đổi / Drop)` $\rightarrow$ `4. Adaptive Sampling Module (Lấy mẫu tỉ lệ)` $\rightarrow$ `5. Chuyển vào Transmission Channel đẩy lên đám mây`."
+              ],
+              "paragraphsVi": [
+                "Hiểu đúng luồng di chuyển của dữ liệu:",
+                "`1. Auto Collection sinh Telemetry` $\rightarrow$ `2. Chạy toàn bộ ITelemetryInitializer (Gắn thêm thuộc tính)` $\rightarrow$ `3. Chạy qua chuỗi ITelemetryProcessor (Lọc / Sửa đổi / Drop)` $\rightarrow$ `4. Adaptive Sampling Module (Lấy mẫu tỉ lệ)` $\rightarrow$ `5. Chuyển vào Transmission Channel đẩy lên đám mây`."
+              ],
+              "codeTitle": "Sơ đồ Pipeline Telemetry hoàn chỉnh",
+              "codeLanguage": "text",
+              "codeContent": "[Event / Request Phát Sinh]\n          │\n          ▼\n[ITelemetryInitializer] ──► Bổ sung RoleName=\"OrderService\", UserId=\"usr_123\"\n          │\n          ▼\n[ITelemetryProcessor]   ──► Kiểm tra URL == \"/healthz\"? -> Bỏ qua (Drop)!\n          │\n          ▼\n[Adaptive Sampling]     ──► Lưu lượng cao? Giữ lại 10% các giao dịch đại diện\n          │\n          ▼\n[Azure Ingestion Pipeline]",
+              "calloutType": "info",
+              "calloutTitle": "Nguyên tắc thiết kế",
+              "calloutTitleVi": "Nguyên tắc thiết kế",
+              "calloutText": "Hãy giữ logic trong Initializer và Processor chạy cực nhanh, tránh gọi các hàm bất đồng bộ nặng (như query database) vì nó sẽ làm chậm chính request của người dùng.",
+              "calloutTextVi": "Hãy giữ logic trong Initializer và Processor chạy cực nhanh, tránh gọi các hàm bất đồng bộ nặng (như query database) vì nó sẽ làm chậm chính request của người dùng."
+            }
+          ]
+        },
+        {
+          "id": "ai-bai-4-sampling-cost-optimization",
+          "seriesId": "app-insights-series",
+          "lessonNumber": "Bài 4",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Tối Ưu Hóa Chi Phí: Adaptive Sampling, Fixed-Rate, Ingestion Sampling và Daily Cap",
+          "titleVi": "Tối Ưu Hóa Chi Phí: Adaptive Sampling, Fixed-Rate, Ingestion Sampling và Daily Cap",
+          "readingTime": "13 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Tránh cú sốc hóa đơn đám mây: Phân biệt 3 loại kỹ thuật lấy mẫu (Sampling), cách giữ nguyên 100% Exception quan trọng và cấu hình Daily Cap giới hạn ngân sách nghiêm ngặt.",
+          "summaryVi": "Tránh cú sốc hóa đơn đám mây: Phân biệt 3 loại kỹ thuật lấy mẫu (Sampling), cách giữ nguyên 100% Exception quan trọng và cấu hình Daily Cap giới hạn ngân sách nghiêm ngặt.",
+          "tags": [
+            "sampling",
+            "adaptive-sampling",
+            "cost-optimization",
+            "daily-cap",
+            "azure-billing"
+          ],
+          "sections": [
+            {
+              "heading": "1. 'Cú Sốc Hóa Đơn' Azure và Bài Toán Dung Lượng Ingestion",
+              "headingVi": "1. 'Cú Sốc Hóa Đơn' Azure và Bài Toán Dung Lượng Ingestion",
+              "paragraphs": [
+                "Azure Application Insights tính phí dựa trên số Gigabyte (GB) dữ liệu nạp vào (Ingestion Fee, trung bình ~$2.30/GB). Mỗi tháng Azure cho miễn phí 5GB đầu tiên.",
+                "Nếu một hệ thống có 100 triệu request mỗi tháng, mỗi request sinh ra telemetry Request + 3 câu SQL Dependency + 2 dòng Trace $\rightarrow$ Tổng dung lượng có thể lên đến hàng trăm GB (chi phí hơn 1.000 USD/tháng)!",
+                "Bạn có thực sự cần lưu lại 100% của 100 triệu request thành công (200 OK) giống hệt nhau không? Câu trả lời là KHÔNG. Chúng ta chỉ cần một mẫu đại diện thống kê (Statistical Sample).",
+                "**Sampling (Lấy mẫu)** là kỹ thuật giảm dung lượng nạp vào trong khi vẫn giữ nguyên tính chính xác của các chỉ số thống kê trung bình."
+              ],
+              "paragraphsVi": [
+                "Azure Application Insights tính phí dựa trên số Gigabyte (GB) dữ liệu nạp vào (Ingestion Fee, trung bình ~$2.30/GB). Mỗi tháng Azure cho miễn phí 5GB đầu tiên.",
+                "Nếu một hệ thống có 100 triệu request mỗi tháng, mỗi request sinh ra telemetry Request + 3 câu SQL Dependency + 2 dòng Trace $\rightarrow$ Tổng dung lượng có thể lên đến hàng trăm GB (chi phí hơn 1.000 USD/tháng)!",
+                "Bạn có thực sự cần lưu lại 100% của 100 triệu request thành công (200 OK) giống hệt nhau không? Câu trả lời là KHÔNG. Chúng ta chỉ cần một mẫu đại diện thống kê (Statistical Sample).",
+                "**Sampling (Lấy mẫu)** là kỹ thuật giảm dung lượng nạp vào trong khi vẫn giữ nguyên tính chính xác của các chỉ số thống kê trung bình."
+              ],
+              "codeTitle": "So sánh 3 loại cơ chế Sampling trong Azure",
+              "codeLanguage": "text",
+              "codeContent": "┌────────────────────────┬──────────────────────────┬──────────────────────────┐\n│ Loại Sampling          │ Nơi Thực Thi             │ Ưu / Nhược Điểm          │\n├────────────────────────┼──────────────────────────┼──────────────────────────┤\n│ Adaptive Sampling      │ Client-side (.NET SDK)   │ Tự điều chỉnh theo tải   │\n│ (Khuyên dùng nhất)     │                          │ Tiết kiệm băng thông + $ │\n├────────────────────────┼──────────────────────────┼──────────────────────────┤\n│ Fixed-Rate Sampling    │ Client-side (.NET SDK)   │ Cố định tỉ lệ (VD: 20%)  │\n│                        │                          │ Dễ cấu hình, đoán trước $│\n├────────────────────────┼──────────────────────────┼──────────────────────────┤\n│ Ingestion Sampling     │ Server-side (Azure Cloud)│ Tốn băng thông mạng máy chủ│\n│                        │                          │ Không khuyên dùng        │\n└────────────────────────┴──────────────────────────┴──────────────────────────┘",
+              "calloutType": "tip",
+              "calloutTitle": "Bảo toàn chuỗi liên kết (Correlated Sampling)",
+              "calloutTitleVi": "Bảo toàn chuỗi liên kết (Correlated Sampling)",
+              "calloutText": "Khi một Request được chọn để lưu mẫu, TẤT CẢ các Dependency và Trace liên quan đến Request đó cũng sẽ được giữ lại, đảm bảo bạn luôn có thể xem trọn vẹn bức tranh End-to-End của giao dịch đó.",
+              "calloutTextVi": "Khi một Request được chọn để lưu mẫu, TẤT CẢ các Dependency và Trace liên quan đến Request đó cũng sẽ được giữ lại, đảm bảo bạn luôn có thể xem trọn vẹn bức tranh End-to-End của giao dịch đó."
+            },
+            {
+              "heading": "2. Cấu Hình Adaptive Sampling Chuyên Sâu Trong C#",
+              "headingVi": "2. Cấu Hình Adaptive Sampling Chuyên Sâu Trong C#",
+              "paragraphs": [
+                "Mặc định trong ASP.NET Core, Adaptive Sampling đã được bật. Tuy nhiên, cấu hình mặc định có thể quá thoáng hoặc không phù hợp với mục tiêu ngân sách của bạn.",
+                "Quy tắc vàng: Luôn loại trừ Exception khỏi việc lấy mẫu. Mọi Exception và Lỗi thất bại đều phải được giữ lại 100% để phục vụ việc debug sự cố."
+              ],
+              "paragraphsVi": [
+                "Mặc định trong ASP.NET Core, Adaptive Sampling đã được bật. Tuy nhiên, cấu hình mặc định có thể quá thoáng hoặc không phù hợp với mục tiêu ngân sách của bạn.",
+                "Quy tắc vàng: Luôn loại trừ Exception khỏi việc lấy mẫu. Mọi Exception và Lỗi thất bại đều phải được giữ lại 100% để phục vụ việc debug sự cố."
+              ],
+              "codeTitle": "Tùy biến Adaptive Sampling trong Program.cs",
+              "codeLanguage": "csharp",
+              "codeContent": "builder.Services.AddApplicationInsightsTelemetry(options =>\n{\n    // Kích hoạt Adaptive Sampling\n    options.EnableAdaptiveSampling = true;\n});\n\n// Tinh chỉnh thông số Adaptive Sampling chi tiết\nbuilder.Services.Configure<TelemetryConfiguration>(telemetryConfig =>\n{\n    var builder = telemetryConfig.DefaultTelemetrySink.TelemetryProcessorChainBuilder;\n    \n    builder.UseAdaptiveSampling(options =>\n    {\n        // Giới hạn tối đa 5 telemetry items mỗi giây cho mỗi node server\n        options.MaxTelemetryItemsPerSecond = 5;\n        // Tỉ lệ lấy mẫu tối thiểu là 5%\n        options.MinSamplingPercentage = 5;\n        // Tỉ lệ lấy mẫu tối đa là 100%\n        options.MaxSamplingPercentage = 100;\n        // Loại trừ Exception và Event kinh doanh khỏi việc lấy mẫu (Giữ lại 100%!)\n        options.ExcludedTypes = \"Exception;Event\";\n    });\n    \n    builder.Build();\n});",
+              "calloutType": "info",
+              "calloutTitle": "Lợi ích của ExcludedTypes",
+              "calloutTitleVi": "Lợi ích của ExcludedTypes",
+              "calloutText": "Nhờ `ExcludedTypes = \"Exception;Event\"`, bạn tiết kiệm được 80% tiền lưu các request thành công thông thường, trong khi 100% các lỗi crash đều được lưu đầy đủ trên Azure.",
+              "calloutTextVi": "Nhờ `ExcludedTypes = \"Exception;Event\"`, bạn tiết kiệm được 80% tiền lưu các request thành công thông thường, trong khi 100% các lỗi crash đều được lưu đầy đủ trên Azure."
+            },
+            {
+              "heading": "3. Cấu Hình Daily Cap & Data Retention Trên Azure Portal",
+              "headingVi": "3. Cấu Hình Daily Cap & Data Retention Trên Azure Portal",
+              "paragraphs": [
+                "Để đảm bảo an toàn tài chính tuyệt đối, hãy thiết lập **Daily Cap (Hạn mức hàng ngày)** trên Azure Portal:",
+                "- Vào resource Application Insights $\rightarrow$ chọn **Usage and estimated costs** $\rightarrow$ chọn **Daily cap**.",
+                "- Đặt hạn mức: ví dụ 2 GB/ngày. Nếu trong ngày có sự cố lặp vô tận (infinite loop log) đẩy quá 2 GB, Azure sẽ tự động ngừng nạp dữ liệu và gửi email cảnh báo cho quản trị viên, tránh việc bị trừ tiền bất ngờ.",
+                "- Thiết lập **Data Retention**: Đặt thời gian lưu trữ 30 ngày (miễn phí) hoặc 90 ngày thay vì để 730 ngày (2 năm)."
+              ],
+              "paragraphsVi": [
+                "Để đảm bảo an toàn tài chính tuyệt đối, hãy thiết lập **Daily Cap (Hạn mức hàng ngày)** trên Azure Portal:",
+                "- Vào resource Application Insights $\rightarrow$ chọn **Usage and estimated costs** $\rightarrow$ chọn **Daily cap**.",
+                "- Đặt hạn mức: ví dụ 2 GB/ngày. Nếu trong ngày có sự cố lặp vô tận (infinite loop log) đẩy quá 2 GB, Azure sẽ tự động ngừng nạp dữ liệu và gửi email cảnh báo cho quản trị viên, tránh việc bị trừ tiền bất ngờ.",
+                "- Thiết lập **Data Retention**: Đặt thời gian lưu trữ 30 ngày (miễn phí) hoặc 90 ngày thay vì để 730 ngày (2 năm)."
+              ],
+              "codeTitle": "Checklist tối ưu ngân sách Application Insights",
+              "codeLanguage": "text",
+              "codeContent": "1. Bật Adaptive Sampling và giới hạn MaxTelemetryItemsPerSecond.\n2. Cấu hình TelemetryProcessor lọc bỏ request HealthCheck /healthz.\n3. Loại bỏ log Information của các thư viện rác (chỉ giữ Warning/Error cho Microsoft namespace).\n4. Đặt Daily Cap: 1-5 GB/ngày tùy quy mô.\n5. Đặt Data Retention: 30 ngày (đủ để điều tra lỗi gần nhất).",
+              "calloutType": "tip",
+              "calloutTitle": "Kiểm soát 100% ngân sách",
+              "calloutTitleVi": "Kiểm soát 100% ngân sách",
+              "calloutText": "Áp dụng checklist này sẽ giúp hệ thống của bạn vận hành trơn tru với chi phí Application Insights chỉ dao động từ 5$ đến 20$/tháng thay vì hàng trăm USD.",
+              "calloutTextVi": "Áp dụng checklist này sẽ giúp hệ thống của bạn vận hành trơn tru với chi phí Application Insights chỉ dao động từ 5$ đến 20$/tháng thay vì hàng trăm USD."
+            }
+          ]
+        },
+        {
+          "id": "ai-bai-5-kql-kusto-query-masterclass",
+          "seriesId": "app-insights-series",
+          "lessonNumber": "Bài 5",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "KQL (Kusto Query Language) Masterclass: Truy Vấn, Phân Tích Lỗi và Điều Tra Sự Cố On-Call Trong 30 Giây",
+          "titleVi": "KQL (Kusto Query Language) Masterclass: Truy Vấn, Phân Tích Lỗi và Điều Tra Sự Cố On-Call Trong 30 Giây",
+          "readingTime": "14 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Làm chủ ngôn ngữ KQL siêu tốc trên Azure Log Analytics: 5 bảng dữ liệu cốt lõi, các toán tử summarize/project/join, và bộ cheat-sheet câu query cứu rỗi cuộc đời khi On-call lúc nửa đêm.",
+          "summaryVi": "Làm chủ ngôn ngữ KQL siêu tốc trên Azure Log Analytics: 5 bảng dữ liệu cốt lõi, các toán tử summarize/project/join, và bộ cheat-sheet câu query cứu rỗi cuộc đời khi On-call lúc nửa đêm.",
+          "tags": [
+            "kql",
+            "kusto",
+            "log-analytics",
+            "incident-investigation",
+            "on-call"
+          ],
+          "sections": [
+            {
+              "heading": "1. Kusto Query Language (KQL) Là Gì và 5 Bảng Dữ Liệu Cốt Lõi",
+              "headingVi": "1. Kusto Query Language (KQL) Là Gì và 5 Bảng Dữ Liệu Cốt Lõi",
+              "paragraphs": [
+                "KQL (Kusto Query Language) là ngôn ngữ truy vấn mạnh mẽ được thiết kế riêng để xử lý hàng tỷ dòng log trong vài phần trăm giây trên Azure Data Explorer và Log Analytics Workspace.",
+                "Cú pháp KQL chạy theo luồng đường ống dẫn (Piping syntax `|`): Dữ liệu từ bảng bên trái được đẩy qua từng bộ lọc bên phải theo thứ tự từ trên xuống dưới.",
+                "Năm bảng dữ liệu bạn dùng 99% thời gian làm việc:",
+                "1. `requests`: Chứa thông tin các HTTP request gửi đến (Url, DurationMs, ResultCode, Success).",
+                "2. `dependencies`: Chứa các cuộc gọi ra bên ngoài (SQL, HTTP Client, Redis, Service Bus).",
+                "3. `exceptions`: Chứa thông tin ngoại lệ (ProblemId, Type, InnermostMessage, StackTrace).",
+                "4. `traces`: Chứa các dòng log từ `ILogger` và `TelemetryClient.TrackTrace`.",
+                "5. `customEvents`: Chứa các sự kiện kinh doanh phát sinh từ `TrackEvent`."
+              ],
+              "paragraphsVi": [
+                "KQL (Kusto Query Language) là ngôn ngữ truy vấn mạnh mẽ được thiết kế riêng để xử lý hàng tỷ dòng log trong vài phần trăm giây trên Azure Data Explorer và Log Analytics Workspace.",
+                "Cú pháp KQL chạy theo luồng đường ống dẫn (Piping syntax `|`): Dữ liệu từ bảng bên trái được đẩy qua từng bộ lọc bên phải theo thứ tự từ trên xuống dưới.",
+                "Năm bảng dữ liệu bạn dùng 99% thời gian làm việc:",
+                "1. `requests`: Chứa thông tin các HTTP request gửi đến (Url, DurationMs, ResultCode, Success).",
+                "2. `dependencies`: Chứa các cuộc gọi ra bên ngoài (SQL, HTTP Client, Redis, Service Bus).",
+                "3. `exceptions`: Chứa thông tin ngoại lệ (ProblemId, Type, InnermostMessage, StackTrace).",
+                "4. `traces`: Chứa các dòng log từ `ILogger` và `TelemetryClient.TrackTrace`.",
+                "5. `customEvents`: Chứa các sự kiện kinh doanh phát sinh từ `TrackEvent`."
+              ],
+              "codeTitle": "Cú pháp cơ bản của KQL",
+              "codeLanguage": "sql",
+              "codeContent": "// Lấy 50 request thất bại gần nhất trong 24 giờ qua\nrequests\n| where timestamp > ago(24h)\n| where success == false\n| project timestamp, name, resultCode, duration, operation_Id\n| order by timestamp desc\n| take 50",
+              "calloutType": "tip",
+              "calloutTitle": "Khóa liên kết operation_Id",
+              "calloutTitleVi": "Khóa liên kết operation_Id",
+              "calloutText": "Cột `operation_Id` chính là mã Correlation ID duy nhất của toàn bộ giao dịch. Bạn lấy `operation_Id` từ bảng `requests`, rồi tìm trong bảng `dependencies` hoặc `exceptions` sẽ ra toàn bộ lịch sử của request đó!",
+              "calloutTextVi": "Cột `operation_Id` chính là mã Correlation ID duy nhất của toàn bộ giao dịch. Bạn lấy `operation_Id` từ bảng `requests`, rồi tìm trong bảng `dependencies` hoặc `exceptions` sẽ ra toàn bộ lịch sử của request đó!"
+            },
+            {
+              "heading": "2. Cheat-Sheet KQL: 4 Câu Lệnh Điều Tra Sự Cố Đỉnh Cao",
+              "headingVi": "2. Cheat-Sheet KQL: 4 Câu Lệnh Điều Tra Sự Cố Đỉnh Cao",
+              "paragraphs": [
+                "Dưới đây là 4 câu truy vấn KQL thực chiến mà mọi kỹ sư On-call đều phải lưu vào bookmark trình duyệt:"
+              ],
+              "paragraphsVi": [
+                "Dưới đây là 4 câu truy vấn KQL thực chiến mà mọi kỹ sư On-call đều phải lưu vào bookmark trình duyệt:"
+              ],
+              "codeTitle": "Bộ 4 câu truy vấn KQL thực chiến khi hệ thống có sự cố",
+              "codeLanguage": "sql",
+              "codeContent": "// CÂU 1: Tìm Top 5 Endpoint chậm nhất hệ thống theo phân vị p95 và p99\nrequests\n| where timestamp > ago(1h)\n| where success == true\n| summarize \n    RequestCount = count(),\n    AvgDuration = avg(duration),\n    P95_Duration = percentile(duration, 95),\n    P99_Duration = percentile(duration, 99)\n    by name\n| where RequestCount > 10\n| order by P95_Duration desc\n| take 5\n\n// CÂU 2: Gom nhóm lỗi Exception nhiều nhất trong 4 giờ qua kèm mẫu lỗi\nexceptions\n| where timestamp > ago(4h)\n| summarize \n    ErrorCount = count(), \n    SampleMessage = any(innermostMessage), \n    LastSeen = max(timestamp) \n    by problemId, type\n| order by ErrorCount desc\n\n// CÂU 3: Tìm Dependency nghẽn (SQL Query hoặc HTTP Call bên ngoài chạy quá 3 giây)\ndependencies\n| where timestamp > ago(2h)\n| where duration > 3000\n| project timestamp, target, type, name, duration, operation_Id\n| order by duration desc\n\n// CÂU 4: Vẽ biểu đồ tỷ lệ lỗi theo từng 5 phút (Error Rate Timechart)\nrequests\n| where timestamp > ago(12h)\n| summarize \n    Total = count(),\n    Failed = countif(success == false)\n    by bin(timestamp, 5m)\n| extend FailureRate = (Failed * 100.0) / Total\n| render timechart",
+              "calloutType": "info",
+              "calloutTitle": "Lệnh render timechart",
+              "calloutTitleVi": "Lệnh render timechart",
+              "calloutText": "Từ khóa `render timechart` ở cuối câu truy vấn KQL sẽ biến bảng số liệu thành một biểu đồ đường trực quan ngay trong Azure Portal mà không cần công cụ bên thứ ba.",
+              "calloutTextVi": "Từ khóa `render timechart` ở cuối câu truy vấn KQL sẽ biến bảng số liệu thành một biểu đồ đường trực quan ngay trong Azure Portal mà không cần công cụ bên thứ ba."
+            },
+            {
+              "heading": "3. Thiết Lập Alert Rules Bắn Cảnh Báo Sang Telegram / Slack",
+              "headingVi": "3. Thiết Lập Alert Rules Bắn Cảnh Báo Sang Telegram / Slack",
+              "paragraphs": [
+                "Đừng chờ đến khi người dùng gọi điện mắng vốn mới biết hệ thống bị lỗi.",
+                "Bạn có thể biến bất kỳ câu lệnh KQL nào thành một **Alert Rule** tự động:",
+                "- Ví dụ: Cứ mỗi 5 phút, Azure chạy câu lệnh kiểm tra: Nếu `requests | where success == false | count` vượt quá 50 lỗi trong 5 phút.",
+                "- Ngay lập tức, Azure Action Group kích hoạt Webhook bắn thông báo khẩn cấp vào kênh Telegram hoặc Slack của đội ngũ kỹ sư kèm đường link dẫn thẳng vào màn hình điều tra lỗi."
+              ],
+              "paragraphsVi": [
+                "Đừng chờ đến khi người dùng gọi điện mắng vốn mới biết hệ thống bị lỗi.",
+                "Bạn có thể biến bất kỳ câu lệnh KQL nào thành một **Alert Rule** tự động:",
+                "- Ví dụ: Cứ mỗi 5 phút, Azure chạy câu lệnh kiểm tra: Nếu `requests | where success == false | count` vượt quá 50 lỗi trong 5 phút.",
+                "- Ngay lập tức, Azure Action Group kích hoạt Webhook bắn thông báo khẩn cấp vào kênh Telegram hoặc Slack của đội ngũ kỹ sư kèm đường link dẫn thẳng vào màn hình điều tra lỗi."
+              ],
+              "codeTitle": "Cấu hình Action Group Webhook gửi Alert",
+              "codeLanguage": "json",
+              "codeContent": "{\n  \"schemaId\": \"azureMonitorCommonAlertSchema\",\n  \"data\": {\n    \"essentials\": {\n      \"alertRule\": \"High_Failure_Rate_Alert\",\n      \"severity\": \"Sev1\",\n      \"signalType\": \"Log\",\n      \"monitorCondition\": \"Fired\"\n    }\n  }\n}",
+              "calloutType": "tip",
+              "calloutTitle": "Nguyên tắc đặt ngưỡng Alert",
+              "calloutTitleVi": "Nguyên tắc đặt ngưỡng Alert",
+              "calloutText": "Hãy đặt cảnh báo dựa trên tỷ lệ phần trăm (FailureRate > 2%) thay vì số lượng tuyệt đối, tránh hiện tượng cảnh báo ảo (False Positive) vào các khung giờ cao điểm khi traffic tự nhiên tăng vọt.",
+              "calloutTextVi": "Hãy đặt cảnh báo dựa trên tỷ lệ phần trăm (FailureRate > 2%) thay vì số lượng tuyệt đối, tránh hiện tượng cảnh báo ảo (False Positive) vào các khung giờ cao điểm khi traffic tự nhiên tăng vọt."
+            }
+          ]
+        },
+        {
+          "id": "ai-bai-6-opentelemetry-worker-blazor-appmap",
+          "seriesId": "app-insights-series",
+          "lessonNumber": "Bài 6",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
+          "title": "Application Insights Trong Hệ Sinh Thái Hiện Đại: OpenTelemetry Exporter, Worker Service, Blazor & Application Map",
+          "titleVi": "Application Insights Trong Hệ Sinh Thái Hiện Đại: OpenTelemetry Exporter, Worker Service, Blazor & Application Map",
+          "readingTime": "15 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Xu hướng tương lai chuẩn hóa: Tích hợp Azure Monitor OpenTelemetry Distro, giám sát tiến trình ngầm Worker Service, gắn Application Insights vào Blazor WebAssembly và khai thác Application Map.",
+          "summaryVi": "Xu hướng tương lai chuẩn hóa: Tích hợp Azure Monitor OpenTelemetry Distro, giám sát tiến trình ngầm Worker Service, gắn Application Insights vào Blazor WebAssembly và khai thác Application Map.",
+          "tags": [
+            "opentelemetry",
+            "azure-monitor",
+            "worker-service",
+            "blazor-wasm",
+            "application-map"
+          ],
+          "sections": [
+            {
+              "heading": "1. Xu Hướng Mới Của Microsoft: Azure Monitor OpenTelemetry Distro",
+              "headingVi": "1. Xu Hướng Mới Của Microsoft: Azure Monitor OpenTelemetry Distro",
+              "paragraphs": [
+                "Microsoft đang tích cực chuyển dịch toàn bộ hệ sinh thái giám sát sang chuẩn mở toàn cầu **OpenTelemetry (OTel)** do Cloud Native Computing Foundation (CNCF) bảo trợ.",
+                "Thay vì phụ thuộc vào thư viện độc quyền cũ `Microsoft.ApplicationInsights.AspNetCore`, Microsoft khuyến nghị các dự án mới từ .NET 8/9/10 sử dụng gói chính thức: **`Azure.Monitor.OpenTelemetry.AspNetCore`**.",
+                "Lợi ích vượt trội:",
+                "- Code của bạn hoàn toàn độc lập với nhà cung cấp (Vendor-agnostic). Ngày mai bạn muốn chuyển từ Azure sang Datadog, Grafana hay Dynatrace chỉ cần đổi Exporter mà không cần sửa 1 dòng code C# nào.",
+                "- Dữ liệu vẫn được gửi trọn vẹn về Azure Application Insights và hiển thị đầy đủ trên Application Map và Transaction Search."
+              ],
+              "paragraphsVi": [
+                "Microsoft đang tích cực chuyển dịch toàn bộ hệ sinh thái giám sát sang chuẩn mở toàn cầu **OpenTelemetry (OTel)** do Cloud Native Computing Foundation (CNCF) bảo trợ.",
+                "Thay vì phụ thuộc vào thư viện độc quyền cũ `Microsoft.ApplicationInsights.AspNetCore`, Microsoft khuyến nghị các dự án mới từ .NET 8/9/10 sử dụng gói chính thức: **`Azure.Monitor.OpenTelemetry.AspNetCore`**.",
+                "Lợi ích vượt trội:",
+                "- Code của bạn hoàn toàn độc lập với nhà cung cấp (Vendor-agnostic). Ngày mai bạn muốn chuyển từ Azure sang Datadog, Grafana hay Dynatrace chỉ cần đổi Exporter mà không cần sửa 1 dòng code C# nào.",
+                "- Dữ liệu vẫn được gửi trọn vẹn về Azure Application Insights và hiển thị đầy đủ trên Application Map và Transaction Search."
+              ],
+              "codeTitle": "Cài đặt và kích hoạt Azure Monitor OpenTelemetry trong C#",
+              "codeLanguage": "csharp",
+              "codeContent": "// Cài đặt: dotnet add package Azure.Monitor.OpenTelemetry.AspNetCore\nusing Azure.Monitor.OpenTelemetry.AspNetCore;\n\nvar builder = WebApplication.CreateBuilder(args);\n\n// Kích hoạt OpenTelemetry chuẩn Azure Monitor chỉ với 1 dòng lệnh\nbuilder.Services.AddOpenTelemetry()\n    .UseAzureMonitor(); // Tự động đọc chuỗi APPLICATIONINSIGHTS_CONNECTION_STRING\n\nvar app = builder.Build();\napp.Run();",
+              "calloutType": "tip",
+              "calloutTitle": "Tương thích 100%",
+              "calloutTitleVi": "Tương thích 100%",
+              "calloutText": "`UseAzureMonitor()` tích hợp sẵn bộ thu thập chuẩn OTel cho ASP.NET Core, HttpClient, SQL Client và chuyển đổi tự động sang schema của Application Insights.",
+              "calloutTextVi": "`UseAzureMonitor()` tích hợp sẵn bộ thu thập chuẩn OTel cho ASP.NET Core, HttpClient, SQL Client và chuyển đổi tự động sang schema của Application Insights."
+            },
+            {
+              "heading": "2. Giám Sát Background Worker Service & Queue Consumer",
+              "headingVi": "2. Giám Sát Background Worker Service & Queue Consumer",
+              "paragraphs": [
+                "Với các ứng dụng chạy nền không có HTTP Request (như .NET Worker Service đọc tin nhắn từ RabbitMQ/Kafka, chạy Cron Job):",
+                "Bạn cài đặt gói `Microsoft.ApplicationInsights.WorkerService` và gọi `services.AddApplicationInsightsTelemetryWorkerService()`.",
+                "Khi xử lý một tin nhắn từ Queue, bạn dùng phương thức `_telemetry.StartOperation<RequestTelemetry>(\"ProcessQueueMessage\")` để đánh dấu điểm bắt đầu và kết thúc của một tác vụ nền."
+              ],
+              "paragraphsVi": [
+                "Với các ứng dụng chạy nền không có HTTP Request (như .NET Worker Service đọc tin nhắn từ RabbitMQ/Kafka, chạy Cron Job):",
+                "Bạn cài đặt gói `Microsoft.ApplicationInsights.WorkerService` và gọi `services.AddApplicationInsightsTelemetryWorkerService()`.",
+                "Khi xử lý một tin nhắn từ Queue, bạn dùng phương thức `_telemetry.StartOperation<RequestTelemetry>(\"ProcessQueueMessage\")` để đánh dấu điểm bắt đầu và kết thúc của một tác vụ nền."
+              ],
+              "codeTitle": "Sử dụng StartOperation trong Background Worker",
+              "codeLanguage": "csharp",
+              "codeContent": "public class QueueConsumerWorker : BackgroundService\n{\n    private readonly TelemetryClient _telemetry;\n\n    public QueueConsumerWorker(TelemetryClient telemetry) => _telemetry = telemetry;\n\n    protected override async Task ExecuteAsync(CancellationToken stoppingToken)\n    {\n        while (!stoppingToken.IsCancellationRequested)\n        {\n            var message = await FetchNextMessageAsync();\n            \n            // Bắt đầu một Operation (Tương đương 1 Request trong Web)\n            using (var operation = _telemetry.StartOperation<RequestTelemetry>(\"ProcessMessage:\" + message.Topic))\n            {\n                try\n                {\n                    await HandleBusinessLogicAsync(message);\n                    operation.Telemetry.Success = true;\n                }\n                catch (Exception ex)\n                {\n                    operation.Telemetry.Success = false;\n                    _telemetry.TrackException(ex);\n                }\n            } // Kết thúc using -> Tự động tính duration và gửi lên Azure\n        }\n    }\n}",
+              "calloutType": "info",
+              "calloutTitle": "Lợi ích của StartOperation",
+              "calloutTitleVi": "Lợi ích của StartOperation",
+              "calloutText": "`StartOperation` tự động sinh `operation_Id` và gắn kết mọi câu truy vấn SQL hay HTTP call phát sinh bên trong khối `using` vào chung một cây phân tích.",
+              "calloutTextVi": "`StartOperation` tự động sinh `operation_Id` và gắn kết mọi câu truy vấn SQL hay HTTP call phát sinh bên trong khối `using` vào chung một cây phân tích."
+            },
+            {
+              "heading": "3. Kết Nối Frontend Blazor WebAssembly & Sức Mạnh Của Application Map",
+              "headingVi": "3. Kết Nối Frontend Blazor WebAssembly & Sức Mạnh Của Application Map",
+              "paragraphs": [
+                "Giám sát Fullstack thực sự (End-to-End Observability):",
+                "Bằng cách nhúng Application Insights JavaScript SDK vào file `index.html` của Blazor WebAssembly, bạn theo dõi được thời gian tải trang (Page Load Time), lỗi JavaScript tại trình duyệt của khách hàng, và quan trọng nhất: Header `traceparent` được tự động chuyển tiếp từ trình duyệt xuống Backend API.",
+                "Tại Azure Portal, tính năng **Application Map** sẽ tự động vẽ một sơ đồ trực quan sống động:",
+                "- Từ Trình duyệt người dùng $\rightarrow$ Gateway $\rightarrow$ Backend Microservices $\rightarrow$ SQL Database $\rightarrow$ Redis.",
+                "- Mỗi nút hiển thị rõ tốc độ trung bình (ms) và số lượng cuộc gọi/phút.",
+                "- Nếu một node hoặc kết nối chuyển sang màu đỏ: Đó chính là điểm nghẽn (Bottleneck) làm chậm toàn bộ hệ thống!"
+              ],
+              "paragraphsVi": [
+                "Giám sát Fullstack thực sự (End-to-End Observability):",
+                "Bằng cách nhúng Application Insights JavaScript SDK vào file `index.html` của Blazor WebAssembly, bạn theo dõi được thời gian tải trang (Page Load Time), lỗi JavaScript tại trình duyệt của khách hàng, và quan trọng nhất: Header `traceparent` được tự động chuyển tiếp từ trình duyệt xuống Backend API.",
+                "Tại Azure Portal, tính năng **Application Map** sẽ tự động vẽ một sơ đồ trực quan sống động:",
+                "- Từ Trình duyệt người dùng $\rightarrow$ Gateway $\rightarrow$ Backend Microservices $\rightarrow$ SQL Database $\rightarrow$ Redis.",
+                "- Mỗi nút hiển thị rõ tốc độ trung bình (ms) và số lượng cuộc gọi/phút.",
+                "- Nếu một node hoặc kết nối chuyển sang màu đỏ: Đó chính là điểm nghẽn (Bottleneck) làm chậm toàn bộ hệ thống!"
+              ],
+              "codeTitle": "Nhúng Application Insights JS SDK vào wwwroot/index.html của Blazor",
+              "codeLanguage": "html",
+              "codeContent": "<!-- Nhúng trong thẻ <head> của wwwroot/index.html -->\n<script type=\"text/javascript\" src=\"https://js.monitor.azure.com/scripts/b/ai.2.min.js\"></script>\n<script type=\"text/javascript\">\n    var snippet = {\n        config: {\n            connectionString: \"InstrumentationKey=...;IngestionEndpoint=...\",\n            enableCorsCorrelation: true, // Tự động inject W3C traceparent vào fetch/XHR\n            enableAutoRouteTracking: true // Tự động bắt sự kiện chuyển trang trong Blazor SPA\n        }\n    };\n    var init = new Microsoft.ApplicationInsights.ApplicationInsights(snippet);\n    var appInsights = init.loadAppInsights();\n    appInsights.trackPageView();\n</script>",
+              "calloutType": "tip",
+              "calloutTitle": "Bức tranh hoàn hảo của một Senior Engineer",
+              "calloutTitleVi": "Bức tranh hoàn hảo của một Senior Engineer",
+              "calloutText": "Khi kết hợp trọn vẹn cả Frontend SPA, Backend .NET, OpenTelemetry và KQL Query, bạn nắm trong tay hệ thống quan sát đạt chuẩn 'Observability Excellence' của các tập đoàn công nghệ lớn nhất thế giới.",
+              "calloutTextVi": "Khi kết hợp trọn vẹn cả Frontend SPA, Backend .NET, OpenTelemetry và KQL Query, bạn nắm trong tay hệ thống quan sát đạt chuẩn 'Observability Excellence' của các tập đoàn công nghệ lớn nhất thế giới."
+            }
+          ]
+        }
+      ]
     }
   ]
 }
