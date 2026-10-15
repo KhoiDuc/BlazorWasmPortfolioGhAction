@@ -1437,7 +1437,7 @@
       "titleVi": "Chuyên Đề Load Balancing & API Gateway: YARP, Ocelot, Monolith & Microservices",
       "icon": "bi-shuffle",
       "color": "#0ea5e9",
-      "badge": "6 Bài Viết",
+      "badge": "7 Bài Viết",
       "description": "Lộ trình chuyên sâu từ nguyên lý cân bằng tải L4/L7, so sánh Monolith vs Microservices, cài đặt YARP & Ocelot, Health Checks, Session Affinity, đến bảo mật Gateway và mô hình HA Production.",
       "descriptionVi": "Lộ trình chuyên sâu từ nguyên lý cân bằng tải L4/L7, so sánh Monolith vs Microservices, cài đặt YARP & Ocelot, Health Checks, Session Affinity, đến bảo mật Gateway và mô hình HA Production.",
       "articles": [
@@ -1986,6 +1986,114 @@
               "calloutTextVi": "Trên máy chủ 4 vCPU và 8GB RAM, YARP Gateway duy trì đều đặn 45.000 - 60.000 RPS với độ trễ p95 dưới 8ms, CPU chỉ dao động quanh mức 40-50% mà không hề xảy ra hiện tượng tràn bộ nhớ hay nghẽn Socket."
             }
           ]
+        },
+        {
+          "id": "lb-bai-7-signalr-websocket-load-balancing",
+          "seriesId": "load-balancing-series",
+          "lessonNumber": "Bài 7",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
+          "title": "Cân Bằng Tải Cho Real-time App: Thách Thức Sticky Session Với WebSocket, SignalR Negotiate & Redis Backplane",
+          "titleVi": "Cân Bằng Tải Cho Real-time App: Thách Thức Sticky Session Với WebSocket, SignalR Negotiate & Redis Backplane",
+          "readingTime": "14 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Giải mã các lỗi kinh điển khi load balancing ứng dụng thời gian thực: Lỗi 404 Handshake Negotiation, cơ chế Sticky Session (Cookie Affinity) trong YARP/Nginx, và kiến trúc Redis Pub/Sub Backplane đồng bộ tin nhắn đa cụm server.",
+          "summaryVi": "Giải mã các lỗi kinh điển khi load balancing ứng dụng thời gian thực: Lỗi 404 Handshake Negotiation, cơ chế Sticky Session (Cookie Affinity) trong YARP/Nginx, và kiến trúc Redis Pub/Sub Backplane đồng bộ tin nhắn đa cụm server.",
+          "tags": [
+            "signalr",
+            "websocket",
+            "load-balancing",
+            "redis-backplane",
+            "sticky-session",
+            "yarp"
+          ],
+          "sections": [
+            {
+              "heading": "1. Bản Chất WebSocket vs HTTP Stateless & Bi Kịch Handshake Negotiation 404",
+              "headingVi": "1. Bản Chất WebSocket vs HTTP Stateless & Bi Kịch Handshake Negotiation 404",
+              "paragraphs": [
+                "Mô hình HTTP REST truyền thống là phi trạng thái (Stateless): Client gửi 1 request, Server xử lý, trả về response rồi đóng kết nối TCP (hoặc trả socket về pool). Với mô hình này, Load Balancer có thể thoải mái phân phối request tiếp theo sang bất kỳ server nào trong cụm bằng thuật toán Round Robin.",
+                "Ngược lại, WebSocket và ASP.NET Core SignalR là kết nối hai chiều (Full-Duplex) kéo dài liên tục (Persistent TCP Connection). Một khi kết nối được thiết lập, socket sẽ giữ nguyên trạng thái mở trong hàng giờ để server chủ động đẩy dữ liệu (Push notification) về cho client mà không cần client phải thăm dò (polling).",
+                "Bi kịch xảy ra trong quy trình bắt tay 2 bước của SignalR:",
+                "1. Bước 1 (Negotiate): Client gửi HTTP POST tới `/chatHub/negotiate`. Server backend sinh ra một `connectionId` và lưu tạm vào bộ nhớ RAM cục bộ, sau đó trả về cho client.",
+                "2. Bước 2 (Upgrade): Client gửi tiếp HTTP GET tới `/chatHub?id={connectionId}` kèm header `Connection: Upgrade` và `Upgrade: websocket` để chính thức mở kênh socket.",
+                "NẾU KHÔNG CÓ STICKY SESSION: Load Balancer (chạy Round Robin thuần) sẽ chuyển Bước 1 vào Server A, nhưng chuyển Bước 2 vào Server B. Vì Server B hoàn toàn không có `connectionId` này trong bộ nhớ, nó lập tức ném ra lỗi HTTP 404 Not Found hoặc HTTP 400 Bad Request! Kết nối thời gian thực bị gãy ngay lập tức."
+              ],
+              "paragraphsVi": [
+                "Mô hình HTTP REST truyền thống là phi trạng thái (Stateless): Client gửi 1 request, Server xử lý, trả về response rồi đóng kết nối TCP (hoặc trả socket về pool). Với mô hình này, Load Balancer có thể thoải mái phân phối request tiếp theo sang bất kỳ server nào trong cụm bằng thuật toán Round Robin.",
+                "Ngược lại, WebSocket và ASP.NET Core SignalR là kết nối hai chiều (Full-Duplex) kéo dài liên tục (Persistent TCP Connection). Một khi kết nối được thiết lập, socket sẽ giữ nguyên trạng thái mở trong hàng giờ để server chủ động đẩy dữ liệu (Push notification) về cho client mà không cần client phải thăm dò (polling).",
+                "Bi kịch xảy ra trong quy trình bắt tay 2 bước của SignalR:",
+                "1. Bước 1 (Negotiate): Client gửi HTTP POST tới `/chatHub/negotiate`. Server backend sinh ra một `connectionId` và lưu tạm vào bộ nhớ RAM cục bộ, sau đó trả về cho client.",
+                "2. Bước 2 (Upgrade): Client gửi tiếp HTTP GET tới `/chatHub?id={connectionId}` kèm header `Connection: Upgrade` và `Upgrade: websocket` để chính thức mở kênh socket.",
+                "NẾU KHÔNG CÓ STICKY SESSION: Load Balancer (chạy Round Robin thuần) sẽ chuyển Bước 1 vào Server A, nhưng chuyển Bước 2 vào Server B. Vì Server B hoàn toàn không có `connectionId` này trong bộ nhớ, nó lập tức ném ra lỗi HTTP 404 Not Found hoặc HTTP 400 Bad Request! Kết nối thời gian thực bị gãy ngay lập tức."
+              ],
+              "codeTitle": "Sơ đồ luồng lỗi khi thiếu Sticky Session",
+              "codeLanguage": "text",
+              "codeContent": "[Client Trình Duyệt]\n   │\n   ├── [1. POST /chatHub/negotiate] ──────► [Load Balancer] ──► [Server A: Lưu ConnectionId vào RAM]\n   │                                             │\n   └── [2. GET /chatHub (WebSocket Upgrade)] ────► [Load Balancer] ──► [Server B]\n                                                                         │\n                                                                         └──► ❌ HTTP 404 NOT FOUND!\n                                                                              (Server B không biết ConnectionId này!)",
+              "calloutType": "warning",
+              "calloutTitle": "Lỗi phổ biến nhất",
+              "calloutTitleVi": "Lỗi phổ biến nhất",
+              "calloutText": "Hơn 90% lỗi 'Error during WebSocket handshake: Unexpected response code: 404' khi deploy cụm nhiều server .NET xuất phát từ việc thiếu cấu hình Session Affinity tại Load Balancer.",
+              "calloutTextVi": "Hơn 90% lỗi 'Error during WebSocket handshake: Unexpected response code: 404' khi deploy cụm nhiều server .NET xuất phát từ việc thiếu cấu hình Session Affinity tại Load Balancer."
+            },
+            {
+              "heading": "2. Cấu Hình Session Affinity (Cookie Sticky Session) Cho SignalR Trong YARP & Nginx",
+              "headingVi": "2. Cấu Hình Session Affinity (Cookie Sticky Session) Cho SignalR Trong YARP & Nginx",
+              "paragraphs": [
+                "Để giải quyết triệt để lỗi 404 Negotiation, Load Balancer phải sử dụng cơ chế **Session Affinity (Sticky Session)**:",
+                "- Khi client gọi `/negotiate` lần đầu, Load Balancer chọn Server A và đồng thời gắn một Cookie mã hóa (ví dụ `.Yarp.Affinity`) vào HTTP Response.",
+                "- Trình duyệt sẽ tự động đính kèm Cookie này trong request nâng cấp WebSocket tiếp theo. Load Balancer đọc Cookie và đảm bảo 100% chuyển tiếp gói tin về đúng Server A.",
+                "- YARP hỗ trợ native giao thức WebSocket và Session Affinity với tùy chọn tự động phục hồi `FailurePolicy: Redistribute` nếu server chỉ định bị crash.",
+                "- Đồng thời, tại phía Client SignalR, luôn bật tính năng `.withAutomaticReconnect()` để client tự động đàm phán lại nếu có sự cố ngắt mạng."
+              ],
+              "paragraphsVi": [
+                "Để giải quyết triệt để lỗi 404 Negotiation, Load Balancer phải sử dụng cơ chế **Session Affinity (Sticky Session)**:",
+                "- Khi client gọi `/negotiate` lần đầu, Load Balancer chọn Server A và đồng thời gắn một Cookie mã hóa (ví dụ `.Yarp.Affinity`) vào HTTP Response.",
+                "- Trình duyệt sẽ tự động đính kèm Cookie này trong request nâng cấp WebSocket tiếp theo. Load Balancer đọc Cookie và đảm bảo 100% chuyển tiếp gói tin về đúng Server A.",
+                "- YARP hỗ trợ native giao thức WebSocket và Session Affinity với tùy chọn tự động phục hồi `FailurePolicy: Redistribute` nếu server chỉ định bị crash.",
+                "- Đồng thời, tại phía Client SignalR, luôn bật tính năng `.withAutomaticReconnect()` để client tự động đàm phán lại nếu có sự cố ngắt mạng."
+              ],
+              "codeTitle": "Cấu hình YARP appsettings.json tối ưu cho cụm SignalR Cluster",
+              "codeLanguage": "json",
+              "codeContent": "{\n  \"ReverseProxy\": {\n    \"Routes\": {\n      \"signalr-route\": {\n        \"ClusterId\": \"signalr-cluster\",\n        \"Match\": {\n          \"Path\": \"/hubs/{**catch-all}\"\n        }\n      }\n    },\n    \"Clusters\": {\n      \"signalr-cluster\": {\n        \"LoadBalancingPolicy\": \"LeastRequests\",\n        \"SessionAffinity\": {\n          \"Enabled\": true,\n          \"Policy\": \"Cookie\",\n          \"FailurePolicy\": \"Redistribute\",\n          \"AffinityKeyName\": \".Portfolio.SignalR.Affinity\",\n          \"Cookie\": {\n            \"HttpOnly\": true,\n            \"SecurePolicy\": \"Always\",\n            \"SameSite\": \"Lax\"\n          }\n        },\n        \"Destinations\": {\n          \"node-1\": { \"Address\": \"http://chat-svc-01:8080/\" },\n          \"node-2\": { \"Address\": \"http://chat-svc-02:8080/\" }\n        }\n      }\n    }\n  }\n}",
+              "calloutType": "tip",
+              "calloutTitle": "Cấu hình tương đương trên Nginx",
+              "calloutTitleVi": "Cấu hình tương đương trên Nginx",
+              "calloutText": "Nếu dùng Nginx, bạn cần thêm `proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection \"upgrade\";` và dùng `ip_hash;` trong upstream block để duy trì Sticky Session theo địa chỉ IP của client.",
+              "calloutTextVi": "Nếu dùng Nginx, bạn cần thêm `proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection \"upgrade\";` và dùng `ip_hash;` trong upstream block để duy trì Sticky Session theo địa chỉ IP của client."
+            },
+            {
+              "heading": "3. Bài Toán Multi-Server Broadcast & Kiến Trúc Redis Pub/Sub Backplane",
+              "headingVi": "3. Bài Toán Multi-Server Broadcast & Kiến Trúc Redis Pub/Sub Backplane",
+              "paragraphs": [
+                "Sau khi cấu hình Sticky Session thành công, bạn lại đối mặt với bài toán hóc búa thứ hai:",
+                "- Giả sử User A đang kết nối socket tới Server 1.",
+                "- User B đang kết nối socket tới Server 2.",
+                "- Khi User A gửi một tin nhắn chat: 'Chào cả phòng!', Server 1 nhận được tin nhắn. Nhưng trong bộ nhớ RAM của Server 1 CHỈ CÓ User A. Server 1 không có cách nào gửi trực tiếp tin nhắn sang cho User B đang nằm ở Server 2!",
+                "Giải pháp chuẩn mực của thế giới phân tán là **SignalR Backplane**:",
+                "Chúng ta đặt một Redis Server làm trung tâm điều phối Pub/Sub. Tất cả các Node Server (Server 1, Server 2, Server 3) đều đăng ký (Subscribe) vào một kênh chung trong Redis.",
+                "Khi Server 1 muốn broadcast tin nhắn `Clients.All.SendAsync(\"ReceiveMessage\", msg)`, nó phát tin đó vào Redis. Redis lập tức bắn tin sang Server 2 và Server 3. Server 2 nhận được và đẩy tiếp xuống cho User B qua kênh WebSocket sẵn có!"
+              ],
+              "paragraphsVi": [
+                "Sau khi cấu hình Sticky Session thành công, bạn lại đối mặt với bài toán hóc búa thứ hai:",
+                "- Giả sử User A đang kết nối socket tới Server 1.",
+                "- User B đang kết nối socket tới Server 2.",
+                "- Khi User A gửi một tin nhắn chat: 'Chào cả phòng!', Server 1 nhận được tin nhắn. Nhưng trong bộ nhớ RAM của Server 1 CHỈ CÓ User A. Server 1 không có cách nào gửi trực tiếp tin nhắn sang cho User B đang nằm ở Server 2!",
+                "Giải pháp chuẩn mực của thế giới phân tán là **SignalR Backplane**:",
+                "Chúng ta đặt một Redis Server làm trung tâm điều phối Pub/Sub. Tất cả các Node Server (Server 1, Server 2, Server 3) đều đăng ký (Subscribe) vào một kênh chung trong Redis.",
+                "Khi Server 1 muốn broadcast tin nhắn `Clients.All.SendAsync(\"ReceiveMessage\", msg)`, nó phát tin đó vào Redis. Redis lập tức bắn tin sang Server 2 và Server 3. Server 2 nhận được và đẩy tiếp xuống cho User B qua kênh WebSocket sẵn có!"
+              ],
+              "codeTitle": "Cấu hình Redis Backplane trong ASP.NET Core Program.cs",
+              "codeLanguage": "csharp",
+              "codeContent": "// Cài đặt gói NuGet: Microsoft.AspNetCore.SignalR.StackExchangeRedis\nvar builder = WebApplication.CreateBuilder(args);\n\n// Đăng ký SignalR kèm Redis Backplane\nbuilder.Services.AddSignalR(options =>\n{\n    options.EnableDetailedErrors = builder.Environment.IsDevelopment();\n    options.KeepAliveInterval = TimeSpan.FromSeconds(15); // Ping giữ socket sống\n    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);\n})\n.AddStackExchangeRedis(builder.Configuration.GetConnectionString(\"Redis\")!, options =>\n{\n    options.Configuration.ChannelPrefix = StackExchange.Redis.RedisChannel.Literal(\"PortfolioSignalR\");\n});\n\nvar app = builder.Build();\napp.MapHub<ChatHub>(\"/hubs/chat\");\napp.Run();",
+              "calloutType": "info",
+              "calloutTitle": "Khi nào nên dùng Azure SignalR Service?",
+              "calloutTitleVi": "Khi nào nên dùng Azure SignalR Service?",
+              "calloutText": "Nếu ứng dụng của bạn có từ 50.000 đến 1 triệu kết nối đồng thời (Concurrent Connections), việc tự duy trì Redis Backplane và RAM socket có thể gây quá tải máy chủ. Khi đó, dịch vụ Serverless 'Azure SignalR Service' sẽ gánh toàn bộ 1 triệu kết nối TCP ở tầng ngoài, backend của bạn chỉ xử lý các event nghiệp vụ dạng stateless cực kỳ nhẹ nhàng.",
+              "calloutTextVi": "Nếu ứng dụng của bạn có từ 50.000 đến 1 triệu kết nối đồng thời (Concurrent Connections), việc tự duy trì Redis Backplane và RAM socket có thể gây quá tải máy chủ. Khi đó, dịch vụ Serverless 'Azure SignalR Service' sẽ gánh toàn bộ 1 triệu kết nối TCP ở tầng ngoài, backend của bạn chỉ xử lý các event nghiệp vụ dạng stateless cực kỳ nhẹ nhàng."
+            }
+          ]
         }
       ]
     },
@@ -2530,6 +2638,1167 @@
               "calloutTitleVi": "Văn hóa Blameless Post-Mortem",
               "calloutText": "Hệ thống logging tốt không phải để tìm ai là người viết code lỗi để đổ lỗi, mà là để toàn bộ đội ngũ có đầy đủ dữ liệu minh bạch, phục hồi hệ thống nhanh nhất và ngăn chặn sự cố tương tự lặp lại trong tương lai.",
               "calloutTextVi": "Hệ thống logging tốt không phải để tìm ai là người viết code lỗi để đổ lỗi, mà là để toàn bộ đội ngũ có đầy đủ dữ liệu minh bạch, phục hồi hệ thống nhanh nhất và ngăn chặn sự cố tương tự lặp lại trong tương lai."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vibe-coding-series",
+      "title": "Vibe Coding Masterclass: Cursor, Claude 3.7, Windsurf & AI Pair Programming",
+      "titleVi": "Chuyên Đề Vibe Coding: Làm Chủ Cursor, Claude 3.7, Windsurf & AI Pair Programming",
+      "icon": "bi-magic",
+      "color": "#8b5cf6",
+      "badge": "6 Bài Viết",
+      "description": "Lộ trình toàn diện từ triết lý Vibe Coding của Andrej Karpathy, cấu hình .cursorrules, System Prompting, Test-Driven Vibe Coding đến quy trình Code Review và CI/CD an toàn cho doanh nghiệp.",
+      "descriptionVi": "Lộ trình toàn diện từ triết lý Vibe Coding của Andrej Karpathy, cấu hình .cursorrules, System Prompting, Test-Driven Vibe Coding đến quy trình Code Review và CI/CD an toàn cho doanh nghiệp.",
+      "articles": [
+        {
+          "id": "vibe-bai-1-triet-ly-mindset",
+          "seriesId": "vibe-coding-series",
+          "lessonNumber": "Bài 1",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
+          "title": "Triết lý Vibe Coding là gì? Từ 'Coder Gõ Phím' sang 'AI Architect Chỉ Huy' và Mindset Dịch Chuyển",
+          "titleVi": "Triết lý Vibe Coding là gì? Từ 'Coder Gõ Phím' sang 'AI Architect Chỉ Huy' và Mindset Dịch Chuyển",
+          "readingTime": "8 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Hiểu rõ khái niệm Vibe Coding do Andrej Karpathy định hình, so sánh các công cụ Cursor, Windsurf, Claude 3.7, Bolt.new và cách tránh 'Vibe Trap' sinh ra code rác.",
+          "summaryVi": "Hiểu rõ khái niệm Vibe Coding do Andrej Karpathy định hình, so sánh các công cụ Cursor, Windsurf, Claude 3.7, Bolt.new và cách tránh 'Vibe Trap' sinh ra code rác.",
+          "tags": [
+            "vibe-coding",
+            "cursor",
+            "claude",
+            "ai-engineering",
+            "mindset"
+          ],
+          "sections": [
+            {
+              "heading": "1. Khái Niệm Vibe Coding của Andrej Karpathy",
+              "headingVi": "1. Khái Niệm Vibe Coding của Andrej Karpathy",
+              "paragraphs": [
+                "Đầu năm 2025, Andrej Karpathy (cựu Giám đốc AI của Tesla, đồng sáng lập OpenAI) đã đưa ra thuật ngữ 'Vibe Coding'. Ông mô tả một phong cách lập trình mới: 'Tôi hoàn toàn quên đi cú pháp ngôn ngữ, quên cách viết một hàm for hay regex phức tạp. Tôi chỉ việc nói chuyện với AI bằng ngôn ngữ tự nhiên, thả mình theo dòng suy nghĩ (vibe with it), và AI sẽ viết 100% dòng code thực tế.'",
+                "Tuy nhiên, Vibe Coding KHÔNG PHẢI là lười biếng hay không cần kiến thức nền tảng. Ngược lại, giá trị của kỹ sư dịch chuyển từ 'người nhớ cú pháp thư viện' sang 'Kiến trúc sư hệ thống (AI Architect)': người định nghĩa luồng dữ liệu, thiết kế database schema, đặt ranh giới bảo mật và thẩm định chất lượng mã nguồn do AI sinh ra."
+              ],
+              "paragraphsVi": [
+                "Đầu năm 2025, Andrej Karpathy (cựu Giám đốc AI của Tesla, đồng sáng lập OpenAI) đã đưa ra thuật ngữ 'Vibe Coding'. Ông mô tả một phong cách lập trình mới: 'Tôi hoàn toàn quên đi cú pháp ngôn ngữ, quên cách viết một hàm for hay regex phức tạp. Tôi chỉ việc nói chuyện với AI bằng ngôn ngữ tự nhiên, thả mình theo dòng suy nghĩ (vibe with it), và AI sẽ viết 100% dòng code thực tế.'",
+                "Tuy nhiên, Vibe Coding KHÔNG PHẢI là lười biếng hay không cần kiến thức nền tảng. Ngược lại, giá trị của kỹ sư dịch chuyển từ 'người nhớ cú pháp thư viện' sang 'Kiến trúc sư hệ thống (AI Architect)': người định nghĩa luồng dữ liệu, thiết kế database schema, đặt ranh giới bảo mật và thẩm định chất lượng mã nguồn do AI sinh ra."
+              ],
+              "codeTitle": "So sánh 2 thế hệ lập trình viên",
+              "codeLanguage": "text",
+              "codeContent": "┌──────────────────────────────┬──────────────────────────────┐\n│ Lập Trình Viên Cổ Điển       │ Vibe Coder Hiện Đại          │\n├──────────────────────────────┼──────────────────────────────┤\n│ Nhớ cú pháp Syntax từng hàm  │ Tập trung Kiến trúc & Logic  │\n│ Gõ từng dòng code thủ công   │ Mô tả hành vi & Edge Cases   │\n│ Đọc StackOverflow 30 phút    │ Đưa log lỗi cho AI fix 5s    │\n│ Tạo 1 prototype mất 2 tuần   │ Dựng full MVP chạy trong 2h  │\n│ Thước đo: Số dòng code viết  │ Thước đo: Giá trị sản phẩm   │\n└──────────────────────────────┴──────────────────────────────┘",
+              "calloutType": "tip",
+              "calloutTitle": "Cốt lõi của Vibe Coding",
+              "calloutTitleVi": "Cốt lõi của Vibe Coding",
+              "calloutText": "Bạn không cần gõ từng dòng code, nhưng bạn BẮT BUỘC phải hiểu code đó làm gì. AI là phi công phụ (Co-pilot), bạn là cơ trưởng (Captain) chịu trách nhiệm về chuyến bay.",
+              "calloutTextVi": "Bạn không cần gõ từng dòng code, nhưng bạn BẮT BUỘC phải hiểu code đó làm gì. AI là phi công phụ (Co-pilot), bạn là cơ trưởng (Captain) chịu trách nhiệm về chuyến bay."
+            },
+            {
+              "heading": "2. Bức Tranh Toàn Cảnh Các Công Cụ Vibe Coding 2026",
+              "headingVi": "2. Bức Tranh Toàn Cảnh Các Công Cụ Vibe Coding 2026",
+              "paragraphs": [
+                "1. Cursor (Fork từ VS Code): Hiện là IDE thống trị thị trường với Composer multi-file edit, agent mode tự chạy terminal và hỗ trợ `.cursorrules`.",
+                "2. Windsurf (Codeium): Đối thủ đáng gờm với tính năng Cascade Flows ghi nhớ ngữ cảnh tương tác sâu và kiểm soát flow code chặt chẽ.",
+                "3. Claude 3.7 Sonnet (Anthropic): Mô hình LLM mạnh nhất cho lập trình với chế độ Hybrid Reasoning (Extended Thinking) và giao diện Artifacts.",
+                "4. Bolt.new & v0.dev: Công cụ dựng nhanh Prototype Web/Fullstack trong trình duyệt từ 1 prompt, tự setup package, UI Tailwind và deploy trong 2 phút.",
+                "5. Aider & Antigravity: Công cụ Agentic coding CLI/IDE mạnh mẽ cho phép subagent tự động lập kế hoạch, chỉnh sửa code và test tự động."
+              ],
+              "paragraphsVi": [
+                "1. Cursor (Fork từ VS Code): Hiện là IDE thống trị thị trường với Composer multi-file edit, agent mode tự chạy terminal và hỗ trợ `.cursorrules`.",
+                "2. Windsurf (Codeium): Đối thủ đáng gờm với tính năng Cascade Flows ghi nhớ ngữ cảnh tương tác sâu và kiểm soát flow code chặt chẽ.",
+                "3. Claude 3.7 Sonnet (Anthropic): Mô hình LLM mạnh nhất cho lập trình với chế độ Hybrid Reasoning (Extended Thinking) và giao diện Artifacts.",
+                "4. Bolt.new & v0.dev: Công cụ dựng nhanh Prototype Web/Fullstack trong trình duyệt từ 1 prompt, tự setup package, UI Tailwind và deploy trong 2 phút.",
+                "5. Aider & Antigravity: Công cụ Agentic coding CLI/IDE mạnh mẽ cho phép subagent tự động lập kế hoạch, chỉnh sửa code và test tự động."
+              ],
+              "codeTitle": "Bảng chọn công cụ theo kịch bản sử dụng",
+              "codeLanguage": "text",
+              "codeContent": "• Cần dựng nhanh Demo cho khách hàng xem trong 15 phút ──────► Bolt.new / v0.dev\n• Dự án thực tế phức tạp, nhiều file, kiến trúc lớn ────────► Cursor / Windsurf\n• Giải bài toán thuật toán hóc búa, thiết kế Database phức tạp ► Claude 3.7 Thinking\n• Làm việc tự động hóa qua terminal, CI/CD pipeline ────────► Aider / Antigravity CLI",
+              "calloutType": "info",
+              "calloutTitle": "Sức mạnh tổng hợp",
+              "calloutTitleVi": "Sức mạnh tổng hợp",
+              "calloutText": "Một Vibe Coder xuất sắc thường kết hợp: Dùng Claude 3.7 để lên Spec kiến trúc -> Dùng Cursor Composer để code multi-file -> Dùng terminal test tự động.",
+              "calloutTextVi": "Một Vibe Coder xuất sắc thường kết hợp: Dùng Claude 3.7 để lên Spec kiến trúc -> Dùng Cursor Composer để code multi-file -> Dùng terminal test tự động."
+            },
+            {
+              "heading": "3. Cảnh Báo 'Vibe Trap' (Bẫy Ảo Tưởng) & Cách Phòng Tránh",
+              "headingVi": "3. Cảnh Báo 'Vibe Trap' (Bẫy Ảo Tưởng) & Cách Phòng Tránh",
+              "paragraphs": [
+                "Rất nhiều người mới rơi vào 'Vibe Trap': Nhấn phím 'Accept All' liên tục mà không đọc lại code. Kết quả sau vài ngày:",
+                "- Code sinh ra trùng lặp, logic đá nhau chan chát (Spaghetti Code).",
+                "- Bảo mật bị hở nghiêm trọng (SQL Injection, lộ secret key, thiếu authentication guardrails).",
+                "- AI bị ảo giác import các thư viện không tồn tại (Package Hallucination) hoặc dùng API đã bị khai tử.",
+                "Nguyên tắc sống còn: Luôn bắt AI giải thích lý do trước khi viết code, và bắt buộc phải có Unit Test kiểm chứng."
+              ],
+              "paragraphsVi": [
+                "Rất nhiều người mới rơi vào 'Vibe Trap': Nhấn phím 'Accept All' liên tục mà không đọc lại code. Kết quả sau vài ngày:",
+                "- Code sinh ra trùng lặp, logic đá nhau chan chát (Spaghetti Code).",
+                "- Bảo mật bị hở nghiêm trọng (SQL Injection, lộ secret key, thiếu authentication guardrails).",
+                "- AI bị ảo giác import các thư viện không tồn tại (Package Hallucination) hoặc dùng API đã bị khai tử.",
+                "Nguyên tắc sống còn: Luôn bắt AI giải thích lý do trước khi viết code, và bắt buộc phải có Unit Test kiểm chứng."
+              ],
+              "codeTitle": "Mẫu prompt kiểm tra và phản biện code của chính AI",
+              "codeLanguage": "text",
+              "codeContent": "Hãy đóng vai trò một Principal Security Engineer khó tính:\n1. Phân tích đoạn code vừa sinh ra, chỉ ra 3 rủi ro tiềm ẩn về hiệu năng hoặc bảo mật.\n2. Nếu có 10.000 người dùng truy cập đồng thời, đoạn code này có bị race condition hoặc memory leak không?\n3. Viết lại phiên bản tối ưu và giải thích rõ sự khác biệt.",
+              "calloutType": "warning",
+              "calloutTitle": "Đừng tin tưởng mù quáng",
+              "calloutTitleVi": "Đừng tin tưởng mù quáng",
+              "calloutText": "AI luôn tự tin trả lời dù nó đang đúng hay sai. Khả năng đặt câu hỏi phản biện (Challenging Prompts) là kỹ năng phân biệt giữa Junior và Senior Vibe Coder.",
+              "calloutTextVi": "AI luôn tự tin trả lời dù nó đang đúng hay sai. Khả năng đặt câu hỏi phản biện (Challenging Prompts) là kỹ năng phân biệt giữa Junior và Senior Vibe Coder."
+            }
+          ]
+        },
+        {
+          "id": "vibe-bai-2-lam-chu-cursor-rules",
+          "seriesId": "vibe-coding-series",
+          "lessonNumber": "Bài 2",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Làm Chủ Cursor & Composer: Cấu hình .cursorrules, System Prompt và Quản Trị Ngữ Cảnh (@Files, @Docs)",
+          "titleVi": "Làm Chủ Cursor & Composer: Cấu hình .cursorrules, System Prompt và Quản Trị Ngữ Cảnh (@Files, @Docs)",
+          "readingTime": "11 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Biến Cursor thành trợ lý ảo hiểu sâu codebase bằng file .cursorrules chuẩn mực, quản lý cửa sổ ngữ cảnh (Context Window) với cú pháp @ và kỹ thuật Composer đa file.",
+          "summaryVi": "Biến Cursor thành trợ lý ảo hiểu sâu codebase bằng file .cursorrules chuẩn mực, quản lý cửa sổ ngữ cảnh (Context Window) với cú pháp @ và kỹ thuật Composer đa file.",
+          "tags": [
+            "cursor",
+            "cursorrules",
+            "context-window",
+            "composer",
+            "prompting"
+          ],
+          "sections": [
+            {
+              "heading": "1. Sức Mạnh Của File .cursorrules Trong Thư Mục Gốc",
+              "headingVi": "1. Sức Mạnh Của File .cursorrules Trong Thư Mục Gốc",
+              "paragraphs": [
+                "Khi không có `.cursorrules`, Cursor sẽ đoán mò phong cách code của bạn và có thể dùng các convention cũ kỹ. File `.cursorrules` (hoặc `AGENTS.md`) đặt tại thư mục gốc của project đóng vai trò như một bộ cẩm nang huấn luyện AI.",
+                "Mỗi khi bạn mở chat hoặc Composer, Cursor sẽ tự động nạp file này vào System Prompt."
+              ],
+              "paragraphsVi": [
+                "Khi không có `.cursorrules`, Cursor sẽ đoán mò phong cách code của bạn và có thể dùng các convention cũ kỹ. File `.cursorrules` (hoặc `AGENTS.md`) đặt tại thư mục gốc của project đóng vai trò như một bộ cẩm nang huấn luyện AI.",
+                "Mỗi khi bạn mở chat hoặc Composer, Cursor sẽ tự động nạp file này vào System Prompt."
+              ],
+              "codeTitle": "Mẫu file .cursorrules chuẩn cho dự án hiện đại",
+              "codeLanguage": "markdown",
+              "codeContent": "# Project: E-Commerce Microservices\n\n## Tech Stack\n- Backend: .NET 9 Web API, C# 13, EF Core 9\n- Frontend: Blazor WebAssembly / Next.js 15 TailwindCSS\n- Database: PostgreSQL, Redis Cache\n\n## Coding Guidelines\n1. Luôn sử dụng C# File-scoped namespaces và Top-level statements.\n2. Bắt buộc dùng Structured Logging: `_logger.LogInformation(\"Order {Id}\", id)`, cấm String Interpolation trong log.\n3. Dùng C# record cho DTO và Command/Query Pattern.\n4. Tuyệt đối không xóa bỏ comment giải thích có sẵn trong file.\n5. Khi tạo file mới, tự động bổ sung XML documentation cho các public method.\n6. Trả về câu trả lời bằng tiếng Việt ngắn gọn, kèm file diff rõ ràng.",
+              "calloutType": "tip",
+              "calloutTitle": "Tránh lãng phí Token",
+              "calloutTitleVi": "Tránh lãng phí Token",
+              "calloutText": "Giữ file `.cursorrules` dưới 100 dòng ngắn gọn, tập trung vào các quy tắc cốt lõi để không chiếm dụng quá nhiều dung lượng của cửa sổ ngữ cảnh (Context Window).",
+              "calloutTextVi": "Giữ file `.cursorrules` dưới 100 dòng ngắn gọn, tập trung vào các quy tắc cốt lõi để không chiếm dụng quá nhiều dung lượng của cửa sổ ngữ cảnh (Context Window)."
+            },
+            {
+              "heading": "2. Nghệ Thuật Điều Phối Ngữ Cảnh Bằng Cú Pháp @ Trong Cursor",
+              "headingVi": "2. Nghệ Thuật Điều Phối Ngữ Cảnh Bằng Cú Pháp @ Trong Cursor",
+              "paragraphs": [
+                "Một trong những nguyên nhân khiến AI trả lời sai là do bị 'ô nhiễm ngữ cảnh' (Context Pollution) khi nạp quá nhiều file không liên quan.",
+                "Hãy chủ động dùng cú pháp `@` để chỉ định chính xác những gì AI cần đọc:",
+                "- `@Files`: Chỉ định file cụ thể (ví dụ `@OrderController.cs`, `@OrderService.cs`).",
+                "- `@Folders`: Chỉ định thư mục chứa module nghiệp vụ liên quan.",
+                "- `@Docs`: Nhúng trực tiếp tài liệu thư viện bên ngoài (ví dụ `@Stripe API`, `@YARP Documentation`).",
+                "- `@Git`: Nạp commit diff hiện tại để yêu cầu AI viết Commit Message hoặc kiểm tra regression bug.",
+                "- `@Codebase`: Tìm kiếm ngữ nghĩa toàn bộ repository (chỉ dùng khi không biết đoạn code nằm ở đâu)."
+              ],
+              "paragraphsVi": [
+                "Một trong những nguyên nhân khiến AI trả lời sai là do bị 'ô nhiễm ngữ cảnh' (Context Pollution) khi nạp quá nhiều file không liên quan.",
+                "Hãy chủ động dùng cú pháp `@` để chỉ định chính xác những gì AI cần đọc:",
+                "- `@Files`: Chỉ định file cụ thể (ví dụ `@OrderController.cs`, `@OrderService.cs`).",
+                "- `@Folders`: Chỉ định thư mục chứa module nghiệp vụ liên quan.",
+                "- `@Docs`: Nhúng trực tiếp tài liệu thư viện bên ngoài (ví dụ `@Stripe API`, `@YARP Documentation`).",
+                "- `@Git`: Nạp commit diff hiện tại để yêu cầu AI viết Commit Message hoặc kiểm tra regression bug.",
+                "- `@Codebase`: Tìm kiếm ngữ nghĩa toàn bộ repository (chỉ dùng khi không biết đoạn code nằm ở đâu)."
+              ],
+              "codeTitle": "Ví dụ câu prompt điều phối ngữ cảnh chuẩn xác",
+              "codeLanguage": "text",
+              "codeContent": "Hãy đọc @IOrderRepository.cs và @CreateOrderCommand.cs.\nViết thêm hàm xử lý thanh toán retry logic 3 lần bằng Polly trong @OrderService.cs.\nĐảm bảo tuân thủ các quy tắc trong @.cursorrules và log lại lỗi khi retry thất bại.",
+              "calloutType": "info",
+              "calloutTitle": "Quy tắc vàng về ngữ cảnh",
+              "calloutTitleVi": "Quy tắc vàng về ngữ cảnh",
+              "calloutText": "Ngữ cảnh càng hẹp và chính xác bao nhiêu, AI sinh code càng chuẩn bấy nhiêu và tỉ lệ bug giảm tới 80%.",
+              "calloutTextVi": "Ngữ cảnh càng hẹp và chính xác bao nhiêu, AI sinh code càng chuẩn bấy nhiêu và tỉ lệ bug giảm tới 80%."
+            },
+            {
+              "heading": "3. Kỹ Thuật Sử Dụng Cursor Composer (Ctrl + I)",
+              "headingVi": "3. Kỹ Thuật Sử Dụng Cursor Composer (Ctrl + I)",
+              "paragraphs": [
+                "Khác với Inline Edit (`Ctrl + K`) chỉ sửa một đoạn code trên 1 file, Composer (`Ctrl + I`) có khả năng chỉnh sửa đồng thời 5-10 file cùng lúc.",
+                "Ví dụ khi bạn thêm một trường mới `PhoneNumber` vào Entity: Composer sẽ tự động cập nhật Database Model, DTO, FluentValidation, Migration và UI Form.",
+                "Chế độ Agent Mode trong Composer cho phép Cursor tự động chạy lệnh terminal (ví dụ `npm run build`, `dotnet build`), đọc log lỗi và tự sửa tiếp cho đến khi build thành công."
+              ],
+              "paragraphsVi": [
+                "Khác với Inline Edit (`Ctrl + K`) chỉ sửa một đoạn code trên 1 file, Composer (`Ctrl + I`) có khả năng chỉnh sửa đồng thời 5-10 file cùng lúc.",
+                "Ví dụ khi bạn thêm một trường mới `PhoneNumber` vào Entity: Composer sẽ tự động cập nhật Database Model, DTO, FluentValidation, Migration và UI Form.",
+                "Chế độ Agent Mode trong Composer cho phép Cursor tự động chạy lệnh terminal (ví dụ `npm run build`, `dotnet build`), đọc log lỗi và tự sửa tiếp cho đến khi build thành công."
+              ],
+              "codeTitle": "Phím tắt thần thánh trong Cursor",
+              "codeLanguage": "text",
+              "codeContent": "• Ctrl + K: Inline code edit trên file hiện tại\n• Ctrl + L: Mở cửa sổ Chat hỏi đáp bên hông\n• Ctrl + I: Mở Composer chỉnh sửa Multi-file đồng thời\n• Ctrl + Shift + J: Mở Terminal nhanh để Agent chạy lệnh kiểm thử",
+              "calloutType": "tip",
+              "calloutTitle": "Luôn review Diff trước khi Save All",
+              "calloutTitleVi": "Luôn review Diff trước khi Save All",
+              "calloutText": "Composer cung cấp giao diện Git Diff trực quan từng file (màu xanh là thêm, đỏ là xóa). Hãy lướt qua từng file trước khi bấm 'Accept' để đảm bảo không bị mất code quan trọng.",
+              "calloutTextVi": "Composer cung cấp giao diện Git Diff trực quan từng file (màu xanh là thêm, đỏ là xóa). Hãy lướt qua từng file trước khi bấm 'Accept' để đảm bảo không bị mất code quan trọng."
+            }
+          ]
+        },
+        {
+          "id": "vibe-bai-3-claude-37-thinking-mode",
+          "seriesId": "vibe-coding-series",
+          "lessonNumber": "Bài 3",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Claude 3.7 Sonnet Thinking Mode & Nghệ Thuật Phân Rã Bài Toán (Task Decomposition)",
+          "titleVi": "Claude 3.7 Sonnet Thinking Mode & Nghệ Thuật Phân Rã Bài Toán (Task Decomposition)",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Tận dụng chế độ Extended Thinking của Claude 3.7 để giải các bài toán kiến trúc hóc búa, kỹ thuật Spec-Driven Prompting và chia nhỏ feature thành các sub-task tuần tự.",
+          "summaryVi": "Tận dụng chế độ Extended Thinking của Claude 3.7 để giải các bài toán kiến trúc hóc búa, kỹ thuật Spec-Driven Prompting và chia nhỏ feature thành các sub-task tuần tự.",
+          "tags": [
+            "claude-37",
+            "thinking-mode",
+            "spec-driven",
+            "task-decomposition"
+          ],
+          "sections": [
+            {
+              "heading": "1. Khám Phá Chế Độ Hybrid Reasoning / Extended Thinking Của Claude 3.7",
+              "headingVi": "1. Khám Phá Chế Độ Hybrid Reasoning / Extended Thinking Của Claude 3.7",
+              "paragraphs": [
+                "Các mô hình AI trước đây (như GPT-4, Claude 3.5) thường lập tức gõ code ngay sau khi nhận prompt, dẫn đến việc thiếu tầm nhìn bao quát và dễ mắc sai lầm logic ở các hàm phức tạp.",
+                "Claude 3.7 Sonnet giới thiệu cơ chế Hybrid Reasoning: Cho phép người dùng tùy chỉnh ngân sách suy nghĩ (Thinking Budget từ 1.000 đến 64.000 tokens).",
+                "Trong giai đoạn 'Thinking', Claude tự mình lập sơ đồ luồng dữ liệu, liệt kê các trường hợp ngoại lệ (Edge Cases), tự phản biện các phương án kiến trúc và loại bỏ giải pháp kém trước khi nhả ra dòng code đầu tiên."
+              ],
+              "paragraphsVi": [
+                "Các mô hình AI trước đây (như GPT-4, Claude 3.5) thường lập tức gõ code ngay sau khi nhận prompt, dẫn đến việc thiếu tầm nhìn bao quát và dễ mắc sai lầm logic ở các hàm phức tạp.",
+                "Claude 3.7 Sonnet giới thiệu cơ chế Hybrid Reasoning: Cho phép người dùng tùy chỉnh ngân sách suy nghĩ (Thinking Budget từ 1.000 đến 64.000 tokens).",
+                "Trong giai đoạn 'Thinking', Claude tự mình lập sơ đồ luồng dữ liệu, liệt kê các trường hợp ngoại lệ (Edge Cases), tự phản biện các phương án kiến trúc và loại bỏ giải pháp kém trước khi nhả ra dòng code đầu tiên."
+              ],
+              "codeTitle": "So sánh phản xạ code thông thường vs Thinking Mode",
+              "codeLanguage": "text",
+              "codeContent": "[Prompt Người Dùng: Thiết kế thuật toán chống Overbooking khi 10.000 người mua 5 vé]\n\n• LLM Truyền Thống: Gõ code C# ngay lập tức ──► Bỏ sót Race Condition tầng Database!\n\n• Claude 3.7 Thinking:\n  ├── Bước 1: Phân tích concurrency: Optimistic Lock hay Pessimistic Lock?\n  ├── Bước 2: Đánh giá Redis Distributed Lock với RedLock token bucket\n  ├── Bước 3: So sánh chi phí round-trip DB\n  └── Bước 4: Chốt giải pháp Redis Lua Script + DB Row Version ──► Sinh code hoàn hảo!",
+              "calloutType": "tip",
+              "calloutTitle": "Khi nào nên bật Thinking Mode?",
+              "calloutTitleVi": "Khi nào nên bật Thinking Mode?",
+              "calloutText": "Hãy bật Thinking Mode cho các bài toán: Thiết kế Database Schema, Xử lý Concurrency & Race Condition, Refactor kiến trúc lớn, hoặc tối ưu thuật toán phức tạp.",
+              "calloutTextVi": "Hãy bật Thinking Mode cho các bài toán: Thiết kế Database Schema, Xử lý Concurrency & Race Condition, Refactor kiến trúc lớn, hoặc tối ưu thuật toán phức tạp."
+            },
+            {
+              "heading": "2. Kỹ Thuật Spec-Driven Prompting: Viết Bản Đặc Tả Trước Khi Viết Code",
+              "headingVi": "2. Kỹ Thuật Spec-Driven Prompting: Viết Bản Đặc Tả Trước Khi Viết Code",
+              "paragraphs": [
+                "Đừng bao giờ prompt chung chung: 'Hãy viết cho tôi tính năng thanh toán'.",
+                "Kỹ thuật Spec-Driven: Bắt đầu bằng việc yêu cầu AI tạo ra một tài liệu đặc tả kỹ thuật (Technical Specification - RFC):",
+                "1. Mô tả User Story & Business Flow.",
+                "2. Danh sách các API Endpoints (Request, Response, Error Codes).",
+                "3. Database Schema changes (Bảng mới, Khóa chính, Chỉ mục Index).",
+                "4. Kế hoạch xử lý lỗi (Retry, Circuit Breaker, Rollback Transaction).",
+                "Sau khi bạn đã review và gật đầu với bản Spec, mới cho phép AI tiến hành viết code theo từng mục."
+              ],
+              "paragraphsVi": [
+                "Đừng bao giờ prompt chung chung: 'Hãy viết cho tôi tính năng thanh toán'.",
+                "Kỹ thuật Spec-Driven: Bắt đầu bằng việc yêu cầu AI tạo ra một tài liệu đặc tả kỹ thuật (Technical Specification - RFC):",
+                "1. Mô tả User Story & Business Flow.",
+                "2. Danh sách các API Endpoints (Request, Response, Error Codes).",
+                "3. Database Schema changes (Bảng mới, Khóa chính, Chỉ mục Index).",
+                "4. Kế hoạch xử lý lỗi (Retry, Circuit Breaker, Rollback Transaction).",
+                "Sau khi bạn đã review và gật đầu với bản Spec, mới cho phép AI tiến hành viết code theo từng mục."
+              ],
+              "codeTitle": "Mẫu prompt yêu cầu lập Spec kỹ thuật",
+              "codeLanguage": "text",
+              "codeContent": "Tôi muốn xây dựng tính năng 'Hủy đơn hàng và hoàn tiền tự động qua Stripe'.\nĐỪNG VIẾT CODE VỘI.\nHãy viết cho tôi một bản Technical Spec ngắn gồm:\n1. State Machine chuyển trạng thái đơn hàng (Draft -> Paid -> Refunding -> Refunded)\n2. Chiến lược Idempotency chống hoàn tiền 2 lần\n3. Cấu trúc bảng OrderRefundAudit trong database\nSau khi tôi duyệt qua bản Spec này, chúng ta sẽ bắt đầu code từng file.",
+              "calloutType": "info",
+              "calloutTitle": "Lợi ích to lớn",
+              "calloutTitleVi": "Lợi ích to lớn",
+              "calloutText": "Spec-Driven giúp bạn phát hiện các lỗ hổng logic nghiệp vụ ngay từ trên giấy trước khi viết cả ngàn dòng code tốn thời gian sửa lại.",
+              "calloutTextVi": "Spec-Driven giúp bạn phát hiện các lỗ hổng logic nghiệp vụ ngay từ trên giấy trước khi viết cả ngàn dòng code tốn thời gian sửa lại."
+            },
+            {
+              "heading": "3. Nghệ Thuật Phân Rã Bài Toán (Task Decomposition)",
+              "headingVi": "3. Nghệ Thuật Phân Rã Bài Toán (Task Decomposition)",
+              "paragraphs": [
+                "Nếu bạn yêu cầu AI viết một tính năng hoàn chỉnh từ Database đến Backend và Frontend trong 1 prompt duy nhất, kết quả thường sẽ bị cụt, thiếu sót hoặc lỗi timeout.",
+                "Hãy chia nhỏ thành 4 sub-prompts tuần tự:",
+                "- Prompt 1: Tạo Database Model & Fluent API Configuration.",
+                "- Prompt 2: Viết Repository & Business Handler kèm Unit Test.",
+                "- Prompt 3: Viết API Controller / Minimal API Endpoint & Validation.",
+                "- Prompt 4: Viết giao diện Frontend kết nối với API."
+              ],
+              "paragraphsVi": [
+                "Nếu bạn yêu cầu AI viết một tính năng hoàn chỉnh từ Database đến Backend và Frontend trong 1 prompt duy nhất, kết quả thường sẽ bị cụt, thiếu sót hoặc lỗi timeout.",
+                "Hãy chia nhỏ thành 4 sub-prompts tuần tự:",
+                "- Prompt 1: Tạo Database Model & Fluent API Configuration.",
+                "- Prompt 2: Viết Repository & Business Handler kèm Unit Test.",
+                "- Prompt 3: Viết API Controller / Minimal API Endpoint & Validation.",
+                "- Prompt 4: Viết giao diện Frontend kết nối với API."
+              ],
+              "codeTitle": "Luồng làm việc phân rã bài toán",
+              "codeLanguage": "text",
+              "codeContent": "Task Lớn ──► [Task 1: Database] ──► Kiểm tra & Commit Git\n          ──► [Task 2: Service API] ──► Kiểm tra & Commit Git\n          ──► [Task 3: Unit Tests]  ──► Chạy Test Green\n          ──► [Task 4: UI Screen]   ──► Hoàn tất & Merge!",
+              "calloutType": "tip",
+              "calloutTitle": "Checkpoint an toàn",
+              "calloutTitleVi": "Checkpoint an toàn",
+              "calloutText": "Sau mỗi sub-task hoàn tất, hãy `git commit` ngay một mốc checkpoint. Nếu ở bước sau AI làm sai hướng, bạn chỉ cần gõ `git checkout .` để quay về điểm an toàn chỉ trong 1 giây.",
+              "calloutTextVi": "Sau mỗi sub-task hoàn tất, hãy `git commit` ngay một mốc checkpoint. Nếu ở bước sau AI làm sai hướng, bạn chỉ cần gõ `git checkout .` để quay về điểm an toàn chỉ trong 1 giây."
+            }
+          ]
+        },
+        {
+          "id": "vibe-bai-4-test-driven-vibe-coding",
+          "seriesId": "vibe-coding-series",
+          "lessonNumber": "Bài 4",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Test-Driven Vibe Coding (TDVC) & Vòng Lặp Tự Sửa Lỗi (Self-Healing Loop)",
+          "titleVi": "Test-Driven Vibe Coding (TDVC) & Vòng Lặp Tự Sửa Lỗi (Self-Healing Loop)",
+          "readingTime": "13 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Phương pháp tối thượng của Senior Vibe Coder: Dùng Test-Driven Development để 'khóa chặt' AI, thiết lập vòng lặp Self-Healing Loop tự đọc lỗi compiler và tự sửa code.",
+          "summaryVi": "Phương pháp tối thượng của Senior Vibe Coder: Dùng Test-Driven Development để 'khóa chặt' AI, thiết lập vòng lặp Self-Healing Loop tự đọc lỗi compiler và tự sửa code.",
+          "tags": [
+            "tdvc",
+            "unit-test",
+            "self-healing",
+            "tdd",
+            "automation"
+          ],
+          "sections": [
+            {
+              "heading": "1. Tại Sao Test-Driven Development (TDD) Là Cặp Bài Trùng Của Vibe Coding?",
+              "headingVi": "1. Tại Sao Test-Driven Development (TDD) Là Cặp Bài Trùng Của Vibe Coding?",
+              "paragraphs": [
+                "Khi bạn viết code thủ công, viết Unit Test thường bị coi là tẻ nhạt. Nhưng trong kỷ nguyên Vibe Coding, Unit Test chính là chiếc dây an toàn giữ cho AI không bao giờ bay chệch quỹ đạo.",
+                "Quy trình Test-Driven Vibe Coding (TDVC):",
+                "1. Viết Test trước (Red): Yêu cầu AI viết bộ Unit Test bao phủ mọi kịch bản thành công và thất bại dựa theo Spec.",
+                "2. Yêu cầu AI viết Implementation (Green): Ra lệnh cho AI viết code nghiệp vụ cho đến khi tất cả các test cases đều chuyển sang màu xanh.",
+                "3. Refactor: Yêu cầu AI tối ưu hóa mã nguồn mà không được làm gãy bất kỳ test nào."
+              ],
+              "paragraphsVi": [
+                "Khi bạn viết code thủ công, viết Unit Test thường bị coi là tẻ nhạt. Nhưng trong kỷ nguyên Vibe Coding, Unit Test chính là chiếc dây an toàn giữ cho AI không bao giờ bay chệch quỹ đạo.",
+                "Quy trình Test-Driven Vibe Coding (TDVC):",
+                "1. Viết Test trước (Red): Yêu cầu AI viết bộ Unit Test bao phủ mọi kịch bản thành công và thất bại dựa theo Spec.",
+                "2. Yêu cầu AI viết Implementation (Green): Ra lệnh cho AI viết code nghiệp vụ cho đến khi tất cả các test cases đều chuyển sang màu xanh.",
+                "3. Refactor: Yêu cầu AI tối ưu hóa mã nguồn mà không được làm gãy bất kỳ test nào."
+              ],
+              "codeTitle": "Ví dụ kịch bản Unit Test làm kim chỉ nam cho AI",
+              "codeLanguage": "csharp",
+              "codeContent": "[Fact]\npublic async Task CalculateDiscount_ShouldApply20Percent_WhenOrderOver1000AndVipCustomer()\n{\n    // Arrange\n    var calculator = new DiscountCalculator();\n    var order = new Order { Amount = 1200, CustomerType = CustomerType.Vip };\n\n    // Act\n    var discount = calculator.Calculate(order);\n\n    // Assert: Khóa chặt nghiệp vụ, AI bắt buộc phải implement đúng 240\n    Assert.Equal(240, discount);\n}",
+              "calloutType": "tip",
+              "calloutTitle": "Định nghĩa hoàn thành khách quan",
+              "calloutTitleVi": "Định nghĩa hoàn thành khách quan",
+              "calloutText": "Thay vì phải mở trình duyệt click chuột test thủ công mất 5 phút, lệnh `dotnet test` chạy trong 2 giây sẽ cho bạn biết ngay lập tức code AI sinh ra có chuẩn hay không.",
+              "calloutTextVi": "Thay vì phải mở trình duyệt click chuột test thủ công mất 5 phút, lệnh `dotnet test` chạy trong 2 giây sẽ cho bạn biết ngay lập tức code AI sinh ra có chuẩn hay không."
+            },
+            {
+              "heading": "2. Thiết Lập Vòng Lặp Tự Sửa Lỗi (Self-Healing Loop)",
+              "headingVi": "2. Thiết Lập Vòng Lặp Tự Sửa Lỗi (Self-Healing Loop)",
+              "paragraphs": [
+                "Khi code bị lỗi biên dịch (Compile Error) hoặc Fail Test, người mới thường đọc lỗi rồi gõ prompt giải thích lại cho AI. Điều này rất chậm chạp và dễ diễn đạt sai.",
+                "Vibe Coder chuyên nghiệp sử dụng Self-Healing Loop:",
+                "Cung cấp quyền chạy terminal cho AI Agent (như Cursor Agent hoặc Aider/Antigravity). Khi test fail, Agent tự đọc trực tiếp Error StackTrace từ terminal, tự mở đúng file ở dòng code bị lỗi, sửa lại thuật toán và chạy lại test.",
+                "Vòng lặp này lặp lại hoàn toàn tự động cho đến khi dòng chữ 'Build Succeeded - All Tests Passed' xuất hiện."
+              ],
+              "paragraphsVi": [
+                "Khi code bị lỗi biên dịch (Compile Error) hoặc Fail Test, người mới thường đọc lỗi rồi gõ prompt giải thích lại cho AI. Điều này rất chậm chạp và dễ diễn đạt sai.",
+                "Vibe Coder chuyên nghiệp sử dụng Self-Healing Loop:",
+                "Cung cấp quyền chạy terminal cho AI Agent (như Cursor Agent hoặc Aider/Antigravity). Khi test fail, Agent tự đọc trực tiếp Error StackTrace từ terminal, tự mở đúng file ở dòng code bị lỗi, sửa lại thuật toán và chạy lại test.",
+                "Vòng lặp này lặp lại hoàn toàn tự động cho đến khi dòng chữ 'Build Succeeded - All Tests Passed' xuất hiện."
+              ],
+              "codeTitle": "Sơ đồ vòng lặp Self-Healing Loop",
+              "codeLanguage": "text",
+              "codeContent": "[AI Agent Sửa Code] ──► [Chạy dotnet test qua Terminal]\n          ▲                               │\n          │ (Tự đọc Exception Trace)       ▼\n          └─── [Kiểm tra kết quả: FAIL] ◄──┘\n                               │\n                               ▼ (Kết quả: PASS!)\n                       [Hoàn tất bàn giao]",
+              "calloutType": "info",
+              "calloutTitle": "Đặt giới hạn số vòng lặp (Max Iterations)",
+              "calloutTitleVi": "Đặt giới hạn số vòng lặp (Max Iterations)",
+              "calloutText": "Luôn đặt giới hạn tối đa 3-5 vòng lặp tự sửa lỗi. Nếu sau 5 lần AI vẫn chưa fix được, đó là dấu hiệu thiết kế kiến trúc ban đầu bị sai, cần sự can thiệp của con người.",
+              "calloutTextVi": "Luôn đặt giới hạn tối đa 3-5 vòng lặp tự sửa lỗi. Nếu sau 5 lần AI vẫn chưa fix được, đó là dấu hiệu thiết kế kiến trúc ban đầu bị sai, cần sự can thiệp của con người."
+            },
+            {
+              "heading": "3. Refactoring Code An Toàn Tuyệt Đối",
+              "headingVi": "3. Refactoring Code An Toàn Tuyệt Đối",
+              "paragraphs": [
+                "Code do AI sinh ra ở phiên bản đầu tiên thường chạy được nhưng có thể dài dòng và chưa tối ưu.",
+                "Sau khi bộ test đã Passed, bạn có thể tự tin ra lệnh cho AI:",
+                "- 'Hãy chuyển các hàm if-else dài này sang Pattern Matching C# 13.'",
+                "- 'Hãy áp dụng Clean Architecture chia tách Repository và Service.'",
+                "- 'Hãy tối ưu bộ nhớ bằng Span<T> và Memory<T>.'",
+                "Nếu sau khi refactor toàn bộ test vẫn màu xanh, bạn hoàn toàn yên tâm 100% không có lỗi regression."
+              ],
+              "paragraphsVi": [
+                "Code do AI sinh ra ở phiên bản đầu tiên thường chạy được nhưng có thể dài dòng và chưa tối ưu.",
+                "Sau khi bộ test đã Passed, bạn có thể tự tin ra lệnh cho AI:",
+                "- 'Hãy chuyển các hàm if-else dài này sang Pattern Matching C# 13.'",
+                "- 'Hãy áp dụng Clean Architecture chia tách Repository và Service.'",
+                "- 'Hãy tối ưu bộ nhớ bằng Span<T> và Memory<T>.'",
+                "Nếu sau khi refactor toàn bộ test vẫn màu xanh, bạn hoàn toàn yên tâm 100% không có lỗi regression."
+              ],
+              "codeTitle": "Prompt yêu cầu Refactor an toàn",
+              "codeLanguage": "text",
+              "codeContent": "Hãy tối ưu hóa @PaymentProcessor.cs theo nguyên lý SOLID.\nYêu cầu bắt buộc:\n1. Tách nhỏ hàm ProcessTransaction thành các private helper method rõ nghĩa.\n2. Giữ nguyên 100% chữ ký public API.\n3. Đảm bảo toàn bộ 15 test cases trong @PaymentTests.cs vẫn PASS mà không sửa file test.",
+              "calloutType": "tip",
+              "calloutTitle": "Quy tắc bất di bất dịch",
+              "calloutTitleVi": "Quy tắc bất di bất dịch",
+              "calloutText": "Khi yêu cầu AI refactor code nghiệp vụ, TUYỆT ĐỐI KHÔNG cho phép AI sửa file Unit Test. AI rất ranh mãnh: đôi khi nó sửa file test để match với code lỗi thay vì sửa code!",
+              "calloutTextVi": "Khi yêu cầu AI refactor code nghiệp vụ, TUYỆT ĐỐI KHÔNG cho phép AI sửa file Unit Test. AI rất ranh mãnh: đôi khi nó sửa file test để match với code lỗi thay vì sửa code!"
+            }
+          ]
+        },
+        {
+          "id": "vibe-bai-5-windsurf-bolt-v0",
+          "seriesId": "vibe-coding-series",
+          "lessonNumber": "Bài 5",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Windsurf Cascade & Fullstack Prototyping Siêu Tốc với v0.dev và Bolt.new",
+          "titleVi": "Windsurf Cascade & Fullstack Prototyping Siêu Tốc với v0.dev và Bolt.new",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Khám phá sức mạnh của Windsurf Cascade Flows, quy trình tạo nhanh Web App fullstack trong trình duyệt với v0/Bolt.new và cách đưa code về local IDE để phát triển sâu.",
+          "summaryVi": "Khám phá sức mạnh của Windsurf Cascade Flows, quy trình tạo nhanh Web App fullstack trong trình duyệt với v0/Bolt.new và cách đưa code về local IDE để phát triển sâu.",
+          "tags": [
+            "windsurf",
+            "bolt-new",
+            "v0-dev",
+            "prototyping",
+            "fullstack"
+          ],
+          "sections": [
+            {
+              "heading": "1. Windsurf Cascade: Deep Context Awareness Khác Gì Cursor?",
+              "headingVi": "1. Windsurf Cascade: Deep Context Awareness Khác Gì Cursor?",
+              "paragraphs": [
+                "Windsurf (phát triển bởi Codeium) tạo nên tiếng vang lớn nhờ công nghệ 'Cascade':",
+                "- Trong khi Cursor xử lý từng prompt tương đối độc lập, Windsurf Cascade tạo ra một 'dòng chảy tương tác liên tục' (Continuous Flow).",
+                "- Cascade tự động theo dõi hành vi của bạn trong IDE: bạn vừa mở file nào, bôi đen đoạn code nào, gõ lệnh gì trong terminal để tự động gom vào context mà không cần bạn phải gõ `@` thủ công.",
+                "- Khả năng 'Supercomplete' của Windsurf dự đoán trước cả hành động tiếp theo của bạn (Next Action Prediction), ví dụ bạn vừa sửa Entity, nó tự đề xuất nhảy sang Controller để sửa tiếp."
+              ],
+              "paragraphsVi": [
+                "Windsurf (phát triển bởi Codeium) tạo nên tiếng vang lớn nhờ công nghệ 'Cascade':",
+                "- Trong khi Cursor xử lý từng prompt tương đối độc lập, Windsurf Cascade tạo ra một 'dòng chảy tương tác liên tục' (Continuous Flow).",
+                "- Cascade tự động theo dõi hành vi của bạn trong IDE: bạn vừa mở file nào, bôi đen đoạn code nào, gõ lệnh gì trong terminal để tự động gom vào context mà không cần bạn phải gõ `@` thủ công.",
+                "- Khả năng 'Supercomplete' của Windsurf dự đoán trước cả hành động tiếp theo của bạn (Next Action Prediction), ví dụ bạn vừa sửa Entity, nó tự đề xuất nhảy sang Controller để sửa tiếp."
+              ],
+              "codeTitle": "So sánh trải nghiệm Cursor vs Windsurf",
+              "codeLanguage": "text",
+              "codeContent": "• Cursor Composer: Bạn là người điều phối, chủ động gán @Files, @Git. Rất mạnh mẽ, quyền lực tuyệt đối trong tay developer.\n• Windsurf Cascade: AI đóng vai trò cộng sự chủ động, tự động đọc context, tự đề xuất các bước đi tiếp theo. Trải nghiệm mượt mà, ít phải bấm phím.",
+              "calloutType": "info",
+              "calloutTitle": "Lựa chọn công cụ",
+              "calloutTitleVi": "Lựa chọn công cụ",
+              "calloutText": "Nếu bạn thích sự kiểm soát chi tiết: Cursor là số 1. Nếu bạn muốn trải nghiệm 'lướt' nhẹ nhàng và AI tự hiểu ý: Windsurf mang lại cảm giác rất ấn tượng.",
+              "calloutTextVi": "Nếu bạn thích sự kiểm soát chi tiết: Cursor là số 1. Nếu bạn muốn trải nghiệm 'lướt' nhẹ nhàng và AI tự hiểu ý: Windsurf mang lại cảm giác rất ấn tượng."
+            },
+            {
+              "heading": "2. Dựng Fullstack Web App Trong 5 Phút Với v0.dev và Bolt.new",
+              "headingVi": "2. Dựng Fullstack Web App Trong 5 Phút Với v0.dev và Bolt.new",
+              "paragraphs": [
+                "Khi cần pitching ý tưởng cho sếp hoặc khách hàng, việc mở VS Code gõ `npm create` hay cấu hình Webpack/Vite là quá chậm.",
+                "- v0.dev (Vercel): Công cụ thiết kế giao diện đỉnh cao với Next.js, Shadcn UI và TailwindCSS. Bạn chỉ cần tải lên 1 tấm ảnh chụp màn hình vẽ tay hoặc mô tả: 'Tạo trang dashboard quản trị kho hàng dark mode phong cách Linear', v0 sẽ nhả ra giao diện React sống động có thể tương tác được ngay.",
+                "- Bolt.new (StackBlitz WebContainers): Khởi chạy một môi trường Linux Node.js hoàn chỉnh ngay bên trong trình duyệt. Bolt.new có thể cài đặt npm package, chạy database SQLite, setup backend server và frontend cùng lúc, cho phép bạn test tính năng đăng nhập, thanh toán và deploy lên Netlify chỉ với 1 cú click."
+              ],
+              "paragraphsVi": [
+                "Khi cần pitching ý tưởng cho sếp hoặc khách hàng, việc mở VS Code gõ `npm create` hay cấu hình Webpack/Vite là quá chậm.",
+                "- v0.dev (Vercel): Công cụ thiết kế giao diện đỉnh cao với Next.js, Shadcn UI và TailwindCSS. Bạn chỉ cần tải lên 1 tấm ảnh chụp màn hình vẽ tay hoặc mô tả: 'Tạo trang dashboard quản trị kho hàng dark mode phong cách Linear', v0 sẽ nhả ra giao diện React sống động có thể tương tác được ngay.",
+                "- Bolt.new (StackBlitz WebContainers): Khởi chạy một môi trường Linux Node.js hoàn chỉnh ngay bên trong trình duyệt. Bolt.new có thể cài đặt npm package, chạy database SQLite, setup backend server và frontend cùng lúc, cho phép bạn test tính năng đăng nhập, thanh toán và deploy lên Netlify chỉ với 1 cú click."
+              ],
+              "codeTitle": "Quy trình chuyển giao từ Web AI về Local IDE",
+              "codeLanguage": "bash",
+              "codeContent": "# Bước 1: Sau khi tạo xong prototype trên Bolt.new hoặc v0, nhấn nút 'Export to GitHub'\n\n# Bước 2: Clone repository về máy tính\ngit clone https://github.com/myuser/my-ai-prototype.git\ncd my-ai-prototype\n\n# Bước 3: Mở bằng Cursor / Windsurf để tiếp tục hoàn thiện logic chuyên sâu\ncursor .",
+              "calloutType": "tip",
+              "calloutTitle": "Tốc độ ra mắt sản phẩm (Time-to-Market)",
+              "calloutTitleVi": "Tốc độ ra mắt sản phẩm (Time-to-Market)",
+              "calloutText": "Quy trình kết hợp 'v0/Bolt.new làm Frontend Demo -> Export về Cursor viết Backend .NET' giúp các startup tinh gọn giảm thời gian ra mắt MVP từ 3 tháng xuống còn 3 ngày.",
+              "calloutTextVi": "Quy trình kết hợp 'v0/Bolt.new làm Frontend Demo -> Export về Cursor viết Backend .NET' giúp các startup tinh gọn giảm thời gian ra mắt MVP từ 3 tháng xuống còn 3 ngày."
+            },
+            {
+              "heading": "3. Tái Cấu Trúc Mã Nguồn Sau Khi Export",
+              "headingVi": "3. Tái Cấu Trúc Mã Nguồn Sau Khi Export",
+              "paragraphs": [
+                "Code xuất ra từ các công cụ Web AI thường dồn tất cả state vào 1-2 file khổng lồ và dùng mock data cứng.",
+                "Khi đưa về Cursor, bước đầu tiên bạn cần làm là:",
+                "1. Tách nhỏ các component dùng chung (Button, Modal, Card).",
+                "2. Thay thế mock data bằng lời gọi API thực tế (`fetch` hoặc `axios`).",
+                "3. Bổ sung quản lý State tập trung (Zustand hoặc React Query / Blazor StateContainer)."
+              ],
+              "paragraphsVi": [
+                "Code xuất ra từ các công cụ Web AI thường dồn tất cả state vào 1-2 file khổng lồ và dùng mock data cứng.",
+                "Khi đưa về Cursor, bước đầu tiên bạn cần làm là:",
+                "1. Tách nhỏ các component dùng chung (Button, Modal, Card).",
+                "2. Thay thế mock data bằng lời gọi API thực tế (`fetch` hoặc `axios`).",
+                "3. Bổ sung quản lý State tập trung (Zustand hoặc React Query / Blazor StateContainer)."
+              ],
+              "codeTitle": "Prompt tái cấu trúc file prototype trong Cursor",
+              "codeLanguage": "text",
+              "codeContent": "Đọc file @App.tsx vừa export từ Bolt.new.\nHãy thực hiện:\n1. Tách các thẻ bảng biểu thành component riêng @UserTable.tsx.\n2. Tách form thêm mới thành @UserCreateModal.tsx.\n3. Tạo custom hook @useUsers.ts để gọi REST API backend, có kèm loading state và error handling.",
+              "calloutType": "info",
+              "calloutTitle": "Hoàn thiện chuyên nghiệp",
+              "calloutTitleVi": "Hoàn thiện chuyên nghiệp",
+              "calloutText": "Đây chính là bản chất của Vibe Coding hiện đại: Tận dụng AI để tăng tốc 90% công việc dựng khung ban đầu, và dùng kinh nghiệm kỹ sư để đánh bóng 10% chất lượng cốt lõi.",
+              "calloutTextVi": "Đây chính là bản chất của Vibe Coding hiện đại: Tận dụng AI để tăng tốc 90% công việc dựng khung ban đầu, và dùng kinh nghiệm kỹ sư để đánh bóng 10% chất lượng cốt lõi."
+            }
+          ]
+        },
+        {
+          "id": "vibe-bai-6-enterprise-guardrails-review",
+          "seriesId": "vibe-coding-series",
+          "lessonNumber": "Bài 6",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
+          "title": "Quy Trình Vibe Coding Doanh Nghiệp: Code Review, Security Auditing & CI/CD Guardrails",
+          "titleVi": "Quy Trình Vibe Coding Doanh Nghiệp: Code Review, Security Auditing & CI/CD Guardrails",
+          "readingTime": "14 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Thiết lập hàng rào bảo vệ vững chắc cho doanh nghiệp: Checklist rà soát mã nguồn do AI sinh ra, chặn lỗ hổng Package Hallucination và tự động kiểm thử bảo mật trên GitHub Actions.",
+          "summaryVi": "Thiết lập hàng rào bảo vệ vững chắc cho doanh nghiệp: Checklist rà soát mã nguồn do AI sinh ra, chặn lỗ hổng Package Hallucination và tự động kiểm thử bảo mật trên GitHub Actions.",
+          "tags": [
+            "enterprise",
+            "security",
+            "ci-cd",
+            "code-review",
+            "guardrails"
+          ],
+          "sections": [
+            {
+              "heading": "1. Checklist 5 Điểm Tử Huyệt Khi Review Code Do AI Sinh Ra",
+              "headingVi": "1. Checklist 5 Điểm Tử Huyệt Khi Review Code Do AI Sinh Ra",
+              "paragraphs": [
+                "Trước khi bấm nút Merge Pull Request của một Vibe Coder vào nhánh `main`, Tech Lead bắt buộc phải kiểm tra 5 điểm tử huyệt:",
+                "1. Lỗ Hổng Ảo Giác Package (Package Hallucination): Kẻ tấn công tạo ra các package độc hại trên npm/NuGet trùng tên với các package mà AI hay bịa ra. Luôn kiểm tra kỹ file `package.json` / `.csproj` xem các thư viện mới có phải chính chủ và có nhiều lượt tải hay không.",
+                "2. Lộ Bí Mật (Secret Leaks): AI rất hay hardcode các API Key, Database Password tạm thời vào code trong lúc debug. Bắt buộc phải dùng Environment Variables hoặc Azure Key Vault.",
+                "3. SQL Injection & Lỗ Hổng Thẩm Quyền (BOLA/IDOR): AI thường viết truy vấn thẳng theo ID `WHERE Id = @id` mà quên kiểm tra quyền sở hữu `AND UserId = @currentUserId`.",
+                "4. Xử Lý Bất Đồng Bộ Lỗi (Async Void & Unhandled Tasks): Trong C#, việc dùng `async void` sẽ làm sập toàn bộ process máy chủ nếu có exception ném ra.",
+                "5. Race Conditions & Deadlocks: Kiểm tra xem các biến tĩnh `static Dictionary` hoặc static counter có được đồng bộ hóa luồng (Thread-safe) hay không."
+              ],
+              "paragraphsVi": [
+                "Trước khi bấm nút Merge Pull Request của một Vibe Coder vào nhánh `main`, Tech Lead bắt buộc phải kiểm tra 5 điểm tử huyệt:",
+                "1. Lỗ Hổng Ảo Giác Package (Package Hallucination): Kẻ tấn công tạo ra các package độc hại trên npm/NuGet trùng tên với các package mà AI hay bịa ra. Luôn kiểm tra kỹ file `package.json` / `.csproj` xem các thư viện mới có phải chính chủ và có nhiều lượt tải hay không.",
+                "2. Lộ Bí Mật (Secret Leaks): AI rất hay hardcode các API Key, Database Password tạm thời vào code trong lúc debug. Bắt buộc phải dùng Environment Variables hoặc Azure Key Vault.",
+                "3. SQL Injection & Lỗ Hổng Thẩm Quyền (BOLA/IDOR): AI thường viết truy vấn thẳng theo ID `WHERE Id = @id` mà quên kiểm tra quyền sở hữu `AND UserId = @currentUserId`.",
+                "4. Xử Lý Bất Đồng Bộ Lỗi (Async Void & Unhandled Tasks): Trong C#, việc dùng `async void` sẽ làm sập toàn bộ process máy chủ nếu có exception ném ra.",
+                "5. Race Conditions & Deadlocks: Kiểm tra xem các biến tĩnh `static Dictionary` hoặc static counter có được đồng bộ hóa luồng (Thread-safe) hay không."
+              ],
+              "codeTitle": "Mẫu prompt kiểm tra bảo mật Pull Request",
+              "codeLanguage": "text",
+              "codeContent": "Hãy đóng vai trò Security Auditor theo chuẩn OWASP Top 10.\nQuét toàn bộ Git Diff sau đây:\n1. Có lỗ hổng SQL Injection, XSS, hoặc IDOR nào không?\n2. Có endpoint nào bị thiếu middleware Authentication/Authorization không?\n3. Có hàm async nào bị nguy cơ deadlock hoặc thiếu CancellationToken không?",
+              "calloutType": "warning",
+              "calloutTitle": "Cảnh báo bảo mật",
+              "calloutTitleVi": "Cảnh báo bảo mật",
+              "calloutText": "Không bao giờ được phép bypass bước Code Review của con người. Người chịu trách nhiệm pháp lý và bảo mật trước công ty luôn là lập trình viên chứ không phải mô hình AI.",
+              "calloutTextVi": "Không bao giờ được phép bypass bước Code Review của con người. Người chịu trách nhiệm pháp lý và bảo mật trước công ty luôn là lập trình viên chứ không phải mô hình AI."
+            },
+            {
+              "heading": "2. Thiết Lập CI/CD Guardrails Tự Động Quét Mã Trên GitHub Actions",
+              "headingVi": "2. Thiết Lập CI/CD Guardrails Tự Động Quét Mã Trên GitHub Actions",
+              "paragraphs": [
+                "Để ngăn chặn code kém chất lượng lọt vào production, chúng ta thiết lập hệ thống rào chắn tự động (Guardrails) trên GitHub Actions pipeline:",
+                "- Linter & Formatter: Ép buộc tuân thủ chuẩn formatting (`dotnet format --verify-no-changes`, `eslint`).",
+                "- Static Application Security Testing (SAST): Sử dụng **Semgrep** hoặc **SonarQube** tự động quét các pattern code nguy hiểm.",
+                "- Dependency Vulnerability Scanner: Dùng **Snyk** hoặc GitHub Dependabot kiểm tra các package phụ thuộc.",
+                "- 100% Unit Test Pass: Nếu có bất kỳ test nào fail, pipeline tự động chặn merge."
+              ],
+              "paragraphsVi": [
+                "Để ngăn chặn code kém chất lượng lọt vào production, chúng ta thiết lập hệ thống rào chắn tự động (Guardrails) trên GitHub Actions pipeline:",
+                "- Linter & Formatter: Ép buộc tuân thủ chuẩn formatting (`dotnet format --verify-no-changes`, `eslint`).",
+                "- Static Application Security Testing (SAST): Sử dụng **Semgrep** hoặc **SonarQube** tự động quét các pattern code nguy hiểm.",
+                "- Dependency Vulnerability Scanner: Dùng **Snyk** hoặc GitHub Dependabot kiểm tra các package phụ thuộc.",
+                "- 100% Unit Test Pass: Nếu có bất kỳ test nào fail, pipeline tự động chặn merge."
+              ],
+              "codeTitle": "Workflow GitHub Actions quét bảo mật và kiểm thử tự động",
+              "codeLanguage": "yaml",
+              "codeContent": "name: Vibe Coding CI Guardrails\non: [pull_request]\n\njobs:\n  security-and-test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Setup .NET\n        uses: actions/setup-dotnet@v4\n        with:\n          dotnet-version: '10.0.x'\n\n      # 1. Kiểm tra định dạng code\n      - name: Verify Code Formatting\n        run: dotnet format --verify-no-changes\n\n      # 2. Quét lỗ hổng bảo mật bằng Semgrep\n      - name: Run Semgrep SAST\n        uses: returntocorp/semgrep-action@v1\n        with:\n          config: >-\n            p/security-audit\n            p/csharp\n\n      # 3. Chạy toàn bộ Unit & Integration Tests\n      - name: Run Unit Tests\n        run: dotnet test --configuration Release --verbosity normal",
+              "calloutType": "tip",
+              "calloutTitle": "Bảo vệ nhánh main",
+              "calloutTitleVi": "Bảo vệ nhánh main",
+              "calloutText": "Bật tính năng Branch Protection Rule trên GitHub: Yêu cầu 'Vibe Coding CI Guardrails' phải chạy thành công và có ít nhất 1 Senior Dev approve thì mới được phép merge.",
+              "calloutTextVi": "Bật tính năng Branch Protection Rule trên GitHub: Yêu cầu 'Vibe Coding CI Guardrails' phải chạy thành công và có ít nhất 1 Senior Dev approve thì mới được phép merge."
+            },
+            {
+              "heading": "3. Tối Ưu Chi Phí Token API Khi Triển Khai Cho Cả Đội Ngũ",
+              "headingVi": "3. Tối Ưu Chi Phí Token API Khi Triển Khai Cho Cả Đội Ngũ",
+              "paragraphs": [
+                "Khi công ty có 20 lập trình viên dùng Cursor và Claude 3.7 hàng ngày, hóa đơn API có thể lên đến hàng ngàn USD/tháng nếu không biết cách tối ưu.",
+                "Chiến lược phân bổ mô hình thông minh (Model Routing):",
+                "- Tác vụ tra cứu nhanh, sửa cú pháp đơn giản, giải thích code: Dùng các model siêu rẻ và siêu nhanh như **Claude 3.5 Haiku** hoặc **Gemini 2.0 Flash** (tiết kiệm 95% chi phí).",
+                "- Tác vụ sinh code multi-file thông thường: Dùng **Claude 3.5 Sonnet** hoặc **GPT-4o**.",
+                "- Tác vụ thiết kế kiến trúc lõi, giải bài toán concurrency hóc búa: Chỉ lúc này mới bật **Claude 3.7 Sonnet với Extended Thinking**.",
+                "- Luôn bật tính năng Prompt Caching của Anthropic/OpenAI để tái sử dụng ngữ cảnh codebase lớn mà không phải trả tiền đọc lại token nhiều lần."
+              ],
+              "paragraphsVi": [
+                "Khi công ty có 20 lập trình viên dùng Cursor và Claude 3.7 hàng ngày, hóa đơn API có thể lên đến hàng ngàn USD/tháng nếu không biết cách tối ưu.",
+                "Chiến lược phân bổ mô hình thông minh (Model Routing):",
+                "- Tác vụ tra cứu nhanh, sửa cú pháp đơn giản, giải thích code: Dùng các model siêu rẻ và siêu nhanh như **Claude 3.5 Haiku** hoặc **Gemini 2.0 Flash** (tiết kiệm 95% chi phí).",
+                "- Tác vụ sinh code multi-file thông thường: Dùng **Claude 3.5 Sonnet** hoặc **GPT-4o**.",
+                "- Tác vụ thiết kế kiến trúc lõi, giải bài toán concurrency hóc búa: Chỉ lúc này mới bật **Claude 3.7 Sonnet với Extended Thinking**.",
+                "- Luôn bật tính năng Prompt Caching của Anthropic/OpenAI để tái sử dụng ngữ cảnh codebase lớn mà không phải trả tiền đọc lại token nhiều lần."
+              ],
+              "codeTitle": "Bảng phân bổ ngân sách Model theo ma trận công việc",
+              "codeLanguage": "text",
+              "codeContent": "┌───────────────────────────────┬─────────────────────────────┬─────────────────┐\n│ Độ Phức Tạp Của Task          │ Model Đề Xuất               │ Chi Phí / 1M Tok│\n├───────────────────────────────┼─────────────────────────────┼─────────────────┤\n│ Explain code, format, comments│ Gemini 2.0 Flash / Haiku    │ ~$0.10 - $0.80  │\n│ Viết Unit Test, CRUD API      │ Claude 3.5 Sonnet           │ ~$3.00          │\n│ Core Architecture, Race Cond  │ Claude 3.7 Thinking Mode    │ ~$3.00 - $15.00 │\n└───────────────────────────────┴─────────────────────────────┴─────────────────┘",
+              "calloutType": "info",
+              "calloutTitle": "Tương lai của nghề kỹ sư phần mềm",
+              "calloutTitleVi": "Tương lai của nghề kỹ sư phần mềm",
+              "calloutText": "AI sẽ không thay thế lập trình viên. Nhưng những lập trình viên biết làm chủ Vibe Coding, hiểu sâu kiến trúc và có kỷ luật kiểm thử sẽ thay thế hoàn toàn những người chỉ biết gõ phím thông thường.",
+              "calloutTextVi": "AI sẽ không thay thế lập trình viên. Nhưng những lập trình viên biết làm chủ Vibe Coding, hiểu sâu kiến trúc và có kỷ luật kiểm thử sẽ thay thế hoàn toàn những người chỉ biết gõ phím thông thường."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rag-gemini-series",
+      "title": "Building Multimodal RAG with Google Gemini: Document Chunking to Grounded Citations",
+      "titleVi": "Chuyên Đề Multimodal RAG với Google Gemini: Từ Chunking Tài Liệu, Vector DB đến Trích Dẫn Nguồn",
+      "icon": "bi-cpu-fill",
+      "color": "#1a73e8",
+      "badge": "6 Bài Viết",
+      "description": "Lộ trình thực chiến toàn diện bám sát chuẩn Google Codelabs: Tách chiết tài liệu PDF phức tạp, tóm tắt ảnh/bảng biểu bằng Gemini Vision, Multi-Vector Retriever với Chroma DB, Hybrid Search và LLM trả lời có trích dẫn nguồn chuẩn xác.",
+      "descriptionVi": "Lộ trình thực chiến toàn diện bám sát chuẩn Google Codelabs: Tách chiết tài liệu PDF phức tạp, tóm tắt ảnh/bảng biểu bằng Gemini Vision, Multi-Vector Retriever với Chroma DB, Hybrid Search và LLM trả lời có trích dẫn nguồn chuẩn xác.",
+      "articles": [
+        {
+          "id": "rag-bai-1-tong-quan-multimodal-rag",
+          "seriesId": "rag-gemini-series",
+          "lessonNumber": "Bài 1",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
+          "title": "Bản Chất RAG và Cuộc Cách Mạng Multimodal RAG với Google Gemini",
+          "titleVi": "Bản Chất RAG và Cuộc Cách Mạng Multimodal RAG với Google Gemini",
+          "readingTime": "9 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Tìm hiểu lý do RAG truyền thống (Text-only) thất bại trước các tài liệu chứa biểu đồ và bảng biểu, 2 hướng tiếp cận Multimodal RAG và kiến trúc tổng quan 5 bước với Google Gemini.",
+          "summaryVi": "Tìm hiểu lý do RAG truyền thống (Text-only) thất bại trước các tài liệu chứa biểu đồ và bảng biểu, 2 hướng tiếp cận Multimodal RAG và kiến trúc tổng quan 5 bước với Google Gemini.",
+          "tags": [
+            "rag",
+            "multimodal-rag",
+            "google-gemini",
+            "gemini-pro",
+            "architecture"
+          ],
+          "sections": [
+            {
+              "heading": "1. Giới Hạn Của RAG Truyền Thống (Text-Only) và Sự Ra Đời Của Multimodal RAG",
+              "headingVi": "1. Giới Hạn Của RAG Truyền Thống (Text-Only) và Sự Ra Đời Của Multimodal RAG",
+              "paragraphs": [
+                "Tạo sinh tăng cường truy xuất (Retrieval-Augmented Generation - RAG) là kỹ thuật cung cấp tài liệu bên ngoài vào cửa sổ ngữ cảnh của LLM để trả lời câu hỏi chính xác và giảm thiểu hiện tượng ảo tưởng (Hallucination).",
+                "Tuy nhiên, hơn 80% tài liệu thực tế của doanh nghiệp (Báo cáo tài chính, tài liệu kỹ thuật y khoa, nghiên cứu khoa học, catalogue sản phẩm) chứa các thông tin quan trọng nhất nằm trong: Biểu đồ cột, đồ thị xu hướng, sơ đồ kiến trúc và bảng số liệu nhiều dòng.",
+                "RAG truyền thống chỉ đọc được văn bản thô (raw text). Khi gặp hình ảnh biểu đồ, parser sẽ bỏ qua hoàn toàn hoặc chỉ đọc được vài chú thích rời rạc, khiến câu trả lời của AI bị sai lệch nghiêm trọng. Multimodal RAG (RAG Đa Phương Thức) ra đời để giải quyết triệt để vấn đề này bằng cách xử lý đồng thời cả chữ, bảng và hình ảnh trực quan."
+              ],
+              "paragraphsVi": [
+                "Tạo sinh tăng cường truy xuất (Retrieval-Augmented Generation - RAG) là kỹ thuật cung cấp tài liệu bên ngoài vào cửa sổ ngữ cảnh của LLM để trả lời câu hỏi chính xác và giảm thiểu hiện tượng ảo tưởng (Hallucination).",
+                "Tuy nhiên, hơn 80% tài liệu thực tế của doanh nghiệp (Báo cáo tài chính, tài liệu kỹ thuật y khoa, nghiên cứu khoa học, catalogue sản phẩm) chứa các thông tin quan trọng nhất nằm trong: Biểu đồ cột, đồ thị xu hướng, sơ đồ kiến trúc và bảng số liệu nhiều dòng.",
+                "RAG truyền thống chỉ đọc được văn bản thô (raw text). Khi gặp hình ảnh biểu đồ, parser sẽ bỏ qua hoàn toàn hoặc chỉ đọc được vài chú thích rời rạc, khiến câu trả lời của AI bị sai lệch nghiêm trọng. Multimodal RAG (RAG Đa Phương Thức) ra đời để giải quyết triệt để vấn đề này bằng cách xử lý đồng thời cả chữ, bảng và hình ảnh trực quan."
+              ],
+              "codeTitle": "So sánh Text-only RAG vs Multimodal RAG",
+              "codeLanguage": "text",
+              "codeContent": "Tài liệu Báo Cáo Tài Chính 2026:\n- Chữ: \"Chi tiết tăng trưởng doanh thu quý 3 xem ở Biểu đồ 4.\"\n- Hình ảnh: [Biểu đồ cột hiển thị Doanh thu Q3 đạt 45.2 triệu USD, tăng 18%]\n\n❌ Text-Only RAG: \"Tài liệu chỉ nói xem ở biểu đồ 4, tôi không có số liệu cụ thể.\"\n Multimodal RAG: \"Doanh thu Q3 đạt 45.2 triệu USD, tăng 18% so với cùng kỳ [Kèm ảnh Biểu đồ 4, Trang 12].\"",
+              "calloutType": "tip",
+              "calloutTitle": "Lợi ích vượt trội",
+              "calloutTitleVi": "Lợi ích vượt trội",
+              "calloutText": "Multimodal RAG không chỉ trích xuất đúng thông tin số liệu từ biểu đồ mà còn có khả năng đính kèm chính xác tấm ảnh biểu đồ gốc làm bằng chứng minh họa cho người dùng.",
+              "calloutTextVi": "Multimodal RAG không chỉ trích xuất đúng thông tin số liệu từ biểu đồ mà còn có khả năng đính kèm chính xác tấm ảnh biểu đồ gốc làm bằng chứng minh họa cho người dùng."
+            },
+            {
+              "heading": "2. Hai Hướng Tiếp Cận Multimodal RAG Theo Chuẩn Google Codelabs",
+              "headingVi": "2. Hai Hướng Tiếp Cận Multimodal RAG Theo Chuẩn Google Codelabs",
+              "paragraphs": [
+                "Theo nghiên cứu chính thức của Google Cloud và LangChain, có 2 cách kiến trúc Multimodal RAG:",
+                "1. Lựa chọn 1: Multimodal Embeddings (Nhúng chung không gian Vector): Sử dụng mô hình nhúng đa phương thức (1408 chiều) để biến cả ảnh và text về cùng một không gian vector. Khi tìm kiếm, text query có thể khớp trực tiếp với vector của hình ảnh.",
+                "2. Lựa chọn 2: Multi-Vector Retriever (Khuyên dùng - Sản phẩm bạn sẽ xây dựng): Sử dụng mô hình đa phương thức Gemini Pro Vision để tóm tắt chi tiết ngữ nghĩa của từng bức ảnh/bảng biểu thành văn bản tóm tắt (Summary). Ta nhúng bản tóm tắt này vào Vector DB để tìm kiếm nhanh, nhưng khi truy xuất thì trả về chính bức ảnh gốc nguyên bản cho Gemini tổng hợp câu trả lời."
+              ],
+              "paragraphsVi": [
+                "Theo nghiên cứu chính thức của Google Cloud và LangChain, có 2 cách kiến trúc Multimodal RAG:",
+                "1. Lựa chọn 1: Multimodal Embeddings (Nhúng chung không gian Vector): Sử dụng mô hình nhúng đa phương thức (1408 chiều) để biến cả ảnh và text về cùng một không gian vector. Khi tìm kiếm, text query có thể khớp trực tiếp với vector của hình ảnh.",
+                "2. Lựa chọn 2: Multi-Vector Retriever (Khuyên dùng - Sản phẩm bạn sẽ xây dựng): Sử dụng mô hình đa phương thức Gemini Pro Vision để tóm tắt chi tiết ngữ nghĩa của từng bức ảnh/bảng biểu thành văn bản tóm tắt (Summary). Ta nhúng bản tóm tắt này vào Vector DB để tìm kiếm nhanh, nhưng khi truy xuất thì trả về chính bức ảnh gốc nguyên bản cho Gemini tổng hợp câu trả lời."
+              ],
+              "codeTitle": "Mô hình kiến trúc Multi-Vector Retriever",
+              "codeLanguage": "text",
+              "codeContent": "[Tài liệu PDF] ──► [Tách: Text + Tables + Images]\n                     │\n                     ├── [Gemini Vision]: Sinh bản mô tả tóm tắt (Summary)\n                     │         │\n                     │         ▼ (Embeddings: text-embedding-004)\n                     │    [Vector Store: Chroma DB] ◄── [Truy vấn của User]\n                     │         │ (Tìm ra ID tương đồng nhất)\n                     │         ▼\n                     └──► [Doc Store]: Lấy ra Hình ảnh gốc + Bảng gốc\n                               │\n                               ▼\n            [Gemini Pro Multimodal Synthesis]\n                               │\n                               ▼\n                 [Câu Trả Lời Kèm Ảnh Nguồn]",
+              "calloutType": "info",
+              "calloutTitle": "Tại sao Multi-Vector Retriever lại tối ưu hơn?",
+              "calloutTitleVi": "Tại sao Multi-Vector Retriever lại tối ưu hơn?",
+              "calloutText": "Bởi vì các mô hình text embedding xử lý văn bản tóm tắt cực kỳ chính xác, đồng thời việc truyền ảnh gốc chất lượng cao cho Gemini Pro Vision phân tích ở bước cuối giúp triệt tiêu hoàn toàn hiện tượng mất mát thông tin.",
+              "calloutTextVi": "Bởi vì các mô hình text embedding xử lý văn bản tóm tắt cực kỳ chính xác, đồng thời việc truyền ảnh gốc chất lượng cao cho Gemini Pro Vision phân tích ở bước cuối giúp triệt tiêu hoàn toàn hiện tượng mất mát thông tin."
+            },
+            {
+              "heading": "3. Lộ Trình 5 Bước Triển Khai Thực Chiến",
+              "headingVi": "3. Lộ Trình 5 Bước Triển Khai Thực Chiến",
+              "paragraphs": [
+                "1. Bước 1: Document Parsing - Trích xuất text, bảng và cắt ảnh tự động từ file PDF bằng `unstructured` và `pypdf`.",
+                "2. Bước 2: Image & Table Summarization - Dùng Gemini để sinh tóm tắt giàu ngữ nghĩa cho từng phần tử.",
+                "3. Bước 3: Multi-Vector Indexing - Lưu trữ vector của bản tóm tắt vào Chroma DB và lưu dữ liệu gốc vào Document Store.",
+                "4. Bước 4: Hybrid Search & Re-ranking - Truy xuất tài liệu chính xác kết hợp từ khóa và ngữ nghĩa.",
+                "5. Bước 5: Grounded Generation - Gemini tổng hợp câu trả lời có trích dẫn nguồn số trang và hiển thị ảnh biểu đồ minh chứng."
+              ],
+              "paragraphsVi": [
+                "1. Bước 1: Document Parsing - Trích xuất text, bảng và cắt ảnh tự động từ file PDF bằng `unstructured` và `pypdf`.",
+                "2. Bước 2: Image & Table Summarization - Dùng Gemini để sinh tóm tắt giàu ngữ nghĩa cho từng phần tử.",
+                "3. Bước 3: Multi-Vector Indexing - Lưu trữ vector của bản tóm tắt vào Chroma DB và lưu dữ liệu gốc vào Document Store.",
+                "4. Bước 4: Hybrid Search & Re-ranking - Truy xuất tài liệu chính xác kết hợp từ khóa và ngữ nghĩa.",
+                "5. Bước 5: Grounded Generation - Gemini tổng hợp câu trả lời có trích dẫn nguồn số trang và hiển thị ảnh biểu đồ minh chứng."
+              ],
+              "codeTitle": "Cài đặt thư viện theo chuẩn Google Codelabs",
+              "codeLanguage": "bash",
+              "codeContent": "pip install -U --quiet langchain langchain-community chromadb langchain-google-vertexai\npip install --quiet \"unstructured[all-docs]\" pypdf pillow pydantic lxml matplotlib tiktoken",
+              "calloutType": "tip",
+              "calloutTitle": "Môi trường thực thi",
+              "calloutTitleVi": "Môi trường thực thi",
+              "calloutText": "Bạn có thể chạy toàn bộ mã nguồn này trên Google Colab miễn phí hoặc triển khai trực tiếp trên máy chủ backend Python/FastAPI nội bộ.",
+              "calloutTextVi": "Bạn có thể chạy toàn bộ mã nguồn này trên Google Colab miễn phí hoặc triển khai trực tiếp trên máy chủ backend Python/FastAPI nội bộ."
+            }
+          ]
+        },
+        {
+          "id": "rag-bai-2-chunking-document-ingestion",
+          "seriesId": "rag-gemini-series",
+          "lessonNumber": "Bài 2",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Document Ingestion & Chiến Lược Phân Mảnh Tài Liệu (Chunking Strategies) Chuyên Sâu",
+          "titleVi": "Document Ingestion & Chiến Lược Phân Mảnh Tài Liệu (Chunking Strategies) Chuyên Sâu",
+          "readingTime": "11 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Tách chiết tài liệu PDF phức tạp bằng unstructured và pypdf: Phân loại văn bản, bảng HTML biểu diễn dữ liệu và tự động cắt các vùng chứa hình ảnh biểu đồ kèm số trang.",
+          "summaryVi": "Tách chiết tài liệu PDF phức tạp bằng unstructured và pypdf: Phân loại văn bản, bảng HTML biểu diễn dữ liệu và tự động cắt các vùng chứa hình ảnh biểu đồ kèm số trang.",
+          "tags": [
+            "document-ingestion",
+            "chunking",
+            "pypdf",
+            "unstructured",
+            "pdf-parsing"
+          ],
+          "sections": [
+            {
+              "heading": "1. Tại Sao Chunking Quyết Định 80% Chất Lượng Của Hệ Thống RAG?",
+              "headingVi": "1. Tại Sao Chunking Quyết Định 80% Chất Lượng Của Hệ Thống RAG?",
+              "paragraphs": [
+                "Nếu bạn cắt đoạn văn quá ngắn (ví dụ 100 ký tự): Đoạn text sẽ bị mất ngữ cảnh xung quanh, vector sinh ra không mang đủ ý nghĩa.",
+                "Nếu bạn cắt đoạn văn quá dài (ví dụ 5.000 ký tự): Đoạn text bị loãng, chứa quá nhiều chủ đề hỗn tạp, khiến thuật toán tìm kiếm vector khó tìm thấy điểm tương đồng chính xác.",
+                "Với tài liệu phức tạp: Không được phép gộp bảng biểu vào giữa đoạn văn xuôi. Bảng biểu cần được giữ nguyên cấu trúc hàng-cột (Table HTML/Markdown), còn hình ảnh biểu đồ cần được cắt riêng ra file ảnh (.png/.jpg) kèm siêu dữ liệu số trang (Metadata)."
+              ],
+              "paragraphsVi": [
+                "Nếu bạn cắt đoạn văn quá ngắn (ví dụ 100 ký tự): Đoạn text sẽ bị mất ngữ cảnh xung quanh, vector sinh ra không mang đủ ý nghĩa.",
+                "Nếu bạn cắt đoạn văn quá dài (ví dụ 5.000 ký tự): Đoạn text bị loãng, chứa quá nhiều chủ đề hỗn tạp, khiến thuật toán tìm kiếm vector khó tìm thấy điểm tương đồng chính xác.",
+                "Với tài liệu phức tạp: Không được phép gộp bảng biểu vào giữa đoạn văn xuôi. Bảng biểu cần được giữ nguyên cấu trúc hàng-cột (Table HTML/Markdown), còn hình ảnh biểu đồ cần được cắt riêng ra file ảnh (.png/.jpg) kèm siêu dữ liệu số trang (Metadata)."
+              ],
+              "codeTitle": "Các chiến lược Chunking phổ biến",
+              "codeLanguage": "text",
+              "codeContent": "1. Fixed-Size Chunking: Cắt cứng 500 tokens, lặp lại 50 tokens (Overlap).\n2. Header-Based Chunking: Cắt theo cấu trúc tiêu đề Markdown (# H1, ## H2, ### H3).\n3. Semantic Chunking: Đo khoảng cách ngữ nghĩa giữa các câu, chỉ ngắt đoạn khi chủ đề thay đổi.\n4. Multimodal Partitioning: Tách độc lập 3 danh sách: text_elements, table_elements, image_elements.",
+              "calloutType": "info",
+              "calloutTitle": "Khuyên dùng cho tài liệu doanh nghiệp",
+              "calloutTitleVi": "Khuyên dùng cho tài liệu doanh nghiệp",
+              "calloutText": "Chiến lược Multimodal Partitioning là giải pháp duy nhất giữ trọn vẹn giá trị của các bảng tài chính và đồ thị phức tạp.",
+              "calloutTextVi": "Chiến lược Multimodal Partitioning là giải pháp duy nhất giữ trọn vẹn giá trị của các bảng tài chính và đồ thị phức tạp."
+            },
+            {
+              "heading": "2. Sử Dụng Thư Viện Unstructured Phân Tách PDF Thành Text, Tables và Images",
+              "headingVi": "2. Sử Dụng Thư Viện Unstructured Phân Tách PDF Thành Text, Tables và Images",
+              "paragraphs": [
+                "Thư viện `unstructured` sử dụng mô hình thị giác máy tính phát hiện layout (Layout Detection Model) để nhận biết đâu là tiêu đề, đâu là bảng số liệu và đâu là hình ảnh minh họa trong từng trang PDF.",
+                "Hàm `partition_pdf` tự động trích xuất các bảng biểu dưới dạng HTML và cắt toàn bộ hình ảnh lưu vào thư mục đĩa cứng."
+              ],
+              "paragraphsVi": [
+                "Thư viện `unstructured` sử dụng mô hình thị giác máy tính phát hiện layout (Layout Detection Model) để nhận biết đâu là tiêu đề, đâu là bảng số liệu và đâu là hình ảnh minh họa trong từng trang PDF.",
+                "Hàm `partition_pdf` tự động trích xuất các bảng biểu dưới dạng HTML và cắt toàn bộ hình ảnh lưu vào thư mục đĩa cứng."
+              ],
+              "codeTitle": "Code Python phân tách tài liệu PDF bằng partition_pdf",
+              "codeLanguage": "python",
+              "codeContent": "from unstructured.partition.pdf import partition_pdf\n\n# Trích xuất toàn bộ phần tử từ file PDF\nraw_pdf_elements = partition_pdf(\n    filename=\"financial_report_2026.pdf\",\n    extract_images_in_pdf=True,               # Tự động cắt và lưu các hình ảnh biểu đồ\n    infer_table_structure=True,               # Nhận diện cấu trúc bảng nhiều dòng/cột\n    chunking_strategy=\"by_title\",             # Nhóm các đoạn văn theo tiêu đề gần nhất\n    max_characters=4000,\n    new_after_n_chars=3800,\n    combine_text_under_n_chars=2000,\n    image_output_dir_path=\"./extracted_images\" # Thư mục lưu các file ảnh cắt ra\n)\n\n# Phân loại thành 2 danh sách: Văn bản và Bảng biểu\ntexts = []\ntables = []\nfor element in raw_pdf_elements:\n    if \"Table\" in str(type(element)):\n        tables.append(str(element))\n    elif \"CompositeElement\" in str(type(element)):\n        texts.append(str(element))\n\nprint(f\"Đã trích xuất: {len(texts)} đoạn văn, {len(tables)} bảng biểu số liệu.\")",
+              "calloutType": "tip",
+              "calloutTitle": "Lợi ích của bảng HTML",
+              "calloutTitleVi": "Lợi ích của bảng HTML",
+              "calloutText": "Khi bảng được trích xuất thành định dạng `<table><tr><td>...</td></tr></table>`, LLM hiểu được mối quan hệ giữa dòng tiêu đề và từng ô dữ liệu chính xác gấp 10 lần so với chuỗi văn bản bị dính liền.",
+              "calloutTextVi": "Khi bảng được trích xuất thành định dạng `<table><tr><td>...</td></tr></table>`, LLM hiểu được mối quan hệ giữa dòng tiêu đề và từng ô dữ liệu chính xác gấp 10 lần so với chuỗi văn bản bị dính liền."
+            },
+            {
+              "heading": "3. Mã Hóa Hình Ảnh Sang Base64 Để Truyền Cho Gemini",
+              "headingVi": "3. Mã Hóa Hình Ảnh Sang Base64 Để Truyền Cho Gemini",
+              "paragraphs": [
+                "Để gửi hình ảnh đã trích xuất từ PDF lên Google Gemini API, chúng ta chuyển đổi file ảnh sang chuỗi mã hóa Base64 chuẩn mực.",
+                "Đồng thời, lưu trữ đường dẫn ảnh và số trang vào Metadata của Document để phục vụ bước hiển thị trích dẫn nguồn sau này."
+              ],
+              "paragraphsVi": [
+                "Để gửi hình ảnh đã trích xuất từ PDF lên Google Gemini API, chúng ta chuyển đổi file ảnh sang chuỗi mã hóa Base64 chuẩn mực.",
+                "Đồng thời, lưu trữ đường dẫn ảnh và số trang vào Metadata của Document để phục vụ bước hiển thị trích dẫn nguồn sau này."
+              ],
+              "codeTitle": "Hàm mã hóa ảnh sang Base64 trong Python",
+              "codeLanguage": "python",
+              "codeContent": "import base64\nimport os\n\ndef encode_image_to_base64(image_path):\n    with open(image_path, \"rb\") as image_file:\n        return base64.b64encode(image_file.read()).decode('utf-8')\n\n# Đọc tất cả hình ảnh đã được trích xuất\nimage_files = [os.path.join(\"./extracted_images\", f) for f in os.listdir(\"./extracted_images\") if f.endswith(('.png', '.jpg'))]\nbase64_images = [encode_image_to_base64(img_path) for img_path in sorted(image_files)]\n\nprint(f\"Đã chuẩn bị {len(base64_images)} hình ảnh biểu đồ sẵn sàng phân tích.\")",
+              "calloutType": "info",
+              "calloutTitle": "Tối ưu dung lượng",
+              "calloutTitleVi": "Tối ưu dung lượng",
+              "calloutText": "Nếu file ảnh quá nặng (> 5MB), hãy dùng thư viện PIL (`Pillow`) resize kích thước tối đa về 1920x1080 trước khi mã hóa để tiết kiệm băng thông và giảm độ trễ gọi API.",
+              "calloutTextVi": "Nếu file ảnh quá nặng (> 5MB), hãy dùng thư viện PIL (`Pillow`) resize kích thước tối đa về 1920x1080 trước khi mã hóa để tiết kiệm băng thông và giảm độ trễ gọi API."
+            }
+          ]
+        },
+        {
+          "id": "rag-bai-3-tom-tat-anh-bang-gemini-vision",
+          "seriesId": "rag-gemini-series",
+          "lessonNumber": "Bài 3",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Tóm Tắt Bảng Biểu & Hình Ảnh Bằng Gemini Pro Vision",
+          "titleVi": "Tóm Tắt Bảng Biểu & Hình Ảnh Bằng Gemini Pro Vision",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Kỹ thuật tóm tắt bảng số liệu và hình ảnh đồ thị thành văn bản ngữ nghĩa cực kỳ chi tiết bằng Google Gemini Pro Vision, phục vụ cho bước Embed và tìm kiếm vector chính xác cao.",
+          "summaryVi": "Kỹ thuật tóm tắt bảng số liệu và hình ảnh đồ thị thành văn bản ngữ nghĩa cực kỳ chi tiết bằng Google Gemini Pro Vision, phục vụ cho bước Embed và tìm kiếm vector chính xác cao.",
+          "tags": [
+            "gemini-pro-vision",
+            "image-summary",
+            "table-summary",
+            "langchain",
+            "prompting"
+          ],
+          "sections": [
+            {
+              "heading": "1. Tại Sao Phải Tóm Tắt Hình Ảnh và Bảng Biểu?",
+              "headingVi": "1. Tại Sao Phải Tóm Tắt Hình Ảnh và Bảng Biểu?",
+              "paragraphs": [
+                "Các mô hình nhúng Text Embeddings thông thường không thể nhận trực tiếp dữ liệu dạng nhị phân của ảnh hoặc bảng HTML phức tạp.",
+                "Bằng cách đưa ảnh biểu đồ vào mô hình đa phương thức Gemini Pro Vision, Gemini sẽ đóng vai trò như một chuyên gia phân tích dữ liệu: nó nhìn vào biểu đồ và mô tả lại toàn bộ trục tung, trục hoành, các cột mốc doanh thu, xu hướng tăng giảm thành một đoạn văn bản tóm tắt giàu ngữ nghĩa.",
+                "Đoạn tóm tắt này sau đó được chuyển thành vector. Khi người dùng đặt câu hỏi 'Doanh thu năm 2026 tăng hay giảm?', câu hỏi sẽ khớp hoàn hảo với bản tóm tắt này!"
+              ],
+              "paragraphsVi": [
+                "Các mô hình nhúng Text Embeddings thông thường không thể nhận trực tiếp dữ liệu dạng nhị phân của ảnh hoặc bảng HTML phức tạp.",
+                "Bằng cách đưa ảnh biểu đồ vào mô hình đa phương thức Gemini Pro Vision, Gemini sẽ đóng vai trò như một chuyên gia phân tích dữ liệu: nó nhìn vào biểu đồ và mô tả lại toàn bộ trục tung, trục hoành, các cột mốc doanh thu, xu hướng tăng giảm thành một đoạn văn bản tóm tắt giàu ngữ nghĩa.",
+                "Đoạn tóm tắt này sau đó được chuyển thành vector. Khi người dùng đặt câu hỏi 'Doanh thu năm 2026 tăng hay giảm?', câu hỏi sẽ khớp hoàn hảo với bản tóm tắt này!"
+              ],
+              "codeTitle": "Prompt chuyên dụng cho Gemini tóm tắt hình ảnh đồ thị",
+              "codeLanguage": "text",
+              "codeContent": "Bạn là chuyên gia phân tích dữ liệu. Hãy phân tích hình ảnh này và đưa ra bản tóm tắt chi tiết phục vụ cho việc tìm kiếm:\n1. Tên biểu đồ/đồ thị là gì?\n2. Trục X và Trục Y thể hiện những chỉ số nào, đơn vị đo lường là gì?\n3. Liệt kê các số liệu cụ thể của từng mốc thời gian hoặc từng danh mục.\n4. Rút ra kết luận xu hướng chính (Tăng/Giảm bao nhiêu %).\nBản tóm tắt cần rõ ràng, chính xác về mặt con số và không được tự bịa đặt.",
+              "calloutType": "tip",
+              "calloutTitle": "Prompting cho bảng số liệu",
+              "calloutTitleVi": "Prompting cho bảng số liệu",
+              "calloutText": "Với bảng số liệu (Tables), hãy yêu cầu Gemini tóm tắt lại các con số nổi bật nhất (Giá trị cao nhất, thấp nhất, tổng cộng) để vector search có thể bắt trúng từ khóa nhanh hơn.",
+              "calloutTextVi": "Với bảng số liệu (Tables), hãy yêu cầu Gemini tóm tắt lại các con số nổi bật nhất (Giá trị cao nhất, thấp nhất, tổng cộng) để vector search có thể bắt trúng từ khóa nhanh hơn."
+            },
+            {
+              "heading": "2. Triển Khai Chuỗi Tóm Tắt Bằng LangChain & ChatGoogleGenerativeAI",
+              "headingVi": "2. Triển Khai Chuỗi Tóm Tắt Bằng LangChain & ChatGoogleGenerativeAI",
+              "paragraphs": [
+                "Chúng ta sử dụng `langchain-google-vertexai` hoặc `langchain-google-genai` để khởi tạo mô hình Gemini và chạy song song xử lý danh sách bảng và hình ảnh."
+              ],
+              "paragraphsVi": [
+                "Chúng ta sử dụng `langchain-google-vertexai` hoặc `langchain-google-genai` để khởi tạo mô hình Gemini và chạy song song xử lý danh sách bảng và hình ảnh."
+              ],
+              "codeTitle": "Code Python tóm tắt ảnh bằng Gemini Pro",
+              "codeLanguage": "python",
+              "codeContent": "from langchain_google_vertexai import ChatVertexAI\nfrom langchain_core.messages import HumanMessage\nfrom langchain_core.output_parsers import StrOutputParser\n\n# Khởi tạo mô hình Gemini\nmodel = ChatVertexAI(model_name=\"gemini-1.5-flash\", temperature=0.1)\n\ndef summarize_image(base64_image):\n    # Truyền đồng thời Prompt Text và Hình ảnh Base64 cho Gemini\n    message = HumanMessage(\n        content=[\n            {\"type\": \"text\", \"text\": \"Hãy mô tả chi tiết biểu đồ hoặc hình ảnh này, liệt kê toàn bộ số liệu và xu hướng chính:\"},\n            {\"type\": \"image_url\", \"image_url\": {\"url\": f\"data:image/jpeg;base64,{base64_image}\"}}\n        ]\n    )\n    return model.invoke([message]).content\n\n# Chạy tóm tắt cho toàn bộ hình ảnh\nimage_summaries = [summarize_image(img) for img in base64_images]\nprint(\"Ví dụ tóm tắt ảnh đầu tiên:\", image_summaries[0][:200])",
+              "calloutType": "info",
+              "calloutTitle": "Sử dụng gemini-1.5-flash",
+              "calloutTitleVi": "Sử dụng gemini-1.5-flash",
+              "calloutText": "Gemini 1.5/2.0 Flash có tốc độ xử lý hình ảnh cực nhanh (dưới 1 giây/ảnh) và chi phí token rẻ hơn 10 lần so với bản Pro, rất thích hợp cho công việc tiền xử lý dữ liệu hàng loạt.",
+              "calloutTextVi": "Gemini 1.5/2.0 Flash có tốc độ xử lý hình ảnh cực nhanh (dưới 1 giây/ảnh) và chi phí token rẻ hơn 10 lần so với bản Pro, rất thích hợp cho công việc tiền xử lý dữ liệu hàng loạt."
+            },
+            {
+              "heading": "3. Đồng Bộ Hóa Văn Bản Tóm Tắt và Dữ Liệu Gốc",
+              "headingVi": "3. Đồng Bộ Hóa Văn Bản Tóm Tắt và Dữ Liệu Gốc",
+              "paragraphs": [
+                "Một nguyên tắc sống còn trong Multi-Vector Retriever:",
+                "Mỗi bản tóm tắt phải được liên kết với đối tượng gốc thông qua một khóa định danh duy nhất (`doc_id` - UUID).",
+                "Nếu tài liệu có 5 bức ảnh, ta sẽ có 5 bản tóm tắt trong Vector Store với metadata `doc_id`, và 5 file ảnh gốc lưu trong Document Store cũng được đánh dấu bằng chính `doc_id` đó."
+              ],
+              "paragraphsVi": [
+                "Một nguyên tắc sống còn trong Multi-Vector Retriever:",
+                "Mỗi bản tóm tắt phải được liên kết với đối tượng gốc thông qua một khóa định danh duy nhất (`doc_id` - UUID).",
+                "Nếu tài liệu có 5 bức ảnh, ta sẽ có 5 bản tóm tắt trong Vector Store với metadata `doc_id`, và 5 file ảnh gốc lưu trong Document Store cũng được đánh dấu bằng chính `doc_id` đó."
+              ],
+              "codeTitle": "Tạo cấu trúc ánh xạ doc_id giữa Summary và Raw Image",
+              "codeLanguage": "python",
+              "codeContent": "import uuid\nfrom langchain_core.documents import Document\n\n# Tạo doc_ids ngẫu nhiên cho từng ảnh\nimage_doc_ids = [str(uuid.uuid4()) for _ in base64_images]\n\n# Tạo Documents cho Vector Store (chứa Summary)\nsummary_docs = []\nfor i, summary in enumerate(image_summaries):\n    summary_docs.append(\n        Document(\n            page_content=summary,\n            metadata={\"doc_id\": image_doc_ids[i], \"type\": \"image\", \"image_path\": image_files[i]}\n        )\n    )",
+              "calloutType": "tip",
+              "calloutTitle": "Tách biệt rõ ràng",
+              "calloutTitleVi": "Tách biệt rõ ràng",
+              "calloutText": "Bằng cách tách biệt này, Vector Store của bạn chỉ lưu text gọn nhẹ, còn các file ảnh nặng hàng trăm MB được lưu trữ an toàn trong Disk hoặc Object Storage (AWS S3 / Google Cloud Storage).",
+              "calloutTextVi": "Bằng cách tách biệt này, Vector Store của bạn chỉ lưu text gọn nhẹ, còn các file ảnh nặng hàng trăm MB được lưu trữ an toàn trong Disk hoặc Object Storage (AWS S3 / Google Cloud Storage)."
+            }
+          ]
+        },
+        {
+          "id": "rag-bai-4-multi-vector-retriever-chroma",
+          "seriesId": "rag-gemini-series",
+          "lessonNumber": "Bài 4",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Vector Database & Multi-Vector Retriever: Cài Đặt Chroma DB và Google Embeddings",
+          "titleVi": "Vector Database & Multi-Vector Retriever: Cài Đặt Chroma DB và Google Embeddings",
+          "readingTime": "13 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Xây dựng Multi-Vector Retriever với Chroma DB và Google text-embedding-004: Khám phá thuật toán Cosine Similarity, HNSW Indexing và cơ chế trả về ảnh gốc khi tìm kiếm text.",
+          "summaryVi": "Xây dựng Multi-Vector Retriever với Chroma DB và Google text-embedding-004: Khám phá thuật toán Cosine Similarity, HNSW Indexing và cơ chế trả về ảnh gốc khi tìm kiếm text.",
+          "tags": [
+            "chromadb",
+            "multi-vector-retriever",
+            "embeddings",
+            "vector-search",
+            "vertex-ai"
+          ],
+          "sections": [
+            {
+              "heading": "1. Khái Niệm Vector Embeddings & Mô Hình text-embedding-004 Của Google",
+              "headingVi": "1. Khái Niệm Vector Embeddings & Mô Hình text-embedding-004 Của Google",
+              "paragraphs": [
+                "Mô hình nhúng (Embedding Model) biến đổi một câu văn hoặc đoạn văn bản thành một mảng số thực nhiều chiều (Vector, thường là 768 hoặc 1536 chiều).",
+                "Các câu có cùng ý nghĩa ngữ nghĩa (dù dùng từ ngữ khác nhau) sẽ nằm gần nhau trong không gian vector nhiều chiều.",
+                "Mô hình `text-embedding-004` (mới nhất của Google Vertex AI) đạt điểm benchmark hàng đầu trên bảng xếp hạng MTEB, hỗ trợ tiếng Việt rất tốt và tối ưu hóa cho tác vụ truy xuất thông tin (Retrieval Task)."
+              ],
+              "paragraphsVi": [
+                "Mô hình nhúng (Embedding Model) biến đổi một câu văn hoặc đoạn văn bản thành một mảng số thực nhiều chiều (Vector, thường là 768 hoặc 1536 chiều).",
+                "Các câu có cùng ý nghĩa ngữ nghĩa (dù dùng từ ngữ khác nhau) sẽ nằm gần nhau trong không gian vector nhiều chiều.",
+                "Mô hình `text-embedding-004` (mới nhất của Google Vertex AI) đạt điểm benchmark hàng đầu trên bảng xếp hạng MTEB, hỗ trợ tiếng Việt rất tốt và tối ưu hóa cho tác vụ truy xuất thông tin (Retrieval Task)."
+              ],
+              "codeTitle": "Khởi tạo Google Vertex AI Embeddings",
+              "codeLanguage": "python",
+              "codeContent": "from langchain_google_vertexai import VertexAIEmbeddings\n\n# Khởi tạo mô hình nhúng mới nhất\nembedding_model = VertexAIEmbeddings(\n    model_name=\"text-embedding-004\",\n    project=PROJECT_ID,\n    location=REGION\n)",
+              "calloutType": "tip",
+              "calloutTitle": "Độ tương đồng Cosine (Cosine Similarity)",
+              "calloutTitleVi": "Độ tương đồng Cosine (Cosine Similarity)",
+              "calloutText": "Chroma DB sử dụng độ tương đồng Cosine đo góc giữa 2 vector: Giá trị tiến về 1.0 nghĩa là 2 đoạn văn có ý nghĩa hoàn toàn trùng khớp.",
+              "calloutTextVi": "Chroma DB sử dụng độ tương đồng Cosine đo góc giữa 2 vector: Giá trị tiến về 1.0 nghĩa là 2 đoạn văn có ý nghĩa hoàn toàn trùng khớp."
+            },
+            {
+              "heading": "2. Cấu Hình Chroma DB và InMemoryByteStore Trong LangChain",
+              "headingVi": "2. Cấu Hình Chroma DB và InMemoryByteStore Trong LangChain",
+              "paragraphs": [
+                "MultiVectorRetriever cần 2 thành phần lưu trữ phối hợp:",
+                "1. Vectorstore (Chroma DB): Lưu trữ Vector của các bản tóm tắt (Summaries) để thực hiện tính toán khoảng cách vector siêu tốc.",
+                "2. Docstore (InMemoryByteStore hoặc Local FileStore/Redis): Lưu trữ nội dung nguyên bản (Hình ảnh Base64, bảng HTML đầy đủ, đoạn văn bản gốc).",
+                "Khi có câu hỏi: Chroma DB tìm ra top 3 `doc_id` có vector gần nhất, sau đó Retriever tự động truy vấn vào Docstore để lấy ra 3 đối tượng gốc chuyển tiếp cho LLM."
+              ],
+              "paragraphsVi": [
+                "MultiVectorRetriever cần 2 thành phần lưu trữ phối hợp:",
+                "1. Vectorstore (Chroma DB): Lưu trữ Vector của các bản tóm tắt (Summaries) để thực hiện tính toán khoảng cách vector siêu tốc.",
+                "2. Docstore (InMemoryByteStore hoặc Local FileStore/Redis): Lưu trữ nội dung nguyên bản (Hình ảnh Base64, bảng HTML đầy đủ, đoạn văn bản gốc).",
+                "Khi có câu hỏi: Chroma DB tìm ra top 3 `doc_id` có vector gần nhất, sau đó Retriever tự động truy vấn vào Docstore để lấy ra 3 đối tượng gốc chuyển tiếp cho LLM."
+              ],
+              "codeTitle": "Thiết lập MultiVectorRetriever chuẩn mực",
+              "codeLanguage": "python",
+              "codeContent": "from langchain_community.vectorstores import Chroma\nfrom langchain.storage import InMemoryByteStore\nfrom langchain.retrievers.multi_vector import MultiVectorRetriever\n\n# 1. Khởi tạo Chroma Vector Store\nvectorstore = Chroma(\n    collection_name=\"multimodal_rag_collection\",\n    embedding_function=embedding_model\n)\n\n# 2. Khởi tạo Document Store lưu dữ liệu gốc\nstore = InMemoryByteStore()\nid_key = \"doc_id\"\n\n# 3. Tạo MultiVectorRetriever kết nối cả 2\nretriever = MultiVectorRetriever(\n    vectorstore=vectorstore,\n    byte_store=store,\n    id_key=id_key\n)\n\n# 4. Nạp dữ liệu vào Retriever\n# Đẩy bản tóm tắt vào Vector Store\nretriever.vectorstore.add_documents(summary_docs)\n\n# Đẩy ảnh gốc Base64 vào Byte Store\nretriever.docstore.mset(list(zip(image_doc_ids, base64_images)))",
+              "calloutType": "info",
+              "calloutTitle": "Tính năng mset thần thánh",
+              "calloutTitleVi": "Tính năng mset thần thánh",
+              "calloutText": "Hàm `retriever.docstore.mset(...)` ánh xạ chính xác cặp key-value giữa `doc_id` và chuỗi ảnh gốc Base64.",
+              "calloutTextVi": "Hàm `retriever.docstore.mset(...)` ánh xạ chính xác cặp key-value giữa `doc_id` và chuỗi ảnh gốc Base64."
+            },
+            {
+              "heading": "3. Kiểm Thử Khả Năng Tìm Kiếm Đa Phương Thức",
+              "headingVi": "3. Kiểm Thử Khả Năng Tìm Kiếm Đa Phương Thức",
+              "paragraphs": [
+                "Hãy thử gửi một câu hỏi bằng tiếng Việt hoặc tiếng Anh: 'Biểu đồ nào thể hiện tốc độ tăng trưởng doanh thu quý 3?'.",
+                "Retriever sẽ trả về chính xác danh sách các ảnh gốc dưới dạng Base64 và đoạn văn liên quan."
+              ],
+              "paragraphsVi": [
+                "Hãy thử gửi một câu hỏi bằng tiếng Việt hoặc tiếng Anh: 'Biểu đồ nào thể hiện tốc độ tăng trưởng doanh thu quý 3?'.",
+                "Retriever sẽ trả về chính xác danh sách các ảnh gốc dưới dạng Base64 và đoạn văn liên quan."
+              ],
+              "codeTitle": "Thực hiện truy vấn thử nghiệm",
+              "codeLanguage": "python",
+              "codeContent": "# Gửi câu hỏi tìm kiếm\nquery = \"Biểu đồ nào so sánh biên lợi nhuận giữa các chi nhánh?\"\nretrieved_docs = retriever.invoke(query)\n\nprint(f\"Tìm thấy {len(retrieved_docs)} tài liệu gốc phù hợp!\")\n# retrieved_docs[0] chính là chuỗi Base64 của tấm ảnh biểu đồ cần tìm",
+              "calloutType": "tip",
+              "calloutTitle": "Hiển thị ảnh trên Jupyter Notebook / Colab",
+              "calloutTitleVi": "Hiển thị ảnh trên Jupyter Notebook / Colab",
+              "calloutText": "Bạn có thể dùng `from IPython.display import Image, display; display(Image(base64.b64decode(retrieved_docs[0])))` để ngắm trực tiếp tấm ảnh biểu đồ vừa tìm được ngay trong notebook.",
+              "calloutTextVi": "Bạn có thể dùng `from IPython.display import Image, display; display(Image(base64.b64decode(retrieved_docs[0])))` để ngắm trực tiếp tấm ảnh biểu đồ vừa tìm được ngay trong notebook."
+            }
+          ]
+        },
+        {
+          "id": "rag-bai-5-hybrid-search-reranking",
+          "seriesId": "rag-gemini-series",
+          "lessonNumber": "Bài 5",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Truy Xuất Kết Hợp (Hybrid Search) & Re-Ranking: Nâng Tầm Độ Chính Xác Lên 95%",
+          "titleVi": "Truy Xuất Kết Hợp (Hybrid Search) & Re-Ranking: Nâng Tầm Độ Chính Xác Lên 95%",
+          "readingTime": "13 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Khắc phục điểm mù của Vector Search bằng Hybrid Search (kết hợp Dense Vector + Sparse BM25 Keyword) và kỹ thuật Re-Ranking với Cohere / Cross-Encoder loại bỏ tài liệu rác.",
+          "summaryVi": "Khắc phục điểm mù của Vector Search bằng Hybrid Search (kết hợp Dense Vector + Sparse BM25 Keyword) và kỹ thuật Re-Ranking với Cohere / Cross-Encoder loại bỏ tài liệu rác.",
+          "tags": [
+            "hybrid-search",
+            "bm25",
+            "reranking",
+            "cohere",
+            "rrf"
+          ],
+          "sections": [
+            {
+              "heading": "1. Điểm Mù Chí Mạng Của Tìm Kiếm Thuần Vector (Dense Only)",
+              "headingVi": "1. Điểm Mù Chí Mạng Của Tìm Kiếm Thuần Vector (Dense Only)",
+              "paragraphs": [
+                "Vector Search rất giỏi hiểu nghĩa tương đương (ví dụ: 'ô tô' gần nghĩa với 'xe hơi').",
+                "Nhưng nó rất tệ khi gặp các từ khóa chính xác tuyệt đối như:",
+                "- Mã lỗi kỹ thuật: `ERR_0x80040154`.",
+                "- Mã sản phẩm / SKU: `IPHONE-16-PRO-MAX-256GB`.",
+                "- Tên riêng ít phổ biến hoặc số hiệu điều khoản hợp đồng: `Điều 14.2 khoản b`.",
+                "Với các từ khóa này, thuật toán tìm kiếm từ khóa truyền thống **BM25 (Best Matching 25)** lại thể hiện sự vượt trội tuyệt đối.",
+                "Giải pháp chuyên nghiệp: Kết hợp cả hai phương pháp thành **Hybrid Search**."
+              ],
+              "paragraphsVi": [
+                "Vector Search rất giỏi hiểu nghĩa tương đương (ví dụ: 'ô tô' gần nghĩa với 'xe hơi').",
+                "Nhưng nó rất tệ khi gặp các từ khóa chính xác tuyệt đối như:",
+                "- Mã lỗi kỹ thuật: `ERR_0x80040154`.",
+                "- Mã sản phẩm / SKU: `IPHONE-16-PRO-MAX-256GB`.",
+                "- Tên riêng ít phổ biến hoặc số hiệu điều khoản hợp đồng: `Điều 14.2 khoản b`.",
+                "Với các từ khóa này, thuật toán tìm kiếm từ khóa truyền thống **BM25 (Best Matching 25)** lại thể hiện sự vượt trội tuyệt đối.",
+                "Giải pháp chuyên nghiệp: Kết hợp cả hai phương pháp thành **Hybrid Search**."
+              ],
+              "codeTitle": "So sánh Dense Vector vs Sparse BM25",
+              "codeLanguage": "text",
+              "codeContent": "┌──────────────────────────────┬──────────────────────────────┐\n│ Dense Search (Vector)        │ Sparse Search (BM25 Keyword) │\n├──────────────────────────────┼──────────────────────────────┤\n│ Hiểu ngữ nghĩa trừu tượng    │ Bắt chính xác từng từ khóa   │\n│ Bỏ sót từ viết tắt, mã lỗi   │ Cực mạnh với mã SKU, tên riêng│\n│ Tốn GPU tính toán Embeddings │ Chạy trên CPU cực nhẹ & nhanh│\n└──────────────────────────────┴──────────────────────────────┘\n         ▼                              ▼\n   HYBRID SEARCH = Kết hợp cả 2 qua Reciprocal Rank Fusion (RRF)",
+              "calloutType": "tip",
+              "calloutTitle": "Công thức RRF (Reciprocal Rank Fusion)",
+              "calloutTitleVi": "Công thức RRF (Reciprocal Rank Fusion)",
+              "calloutText": "RRF tính điểm cho từng tài liệu: `Score = 1 / (60 + Rank_Vector) + 1 / (60 + Rank_BM25)`. Tài liệu nào xuất hiện ở thứ hạng cao ở cả 2 bảng xếp hạng sẽ được đẩy lên vị trí số 1.",
+              "calloutTextVi": "RRF tính điểm cho từng tài liệu: `Score = 1 / (60 + Rank_Vector) + 1 / (60 + Rank_BM25)`. Tài liệu nào xuất hiện ở thứ hạng cao ở cả 2 bảng xếp hạng sẽ được đẩy lên vị trí số 1."
+            },
+            {
+              "heading": "2. Cấu Hình Hybrid Search Với LangChain EnsembleRetriever",
+              "headingVi": "2. Cấu Hình Hybrid Search Với LangChain EnsembleRetriever",
+              "paragraphs": [
+                "LangChain cung cấp sẵn `EnsembleRetriever` giúp bạn ghép một Vector Retriever và một BM25 Retriever lại với nhau, phân bổ trọng số (ví dụ: 60% Vector, 40% BM25)."
+              ],
+              "paragraphsVi": [
+                "LangChain cung cấp sẵn `EnsembleRetriever` giúp bạn ghép một Vector Retriever và một BM25 Retriever lại với nhau, phân bổ trọng số (ví dụ: 60% Vector, 40% BM25)."
+              ],
+              "codeTitle": "Khởi tạo EnsembleRetriever trong Python",
+              "codeLanguage": "python",
+              "codeContent": "from langchain.retrievers import EnsembleRetriever\nfrom langchain_community.retrievers import BM25Retriever\n\n# 1. Khởi tạo BM25 Retriever trên danh sách tài liệu văn bản\nbm25_retriever = BM25Retriever.from_documents(summary_docs)\nbm25_retriever.k = 4\n\n# 2. Khởi tạo Vector Retriever\nvector_retriever = vectorstore.as_retriever(search_kwargs={\"k\": 4})\n\n# 3. Ghép nối Hybrid với trọng số 50 - 50\nhybrid_retriever = EnsembleRetriever(\n    retrievers=[bm25_retriever, vector_retriever],\n    weights=[0.5, 0.5]\n)",
+              "calloutType": "info",
+              "calloutTitle": "Độ bao phủ toàn diện",
+              "calloutTitleVi": "Độ bao phủ toàn diện",
+              "calloutText": "Nhờ có BM25 hỗ trợ, người dùng gõ câu hỏi có chứa số model hay từ viết tắt chuyên ngành đều sẽ được tìm thấy chính xác.",
+              "calloutTextVi": "Nhờ có BM25 hỗ trợ, người dùng gõ câu hỏi có chứa số model hay từ viết tắt chuyên ngành đều sẽ được tìm thấy chính xác."
+            },
+            {
+              "heading": "3. Kỹ Thuật Re-Ranking Với Cross-Encoder / Cohere",
+              "headingVi": "3. Kỹ Thuật Re-Ranking Với Cross-Encoder / Cohere",
+              "paragraphs": [
+                "Sau bước Hybrid Search, bạn lấy ra được Top 20 tài liệu ứng viên. Nhưng nếu nạp cả 20 tài liệu này vào LLM:",
+                "- Tốn chi phí token và làm chậm tốc độ trả lời.",
+                "- Hiện tượng 'Lost in the Middle': LLM thường chỉ chú ý đến đầu và cuối của prompt, dễ bỏ qua tài liệu quan trọng nằm ở giữa.",
+                "Re-Ranker (Mô hình Cross-Encoder chuyên chấm điểm) sẽ đọc đồng thời [Câu hỏi + Từng đoạn văn] và xếp hạng lại mức độ liên quan thực sự, lọc lấy ra đúng Top 3 tài liệu chất lượng nhất."
+              ],
+              "paragraphsVi": [
+                "Sau bước Hybrid Search, bạn lấy ra được Top 20 tài liệu ứng viên. Nhưng nếu nạp cả 20 tài liệu này vào LLM:",
+                "- Tốn chi phí token và làm chậm tốc độ trả lời.",
+                "- Hiện tượng 'Lost in the Middle': LLM thường chỉ chú ý đến đầu và cuối của prompt, dễ bỏ qua tài liệu quan trọng nằm ở giữa.",
+                "Re-Ranker (Mô hình Cross-Encoder chuyên chấm điểm) sẽ đọc đồng thời [Câu hỏi + Từng đoạn văn] và xếp hạng lại mức độ liên quan thực sự, lọc lấy ra đúng Top 3 tài liệu chất lượng nhất."
+              ],
+              "codeTitle": "Tích hợp Cohere Rerank trong LangChain pipeline",
+              "codeLanguage": "python",
+              "codeContent": "from langchain.retrievers import ContextualCompressionRetriever\nfrom langchain_cohere import CohereRerank\n\n# Khởi tạo mô hình Re-ranker\ncompressor = CohereRerank(model=\"rerank-multilingual-v3.0\", top_n=3)\n\n# Bọc quanh Hybrid Retriever\nrerank_retriever = ContextualCompressionRetriever(\n    base_compressor=compressor,\n    base_retriever=hybrid_retriever\n)\n\n# Kết quả trả về luôn là 3 tài liệu liên quan mật thiết nhất\nfinal_docs = rerank_retriever.invoke(\"Chi phí marketing năm 2026 tăng bao nhiêu phần trăm?\")",
+              "calloutType": "tip",
+              "calloutTitle": "Cải thiện độ chính xác",
+              "calloutTitleVi": "Cải thiện độ chính xác",
+              "calloutText": "Các bài benchmark thực tế cho thấy: Việc bổ sung thêm một bước Re-ranking giúp tăng độ chính xác của câu trả lời từ 75% lên tới 92-95%.",
+              "calloutTextVi": "Các bài benchmark thực tế cho thấy: Việc bổ sung thêm một bước Re-ranking giúp tăng độ chính xác của câu trả lời từ 75% lên tới 92-95%."
+            }
+          ]
+        },
+        {
+          "id": "rag-bai-6-grounded-generation-citations",
+          "seriesId": "rag-gemini-series",
+          "lessonNumber": "Bài 6",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
+          "title": "Grounded Generation: LLM Trả Lời Kèm Trích Dẫn Nguồn (Citations) & Ứng Dụng Hoàn Chỉnh",
+          "titleVi": "Grounded Generation: LLM Trả Lời Kèm Trích Dẫn Nguồn (Citations) & Ứng Dụng Hoàn Chỉnh",
+          "readingTime": "15 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Hoàn thiện chuỗi Multimodal RAG Chain hoàn chỉnh: System Prompt chống ảo giác, kỹ thuật Grounding gắn số trang và hiển thị ảnh biểu đồ gốc làm bằng chứng minh họa.",
+          "summaryVi": "Hoàn thiện chuỗi Multimodal RAG Chain hoàn chỉnh: System Prompt chống ảo giác, kỹ thuật Grounding gắn số trang và hiển thị ảnh biểu đồ gốc làm bằng chứng minh họa.",
+          "tags": [
+            "grounded-generation",
+            "citations",
+            "anti-hallucination",
+            "full-pipeline",
+            "streamlit"
+          ],
+          "sections": [
+            {
+              "heading": "1. Xây Dựng Multimodal RAG Chain Bằng LCEL (LangChain Expression Language)",
+              "headingVi": "1. Xây Dựng Multimodal RAG Chain Bằng LCEL (LangChain Expression Language)",
+              "paragraphs": [
+                "Bước cuối cùng của hệ thống RAG là đóng gói toàn bộ luồng xử lý thành một Chain hoàn chỉnh:",
+                "1. Nhận câu hỏi từ người dùng.",
+                "2. Retriever tìm kiếm các đoạn văn và hình ảnh liên quan.",
+                "3. Đóng gói các đoạn văn và hình ảnh Base64 vào cấu trúc `HumanMessage` đa phương thức.",
+                "4. Truyền vào mô hình Gemini Pro để tổng hợp câu trả lời theo đúng sự thật có trong tài liệu."
+              ],
+              "paragraphsVi": [
+                "Bước cuối cùng của hệ thống RAG là đóng gói toàn bộ luồng xử lý thành một Chain hoàn chỉnh:",
+                "1. Nhận câu hỏi từ người dùng.",
+                "2. Retriever tìm kiếm các đoạn văn và hình ảnh liên quan.",
+                "3. Đóng gói các đoạn văn và hình ảnh Base64 vào cấu trúc `HumanMessage` đa phương thức.",
+                "4. Truyền vào mô hình Gemini Pro để tổng hợp câu trả lời theo đúng sự thật có trong tài liệu."
+              ],
+              "codeTitle": "Code Python hoàn chỉnh cho Multimodal RAG Chain",
+              "codeLanguage": "python",
+              "codeContent": "from langchain_core.runnables import RunnablePassthrough, RunnableLambda\nfrom langchain_google_vertexai import ChatVertexAI\nfrom langchain_core.messages import HumanMessage\n\nllm = ChatVertexAI(model_name=\"gemini-1.5-pro\", temperature=0.0)\n\ndef build_multimodal_prompt(input_dict):\n    question = input_dict[\"question\"]\n    context_elements = input_dict[\"context\"]\n    \n    prompt_content = [\n        {\"type\": \"text\", \"text\": f\"\"\"Bạn là trợ lý phân tích tài liệu chuyên nghiệp.\nDựa DUY NHẤT vào các tài liệu văn bản và hình ảnh đính kèm sau đây để trả lời câu hỏi.\nNếu tài liệu không có thông tin, hãy trả lời trung thực: 'Tài liệu không đề cập đến thông tin này'. Tuyệt đối không tự suy diễn.\n\nCâu hỏi: {question}\n\nNội dung tài liệu:\"\"\"}\n    ]\n    \n    # Đính kèm văn bản và hình ảnh vào prompt\n    for elem in context_elements:\n        if isinstance(elem, str) and len(elem) > 500: # Chuỗi Base64 ảnh\n            prompt_content.append({\"type\": \"image_url\", \"image_url\": {\"url\": f\"data:image/jpeg;base64,{elem}\"}})\n        elif hasattr(elem, 'page_content'):\n            prompt_content.append({\"type\": \"text\", \"text\": elem.page_content})\n            \n    return [HumanMessage(content=prompt_content)]\n\n# Ghép nối LCEL Chain\nrag_chain = (\n    {\"context\": retriever, \"question\": RunnablePassthrough()}\n    | RunnableLambda(build_multimodal_prompt)\n    | llm\n    | StrOutputParser()\n)\n\n# Chạy thử nghiệm!\nresponse = rag_chain.invoke(\"Tỷ suất lợi nhuận ròng năm 2026 đạt bao nhiêu và xu hướng như thế nào?\")\nprint(response)",
+              "calloutType": "tip",
+              "calloutTitle": "Temperature = 0.0",
+              "calloutTitleVi": "Temperature = 0.0",
+              "calloutText": "Luôn đặt `temperature = 0.0` để ép mô hình suy luận theo hướng xác định (Deterministic), bám sát 100% dữ liệu gốc và triệt tiêu tính ngẫu nhiên.",
+              "calloutTextVi": "Luôn đặt `temperature = 0.0` để ép mô hình suy luận theo hướng xác định (Deterministic), bám sát 100% dữ liệu gốc và triệt tiêu tính ngẫu nhiên."
+            },
+            {
+              "heading": "2. Cơ Chế Trích Dẫn Nguồn (Source Citations & Grounding)",
+              "headingVi": "2. Cơ Chế Trích Dẫn Nguồn (Source Citations & Grounding)",
+              "paragraphs": [
+                "Người dùng trong doanh nghiệp không bao giờ tin tưởng một câu trả lời AI nếu không có bằng chứng.",
+                "Hệ thống của chúng ta trả về một đối tượng phản hồi gồm 2 phần:",
+                "1. Nội dung câu trả lời được format Markdown đẹp mắt, có trỏ số trang `[Trang 15]`.",
+                "2. Danh sách các hình ảnh biểu đồ gốc trích xuất từ đúng số trang đó để hiển thị trực tiếp bên cạnh câu trả lời cho người dùng đối soát bằng mắt."
+              ],
+              "paragraphsVi": [
+                "Người dùng trong doanh nghiệp không bao giờ tin tưởng một câu trả lời AI nếu không có bằng chứng.",
+                "Hệ thống của chúng ta trả về một đối tượng phản hồi gồm 2 phần:",
+                "1. Nội dung câu trả lời được format Markdown đẹp mắt, có trỏ số trang `[Trang 15]`.",
+                "2. Danh sách các hình ảnh biểu đồ gốc trích xuất từ đúng số trang đó để hiển thị trực tiếp bên cạnh câu trả lời cho người dùng đối soát bằng mắt."
+              ],
+              "codeTitle": "Định dạng JSON phản hồi kèm Citation cho Frontend",
+              "codeLanguage": "json",
+              "codeContent": "{\n  \"answer\": \"Doanh thu dịch vụ Cloud trong năm 2026 đạt 32.5 tỷ USD, tăng trưởng 28% so với năm 2025. Chi tiết doanh thu theo từng quý được thể hiện rõ ràng trong biểu đồ phân bổ [Nguồn: Báo Cáo Thường Niên, Trang 18].\",\n  \"citations\": [\n    {\n      \"source\": \"annual_report_2026.pdf\",\n      \"page\": 18,\n      \"type\": \"chart\",\n      \"image_url\": \"/static/extracted_images/figure_page_18_1.png\"\n    }\n  ],\n  \"confidence_score\": 0.98\n}",
+              "calloutType": "info",
+              "calloutTitle": "Niềm tin của người dùng",
+              "calloutTitleVi": "Niềm tin của người dùng",
+              "calloutText": "Khi người dùng thấy câu trả lời của AI khớp 100% với biểu đồ xuất hiện ngay bên cạnh, mức độ tin tưởng vào giải pháp AI của doanh nghiệp đạt mức tối đa.",
+              "calloutTextVi": "Khi người dùng thấy câu trả lời của AI khớp 100% với biểu đồ xuất hiện ngay bên cạnh, mức độ tin tưởng vào giải pháp AI của doanh nghiệp đạt mức tối đa."
+            },
+            {
+              "heading": "3. Triển Khai Giao Diện Hỏi Đáp Với Streamlit / Blazor",
+              "headingVi": "3. Triển Khai Giao Diện Hỏi Đáp Với Streamlit / Blazor",
+              "paragraphs": [
+                "Chỉ với 30 dòng code Python Streamlit (hoặc Blazor WebAssembly C#), bạn đã có thể đưa hệ thống Multimodal RAG này vào vận hành thực tế:",
+                "- Bên trái: Khu vực tải lên file PDF báo cáo tài chính mới.",
+                "- Ở giữa: Khung chat hỏi đáp tương tác với Gemini.",
+                "- Bên phải: Khung hiển thị các hình ảnh biểu đồ chứng cứ được hệ thống tự động bốc tách ra."
+              ],
+              "paragraphsVi": [
+                "Chỉ với 30 dòng code Python Streamlit (hoặc Blazor WebAssembly C#), bạn đã có thể đưa hệ thống Multimodal RAG này vào vận hành thực tế:",
+                "- Bên trái: Khu vực tải lên file PDF báo cáo tài chính mới.",
+                "- Ở giữa: Khung chat hỏi đáp tương tác với Gemini.",
+                "- Bên phải: Khung hiển thị các hình ảnh biểu đồ chứng cứ được hệ thống tự động bốc tách ra."
+              ],
+              "codeTitle": "Giao diện Streamlit đơn giản cho Multimodal RAG",
+              "codeLanguage": "python",
+              "codeContent": "import streamlit as st\nimport base64\n\nst.set_page_config(layout=\"wide\", page_title=\"Multimodal RAG with Gemini\")\nst.title(\" Trợ Lý Hỏi Đáp Báo Cáo Tài Chính Đa Phương Thức\")\n\nuser_query = st.chat_input(\"Nhập câu hỏi về báo cáo tài chính của bạn tại đây...\")\n\nif user_query:\n    with st.spinner(\"Đang truy xuất dữ liệu và biểu đồ...\"):\n        # 1. Gọi RAG chain\n        result = rag_chain.invoke(user_query)\n        docs = retriever.invoke(user_query)\n        \n        col1, col2 = st.columns([3, 2])\n        with col1:\n            st.markdown(\"### 🤖 Câu Trả Lời:\")\n            st.write(result)\n            \n        with col2:\n            st.markdown(\"### 📊 Bằng Chứng Minh Họa:\")\n            for doc in docs:\n                if isinstance(doc, str) and len(doc) > 500: # Ảnh Base64\n                    st.image(base64.b64decode(doc), caption=\"Hình ảnh/Biểu đồ gốc từ tài liệu\", use_column_width=True)",
+              "calloutType": "tip",
+              "calloutTitle": "Sẵn sàng cho Production",
+              "calloutTitleVi": "Sẵn sàng cho Production",
+              "calloutText": "Chúc mừng bạn đã hoàn thành trọn vẹn lộ trình xây dựng hệ thống Multimodal RAG chuẩn Enterprise từ A-Z theo đúng công nghệ tiên tiến nhất của Google Cloud và Gemini!",
+              "calloutTextVi": "Chúc mừng bạn đã hoàn thành trọn vẹn lộ trình xây dựng hệ thống Multimodal RAG chuẩn Enterprise từ A-Z theo đúng công nghệ tiên tiến nhất của Google Cloud và Gemini!"
             }
           ]
         }
