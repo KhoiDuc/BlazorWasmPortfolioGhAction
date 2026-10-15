@@ -1,0 +1,660 @@
+{
+  "domains": [
+    {
+      "id": "dotnet",
+      "name": ".NET & C# Ecosystem",
+      "nameVi": "Hệ Sinh Thái .NET & C#",
+      "icon": "bi-filetype-cs",
+      "color": "#512bd4",
+      "badge": ".NET 9/10",
+      "description": "Clean architecture scaffolding, Native AOT, production memory diagnostics, EF Core migrations & high-throughput concurrency.",
+      "descriptionVi": "Khởi tạo Clean Architecture, Native AOT, chẩn đoán rò rỉ bộ nhớ, EF Core migrations và concurrency hiệu năng cao."
+    },
+    {
+      "id": "python",
+      "name": "Python & Modern Backend",
+      "nameVi": "Python & Modern Backend",
+      "icon": "bi-filetype-py",
+      "color": "#38bdf8",
+      "badge": "FastAPI + uv",
+      "description": "Lightning-fast uv package manager, FastAPI with Pydantic v2, async SQLAlchemy 2.0, SSE streaming & Gunicorn worker setups.",
+      "descriptionVi": "Package manager uv tốc độ cao, FastAPI với Pydantic v2, SQLAlchemy 2.0 async, SSE streaming và Gunicorn production."
+    },
+    {
+      "id": "ai-mcp",
+      "name": "AI Engineering & MCP",
+      "nameVi": "Kỹ Thuật AI & Chuẩn MCP",
+      "icon": "bi-robot",
+      "color": "#10a37f",
+      "badge": "MCP + LLMs",
+      "description": "Model Context Protocol (MCP) server & client inspector, Semantic Kernel (.NET), Ollama local models, and PgVector hybrid RAG.",
+      "descriptionVi": "Giao thức Model Context Protocol (MCP), Semantic Kernel (.NET), mô hình cục bộ Ollama và Hybrid RAG với PgVector."
+    },
+    {
+      "id": "devops",
+      "name": "Containers & Kubernetes",
+      "nameVi": "Container & Kubernetes",
+      "icon": "bi-box-seam",
+      "color": "#2496ed",
+      "badge": "Docker + K8s",
+      "description": "Multi-stage distroless/chiseled builds, BuildKit multi-arch, Docker Compose v2 healthchecks, and kubectl 5-minute triage.",
+      "descriptionVi": "Build container đa tầng chiseled/distroless, BuildKit đa kiến trúc, Compose v2 healthcheck và cấp cứu Kubernetes 5 phút."
+    },
+    {
+      "id": "cloud",
+      "name": "Cloud & Edge (AWS & Cloudflare)",
+      "nameVi": "Hạ Tầng Cloud & Edge",
+      "icon": "bi-cloud-check-fill",
+      "color": "#ff9900",
+      "badge": "AWS + Workers",
+      "description": "AWS CLI v2 SSO profiles, S3 sync & presigned URLs, ECS Fargate deployments, CloudWatch tailing, and Cloudflare Wrangler edge.",
+      "descriptionVi": "AWS CLI v2 SSO, đồng bộ S3 & presigned URL, cập nhật ECS Fargate, xem log CloudWatch và Cloudflare Wrangler."
+    },
+    {
+      "id": "database",
+      "name": "Databases & Data Engines",
+      "nameVi": "Cơ Sở Dữ Liệu & Data Engines",
+      "icon": "bi-database-fill-gear",
+      "color": "#336791",
+      "badge": "Postgres + Redis",
+      "description": "PostgreSQL indexing & EXPLAIN ANALYZE, pg_dump/restore pipelines, instant OLAP with DuckDB, and Redis Streams consumer groups.",
+      "descriptionVi": "Tối ưu Index & EXPLAIN ANALYZE PostgreSQL, sao lưu pg_dump, phân tích dữ liệu tức thì với DuckDB và Redis Streams."
+    },
+    {
+      "id": "git-cicd",
+      "name": "Advanced Git & GitHub Actions",
+      "nameVi": "Git Chuyên Sâu & CI/CD",
+      "icon": "bi-git",
+      "color": "#f05032",
+      "badge": "Git + Actions",
+      "description": "Git worktrees for zero-stash multi-branching, bisect binary search for bugs, reflog recovery, and matrix caching workflows.",
+      "descriptionVi": "Git worktree làm việc song song nhiều nhánh, bisect dò bug nhị phân, reflog cứu commit đã xóa và GitHub Actions matrix cache."
+    },
+    {
+      "id": "linux",
+      "name": "Linux Mastery & Networking",
+      "nameVi": "Linux Chuyên Sâu & Mạng",
+      "icon": "bi-terminal-fill",
+      "color": "#fcc624",
+      "badge": "Sysadmin + CLI",
+      "description": "High-speed text slicing with ripgrep & jq, socket inspection (ss, lsof), systemd service management, and tmux workflows.",
+      "descriptionVi": "Xử lý log siêu tốc với ripgrep & jq, kiểm tra cổng mạng với ss/lsof, quản trị dịch vụ systemd và phím tắt tmux."
+    },
+    {
+      "id": "security",
+      "name": "DevSecOps & Identity",
+      "nameVi": "Bảo Mật & DevSecOps",
+      "icon": "bi-shield-lock-fill",
+      "color": "#e11d48",
+      "badge": "OAuth2 + OpenSSL",
+      "description": "OpenSSL SAN cert creation, OAuth 2.0 PKCE flow verification, JWT inspection & tampering defense, and Trivy vulnerability scanning.",
+      "descriptionVi": "Tạo chứng chỉ SSL SAN, xác thực OAuth 2.0 PKCE qua curl, phân tích lỗ hổng JWT và quét bảo mật container với Trivy."
+    },
+    {
+      "id": "architecture",
+      "name": "Observability & System Design",
+      "nameVi": "Giám Sát & Thiết Kế Hệ Thống",
+      "icon": "bi-diagram-3-fill",
+      "color": "#a855f7",
+      "badge": "OTel + SRE",
+      "description": "OpenTelemetry collector pipeline, Prometheus PromQL p99 latency queries, Sliding Window rate limiters, and Outbox pattern blueprints.",
+      "descriptionVi": "Cấu hình OpenTelemetry pipeline, câu lệnh PromQL tính p99 latency, thuật toán Sliding Window và kiến trúc Transactional Outbox."
+    }
+  ],
+  "defaultParameters": [
+    {
+      "key": "PROJECT_NAME",
+      "label": "Project / App Name",
+      "defaultValue": "OrderProcessingService",
+      "placeholder": "e.g. MyService",
+      "description": "Tên dự án hoặc giải pháp"
+    },
+    {
+      "key": "PORT",
+      "label": "HTTP Port",
+      "defaultValue": "8080",
+      "placeholder": "e.g. 5000, 8080",
+      "description": "Cổng mạng lắng nghe dịch vụ"
+    },
+    {
+      "key": "IMAGE",
+      "label": "Docker Image Name",
+      "defaultValue": "myorg/api-service",
+      "placeholder": "e.g. repo/my-app",
+      "description": "Tên image container"
+    },
+    {
+      "key": "TAG",
+      "label": "Release / Git Tag",
+      "defaultValue": "v1.0.0",
+      "placeholder": "e.g. latest, v1.0.0",
+      "description": "Phiên bản phát hành hoặc tag"
+    },
+    {
+      "key": "AWS_PROFILE",
+      "label": "AWS Named Profile",
+      "defaultValue": "prod-lead",
+      "placeholder": "e.g. default, prod-profile",
+      "description": "Tên cấu hình tài khoản AWS CLI"
+    },
+    {
+      "key": "CONTAINER",
+      "label": "Container Name",
+      "defaultValue": "web-api-instance",
+      "placeholder": "e.g. web-app",
+      "description": "Tên thực thể container Docker"
+    },
+    {
+      "key": "DB_NAME",
+      "label": "Database Name",
+      "defaultValue": "ecommerce_prod",
+      "placeholder": "e.g. main_db",
+      "description": "Tên cơ sở dữ liệu"
+    }
+  ],
+  "commands": [
+    {
+      "id": "dotnet-clean-arch",
+      "domainId": "dotnet",
+      "subcategory": "CLI & Architecture",
+      "title": "Bootstrap Clean Architecture Solution",
+      "titleVi": "Khởi tạo Solution chuẩn Clean Architecture",
+      "description": "Generate a multi-project solution structure with Domain, Application, Infrastructure, and API layers using dotnet CLI.",
+      "descriptionVi": "Tạo cấu trúc solution nhiều tầng (Domain, Application, Infrastructure, WebAPI) hoàn chỉnh bằng dotnet CLI.",
+      "rawCommand": "dotnet new sln -n {{PROJECT_NAME}}\n\nmkdir src\ncd src\ndotnet new classlib -n {{PROJECT_NAME}}.Domain\ndotnet new classlib -n {{PROJECT_NAME}}.Application\ndotnet new classlib -n {{PROJECT_NAME}}.Infrastructure\ndotnet new webapi -n {{PROJECT_NAME}}.Api --use-controllers false\n\ncd ..\ndotnet sln add (Get-ChildItem -Recurse *.csproj)\n\ndotnet add src/{{PROJECT_NAME}}.Application/{{PROJECT_NAME}}.Application.csproj reference src/{{PROJECT_NAME}}.Domain/{{PROJECT_NAME}}.Domain.csproj\ndotnet add src/{{PROJECT_NAME}}.Infrastructure/{{PROJECT_NAME}}.Infrastructure.csproj reference src/{{PROJECT_NAME}}.Application/{{PROJECT_NAME}}.Application.csproj\ndotnet add src/{{PROJECT_NAME}}.Api/{{PROJECT_NAME}}.Api.csproj reference src/{{PROJECT_NAME}}.Infrastructure/{{PROJECT_NAME}}.Infrastructure.csproj",
+      "codeLanguage": "powershell",
+      "flags": [
+        { "flag": "dotnet new sln -n", "explanation": "Creates a root .sln file with the specified name", "explanationVi": "Tạo file solution (.sln) ở thư mục gốc với tên chỉ định" },
+        { "flag": "--use-controllers false", "explanation": "Creates modern Minimal APIs template instead of classic controller overhead", "explanationVi": "Dùng Minimal APIs hiện đại thay vì cấu trúc Controller cồng kềnh" },
+        { "flag": "dotnet sln add", "explanation": "Registers all .csproj projects recursively into the solution file", "explanationVi": "Đăng ký toàn bộ file .csproj vào file .sln tự động" }
+      ],
+      "whenToUse": "At the start of every production enterprise project to enforce clean dependency inversion from day one.",
+      "whenToUseVi": "Khi bắt đầu bất kỳ dự án chuyên nghiệp nào để đảm bảo nguyên lý đảo ngược phụ thuộc (DIP) chuẩn mực.",
+      "pitfalls": "Avoid circular references; never let Domain depend on Infrastructure.",
+      "pitfallsVi": "Tránh tham chiếu vòng; tầng Domain tuyệt đối không phụ thuộc vào Infrastructure hay thư viện bên thứ 3.",
+      "level": "Daily Practical",
+      "tags": ["dotnet", "clean-architecture", "cli", "scaffolding"]
+    },
+    {
+      "id": "dotnet-native-aot",
+      "domainId": "dotnet",
+      "subcategory": "Build & Optimization",
+      "title": "Publish Native AOT (Ahead-Of-Time) Binary",
+      "titleVi": "Biên dịch Native AOT siêu nhẹ & khởi động tức thì",
+      "description": "Compile C# code directly into platform-specific machine code without JIT, yielding near-zero cold starts and tiny memory footprint.",
+      "descriptionVi": "Biên dịch mã C# trực tiếp thành mã máy không qua JIT, giúp microservice khởi động trong mili-giây và giảm tiêu thụ RAM tối đa.",
+      "rawCommand": "dotnet publish src/{{PROJECT_NAME}}.Api/{{PROJECT_NAME}}.Api.csproj \\\n  -c Release \\\n  -r linux-x64 \\\n  --self-contained true \\\n  -p:PublishAot=true \\\n  -p:StripSymbols=true \\\n  -p:OptimizationPreference=Size \\\n  -o ./dist/aot-app",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "-c Release", "explanation": "Enables full compiler release optimizations", "explanationVi": "Bật tối ưu hóa mã chạy thực tế (Release mode)" },
+        { "flag": "-r linux-x64", "explanation": "Specifies target Runtime Identifier (RID)", "explanationVi": "Chỉ định nền tảng thực thi đích (Linux 64-bit)" },
+        { "flag": "-p:PublishAot=true", "explanation": "Triggers Native AOT compilation pipeline", "explanationVi": "Kích hoạt pipeline biên dịch Ahead-Of-Time" },
+        { "flag": "-p:StripSymbols=true", "explanation": "Strips debug symbol tables to cut binary size in half", "explanationVi": "Gỡ bỏ bảng debug symbol giúp giảm 50% kích thước file thực thi" }
+      ],
+      "whenToUse": "Serverless AWS Lambda, CLI utilities, and high-density Kubernetes containers where cold start time is critical.",
+      "whenToUseVi": "AWS Lambda, CLI tools, hoặc container Kubernetes cần thời gian khởi động tức thì dưới 15ms.",
+      "pitfalls": "Heavy reflection or dynamic code generation (like unconfigured AutoMapper or Newtonsoft.Json) will fail at runtime. Use System.Text.Json source generators.",
+      "pitfallsVi": "Các thư viện dùng reflection sâu hoặc sinh code động sẽ bị lỗi khi chạy. Cần dùng Source Generator cho System.Text.Json.",
+      "level": "Production Tuning",
+      "tags": ["dotnet", "aot", "performance", "lambda"]
+    },
+    {
+      "id": "dotnet-mem-leak-diag",
+      "domainId": "dotnet",
+      "subcategory": "Production Diagnostics",
+      "title": "Triage Live Production Memory Leak & High CPU",
+      "titleVi": "Bắt & Phân tích rò rỉ bộ nhớ (Memory Leak) trên Production",
+      "description": "Collect and analyze diagnostic memory dumps and CPU performance traces from a live container without restarting it.",
+      "descriptionVi": "Thu thập crash dump và CPU trace trực tiếp từ container đang chạy trên server mà không cần khởi động lại dịch vụ.",
+      "rawCommand": "# 1. Install diagnostic tools globally\ndotnet tool install -g dotnet-dump\ndotnet tool install -g dotnet-trace\ndotnet tool install -g dotnet-gcdump\n\n# 2. Find target process ID\ndotnet-dump ps\n\n# 3. Capture a full heap memory dump\ndotnet-dump collect -p $PID -o /tmp/{{PROJECT_NAME}}_leak.dump\n\n# 4. Open interactive analysis terminal\ndotnet-dump analyze /tmp/{{PROJECT_NAME}}_leak.dump\n\n# Inside dotnet-dump shell:\n# > dumpheap -stat          # List types by count and total size\n# > dumpheap -mt <MethodTable> -min 1048576 # Inspect objects > 1MB\n# > gcroot <ObjectAddress>  # Pinpoint root references preventing GC cleanup",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "dotnet-dump ps", "explanation": "Lists all .NET processes running on the machine/container", "explanationVi": "Liệt kê mọi tiến trình .NET đang chạy trên hệ thống" },
+        { "flag": "dumpheap -stat", "explanation": "Aggregates all allocated objects by class type and memory volume", "explanationVi": "Thống kê mọi đối tượng trong Heap theo class và kích thước chiếm dụng" },
+        { "flag": "gcroot", "explanation": "Traces the reference chain back to static/scoped roots holding the object", "explanationVi": "Tìm chuỗi tham chiếu giữ đối tượng không cho Garbage Collector thu hồi" }
+      ],
+      "whenToUse": "When your container RAM steadily grows or pods get OOMKilled (Out Of Memory) in Kubernetes.",
+      "whenToUseVi": "Khi RAM của container tăng liên tục không giảm hoặc pod bị Kubernetes kill do lỗi OOMKilled.",
+      "pitfalls": "Dumping a 4GB+ process can temporarily freeze execution for 1-3 seconds. Use gcdump first if service downtime cannot be tolerated.",
+      "pitfallsVi": "Tạo dump tiến trình dung lượng lớn có thể làm ứng dụng khựng lại 1-2 giây. Hãy ưu tiên dùng dotnet-gcdump trước.",
+      "level": "Disaster Recovery",
+      "tags": ["dotnet", "troubleshooting", "memory-leak", "dotnet-dump"]
+    },
+    {
+      "id": "dotnet-ef-idempotent",
+      "domainId": "dotnet",
+      "subcategory": "EF Core & Database",
+      "title": "Generate Zero-Downtime Idempotent Migration Script",
+      "titleVi": "Sinh Script Migration idempotent an toàn cho CI/CD",
+      "description": "Create a raw SQL script that safely applies pending EF Core migrations only if they haven't been applied yet.",
+      "descriptionVi": "Xuất file SQL migration kiểm tra trước trạng thái bảng, chạy an toàn trong pipeline CI/CD mà không gây lỗi trùng lặp.",
+      "rawCommand": "dotnet ef migrations script \\\n  --idempotent \\\n  --project src/{{PROJECT_NAME}}.Infrastructure \\\n  --startup-project src/{{PROJECT_NAME}}.Api \\\n  --output ./migrations/apply_migrations.sql",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "--idempotent", "explanation": "Wraps each migration in an 'IF NOT EXISTS' check against __EFMigrationsHistory", "explanationVi": "Bọc từng migration trong lệnh kiểm tra bảng __EFMigrationsHistory" },
+        { "flag": "--output", "explanation": "Saves raw SQL to file for DBA review or automated CI/CD pipeline", "explanationVi": "Lưu script SQL ra file để DBA review hoặc chạy qua pipeline deployment" }
+      ],
+      "whenToUse": "Production release pipelines. Never use dbContext.Database.Migrate() at application startup in multi-replica pods.",
+      "whenToUseVi": "Trong pipeline deploy production. Không bao giờ gọi Migrate() tự động khi khởi động app chạy nhiều pod vì dễ race condition.",
+      "pitfalls": "Watch out for long-running table locks on high-traffic tables. Add indexes concurrently where supported.",
+      "pitfallsVi": "Chú ý lock bảng khi thêm cột trên bảng hàng triệu bản ghi trong giờ cao điểm.",
+      "level": "Production Tuning",
+      "tags": ["dotnet", "efcore", "database", "ci-cd"]
+    },
+    {
+      "id": "python-uv-workflow",
+      "domainId": "python",
+      "subcategory": "Package & Runtime",
+      "title": "Ultra-Fast Python Project Setup with 'uv'",
+      "titleVi": "Khởi tạo môi trường Python siêu tốc với 'uv' (Rust)",
+      "description": "Replace slow pip and poetry with uv — written in Rust, resolving dependencies 10x-100x faster with unified virtualenv.",
+      "descriptionVi": "Thay thế pip và poetry bằng uv viết bằng Rust, cài đặt thư viện và quản lý môi trường ảo nhanh gấp 10-100 lần.",
+      "rawCommand": "# 1. Initialize modern Python project\nuv init {{PROJECT_NAME}}\ncd {{PROJECT_NAME}}\n\n# 2. Pin Python version and create virtual environment\nuv venv --python 3.12\nsource .venv/bin/activate  # On Windows: .venv\\Scripts\\activate\n\n# 3. Add modern async web stack\nuv add fastapi pydantic uvicorn[standard] asyncpg sqlalchemy ruff\n\n# 4. Run application with auto-reload\nuv run uvicorn main:app --host 0.0.0.0 --port {{PORT}} --reload\n\n# 5. Format & Lint at blazing speed\nuv run ruff check . --fix\nuv run ruff format .",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "uv init", "explanation": "Generates pyproject.toml with modern PEP 621 metadata", "explanationVi": "Tạo file pyproject.toml theo chuẩn PEP 621 mới nhất" },
+        { "flag": "uv add", "explanation": "Resolves dependency tree and writes locked versions to uv.lock instantly", "explanationVi": "Phân giải cây phụ thuộc và khóa phiên bản vào uv.lock tức thì" },
+        { "flag": "uv run", "explanation": "Executes command automatically inside project's virtualenv without manual activation", "explanationVi": "Chạy lệnh thẳng trong môi trường ảo mà không cần kích hoạt thủ công" }
+      ],
+      "whenToUse": "Every new Python microservice, AI agent script, or CI pipeline needing rapid docker builds.",
+      "whenToUseVi": "Mọi dự án Python mới, script AI Agent, hoặc container build trong CI cần tối ưu thời gian tải package.",
+      "pitfalls": "Ensure pyproject.toml and uv.lock are committed to git for deterministic builds.",
+      "pitfallsVi": "Nhớ commit cả file pyproject.toml và uv.lock vào Git để đảm bảo môi trường build đồng nhất tuyệt đối.",
+      "level": "Daily Practical",
+      "tags": ["python", "uv", "tooling", "fastapi"]
+    },
+    {
+      "id": "python-fastapi-sse",
+      "domainId": "python",
+      "subcategory": "Async & Streaming",
+      "title": "FastAPI Server-Sent Events (SSE) AI Streaming",
+      "titleVi": "FastAPI phát dòng dữ liệu AI Token thời gian thực (SSE)",
+      "description": "Stream LLM tokens or real-time event updates directly to frontend web clients using async generators and EventSource protocol.",
+      "descriptionVi": "Truyền dòng token LLM hoặc sự kiện theo thời gian thực về giao diện người dùng qua generator bất đồng bộ.",
+      "rawCommand": "from fastapi import FastAPI\nfrom fastapi.responses import StreamingResponse\nimport asyncio\nimport json\n\napp = FastAPI(title=\"{{PROJECT_NAME}}\")\n\nasync def token_generator(prompt: str):\n    words = f\"Responding to: {prompt}. Streaming tokens in real-time...\".split()\n    for word in words:\n        await asyncio.sleep(0.08)  # Simulate LLM chunk generation\n        data = json.dumps({\"chunk\": word + \" \"})\n        yield f\"data: {data}\\n\\n\"\n    yield \"data: [DONE]\\n\\n\"\n\n@app.get(\"/api/chat/stream\")\nasync def stream_chat(prompt: str = \"Hello\"):\n    return StreamingResponse(\n        token_generator(prompt),\n        media_type=\"text/event-stream\",\n        headers={\n            \"Cache-Control\": \"no-cache\",\n            \"Connection\": \"keep-alive\",\n            \"X-Accel-Buffering\": \"no\" # Disable Nginx response buffering\n        }\n    )",
+      "codeLanguage": "python",
+      "flags": [
+        { "flag": "media_type='text/event-stream'", "explanation": "Sets standard MIME type for Server-Sent Events", "explanationVi": "Thiết lập chuẩn định dạng dữ liệu cho Server-Sent Events" },
+        { "flag": "yield f'data: ...\\n\\n'", "explanation": "SSE protocol specification requires data: prefix and double newline terminator", "explanationVi": "Chuẩn giao thức SSE yêu cầu tiền tố data: và kết thúc bằng 2 ký tự xuống dòng" },
+        { "flag": "X-Accel-Buffering: no", "explanation": "Instructs reverse proxies like Nginx to disable chunk buffering", "explanationVi": "Báo cho reverse proxy như Nginx không gom buffer mà gửi data đi ngay lập tức" }
+      ],
+      "whenToUse": "AI Chatbots, live financial tickers, real-time progress bars, and push notifications.",
+      "whenToUseVi": "Ứng dụng Chatbot AI, bảng giá tài chính real-time, thanh tiến trình tác vụ nền dài.",
+      "pitfalls": "Without 'X-Accel-Buffering: no', reverse proxies (Nginx, Cloudflare) may buffer all chunks and send everything at once at the end.",
+      "pitfallsVi": "Nếu thiếu header 'X-Accel-Buffering: no', proxy trung gian có thể giữ lại toàn bộ data đến khi stream xong mới nhả ra.",
+      "level": "Production Tuning",
+      "tags": ["python", "fastapi", "streaming", "sse", "ai"]
+    },
+    {
+      "id": "mcp-inspector-testing",
+      "domainId": "ai-mcp",
+      "subcategory": "Model Context Protocol",
+      "title": "Debug MCP Server with Official MCP Inspector",
+      "titleVi": "Kiểm thử & Debug MCP Server qua MCP Inspector",
+      "description": "Interactive web UI to test and inspect tools, prompts, and resources exposed by an MCP server without needing Claude Desktop.",
+      "descriptionVi": "Giao diện Web trực quan để test tool, prompt và resource của MCP Server mà không cần mở Claude Desktop.",
+      "rawCommand": "# Test a Python-based MCP Server over stdio transport\nnpx @modelcontextprotocol/inspector uv run python mcp_server.py\n\n# Test a C# / .NET MCP Server\nnpx @modelcontextprotocol/inspector dotnet run --project src/{{PROJECT_NAME}}.McpServer\n\n# Test an existing Node-based MCP tool\nnpx @modelcontextprotocol/inspector npx -y @modelcontextprotocol/server-postgres postgresql://user:pass@localhost:5432/{{DB_NAME}}",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "npx @modelcontextprotocol/inspector", "explanation": "Launches the official dev-tools proxy on http://localhost:5173", "explanationVi": "Chạy giao diện debugger chính thức của Anthropic tại cổng 5173" },
+        { "flag": "stdio transport", "explanation": "Communicates via standard input/output streams between client and server", "explanationVi": "Giao tiếp 2 chiều qua luồng Standard Input / Output" }
+      ],
+      "whenToUse": "Whenever building or debugging new MCP tools before registering them in Claude Desktop or Cursor/Antigravity.",
+      "whenToUseVi": "Bất cứ khi nào viết tool MCP mới để kiểm thử schema đầu vào, output trả về và xử lý ngoại lệ.",
+      "pitfalls": "Any unhandled print() or Console.WriteLine() to stdout will corrupt the JSON-RPC framing. Use stderr for server logs.",
+      "pitfallsVi": "Lệnh in print() hoặc Console.WriteLine ra stdout sẽ làm hỏng bản tin JSON-RPC. Mọi log server bắt buộc phải ghi ra stderr.",
+      "level": "Daily Practical",
+      "tags": ["ai", "mcp", "anthropic", "debugging"]
+    },
+    {
+      "id": "mcp-fastmcp-server",
+      "domainId": "ai-mcp",
+      "subcategory": "Model Context Protocol",
+      "title": "Build Production MCP Server in Python (FastMCP)",
+      "titleVi": "Xây dựng MCP Server hoàn chỉnh bằng Python (FastMCP)",
+      "description": "Create a secure MCP Server exposing database query tools, system health checks, and prompt templates to AI agents.",
+      "descriptionVi": "Tạo MCP Server cung cấp Tool tra cứu database, kiểm tra hệ thống và template prompt cho các Agent AI gọi.",
+      "rawCommand": "from mcp.server.fastmcp import FastMCP\nimport subprocess\n\nmcp = FastMCP(\"{{PROJECT_NAME}}-McpEngine\")\n\n@mcp.tool()\ndef query_database_record(record_id: int) -> str:\n    \"\"\"Query customer record details from database by ID.\"\"\"\n    # In production, query your PostgreSQL/Redis connection\n    return f\"Record #{record_id}: Status=ACTIVE, Tier=ENTERPRISE, Balance=$12,450.00\"\n\n@mcp.tool()\ndef execute_health_check() -> dict:\n    \"\"\"Run system memory and latency diagnostics.\"\"\"\n    return {\"status\": \"HEALTHY\", \"cpu_pct\": 14.2, \"mem_available_mb\": 4096}\n\n@mcp.prompt()\ndef code_review_prompt(language: str) -> str:\n    \"\"\"Generate a strict senior engineer code review template.\"\"\"\n    return f\"Review this {language} code for security vulnerabilities, memory leaks, and concurrency deadlocks.\"\n\nif __name__ == \"__main__\":\n    mcp.run(transport=\"stdio\")",
+      "codeLanguage": "python",
+      "flags": [
+        { "flag": "@mcp.tool()", "explanation": "Exposes Python function as an executable LLM tool with automatic JSON Schema generation", "explanationVi": "Tự động sinh JSON Schema để AI gọi hàm Python này" },
+        { "flag": "@mcp.prompt()", "explanation": "Registers reusable prompt template into client's prompt library", "explanationVi": "Đăng ký mẫu prompt tái sử dụng vào kho prompt của AI client" },
+        { "flag": "transport='stdio'", "explanation": "Runs lightweight local process transport (or 'sse' for network HTTP service)", "explanationVi": "Chạy qua tiến trình local hoặc đổi sang 'sse' nếu cần phục vụ qua mạng" }
+      ],
+      "whenToUse": "To grant Cursor, Claude Desktop, or Antigravity agents secure access to your proprietary tools and APIs.",
+      "whenToUseVi": "Khi cần trao quyền cho AI truy xuất database nội bộ, gọi API nghiệp vụ hoặc chạy lệnh hạ tầng an toàn.",
+      "pitfalls": "Validate inputs rigorously; AI can hallucinate unexpected types or SQL injection payloads.",
+      "pitfallsVi": "Luôn validate dữ liệu tham số; AI có thể truyền nhầm kiểu dữ liệu hoặc vô tình sinh câu lệnh độc hại.",
+      "level": "Daily Practical",
+      "tags": ["ai", "mcp", "fastmcp", "python"]
+    },
+    {
+      "id": "ai-ollama-custom-model",
+      "domainId": "ai-mcp",
+      "subcategory": "Local LLM Serving",
+      "title": "Build & Serve Custom Local LLM with Ollama Modelfile",
+      "titleVi": "Tạo & Chạy mô hình AI cục bộ bằng Ollama Modelfile",
+      "description": "Quantize, customize system instructions, and enforce deterministic parameters for private offline local AI execution.",
+      "descriptionVi": "Đóng gói mô hình AI chạy offline trên máy tính, tùy biến prompt hệ thống và thiết lập tham số sinh token.",
+      "rawCommand": "# 1. Create custom Modelfile\ncat << 'EOF' > Modelfile\nFROM llama3.2:3b\nPARAMETER temperature 0.2\nPARAMETER top_p 0.9\nPARAMETER num_ctx 8192\n\nSYSTEM \"\"\"\nYou are a Senior Cloud Solutions Architect for {{PROJECT_NAME}}.\nAlways provide concise, battle-tested CLI commands and production code snippets.\nFlag potential security vulnerabilities immediately.\n\"\"\"\nEOF\n\n# 2. Build the tailored model\nollama create {{PROJECT_NAME}}-architect -f ./Modelfile\n\n# 3. Test interactively\nollama run {{PROJECT_NAME}}-architect \"Explain the outbox pattern in 3 bullet points\"\n\n# 4. Expose OpenAI-compatible REST API for your apps\ncurl http://localhost:11434/v1/chat/completions \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"model\": \"{{PROJECT_NAME}}-architect\",\n    \"messages\": [{\"role\": \"user\", \"content\": \"Verify docker command syntax\"}]\n  }'",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "PARAMETER temperature 0.2", "explanation": "Low temperature ensures deterministic, factual code generation", "explanationVi": "Nhiệt độ thấp giúp AI trả lời chính xác, tránh bịa đặt thông tin" },
+        { "flag": "PARAMETER num_ctx 8192", "explanation": "Expands context window memory to 8k tokens for larger code files", "explanationVi": "Mở rộng cửa sổ ngữ cảnh lên 8,192 token để đọc file code dài" },
+        { "flag": "/v1/chat/completions", "explanation": "Standard API endpoint drop-in compatible with OpenAI SDKs", "explanationVi": "Cổng kết nối chuẩn tương thích hoàn toàn với thư viện OpenAI SDK" }
+      ],
+      "whenToUse": "Air-gapped environments, GDPR/HIPAA compliance, zero data egress, or offline development workflows.",
+      "whenToUseVi": "Môi trường bảo mật nội bộ, không được để lọt dữ liệu ra ngoài Internet hoặc làm việc offline.",
+      "pitfalls": "Check VRAM availability before expanding num_ctx; 32k context on large models can trigger OOM swap.",
+      "pitfallsVi": "Kiểm tra dung lượng VRAM card màn hình; tăng context quá cao trên mô hình nặng có thể gây tràn bộ nhớ.",
+      "level": "Daily Practical",
+      "tags": ["ai", "ollama", "local-llm", "privacy"]
+    },
+    {
+      "id": "docker-chiseled-dotnet",
+      "domainId": "devops",
+      "subcategory": "Containerization",
+      "title": "Ultra-Secure .NET Multi-Stage Dockerfile (Chiseled Ubuntu)",
+      "titleVi": "Dockerfile .NET đa tầng siêu nhẹ & bảo mật (Chiseled Ubuntu)",
+      "description": "Production Dockerfile cutting image size down to ~65MB with zero package manager, zero shell, and non-root execution.",
+      "descriptionVi": "Dockerfile production giảm dung lượng image xuống dưới 65MB, loại bỏ hoàn toàn bash shell và chạy với quyền non-root.",
+      "rawCommand": "# Build Stage\nFROM mcr.microsoft.com/dotnet/sdk:9.0 AS build\nWORKDIR /source\n\n# Cache NuGet layers\nCOPY *.sln .\nCOPY src/*/*.csproj ./\nRUN for file in $(ls *.csproj); do mkdir -p src/${file%.*}/ && mv $file src/${file%.*}/; done\nRUN dotnet restore\n\n# Copy source & build release\nCOPY src/ src/\nWORKDIR /source/src/{{PROJECT_NAME}}.Api\nRUN dotnet publish -c Release -o /app/publish \\\n    --no-restore \\\n    -p:UseAppHost=false\n\n# Final Runtime Stage (Distroless / Chiseled)\nFROM mcr.microsoft.com/dotnet/aspnet:9.0-noble-chiseled AS runtime\nWORKDIR /app\nCOPY --from=build /app/publish .\n\nEXPOSE {{PORT}}\nENV ASPNETCORE_HTTP_PORTS={{PORT}} \\\n    DOTNET_EnableDiagnostics=0\n\nUSER $APP_UID\nENTRYPOINT [\"dotnet\", \"{{PROJECT_NAME}}.Api.dll\"]",
+      "codeLanguage": "dockerfile",
+      "flags": [
+        { "flag": "noble-chiseled", "explanation": "Ubuntu Chiseled base has no shell, no curl, no apt — eliminates 98% of CVE attack surface", "explanationVi": "Image Ubuntu rút gọn không có shell, không curl/apt, loại bỏ 98% lỗ hổng bảo mật" },
+        { "flag": "USER $APP_UID", "explanation": "Runs container as unprivileged non-root user (UID 1654)", "explanationVi": "Chạy container dưới quyền user thông thường, ngăn leo thang đặc quyền" },
+        { "flag": "UseAppHost=false", "explanation": "Generates cross-platform IL assembly instead of platform-specific binary", "explanationVi": "Tối ưu hóa file xuất ra giúp container khởi động nhẹ nhàng hơn" }
+      ],
+      "whenToUse": "Mandatory standard for all production enterprise ASP.NET Core services.",
+      "whenToUseVi": "Tiêu chuẩn bắt buộc cho mọi container ASP.NET Core triển khai lên Kubernetes hoặc ECS.",
+      "pitfalls": "Because chiseled images have no /bin/sh, 'docker exec -it <container> bash' will fail. Use ephemeral debug containers if troubleshooting is needed.",
+      "pitfallsVi": "Vì không có bash shell, lệnh 'docker exec -it' sẽ không vào được terminal. Cần dùng ephemeral debug container khi cứu hộ.",
+      "level": "Production Tuning",
+      "tags": ["docker", "dotnet", "security", "chiseled"]
+    },
+    {
+      "id": "docker-buildx-multiarch",
+      "domainId": "devops",
+      "subcategory": "Containerization",
+      "title": "Build Multi-Platform Images with Docker Buildx",
+      "titleVi": "Build Docker Image đa kiến trúc (ARM64 & AMD64)",
+      "description": "Compile a single image manifest supporting both Apple Silicon (ARM64) and Cloud Server (x86_64) architectures simultaneously.",
+      "descriptionVi": "Đóng gói 1 Docker Image duy nhất chạy được mượt mà trên cả Mac M1/M2/M3 (ARM64) và máy chủ Cloud Intel/AMD (x86_64).",
+      "rawCommand": "# 1. Initialize custom buildx instance\ndocker buildx create --name multiarch-builder --driver docker-container --use\ndocker buildx inspect --bootstrap\n\n# 2. Build & Push multi-arch manifest directly to registry\ndocker buildx build \\\n  --platform linux/amd64,linux/arm64 \\\n  -t {{IMAGE}}:{{TAG}} \\\n  -t {{IMAGE}}:latest \\\n  --push \\\n  --cache-to type=inline \\\n  --cache-from type=registry,ref={{IMAGE}}:latest \\\n  .",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "--platform linux/amd64,linux/arm64", "explanation": "Cross-compiles for both standard servers and ARM chips", "explanationVi": "Biên dịch song song cho cả server x86 và chip ARM" },
+        { "flag": "--push", "explanation": "Uploads the resulting multi-manifest directly to container registry", "explanationVi": "Đẩy thẳng manifest đa nền tảng lên Docker Hub / ECR / GHCR" },
+        { "flag": "--cache-from", "explanation": "Pulls existing layers from registry to drastically speed up CI build times", "explanationVi": "Tận dụng layer cache có sẵn trên registry để tăng tốc độ build CI" }
+      ],
+      "whenToUse": "Teams with mixed Mac/Linux dev machines, or deploying to cheaper AWS Graviton (ARM) instances.",
+      "whenToUseVi": "Khi team dùng MacBook ARM nhưng server deploy là Linux x86, hoặc muốn chạy trên AWS Graviton tiết kiệm 20% chi phí.",
+      "pitfalls": "Cannot use '--load' with multiple platforms at once; must push directly to a registry or build one platform locally.",
+      "pitfallsVi": "Cờ '--load' không hỗ trợ nạp nhiều nền tảng cùng lúc vào docker local; bắt buộc phải đẩy lên registry.",
+      "level": "Daily Practical",
+      "tags": ["docker", "buildx", "multi-arch", "arm64"]
+    },
+    {
+      "id": "k8s-pod-triage",
+      "domainId": "devops",
+      "subcategory": "Kubernetes",
+      "title": "Kubernetes 5-Minute Production Emergency Triage",
+      "titleVi": "Cấp cứu Pod Kubernetes gặp sự cố (CrashLoopBackOff)",
+      "description": "Rapid command sequence to diagnose failing pods, view pre-crash termination logs, and spin up live debugging containers.",
+      "descriptionVi": "Chuỗi lệnh thần tốc để truy tìm nguyên nhân Pod bị crash, đọc log trước khi chết và gắn container cứu hộ.",
+      "rawCommand": "# 1. Check pod status, restarts, and node placement\nkubectl get pods -n prod -o wide --sort-by='.status.startTime'\n\n# 2. Inspect root cause event (OOMKilled, LivenessProbe failed, CrashLoopBackOff)\nkubectl describe pod {{CONTAINER}} -n prod\n\n# 3. Read logs from PREVIOUS instance before crash happened\nkubectl logs {{CONTAINER}} -n prod --previous --tail 200\n\n# 4. Port-forward internal port to localhost for quick healthcheck\nkubectl port-forward pod/{{CONTAINER}} {{PORT}}:{{PORT}} -n prod\n\n# 5. Attach an ephemeral debugging container with curl/netstat into running pod\nkubectl debug -it {{CONTAINER}} -n prod --image=nicolaka/netshoot --target={{CONTAINER}}",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "--previous", "explanation": "Dumps stdout/stderr of the container instance that crashed right before restart", "explanationVi": "In ra log của phiên container vừa bị chết trước khi Kubernetes khởi động lại" },
+        { "flag": "kubectl debug", "explanation": "Attaches an ephemeral container sharing network and process namespace with the target", "explanationVi": "Gắn container debug chia sẻ chung network và PID namespace để soi sự cố" },
+        { "flag": "netshoot image", "explanation": "Swiss army knife network troubleshooting image containing dig, curl, tcpdump, ss", "explanationVi": "Bộ công cụ mạng đầy đủ chứa sẵn curl, dig, tcpdump để chẩn đoán kết nối" }
+      ],
+      "whenToUse": "When PagerDuty triggers an alert for CrashLoopBackOff or pod unreadiness.",
+      "whenToUseVi": "Khi hệ thống báo động Pod bị crash liên tục hoặc không vượt qua được Readiness probe.",
+      "pitfalls": "Restarting a pod with 'kubectl delete pod' clears previous logs unless your cluster logs to an external aggregator.",
+      "pitfallsVi": "Nếu xóa pod bằng 'kubectl delete pod', log cũ sẽ biến mất nếu cụm chưa cấu hình lưu log tập trung.",
+      "level": "Disaster Recovery",
+      "tags": ["kubernetes", "kubectl", "troubleshooting", "crashloop"]
+    },
+    {
+      "id": "aws-ecs-force-deploy",
+      "domainId": "cloud",
+      "subcategory": "AWS Compute",
+      "title": "Zero-Downtime AWS ECS Fargate Rolling Deployment",
+      "titleVi": "Cập nhật dịch vụ AWS ECS Fargate không gián đoạn (Zero-Downtime)",
+      "description": "Trigger a graceful rolling deployment on AWS ECS Fargate, pulling latest container image and checking target health.",
+      "descriptionVi": "Kích hoạt triển khai cuốn chiếu trên AWS ECS Fargate, tải image mới và kiểm tra sức khỏe trước khi ngắt container cũ.",
+      "rawCommand": "# 1. Login Docker to AWS ECR\naws ecr get-login-password --region ap-southeast-1 --profile {{AWS_PROFILE}} | \\\n  docker login --username AWS --password-stdin 123456789012.dkr.ecr.ap-southeast-1.amazonaws.com\n\n# 2. Tag & Push updated container image\ndocker tag {{IMAGE}}:{{TAG}} 123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/{{IMAGE}}:{{TAG}}\ndocker push 123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/{{IMAGE}}:{{TAG}}\n\n# 3. Force ECS to spin up new task definition and drain old tasks\naws ecs update-service \\\n  --cluster prod-cluster \\\n  --service {{PROJECT_NAME}}-service \\\n  --force-new-deployment \\\n  --region ap-southeast-1 \\\n  --profile {{AWS_PROFILE}}\n\n# 4. Tail rolling deployment logs in real-time\naws logs tail /ecs/{{PROJECT_NAME}}-service --follow --region ap-southeast-1 --profile {{AWS_PROFILE}}",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "--force-new-deployment", "explanation": "Instructs ECS to spin up healthy new containers before terminating old ones", "explanationVi": "Yêu cầu ECS bật container mới khỏe mạnh trước khi tắt các task cũ" },
+        { "flag": "aws logs tail --follow", "explanation": "Streams CloudWatch application logs directly into terminal like 'tail -f'", "explanationVi": "Truyền trực tiếp log từ CloudWatch về màn hình dòng lệnh theo thời gian thực" }
+      ],
+      "whenToUse": "Deploying new features or hotfixes to production microservices on AWS.",
+      "whenToUseVi": "Khi phát hành tính năng mới hoặc vá lỗi nóng cho microservice chạy trên AWS ECS.",
+      "pitfalls": "Ensure minimumHealthyPercent is set to 100% and maximumPercent to 200% on the service definition to prevent downtime.",
+      "pitfallsVi": "Cần cấu hình minimumHealthyPercent=100% để đảm bảo luôn có đủ số task phục vụ khách hàng khi đang deploy.",
+      "level": "Daily Practical",
+      "tags": ["aws", "ecs", "fargate", "cloudwatch"]
+    },
+    {
+      "id": "aws-s3-sync-presign",
+      "domainId": "cloud",
+      "subcategory": "AWS Storage",
+      "title": "AWS S3 High-Speed Sync & Secure Presigned URLs",
+      "titleVi": "Đồng bộ file S3 tốc độ cao & Tạo link tải tạm thời (Presigned)",
+      "description": "Efficiently sync static build assets with checksum validation and generate time-expiring download URLs without public bucket access.",
+      "descriptionVi": "Đồng bộ thư mục tĩnh lên S3 chỉ đẩy file thay đổi, và tạo đường dẫn tải file có giới hạn thời gian an toàn.",
+      "rawCommand": "# 1. Sync static frontend assets with deletion and cache headers\naws s3 sync ./dist s3://{{PROJECT_NAME}}-assets/web \\\n  --delete \\\n  --cache-control \"max-age=31536000,public,immutable\" \\\n  --exclude \"*.html\" \\\n  --profile {{AWS_PROFILE}}\n\n# Sync HTML with no-cache so users get immediate updates\naws s3 sync ./dist s3://{{PROJECT_NAME}}-assets/web \\\n  --delete \\\n  --cache-control \"no-cache, no-store, must-revalidate\" \\\n  --include \"*.html\" \\\n  --profile {{AWS_PROFILE}}\n\n# 2. Generate a secure presigned download link valid for 15 minutes\naws s3 presign s3://{{PROJECT_NAME}}-assets/reports/financial_audit.pdf \\\n  --expires-in 900 \\\n  --profile {{AWS_PROFILE}}",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "--delete", "explanation": "Deletes files in destination bucket that no longer exist in local source", "explanationVi": "Tự động xóa các file trên S3 nếu file đó đã bị xóa ở thư mục local" },
+        { "flag": "--cache-control", "explanation": "Optimizes CDN browser caching for hashed JS/CSS assets", "explanationVi": "Tối ưu hóa bộ nhớ đệm CDN cho các file tĩnh đã có băm định danh" },
+        { "flag": "aws s3 presign", "explanation": "Generates cryptographically signed URL granting temporary read access", "explanationVi": "Tạo đường link ký điện tử cho phép người nhận truy cập file tạm thời" }
+      ],
+      "whenToUse": "Deploying Blazor WASM/Vite apps to S3 + CloudFront, or sharing sensitive reports securely.",
+      "whenToUseVi": "Deploy website tĩnh lên S3 kết hợp CloudFront, hoặc gửi link tải báo cáo bảo mật cho khách hàng.",
+      "pitfalls": "Never sync HTML files with long cache headers; users will be stuck on old cached versions of your app.",
+      "pitfallsVi": "Không bao giờ set cache dài hạn cho file index.html; trình duyệt sẽ không tải code mới khi bạn update.",
+      "level": "Daily Practical",
+      "tags": ["aws", "s3", "presign", "frontend"]
+    },
+    {
+      "id": "postgres-explain-analyze",
+      "domainId": "database",
+      "subcategory": "Query Optimization",
+      "title": "PostgreSQL Query Optimization with EXPLAIN ANALYZE",
+      "titleVi": "Tối ưu câu lệnh PostgreSQL với EXPLAIN (ANALYZE, BUFFERS)",
+      "description": "Uncover slow sequential scans, cache buffer hits vs disk reads, and verify index usage in production SQL queries.",
+      "descriptionVi": "Bóc tách câu lệnh SQL chậm, phát hiện quét toàn bảng (Seq Scan) và xem tỉ lệ đọc từ RAM Buffer hay ổ cứng.",
+      "rawCommand": "-- Run inside psql or database client\nEXPLAIN (ANALYZE, BUFFERS, SETTINGS, VERBOSE)\nSELECT o.id, o.order_number, c.email, SUM(oi.price * oi.quantity) as total_amount\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nJOIN order_items oi ON oi.order_id = o.id\nWHERE o.created_at >= NOW() - INTERVAL '30 days'\n  AND o.status = 'COMPLETED'\nGROUP BY o.id, o.order_number, c.email\nORDER BY total_amount DESC\nLIMIT 50;\n\n-- Create tailored composite index to eliminate Seq Scan\nCREATE INDEX CONCURRENTLY idx_orders_status_created \nON orders (status, created_at DESC) \nINCLUDE (customer_id, order_number);",
+      "codeLanguage": "sql",
+      "flags": [
+        { "flag": "ANALYZE", "explanation": "Executes query for real and measures actual execution time in milliseconds", "explanationVi": "Thực sự chạy truy vấn và đo thời gian thực thi từng bước bằng mili-giây" },
+        { "flag": "BUFFERS", "explanation": "Shows cache hits vs disk reads (Shared Read vs Shared Hit)", "explanationVi": "Cho biết số block dữ liệu đọc từ RAM cache hay phải load từ ổ đĩa" },
+        { "flag": "CREATE INDEX CONCURRENTLY", "explanation": "Builds index in background without locking table against writes", "explanationVi": "Tạo index ở chế độ nền không khóa bảng, tránh gián đoạn ghi dữ liệu" }
+      ],
+      "whenToUse": "Diagnosing endpoints exceeding 200ms latency or database CPU spikes.",
+      "whenToUseVi": "Khi API bị chậm trên 200ms hoặc CPU server database bị quá tải.",
+      "pitfalls": "Running EXPLAIN ANALYZE on a DELETE or UPDATE will actually delete or modify data! Use in a transaction and rollback if testing mutations.",
+      "pitfallsVi": "Dùng EXPLAIN ANALYZE với câu lệnh UPDATE/DELETE sẽ thực sự sửa/xóa data! Hãy bọc trong BEGIN/ROLLBACK.",
+      "level": "Production Tuning",
+      "tags": ["postgres", "sql", "performance", "indexing"]
+    },
+    {
+      "id": "database-duckdb-olap",
+      "domainId": "database",
+      "subcategory": "Modern Analytics",
+      "title": "Lightning-Fast Local Analytics on Parquet/CSV with DuckDB",
+      "titleVi": "Phân tích dữ liệu triệu dòng cực nhanh bằng DuckDB CLI",
+      "description": "Execute sub-second SQL aggregation queries directly on gigabytes of raw Parquet or CSV logs without spinning up heavy databases.",
+      "descriptionVi": "Chạy truy vấn SQL tổng hợp trong tích tắc trực tiếp trên file Parquet/CSV hàng GB mà không cần cài database server.",
+      "rawCommand": "# Run direct SQL query against compressed Parquet/CSV files\nduckdb -c \"\nSELECT \n    status_code,\n    count(*) as total_requests,\n    round(avg(response_time_ms), 2) as avg_latency,\n    round(quantile_cont(response_time_ms, 0.99), 2) as p99_latency\nFROM read_parquet('s3://prod-logs/{{PROJECT_NAME}}/*/*.parquet')\nWHERE timestamp >= '2026-10-01'\nGROUP BY status_code\nORDER BY total_requests DESC;\n\"\n\n# Export aggregated query result straight into a new compressed Parquet file\nduckdb -c \"COPY (SELECT * FROM 'access.log.csv' WHERE status >= 500) TO 'errors.parquet' (FORMAT PARQUET);\"",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "read_parquet()", "explanation": "Scans columnar data directly with vectorized SIMD CPU instructions", "explanationVi": "Đọc dữ liệu dạng cột siêu tốc tận dụng tập lệnh SIMD của CPU" },
+        { "flag": "quantile_cont(..., 0.99)", "explanation": "Calculates true 99th percentile response time accurately", "explanationVi": "Tính toán chính xác phân vị p99 của thời gian phản hồi" },
+        { "flag": "FORMAT PARQUET", "explanation": "Produces heavily compressed, typed columnar storage file", "explanationVi": "Xuất file chuẩn Parquet nén cao, tiết kiệm 80% dung lượng ổ đĩa" }
+      ],
+      "whenToUse": "Log analysis, data pipeline sanity checks, and local data engineering workloads.",
+      "whenToUseVi": "Phân tích log server, kiểm tra pipeline dữ liệu và xử lý data cục bộ không cần hạ tầng nặng.",
+      "pitfalls": "Watch available RAM when running memory-heavy window functions across tens of gigabytes.",
+      "pitfallsVi": "Chú ý dung lượng RAM máy tính khi chạy các hàm Window Function trên tập dữ liệu hàng chục gigabyte.",
+      "level": "Daily Practical",
+      "tags": ["duckdb", "analytics", "parquet", "sql"]
+    },
+    {
+      "id": "git-worktree-multibranch",
+      "domainId": "git-cicd",
+      "subcategory": "Git Mastery",
+      "title": "Git Worktree: Work on Multiple Branches Simultaneously",
+      "titleVi": "Git Worktree: Làm việc đồng thời nhiều nhánh không cần Stash",
+      "description": "Check out multiple branches into separate directories from a single repository clone — fix hotfixes without interrupting feature work.",
+      "descriptionVi": "Mở nhiều nhánh Git cùng lúc ở các thư mục riêng biệt từ 1 repo duy nhất — vá hotfix ngay mà không cần stash hay clone lại.",
+      "rawCommand": "# 1. Create a separate worktree folder for an urgent hotfix\ngit worktree add ../{{PROJECT_NAME}}-hotfix hotfix/login-bug\n\n# 2. Create another worktree based on a new branch\ngit worktree add -b feature/ai-integration ../{{PROJECT_NAME}}-ai main\n\n# 3. List all currently active linked worktrees\ngit worktree list\n\n# 4. Once hotfix is merged and finished, clean up\ncd ../{{PROJECT_NAME}}\ngit worktree remove ../{{PROJECT_NAME}}-hotfix",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "git worktree add <path> <branch>", "explanation": "Checks out target branch into specified folder sharing same .git history", "explanationVi": "Checkout nhánh sang thư mục chỉ định và dùng chung toàn bộ lịch sử Git" },
+        { "flag": "-b <new-branch>", "explanation": "Creates and checks out new branch into the worktree directory", "explanationVi": "Tạo nhánh mới đồng thời mở sang thư mục worktree ngay lập tức" },
+        { "flag": "git worktree remove", "explanation": "Safely detaches worktree folder after code is committed or merged", "explanationVi": "Gỡ bỏ thư mục worktree an toàn sau khi đã hoàn thành công việc" }
+      ],
+      "whenToUse": "When you are in the middle of a big refactor and an urgent production hotfix arrives.",
+      "whenToUseVi": "Khi đang code dở một tính năng lớn mà có yêu cầu sửa gấp lỗi Production, tránh việc stash bị conflict.",
+      "pitfalls": "You cannot check out the same branch in two different worktrees at the same time.",
+      "pitfallsVi": "Không thể checkout cùng 1 nhánh Git ở 2 thư mục worktree khác nhau trong cùng một thời điểm.",
+      "level": "Daily Practical",
+      "tags": ["git", "worktree", "productivity", "hotfix"]
+    },
+    {
+      "id": "git-bisect-automated-bug",
+      "domainId": "git-cicd",
+      "subcategory": "Git Mastery",
+      "title": "Automated Bug Hunting with Git Bisect",
+      "titleVi": "Săn lùng Commit gây lỗi tự động bằng Git Bisect nhị phân",
+      "description": "Binary search through hundreds of commits automatically using a test script to identify the exact commit that introduced a bug.",
+      "descriptionVi": "Tìm kiếm nhị phân xuyên qua hàng trăm commit bằng script test tự động để chỉ mặt đặt tên commit sinh ra lỗi.",
+      "rawCommand": "# 1. Start bisect wizard\ngit bisect start\n\n# 2. Current HEAD has the bug\ngit bisect bad\n\n# 3. Last known good release was v1.0.0\ngit bisect good {{TAG}}\n\n# 4. Let Git test automatically using dotnet test or a shell script\ngit bisect run dotnet test --filter \"FullyQualifiedName~OrderProcessingTests\"\n\n# 5. When Git announces the culprit commit, reset state\ngit bisect reset",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "git bisect bad", "explanation": "Marks current commit as containing the regression or bug", "explanationVi": "Đánh dấu commit hiện tại đang bị dính lỗi" },
+        { "flag": "git bisect good", "explanation": "Marks known baseline commit where everything was working fine", "explanationVi": "Đánh dấu mốc commit trong quá khứ khi hệ thống vẫn chạy ổn định" },
+        { "flag": "git bisect run <cmd>", "explanation": "Executes command on each step; 0 means good, 1-127 means bad", "explanationVi": "Tự động chạy lệnh kiểm tra trên từng commit; mã 0 là tốt, mã lỗi là bad" }
+      ],
+      "whenToUse": "When an unknown bug appeared in production and nobody knows which PR broke it.",
+      "whenToUseVi": "Khi phát hiện lỗi ngầm trên Production và không ai rõ pull request nào trong 50 commit gần đây gây ra.",
+      "pitfalls": "Ensure the test command is reliable; a flaky test will lead bisect to point to the wrong commit.",
+      "pitfallsVi": "Đảm bảo script test chạy ổn định; nếu test chập chờn sẽ khiến bisect chỉ sai commit vô tội.",
+      "level": "Production Tuning",
+      "tags": ["git", "bisect", "testing", "debugging"]
+    },
+    {
+      "id": "linux-ripgrep-jq-pipe",
+      "domainId": "linux",
+      "subcategory": "CLI Text Processing",
+      "title": "High-Speed JSON Log Triage with Ripgrep & JQ",
+      "titleVi": "Lọc Log JSON hàng GB siêu tốc với Ripgrep & JQ",
+      "description": "Slice through gigabytes of structured JSON application logs in seconds to extract failing trace IDs and user payloads.",
+      "descriptionVi": "Quét qua hàng gigabyte log JSON ứng dụng trong vài giây để trích xuất mã Trace ID bị lỗi và payload người dùng.",
+      "rawCommand": "# 1. Filter HTTP 500 errors and pretty print user ID + exception message\nrg '\"status\":500' /var/log/{{PROJECT_NAME}}/*.log -m 50 | \\\n  jq -r '{timestamp: .time, trace_id: .traceId, user: .userId, error: .exception.message}'\n\n# 2. Find top 10 most frequent error exceptions\nrg '\"level\":\"error\"' /var/log/{{PROJECT_NAME}}/*.log | \\\n  jq -r '.exception.type' | \\\n  sort | uniq -c | sort -nr | head -n 10\n\n# 3. Extract all unique IPs making requests to sensitive admin routes\nrg '\"path\":\"/admin/.*\"' /var/log/nginx/access.json | \\\n  jq -r '.client_ip' | \\\n  sort -u",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "rg -m 50", "explanation": "Ripgrep limits search to first 50 matches per file, preventing terminal flood", "explanationVi": "Ripgrep giới hạn 50 kết quả đầu tiên mỗi file, tránh tràn màn hình" },
+        { "flag": "jq -r", "explanation": "Outputs raw string values without surrounding quotation marks", "explanationVi": "Xuất chuỗi thô không kèm dấu ngoặc kép bọc ngoài" },
+        { "flag": "sort | uniq -c | sort -nr", "explanation": "Classic Unix frequency count pipeline sorted in descending order", "explanationVi": "Chuỗi pipeline đếm tần suất xuất hiện và xếp hạng giảm dần" }
+      ],
+      "whenToUse": "Investigating outages on Linux servers without waiting for web UI log dashboards to load.",
+      "whenToUseVi": "Khi server gặp sự cố cần bắt bệnh ngay trên terminal máy chủ mà không phải đợi dashboard web tải.",
+      "pitfalls": "Ensure logs are single-line JSON; multi-line stack traces need 'jq --slurp' or ripgrep multiline flags.",
+      "pitfallsVi": "Đảm bảo mỗi dòng log là 1 đối tượng JSON độc lập; nếu log nhiều dòng cần dùng cờ multiline.",
+      "level": "Daily Practical",
+      "tags": ["linux", "ripgrep", "jq", "logs"]
+    },
+    {
+      "id": "linux-port-socket-diag",
+      "domainId": "linux",
+      "subcategory": "Networking",
+      "title": "Network Port & Socket Inspection (ss & lsof)",
+      "titleVi": "Kiểm tra cổng mạng & tiến trình chiếm dụng (ss & lsof)",
+      "description": "Find out which process is hogging a port, inspect TCP socket buffer states, and troubleshoot connection timeouts.",
+      "descriptionVi": "Tìm chính xác tiến trình nào đang chiếm dụng port, kiểm tra trạng thái socket TCP và chẩn đoán timeout.",
+      "rawCommand": "# 1. Find process listening on specified port (e.g. port 8080 or 5000)\nsudo ss -tulpn | grep :{{PORT}}\n\n# 2. Alternative using lsof to show exact command and Process ID (PID)\nsudo lsof -i :{{PORT}}\n\n# 3. Kill hung process immediately by PID\nsudo kill -9 <PID>\n\n# 4. Check TCP connection states (ESTABLISHED, TIME_WAIT, CLOSE_WAIT)\nss -s\n\n# 5. Measure latency and SSL certificate expiry of remote API\ncurl -Iv https://api.example.com/health --connect-timeout 3",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "ss -tulpn", "explanation": "-t (TCP), -u (UDP), -l (Listening), -p (Process), -n (Numeric port)", "explanationVi": "-t (TCP), -u (UDP), -l (Đang lắng nghe), -p (Kèm tên tiến trình), -n (Hiện số port)" },
+        { "flag": "lsof -i :PORT", "explanation": "Lists all open internet files and sockets bound to that port", "explanationVi": "Liệt kê mọi socket và tiến trình gắn với cổng đó" },
+        { "flag": "curl -Iv", "explanation": "Performs HEAD request with verbose TLS handshake inspection", "explanationVi": "Gửi request HEAD kèm chi tiết bắt tay TLS/SSL để soi cert" }
+      ],
+      "whenToUse": "When getting 'Address already in use' during app startup or testing inter-service connectivity.",
+      "whenToUseVi": "Khi khởi động ứng dụng báo lỗi 'Address already in use' hoặc kiểm tra kết nối mạng giữa các service.",
+      "pitfalls": "Running ss without sudo won't show process names (PID) belonging to other system users.",
+      "pitfallsVi": "Chạy lệnh ss không có quyền sudo sẽ không nhìn thấy PID của các tiến trình thuộc user khác.",
+      "level": "Daily Practical",
+      "tags": ["linux", "networking", "ports", "lsof"]
+    },
+    {
+      "id": "security-openssl-san-cert",
+      "domainId": "security",
+      "subcategory": "Cryptography & TLS",
+      "title": "Generate Production-Grade Self-Signed SAN TLS Certificates",
+      "titleVi": "Tạo chứng chỉ SSL/TLS chuẩn SAN bằng OpenSSL",
+      "description": "Generate modern private keys and self-signed certificates with Subject Alternative Names (SAN) accepted by modern browsers.",
+      "descriptionVi": "Tạo khóa bí mật và chứng chỉ SSL tự ký có khai báo SAN đầy đủ, không bị trình duyệt cảnh báo lỗi không an toàn.",
+      "rawCommand": "# 1. Generate RSA 4096 private key\nopenssl genrsa -out {{PROJECT_NAME}}.key 4096\n\n# 2. Create OpenSSL SAN configuration file\ncat << 'EOF' > san.cnf\n[req]\ndefault_bits = 4096\nprompt = no\ndefault_md = sha256\ndistinguished_name = dn\nx509_extensions = v3_req\n\n[dn]\nC = VN\nST = HoChiMinh\nL = District1\nO = TechCorp\nCN = api.local.dev\n\n[v3_req]\nsubjectAltName = @alt_names\nbasicConstraints = CA:FALSE\nkeyUsage = nonRepudiation, digitalSignature, keyEncipherment\n\n[alt_names]\nDNS.1 = localhost\nDNS.2 = api.local.dev\nIP.1 = 127.0.0.1\nEOF\n\n# 3. Generate X509 certificate valid for 365 days\nopenssl req -x509 -new -nodes -key {{PROJECT_NAME}}.key \\\n  -config san.cnf \\\n  -out {{PROJECT_NAME}}.crt \\\n  -days 365",
+      "codeLanguage": "bash",
+      "flags": [
+        { "flag": "subjectAltName = @alt_names", "explanation": "Subject Alternative Names required by modern Chrome and Firefox", "explanationVi": "Bắt buộc phải có SAN cho cả DNS và IP để Chrome/Firefox chấp nhận" },
+        { "flag": "-nodes", "explanation": "No DES encryption on private key so server can boot automatically without password prompt", "explanationVi": "Không mã hóa private key bằng mật khẩu để server khởi động tự động" }
+      ],
+      "whenToUse": "Local HTTPS testing, internal gRPC microservice mutual TLS (mTLS), and staging environments.",
+      "whenToUseVi": "Môi trường test HTTPS máy local, xác thực mTLS giữa các microservice nội bộ hoặc server staging.",
+      "pitfalls": "Certificates without SAN (using only CN) are automatically rejected as insecure by modern browsers.",
+      "pitfallsVi": "Chứng chỉ chỉ có Common Name (CN) mà không có SAN sẽ bị Chrome đánh dấu không hợp lệ ngay lập tức.",
+      "level": "Daily Practical",
+      "tags": ["security", "openssl", "ssl", "tls"]
+    },
+    {
+      "id": "arch-sliding-window-rate-limit",
+      "domainId": "architecture",
+      "subcategory": "Resilience & Algorithms",
+      "title": "Sliding Window Rate Limiter Pattern (High Concurrency)",
+      "titleVi": "Thuật toán giới hạn tốc độ Sliding Window (Chống DDoS)",
+      "description": "Implementation blueprint of Sliding Window Log rate limiter using Redis sorted sets (ZSET) to prevent API abuse.",
+      "descriptionVi": "Thiết kế kiến trúc giới hạn số lượng request bằng Redis Sorted Set, chính xác và mượt mà hơn Fixed Window.",
+      "rawCommand": "-- Redis pipeline script for Sliding Window Rate Limiting\n-- KEYS[1] = ratelimit:{client_ip}\n-- ARGV[1] = current_timestamp_ms\n-- ARGV[2] = window_size_ms (e.g. 60000 for 1 minute)\n-- ARGV[3] = max_allowed_requests (e.g. 100)\n\n-- 1. Remove all requests older than the sliding window threshold\nredis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', ARGV[1] - ARGV[2])\n\n-- 2. Count current active requests within the window\nlocal current_count = redis.call('ZCARD', KEYS[1])\n\n-- 3. Check threshold\nif current_count < tonumber(ARGV[3]) then\n    -- Add current request timestamp as both score and member\n    redis.call('ZADD', KEYS[1], ARGV[1], ARGV[1] .. '-' .. math.random())\n    redis.call('PEXPIRE', KEYS[1], ARGV[2])\n    return 1 -- ALLOW REQUEST\nelse\n    return 0 -- REJECT REQUEST (HTTP 429 Too Many Requests)\nend",
+      "codeLanguage": "sql",
+      "flags": [
+        { "flag": "ZREMRANGEBYSCORE", "explanation": "Purges expired timestamps outside the rolling time window in O(log(N)+M)", "explanationVi": "Xóa các timestamp cũ ngoài khung thời gian trượt với độ phức tạp cực thấp" },
+        { "flag": "ZCARD", "explanation": "Returns current element count in O(1) time complexity", "explanationVi": "Đếm số lượng request hiện tại với tốc độ tức thì O(1)" },
+        { "flag": "HTTP 429", "explanation": "Returns standard 'Too Many Requests' header with Retry-After", "explanationVi": "Chuẩn mã lỗi HTTP báo cho client biết cần chờ bao lâu trước khi gửi lại" }
+      ],
+      "whenToUse": "Public API gateways, login brute-force prevention, and third-party webhook ingest endpoints.",
+      "whenToUseVi": "Cổng API Gateway công khai, chống dò mật khẩu brute-force ở màn login và cổng nhận webhook.",
+      "pitfalls": "High request volume can make ZSET memory footprint grow. For ultra-high scale (1M req/s), consider Sliding Window Counter.",
+      "pitfallsVi": "Với lưu lượng hàng triệu request/giây, Sorted Set có thể tốn RAM; khi đó nên chuyển sang Sliding Window Counter.",
+      "level": "Senior Architecture",
+      "tags": ["architecture", "redis", "rate-limiting", "resilience"]
+    },
+    {
+      "id": "arch-otel-collector-config",
+      "domainId": "architecture",
+      "subcategory": "Observability",
+      "title": "OpenTelemetry (OTel) Collector Unified Pipeline",
+      "titleVi": "Cấu hình OpenTelemetry Collector chuẩn công nghiệp",
+      "description": "Production configuration collecting Traces, Metrics, and Logs from multiple services and exporting to Prometheus and Jaeger.",
+      "descriptionVi": "File cấu hình OpenTelemetry Collector thu thập dữ liệu Vết (Traces), Đo lường (Metrics) và Log về Jaeger và Prometheus.",
+      "rawCommand": "receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: 0.0.0.0:4317\n      http:\n        endpoint: 0.0.0.0:4318\n\nprocessors:\n  batch:\n    send_batch_size: 1024\n    timeout: 1s\n  memory_limiter:\n    check_interval: 1s\n    limit_percentage: 75\n    spike_limit_percentage: 20\n\nexporters:\n  prometheus:\n    endpoint: 0.0.0.0:8889\n  otlp/jaeger:\n    endpoint: jaeger:4317\n    tls:\n      insecure: true\n  logging:\n    loglevel: info\n\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [memory_limiter, batch]\n      exporters: [otlp/jaeger]\n    metrics:\n      receivers: [otlp]\n      processors: [memory_limiter, batch]\n      exporters: [prometheus]",
+      "codeLanguage": "yaml",
+      "flags": [
+        { "flag": "otlp protocols (4317/4318)", "explanation": "Accepts standard OpenTelemetry over both gRPC and HTTP", "explanationVi": "Nhận dữ liệu chuẩn OTel qua cả cổng gRPC (4317) và HTTP (4318)" },
+        { "flag": "batch processor", "explanation": "Batches outgoing telemetry to drastically reduce network calls and CPU usage", "explanationVi": "Gom nhóm dữ liệu trước khi đẩy đi để giảm tải mạng và CPU" },
+        { "flag": "memory_limiter", "explanation": "Drops or throttles incoming data if Collector approaches memory cap, preventing OOM crash", "explanationVi": "Tự động ngắt hoặc điều tiết tải nếu collector gần chạm ngưỡng RAM" }
+      ],
+      "whenToUse": "Centralizing observability across polyglot microservices (.NET, Python, Go, Node.js).",
+      "whenToUseVi": "Chuẩn hóa hệ thống giám sát tập trung cho hệ thống microservice viết bằng nhiều ngôn ngữ.",
+      "pitfalls": "Always place memory_limiter as the first processor in every pipeline to protect collector stability.",
+      "pitfallsVi": "Luôn đặt memory_limiter ở vị trí đầu tiên trong danh sách processors để bảo vệ an toàn cho collector.",
+      "level": "Senior Architecture",
+      "tags": ["architecture", "opentelemetry", "sre", "monitoring"]
+    }
+  ]
+}

@@ -1,0 +1,685 @@
+/* ==========================================================================
+   DEVELOPMENT LEARNING HUB - MODERN GLASSMORPHIC & TERMINAL THEME
+   ========================================================================== */
+
+:root {
+    --dev-bg: #0b0f19;
+    --dev-surface: rgba(17, 24, 39, 0.75);
+    --dev-surface-card: rgba(22, 30, 49, 0.85);
+    --dev-border: rgba(255, 255, 255, 0.08);
+    --dev-border-hover: rgba(99, 102, 241, 0.4);
+    --dev-text-main: #f3f4f6;
+    --dev-text-muted: #9ca3af;
+    --dev-accent: #6366f1;
+    --dev-accent-glow: rgba(99, 102, 241, 0.25);
+    --dev-terminal-bg: #030712;
+    --dev-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+[data-theme="light"] {
+    --dev-bg: #f8fafc;
+    --dev-surface: rgba(255, 255, 255, 0.85);
+    --dev-surface-card: #ffffff;
+    --dev-border: rgba(0, 0, 0, 0.08);
+    --dev-border-hover: rgba(99, 102, 241, 0.4);
+    --dev-text-main: #0f172a;
+    --dev-text-muted: #64748b;
+    --dev-terminal-bg: #0f172a;
+}
+
+.dev-hub-app {
+    min-height: calc(100vh - 64px);
+    background-color: var(--dev-bg);
+    color: var(--dev-text-main);
+    padding: 2rem 1rem 4rem;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.dev-hub-container {
+    max-width: 1360px;
+    margin: 0 auto;
+}
+
+/* ==========================================================================
+   HERO HEADER
+   ========================================================================== */
+.dev-hero {
+    position: relative;
+    background: radial-gradient(circle at 50% -20%, rgba(99, 102, 241, 0.15), transparent 70%);
+    border: 1px solid var(--dev-border);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+}
+
+.dev-hero-badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.dev-pill-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.dev-pulse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 10px #10b981;
+    animation: devPulse 2s infinite ease-in-out;
+}
+
+@keyframes devPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.dev-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    margin: 0 0 0.75rem;
+    background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .dev-title {
+    background: linear-gradient(135deg, #0f172a 30%, #475569 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.dev-subtitle {
+    font-size: 1.05rem;
+    color: var(--dev-text-muted);
+    max-width: 900px;
+    line-height: 1.6;
+    margin: 0 0 1.5rem;
+}
+
+/* Stats Row */
+.dev-stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--dev-border);
+}
+
+.dev-stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.dev-stat-val {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #818cf8;
+}
+
+.dev-stat-lbl {
+    font-size: 0.75rem;
+    color: var(--dev-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ==========================================================================
+   GLOBAL PARAMETERS DRAWER
+   ========================================================================== */
+.dev-param-drawer {
+    background: var(--dev-surface);
+    border: 1px solid var(--dev-border);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+}
+
+.dev-param-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.dev-param-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--dev-text-main);
+}
+
+.dev-param-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.dev-param-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.dev-param-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--dev-text-muted);
+}
+
+.dev-param-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.dev-param-input {
+    width: 100%;
+    background: var(--dev-terminal-bg);
+    border: 1px solid var(--dev-border);
+    border-radius: 8px;
+    color: #38bdf8;
+    font-family: var(--dev-font-mono);
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dev-param-input:focus {
+    outline: none;
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+/* ==========================================================================
+   SEARCH & FILTERS
+   ========================================================================== */
+.dev-filter-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.dev-search-input-box {
+    position: relative;
+    width: 100%;
+}
+
+.dev-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--dev-text-muted);
+    font-size: 1.1rem;
+    pointer-events: none;
+}
+
+.dev-search-input {
+    width: 100%;
+    background: var(--dev-surface);
+    border: 1px solid var(--dev-border);
+    border-radius: 12px;
+    padding: 0.85rem 1rem 0.85rem 2.85rem;
+    color: var(--dev-text-main);
+    font-size: 0.95rem;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+}
+
+.dev-search-input:focus {
+    outline: none;
+    border-color: var(--dev-accent);
+    box-shadow: 0 0 0 3px var(--dev-accent-glow);
+}
+
+/* Domain Navigation Bar */
+.dev-domains-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.dev-domain-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    background: var(--dev-surface);
+    color: var(--dev-text-muted);
+    border: 1px solid var(--dev-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dev-domain-btn:hover {
+    color: var(--dev-text-main);
+    border-color: var(--dev-border-hover);
+    transform: translateY(-1px);
+}
+
+.dev-domain-btn.active {
+    background: rgba(99, 102, 241, 0.15);
+    color: #ffffff;
+    border-color: #6366f1;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+}
+
+[data-theme="light"] .dev-domain-btn.active {
+    color: #4f46e5;
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.dev-domain-badge {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Level filter buttons */
+.dev-level-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.dev-level-label {
+    font-size: 0.8rem;
+    color: var(--dev-text-muted);
+    font-weight: 600;
+    margin-right: 0.25rem;
+}
+
+.dev-level-pill {
+    padding: 0.3rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid var(--dev-border);
+    color: var(--dev-text-muted);
+    transition: all 0.2s ease;
+}
+
+.dev-level-pill:hover,
+.dev-level-pill.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--dev-text-main);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ==========================================================================
+   COMMAND CARDS GRID
+   ========================================================================== */
+.dev-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+.dev-card {
+    background: var(--dev-surface-card);
+    border: 1px solid var(--dev-border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.dev-card:hover {
+    border-color: var(--dev-border-hover);
+    box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+}
+
+/* Card Header */
+.dev-card-header {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--dev-border);
+}
+
+.dev-card-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+
+.dev-meta-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--dev-text-muted);
+}
+
+.dev-level-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.dev-level-badge.Daily-Practical {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.dev-level-badge.Production-Tuning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.dev-level-badge.Disaster-Recovery {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.dev-level-badge.Senior-Architecture {
+    background: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.dev-card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+    color: var(--dev-text-main);
+}
+
+.dev-card-desc {
+    font-size: 0.88rem;
+    color: var(--dev-text-muted);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Card Action Buttons (Bookmark, etc.) */
+.dev-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dev-icon-btn {
+    background: transparent;
+    border: 1px solid var(--dev-border);
+    color: var(--dev-text-muted);
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dev-icon-btn:hover {
+    color: #facc15;
+    border-color: #facc15;
+    background: rgba(250, 204, 21, 0.08);
+}
+
+.dev-icon-btn.bookmarked {
+    color: #facc15;
+    border-color: #facc15;
+    background: rgba(250, 204, 21, 0.15);
+}
+
+/* ==========================================================================
+   TERMINAL CODE BLOCK (MACOS WINDOW STYLE)
+   ========================================================================== */
+.dev-terminal {
+    background: var(--dev-terminal-bg);
+    position: relative;
+    border-top: 1px solid var(--dev-border);
+    border-bottom: 1px solid var(--dev-border);
+}
+
+.dev-terminal-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1rem;
+    background: rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.dev-window-dots {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dev-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dev-dot.red { background: #ef4444; }
+.dev-dot.yellow { background: #f59e0b; }
+.dev-dot.green { background: #10b981; }
+
+.dev-terminal-lang {
+    font-family: var(--dev-font-mono);
+    font-size: 0.7rem;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+
+.dev-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e5e7eb;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dev-copy-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.dev-copy-btn.copied {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border-color: #10b981;
+}
+
+.dev-code-pre {
+    margin: 0;
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    font-family: var(--dev-font-mono);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #e2e8f0;
+}
+
+/* ==========================================================================
+   FLAG INSPECTOR & PRACTICAL INSIGHTS
+   ========================================================================== */
+.dev-card-body {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Flags table/list */
+.dev-flags-accordion {
+    border: 1px solid var(--dev-border);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+}
+
+.dev-flags-header {
+    padding: 0.6rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--dev-text-muted);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s ease;
+}
+
+.dev-flags-header:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--dev-text-main);
+}
+
+.dev-flags-content {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--dev-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dev-flag-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    font-size: 0.82rem;
+}
+
+.dev-flag-pill {
+    font-family: var(--dev-font-mono);
+    font-weight: 600;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.dev-flag-desc {
+    color: var(--dev-text-muted);
+    line-height: 1.4;
+}
+
+/* Alerts: When to use & Pitfalls */
+.dev-alert-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.84rem;
+    line-height: 1.5;
+}
+
+.dev-alert-box.when-to-use {
+    background: rgba(16, 185, 129, 0.08);
+    border-left: 3px solid #10b981;
+    color: #d1fae5;
+}
+
+[data-theme="light"] .dev-alert-box.when-to-use {
+    color: #065f46;
+}
+
+.dev-alert-box.pitfalls {
+    background: rgba(239, 68, 68, 0.08);
+    border-left: 3px solid #ef4444;
+    color: #fee2e2;
+}
+
+[data-theme="light"] .dev-alert-box.pitfalls {
+    color: #991b1b;
+}
+
+.dev-alert-icon {
+    font-size: 1rem;
+    margin-top: 1px;
+}
+
+/* Empty state */
+.dev-empty-state {
+    text-align: center;
+    padding: 4rem 1rem;
+    border: 1px dashed var(--dev-border);
+    border-radius: 16px;
+    color: var(--dev-text-muted);
+}
+
+.dev-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #6366f1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dev-title {
+        font-size: 1.75rem;
+    }
+    
+    .dev-hero {
+        padding: 1.5rem;
+    }
+    
+    .dev-param-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dev-code-pre {
+        font-size: 0.8rem;
+    }
+}
