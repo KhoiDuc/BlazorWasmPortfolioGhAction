@@ -2,9 +2,18 @@
 @page "/{lang:regex(^(en|vn)$)}/dev-learning"
 @page "/learning/dev-learning"
 @page "/{lang:regex(^(en|vn)$)}/learning/dev-learning"
+@page "/learning/dev-learning/{SeriesId}"
+@page "/{lang:regex(^(en|vn)$)}/learning/dev-learning/{SeriesId}"
+@page "/dev-learning/{SeriesId}"
+@page "/{lang:regex(^(en|vn)$)}/dev-learning/{SeriesId}"
+@page "/learning/dev-learning/{SeriesId}/{ArticleId}"
+@page "/{lang:regex(^(en|vn)$)}/learning/dev-learning/{SeriesId}/{ArticleId}"
+@page "/dev-learning/{SeriesId}/{ArticleId}"
+@page "/{lang:regex(^(en|vn)$)}/dev-learning/{SeriesId}/{ArticleId}"
 @inherits CultureAwareComponent
 @inject HttpClient Http
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
 @using System.Text.Json
 @using BlazorWasmPortfolioGhAction.Pages
 
@@ -120,12 +129,15 @@
                         </span>
                         <i class="bi bi-chevron-right dev-bc-sep"></i>
                         <span class="dev-bc-item">
-                            <a href="@LangHref("learning/dev-learning")">Dev Learning</a>
+                            <a href="@GetDevLearningHomeUrl()">Dev Learning</a>
                         </span>
-                        <i class="bi bi-chevron-right dev-bc-sep"></i>
-                        <span class="dev-bc-item">
-                            @(_selectedSeries?.TitleVi)
-                        </span>
+                        @if (_selectedSeries != null)
+                        {
+                            <i class="bi bi-chevron-right dev-bc-sep"></i>
+                            <span class="dev-bc-item">
+                                <a href="@GetSeriesUrl(_selectedSeries.Id)">@(CultureService.IsEnglish ? _selectedSeries.Title : _selectedSeries.TitleVi)</a>
+                            </span>
+                        }
                         <i class="bi bi-chevron-right dev-bc-sep"></i>
                         <span class="dev-bc-item active">@_activeArticle.LessonNumber</span>
                     </nav>
@@ -197,13 +209,22 @@
                                     <span class="dev-meta-pill author">
                                         <i class="bi bi-person-circle"></i> Khôi Nguyễn · Senior Fullstack
                                     </span>
-                                    <button type="button" 
-                                            class="dev-bookmark-btn @(isCurArticleSaved ? "saved" : "")"
-                                            title="@(isCurArticleSaved ? "Bỏ lưu bài viết" : "Lưu bài viết này")"
-                                            @onclick="() => ToggleBookmark(_activeArticle.Id)">
-                                        <i class="bi @(isCurArticleSaved ? "bi-bookmark-star-fill" : "bi-bookmark-plus")"></i>
-                                        <span>@(isCurArticleSaved ? "Đã Lưu" : "Lưu Bài")</span>
-                                    </button>
+                                    <div class="dev-actions-group">
+                                        <button type="button" 
+                                                class="dev-bookmark-btn @(isCurArticleSaved ? "saved" : "")"
+                                                title="@(isCurArticleSaved ? "Bỏ lưu bài viết" : "Lưu bài viết này")"
+                                                @onclick="() => ToggleBookmark(_activeArticle.Id)">
+                                            <i class="bi @(isCurArticleSaved ? "bi-bookmark-star-fill" : "bi-bookmark-plus")"></i>
+                                            <span>@(isCurArticleSaved ? (CultureService.IsEnglish ? "Saved" : "Đã Lưu") : (CultureService.IsEnglish ? "Save" : "Lưu Bài"))</span>
+                                        </button>
+                                        <button type="button" 
+                                                class="dev-share-btn @(_copiedShareUrl ? "copied" : "")"
+                                                title="Sao chép link bài viết để chia sẻ"
+                                                @onclick="ShareCurrentArticle">
+                                            <i class="bi @(_copiedShareUrl ? "bi-check2-circle" : "bi-share-fill")"></i>
+                                            <span>@(_copiedShareUrl ? (CultureService.IsEnglish ? "Copied Link!" : "Đã Chép Link!") : (CultureService.IsEnglish ? "Share Article" : "Chia Sẻ"))</span>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <!-- Article Main Title -->
@@ -386,9 +407,21 @@
                 <!-- Chuyên Đề Header Card -->
                 <div class="dev-feed-series-banner" style="--banner-accent: @(_selectedSeries?.Color ?? "#0284c7");">
                     <div class="dev-feed-banner-content">
-                        <div class="dev-feed-banner-badge">
-                            <i class="bi @(_selectedSeries?.Icon ?? "bi-box-seam-fill")"></i>
-                            <span>@(_selectedSeries?.Badge ?? "Chuyên Đề")</span>
+                        <div class="dev-feed-banner-badge-row">
+                            <div class="dev-feed-banner-badge">
+                                <i class="bi @(_selectedSeries?.Icon ?? "bi-box-seam-fill")"></i>
+                                <span>@(_selectedSeries?.Badge ?? "Chuyên Đề")</span>
+                            </div>
+                            @if (_selectedSeries != null)
+                            {
+                                <button type="button" 
+                                        class="dev-share-btn @(_copiedSeriesUrl ? "copied" : "")"
+                                        title="Sao chép link chuyên đề này để chia sẻ"
+                                        @onclick="ShareCurrentSeries">
+                                    <i class="bi @(_copiedSeriesUrl ? "bi-check2-circle" : "bi-share-fill")"></i>
+                                    <span>@(_copiedSeriesUrl ? (CultureService.IsEnglish ? "Copied Series Link!" : "Đã Chép Link Chuyên Đề!") : (CultureService.IsEnglish ? "Share Series" : "Chia Sẻ Chuyên Đề"))</span>
+                                </button>
+                            }
                         </div>
                         <h2 class="dev-feed-series-title">
                             @(CultureService.IsEnglish ? _selectedSeries?.Title : _selectedSeries?.TitleVi)
@@ -468,13 +501,22 @@
                                         @GetLevelIcon(article.LevelOrder) @article.LevelVi
                                     </span>
                                     <span class="dev-post-lesson-pill">@article.LessonNumber</span>
-                                    <button type="button" 
-                                            class="dev-post-card-bookmark @(isSaved ? "saved" : "")"
-                                            title="@(isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết này")"
-                                            @onclick="() => ToggleBookmark(article.Id)"
-                                            @onclick:stopPropagation="true">
-                                        <i class="bi @(isSaved ? "bi-bookmark-star-fill" : "bi-bookmark")"></i>
-                                    </button>
+                                    <div class="dev-post-card-actions">
+                                        <button type="button" 
+                                                class="dev-post-card-bookmark @(_copiedArticleCardId == article.Id ? "copied" : "")"
+                                                title="Sao chép link bài viết"
+                                                @onclick="() => ShareSpecificArticle(article)"
+                                                @onclick:stopPropagation="true">
+                                            <i class="bi @(_copiedArticleCardId == article.Id ? "bi-check2" : "bi-share")"></i>
+                                        </button>
+                                        <button type="button" 
+                                                class="dev-post-card-bookmark @(isSaved ? "saved" : "")"
+                                                title="@(isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết này")"
+                                                @onclick="() => ToggleBookmark(article.Id)"
+                                                @onclick:stopPropagation="true">
+                                            <i class="bi @(isSaved ? "bi-bookmark-star-fill" : "bi-bookmark")"></i>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <h3 class="dev-post-card-title" @onclick="() => ReadArticle(article)">
@@ -517,6 +559,9 @@
 @code {
     private enum ViewMode { Feed, Reader }
 
+    [Parameter] public string? SeriesId { get; set; }
+    [Parameter] public string? ArticleId { get; set; }
+
     private DevBlogData? _data;
     private bool _isLoading = true;
     private DevSeries? _selectedSeries;
@@ -527,6 +572,12 @@
     private bool _showOnlyBookmarks = false;
     private string? _copiedCodeId = null;
 
+    private string? _lastAppliedSeriesId;
+    private string? _lastAppliedArticleId;
+    private bool _copiedShareUrl = false;
+    private bool _copiedSeriesUrl = false;
+    private string? _copiedArticleCardId = null;
+
     private HashSet<string> _bookmarkedIds = new();
 
     private static readonly JsonSerializerOptions _jsonOpts = new()
@@ -534,15 +585,21 @@
         PropertyNameCaseInsensitive = true
     };
 
+    private string GetDevLearningHomeUrl() =>
+        CulturePath.Combine(CultureService.UrlLang, "learning/dev-learning");
+
+    private string GetSeriesUrl(string seriesId) =>
+        CulturePath.Combine(CultureService.UrlLang, $"learning/dev-learning/{seriesId}");
+
+    private string GetArticleUrl(string seriesId, string articleId) =>
+        CulturePath.Combine(CultureService.UrlLang, $"learning/dev-learning/{seriesId}/{articleId}");
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
             _data = await Http.GetFromJsonAsync<DevBlogData>("sample-data/dev-learning.json", _jsonOpts);
-            if (_data?.SeriesList != null && _data.SeriesList.Count > 0)
-            {
-                _selectedSeries = _data.SeriesList[0];
-            }
+            ApplyRouteParameters();
         }
         catch (Exception ex)
         {
@@ -552,6 +609,69 @@
         {
             _isLoading = false;
         }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_data != null)
+        {
+            ApplyRouteParameters();
+        }
+    }
+
+    private void ApplyRouteParameters()
+    {
+        if (_data == null || _data.SeriesList == null || _data.SeriesList.Count == 0) return;
+
+        if (string.Equals(SeriesId, _lastAppliedSeriesId, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(ArticleId, _lastAppliedArticleId, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _lastAppliedSeriesId = SeriesId;
+        _lastAppliedArticleId = ArticleId;
+
+        if (!string.IsNullOrEmpty(ArticleId))
+        {
+            var matchedArticle = _data.SeriesList
+                .SelectMany(s => s.Articles)
+                .FirstOrDefault(a => string.Equals(a.Id, ArticleId, StringComparison.OrdinalIgnoreCase));
+
+            if (matchedArticle != null)
+            {
+                _activeArticle = matchedArticle;
+                _selectedSeries = _data.SeriesList.FirstOrDefault(s => s.Id == matchedArticle.SeriesId) ?? _selectedSeries;
+                _viewMode = ViewMode.Reader;
+                try
+                {
+                    _ = JS.InvokeVoidAsync("window.scrollTo", new { top = 180, behavior = "smooth" });
+                }
+                catch { }
+                return;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(SeriesId))
+        {
+            var matchedSeries = _data.SeriesList
+                .FirstOrDefault(s => string.Equals(s.Id, SeriesId, StringComparison.OrdinalIgnoreCase));
+
+            if (matchedSeries != null)
+            {
+                _selectedSeries = matchedSeries;
+                _activeArticle = null;
+                _viewMode = ViewMode.Feed;
+                return;
+            }
+        }
+
+        if (_selectedSeries == null && _data.SeriesList.Count > 0)
+        {
+            _selectedSeries = _data.SeriesList[0];
+        }
+        _activeArticle = null;
+        _viewMode = ViewMode.Feed;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -653,6 +773,7 @@
         _searchTerm = "";
         _viewMode = ViewMode.Feed;
         _activeArticle = null;
+        Navigation.NavigateTo(GetSeriesUrl(series.Id));
     }
 
     private void ToggleBookmarkFilter()
@@ -677,8 +798,7 @@
             _selectedSeries = _data?.SeriesList.FirstOrDefault(s => s.Id == article.SeriesId) ?? _selectedSeries;
         }
         _viewMode = ViewMode.Reader;
-        StateHasChanged();
-
+        Navigation.NavigateTo(GetArticleUrl(article.SeriesId, article.Id));
         try
         {
             _ = JS.InvokeVoidAsync("window.scrollTo", new { top = 180, behavior = "smooth" });
@@ -689,11 +809,68 @@
     private void BackToFeed()
     {
         _viewMode = ViewMode.Feed;
-        StateHasChanged();
-
+        _activeArticle = null;
+        if (_selectedSeries != null)
+        {
+            Navigation.NavigateTo(GetSeriesUrl(_selectedSeries.Id));
+        }
+        else
+        {
+            Navigation.NavigateTo(GetDevLearningHomeUrl());
+        }
         try
         {
             _ = JS.InvokeVoidAsync("window.scrollTo", new { top = 180, behavior = "smooth" });
+        }
+        catch { }
+    }
+
+    private async Task ShareCurrentArticle()
+    {
+        if (_activeArticle == null || _selectedSeries == null) return;
+        var rel = GetArticleUrl(_activeArticle.SeriesId, _activeArticle.Id);
+        var url = Navigation.ToAbsoluteUri(rel).ToString();
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", url);
+            _copiedShareUrl = true;
+            StateHasChanged();
+            await Task.Delay(2500);
+            _copiedShareUrl = false;
+            StateHasChanged();
+        }
+        catch { }
+    }
+
+    private async Task ShareCurrentSeries()
+    {
+        if (_selectedSeries == null) return;
+        var rel = GetSeriesUrl(_selectedSeries.Id);
+        var url = Navigation.ToAbsoluteUri(rel).ToString();
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", url);
+            _copiedSeriesUrl = true;
+            StateHasChanged();
+            await Task.Delay(2500);
+            _copiedSeriesUrl = false;
+            StateHasChanged();
+        }
+        catch { }
+    }
+
+    private async Task ShareSpecificArticle(DevArticle article)
+    {
+        var rel = GetArticleUrl(article.SeriesId, article.Id);
+        var url = Navigation.ToAbsoluteUri(rel).ToString();
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", url);
+            _copiedArticleCardId = article.Id;
+            StateHasChanged();
+            await Task.Delay(2500);
+            _copiedArticleCardId = null;
+            StateHasChanged();
         }
         catch { }
     }
