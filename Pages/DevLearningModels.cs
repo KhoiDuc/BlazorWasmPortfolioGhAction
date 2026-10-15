@@ -24,7 +24,10 @@ public class DevArticle
 {
     [JsonPropertyName("id")] public string Id { get; set; } = "";
     [JsonPropertyName("seriesId")] public string SeriesId { get; set; } = "";
-    [JsonPropertyName("lessonNumber")] public string LessonNumber { get; set; } = ""; // e.g. "Bài 1", "Bài 17"
+    [JsonPropertyName("lessonNumber")] public string LessonNumber { get; set; } = ""; // e.g. "Bài 1", "Bài 2"
+    [JsonPropertyName("level")] public string Level { get; set; } = "Beginner"; // Beginner, Intermediate, Advanced, Production
+    [JsonPropertyName("levelVi")] public string LevelVi { get; set; } = "Cơ bản"; // Cơ bản, Trung cấp, Nâng cao, Thực chiến
+    [JsonPropertyName("levelOrder")] public int LevelOrder { get; set; } = 1; // 1: Cơ bản, 2: Trung cấp, 3: Nâng cao, 4: Thực chiến
     [JsonPropertyName("title")] public string Title { get; set; } = "";
     [JsonPropertyName("titleVi")] public string TitleVi { get; set; } = "";
     [JsonPropertyName("readingTime")] public string ReadingTime { get; set; } = "10 phút đọc";

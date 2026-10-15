@@ -13,27 +13,27 @@
             <div class="dev-ambient-glow" aria-hidden="true"></div>
             <div class="dev-brand-row">
                 <span class="dev-brand-pill">
-                    <span class="dev-live-dot"></span> TECH BLOG &amp; TUTORIAL SERIES
+                    <span class="dev-live-dot"></span> DEV LEARNING BLOG
                 </span>
                 <span class="dev-brand-pill outline">
-                    PRODUCTION ENGINEERING
+                    LỘ TRÌNH TỪ CƠ BẢN ĐẾN NÂNG CAO
                 </span>
                 @if (_bookmarkedIds.Count > 0)
                 {
                     <button type="button" 
                             class="dev-brand-pill" 
                             style="cursor: pointer; background: rgba(250, 204, 21, 0.15); color: #facc15; border-color: #facc15;"
-                            @onclick="() => _showOnlyBookmarks = !_showOnlyBookmarks">
+                            @onclick="() => ToggleBookmarkFilter()">
                         <i class="bi bi-bookmark-star-fill"></i> @(_showOnlyBookmarks ? (CultureService.IsEnglish ? "Show All Articles" : "Hiện Tất Cả Bài Viết") : $"{_bookmarkedIds.Count} {(CultureService.IsEnglish ? "Saved Articles" : "Bài Đã Lưu")}")
                     </button>
                 }
             </div>
 
             <h1 class="dev-title">
-                @(CultureService.IsEnglish ? "Engineering Blog & Tutorial Series Hub" : "Chuyên Đề Kỹ Thuật & Blog Thực Chiến")
+                @(CultureService.IsEnglish ? "Tech Blog & Engineering Roadmaps" : "Blog Kỹ Thuật & Chuyên Đề Thực Chiến")
             </h1>
             <p class="dev-subtitle">
-                Chuỗi bài viết hướng dẫn chuyên sâu từ cơ bản đến nâng cao theo từng <b>Serie bài giảng (Bài 1 &rarr; Bài 17)</b> cho <b>Khôi Nguyễn</b> · Tích hợp Docker VPS, Kubernetes cụm thực chiến, tối ưu hóa .NET 10 Enterprise, AWS Cloud Architecture và Kỹ thuật AI Model Context Protocol (MCP).
+                Hệ thống các <b>Chuyên đề công nghệ</b> chia theo từng bài viết Blog từ <b>Cơ bản &rarr; Trung cấp &rarr; Nâng cao &rarr; Thực chiến</b> cho <b>Khôi Nguyễn</b> · Đầy đủ lý thuyết nền tảng, kiến trúc hệ thống, file cấu hình và code mẫu thực tế.
             </p>
 
             @if (_data != null)
@@ -41,17 +41,17 @@
                 <div class="dev-stats-ticker">
                     <div class="dev-ticker-item">
                         <span class="dev-ticker-val">@_data.SeriesList.Count</span>
-                        <span class="dev-ticker-lbl">Chuỗi Chuyên Đề</span>
+                        <span class="dev-ticker-lbl">Chuyên Đề</span>
                     </div>
                     <div class="dev-ticker-sep"></div>
                     <div class="dev-ticker-item">
                         <span class="dev-ticker-val">@TotalArticlesCount</span>
-                        <span class="dev-ticker-lbl">Bài Viết Kỹ Thuật</span>
+                        <span class="dev-ticker-lbl">Bài Viết Blog</span>
                     </div>
                     <div class="dev-ticker-sep"></div>
                     <div class="dev-ticker-item highlight">
-                        <span class="dev-ticker-val">100% Thực Chiến</span>
-                        <span class="dev-ticker-lbl">Production Ready</span>
+                        <span class="dev-ticker-val">Cơ Bản &rarr; Nâng Cao</span>
+                        <span class="dev-ticker-lbl">Lộ Trình Chuẩn</span>
                     </div>
                     <div class="dev-ticker-sep"></div>
                     <div class="dev-ticker-item">
@@ -62,7 +62,7 @@
             }
         </header>
 
-        <!-- Series Selector Pills (Docker, K8s, .NET, AWS, AI) -->
+        <!-- Series Selector Bar (Chuyên Đề Docker, K8s, .NET, AWS, AI MCP) -->
         @if (_data?.SeriesList != null)
         {
             <section class="dev-series-pills-bar">
@@ -87,7 +87,7 @@
         {
             <div style="text-align: center; padding: 4rem 1rem; color: var(--color-text-muted);">
                 <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; margin-bottom: 1rem;"></div>
-                <p>Đang tải nội dung Blog &amp; Bài giảng kỹ thuật...</p>
+                <p>Đang tải các chuyên đề bài viết kỹ thuật...</p>
             </div>
         }
         else if (_data == null || !_data.SeriesList.Any())
@@ -97,62 +97,65 @@
                 <h5>Không tìm thấy dữ liệu bài viết</h5>
             </div>
         }
-        else
+        else if (_activeArticle != null && _viewMode == ViewMode.Reader)
         {
-            <!-- Two-Column Blog Reading Experience (AZDIGI Series Architecture) -->
-            <div class="dev-blog-layout">
-                <!-- Left Column: Series Sidebar / Lesson Index -->
-                <aside class="dev-series-sidebar">
-                    <div class="dev-sidebar-sticky-card">
-                        <!-- Sidebar Header -->
-                        <div class="dev-sidebar-header">
-                            <div class="dev-sidebar-series-badge" style="color: @(_selectedSeries?.Color ?? "#0284c7"); background: @(_selectedSeries?.Color ?? "#0284c7")18;">
-                                <i class="bi @(_selectedSeries?.Icon ?? "bi-collection-play-fill")"></i>
-                                <span>@(_selectedSeries?.Badge ?? "Chuyên Đề")</span>
-                            </div>
-                            <h3 class="dev-sidebar-title">
-                                @(CultureService.IsEnglish ? _selectedSeries?.Title : _selectedSeries?.TitleVi)
-                            </h3>
-                            <p class="dev-sidebar-desc">
-                                @(CultureService.IsEnglish ? _selectedSeries?.Description : _selectedSeries?.DescriptionVi)
-                            </p>
-                        </div>
+            <!-- ========================================================================= -->
+            <!-- MODE 2: SINGLE ARTICLE READER VIEW (Chi Tiết Bài Viết)                     -->
+            <!-- ========================================================================= -->
+            <div class="dev-article-reader-wrapper">
+                <!-- Back Button & Breadcrumbs Bar -->
+                <div class="dev-reader-top-action">
+                    <button type="button" class="dev-back-to-feed-btn" @onclick="BackToFeed">
+                        <i class="bi bi-arrow-left"></i>
+                        <span>@(CultureService.IsEnglish ? "Back to Articles List" : $"Quay lại danh sách: {_selectedSeries?.TitleVi}")</span>
+                    </button>
 
-                        <!-- Sidebar Lesson Search -->
-                        <div class="dev-sidebar-search">
-                            <i class="bi bi-search"></i>
-                            <input type="text" 
-                                   placeholder="Tìm bài trong chuyên đề..." 
-                                   @bind="_lessonSearchTerm" 
-                                   @bind:event="oninput" />
-                        </div>
+                    <nav class="dev-breadcrumb-nav" aria-label="Breadcrumb">
+                        <span class="dev-bc-item">
+                            <a href="@LangHref("")">Trang Chủ</a>
+                        </span>
+                        <i class="bi bi-chevron-right dev-bc-sep"></i>
+                        <span class="dev-bc-item">
+                            <a href="@LangHref("dev-learning")">Dev Learning</a>
+                        </span>
+                        <i class="bi bi-chevron-right dev-bc-sep"></i>
+                        <span class="dev-bc-item">
+                            @(_selectedSeries?.TitleVi)
+                        </span>
+                        <i class="bi bi-chevron-right dev-bc-sep"></i>
+                        <span class="dev-bc-item active">@_activeArticle.LessonNumber</span>
+                    </nav>
+                </div>
 
-                        <!-- Lessons List (Bài 1, Bài 4, Bài 10, Bài 17...) -->
-                        <div class="dev-lesson-nav-list" role="navigation" aria-label="Danh sách bài học trong serie">
-                            @if (!VisibleLessons.Any())
-                            {
-                                <div class="dev-empty-lessons">
-                                    <i class="bi bi-search"></i>
-                                    <span>Không tìm thấy bài viết khớp từ khóa</span>
+                <div class="dev-blog-layout">
+                    <!-- Left Column: Series Sidebar / Lesson List -->
+                    <aside class="dev-series-sidebar">
+                        <div class="dev-sidebar-sticky-card">
+                            <div class="dev-sidebar-header">
+                                <div class="dev-sidebar-series-badge" style="color: @(_selectedSeries?.Color ?? "#0284c7"); background: @(_selectedSeries?.Color ?? "#0284c7")18;">
+                                    <i class="bi @(_selectedSeries?.Icon ?? "bi-collection-play-fill")"></i>
+                                    <span>@(_selectedSeries?.Badge ?? "Chuyên Đề")</span>
                                 </div>
-                            }
-                            else
-                            {
-                                @foreach (var art in VisibleLessons)
+                                <h3 class="dev-sidebar-title">
+                                    @(CultureService.IsEnglish ? _selectedSeries?.Title : _selectedSeries?.TitleVi)
+                                </h3>
+                            </div>
+
+                            <!-- Lessons in this series -->
+                            <div class="dev-lesson-nav-list" role="navigation">
+                                @foreach (var art in _selectedSeries?.Articles ?? new List<DevArticle>())
                                 {
                                     var isCur = _activeArticle?.Id == art.Id;
-                                    var isSaved = _bookmarkedIds.Contains(art.Id);
+                                    var isArtSaved = _bookmarkedIds.Contains(art.Id);
 
                                     <button type="button" 
                                             class="dev-lesson-item @(isCur ? "active" : "")"
                                             style="@(isCur ? $"--lesson-accent: {_selectedSeries?.Color ?? "#0284c7"};" : "")"
-                                            @onclick="() => SelectArticle(art)">
+                                            @onclick="() => ReadArticle(art)">
                                         <div class="dev-lesson-meta-row">
+                                            <span class="dev-level-tag @GetLevelCssClass(art.LevelOrder)">@art.LevelVi</span>
                                             <span class="dev-lesson-number-badge">@art.LessonNumber</span>
-                                            <span class="dev-lesson-time">
-                                                <i class="bi bi-clock"></i> @art.ReadingTime
-                                            </span>
-                                            @if (isSaved)
+                                            @if (isArtSaved)
                                             {
                                                 <i class="bi bi-bookmark-fill dev-saved-icon ms-auto" title="Đã lưu"></i>
                                             }
@@ -162,41 +165,23 @@
                                         </div>
                                     </button>
                                 }
-                            }
+                            </div>
                         </div>
-                    </div>
-                </aside>
+                    </aside>
 
-                <!-- Right Column: Full Blog Article Reader View -->
-                <main class="dev-article-reader" id="article-reader-top">
-                    @if (_activeArticle != null)
-                    {
-                        var isSaved = _bookmarkedIds.Contains(_activeArticle.Id);
-
-                        <!-- Breadcrumb Navigation -->
-                        <nav class="dev-breadcrumb-nav" aria-label="Breadcrumb">
-                            <span class="dev-bc-item">
-                                <a href="@LangHref("")">Trang Chủ</a>
-                            </span>
-                            <i class="bi bi-chevron-right dev-bc-sep"></i>
-                            <span class="dev-bc-item">
-                                <a href="@LangHref("dev-learning")">Dev Learning</a>
-                            </span>
-                            <i class="bi bi-chevron-right dev-bc-sep"></i>
-                            <span class="dev-bc-item">
-                                @(CultureService.IsEnglish ? _selectedSeries?.Title : _selectedSeries?.TitleVi)
-                            </span>
-                            <i class="bi bi-chevron-right dev-bc-sep"></i>
-                            <span class="dev-bc-item active">@_activeArticle.LessonNumber</span>
-                        </nav>
-
-                        <!-- Article Header -->
+                    <!-- Right Column: Full Article Body -->
+                    <main class="dev-article-reader">
+                        @{
+                            var isCurArticleSaved = _activeArticle != null && _bookmarkedIds.Contains(_activeArticle.Id);
+                        }
                         <article class="dev-article-card">
                             <header class="dev-article-main-header">
                                 <!-- Top Metadata Row -->
                                 <div class="dev-article-meta-bar">
+                                    <span class="dev-level-badge-large @GetLevelCssClass(_activeArticle.LevelOrder)">
+                                        @GetLevelIcon(_activeArticle.LevelOrder) @_activeArticle.LevelVi
+                                    </span>
                                     <span class="dev-series-tag" style="background: @(_selectedSeries?.Color ?? "#0284c7")18; color: @(_selectedSeries?.Color ?? "#0284c7"); border-color: @(_selectedSeries?.Color ?? "#0284c7")40;">
-                                        <i class="bi @(_selectedSeries?.Icon ?? "bi-bookmark")"></i>
                                         @_activeArticle.LessonNumber
                                     </span>
                                     <span class="dev-meta-pill">
@@ -209,11 +194,11 @@
                                         <i class="bi bi-person-circle"></i> Khôi Nguyễn · Senior Fullstack
                                     </span>
                                     <button type="button" 
-                                            class="dev-bookmark-btn @(isSaved ? "saved" : "")"
-                                            title="@(isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết này")"
+                                            class="dev-bookmark-btn @(isCurArticleSaved ? "saved" : "")"
+                                            title="@(isCurArticleSaved ? "Bỏ lưu bài viết" : "Lưu bài viết này")"
                                             @onclick="() => ToggleBookmark(_activeArticle.Id)">
-                                        <i class="bi @(isSaved ? "bi-bookmark-star-fill" : "bi-bookmark-plus")"></i>
-                                        <span>@(isSaved ? "Đã Lưu" : "Lưu Bài")</span>
+                                        <i class="bi @(isCurArticleSaved ? "bi-bookmark-star-fill" : "bi-bookmark-plus")"></i>
+                                        <span>@(isCurArticleSaved ? "Đã Lưu" : "Lưu Bài")</span>
                                     </button>
                                 </div>
 
@@ -222,7 +207,7 @@
                                     @(CultureService.IsEnglish ? _activeArticle.Title : _activeArticle.TitleVi)
                                 </h1>
 
-                                <!-- Lead Summary Callout (AZDIGI Style) -->
+                                <!-- Lead Summary Callout -->
                                 <div class="dev-lead-summary">
                                     <div class="dev-lead-icon">
                                         <i class="bi bi-quote"></i>
@@ -241,7 +226,7 @@
                                     }
                                 </div>
 
-                                <!-- Table of Contents Box for quick section jumping -->
+                                <!-- Table of Contents Box -->
                                 @if (_activeArticle.Sections.Count > 1)
                                 {
                                     <div class="dev-article-toc-box">
@@ -349,10 +334,10 @@
                                 {
                                     <button type="button" 
                                             class="dev-nav-btn prev"
-                                            @onclick="() => SelectArticle(PreviousArticle)">
+                                            @onclick="() => ReadArticle(PreviousArticle)">
                                         <i class="bi bi-arrow-left"></i>
                                         <div class="dev-nav-btn-text">
-                                            <span class="dev-nav-sub">Bài Trước</span>
+                                            <span class="dev-nav-sub">Bài Trước · @PreviousArticle.LevelVi</span>
                                             <span class="dev-nav-main">@PreviousArticle.LessonNumber: @(CultureService.IsEnglish ? PreviousArticle.Title : PreviousArticle.TitleVi)</span>
                                         </div>
                                     </button>
@@ -366,9 +351,9 @@
                                 {
                                     <button type="button" 
                                             class="dev-nav-btn next"
-                                            @onclick="() => SelectArticle(NextArticle)">
+                                            @onclick="() => ReadArticle(NextArticle)">
                                         <div class="dev-nav-btn-text">
-                                            <span class="dev-nav-sub">Bài Tiếp Theo</span>
+                                            <span class="dev-nav-sub">Bài Tiếp Theo · @NextArticle.LevelVi</span>
                                             <span class="dev-nav-main">@NextArticle.LessonNumber: @(CultureService.IsEnglish ? NextArticle.Title : NextArticle.TitleVi)</span>
                                         </div>
                                         <i class="bi bi-arrow-right"></i>
@@ -380,26 +365,157 @@
                                 }
                             </footer>
                         </article>
-                    }
-                    else
-                    {
-                        <div class="dev-no-article-selected">
-                            <i class="bi bi-journal-code"></i>
-                            <h4>Vui lòng chọn một bài viết từ danh sách bên trái</h4>
-                        </div>
-                    }
-                </main>
+                    </main>
+                </div>
             </div>
+        }
+        else
+        {
+            <!-- ========================================================================= -->
+            <!-- MODE 1: BLOG POSTS LIST / FEED VIEW (Danh Sách Bài Viết Theo Chuyên Đề)   -->
+            <!-- ========================================================================= -->
+            <section class="dev-series-feed-section">
+                <!-- Chuyên Đề Header Card -->
+                <div class="dev-feed-series-banner" style="--banner-accent: @(_selectedSeries?.Color ?? "#0284c7");">
+                    <div class="dev-feed-banner-content">
+                        <div class="dev-feed-banner-badge">
+                            <i class="bi @(_selectedSeries?.Icon ?? "bi-box-seam-fill")"></i>
+                            <span>@(_selectedSeries?.Badge ?? "Chuyên Đề")</span>
+                        </div>
+                        <h2 class="dev-feed-series-title">
+                            @(CultureService.IsEnglish ? _selectedSeries?.Title : _selectedSeries?.TitleVi)
+                        </h2>
+                        <p class="dev-feed-series-desc">
+                            @(CultureService.IsEnglish ? _selectedSeries?.Description : _selectedSeries?.DescriptionVi)
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Toolbar: Lọc Cấp Độ (Cơ bản -> Nâng cao) & Ô Tìm Kiếm -->
+                <div class="dev-feed-toolbar">
+                    <div class="dev-level-filter-chips">
+                        <button type="button" 
+                                class="dev-level-chip @(_selectedLevelFilter == null ? "active" : "")"
+                                @onclick="() => _selectedLevelFilter = null">
+                            <span>Tất Cả Bài Viết</span>
+                            <span class="dev-level-count">@(_selectedSeries?.Articles.Count ?? 0)</span>
+                        </button>
+                        <button type="button" 
+                                class="dev-level-chip level-1 @(_selectedLevelFilter == 1 ? "active" : "")"
+                                @onclick="() => _selectedLevelFilter = 1">
+                            <span>🌱 Cơ Bản</span>
+                            <span class="dev-level-count">@CountArticlesByLevel(1)</span>
+                        </button>
+                        <button type="button" 
+                                class="dev-level-chip level-2 @(_selectedLevelFilter == 2 ? "active" : "")"
+                                @onclick="() => _selectedLevelFilter = 2">
+                            <span>⚡ Trung Cấp</span>
+                            <span class="dev-level-count">@CountArticlesByLevel(2)</span>
+                        </button>
+                        <button type="button" 
+                                class="dev-level-chip level-3 @(_selectedLevelFilter == 3 ? "active" : "")"
+                                @onclick="() => _selectedLevelFilter = 3">
+                            <span>🔥 Nâng Cao</span>
+                            <span class="dev-level-count">@CountArticlesByLevel(3)</span>
+                        </button>
+                        <button type="button" 
+                                class="dev-level-chip level-4 @(_selectedLevelFilter == 4 ? "active" : "")"
+                                @onclick="() => _selectedLevelFilter = 4">
+                            <span>🚀 Thực Chiến</span>
+                            <span class="dev-level-count">@CountArticlesByLevel(4)</span>
+                        </button>
+                    </div>
+
+                    <div class="dev-feed-search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" 
+                               placeholder="Tìm bài viết trong chuyên đề này..." 
+                               @bind="_searchTerm" 
+                               @bind:event="oninput" />
+                    </div>
+                </div>
+
+                <!-- Blog Articles Grid / Cards -->
+                @if (!FilteredArticles.Any())
+                {
+                    <div class="dev-empty-feed">
+                        <i class="bi bi-search"></i>
+                        <h5>Không tìm thấy bài viết nào phù hợp</h5>
+                        <p>Thử chọn cấp độ khác hoặc xóa từ khóa tìm kiếm.</p>
+                        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="ClearFilters">
+                            Xem tất cả bài viết
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="dev-articles-grid">
+                        @foreach (var article in FilteredArticles)
+                        {
+                            var isSaved = _bookmarkedIds.Contains(article.Id);
+
+                            <div class="dev-article-post-card" style="--post-accent: @(_selectedSeries?.Color ?? "#0284c7");">
+                                <div class="dev-post-card-top">
+                                    <span class="dev-level-badge @GetLevelCssClass(article.LevelOrder)">
+                                        @GetLevelIcon(article.LevelOrder) @article.LevelVi
+                                    </span>
+                                    <span class="dev-post-lesson-pill">@article.LessonNumber</span>
+                                    <button type="button" 
+                                            class="dev-post-card-bookmark @(isSaved ? "saved" : "")"
+                                            title="@(isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết này")"
+                                            @onclick="() => ToggleBookmark(article.Id)"
+                                            @onclick:stopPropagation="true">
+                                        <i class="bi @(isSaved ? "bi-bookmark-star-fill" : "bi-bookmark")"></i>
+                                    </button>
+                                </div>
+
+                                <h3 class="dev-post-card-title" @onclick="() => ReadArticle(article)">
+                                    @(CultureService.IsEnglish ? article.Title : article.TitleVi)
+                                </h3>
+
+                                <p class="dev-post-card-summary">
+                                    @(CultureService.IsEnglish ? article.Summary : article.SummaryVi)
+                                </p>
+
+                                <div class="dev-post-tags">
+                                    @foreach (var tag in article.Tags.Take(3))
+                                    {
+                                        <span class="dev-post-tag">#@tag</span>
+                                    }
+                                </div>
+
+                                <div class="dev-post-card-footer">
+                                    <div class="dev-post-meta">
+                                        <span><i class="bi bi-clock"></i> @article.ReadingTime</span>
+                                        <span><i class="bi bi-calendar3"></i> @article.PublishedDate</span>
+                                    </div>
+
+                                    <button type="button" 
+                                            class="dev-post-read-btn" 
+                                            @onclick="() => ReadArticle(article)">
+                                        <span>Đọc Bài Viết</span>
+                                        <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
         }
     </div>
 </div>
 
 @code {
+    private enum ViewMode { Feed, Reader }
+
     private DevBlogData? _data;
     private bool _isLoading = true;
     private DevSeries? _selectedSeries;
     private DevArticle? _activeArticle;
-    private string _lessonSearchTerm = "";
+    private ViewMode _viewMode = ViewMode.Feed;
+    private int? _selectedLevelFilter = null;
+    private string _searchTerm = "";
     private bool _showOnlyBookmarks = false;
     private string? _copiedCodeId = null;
 
@@ -418,10 +534,6 @@
             if (_data?.SeriesList != null && _data.SeriesList.Count > 0)
             {
                 _selectedSeries = _data.SeriesList[0];
-                if (_selectedSeries.Articles.Count > 0)
-                {
-                    _activeArticle = _selectedSeries.Articles[0];
-                }
             }
         }
         catch (Exception ex)
@@ -457,7 +569,13 @@
 
     private int TotalArticlesCount => _data?.SeriesList?.Sum(s => s.Articles.Count) ?? 0;
 
-    private IEnumerable<DevArticle> VisibleLessons
+    private int CountArticlesByLevel(int levelOrder)
+    {
+        if (_selectedSeries == null) return 0;
+        return _selectedSeries.Articles.Count(a => a.LevelOrder == levelOrder);
+    }
+
+    private IEnumerable<DevArticle> FilteredArticles
     {
         get
         {
@@ -466,7 +584,6 @@
             IEnumerable<DevArticle> list;
             if (_showOnlyBookmarks)
             {
-                // When in bookmark mode, show all saved articles from all series
                 list = _data?.SeriesList.SelectMany(s => s.Articles).Where(a => _bookmarkedIds.Contains(a.Id)) ?? Enumerable.Empty<DevArticle>();
             }
             else
@@ -474,10 +591,17 @@
                 list = _selectedSeries.Articles;
             }
 
-            if (!string.IsNullOrWhiteSpace(_lessonSearchTerm))
+            // Filter by level
+            if (_selectedLevelFilter.HasValue)
             {
-                var t = _lessonSearchTerm.Trim().ToLowerInvariant();
-                list = list.Where(a => 
+                list = list.Where(a => a.LevelOrder == _selectedLevelFilter.Value);
+            }
+
+            // Filter by search term
+            if (!string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                var t = _searchTerm.Trim().ToLowerInvariant();
+                list = list.Where(a =>
                     a.LessonNumber.ToLowerInvariant().Contains(t) ||
                     a.Title.ToLowerInvariant().Contains(t) ||
                     a.TitleVi.ToLowerInvariant().Contains(t) ||
@@ -486,7 +610,8 @@
                     a.Tags.Any(tag => tag.ToLowerInvariant().Contains(t)));
             }
 
-            return list;
+            // Order by LevelOrder then lesson
+            return list.OrderBy(a => a.LevelOrder);
         }
     }
 
@@ -516,30 +641,51 @@
     {
         _selectedSeries = series;
         _showOnlyBookmarks = false;
-        _lessonSearchTerm = "";
-        if (series.Articles.Count > 0)
-        {
-            _activeArticle = series.Articles[0];
-        }
-        else
-        {
-            _activeArticle = null;
-        }
+        _selectedLevelFilter = null;
+        _searchTerm = "";
+        _viewMode = ViewMode.Feed;
+        _activeArticle = null;
     }
 
-    private async Task SelectArticle(DevArticle article)
+    private void ToggleBookmarkFilter()
+    {
+        _showOnlyBookmarks = !_showOnlyBookmarks;
+        _viewMode = ViewMode.Feed;
+        _activeArticle = null;
+    }
+
+    private void ClearFilters()
+    {
+        _selectedLevelFilter = null;
+        _searchTerm = "";
+        _showOnlyBookmarks = false;
+    }
+
+    private void ReadArticle(DevArticle article)
     {
         _activeArticle = article;
-        // Also ensure selected series matches this article
         if (_selectedSeries == null || _selectedSeries.Id != article.SeriesId)
         {
             _selectedSeries = _data?.SeriesList.FirstOrDefault(s => s.Id == article.SeriesId) ?? _selectedSeries;
         }
+        _viewMode = ViewMode.Reader;
         StateHasChanged();
 
         try
         {
-            await JS.InvokeVoidAsync("window.scrollTo", new { top = 220, behavior = "smooth" });
+            _ = JS.InvokeVoidAsync("window.scrollTo", new { top = 180, behavior = "smooth" });
+        }
+        catch { }
+    }
+
+    private void BackToFeed()
+    {
+        _viewMode = ViewMode.Feed;
+        StateHasChanged();
+
+        try
+        {
+            _ = JS.InvokeVoidAsync("window.scrollTo", new { top = 180, behavior = "smooth" });
         }
         catch { }
     }
@@ -576,6 +722,24 @@
         }
         catch { }
     }
+
+    private static string GetLevelCssClass(int levelOrder) => levelOrder switch
+    {
+        1 => "level-beginner",
+        2 => "level-intermediate",
+        3 => "level-advanced",
+        4 => "level-production",
+        _ => "level-beginner"
+    };
+
+    private static string GetLevelIcon(int levelOrder) => levelOrder switch
+    {
+        1 => "🌱",
+        2 => "⚡",
+        3 => "🔥",
+        4 => "🚀",
+        _ => "📌"
+    };
 
     private string LangHref(string path) => CulturePath.Combine(CultureService.UrlLang, path);
 }

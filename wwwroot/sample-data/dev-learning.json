@@ -1,19 +1,22 @@
 {
   "seriesList": [
     {
-      "id": "docker-zero-to-hero",
+      "id": "docker-series",
       "title": "Docker from Zero to Hero on VPS",
-      "titleVi": "Docker từ Zero đến Hero trên VPS",
+      "titleVi": "Chuyên Đề Docker: Từ Cơ Bản Đến Thực Chiến Trên VPS",
       "icon": "bi-box-seam-fill",
       "color": "#0284c7",
-      "badge": "17 Bài Học",
-      "description": "Comprehensive practical roadmap from basic container concepts, Dockerfile optimization, Volumes, Networks, Docker Compose, Reverse Proxy, to real-world self-hosted production setups.",
-      "descriptionVi": "Chuỗi bài giảng thực chiến đầy đủ từ khái niệm container cơ bản, viết Dockerfile tối ưu, quản lý Volume & Network, Docker Compose, Reverse Proxy SSL, đến tổng hợp project mẫu thực tế.",
+      "badge": "8 Bài Viết",
+      "description": "Lộ trình bài viết toàn diện từ làm quen container, các lệnh CLI, Dockerfile tối ưu, Docker Compose, Reverse Proxy SSL đến tổng hợp project mẫu thực tế.",
+      "descriptionVi": "Lộ trình bài viết toàn diện từ làm quen container, các lệnh CLI, Dockerfile tối ưu, Docker Compose, Reverse Proxy SSL đến tổng hợp project mẫu thực tế.",
       "articles": [
         {
           "id": "docker-bai-1-tong-quan",
-          "seriesId": "docker-zero-to-hero",
+          "seriesId": "docker-series",
           "lessonNumber": "Bài 1",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
           "title": "Docker là gì? Container vs Virtual Machine và Cài đặt trên VPS",
           "titleVi": "Docker là gì? Container vs Virtual Machine và Cài đặt trên VPS",
           "readingTime": "8 phút đọc",
@@ -41,31 +44,88 @@
               "calloutTitleVi": "Ghi nhớ cốt lõi",
               "calloutText": "Image là bản thiết kế đóng gói tĩnh (Class), còn Container là thực thể đang chạy (Object instance). Một Image có thể khởi chạy thành nhiều Container độc lập.",
               "calloutTextVi": "Image là bản thiết kế đóng gói tĩnh (Class), còn Container là thực thể đang chạy (Object instance). Một Image có thể khởi chạy thành nhiều Container độc lập."
-            },
+            }
+          ]
+        },
+        {
+          "id": "docker-bai-2-cli-commands",
+          "seriesId": "docker-series",
+          "lessonNumber": "Bài 2",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
+          "title": "Các câu lệnh Docker CLI thiết yếu hàng ngày cho Developer",
+          "titleVi": "Các câu lệnh Docker CLI thiết yếu hàng ngày cho Developer",
+          "readingTime": "10 phút đọc",
+          "publishedDate": "11/10/2026",
+          "summary": "Thành thạo 10 câu lệnh quản trị Docker phổ biến nhất: run, ps, exec, logs, cp, inspect, stats và dọn dẹp hệ thống với prune.",
+          "summaryVi": "Thành thạo 10 câu lệnh quản trị Docker phổ biến nhất: run, ps, exec, logs, cp, inspect, stats và dọn dẹp hệ thống với prune.",
+          "tags": ["docker-cli", "bash", "cheatsheet"],
+          "sections": [
             {
-              "heading": "2. Vòng đời Container và các lệnh quản trị cơ bản",
-              "headingVi": "2. Vòng đời Container và các lệnh quản trị cơ bản",
+              "heading": "1. Khởi chạy và Quản lý Container",
+              "headingVi": "1. Khởi chạy và Quản lý Container",
               "paragraphs": [
-                "Để làm chủ Docker trên VPS, bạn cần thành thạo 5 lệnh cơ bản: chạy container ở chế độ nền (-d), ánh xạ cổng (-p host:container), đọc log theo thời gian thực (-f), gắn terminal vào container (exec -it), và dọn dẹp container cũ."
+                "Lệnh `docker run` là lệnh mạnh mẽ nhất để khởi tạo và chạy một container từ Image. Cần chú ý cờ `-d` để chạy nền (detached), `-p` để map cổng mạng và `--name` để đặt tên dễ nhớ."
               ],
               "paragraphsVi": [
-                "Để làm chủ Docker trên VPS, bạn cần thành thạo 5 lệnh cơ bản: chạy container ở chế độ nền (-d), ánh xạ cổng (-p host:container), đọc log theo thời gian thực (-f), gắn terminal vào container (exec -it), và dọn dẹp container cũ."
+                "Lệnh `docker run` là lệnh mạnh mẽ nhất để khởi tạo và chạy một container từ Image. Cần chú ý cờ `-d` để chạy nền (detached), `-p` để map cổng mạng và `--name` để đặt tên dễ nhớ."
               ],
-              "codeTitle": "Các lệnh quản trị container thiết yếu hàng ngày",
+              "codeTitle": "Các lệnh chạy và xem trạng thái container",
               "codeLanguage": "bash",
-              "codeContent": "# Chạy Nginx ở chế độ nền, map cổng 8080 của VPS vào cổng 80 của container\ndocker run -d --name my-web -p 8080:80 nginx:alpine\n\n# Xem danh sách container đang chạy\ndocker ps\n\n# Xem log của container (theo dõi thời gian thực)\ndocker logs -f --tail 100 my-web\n\n# Truy cập vào terminal bên trong container\ndocker exec -it my-web sh\n\n# Dừng và xóa container\ndocker stop my-web && docker rm my-web",
+              "codeContent": "# Chạy Nginx ở cổng 8080\ndocker run -d --name web-app -p 8080:80 nginx:alpine\n\n# Liệt kê các container đang chạy\ndocker ps\n\n# Xem toàn bộ container bao gồm cả đã tắt\ndocker ps -a\n\n# Xem mức sử dụng CPU/RAM theo thời gian thực\ndocker stats",
               "calloutType": "tip",
               "calloutTitle": "Mẹo hữu ích",
               "calloutTitleVi": "Mẹo hữu ích",
-              "calloutText": "Luôn sử dụng cờ -d (detached mode) khi chạy service trên VPS để container không chiếm dụng cửa sổ dòng lệnh SSH của bạn.",
-              "calloutTextVi": "Luôn sử dụng cờ -d (detached mode) khi chạy service trên VPS để container không chiếm dụng cửa sổ dòng lệnh SSH của bạn."
+              "calloutText": "Sử dụng 'docker system prune -a --volumes' định kỳ để dọn sạch container tắt, image thừa và volume mồ côi giúp giải phóng hàng chục GB ổ cứng VPS.",
+              "calloutTextVi": "Sử dụng 'docker system prune -a --volumes' định kỳ để dọn sạch container tắt, image thừa và volume mồ côi giúp giải phóng hàng chục GB ổ cứng VPS."
+            }
+          ]
+        },
+        {
+          "id": "docker-bai-3-volumes-network",
+          "seriesId": "docker-series",
+          "lessonNumber": "Bài 3",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Quản lý Dữ liệu & Mạng trong Docker: Volumes, Bind Mounts và Bridge",
+          "titleVi": "Quản lý Dữ liệu & Mạng trong Docker: Volumes, Bind Mounts và Bridge",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "12/10/2026",
+          "summary": "Hiểu rõ cơ chế lưu trữ bền vững (Persistent Data) để không bao giờ mất database khi xóa container, và thiết lập Custom Bridge Network để các container gọi nhau qua Domain Name nội bộ.",
+          "summaryVi": "Hiểu rõ cơ chế lưu trữ bền vững (Persistent Data) để không bao giờ mất database khi xóa container, và thiết lập Custom Bridge Network để các container gọi nhau qua Domain Name nội bộ.",
+          "tags": ["volumes", "networks", "data-persistence"],
+          "sections": [
+            {
+              "heading": "1. So sánh Docker Volume vs Bind Mount",
+              "headingVi": "1. So sánh Docker Volume vs Bind Mount",
+              "paragraphs": [
+                "Container sinh ra là phi trạng thái (Stateless). Khi container bị xóa, mọi dữ liệu ghi bên trong nó đều biến mất. Để lưu dữ liệu lâu dài (như Database PostgreSQL, MySQL, Uploads), bạn phải dùng Volume hoặc Bind Mount.",
+                "Named Volume được Docker quản lý tại `/var/lib/docker/volumes`, có hiệu năng cao và thích hợp cho production. Bind Mount map trực tiếp 1 thư mục từ host vào container, thích hợp cho việc live-code ở môi trường development."
+              ],
+              "paragraphsVi": [
+                "Container sinh ra là phi trạng thái (Stateless). Khi container bị xóa, mọi dữ liệu ghi bên trong nó đều biến mất. Để lưu dữ liệu lâu dài (như Database PostgreSQL, MySQL, Uploads), bạn phải dùng Volume hoặc Bind Mount.",
+                "Named Volume được Docker quản lý tại `/var/lib/docker/volumes`, có hiệu năng cao và thích hợp cho production. Bind Mount map trực tiếp 1 thư mục từ host vào container, thích hợp cho việc live-code ở môi trường development."
+              ],
+              "codeTitle": "Tạo Volume và Custom Network",
+              "codeLanguage": "bash",
+              "codeContent": "# Tạo network nội bộ riêng\ndocker network create app-net\n\n# Chạy Postgres kèm Volume bền vững\ndocker run -d --name pg-db \\\n  --network app-net \\\n  -v pgdata:/var/lib/postgresql/data \\\n  -e POSTGRES_PASSWORD=secret \\\n  postgres:16-alpine",
+              "calloutType": "info",
+              "calloutTitle": "Giao tiếp nội bộ",
+              "calloutTitleVi": "Giao tiếp nội bộ",
+              "calloutText": "Trong cùng một Custom Bridge Network, các container tự động phân giải tên miền (DNS) bằng chính tên container của nhau (ví dụ: 'pg-db:5432').",
+              "calloutTextVi": "Trong cùng một Custom Bridge Network, các container tự động phân giải tên miền (DNS) bằng chính tên container của nhau (ví dụ: 'pg-db:5432')."
             }
           ]
         },
         {
           "id": "docker-bai-4-dockerfile",
-          "seriesId": "docker-zero-to-hero",
+          "seriesId": "docker-series",
           "lessonNumber": "Bài 4",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
           "title": "Viết Dockerfile chuẩn: Tối ưu Layer Cache và Multi-Stage Build",
           "titleVi": "Viết Dockerfile chuẩn: Tối ưu Layer Cache và Multi-Stage Build",
           "readingTime": "12 phút đọc",
@@ -79,105 +139,143 @@
               "headingVi": "1. Cơ chế Layer Caching trong Dockerfile",
               "paragraphs": [
                 "Mỗi chỉ thị trong Dockerfile (FROM, RUN, COPY) tạo ra một tầng (Layer) dữ liệu chỉ đọc. Khi bạn build lại image, Docker sẽ tái sử dụng các layer không thay đổi từ bộ nhớ đệm.",
-                "Quy tắc vàng: Luôn copy file khai báo thư viện (package.json, *.csproj, pyproject.toml) và chạy lệnh cài đặt thư viện trước khi COPY toàn bộ mã nguồn. Điều này đảm bảo khi bạn sửa 1 dòng code, Docker không phải tải lại toàn bộ packages từ đầu."
+                "Quy tắc vàng: Luôn copy file khai báo thư viện (package.json, *.csproj, pyproject.toml) và chạy lệnh cài đặt thư viện trước khi COPY toàn bộ mã nguồn."
               ],
               "paragraphsVi": [
                 "Mỗi chỉ thị trong Dockerfile (FROM, RUN, COPY) tạo ra một tầng (Layer) dữ liệu chỉ đọc. Khi bạn build lại image, Docker sẽ tái sử dụng các layer không thay đổi từ bộ nhớ đệm.",
-                "Quy tắc vàng: Luôn copy file khai báo thư viện (package.json, *.csproj, pyproject.toml) và chạy lệnh cài đặt thư viện trước khi COPY toàn bộ mã nguồn. Điều này đảm bảo khi bạn sửa 1 dòng code, Docker không phải tải lại toàn bộ packages từ đầu."
+                "Quy tắc vàng: Luôn copy file khai báo thư viện (package.json, *.csproj, pyproject.toml) và chạy lệnh cài đặt thư viện trước khi COPY toàn bộ mã nguồn."
               ],
-              "codeTitle": "Ví dụ Dockerfile tận dụng tối đa Layer Cache",
+              "codeTitle": "Ví dụ Dockerfile tối ưu Layer Cache & Multi-stage",
               "codeLanguage": "dockerfile",
-              "codeContent": "# Bước 1: Copy file dependencies trước\nCOPY package*.json ./\nRUN npm ci\n\n# Bước 2: Copy mã nguồn sau\nCOPY . .\nRUN npm run build",
+              "codeContent": "# Stage 1: Build\nFROM mcr.microsoft.com/dotnet/sdk:10.0 AS build\nWORKDIR /src\nCOPY *.csproj .\nRUN dotnet restore\nCOPY . .\nRUN dotnet publish -c Release -o /app/publish\n\n# Stage 2: Runtime siêu nhẹ (chỉ ~80MB thay vì 800MB)\nFROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime\nWORKDIR /app\nCOPY --from=build /app/publish .\nENTRYPOINT [\"dotnet\", \"MyApi.dll\"]",
               "calloutType": "warning",
               "calloutTitle": "Cạm bẫy thường gặp",
               "calloutTitleVi": "Cạm bẫy thường gặp",
               "calloutText": "Nếu đặt lệnh 'COPY . .' lên trước lệnh restore/install, cache layer sẽ bị phá vỡ mỗi lần bạn sửa dù chỉ một dấu chấm trong code!",
               "calloutTextVi": "Nếu đặt lệnh 'COPY . .' lên trước lệnh restore/install, cache layer sẽ bị phá vỡ mỗi lần bạn sửa dù chỉ một dấu chấm trong code!"
-            },
-            {
-              "heading": "2. Multi-Stage Build: Giảm kích thước image từ 600MB xuống 50MB",
-              "headingVi": "2. Multi-Stage Build: Giảm kích thước image từ 600MB xuống 50MB",
-              "paragraphs": [
-                "Multi-stage build cho phép sử dụng image SDK nặng (chứa trình biên dịch C#, Node, Go) trong giai đoạn build, sau đó chỉ copy file nhị phân đã biên dịch sang một Runtime Image siêu nhẹ (như Alpine, Chiseled Ubuntu, Distroless).",
-                "Kết quả: Image production không chứa mã nguồn, không chứa công cụ build thừa thãi, giảm 90% dung lượng và loại bỏ hầu hết các lỗ hổng bảo mật CVE."
-              ],
-              "paragraphsVi": [
-                "Multi-stage build cho phép sử dụng image SDK nặng (chứa trình biên dịch C#, Node, Go) trong giai đoạn build, sau đó chỉ copy file nhị phân đã biên dịch sang một Runtime Image siêu nhẹ (như Alpine, Chiseled Ubuntu, Distroless).",
-                "Kết quả: Image production không chứa mã nguồn, không chứa công cụ build thừa thãi, giảm 90% dung lượng và loại bỏ hầu hết các lỗ hổng bảo mật CVE."
-              ],
-              "codeTitle": "Cấu hình Multi-Stage Dockerfile hoàn chỉnh",
-              "codeLanguage": "dockerfile",
-              "codeContent": "# Giai đoạn 1: Build bằng SDK đầy đủ\nFROM mcr.microsoft.com/dotnet/sdk:9.0 AS build\nWORKDIR /src\nCOPY *.csproj .\nRUN dotnet restore\nCOPY . .\nRUN dotnet publish -c Release -o /app/out --no-restore\n\n# Giai đoạn 2: Runtime siêu nhẹ (Ubuntu Chiseled)\nFROM mcr.microsoft.com/dotnet/aspnet:9.0-noble-chiseled\nWORKDIR /app\nCOPY --from=build /app/out .\nUSER $APP_UID\nENTRYPOINT [\"dotnet\", \"MyService.Api.dll\"]",
-              "calloutType": "tip",
-              "calloutTitle": "Điểm nhấn bảo mật",
-              "calloutTitleVi": "Điểm nhấn bảo mật",
-              "calloutText": "Chỉ thị 'USER $APP_UID' đảm bảo ứng dụng chạy dưới quyền non-root, ngăn chặn kẻ tấn công chiếm quyền kiểm soát máy chủ khi ứng dụng có lỗ hổng.",
-              "calloutTextVi": "Chỉ thị 'USER $APP_UID' đảm bảo ứng dụng chạy dưới quyền non-root, ngăn chặn kẻ tấn công chiếm quyền kiểm soát máy chủ khi ứng dụng có lỗ hổng."
             }
           ]
         },
         {
-          "id": "docker-bai-10-reverse-proxy",
-          "seriesId": "docker-zero-to-hero",
-          "lessonNumber": "Bài 10",
-          "title": "Reverse Proxy: 1 VPS chạy nhiều domain với Nginx Proxy Manager & SSL tự động",
-          "titleVi": "Reverse Proxy: 1 VPS chạy nhiều domain với Nginx Proxy Manager & SSL tự động",
-          "readingTime": "15 phút đọc",
-          "publishedDate": "14/10/2026",
-          "summary": "Giải pháp chạy nhiều ứng dụng khác nhau trên cùng 1 IP VPS thông qua reverse proxy và tự động xin cấp chứng chỉ SSL Let's Encrypt miễn phí.",
-          "summaryVi": "Giải pháp chạy nhiều ứng dụng khác nhau trên cùng 1 IP VPS thông qua reverse proxy và tự động xin cấp chứng chỉ SSL Let's Encrypt miễn phí.",
-          "tags": ["reverse-proxy", "nginx", "ssl", "lets-encrypt"],
+          "id": "docker-bai-5-compose",
+          "seriesId": "docker-series",
+          "lessonNumber": "Bài 5",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Docker Compose từ A-Z: Quản lý Multi-Container và Biến môi trường .env",
+          "titleVi": "Docker Compose từ A-Z: Quản lý Multi-Container và Biến môi trường .env",
+          "readingTime": "14 phút đọc",
+          "publishedDate": "13/10/2026",
+          "summary": "Khai báo cấu hình hệ thống bằng code (IaC) với file docker-compose.yml, quản lý liên kết depends_on, healthcheck và bảo mật credentials qua file .env.",
+          "summaryVi": "Khai báo cấu hình hệ thống bằng code (IaC) với file docker-compose.yml, quản lý liên kết depends_on, healthcheck và bảo mật credentials qua file .env.",
+          "tags": ["docker-compose", "environment-variables", "orchestration"],
           "sections": [
             {
-              "heading": "1. Bài toán: Một IP VPS duy nhất chạy 5 website độc lập",
-              "headingVi": "1. Bài toán: Một IP VPS duy nhất chạy 5 website độc lập",
+              "heading": "1. Khái niệm và Cú pháp chuẩn Docker Compose",
+              "headingVi": "1. Khái niệm và Cú pháp chuẩn Docker Compose",
               "paragraphs": [
-                "Một máy chủ VPS chỉ có 1 cổng 80 (HTTP) và 1 cổng 443 (HTTPS). Nếu bạn chạy Web A chiếm cổng 80, Web B sẽ không thể chạy cổng 80 được nữa.",
-                "Giải pháp chuẩn là dựng một Reverse Proxy (Nginx Proxy Manager) đứng ở cổng 80/443. Khi người dùng truy cập 'git.domain.com', Proxy sẽ chuyển tiếp request vào container Gitea cổng 3000. Khi truy cập 'cloud.domain.com', Proxy sẽ chuyển vào container Nextcloud cổng 8080."
+                "Thay vì phải gõ hàng chục lệnh `docker run` dài dòng mỗi lần restart VPS, Docker Compose cho phép bạn định nghĩa toàn bộ stack (Frontend, Backend, Database, Redis) trong 1 file `docker-compose.yml` duy nhất.",
+                "Chỉ cần 1 câu lệnh: `docker compose up -d`, toàn bộ hệ thống sẽ được kéo image, tạo network, gắn volume và khởi chạy tuần tự theo đúng phụ thuộc."
               ],
               "paragraphsVi": [
-                "Một máy chủ VPS chỉ có 1 cổng 80 (HTTP) và 1 cổng 443 (HTTPS). Nếu bạn chạy Web A chiếm cổng 80, Web B sẽ không thể chạy cổng 80 được nữa.",
-                "Giải pháp chuẩn là dựng một Reverse Proxy (Nginx Proxy Manager) đứng ở cổng 80/443. Khi người dùng truy cập 'git.domain.com', Proxy sẽ chuyển tiếp request vào container Gitea cổng 3000. Khi truy cập 'cloud.domain.com', Proxy sẽ chuyển vào container Nextcloud cổng 8080."
+                "Thay vì phải gõ hàng chục lệnh `docker run` dài dòng mỗi lần restart VPS, Docker Compose cho phép bạn định nghĩa toàn bộ stack (Frontend, Backend, Database, Redis) trong 1 file `docker-compose.yml` duy nhất.",
+                "Chỉ cần 1 câu lệnh: `docker compose up -d`, toàn bộ hệ thống sẽ được kéo image, tạo network, gắn volume và khởi chạy tuần tự theo đúng phụ thuộc."
               ],
-              "codeTitle": "Tạo Docker Network chia sẻ 'proxy-tier'",
-              "codeLanguage": "bash",
-              "codeContent": "docker network create proxy-tier",
-              "calloutType": "tip",
-              "calloutTitle": "Cơ chế giao tiếp",
-              "calloutTitleVi": "Cơ chế giao tiếp",
-              "calloutText": "Các container chỉ cần tham gia chung network 'proxy-tier', Reverse Proxy sẽ gọi được container bằng chính tên service của nó (ví dụ: http://gitea:3000) mà không cần mở port ra ngoài Internet.",
-              "calloutTextVi": "Các container chỉ cần tham gia chung network 'proxy-tier', Reverse Proxy sẽ gọi được container bằng chính tên service của nó (ví dụ: http://gitea:3000) mà không cần mở port ra ngoài Internet."
-            },
-            {
-              "heading": "2. Triển khai Nginx Proxy Manager bằng Docker Compose",
-              "headingVi": "2. Triển khai Nginx Proxy Manager bằng Docker Compose",
-              "paragraphs": [
-                "Nginx Proxy Manager cung cấp giao diện web thân thiện, cho phép cấu hình Proxy Hosts, cấp phát SSL Let's Encrypt tự động, bật Force SSL và hỗ trợ WebSockets chỉ bằng các nút gạt trực quan."
-              ],
-              "paragraphsVi": [
-                "Nginx Proxy Manager cung cấp giao diện web thân thiện, cho phép cấu hình Proxy Hosts, cấp phát SSL Let's Encrypt tự động, bật Force SSL và hỗ trợ WebSockets chỉ bằng các nút gạt trực quan."
-              ],
-              "codeTitle": "docker-compose.yml hoàn chỉnh cho Nginx Proxy Manager",
+              "codeTitle": "Mẫu file docker-compose.yml chuẩn",
               "codeLanguage": "yaml",
-              "codeContent": "services:\n  npm:\n    image: 'jc21/nginx-proxy-manager:latest'\n    container_name: nginx-proxy-manager\n    restart: unless-stopped\n    ports:\n      - '80:80'\n      - '81:81'\n      - '443:443'\n    environment:\n      - DB_MYSQL_HOST=npm-db\n      - DB_MYSQL_PORT=3306\n      - DB_MYSQL_USER=npm\n      - DB_MYSQL_PASSWORD=npm_secret_password\n      - DB_MYSQL_NAME=npm\n    volumes:\n      - ./data:/data\n      - ./letsencrypt:/etc/letsencrypt\n    depends_on:\n      npm-db:\n        condition: service_healthy\n    networks:\n      - npm-net\n      - proxy-tier\n\n  npm-db:\n    image: 'mariadb:11'\n    container_name: npm-db\n    restart: unless-stopped\n    environment:\n      - MYSQL_ROOT_PASSWORD=npm_root_password\n      - MYSQL_DATABASE=npm\n      - MYSQL_USER=npm\n      - MYSQL_PASSWORD=npm_secret_password\n    volumes:\n      - ./mysql:/var/lib/mysql\n    healthcheck:\n      test: [\"CMD-SHELL\", \"healthcheck.sh --connect --innodb_initialized\"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n    networks:\n      - npm-net\n\nnetworks:\n  npm-net:\n  proxy-tier:\n    external: true",
+              "codeContent": "services:\n  app:\n    image: my-app:latest\n    restart: unless-stopped\n    ports:\n      - \"8080:8080\"\n    env_file: .env\n    depends_on:\n      redis:\n        condition: service_healthy\n\n  redis:\n    image: redis:7-alpine\n    restart: unless-stopped\n    healthcheck:\n      test: [\"CMD\", \"redis-cli\", \"ping\"]\n      interval: 5s\n      timeout: 3s\n      retries: 5",
+              "calloutType": "tip",
+              "calloutTitle": "Lệnh thông dụng",
+              "calloutTitleVi": "Lệnh thông dụng",
+              "calloutText": "Dùng 'docker compose down' để dừng sạch sẽ, và 'docker compose pull && docker compose up -d' để cập nhật phiên bản mới không mất dữ liệu.",
+              "calloutTextVi": "Dùng 'docker compose down' để dừng sạch sẽ, và 'docker compose pull && docker compose up -d' để cập nhật phiên bản mới không mất dữ liệu."
+            }
+          ]
+        },
+        {
+          "id": "docker-bai-6-reverse-proxy",
+          "seriesId": "docker-series",
+          "lessonNumber": "Bài 6",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Reverse Proxy với Nginx Proxy Manager & SSL Tự Động Let's Encrypt",
+          "titleVi": "Reverse Proxy với Nginx Proxy Manager & SSL Tự Động Let's Encrypt",
+          "readingTime": "15 phút đọc",
+          "publishedDate": "14/10/2026",
+          "summary": "Giải pháp kinh điển: Chạy 10+ website/app khác nhau trên cùng 1 IP VPS với port 80 & 443 duy nhất, tự động cấp và gia hạn chứng chỉ HTTPS hoàn toàn miễn phí.",
+          "summaryVi": "Giải pháp kinh điển: Chạy 10+ website/app khác nhau trên cùng 1 IP VPS với port 80 & 443 duy nhất, tự động cấp và gia hạn chứng chỉ HTTPS hoàn toàn miễn phí.",
+          "tags": ["nginx-proxy-manager", "ssl", "letsencrypt", "reverse-proxy"],
+          "sections": [
+            {
+              "heading": "1. Mô hình Reverse Proxy",
+              "headingVi": "1. Mô hình Reverse Proxy",
+              "paragraphs": [
+                "Khi bạn có nhiều container (Gitea cổng 3000, Web cổng 8080, Nextcloud cổng 8088), bạn không thể bắt người dùng nhớ các số cổng này. Nginx Proxy Manager đứng ở cổng 80/443, đọc Header Host của request và định tuyến tới đúng container tương ứng."
+              ],
+              "paragraphsVi": [
+                "Khi bạn có nhiều container (Gitea cổng 3000, Web cổng 8080, Nextcloud cổng 8088), bạn không thể bắt người dùng nhớ các số cổng này. Nginx Proxy Manager đứng ở cổng 80/443, đọc Header Host của request và định tuyến tới đúng container tương ứng."
+              ],
+              "codeTitle": "Tạo mạng chung proxy-tier và chạy NPM",
+              "codeLanguage": "yaml",
+              "codeContent": "services:\n  npm:\n    image: 'jc21/nginx-proxy-manager:latest'\n    container_name: nginx-proxy-manager\n    restart: unless-stopped\n    ports:\n      - '80:80'\n      - '81:81'  # Giao diện quản trị UI\n      - '443:443'\n    volumes:\n      - ./data:/data\n      - ./letsencrypt:/etc/letsencrypt\n    networks:\n      - proxy-tier\n\nnetworks:\n  proxy-tier:\n    external: true",
               "calloutType": "info",
               "calloutTitle": "Đăng nhập ban đầu",
               "calloutTitleVi": "Đăng nhập ban đầu",
-              "calloutText": "Truy cập http://IP_VPS:81 để vào trang quản trị. Tài khoản mặc định: Email 'admin@example.com', Mật khẩu 'changeme'.",
-              "calloutTextVi": "Truy cập http://IP_VPS:81 để vào trang quản trị. Tài khoản mặc định: Email 'admin@example.com', Mật khẩu 'changeme'."
+              "calloutText": "Mở cổng 81 vào IP VPS để thiết lập tài khoản admin. Sau đó trỏ domain CNAME/A về IP VPS và click 'Request a new SSL Certificate'.",
+              "calloutTextVi": "Mở cổng 81 vào IP VPS để thiết lập tài khoản admin. Sau đó trỏ domain CNAME/A về IP VPS và click 'Request a new SSL Certificate'."
             }
           ]
         },
         {
-          "id": "docker-bai-17-project-mau",
-          "seriesId": "docker-zero-to-hero",
-          "lessonNumber": "Bài 17",
+          "id": "docker-bai-7-security",
+          "seriesId": "docker-series",
+          "lessonNumber": "Bài 7",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Bảo Mật Container: Hardening Linux, Non-Root User & Giới Hạn Tài Nguyên",
+          "titleVi": "Bảo Mật Container: Hardening Linux, Non-Root User & Giới Hạn Tài Nguyên",
+          "readingTime": "14 phút đọc",
+          "publishedDate": "14/10/2026",
+          "summary": "Bảo vệ máy chủ VPS trước nguy cơ container breakout: chạy container dưới user không có quyền root, giới hạn RAM/CPU (cgroups) và đọc file hệ thống ở chế độ read-only.",
+          "summaryVi": "Bảo vệ máy chủ VPS trước nguy cơ container breakout: chạy container dưới user không có quyền root, giới hạn RAM/CPU (cgroups) và đọc file hệ thống ở chế độ read-only.",
+          "tags": ["security", "hardening", "non-root", "cgroups"],
+          "sections": [
+            {
+              "heading": "1. Nguyên tắc đặc quyền tối thiểu (Least Privilege)",
+              "headingVi": "1. Nguyên tắc đặc quyền tối thiểu (Least Privilege)",
+              "paragraphs": [
+                "Mặc định, nếu không khai báo `USER` trong Dockerfile, container sẽ chạy dưới quyền root (UID 0). Nếu hacker tìm ra lỗ hổng Remote Code Execution trong app của bạn, họ có thể khai thác lỗi kernel để chiếm toàn quyền điều khiển VPS máy chủ."
+              ],
+              "paragraphsVi": [
+                "Mặc định, nếu không khai báo `USER` trong Dockerfile, container sẽ chạy dưới quyền root (UID 0). Khi hacker tìm ra lỗ hổng Remote Code Execution trong app của bạn, họ có thể khai thác lỗi kernel để chiếm toàn quyền điều khiển VPS máy chủ."
+              ],
+              "codeTitle": "Cấu hình bảo mật và giới hạn RAM/CPU trong Compose",
+              "codeLanguage": "yaml",
+              "codeContent": "services:\n  api:\n    image: my-secure-api:latest\n    user: \"1001:1001\"  # Chạy bằng user không có quyền root\n    read_only: true     # Khóa toàn bộ filesystem chỉ đọc\n    tmpfs:\n      - /tmp            # Chỉ cho phép ghi tạm vào RAM\n    deploy:\n      resources:\n        limits:\n          cpus: '0.50'\n          memory: 512M",
+              "calloutType": "warning",
+              "calloutTitle": "Cảnh báo OOM",
+              "calloutTitleVi": "Cảnh báo OOM",
+              "calloutText": "Luôn đặt memory limit để một container rò rỉ bộ nhớ không làm treo đứng toàn bộ máy chủ VPS.",
+              "calloutTextVi": "Luôn đặt memory limit để một container rò rỉ bộ nhớ không làm treo đứng toàn bộ máy chủ VPS."
+            }
+          ]
+        },
+        {
+          "id": "docker-bai-8-project-mau",
+          "seriesId": "docker-series",
+          "lessonNumber": "Bài 8",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
           "title": "Docker Compose trong thực tế – Tổng hợp project mẫu hoàn chỉnh",
           "titleVi": "Docker Compose trong thực tế – Tổng hợp project mẫu hoàn chỉnh",
           "readingTime": "18 phút đọc",
           "publishedDate": "15/10/2026",
-          "summary": "Bài tổng kết series: 5 project mẫu thực tế copy-paste chạy ngay: Gitea Git Server, Nextcloud Cloud Storage, n8n Automation, và Complete Monitoring Stack.",
-          "summaryVi": "Bài tổng kết series: 5 project mẫu thực tế copy-paste chạy ngay: Gitea Git Server, Nextcloud Cloud Storage, n8n Automation, và Complete Monitoring Stack.",
+          "summary": "Bài tổng kết chuyên đề: 5 project mẫu thực tế copy-paste chạy ngay: Gitea Git Server, Nextcloud Cloud Storage, n8n Automation, và Complete Monitoring Stack.",
+          "summaryVi": "Bài tổng kết chuyên đề: 5 project mẫu thực tế copy-paste chạy ngay: Gitea Git Server, Nextcloud Cloud Storage, n8n Automation, và Complete Monitoring Stack.",
           "tags": ["docker-compose", "gitea", "nextcloud", "n8n", "monitoring"],
           "sections": [
             {
@@ -193,49 +291,34 @@
               ],
               "codeTitle": "Cấu trúc thư mục & docker-compose.yml",
               "codeLanguage": "yaml",
-              "codeContent": "services:\n  gitea:\n    image: gitea/gitea:latest\n    container_name: gitea\n    restart: unless-stopped\n    ports:\n      - \"3000:3000\"\n      - \"2222:22\"\n    environment:\n      - USER_UID=1000\n      - USER_GID=1000\n      - GITEA__database__DB_TYPE=postgres\n      - GITEA__database__HOST=gitea-db:5432\n      - GITEA__database__NAME=gitea\n      - GITEA__database__USER=gitea\n      - GITEA__database__PASSWD=gitea_secret_password\n    volumes:\n      - gitea_data:/data\n      - /etc/timezone:/etc/timezone:ro\n      - /etc/localtime:/etc/localtime:ro\n    depends_on:\n      gitea-db:\n        condition: service_healthy\n    networks:\n      - gitea-net\n\n  gitea-db:\n    image: postgres:16-alpine\n    container_name: gitea-db\n    restart: unless-stopped\n    environment:\n      - POSTGRES_USER=gitea\n      - POSTGRES_PASSWORD=gitea_secret_password\n      - POSTGRES_DB=gitea\n    volumes:\n      - gitea_db_data:/var/lib/postgresql/data\n    healthcheck:\n      test: [\"CMD-SHELL\", \"pg_isready -U gitea\"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n    networks:\n      - gitea-net\n\nvolumes:\n  gitea_data:\n  gitea_db_data:\n\nnetworks:\n  gitea-net:",
+              "codeContent": "services:\n  gitea:\n    image: gitea/gitea:latest\n    container_name: gitea\n    restart: unless-stopped\n    ports:\n      - \"3000:3000\"\n      - \"2222:22\"\n    environment:\n      - USER_UID=1000\n      - USER_GID=1000\n      - GITEA__database__DB_TYPE=postgres\n      - GITEA__database__HOST=gitea-db:5432\n      - GITEA__database__NAME=gitea\n      - GITEA__database__USER=gitea\n      - GITEA__database__PASSWD=gitea_secret_password\n    volumes:\n      - gitea_data:/data\n    depends_on:\n      gitea-db:\n        condition: service_healthy\n    networks:\n      - gitea-net\n\n  gitea-db:\n    image: postgres:16-alpine\n    container_name: gitea-db\n    restart: unless-stopped\n    environment:\n      - POSTGRES_USER=gitea\n      - POSTGRES_PASSWORD=gitea_secret_password\n      - POSTGRES_DB=gitea\n    volumes:\n      - gitea_db_data:/var/lib/postgresql/data\n    healthcheck:\n      test: [\"CMD-SHELL\", \"pg_isready -U gitea\"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n    networks:\n      - gitea-net\n\nvolumes:\n  gitea_data:\n  gitea_db_data:\n\nnetworks:\n  gitea-net:",
               "calloutType": "tip",
               "calloutTitle": "Điểm nhấn kỹ thuật",
               "calloutTitleVi": "Điểm nhấn kỹ thuật",
               "calloutText": "Cấu hình 'condition: service_healthy' kết hợp lệnh 'pg_isready' đảm bảo Gitea không bao giờ bị lỗi kết nối cơ sở dữ liệu khi hệ thống khởi động lại.",
               "calloutTextVi": "Cấu hình 'condition: service_healthy' kết hợp lệnh 'pg_isready' đảm bảo Gitea không bao giờ bị lỗi kết nối cơ sở dữ liệu khi hệ thống khởi động lại."
-            },
-            {
-              "heading": "Project 2: Complete Monitoring Stack (Uptime Kuma + Prometheus + Grafana)",
-              "headingVi": "Project 2: Complete Monitoring Stack (Uptime Kuma + Prometheus + Grafana)",
-              "paragraphs": [
-                "Giám sát VPS/Server toàn diện: Uptime Kuma kiểm tra độ sẵn sàng và gửi cảnh báo qua Telegram; Node Exporter thu thập dữ liệu phần cứng; Prometheus cào metrics định kỳ; và Grafana hiển thị biểu đồ trực quan."
-              ],
-              "paragraphsVi": [
-                "Giám sát VPS/Server toàn diện: Uptime Kuma kiểm tra độ sẵn sàng và gửi cảnh báo qua Telegram; Node Exporter thu thập dữ liệu phần cứng; Prometheus cào metrics định kỳ; và Grafana hiển thị biểu đồ trực quan."
-              ],
-              "codeTitle": "docker-compose.yml cho Monitoring Stack",
-              "codeLanguage": "yaml",
-              "codeContent": "services:\n  uptime-kuma:\n    image: louislam/uptime-kuma:latest\n    container_name: uptime-kuma\n    restart: unless-stopped\n    ports:\n      - \"3001:3001\"\n    volumes:\n      - uptime_kuma_data:/app/data\n    networks:\n      - monitoring-net\n\n  prometheus:\n    image: prom/prometheus:latest\n    container_name: prometheus\n    restart: unless-stopped\n    ports:\n      - \"9090:9090\"\n    command:\n      - '--config.file=/etc/prometheus/prometheus.yml'\n      - '--storage.tsdb.retention.time=15d'\n    volumes:\n      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro\n      - prometheus_data:/prometheus\n    networks:\n      - monitoring-net\n\n  node-exporter:\n    image: prom/node-exporter:latest\n    container_name: node-exporter\n    restart: unless-stopped\n    volumes:\n      - /proc:/host/proc:ro\n      - /sys:/host/sys:ro\n      - /:/rootfs:ro\n    command:\n      - '--path.procfs=/host/proc'\n      - '--path.sysfs=/host/sys'\n      - '--path.rootfs=/rootfs'\n    networks:\n      - monitoring-net\n\n  grafana:\n    image: grafana/grafana:latest\n    container_name: grafana\n    restart: unless-stopped\n    ports:\n      - \"3000:3000\"\n    environment:\n      - GF_SECURITY_ADMIN_PASSWORD=grafana_secret_password\n    volumes:\n      - grafana_data:/var/lib/grafana\n    networks:\n      - monitoring-net\n\nvolumes:\n  uptime_kuma_data:\n  prometheus_data:\n  grafana_data:\n\nnetworks:\n  monitoring-net:",
-              "calloutType": "info",
-              "calloutTitle": "Hướng dẫn sử dụng",
-              "calloutTitleVi": "Hướng dẫn sử dụng",
-              "calloutText": "Trong Grafana, thêm Prometheus datasource tại 'http://prometheus:9090' và import Dashboard ID 1860 (Node Exporter Full) để theo dõi ngay lập tức CPU, RAM, ổ cứng của VPS.",
-              "calloutTextVi": "Trong Grafana, thêm Prometheus datasource tại 'http://prometheus:9090' và import Dashboard ID 1860 (Node Exporter Full) để theo dõi ngay lập tức CPU, RAM, ổ cứng của VPS."
             }
           ]
         }
       ]
     },
     {
-      "id": "k8s-hands-on",
+      "id": "k8s-series",
       "title": "Kubernetes (K8s) Production Hands-On",
-      "titleVi": "Kubernetes (K8s) Thực Chiến Cho Developer & DevOps",
+      "titleVi": "Chuyên Đề Kubernetes: Điều Phối Container Cụm Thực Chiến",
       "icon": "bi-boxes",
       "color": "#326ce5",
-      "badge": "Chuỗi 5 Bài",
-      "description": "Master container orchestration from cluster components, deployments, zero-downtime rolling updates, to ingress routing, auto-scaling, and disaster triage.",
-      "descriptionVi": "Làm chủ điều phối container từ kiến trúc cụm K8s, viết manifest YAML chuẩn đến rollout không gián đoạn, Ingress SSL, tự động co giãn và xử lý sự cố khẩn cấp.",
+      "badge": "6 Bài Viết",
+      "description": "Lộ trình học K8s từ bản chất kiến trúc Control Plane, Pods, ReplicaSet đến Ingress, Rolling Update và xử lý sự cố OOMKilled trên Production.",
+      "descriptionVi": "Lộ trình học K8s từ bản chất kiến trúc Control Plane, Pods, ReplicaSet đến Ingress, Rolling Update và xử lý sự cố OOMKilled trên Production.",
       "articles": [
         {
           "id": "k8s-bai-1-kien-truc",
-          "seriesId": "k8s-hands-on",
+          "seriesId": "k8s-series",
           "lessonNumber": "Bài 1",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
           "title": "Giải phẫu kiến trúc K8s: Control Plane, Worker Node & Vòng đời của Pod",
           "titleVi": "Giải phẫu kiến trúc K8s: Control Plane, Worker Node & Vòng đời của Pod",
           "readingTime": "10 phút đọc",
@@ -248,55 +331,161 @@
               "heading": "1. Các thành phần cốt lõi của cụm Kubernetes",
               "headingVi": "1. Các thành phần cốt lõi của cụm Kubernetes",
               "paragraphs": [
-                "Kubernetes chia làm hai phần chính: Control Plane (bộ não điều khiển) và Worker Nodes (nơi chạy các container thực tế).",
-                "Control Plane gồm: kube-apiserver (cổng giao tiếp REST), etcd (cơ sở dữ liệu lưu trạng thái cụm), kube-scheduler (phân bổ Pod vào Node phù hợp), và kube-controller-manager (đảm bảo trạng thái thực tế luôn khớp với trạng thái mong muốn).",
-                "Worker Node gồm: kubelet (giao tiếp với apiserver và điều khiển container runtime), kube-proxy (định tuyến mạng), và Container Runtime (Containerd)."
+                "Cụm Kubernetes được chia thành hai nhóm chính: Control Plane (bộ não điều hành) và Worker Nodes (nơi chạy ứng dụng thực tế).",
+                "Trong Control Plane, `kube-apiserver` là cổng giao tiếp duy nhất nhận lệnh từ `kubectl`; `etcd` lưu trữ toàn bộ trạng thái cụm; `kube-scheduler` quyết định Pod sẽ rơi vào Node nào; và `kube-controller-manager` đảm bảo số lượng bản sao mong muốn luôn được duy trì."
               ],
               "paragraphsVi": [
-                "Kubernetes chia làm hai phần chính: Control Plane (bộ não điều khiển) và Worker Nodes (nơi chạy các container thực tế).",
-                "Control Plane gồm: kube-apiserver (cổng giao tiếp REST), etcd (cơ sở dữ liệu lưu trạng thái cụm), kube-scheduler (phân bổ Pod vào Node phù hợp), và kube-controller-manager (đảm bảo trạng thái thực tế luôn khớp với trạng thái mong muốn).",
-                "Worker Node gồm: kubelet (giao tiếp với apiserver và điều khiển container runtime), kube-proxy (định tuyến mạng), và Container Runtime (Containerd)."
+                "Cụm Kubernetes được chia thành hai nhóm chính: Control Plane (bộ não điều hành) và Worker Nodes (nơi chạy ứng dụng thực tế).",
+                "Trong Control Plane, `kube-apiserver` là cổng giao tiếp duy nhất nhận lệnh từ `kubectl`; `etcd` lưu trữ toàn bộ trạng thái cụm; `kube-scheduler` quyết định Pod sẽ rơi vào Node nào; và `kube-controller-manager` đảm bảo số lượng bản sao mong muốn luôn được duy trì."
               ],
-              "codeTitle": "Kiểm tra trạng thái cụm Kubernetes bằng kubectl",
+              "codeTitle": "Kiểm tra trạng thái cluster bằng kubectl",
               "codeLanguage": "bash",
-              "codeContent": "kubectl cluster-info\nkubectl get nodes -o wide",
+              "codeContent": "kubectl cluster-info\nkubectl get nodes -o wide\nkubectl get pods -A",
               "calloutType": "tip",
-              "calloutTitle": "Nguyên lý cơ bản",
-              "calloutTitleVi": "Nguyên lý cơ bản",
-              "calloutText": "Trong K8s, bạn không bao giờ quản lý Pod đơn lẻ bằng tay; bạn luôn định nghĩa Deployment để Kubernetes tự động phục hồi (Self-Healing) khi Pod gặp sự cố.",
-              "calloutTextVi": "Trong K8s, bạn không bao giờ quản lý Pod đơn lẻ bằng tay; bạn luôn định nghĩa Deployment để Kubernetes tự động phục hồi (Self-Healing) khi Pod gặp sự cố."
+              "calloutTitle": "Ghi nhớ",
+              "calloutTitleVi": "Ghi nhớ",
+              "calloutText": "Pod là đơn vị thực thi nhỏ nhất trong K8s. Một Pod có thể chứa một hoặc nhiều container chia sẻ chung Network Namespace và Storage Volume.",
+              "calloutTextVi": "Pod là đơn vị thực thi nhỏ nhất trong K8s. Một Pod có thể chứa một hoặc nhiều container chia sẻ chung Network Namespace và Storage Volume."
             }
           ]
         },
         {
-          "id": "k8s-bai-4-triage",
-          "seriesId": "k8s-hands-on",
-          "lessonNumber": "Bài 4",
-          "title": "Cấp cứu sự cố Pod CrashLoopBackOff & OOMKilled trên Production trong 5 phút",
-          "titleVi": "Cấp cứu sự cố Pod CrashLoopBackOff & OOMKilled trên Production trong 5 phút",
-          "readingTime": "14 phút đọc",
-          "publishedDate": "14/10/2026",
-          "summary": "Quy trình cấp cứu thần tốc khi nhận cảnh báo PagerDuty: bắt bệnh nguyên nhân Pod bị chết liên tục, đọc log phiên trước khi crash và gắn debug container.",
-          "summaryVi": "Quy trình cấp cứu thần tốc khi nhận cảnh báo PagerDuty: bắt bệnh nguyên nhân Pod bị chết liên tục, đọc log phiên trước khi crash và gắn debug container.",
-          "tags": ["k8s", "troubleshooting", "oomkilled", "sre"],
+          "id": "k8s-bai-2-deployments",
+          "seriesId": "k8s-series",
+          "lessonNumber": "Bài 2",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
+          "title": "Tạo Deployment đầu tiên & Quản lý Scale số lượng Pods",
+          "titleVi": "Tạo Deployment đầu tiên & Quản lý Scale số lượng Pods",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "12/10/2026",
+          "summary": "Viết file manifest YAML định nghĩa Deployment, tự động tái tạo Pod khi container gặp sự cố, và scale lên 5 replicas chỉ bằng 1 câu lệnh.",
+          "summaryVi": "Viết file manifest YAML định nghĩa Deployment, tự động tái tạo Pod khi container gặp sự cố, và scale lên 5 replicas chỉ bằng 1 câu lệnh.",
+          "tags": ["deployment", "yaml", "scaling"],
           "sections": [
             {
-              "heading": "1. Quy trình chẩn đoán 4 bước khi Pod bị CrashLoopBackOff",
-              "headingVi": "1. Quy trình chẩn đoán 4 bước khi Pod bị CrashLoopBackOff",
+              "heading": "1. Viết Deployment Manifest chuẩn",
+              "headingVi": "1. Viết Deployment Manifest chuẩn",
               "paragraphs": [
-                "CrashLoopBackOff xảy ra khi container khởi động lên nhưng bị tắt (exit) ngay sau đó, khiến Kubernetes phải khởi động lại liên tục với thời gian chờ tăng dần (back-off delay).",
-                "Nguyên nhân phổ biến nhất: Lỗi kết nối database (thiếu biến môi trường), cổng lắng nghe không khớp, file cấu hình bị thiếu, hoặc LivenessProbe quá khắt khe."
+                "Không bao giờ tạo Pod trần (naked pod) trên production vì khi node chết, Pod sẽ chết vĩnh viễn. Thay vào đó, hãy luôn bọc Pod trong một `Deployment` để được hỗ trợ tự phục hồi (Self-Healing)."
               ],
               "paragraphsVi": [
-                "CrashLoopBackOff xảy ra khi container khởi động lên nhưng bị tắt (exit) ngay sau đó, khiến Kubernetes phải khởi động lại liên tục với thời gian chờ tăng dần (back-off delay).",
-                "Nguyên nhân phổ biến nhất: Lỗi kết nối database (thiếu biến môi trường), cổng lắng nghe không khớp, file cấu hình bị thiếu, hoặc LivenessProbe quá khắt khe."
+                "Không bao giờ tạo Pod trần (naked pod) trên production vì khi node chết, Pod sẽ chết vĩnh viễn. Thay vào đó, hãy luôn bọc Pod trong một `Deployment` để được hỗ trợ tự phục hồi (Self-Healing)."
               ],
-              "codeTitle": "Lệnh đọc log của phiên container vừa chết",
+              "codeTitle": "deployment.yaml cho ứng dụng Web",
+              "codeLanguage": "yaml",
+              "codeContent": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web-deployment\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: web\n  template:\n    metadata:\n      labels:\n        app: web\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:alpine\n        ports:\n        - containerPort: 80",
+              "calloutType": "info",
+              "calloutTitle": "Lệnh áp dụng",
+              "calloutTitleVi": "Lệnh áp dụng",
+              "calloutText": "Chạy 'kubectl apply -f deployment.yaml' và dùng lệnh 'kubectl scale deployment web-deployment --replicas=5' để tăng tải lập tức.",
+              "calloutTextVi": "Chạy 'kubectl apply -f deployment.yaml' và dùng lệnh 'kubectl scale deployment web-deployment --replicas=5' để tăng tải lập tức."
+            }
+          ]
+        },
+        {
+          "id": "k8s-bai-3-networking",
+          "seriesId": "k8s-series",
+          "lessonNumber": "Bài 3",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Mạng trong K8s: Phân biệt ClusterIP, NodePort, LoadBalancer và Ingress",
+          "titleVi": "Mạng trong K8s: Phân biệt ClusterIP, NodePort, LoadBalancer và Ingress",
+          "readingTime": "15 phút đọc",
+          "publishedDate": "13/10/2026",
+          "summary": "Cách các Pod giao tiếp nội bộ qua Service, mở cổng ra ngoài Internet qua Ingress Controller và cấu hình tự động trỏ Domain SSL.",
+          "summaryVi": "Cách các Pod giao tiếp nội bộ qua Service, mở cổng ra ngoài Internet qua Ingress Controller và cấu hình tự động trỏ Domain SSL.",
+          "tags": ["networking", "ingress", "clusterip"],
+          "sections": [
+            {
+              "heading": "1. Vì sao Pod IP không đáng tin cậy?",
+              "headingVi": "1. Vì sao Pod IP không đáng tin cậy?",
+              "paragraphs": [
+                "Pod trong K8s có tính tạm thời (ephemeral). Khi Pod bị xóa và tạo lại, nó nhận 1 địa chỉ IP hoàn toàn mới. Do đó ta cần đối tượng `Service` để cung cấp một Virtual IP tĩnh và bộ cân bằng tải nội bộ."
+              ],
+              "paragraphsVi": [
+                "Pod trong K8s có tính tạm thời (ephemeral). Khi Pod bị xóa và tạo lại, nó nhận 1 địa chỉ IP hoàn toàn mới. Do đó ta cần đối tượng `Service` để cung cấp một Virtual IP tĩnh và bộ cân bằng tải nội bộ."
+              ],
+              "codeTitle": "Cấu hình Service ClusterIP và Ingress",
+              "codeLanguage": "yaml",
+              "codeContent": "apiVersion: v1\nkind: Service\nmetadata:\n  name: web-service\nspec:\n  selector:\n    app: web\n  ports:\n  - port: 80\n    targetPort: 80",
+              "calloutType": "tip",
+              "calloutTitle": "Thực tế Production",
+              "calloutTitleVi": "Thực tế Production",
+              "calloutText": "Trên cụm production, 99% các dịch vụ đều dùng Service loại ClusterIP kết hợp một Ingress duy nhất để tiết kiệm chi phí Load Balancer của Cloud.",
+              "calloutTextVi": "Trên cụm production, 99% các dịch vụ đều dùng Service loại ClusterIP kết hợp một Ingress duy nhất để tiết kiệm chi phí Load Balancer của Cloud."
+            }
+          ]
+        },
+        {
+          "id": "k8s-bai-4-rolling-updates",
+          "seriesId": "k8s-series",
+          "lessonNumber": "Bài 4",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Triển khai không gián đoạn (Zero-Downtime) & Liveness/Readiness Probes",
+          "titleVi": "Triển khai không gián đoạn (Zero-Downtime) & Liveness/Readiness Probes",
+          "readingTime": "14 phút đọc",
+          "publishedDate": "14/10/2026",
+          "summary": "Bảo đảm người dùng không bao giờ gặp lỗi 502 Bad Gateway khi deploy version mới nhờ vào chiến lược RollingUpdate, maxSurge, maxUnavailable và Probe checks.",
+          "summaryVi": "Bảo đảm người dùng không bao giờ gặp lỗi 502 Bad Gateway khi deploy version mới nhờ vào chiến lược RollingUpdate, maxSurge, maxUnavailable và Probe checks.",
+          "tags": ["zero-downtime", "probes", "rolling-update"],
+          "sections": [
+            {
+              "heading": "1. Sự khác nhau giữa Liveness và Readiness Probe",
+              "headingVi": "1. Sự khác nhau giữa Liveness và Readiness Probe",
+              "paragraphs": [
+                "Readiness Probe kiểm tra xem Pod đã khởi động xong xuôi (đã kết nối DB, nạp cache) để bắt đầu nhận traffic hay chưa. Nếu probe này chưa pass, Service sẽ không chuyển request tới Pod.",
+                "Liveness Probe kiểm tra xem ứng dụng có bị deadlock hay treo hay không. Nếu probe này fail, K8s sẽ tự động restart container."
+              ],
+              "paragraphsVi": [
+                "Readiness Probe kiểm tra xem Pod đã khởi động xong xuôi (đã kết nối DB, nạp cache) để bắt đầu nhận traffic hay chưa. Nếu probe này chưa pass, Service sẽ không chuyển request tới Pod.",
+                "Liveness Probe kiểm tra xem ứng dụng có bị deadlock hay treo hay không. Nếu probe này fail, K8s sẽ tự động restart container."
+              ],
+              "codeTitle": "Cấu hình Probes chuẩn",
+              "codeLanguage": "yaml",
+              "codeContent": "readinessProbe:\n  httpGet:\n    path: /health/ready\n    port: 8080\n  initialDelaySeconds: 10\n  periodSeconds: 5\nlivenessProbe:\n  httpGet:\n    path: /health/live\n    port: 8080\n  initialDelaySeconds: 15\n  periodSeconds: 10",
+              "calloutType": "tip",
+              "calloutTitle": "Lưu ý quan trọng",
+              "calloutTitleVi": "Lưu ý quan trọng",
+              "calloutText": "Không bao giờ để Liveness Probe trỏ tới endpoint phụ thuộc bên ngoài như database, vì nếu DB chậm, K8s sẽ restart hàng loạt pod dẫn đến thảm họa sập cụm.",
+              "calloutTextVi": "Không bao giờ để Liveness Probe trỏ tới endpoint phụ thuộc bên ngoài như database, vì nếu DB chậm, K8s sẽ restart hàng loạt pod dẫn đến thảm họa sập cụm."
+            }
+          ]
+        },
+        {
+          "id": "k8s-bai-5-triage-oomkilled",
+          "seriesId": "k8s-series",
+          "lessonNumber": "Bài 5",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
+          "title": "Bắt Bệnh Production: Triage CrashLoopBackOff & OOMKilled cấp tốc",
+          "titleVi": "Bắt Bệnh Production: Triage CrashLoopBackOff & OOMKilled cấp tốc",
+          "readingTime": "16 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Quy trình điều tra sự cố trực tiếp khi Pod bị lỗi trên cụm Production: dùng kubectl describe, tra cứu Exit Code 137, và xem log của container đời trước (--previous).",
+          "summaryVi": "Quy trình điều tra sự cố trực tiếp khi Pod bị lỗi trên cụm Production: dùng kubectl describe, tra cứu Exit Code 137, và xem log của container đời trước (--previous).",
+          "tags": ["troubleshooting", "oomkilled", "crashloopbackoff"],
+          "sections": [
+            {
+              "heading": "1. Các bước điều tra sự cố chuẩn",
+              "headingVi": "1. Các bước điều tra sự cố chuẩn",
+              "paragraphs": [
+                "Khi nhận cảnh báo Pod bị CrashLoopBackOff, tuyệt đối không restart mù quáng. Hãy thực hiện 3 lệnh vàng theo đúng thứ tự để tìm nguyên nhân gốc rễ (Root Cause)."
+              ],
+              "paragraphsVi": [
+                "Khi nhận cảnh báo Pod bị CrashLoopBackOff, tuyệt đối không restart mù quáng. Hãy thực hiện 3 lệnh vàng theo đúng thứ tự để tìm nguyên nhân gốc rễ (Root Cause)."
+              ],
+              "codeTitle": "Bộ 3 lệnh cứu nguy production",
               "codeLanguage": "bash",
-              "codeContent": "# Bước 1: Soi sự kiện lỗi (Events)\nkubectl describe pod my-app-xyz -n prod\n\n# Bước 2: Đọc log của phiên container trước khi bị chết (--previous)\nkubectl logs my-app-xyz -n prod --previous --tail 200\n\n# Bước 3: Gắn container cứu hộ netshoot vào pod đang chạy\nkubectl debug -it my-app-xyz -n prod --image=nicolaka/netshoot --target=my-app",
+              "codeContent": "# Bước 1: Xem sự kiện chi tiết và Exit Code\nkubectl describe pod <pod-name>\n\n# Bước 2: Xem log ngay trước khi container bị chết\nkubectl logs <pod-name> --previous\n\n# Bước 3: Xem mức tiêu thụ RAM/CPU của Pod\nkubectl top pod <pod-name>",
               "calloutType": "warning",
-              "calloutTitle": "Cảnh báo khẩn cấp",
-              "calloutTitleVi": "Cảnh báo khẩn cấp",
+              "calloutTitle": "Exit Code 137",
+              "calloutTitleVi": "Exit Code 137",
               "calloutText": "Nếu Pod hiển thị 'Exit Code 137', đây là mã định danh của OOMKilled (Out Of Memory). Container đã vượt quá memory limit quy định và bị nhân Linux kill thẳng tay.",
               "calloutTextVi": "Nếu Pod hiển thị 'Exit Code 137', đây là mã định danh của OOMKilled (Out Of Memory). Container đã vượt quá memory limit quy định và bị nhân Linux kill thẳng tay."
             }
@@ -305,19 +494,57 @@
       ]
     },
     {
-      "id": "dotnet-advanced-deep-dive",
+      "id": "dotnet-series",
       "title": ".NET & C# Enterprise Engineering",
-      "titleVi": ".NET Chuyên Sâu: Performance, Microservices & Clean Architecture",
+      "titleVi": "Chuyên Đề .NET: Kỹ Thuật Lập Trình Doanh Nghiệp Chuyên Sâu",
       "icon": "bi-filetype-cs",
       "color": "#6366f1",
-      "badge": "Chuỗi 4 Bài",
-      "description": "Deep dive into production enterprise C# development: Clean Architecture scaffolding, EF Core optimization, Native AOT compilation, and production memory leak forensics.",
-      "descriptionVi": "Chuyên đề sâu về kỹ thuật phần mềm C# doanh nghiệp: Khởi tạo Clean Architecture, tối ưu hóa EF Core, biên dịch Native AOT và kỹ năng bắt bệnh rò rỉ bộ nhớ production.",
+      "badge": "5 Bài Viết",
+      "description": "Lộ trình kỹ thuật C# & .NET 10 từ Clean Architecture, tối ưu hóa Entity Framework Core, Caching đa tầng đến phân tích Memory Leak trên Production.",
+      "descriptionVi": "Lộ trình kỹ thuật C# & .NET 10 từ Clean Architecture, tối ưu hóa Entity Framework Core, Caching đa tầng đến phân tích Memory Leak trên Production.",
       "articles": [
         {
-          "id": "dotnet-bai-2-efcore-performance",
-          "seriesId": "dotnet-advanced-deep-dive",
+          "id": "dotnet-bai-1-clean-arch",
+          "seriesId": "dotnet-series",
+          "lessonNumber": "Bài 1",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
+          "title": "Clean Architecture & Dependency Injection chuẩn doanh nghiệp trong .NET 10",
+          "titleVi": "Clean Architecture & Dependency Injection chuẩn doanh nghiệp trong .NET 10",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "11/10/2026",
+          "summary": "Tổ chức Solution theo mô hình 4 tầng (Domain, Application, Infrastructure, API) bảo đảm mã nguồn dễ bảo trì, dễ test và độc lập với database.",
+          "summaryVi": "Tổ chức Solution theo mô hình 4 tầng (Domain, Application, Infrastructure, API) bảo đảm mã nguồn dễ bảo trì, dễ test và độc lập với database.",
+          "tags": ["dotnet", "clean-architecture", "design-patterns"],
+          "sections": [
+            {
+              "heading": "1. Nguyên lý phụ thuộc đảo ngược (Dependency Inversion)",
+              "headingVi": "1. Nguyên lý phụ thuộc đảo ngược (Dependency Inversion)",
+              "paragraphs": [
+                "Trọng tâm của Clean Architecture là tầng Domain nằm ở trong cùng, không tham chiếu bất kỳ thư viện bên ngoài nào. Tầng Application định nghĩa các Interface (như `IUserRepository`), và tầng Infrastructure sẽ hiện thực hóa Interface đó."
+              ],
+              "paragraphsVi": [
+                "Trọng tâm của Clean Architecture là tầng Domain nằm ở trong cùng, không tham chiếu bất kỳ thư viện bên ngoài nào. Tầng Application định nghĩa các Interface (như `IUserRepository`), và tầng Infrastructure sẽ hiện thực hóa Interface đó."
+              ],
+              "codeTitle": "Đăng ký DI Service theo nhóm rõ ràng",
+              "codeLanguage": "csharp",
+              "codeContent": "public static class DependencyInjection\n{\n    public static IServiceCollection AddApplicationServices(this IServiceCollection services)\n    {\n        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));\n        return services;\n    }\n}",
+              "calloutType": "tip",
+              "calloutTitle": "Lợi ích kiểm thử",
+              "calloutTitleVi": "Lợi ích kiểm thử",
+              "calloutText": "Nhờ phân tách rõ ràng, bạn có thể viết Unit Test cho toàn bộ nghiệp vụ trong Application layer mà không cần phải bật Database thật.",
+              "calloutTextVi": "Nhờ phân tách rõ ràng, bạn có thể viết Unit Test cho toàn bộ nghiệp vụ trong Application layer mà không cần phải bật Database thật."
+            }
+          ]
+        },
+        {
+          "id": "dotnet-bai-2-efcore",
+          "seriesId": "dotnet-series",
           "lessonNumber": "Bài 2",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
           "title": "Tối ưu hóa hiệu năng EF Core & Sinh SQL Migration Idempotent an toàn cho CI/CD",
           "titleVi": "Tối ưu hóa hiệu năng EF Core & Sinh SQL Migration Idempotent an toàn cho CI/CD",
           "readingTime": "14 phút đọc",
@@ -330,12 +557,10 @@
               "heading": "1. Bộ ba tối ưu hóa truy vấn đọc trong EF Core",
               "headingVi": "1. Bộ ba tối ưu hóa truy vấn đọc trong EF Core",
               "paragraphs": [
-                "Trong các API chỉ đọc dữ liệu hiển thị (GET requests), việc bật Change Tracker mặc định của EF Core là một sự lãng phí tài nguyên RAM và CPU rất lớn.",
-                "Sử dụng '.AsNoTracking()' giúp EF Core bỏ qua bước theo dõi đối tượng, tăng tốc độ truy vấn từ 2x - 3x. Khi join nhiều bảng có quan hệ 1-Nhiều, dùng '.AsSplitQuery()' để tránh bùng nổ dữ liệu trùng lặp (Cartesian Explosion)."
+                "Sử dụng `.AsNoTracking()` giúp EF Core bỏ qua bước theo dõi đối tượng, tăng tốc độ truy vấn từ 2x - 3x. Khi join nhiều bảng có quan hệ 1-Nhiều, dùng `.AsSplitQuery()` để tránh bùng nổ dữ liệu trùng lặp (Cartesian Explosion)."
               ],
               "paragraphsVi": [
-                "Trong các API chỉ đọc dữ liệu hiển thị (GET requests), việc bật Change Tracker mặc định của EF Core là một sự lãng phí tài nguyên RAM và CPU rất lớn.",
-                "Sử dụng '.AsNoTracking()' giúp EF Core bỏ qua bước theo dõi đối tượng, tăng tốc độ truy vấn từ 2x - 3x. Khi join nhiều bảng có quan hệ 1-Nhiều, dùng '.AsSplitQuery()' để tránh bùng nổ dữ liệu trùng lặp (Cartesian Explosion)."
+                "Sử dụng `.AsNoTracking()` giúp EF Core bỏ qua bước theo dõi đối tượng, tăng tốc độ truy vấn từ 2x - 3x. Khi join nhiều bảng có quan hệ 1-Nhiều, dùng `.AsSplitQuery()` để tránh bùng nổ dữ liệu trùng lặp (Cartesian Explosion)."
               ],
               "codeTitle": "Truy vấn C# tối ưu hóa hoàn hảo",
               "codeLanguage": "csharp",
@@ -345,33 +570,86 @@
               "calloutTitleVi": "Nguyên tắc vàng",
               "calloutText": "Luôn dùng Projection (.Select(...)) để chỉ lấy đúng những cột giao diện cần hiển thị, không bao giờ lấy toàn bộ các cột của bảng về RAM ứng dụng.",
               "calloutTextVi": "Luôn dùng Projection (.Select(...)) để chỉ lấy đúng những cột giao diện cần hiển thị, không bao giờ lấy toàn bộ các cột của bảng về RAM ứng dụng."
-            },
-            {
-              "heading": "2. Xuất Script Migration Idempotent cho Pipeline CI/CD",
-              "headingVi": "2. Xuất Script Migration Idempotent cho Pipeline CI/CD",
-              "paragraphs": [
-                "Không bao giờ gọi 'context.Database.Migrate()' khi khởi động ứng dụng trong môi trường microservices chạy nhiều pod, vì các pod sẽ tranh chấp khóa bảng và gây crash.",
-                "Thay vào đó, trong bước build CI/CD, hãy xuất file SQL migration với cờ '--idempotent'. Script này sẽ tự động kiểm tra bảng __EFMigrationsHistory và chỉ áp dụng những migration nào chưa có."
-              ],
-              "paragraphsVi": [
-                "Không bao giờ gọi 'context.Database.Migrate()' khi khởi động ứng dụng trong môi trường microservices chạy nhiều pod, vì các pod sẽ tranh chấp khóa bảng và gây crash.",
-                "Thay vào đó, trong bước build CI/CD, hãy xuất file SQL migration với cờ '--idempotent'. Script này sẽ tự động kiểm tra bảng __EFMigrationsHistory và chỉ áp dụng những migration nào chưa có."
-              ],
-              "codeTitle": "Lệnh sinh script migration idempotent",
-              "codeLanguage": "bash",
-              "codeContent": "dotnet ef migrations script \\\n  --idempotent \\\n  --project src/MyService.Infrastructure \\\n  --startup-project src/MyService.Api \\\n  --output ./migrations/apply_migrations.sql",
-              "calloutType": "info",
-              "calloutTitle": "Thực thi an toàn",
-              "calloutTitleVi": "Thực thi an toàn",
-              "calloutText": "File SQL này có thể chạy nhiều lần mà không bao giờ báo lỗi trùng lặp cấu trúc bảng.",
-              "calloutTextVi": "File SQL này có thể chạy nhiều lần mà không bao giờ báo lỗi trùng lặp cấu trúc bảng."
             }
           ]
         },
         {
-          "id": "dotnet-bai-4-memory-leak",
-          "seriesId": "dotnet-advanced-deep-dive",
+          "id": "dotnet-bai-3-caching",
+          "seriesId": "dotnet-series",
+          "lessonNumber": "Bài 3",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Chiến lược Caching Đa Tầng với HybridCache & Distributed Redis trong .NET 10",
+          "titleVi": "Chiến lược Caching Đa Tầng với HybridCache & Distributed Redis trong .NET 10",
+          "readingTime": "13 phút đọc",
+          "publishedDate": "13/10/2026",
+          "summary": "Tận dụng HybridCache mới trong .NET 10 kết hợp L1 In-Memory và L2 Redis phân tán, chống Cache Stampede bằng distributed locking.",
+          "summaryVi": "Tận dụng HybridCache mới trong .NET 10 kết hợp L1 In-Memory và L2 Redis phân tán, chống Cache Stampede bằng distributed locking.",
+          "tags": ["caching", "redis", "hybridcache"],
+          "sections": [
+            {
+              "heading": "1. Cơ chế hoạt động của HybridCache",
+              "headingVi": "1. Cơ chế hoạt động của HybridCache",
+              "paragraphs": [
+                "HybridCache tự động đọc trước từ RAM cục bộ (L1 - cực nhanh, nano giây). Nếu không có, nó đọc từ Redis (L2). Quan trọng hơn, nó có cơ chế tự khóa (stampede protection) để khi 10.000 user cùng gọi 1 key hết hạn, chỉ có 1 request được phép chạm vào database."
+              ],
+              "paragraphsVi": [
+                "HybridCache tự động đọc trước từ RAM cục bộ (L1 - cực nhanh, nano giây). Nếu không có, nó đọc từ Redis (L2). Quan trọng hơn, nó có cơ chế tự khóa (stampede protection) để khi 10.000 user cùng gọi 1 key hết hạn, chỉ có 1 request được phép chạm vào database."
+              ],
+              "codeTitle": "Sử dụng HybridCache trong C#",
+              "codeLanguage": "csharp",
+              "codeContent": "public async Task<ProductDto> GetProductAsync(int id)\n{\n    return await _hybridCache.GetOrCreateAsync(\n        $\"product-{id}\",\n        async cancel => await _db.Products.FindAsync(id, cancel),\n        new HybridCacheEntryOptions { Expiration = TimeSpan.FromMinutes(10) });\n}",
+              "calloutType": "tip",
+              "calloutTitle": "Đơn giản & Mạnh mẽ",
+              "calloutTitleVi": "Đơn giản & Mạnh mẽ",
+              "calloutText": "HybridCache thay thế hoàn toàn việc phải tự viết các đoạn code boilerplate if-null-then-set phức tạp.",
+              "calloutTextVi": "HybridCache thay thế hoàn toàn việc phải tự viết các đoạn code boilerplate if-null-then-set phức tạp."
+            }
+          ]
+        },
+        {
+          "id": "dotnet-bai-4-background-jobs",
+          "seriesId": "dotnet-series",
           "lessonNumber": "Bài 4",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Xử lý tác vụ nền hiệu năng cao: System.Threading.Channels & MassTransit",
+          "titleVi": "Xử lý tác vụ nền hiệu năng cao: System.Threading.Channels & MassTransit",
+          "readingTime": "15 phút đọc",
+          "publishedDate": "14/10/2026",
+          "summary": "Xây dựng hàng đợi in-memory siêu tốc bằng Channels không khóa (lock-free), và kết nối Message Broker RabbitMQ với thư viện MassTransit.",
+          "summaryVi": "Xây dựng hàng đợi in-memory siêu tốc bằng Channels không khóa (lock-free), và kết nối Message Broker RabbitMQ với thư viện MassTransit.",
+          "tags": ["channels", "backgroundservice", "rabbitmq", "masstransit"],
+          "sections": [
+            {
+              "heading": "1. Vì sao nên dùng Channels thay vì BlockingCollection?",
+              "headingVi": "1. Vì sao nên dùng Channels thay vì BlockingCollection?",
+              "paragraphs": [
+                "`System.Threading.Channels` hỗ trợ mô hình Producer-Consumer hoàn toàn bất đồng bộ (async/await), tối ưu hóa luồng ThreadPool và hỗ trợ cơ chế Backpressure để không làm tràn RAM khi producer đẩy dữ liệu quá nhanh."
+              ],
+              "paragraphsVi": [
+                "`System.Threading.Channels` hỗ trợ mô hình Producer-Consumer hoàn toàn bất đồng bộ (async/await), tối ưu hóa luồng ThreadPool và hỗ trợ cơ chế Backpressure để không làm tràn RAM khi producer đẩy dữ liệu quá nhanh."
+              ],
+              "codeTitle": "Khởi tạo Bounded Channel",
+              "codeLanguage": "csharp",
+              "codeContent": "var channel = Channel.CreateBounded<NotificationTask>(new BoundedChannelOptions(1000)\n{\n    FullMode = BoundedChannelFullMode.Wait\n});",
+              "calloutType": "info",
+              "calloutTitle": "Mô hình xử lý",
+              "calloutTitleVi": "Mô hình xử lý",
+              "calloutText": "Một BackgroundService đọc dữ liệu qua 'channel.Reader.ReadAllAsync(ct)' để xử lý ngầm email, thông báo và báo cáo mà API vẫn phản hồi 200 OK ngay lập tức.",
+              "calloutTextVi": "Một BackgroundService đọc dữ liệu qua 'channel.Reader.ReadAllAsync(ct)' để xử lý ngầm email, thông báo và báo cáo mà API vẫn phản hồi 200 OK ngay lập tức."
+            }
+          ]
+        },
+        {
+          "id": "dotnet-bai-5-memory-leak",
+          "seriesId": "dotnet-series",
+          "lessonNumber": "Bài 5",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
           "title": "Bắt bệnh rò rỉ bộ nhớ (Memory Leak) & CPU 100% bằng dotnet-dump và gcroot",
           "titleVi": "Bắt bệnh rò rỉ bộ nhớ (Memory Leak) & CPU 100% bằng dotnet-dump và gcroot",
           "readingTime": "16 phút đọc",
@@ -403,23 +681,96 @@
       ]
     },
     {
-      "id": "aws-cloud-hands-on",
+      "id": "aws-series",
       "title": "AWS Cloud Architecture Hands-On",
-      "titleVi": "Điện Toán Đám Mây AWS Từ Cơ Bản Đến Production",
+      "titleVi": "Chuyên Đề AWS Cloud: Kiến Trúc Đám Mây Thực Chiến",
       "icon": "bi-cloud-check-fill",
       "color": "#ea580c",
-      "badge": "Chuỗi 3 Bài",
-      "description": "Production AWS cloud patterns: IAM security, S3 static asset workflows, containerized ECS Fargate deployments, and Serverless architectures.",
-      "descriptionVi": "Thực hành thiết kế hạ tầng AWS: Phân quyền bảo mật IAM, lưu trữ S3, triển khai microservice ECS Fargate không máy chủ và tự động hóa với Terraform.",
+      "badge": "4 Bài Viết",
+      "description": "Lộ trình làm chủ AWS từ nền tảng mạng VPC, lưu trữ S3/CDN đến container không máy chủ ECS Fargate và tự động hóa với Terraform.",
+      "descriptionVi": "Lộ trình làm chủ AWS từ nền tảng mạng VPC, lưu trữ S3/CDN đến container không máy chủ ECS Fargate và tự động hóa với Terraform.",
       "articles": [
         {
-          "id": "aws-bai-2-ecs-fargate",
-          "seriesId": "aws-cloud-hands-on",
+          "id": "aws-bai-1-vpc-iam",
+          "seriesId": "aws-series",
+          "lessonNumber": "Bài 1",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
+          "title": "Tổng quan hạ tầng AWS: VPC, Subnet, Internet Gateway & Phân quyền IAM",
+          "titleVi": "Tổng quan hạ tầng AWS: VPC, Subnet, Internet Gateway & Phân quyền IAM",
+          "readingTime": "11 phút đọc",
+          "publishedDate": "12/10/2026",
+          "summary": "Thiết lập nền móng mạng an toàn trên AWS: Public Subnet cho Load Balancer, Private Subnet cho Database/Backend và quy tắc bảo mật IAM Roles.",
+          "summaryVi": "Thiết lập nền móng mạng an toàn trên AWS: Public Subnet cho Load Balancer, Private Subnet cho Database/Backend và quy tắc bảo mật IAM Roles.",
+          "tags": ["aws", "vpc", "iam", "security"],
+          "sections": [
+            {
+              "heading": "1. Thiết kế mạng VPC chuẩn doanh nghiệp",
+              "headingVi": "1. Thiết kế mạng VPC chuẩn doanh nghiệp",
+              "paragraphs": [
+                "Tuyệt đối không để cơ sở dữ liệu hoặc container backend ở Public Subnet có gắn Public IP. Mô hình chuẩn luôn là Public Subnet đón request ngoài internet qua ALB, sau đó chuyển tiếp vào Private Subnet."
+              ],
+              "paragraphsVi": [
+                "Tuyệt đối không để cơ sở dữ liệu hoặc container backend ở Public Subnet có gắn Public IP. Mô hình chuẩn luôn là Public Subnet đón request ngoài internet qua ALB, sau đó chuyển tiếp vào Private Subnet."
+              ],
+              "codeTitle": "Kiểm tra IAM identity bằng AWS CLI",
+              "codeLanguage": "bash",
+              "codeContent": "aws sts get-caller-identity\naws ec2 describe-vpcs",
+              "calloutType": "tip",
+              "calloutTitle": "IAM Roles vs Access Keys",
+              "calloutTitleVi": "IAM Roles vs Access Keys",
+              "calloutText": "Không bao giờ hardcode Access Key và Secret Key trong code. Khi chạy trên EC2 hoặc ECS, hãy gán IAM Task Role để ứng dụng tự nhận quyền tạm thời.",
+              "calloutTextVi": "Không bao giờ hardcode Access Key và Secret Key trong code. Khi chạy trên EC2 hoặc ECS, hãy gán IAM Task Role để ứng dụng tự nhận quyền tạm thời."
+            }
+          ]
+        },
+        {
+          "id": "aws-bai-2-s3-cloudfront",
+          "seriesId": "aws-series",
           "lessonNumber": "Bài 2",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Lưu trữ và phân phối Static Assets với AWS S3, CloudFront CDN & ACM SSL",
+          "titleVi": "Lưu trữ và phân phối Static Assets với AWS S3, CloudFront CDN & ACM SSL",
+          "readingTime": "13 phút đọc",
+          "publishedDate": "13/10/2026",
+          "summary": "Lưu trữ file tải lên người dùng an toàn trên S3, bật CloudFront CDN để cache tài nguyên toàn cầu và cấp chứng chỉ HTTPS miễn phí với AWS Certificate Manager.",
+          "summaryVi": "Lưu trữ file tải lên người dùng an toàn trên S3, bật CloudFront CDN để cache tài nguyên toàn cầu và cấp chứng chỉ HTTPS miễn phí với AWS Certificate Manager.",
+          "tags": ["s3", "cloudfront", "cdn", "acm"],
+          "sections": [
+            {
+              "heading": "1. Bảo vệ S3 Bucket bằng Origin Access Control (OAC)",
+              "headingVi": "1. Bảo vệ S3 Bucket bằng Origin Access Control (OAC)",
+              "paragraphs": [
+                "Không bao giờ bật Public Access cho S3 Bucket. Bằng cách kích hoạt OAC trong CloudFront, người dùng chỉ có thể truy cập file thông qua CDN có kiểm soát cache và SSL."
+              ],
+              "paragraphsVi": [
+                "Không bao giờ bật Public Access cho S3 Bucket. Bằng cách kích hoạt OAC trong CloudFront, người dùng chỉ có thể truy cập file thông qua CDN có kiểm soát cache và SSL."
+              ],
+              "codeTitle": "Đồng bộ file lên S3 bằng AWS CLI",
+              "codeLanguage": "bash",
+              "codeContent": "aws s3 sync ./dist s3://my-static-assets-bucket --delete\naws cloudfront create-invalidation --distribution-id $DIST_ID --paths \"/*\"",
+              "calloutType": "info",
+              "calloutTitle": "Cache Invalidation",
+              "calloutTitleVi": "Cache Invalidation",
+              "calloutText": "Mỗi lần deploy phiên bản frontend mới, hãy chạy lệnh create-invalidation để xóa cache cũ trên toàn bộ hệ thống PoP của CloudFront.",
+              "calloutTextVi": "Mỗi lần deploy phiên bản frontend mới, hãy chạy lệnh create-invalidation để xóa cache cũ trên toàn bộ hệ thống PoP của CloudFront."
+            }
+          ]
+        },
+        {
+          "id": "aws-bai-3-ecs-fargate",
+          "seriesId": "aws-series",
+          "lessonNumber": "Bài 3",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
           "title": "Triển khai Microservice không máy chủ trên AWS ECS Fargate & ALB",
           "titleVi": "Triển khai Microservice không máy chủ trên AWS ECS Fargate & ALB",
           "readingTime": "15 phút đọc",
-          "publishedDate": "13/10/2026",
+          "publishedDate": "14/10/2026",
           "summary": "Cách đóng gói image lên AWS ECR, cấu hình Task Definition Fargate (vCPU/RAM), gán Application Load Balancer và kích hoạt rolling deployment không downtime.",
           "summaryVi": "Cách đóng gói image lên AWS ECR, cấu hình Task Definition Fargate (vCPU/RAM), gán Application Load Balancer và kích hoạt rolling deployment không downtime.",
           "tags": ["aws", "ecs", "fargate", "cloudwatch"],
@@ -428,16 +779,14 @@
               "heading": "1. Mô hình kiến trúc ECS Fargate Serverless",
               "headingVi": "1. Mô hình kiến trúc ECS Fargate Serverless",
               "paragraphs": [
-                "Với ECS Fargate, bạn không cần phải quản lý máy chủ EC2, không cần vá lỗi hệ điều hành hay lo lắng về bảo trì phần cứng. AWS tự động cấp phát tài nguyên tính toán chính xác theo mức vCPU và RAM bạn khai báo trong Task Definition.",
-                "Hệ thống gồm: Application Load Balancer ở Public Subnet nhận request từ Internet, kiểm tra Health Check và chuyển tiếp vào các Task Fargate chạy an toàn trong Private Subnet."
+                "Với ECS Fargate, bạn không cần phải quản lý máy chủ EC2, không cần vá lỗi hệ điều hành hay lo lắng về bảo trì phần cứng. AWS tự động cấp phát tài nguyên tính toán chính xác theo mức vCPU và RAM bạn khai báo trong Task Definition."
               ],
               "paragraphsVi": [
-                "Với ECS Fargate, bạn không cần phải quản lý máy chủ EC2, không cần vá lỗi hệ điều hành hay lo lắng về bảo trì phần cứng. AWS tự động cấp phát tài nguyên tính toán chính xác theo mức vCPU và RAM bạn khai báo trong Task Definition.",
-                "Hệ thống gồm: Application Load Balancer ở Public Subnet nhận request từ Internet, kiểm tra Health Check và chuyển tiếp vào các Task Fargate chạy an toàn trong Private Subnet."
+                "Với ECS Fargate, bạn không cần phải quản lý máy chủ EC2, không cần vá lỗi hệ điều hành hay lo lắng về bảo trì phần cứng. AWS tự động cấp phát tài nguyên tính toán chính xác theo mức vCPU và RAM bạn khai báo trong Task Definition."
               ],
               "codeTitle": "Lệnh deploy image mới lên ECS Fargate bằng AWS CLI",
               "codeLanguage": "bash",
-              "codeContent": "# Đăng nhập ECR\naws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin <ecr-url>\n\n# Push image\ndocker tag my-api:latest <ecr-url>/my-api:latest\ndocker push <ecr-url>/my-api:latest\n\n# Yêu cầu ECS kéo image mới và cập nhật cuốn chiếu\naws ecs update-service \\\n  --cluster prod-cluster \\\n  --service order-api-service \\\n  --force-new-deployment\n\n# Xem log ứng dụng trực tiếp từ terminal\naws logs tail /ecs/order-api-service --follow",
+              "codeContent": "# Push image lên ECR\ndocker tag my-api:latest <ecr-url>/my-api:latest\ndocker push <ecr-url>/my-api:latest\n\n# Cập nhật ECS service\naws ecs update-service \\\n  --cluster prod-cluster \\\n  --service order-api-service \\\n  --force-new-deployment",
               "calloutType": "tip",
               "calloutTitle": "Bảo đảm Zero-Downtime",
               "calloutTitleVi": "Bảo đảm Zero-Downtime",
@@ -445,27 +794,65 @@
               "calloutTextVi": "Thiết lập 'minimumHealthyPercent = 100' đảm bảo ECS luôn duy trì 100% số lượng task phục vụ người dùng trước khi tắt các container phiên bản cũ."
             }
           ]
+        },
+        {
+          "id": "aws-bai-4-terraform",
+          "seriesId": "aws-series",
+          "lessonNumber": "Bài 4",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
+          "title": "Hạ tầng dưới dạng mã (IaC) tự động hóa AWS với Terraform từ A-Z",
+          "titleVi": "Hạ tầng dưới dạng mã (IaC) tự động hóa AWS với Terraform từ A-Z",
+          "readingTime": "16 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Không click chuột cấu hình thủ công: Định nghĩa toàn bộ VPC, RDS, ECS và Security Groups bằng file mã nguồn Terraform .tf có thể tái tạo cụm trong 5 phút.",
+          "summaryVi": "Không click chuột cấu hình thủ công: Định nghĩa toàn bộ VPC, RDS, ECS và Security Groups bằng file mã nguồn Terraform .tf có thể tái tạo cụm trong 5 phút.",
+          "tags": ["terraform", "iac", "devops", "automation"],
+          "sections": [
+            {
+              "heading": "1. Khởi tạo và Quản lý Terraform State",
+              "headingVi": "1. Khởi tạo và Quản lý Terraform State",
+              "paragraphs": [
+                "Terraform lưu trạng thái tài nguyên trong file state. Trên môi trường team, state luôn được lưu ở S3 Bucket kết hợp DynamoDB để khóa tránh ghi đè đồng thời."
+              ],
+              "paragraphsVi": [
+                "Terraform lưu trạng thái tài nguyên trong file state. Trên môi trường team, state luôn được lưu ở S3 Bucket kết hợp DynamoDB để khóa tránh ghi đè đồng thời."
+              ],
+              "codeTitle": "Các lệnh thực thi Terraform",
+              "codeLanguage": "bash",
+              "codeContent": "terraform init\nterraform plan -out=tfplan\nterraform apply tfplan",
+              "calloutType": "warning",
+              "calloutTitle": "Quy tắc an toàn",
+              "calloutTitleVi": "Quy tắc an toàn",
+              "calloutText": "Luôn chạy 'terraform plan' và xem kỹ danh sách tài nguyên sẽ bị sửa/xóa trước khi chạy 'apply'.",
+              "calloutTextVi": "Luôn chạy 'terraform plan' và xem kỹ danh sách tài nguyên sẽ bị sửa/xóa trước khi chạy 'apply'."
+            }
+          ]
         }
       ]
     },
     {
-      "id": "ai-mcp-engineering",
+      "id": "ai-mcp-series",
       "title": "AI Engineering & Model Context Protocol (MCP)",
-      "titleVi": "Kỹ Thuật AI & Chuẩn MCP (Model Context Protocol)",
+      "titleVi": "Chuyên Đề AI & Model Context Protocol (MCP)",
       "icon": "bi-robot",
       "color": "#10b981",
-      "badge": "Chuỗi 3 Bài",
-      "description": "Next-gen AI engineering: Understanding Model Context Protocol (MCP), building custom tools in Python & C# for AI agents, and serving offline LLMs with Ollama.",
-      "descriptionVi": "Đón đầu xu hướng công nghệ AI: Giao thức Model Context Protocol (MCP), viết công cụ Tool cho Claude/Cursor/Antigravity bằng Python & C#, và tự host mô hình cục bộ với Ollama.",
+      "badge": "4 Bài Viết",
+      "description": "Lộ trình kỹ thuật AI hiện đại: Khái niệm Model Context Protocol (MCP), chạy Local LLM với Ollama, viết custom MCP Tools và hệ thống Multi-Agent.",
+      "descriptionVi": "Lộ trình kỹ thuật AI hiện đại: Khái niệm Model Context Protocol (MCP), chạy Local LLM với Ollama, viết custom MCP Tools và hệ thống Multi-Agent.",
       "articles": [
         {
           "id": "ai-bai-1-mcp-overview",
-          "seriesId": "ai-mcp-engineering",
+          "seriesId": "ai-mcp-series",
           "lessonNumber": "Bài 1",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
           "title": "Model Context Protocol (MCP) là gì? Kiến trúc Host, Client và Server",
           "titleVi": "Model Context Protocol (MCP) là gì? Kiến trúc Host, Client và Server",
           "readingTime": "11 phút đọc",
-          "publishedDate": "15/10/2026",
+          "publishedDate": "13/10/2026",
           "summary": "Tìm hiểu giao thức chuẩn hóa mở MCP do Anthropic khởi xướng, cách AI kết nối an toàn với database, API nội bộ và hệ thống file thông qua Tools & Resources.",
           "summaryVi": "Tìm hiểu giao thức chuẩn hóa mở MCP do Anthropic khởi xướng, cách AI kết nối an toàn với database, API nội bộ và hệ thống file thông qua Tools & Resources.",
           "tags": ["ai", "mcp", "anthropic", "llm-tools"],
@@ -474,14 +861,14 @@
               "heading": "1. Vì sao thế giới AI cần chuẩn MCP?",
               "headingVi": "1. Vì sao thế giới AI cần chuẩn MCP?",
               "paragraphs": [
-                "Trước khi có MCP, mỗi ứng dụng AI (OpenAI, Claude, Cursor, trợ lý nội bộ) đều có một cách viết Function Calling và kết nối dữ liệu riêng. Khi muốn tích hợp database vào 3 ứng dụng AI khác nhau, bạn phải viết 3 adapter riêng biệt.",
+                "Trước khi có MCP, mỗi ứng dụng AI đều có một cách viết Function Calling và kết nối dữ liệu riêng. Khi muốn tích hợp database vào 3 ứng dụng AI khác nhau, bạn phải viết 3 adapter riêng biệt.",
                 "Model Context Protocol (MCP) đóng vai trò như 'cổng USB-C' của thế giới AI: Một giao thức mở duy nhất cho phép AI Agent (Host) kết nối an toàn tới bất kỳ nguồn dữ liệu hoặc công cụ nào (MCP Server) qua luồng Stdio hoặc SSE."
               ],
               "paragraphsVi": [
-                "Trước khi có MCP, mỗi ứng dụng AI (OpenAI, Claude, Cursor, trợ lý nội bộ) đều có một cách viết Function Calling và kết nối dữ liệu riêng. Khi muốn tích hợp database vào 3 ứng dụng AI khác nhau, bạn phải viết 3 adapter riêng biệt.",
+                "Trước khi có MCP, mỗi ứng dụng AI đều có một cách viết Function Calling và kết nối dữ liệu riêng. Khi muốn tích hợp database vào 3 ứng dụng AI khác nhau, bạn phải viết 3 adapter riêng biệt.",
                 "Model Context Protocol (MCP) đóng vai trò như 'cổng USB-C' của thế giới AI: Một giao thức mở duy nhất cho phép AI Agent (Host) kết nối an toàn tới bất kỳ nguồn dữ liệu hoặc công cụ nào (MCP Server) qua luồng Stdio hoặc SSE."
               ],
-              "codeTitle": "Kiểm thử MCP Server bằng công cụ chính thức MCP Inspector",
+              "codeTitle": "Kiểm thử MCP Server bằng MCP Inspector",
               "codeLanguage": "bash",
               "codeContent": "npx @modelcontextprotocol/inspector python mcp_server.py",
               "calloutType": "tip",
@@ -489,6 +876,111 @@
               "calloutTitleVi": "Trải nghiệm trực quan",
               "calloutText": "MCP Inspector mở giao diện web tại http://localhost:5173 cho phép bạn test gọi từng hàm tool, kiểm tra tham số đầu vào và output trả về trước khi cấu hình vào Claude Desktop hay Cursor.",
               "calloutTextVi": "MCP Inspector mở giao diện web tại http://localhost:5173 cho phép bạn test gọi từng hàm tool, kiểm tra tham số đầu vào và output trả về trước khi cấu hình vào Claude Desktop hay Cursor."
+            }
+          ]
+        },
+        {
+          "id": "ai-bai-2-ollama",
+          "seriesId": "ai-mcp-series",
+          "lessonNumber": "Bài 2",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Tự host Local LLMs trên máy cá nhân & VPS với Ollama & Open WebUI",
+          "titleVi": "Tự host Local LLMs trên máy cá nhân & VPS với Ollama & Open WebUI",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "14/10/2026",
+          "summary": "Chạy mô hình ngôn ngữ lớn (Llama 3, DeepSeek, Qwen 2.5) hoàn toàn offline trên GPU cá nhân hoặc VPS, cung cấp OpenAI-compatible API cho các ứng dụng nội bộ.",
+          "summaryVi": "Chạy mô hình ngôn ngữ lớn (Llama 3, DeepSeek, Qwen 2.5) hoàn toàn offline trên GPU cá nhân hoặc VPS, cung cấp OpenAI-compatible API cho các ứng dụng nội bộ.",
+          "tags": ["ollama", "local-llm", "openwebui", "privacy"],
+          "sections": [
+            {
+              "heading": "1. Chạy Ollama và Kéo Model chỉ với 1 lệnh",
+              "headingVi": "1. Chạy Ollama và Kéo Model chỉ với 1 lệnh",
+              "paragraphs": [
+                "Ollama đóng gói sẵn toàn bộ runtime llama.cpp và quản lý bộ nhớ VRAM của GPU tối ưu. Bạn có thể kéo model 8B hoặc 14B về chạy mà không cần cài đặt driver CUDA phức tạp."
+              ],
+              "paragraphsVi": [
+                "Ollama đóng gói sẵn toàn bộ runtime llama.cpp và quản lý bộ nhớ VRAM của GPU tối ưu. Bạn có thể kéo model 8B hoặc 14B về chạy mà không cần cài đặt driver CUDA phức tạp."
+              ],
+              "codeTitle": "Lệnh kéo và gọi model trong terminal",
+              "codeLanguage": "bash",
+              "codeContent": "# Chạy model Llama 3\nollama run llama3.1:8b\n\n# Gọi API tương thích OpenAI\ncurl http://localhost:11434/v1/chat/completions \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\": \"llama3.1:8b\", \"messages\": [{\"role\": \"user\", \"content\": \"Xin chào!\"}]}'",
+              "calloutType": "info",
+              "calloutTitle": "Bảo mật tuyệt đối",
+              "calloutTitleVi": "Bảo mật tuyệt đối",
+              "calloutText": "Toàn bộ dữ liệu của bạn không bao giờ rời khỏi máy chủ cục bộ, đáp ứng tiêu chuẩn khắt khe cho doanh nghiệp về dữ liệu riêng tư.",
+              "calloutTextVi": "Toàn bộ dữ liệu của bạn không bao giờ rời khỏi máy chủ cục bộ, đáp ứng tiêu chuẩn khắt khe cho doanh nghiệp về dữ liệu riêng tư."
+            }
+          ]
+        },
+        {
+          "id": "ai-bai-3-custom-mcp",
+          "seriesId": "ai-mcp-series",
+          "lessonNumber": "Bài 3",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Viết Custom MCP Server bằng C# / Python cung cấp Tools cho AI Agent",
+          "titleVi": "Viết Custom MCP Server bằng C# / Python cung cấp Tools cho AI Agent",
+          "readingTime": "15 phút đọc",
+          "publishedDate": "14/10/2026",
+          "summary": "Cách xây dựng MCP Server cho phép Claude/Cursor/Antigravity tự động truy vấn Database SQL Server, chạy lệnh hệ thống hoặc gọi API bên ngoài thông qua Tool Calling.",
+          "summaryVi": "Cách xây dựng MCP Server cho phép Claude/Cursor/Antigravity tự động truy vấn Database SQL Server, chạy lệnh hệ thống hoặc gọi API bên ngoài thông qua Tool Calling.",
+          "tags": ["mcp-server", "python", "csharp", "tool-calling"],
+          "sections": [
+            {
+              "heading": "1. Cấu trúc một MCP Tool chuẩn",
+              "headingVi": "1. Cấu trúc một MCP Tool chuẩn",
+              "paragraphs": [
+                "Mỗi tool khai báo gồm: Name, Description (mô tả rõ ràng để LLM biết khi nào nên gọi), và JSON Schema định nghĩa các tham số đầu vào."
+              ],
+              "paragraphsVi": [
+                "Mỗi tool khai báo gồm: Name, Description (mô tả rõ ràng để LLM biết khi nào nên gọi), và JSON Schema định nghĩa các tham số đầu vào."
+              ],
+              "codeTitle": "Ví dụ MCP Tool viết bằng Python với thư viện mcp FastMCP",
+              "codeLanguage": "python",
+              "codeContent": "from mcp.server.fastmcp import FastMCP\n\nmcp = FastMCP(\"Database Assistant\")\n\n@mcp.tool()\ndef query_order_status(order_id: str) -> str:\n    \"\"\"Truy vấn trạng thái đơn hàng từ database.\"\"\"\n    # Thực hiện truy vấn DB\n    return f\"Đơn hàng {order_id} đang được giao hàng.\"\n\nif __name__ == \"__main__\":\n    mcp.run()",
+              "calloutType": "tip",
+              "calloutTitle": "Mẹo viết Description",
+              "calloutTitleVi": "Mẹo viết Description",
+              "calloutText": "Viết mô tả Tool càng chi tiết, AI Agent càng chọn công cụ chính xác và ít bị ảo giác (hallucination).",
+              "calloutTextVi": "Viết mô tả Tool càng chi tiết, AI Agent càng chọn công cụ chính xác và ít bị ảo giác (hallucination)."
+            }
+          ]
+        },
+        {
+          "id": "ai-bai-4-rag-system",
+          "seriesId": "ai-mcp-series",
+          "lessonNumber": "Bài 4",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
+          "title": "Xây dựng hệ thống RAG Production với Vector Database (Qdrant & pgvector)",
+          "titleVi": "Xây dựng hệ thống RAG Production với Vector Database (Qdrant & pgvector)",
+          "readingTime": "16 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Triển khai Retrieval-Augmented Generation (RAG) thực tế: Chunking tài liệu, sinh embeddings và tìm kiếm tương đồng vector Cosine Similarity phục vụ chatbot tri thức nội bộ.",
+          "summaryVi": "Triển khai Retrieval-Augmented Generation (RAG) thực tế: Chunking tài liệu, sinh embeddings và tìm kiếm tương đồng vector Cosine Similarity phục vụ chatbot tri thức nội bộ.",
+          "tags": ["rag", "vector-db", "qdrant", "pgvector"],
+          "sections": [
+            {
+              "heading": "1. Kiến trúc luồng RAG Production",
+              "headingVi": "1. Kiến trúc luồng RAG Production",
+              "paragraphs": [
+                "Khi người dùng đặt câu hỏi, hệ thống chuyển câu hỏi thành Vector Embedding, tìm top 5 đoạn văn bản tương đồng nhất trong Vector Database, và đưa vào Prompt ngữ cảnh cho LLM trả lời."
+              ],
+              "paragraphsVi": [
+                "Khi người dùng đặt câu hỏi, hệ thống chuyển câu hỏi thành Vector Embedding, tìm top 5 đoạn văn bản tương đồng nhất trong Vector Database, và đưa vào Prompt ngữ cảnh cho LLM trả lời."
+              ],
+              "codeTitle": "Chạy Qdrant Vector Database bằng Docker",
+              "codeLanguage": "bash",
+              "codeContent": "docker run -d --name qdrant -p 6333:6333 \\\n  -v qdrant_storage:/qdrant/storage \\\n  qdrant/qdrant",
+              "calloutType": "tip",
+              "calloutTitle": "Chunking Strategy",
+              "calloutTitleVi": "Chunking Strategy",
+              "calloutText": "Nên cắt đoạn văn bản có độ dài 500-800 tokens và gối đầu (overlap) 100 tokens để giữ nguyên vẹn ngữ cảnh giữa các đoạn.",
+              "calloutTextVi": "Nên cắt đoạn văn bản có độ dài 500-800 tokens và gối đầu (overlap) 100 tokens để giữ nguyên vẹn ngữ cảnh giữa các đoạn."
             }
           ]
         }
