@@ -5,14 +5,32 @@
     <div class="toeic-section-header">
         <h2 class="toeic-section-title">
             <i class="bi bi-diagram-3-fill text-warning"></i>
-            Ngữ Pháp Trọng Tâm & Mini Quiz Tương Tác
+            12 Trụ Cột Ngữ Pháp Cốt Lõi Part 5 & Mini Quiz Tương Tác
         </h2>
         <p class="toeic-section-desc">
-            Nắm vững bản chất quy tắc vị trí từ loại, kỹ thuật rút gọn mệnh đề quan hệ và làm bài kiểm tra mini có đáp án giải thích chi tiết.
+            Bao phủ 100% dạng câu hỏi ngữ pháp Part 5: Từ loại, 12 thì, thể bị động, đại từ, sự hòa hợp S-V, mệnh đề quan hệ rút gọn, liên từ vs giới từ, câu điều kiện đảo ngữ, thể giả định, so sánh và V-ing vs To-V.
         </p>
     </div>
 
-    @foreach (var topic in Data.GrammarTopics)
+    <!-- Quick Topic Jump Chips -->
+    <div class="toeic-filter-pills" style="margin-bottom: 2rem;">
+        <button type="button"
+                class="toeic-filter-chip @(_selectedGrammarFilter == "all" ? "active" : "")"
+                @onclick='() => _selectedGrammarFilter = "all"'>
+            <i class="bi bi-grid-fill me-1"></i> Tất Cả (@Data.GrammarTopics.Count Trụ Cột)
+        </button>
+        @foreach (var topic in Data.GrammarTopics)
+        {
+            var isCurrent = _selectedGrammarFilter == topic.Id;
+            <button type="button"
+                    class="toeic-filter-chip @(isCurrent ? "active" : "")"
+                    @onclick="() => _selectedGrammarFilter = topic.Id">
+                @topic.Title.Split('(')[0].Trim()
+            </button>
+        }
+    </div>
+
+    @foreach (var topic in DisplayedTopics)
     {
         <div class="toeic-grammar-block">
             <h3 class="toeic-grammar-title">@topic.Title</h3>
@@ -123,7 +141,13 @@
 @code {
     [Parameter] public ToeicData Data { get; set; } = default!;
 
+    private string _selectedGrammarFilter = "all";
     private Dictionary<string, int> _userAnswers = new();
+
+    private IEnumerable<ToeicGrammarTopic> DisplayedTopics =>
+        _selectedGrammarFilter == "all"
+            ? Data.GrammarTopics
+            : Data.GrammarTopics.Where(t => t.Id == _selectedGrammarFilter);
 
     private void SelectAnswer(string qKey, int choice)
     {

@@ -16,31 +16,36 @@
                     <span class="toeic-live-dot"></span> TOEIC MASTERY HUB
                 </span>
                 <span class="toeic-brand-pill outline">
-                    100% NATIVE INTERACTIVE
+                    4-SKILLS & EXAM BLUEPRINT
                 </span>
             </div>
 
-            <h1 class="toeic-title">Bứt Phá Điểm Số TOEIC 4 Kỹ Năng</h1>
+            <h1 class="toeic-title">Cẩm Nang Ôn Thi TOEIC Toàn Diện & Thực Chiến</h1>
             <p class="toeic-subtitle">
-                Bộ cẩm nang thực chiến cho <b>Khôi</b> · Tích hợp 28 chuyên đề kiến thức tương tác, bóc tách bẫy Part 1–7, mẹo phản xạ 5 giây, từ vựng Paraphrase và xưởng luyện Speaking/Writing.
+                Hệ thống ôn luyện chuẩn hóa cho <b>Khôi</b> · Cấu trúc đề 7 Part & quản trị 120 phút, công cụ tính quy đổi điểm ETS, cẩm nang phòng thi IIG, 28 chuyên đề tri thức, bóc tách cạm bẫy Part 1–7, ngữ pháp 12 trụ cột cốt lõi, cặp từ dễ nhầm lẫn, Flashcard 3D và phòng luyện Speaking/Writing.
             </p>
 
             @if (_data != null)
             {
                 <div class="toeic-stats-ticker">
                     <div class="toeic-ticker-item">
+                        <span class="toeic-ticker-val">@_data.ExamParts.Count Parts</span>
+                        <span class="toeic-ticker-lbl">Cấu Trúc Đề</span>
+                    </div>
+                    <div class="toeic-ticker-sep"></div>
+                    <div class="toeic-ticker-item">
                         <span class="toeic-ticker-val">@_data.Modules.Count</span>
-                        <span class="toeic-ticker-lbl">Chuyên Đề Tương Tác</span>
+                        <span class="toeic-ticker-lbl">Chuyên Đề Tri Thức</span>
+                    </div>
+                    <div class="toeic-ticker-sep"></div>
+                    <div class="toeic-ticker-item">
+                        <span class="toeic-ticker-val">@_data.GrammarTopics.Count Trụ Cột</span>
+                        <span class="toeic-ticker-lbl">Ngữ Pháp Part 5</span>
                     </div>
                     <div class="toeic-ticker-sep"></div>
                     <div class="toeic-ticker-item">
                         <span class="toeic-ticker-val">@_data.Traps.Count</span>
                         <span class="toeic-ticker-lbl">Bẫy Đề Thi</span>
-                    </div>
-                    <div class="toeic-ticker-sep"></div>
-                    <div class="toeic-ticker-item">
-                        <span class="toeic-ticker-val">@_data.QuickTricks.Count</span>
-                        <span class="toeic-ticker-lbl">Mẹo Tốc Độ</span>
                     </div>
                     <div class="toeic-ticker-sep"></div>
                     <div class="toeic-ticker-item highlight">
@@ -92,6 +97,10 @@
             <main class="toeic-viewport">
                 @switch (_activeTab)
                 {
+                    case "format":
+                        <ToeicFormatTab Data="@_data" />
+                        break;
+
                     case "overview":
                         <ToeicOverviewTab Data="@_data" />
                         break;
@@ -124,15 +133,16 @@
 @code {
     private ToeicData? _data;
     private bool _loadError;
-    private string _activeTab = "overview";
+    private string _activeTab = "format";
     private HashSet<string> _masteredTraps = new();
 
     private readonly List<(string Key, string Label, string Icon, string Badge)> _tabs = new()
     {
+        ("format", "Cấu Trúc Đề & Tính Điểm ETS", "bi-compass-fill", "Chuẩn ETS"),
         ("overview", "28 Chuyên Đề Tương Tác", "bi-grid-fill", "28"),
         ("traps", "Bẫy Đề Thi & Mẹo 5s", "bi-shield-exclamation", "Part 1-7"),
-        ("vocab", "Từ Vựng & Paraphrase", "bi-journal-bookmark-fill", "Matrix"),
-        ("grammar", "Ngữ Pháp & Mini Quiz", "bi-diagram-3-fill", "Quiz"),
+        ("vocab", "Từ Vựng, Cặp Từ & Thẻ Nhớ 3D", "bi-card-heading", "Flashcards"),
+        ("grammar", "Ngữ Pháp 12 Trụ Cột & Quiz", "bi-diagram-3-fill", "12 Trụ Cột"),
         ("speaking", "Luyện Nói (Speaking)", "bi-mic-fill", "Timer"),
         ("writing", "Luyện Viết (Writing)", "bi-pen-fill", "Blueprint"),
     };

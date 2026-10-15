@@ -1,32 +1,167 @@
 @using BlazorWasmPortfolioGhAction.Pages
+@inject IJSRuntime JS
 
 <div class="toeic-vocab-tab">
     <!-- Header -->
     <div class="toeic-section-header">
         <h2 class="toeic-section-title">
             <i class="bi bi-journal-bookmark-fill text-warning"></i>
-            Kho Từ Vựng Trọng Điểm & Ma Trận Paraphrase
+            Kho Từ Vựng Trọng Điểm & Thẻ Nhớ Flashcard 3D
         </h2>
         <p class="toeic-section-desc">
-            Từ vựng phân theo 4 nhóm chuyên đề công sở và các cặp từ đồng nghĩa (Paraphrase) quyết định điểm số Part 3, 4, 7.
+            Từ vựng phân theo 8 chủ đề cốt lõi của đề thi TOEIC, hỗ trợ học tương tác bằng Flashcard 3D phản xạ nhanh và ma trận Paraphrase Part 7.
         </p>
     </div>
 
-    <!-- Sub-navigation: Vocab Categories vs Paraphrase Matrix -->
+    <!-- Mode Selector -->
     <div class="toeic-filter-pills" style="margin-bottom: 2rem;">
+        <button type="button"
+                class="toeic-filter-chip @(_vocabMode == "flashcard" ? "active" : "")"
+                @onclick='() => _vocabMode = "flashcard"'>
+            <i class="bi bi-card-heading me-1 text-warning"></i> Thẻ Nhớ 3D (@AllWords.Count từ)
+        </button>
+        <button type="button"
+                class="toeic-filter-chip @(_vocabMode == "confusing" ? "active" : "")"
+                @onclick='() => _vocabMode = "confusing"'>
+            <i class="bi bi-slash-circle me-1 text-danger"></i> Cặp Từ Dễ Nhầm Lẫn (@(Data.ConfusingWords?.Count ?? 0) cặp)
+        </button>
+        <button type="button"
+                class="toeic-filter-chip @(_vocabMode == "phrasal" ? "active" : "")"
+                @onclick='() => _vocabMode = "phrasal"'>
+            <i class="bi bi-lightning-charge-fill me-1 text-primary"></i> Cụm Động Từ Hay Gặp (@(Data.PhrasalVerbs?.Count ?? 0) cụm)
+        </button>
         <button type="button"
                 class="toeic-filter-chip @(_vocabMode == "vocab" ? "active" : "")"
                 @onclick='() => _vocabMode = "vocab"'>
-            <i class="bi bi-card-text me-1"></i> Từ Vựng Cốt Lõi Theo Chủ Đề
+            <i class="bi bi-grid-fill me-1"></i> Danh Sách Từ Vựng 8 Chủ Đề
         </button>
         <button type="button"
                 class="toeic-filter-chip @(_vocabMode == "paraphrase" ? "active" : "")"
                 @onclick='() => _vocabMode = "paraphrase"'>
-            <i class="bi bi-arrow-left-right me-1"></i> Ma Trận Paraphrase (Verbs & Nouns)
+            <i class="bi bi-arrow-left-right me-1"></i> Ma Trận Paraphrase
         </button>
     </div>
 
-    @if (_vocabMode == "vocab")
+    @if (_vocabMode == "flashcard")
+    {
+        <!-- 3D Flashcard Mode -->
+        <div class="toeic-fc-wrapper">
+            <!-- Toolbar -->
+            <div class="toeic-fc-toolbar">
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <select class="toeic-search-input" style="width: auto; padding: 0.4rem 1rem;" @bind="_selectedFlashcardCategory" @bind:after="ResetDeck">
+                        <option value="all">Toàn bộ kho từ (@AllWords.Count từ)</option>
+                        @foreach (var cat in Data.VocabCategories)
+                        {
+                            <option value="@cat.Id">@cat.Name (@cat.Items.Count từ)</option>
+                        }
+                    </select>
+
+                    <button type="button" class="toeic-tool-btn" @onclick="ShuffleDeck">
+                        <i class="bi bi-shuffle me-1"></i> Trộn thẻ
+                    </button>
+                </div>
+
+                <div style="font-size: 0.85rem; color: var(--color-text-secondary); font-weight: 600;">
+                    Thẻ <b>@(_currentDeck.Any() ? _currentCardIndex + 1 : 0)</b> / @_currentDeck.Count
+                    • Đã thuộc: <b class="text-success">@LearnedCount</b> từ
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div style="height: 6px; background: var(--color-bg-surface-elevated); border-radius: 9999px; margin-bottom: 1.5rem; overflow: hidden;">
+                <div style="height: 100%; width: @(ProgressPercentage)%; background: var(--gradient-brand, #ca8a04); transition: width 0.3s ease;"></div>
+            </div>
+
+            @if (_currentDeck.Any() && CurrentWord != null)
+            {
+                var isLearned = _learnedWords.Contains(CurrentWord.En);
+
+                <!-- 3D Card Scene -->
+                <div class="toeic-fc-card-scene" @onclick="ToggleFlip">
+                    <div class="toeic-fc-card @(_isFlipped ? "is-flipped" : "")">
+                        <!-- Front Face -->
+                        <div class="toeic-fc-face toeic-fc-front">
+                            <div class="toeic-fc-badge-row">
+                                <span class="toeic-tag">@CurrentWord.Pos</span>
+                                @if (isLearned)
+                                {
+                                    <span class="toeic-tag" style="background: rgba(34, 197, 94, 0.2); color: #16a34a;">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Đã thuộc
+                                    </span>
+                                }
+                            </div>
+
+                            <div class="toeic-fc-word-large">@CurrentWord.En</div>
+                            <div class="toeic-fc-ipa">@CurrentWord.Ipa</div>
+
+                            <button type="button"
+                                    class="toeic-tts-btn"
+                                    style="font-size: 1.5rem; margin-top: 1rem;"
+                                    title="Nghe phát âm"
+                                    @onclick:stopPropagation="true"
+                                    @onclick="() => PlayAudio(CurrentWord.En)">
+                                <i class="bi bi-volume-up-fill"></i>
+                            </button>
+
+                            <div class="toeic-fc-hint">
+                                <i class="bi bi-hand-index-thumb me-1"></i> Chạm để lật xem nghĩa tiếng Việt & ví dụ
+                            </div>
+                        </div>
+
+                        <!-- Back Face -->
+                        <div class="toeic-fc-face toeic-fc-back">
+                            <div class="toeic-fc-badge-row">
+                                <span class="toeic-tag" style="background: rgba(202, 138, 4, 0.15); color: var(--color-brand-symbol, #ca8a04);">
+                                    Nghĩa Tiếng Việt
+                                </span>
+                            </div>
+
+                            <div class="toeic-fc-vi">@CurrentWord.Vi</div>
+
+                            @if (!string.IsNullOrEmpty(CurrentWord.Collocation))
+                            {
+                                <div class="toeic-fc-colloc">
+                                    <i class="bi bi-link-45deg me-1"></i> <b>Cụm đi kèm:</b> @CurrentWord.Collocation
+                                </div>
+                            }
+
+                            <div class="toeic-fc-example">
+                                "@CurrentWord.Example"
+                            </div>
+
+                            <div class="toeic-fc-hint">
+                                <i class="bi bi-arrow-repeat me-1"></i> Chạm để quay lại mặt trước
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="toeic-fc-controls">
+                    <button type="button" class="toeic-timer-btn secondary" @onclick="PrevCard" disabled="@(_currentCardIndex == 0)">
+                        <i class="bi bi-arrow-left"></i> Thẻ trước
+                    </button>
+
+                    <button type="button" class="toeic-timer-btn primary" @onclick="ToggleFlip">
+                        <i class="bi bi-arrow-repeat"></i> Lật thẻ
+                    </button>
+
+                    <button type="button"
+                            class="toeic-tool-btn @(isLearned ? "text-success" : "")"
+                            @onclick="() => ToggleLearned(CurrentWord.En)">
+                        <i class="bi @(isLearned ? "bi-check2-all text-success" : "bi-check2")"></i>
+                        @(isLearned ? "Đã thuộc từ này" : "Đánh dấu đã thuộc")
+                    </button>
+
+                    <button type="button" class="toeic-timer-btn secondary" @onclick="NextCard" disabled="@(_currentCardIndex >= _currentDeck.Count - 1)">
+                        Thẻ tiếp <i class="bi bi-arrow-right"></i>
+                    </button>
+                </div>
+            }
+        </div>
+    }
+    else if (_vocabMode == "vocab")
     {
         <!-- Category Selector -->
         <div class="toeic-filter-pills" style="margin-bottom: 1.5rem;">
@@ -127,14 +262,244 @@
             }
         </div>
     }
+    else if (_vocabMode == "confusing")
+    {
+        <!-- Confusing Words Matrix -->
+        <div class="toeic-confusing-section">
+            <div class="toeic-timeline-header-card" style="margin-bottom: 2rem;">
+                <h3 style="font-size: 1.25rem; font-weight: 800; margin: 0 0 0.5rem; color: #ef4444;">
+                    <i class="bi bi-slash-circle me-2"></i>Ma Trận Cặp Từ Dễ Nhầm Lẫn Kinh Điển (Part 5 & 6)
+                </h3>
+                <p style="font-size: 0.88rem; color: var(--color-text-secondary); margin: 0; line-height: 1.6;">
+                    Đây là các cặp từ có cách viết, phát âm gần giống nhau hoặc chung gốc từ nhưng mang nghĩa hoàn toàn khác biệt mà ETS chuyên dùng làm phương án bẫy gây mất điểm.
+                </p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">
+                @foreach (var pair in Data.ConfusingWords ?? new())
+                {
+                    <div style="background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: 14px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.75rem;">
+                                <h4 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--color-text-primary);">
+                                    @pair.PairTitle
+                                </h4>
+                                <span class="toeic-tag" style="background: rgba(239, 68, 68, 0.12); color: #ef4444; font-weight: 700;">
+                                    Bẫy Part 5
+                                </span>
+                            </div>
+
+                            <!-- Word 1 -->
+                            <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 10px; padding: 0.85rem; margin-bottom: 0.85rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <b style="font-size: 1.05rem; color: #3b82f6;">@pair.Word1</b>
+                                        <span class="toeic-tag" style="font-size: 0.72rem;">@pair.Pos1</span>
+                                    </div>
+                                    <button type="button" class="toeic-tts-btn" style="font-size: 1rem;" title="Phát âm" @onclick="() => PlayAudio(pair.Word1)">
+                                        <i class="bi bi-volume-up-fill"></i>
+                                    </button>
+                                </div>
+                                <div style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-primary); margin-bottom: 0.35rem;">
+                                    @pair.Meaning1
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--color-text-muted); font-style: italic;">
+                                    "@pair.Example1"
+                                </div>
+                            </div>
+
+                            <!-- Word 2 -->
+                            <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 0.85rem; margin-bottom: 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <b style="font-size: 1.05rem; color: #10b981;">@pair.Word2</b>
+                                        <span class="toeic-tag" style="font-size: 0.72rem;">@pair.Pos2</span>
+                                    </div>
+                                    <button type="button" class="toeic-tts-btn" style="font-size: 1rem;" title="Phát âm" @onclick="() => PlayAudio(pair.Word2)">
+                                        <i class="bi bi-volume-up-fill"></i>
+                                    </button>
+                                </div>
+                                <div style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-primary); margin-bottom: 0.35rem;">
+                                    @pair.Meaning2
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--color-text-muted); font-style: italic;">
+                                    "@pair.Example2"
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Distinction Tip -->
+                        <div style="background: rgba(202, 138, 4, 0.08); border-left: 3px solid #ca8a04; border-radius: 6px; padding: 0.65rem 0.85rem; font-size: 0.82rem; color: var(--color-text-primary);">
+                            <i class="bi bi-lightbulb-fill text-warning me-1"></i>
+                            <b>Mẹo phân biệt:</b> @pair.DistinctionTip
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else if (_vocabMode == "phrasal")
+    {
+        <!-- Essential Phrasal Verbs -->
+        <div class="toeic-phrasal-section">
+            <div class="toeic-timeline-header-card" style="margin-bottom: 2rem;">
+                <h3 style="font-size: 1.25rem; font-weight: 800; margin: 0 0 0.5rem; color: #3b82f6;">
+                    <i class="bi bi-lightning-charge-fill me-2"></i>Cụm Động Từ (Phrasal Verbs) Xuất Hiện Nhiều Nhất Đề Thi
+                </h3>
+                <p style="font-size: 0.88rem; color: var(--color-text-secondary); margin: 0; line-height: 1.6;">
+                    Trong văn cảnh công sở và đề thi TOEIC, phrasal verbs thường mang nghĩa thành ngữ chuyên biệt. Nắm chắc danh sách này giúp bạn xử lý nhanh gọn các câu hỏi từ vựng khó ở Part 5 & 7.
+                </p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+                @foreach (var pv in Data.PhrasalVerbs ?? new())
+                {
+                    <div style="background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: 14px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <h4 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--color-brand-symbol, #ca8a04);">
+                                        @pv.Verb
+                                    </h4>
+                                    <button type="button" class="toeic-tts-btn" style="font-size: 1rem;" title="Phát âm" @onclick="() => PlayAudio(pv.Verb)">
+                                        <i class="bi bi-volume-up-fill"></i>
+                                    </button>
+                                </div>
+                                <span class="toeic-tag" style="background: rgba(59, 130, 246, 0.12); color: #3b82f6; font-weight: 700;">
+                                    Phrasal Verb
+                                </span>
+                            </div>
+
+                            <div style="font-size: 0.95rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: 0.5rem;">
+                                @pv.MeaningVi
+                            </div>
+
+                            <div style="margin-bottom: 0.75rem;">
+                                <span style="font-size: 0.78rem; color: var(--color-text-muted); font-weight: 600;">Đồng nghĩa:</span>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: #10b981; margin-left: 0.35rem;">@pv.Synonym</span>
+                            </div>
+
+                            <div style="background: var(--color-bg-surface-elevated); border-radius: 8px; padding: 0.75rem; font-size: 0.82rem; color: var(--color-text-secondary); font-style: italic; margin-bottom: 0.75rem; line-height: 1.5;">
+                                "@pv.Example"
+                            </div>
+                        </div>
+
+                        <div style="font-size: 0.78rem; color: var(--color-text-muted); border-top: 1px solid var(--color-border); pt-2; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.35rem;">
+                            <i class="bi bi-pin-angle-fill text-warning"></i>
+                            <span><b>Ngữ cảnh:</b> @pv.ContextNote</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 </div>
 
 @code {
     [Parameter] public ToeicData Data { get; set; } = default!;
     [Parameter] public EventCallback<string> OnSpeak { get; set; }
 
-    private string _vocabMode = "vocab";
+    private string _vocabMode = "flashcard";
     private string _selectedCatId = "cat-business";
+    private string _selectedFlashcardCategory = "all";
+
+    private List<ToeicWordItem> _currentDeck = new();
+    private int _currentCardIndex = 0;
+    private bool _isFlipped = false;
+    private HashSet<string> _learnedWords = new();
+
+    private List<ToeicWordItem> AllWords => Data.VocabCategories.SelectMany(c => c.Items).ToList();
+
+    private ToeicWordItem? CurrentWord => _currentDeck.Count > _currentCardIndex ? _currentDeck[_currentCardIndex] : null;
+
+    private int LearnedCount => _currentDeck.Count(w => _learnedWords.Contains(w.En));
+
+    private double ProgressPercentage => _currentDeck.Any() ? Math.Round((double)(_currentCardIndex + 1) / _currentDeck.Count * 100, 1) : 0;
+
+    protected override void OnInitialized()
+    {
+        ResetDeck();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var stored = await JS.InvokeAsync<string?>("localStorage.getItem", "toeic_learned_words");
+                if (!string.IsNullOrEmpty(stored))
+                {
+                    var list = System.Text.Json.JsonSerializer.Deserialize<List<string>>(stored);
+                    if (list != null)
+                    {
+                        _learnedWords = new HashSet<string>(list);
+                        StateHasChanged();
+                    }
+                }
+            }
+            catch { }
+        }
+    }
+
+    private void ResetDeck()
+    {
+        if (_selectedFlashcardCategory == "all")
+        {
+            _currentDeck = AllWords.ToList();
+        }
+        else
+        {
+            var cat = Data.VocabCategories.FirstOrDefault(c => c.Id == _selectedFlashcardCategory);
+            _currentDeck = cat != null ? cat.Items.ToList() : AllWords.ToList();
+        }
+        _currentCardIndex = 0;
+        _isFlipped = false;
+    }
+
+    private void ShuffleDeck()
+    {
+        var rng = new Random();
+        _currentDeck = _currentDeck.OrderBy(x => rng.Next()).ToList();
+        _currentCardIndex = 0;
+        _isFlipped = false;
+    }
+
+    private void ToggleFlip() => _isFlipped = !_isFlipped;
+
+    private void NextCard()
+    {
+        if (_currentCardIndex < _currentDeck.Count - 1)
+        {
+            _currentCardIndex++;
+            _isFlipped = false;
+        }
+    }
+
+    private void PrevCard()
+    {
+        if (_currentCardIndex > 0)
+        {
+            _currentCardIndex--;
+            _isFlipped = false;
+        }
+    }
+
+    private void ToggleLearned(string en)
+    {
+        if (!_learnedWords.Remove(en)) _learnedWords.Add(en);
+        _ = SaveLearnedAsync();
+    }
+
+    private async Task SaveLearnedAsync()
+    {
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(_learnedWords);
+            await JS.InvokeVoidAsync("localStorage.setItem", "toeic_learned_words", json);
+        }
+        catch { }
+    }
 
     private async Task PlayAudio(string text)
     {

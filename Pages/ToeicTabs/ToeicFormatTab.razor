@@ -1,0 +1,509 @@
+@using BlazorWasmPortfolioGhAction.Pages
+
+<div class="toeic-format-tab">
+    <!-- Header -->
+    <div class="toeic-section-header">
+        <h2 class="toeic-section-title">
+            <i class="bi bi-compass-fill text-warning"></i>
+            Cấu Trúc Đề Thi TOEIC & Chiến Lược Phân Bổ 120 Phút
+        </h2>
+        <p class="toeic-section-desc">
+            Toàn bộ bức tranh tổng thể về bài thi TOEIC 2 kỹ năng Listening & Reading chuẩn ETS: cấu trúc 7 Part, timeline phân bổ từng phút và hướng dẫn 4 giọng đọc tiếng Anh.
+        </p>
+    </div>
+
+    <!-- Sub-navigation inside Format Tab -->
+    <div class="toeic-filter-pills" style="margin-bottom: 2rem;">
+        <button type="button"
+                class="toeic-filter-chip @(_activeSubSection == "parts" ? "active" : "")"
+                @onclick='() => _activeSubSection = "parts"'>
+            <i class="bi bi-grid-3x3-gap-fill me-1"></i> Cấu Trúc 7 Phần Thi
+        </button>
+        <button type="button"
+                class="toeic-filter-chip @(_activeSubSection == "calculator" ? "active" : "")"
+                @onclick='() => _activeSubSection = "calculator"'>
+            <i class="bi bi-calculator-fill me-1 text-warning"></i> Bảng Quy Đổi & Tính Điểm ETS
+        </button>
+        <button type="button"
+                class="toeic-filter-chip @(_activeSubSection == "timeline" ? "active" : "")"
+                @onclick='() => _activeSubSection = "timeline"'>
+            <i class="bi bi-clock-history me-1"></i> Chiến Thuật 120 Phút
+        </button>
+        <button type="button"
+                class="toeic-filter-chip @(_activeSubSection == "checklist" ? "active" : "")"
+                @onclick='() => _activeSubSection = "checklist"'>
+            <i class="bi bi-card-checklist me-1 text-success"></i> Cẩm Nang & Checklist Phòng Thi
+        </button>
+        <button type="button"
+                class="toeic-filter-chip @(_activeSubSection == "tiers" ? "active" : "")"
+                @onclick='() => _activeSubSection = "tiers"'>
+            <i class="bi bi-trophy-fill me-1"></i> Thang Điểm & Mục Tiêu
+        </button>
+        <button type="button"
+                class="toeic-filter-chip @(_activeSubSection == "accents" ? "active" : "")"
+                @onclick='() => _activeSubSection = "accents"'>
+            <i class="bi bi-translate me-1"></i> 4 Giọng Đọc Listening
+        </button>
+    </div>
+
+    @switch (_activeSubSection)
+    {
+        case "parts":
+            <!-- 7 Parts Grid -->
+            <div class="toeic-exam-parts-grid">
+                @foreach (var p in Data.ExamParts)
+                {
+                    <div class="toeic-exam-part-card">
+                        <div class="toeic-part-card-top">
+                            <div>
+                                <span class="toeic-part-badge">@p.Part</span>
+                                <span class="toeic-skill-pill @p.Skill.ToLowerInvariant()">@p.Skill</span>
+                            </div>
+                            <span class="toeic-q-count">@p.QuestionsCount câu • @p.DurationMinutes</span>
+                        </div>
+
+                        <h3 class="toeic-part-title">@p.Title</h3>
+                        <p class="toeic-part-desc">@p.FormatDescription</p>
+
+                        <div class="toeic-part-tip-box">
+                            <b><i class="bi bi-lightbulb-fill text-warning me-1"></i> Mẹo ăn điểm:</b> @p.ScoreTip
+                        </div>
+
+                        <div class="toeic-part-strat-box">
+                            <b><i class="bi bi-bullseye text-success me-1"></i> Chiến lược:</b> @p.TargetScoreStrategy
+                        </div>
+                    </div>
+                }
+            </div>
+            break;
+
+        case "calculator":
+            <!-- Interactive TOEIC Score Calculator -->
+            <div class="toeic-calculator-wrapper">
+                <div class="toeic-timeline-header-card" style="margin-bottom: 2rem;">
+                    <h3 style="font-size: 1.25rem; font-weight: 800; margin: 0 0 0.5rem; color: var(--color-brand-symbol, #ca8a04);">
+                        <i class="bi bi-calculator-fill me-2"></i>Công Cụ Quy Đổi Điểm Thô Sang Điểm Chuẩn ETS (10 – 990)
+                    </h3>
+                    <p style="font-size: 0.88rem; color: var(--color-text-secondary); margin: 0; line-height: 1.6;">
+                        Khi làm bài thi thử (ETS 2020–2024, Hacker TOEIC), hãy nhập số câu đúng Listening (0–100) và Reading (0–100) để quy đổi ra điểm thực tế theo thuật toán đường cong phân vị chuẩn ETS.
+                    </p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <!-- Controls Card -->
+                    <div style="background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: 14px; padding: 1.5rem;">
+                        <h4 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="bi bi-sliders text-warning"></i> Nhập Số Câu Trả Lời Đúng
+                        </h4>
+
+                        <!-- Listening Slider -->
+                        <div style="margin-bottom: 1.75rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <label style="font-weight: 700; font-size: 0.92rem; color: var(--color-text-primary);">
+                                    <i class="bi bi-headphones me-1 text-primary"></i> Listening (0 – 100 câu)
+                                </label>
+                                <span style="font-size: 1.1rem; font-weight: 800; color: #3b82f6;">@_rawListening / 100</span>
+                            </div>
+                            <input type="range" min="0" max="100" class="form-range" style="width: 100%; accent-color: #3b82f6;" @bind="_rawListening" @bind:event="oninput" />
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted);">
+                                <span>0 câu (5đ)</span>
+                                <span>50 câu (~265đ)</span>
+                                <span>75 câu (~400đ)</span>
+                                <span>100 câu (495đ)</span>
+                            </div>
+                        </div>
+
+                        <!-- Reading Slider -->
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <label style="font-weight: 700; font-size: 0.92rem; color: var(--color-text-primary);">
+                                    <i class="bi bi-book me-1 text-success"></i> Reading (0 – 100 câu)
+                                </label>
+                                <span style="font-size: 1.1rem; font-weight: 800; color: #10b981;">@_rawReading / 100</span>
+                            </div>
+                            <input type="range" min="0" max="100" class="form-range" style="width: 100%; accent-color: #10b981;" @bind="_rawReading" @bind:event="oninput" />
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted);">
+                                <span>0 câu (5đ)</span>
+                                <span>50 câu (~235đ)</span>
+                                <span>75 câu (~375đ)</span>
+                                <span>100 câu (495đ)</span>
+                            </div>
+                        </div>
+
+                        <!-- Presets -->
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; pt-2;">
+                            <span style="font-size: 0.8rem; color: var(--color-text-muted); align-self: center;">Mức mẫu:</span>
+                            <button type="button" class="toeic-filter-chip" style="font-size: 0.8rem; padding: 0.25rem 0.65rem;" @onclick="() => SetPreset(50, 45)">Mục Tiêu 500</button>
+                            <button type="button" class="toeic-filter-chip" style="font-size: 0.8rem; padding: 0.25rem 0.65rem;" @onclick="() => SetPreset(70, 65)">Mục Tiêu 650</button>
+                            <button type="button" class="toeic-filter-chip" style="font-size: 0.8rem; padding: 0.25rem 0.65rem;" @onclick="() => SetPreset(85, 80)">Mục Tiêu 800</button>
+                            <button type="button" class="toeic-filter-chip" style="font-size: 0.8rem; padding: 0.25rem 0.65rem;" @onclick="() => SetPreset(96, 95)">Mục Tiêu 950+</button>
+                        </div>
+                    </div>
+
+                    <!-- Result Score Board -->
+                    <div style="background: linear-gradient(135deg, rgba(202, 138, 4, 0.08) 0%, rgba(59, 130, 246, 0.05) 100%); border: 1px solid rgba(202, 138, 4, 0.3); border-radius: 14px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <span class="toeic-tag" style="background: rgba(202, 138, 4, 0.15); color: #ca8a04; font-weight: 700;">
+                                    KẾT QUẢ QUY ĐỔI ETS
+                                </span>
+                                <span class="toeic-tag" style="background: rgba(34, 197, 94, 0.15); color: #16a34a; font-weight: 800;">
+                                    CEFR: @CefrLevel
+                                </span>
+                            </div>
+
+                            <div style="text-align: center; margin: 1.25rem 0;">
+                                <div style="font-size: 3.5rem; font-weight: 900; line-height: 1; color: var(--color-brand-symbol, #ca8a04); text-shadow: 0 2px 10px rgba(202, 138, 4, 0.25);">
+                                    @TotalScaledScore
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem; font-weight: 600;">
+                                    TỔNG ĐIỂM TOEIC / 990 ĐIỂM
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                                <div style="background: var(--color-bg-surface); padding: 0.85rem; border-radius: 10px; border: 1px solid var(--color-border); text-align: center;">
+                                    <div style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">LISTENING</div>
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: #3b82f6;">@ListeningScaledScore</div>
+                                    <div style="font-size: 0.72rem; color: var(--color-text-secondary);">@_rawListening / 100 câu đúng</div>
+                                </div>
+                                <div style="background: var(--color-bg-surface); padding: 0.85rem; border-radius: 10px; border: 1px solid var(--color-border); text-align: center;">
+                                    <div style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">READING</div>
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: #10b981;">@ReadingScaledScore</div>
+                                    <div style="font-size: 0.72rem; color: var(--color-text-secondary);">@_rawReading / 100 câu đúng</div>
+                                </div>
+                            </div>
+
+                            <div style="font-size: 0.88rem; line-height: 1.5; color: var(--color-text-primary); background: var(--color-bg-surface); padding: 0.85rem 1rem; border-radius: 10px; border-left: 3px solid #ca8a04;">
+                                <b>Đánh giá năng lực:</b> @ScoreAssessment
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1rem; font-size: 0.82rem; color: var(--color-text-secondary); text-align: right;">
+                            <i class="bi bi-info-circle me-1"></i> Thang điểm chuẩn ETS (cộng biên độ ±15đ)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Score Conversion Table Accordion -->
+                <div style="background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" @onclick="() => _showFullMatrix = !_showFullMatrix">
+                        <h4 style="margin: 0; font-size: 1rem; font-weight: 700; color: var(--color-text-primary);">
+                            <i class="bi bi-table me-2 text-warning"></i>
+                            Bảng Tra Cứu Điểm Từng Mốc Câu Đúng (Full Conversion Matrix)
+                        </h4>
+                        <button type="button" class="toeic-tool-btn">
+                            <i class="bi @(_showFullMatrix ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                        </button>
+                    </div>
+
+                    @if (_showFullMatrix)
+                    {
+                        <div class="toeic-table-responsive" style="margin-top: 1.25rem;">
+                            <table class="toeic-cheat-table">
+                                <thead>
+                                    <tr>
+                                        <th>Khoảng Câu Đúng</th>
+                                        <th>Điểm Listening Ước Lượng</th>
+                                        <th>Điểm Reading Ước Lượng</th>
+                                        <th>Tổng Điểm Trung Bình</th>
+                                        <th>Cấp Độ Năng Lực</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><b>91 – 100 câu</b></td>
+                                        <td><span class="text-primary fw-bold">470 – 495</span></td>
+                                        <td><span class="text-success fw-bold">455 – 495</span></td>
+                                        <td><b class="text-warning">925 – 990</b></td>
+                                        <td>Gần như bản ngữ (C1/Mastery)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>81 – 90 câu</b></td>
+                                        <td><span class="text-primary fw-bold">420 – 465</span></td>
+                                        <td><span class="text-success fw-bold">405 – 450</span></td>
+                                        <td><b class="text-warning">825 – 915</b></td>
+                                        <td>Làm việc môi trường quốc tế chuyên sâu (B2/C1)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>71 – 80 câu</b></td>
+                                        <td><span class="text-primary fw-bold">370 – 415</span></td>
+                                        <td><span class="text-success fw-bold">355 – 400</span></td>
+                                        <td><b class="text-warning">725 – 815</b></td>
+                                        <td>Giao tiếp kinh doanh & chuyên môn tốt (B2)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>61 – 70 câu</b></td>
+                                        <td><span class="text-primary fw-bold">315 – 365</span></td>
+                                        <td><span class="text-success fw-bold">300 – 350</span></td>
+                                        <td><b class="text-warning">615 – 715</b></td>
+                                        <td>Chuẩn doanh nghiệp & ngân hàng (B1/B2)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>51 – 60 câu</b></td>
+                                        <td><span class="text-primary fw-bold">255 – 310</span></td>
+                                        <td><span class="text-success fw-bold">240 – 295</span></td>
+                                        <td><b class="text-warning">495 – 605</b></td>
+                                        <td>Chuẩn tốt nghiệp đại học phổ thông (B1)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>41 – 50 câu</b></td>
+                                        <td><span class="text-primary fw-bold">195 – 250</span></td>
+                                        <td><span class="text-success fw-bold">180 – 235</span></td>
+                                        <td><b class="text-warning">375 – 485</b></td>
+                                        <td>Giao tiếp cơ bản, mất gốc ngữ pháp (A2)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>21 – 40 câu</b></td>
+                                        <td><span class="text-primary fw-bold">75 – 190</span></td>
+                                        <td><span class="text-success fw-bold">65 – 175</span></td>
+                                        <td><b class="text-warning">140 – 365</b></td>
+                                        <td>Sơ cấp, cần củng cố phát âm và từ vựng cơ bản</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+            break;
+
+        case "timeline":
+            <!-- 120-minute Timeline -->
+            <div class="toeic-timeline-container">
+                <div class="toeic-timeline-header-card">
+                    <h3 style="font-size: 1.25rem; font-weight: 800; margin: 0 0 0.5rem; color: var(--color-brand-symbol, #ca8a04);">
+                        <i class="bi bi-stopwatch-fill me-2"></i>Chiến Thuật Quản Trị 120 Phút Làm Bài Không Bị Thiếu Giờ
+                    </h3>
+                    <p style="font-size: 0.88rem; color: var(--color-text-secondary); margin: 0; line-height: 1.6;">
+                        Bài thi TOEIC gồm 200 câu trong 120 phút. Hơn 70% thí sinh bị mất điểm ở Part 7 do phân bổ sai thời gian ở Part 5 và Part 6. Dưới đây là lộ trình thời gian chuẩn của các thủ khoa 990 TOEIC.
+                    </p>
+                </div>
+
+                <div class="toeic-timeline-steps">
+                    @foreach (var block in Data.TimeTimeline)
+                    {
+                        <div class="toeic-timeline-row">
+                            <div class="toeic-timeline-time-badge">
+                                @block.TimeWindow
+                            </div>
+                            <div class="toeic-timeline-content-card">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; flex-wrap: wrap;">
+                                    <h4 style="font-size: 1.05rem; font-weight: 800; margin: 0; color: var(--color-text-primary);">
+                                        @block.Part
+                                    </h4>
+                                    <span class="toeic-tag" style="color: #22c55e;">@block.TimePerQuestion</span>
+                                </div>
+                                <p style="font-size: 0.88rem; color: var(--color-text-secondary); margin: 0; line-height: 1.5;">
+                                    @block.Strategy
+                                </p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            break;
+
+        case "checklist":
+            <!-- Exam Day Survival Kit & Checklist -->
+            <div class="toeic-checklist-wrapper">
+                <div class="toeic-timeline-header-card" style="margin-bottom: 2rem;">
+                    <h3 style="font-size: 1.25rem; font-weight: 800; margin: 0 0 0.5rem; color: var(--color-brand-symbol, #ca8a04);">
+                        <i class="bi bi-shield-check me-2 text-success"></i>Cẩm Nang & Checklist Phòng Thi IIG Chuẩn 100%
+                    </h3>
+                    <p style="font-size: 0.88rem; color: var(--color-text-secondary); margin: 0; line-height: 1.6;">
+                        Mọi chi tiết sống còn trước khi bước vào phòng thi: giấy tờ hợp lệ, quy chế an ninh của IIG, kỹ thuật tô phiếu trả lời OMR và cách giữ vững tâm lý khi bị lỡ câu nghe.
+                    </p>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 1.75rem;">
+                    @foreach (var tip in Data.ExamTips ?? new())
+                    {
+                        <div style="background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: 14px; padding: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                                    <span style="width: 38px; height: 38px; border-radius: 10px; background: rgba(202, 138, 4, 0.15); color: var(--color-brand-symbol, #ca8a04); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                                        <i class="bi @tip.Icon"></i>
+                                    </span>
+                                    <div>
+                                        <span class="toeic-tag" style="font-size: 0.72rem; padding: 0.15rem 0.5rem; margin-bottom: 0.2rem; display: inline-block;">@tip.Phase</span>
+                                        <h4 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--color-text-primary);">@tip.Title</h4>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1rem;">
+                                <!-- DO LIST -->
+                                <div style="background: rgba(34, 197, 94, 0.05); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 10px; padding: 1rem;">
+                                    <div style="font-weight: 800; color: #16a34a; font-size: 0.88rem; margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.35rem;">
+                                        <i class="bi bi-check-circle-fill"></i> NÊN LÀM (DO)
+                                    </div>
+                                    <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.55;">
+                                        @foreach (var d in tip.DoList)
+                                        {
+                                            <li style="margin-bottom: 0.4rem;">@d</li>
+                                        }
+                                    </ul>
+                                </div>
+
+                                <!-- DONT LIST -->
+                                <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 10px; padding: 1rem;">
+                                    <div style="font-weight: 800; color: #ef4444; font-size: 0.88rem; margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.35rem;">
+                                        <i class="bi bi-x-circle-fill"></i> TUYỆT ĐỐI TRÁNH (DON'T)
+                                    </div>
+                                    <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.55;">
+                                        @foreach (var dn in tip.DontList)
+                                        {
+                                            <li style="margin-bottom: 0.4rem;">@dn</li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Pro Secret -->
+                            <div style="background: rgba(202, 138, 4, 0.08); border-left: 3px solid #ca8a04; border-radius: 6px; padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--color-text-primary);">
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <b>Bí quyết thủ khoa:</b> @tip.ProSecret
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            break;
+
+        case "tiers":
+            <!-- Score Tiers -->
+            <div class="toeic-tiers-grid">
+                @foreach (var tier in Data.ScoreTiers)
+                {
+                    <div class="toeic-tier-card">
+                        <div class="toeic-tier-header">
+                            <span class="toeic-tier-range">@tier.Range</span>
+                            <span class="toeic-tier-badge">@tier.LevelName</span>
+                        </div>
+                        <p class="toeic-tier-desc">@tier.Description</p>
+
+                        <div class="toeic-tier-subscores">
+                            <div class="toeic-subscore-item">
+                                <span class="toeic-subscore-lbl">Listening</span>
+                                <span class="toeic-subscore-val">@tier.ListeningScore</span>
+                            </div>
+                            <div class="toeic-subscore-item">
+                                <span class="toeic-subscore-lbl">Reading</span>
+                                <span class="toeic-subscore-val">@tier.ReadingScore</span>
+                            </div>
+                        </div>
+
+                        <div class="toeic-tier-benchmark">
+                            <i class="bi bi-briefcase-fill me-1 text-primary"></i>
+                            <b>Ứng dụng nghề nghiệp:</b> @tier.CareerBenchmark
+                        </div>
+                    </div>
+                }
+            </div>
+            break;
+
+        case "accents":
+            <!-- Accents Guide -->
+            <div class="toeic-accents-grid">
+                @foreach (var acc in Data.AccentGuides)
+                {
+                    <div class="toeic-accent-card">
+                        <div class="toeic-accent-header">
+                            <span class="toeic-accent-flag">@acc.Flag</span>
+                            <h3 class="toeic-accent-name">@acc.Accent</h3>
+                        </div>
+                        <p class="toeic-accent-desc">@acc.Characteristics</p>
+
+                        <div class="toeic-accent-examples">
+                            <b><i class="bi bi-volume-up-fill me-1 text-warning"></i> Ví dụ đặc trưng:</b> @acc.CommonExamples
+                        </div>
+
+                        <div class="toeic-accent-alert">
+                            <b><i class="bi bi-exclamation-triangle-fill me-1 text-danger"></i> Cảnh giác bẫy:</b> @acc.TrapAlert
+                        </div>
+                    </div>
+                }
+            </div>
+            break;
+    }
+</div>
+
+@code {
+    [Parameter] public ToeicData Data { get; set; } = default!;
+
+    private string _activeSubSection = "parts";
+    private int _rawListening = 65;
+    private int _rawReading = 60;
+    private bool _showFullMatrix = false;
+
+    private int ListeningScaledScore => CalculateListeningScore(_rawListening);
+    private int ReadingScaledScore => CalculateReadingScore(_rawReading);
+    private int TotalScaledScore => ListeningScaledScore + ReadingScaledScore;
+
+    private string CefrLevel
+    {
+        get
+        {
+            var total = TotalScaledScore;
+            if (total >= 905) return "C1 - Advanced (Chuyên gia)";
+            if (total >= 785) return "B2 - Upper Intermediate (Làm việc quốc tế)";
+            if (total >= 550) return "B1 - Intermediate (Tốt nghiệp ĐH)";
+            if (total >= 400) return "A2 - Pre-Intermediate (Cơ bản)";
+            return "A1 - Beginner (Mất gốc)";
+        }
+    }
+
+    private string ScoreAssessment
+    {
+        get
+        {
+            var total = TotalScaledScore;
+            if (total >= 850)
+                return $"Xuất sắc! Với {total} điểm, bạn đủ năng lực đàm phán hợp đồng, thuyết trình và làm việc tại các tập đoàn công nghệ đa quốc gia.";
+            if (total >= 750)
+                return $"Rất tốt! Với {total} điểm, bạn vượt chuẩn nộp hồ sơ hầu hết các công ty tài chính, công nghệ và ngân hàng lớn.";
+            if (total >= 650)
+                return $"Khá! Với {total} điểm, bạn đã đạt mốc chuẩn làm việc. Để lên mốc 750+, hãy tập trung luyện thêm 10 câu Listening ở Part 3 & 4.";
+            if (total >= 500)
+                return $"Trung bình khá! Với {total} điểm, bạn đã đủ chuẩn tốt nghiệp đại học. Cần củng cố thêm ngữ pháp Part 5 để bứt phá lên 650+.";
+            return $"Cần tăng tốc! Với {total} điểm, bạn cần tập trung ôn 12 Trụ cột ngữ pháp Part 5 và luyện từ vựng qua Flashcard 3D.";
+        }
+    }
+
+    private void SetPreset(int lc, int rc)
+    {
+        _rawListening = lc;
+        _rawReading = rc;
+    }
+
+    private static int CalculateListeningScore(int raw)
+    {
+        if (raw <= 0) return 5;
+        if (raw <= 15) return 5 + (raw * 2);
+        if (raw <= 25) return 35 + (raw - 15) * 6;
+        if (raw <= 35) return 95 + (raw - 25) * 6;
+        if (raw <= 45) return 155 + (raw - 35) * 6;
+        if (raw <= 55) return 215 + (raw - 45) * 6;
+        if (raw <= 65) return 275 + (raw - 55) * 6;
+        if (raw <= 75) return 335 + (raw - 65) * 6;
+        if (raw <= 85) return 395 + (raw - 75) * 5;
+        if (raw <= 95) return 445 + (raw - 85) * 4;
+        return Math.Min(495, 485 + (raw - 95) * 2);
+    }
+
+    private static int CalculateReadingScore(int raw)
+    {
+        if (raw <= 0) return 5;
+        if (raw <= 15) return 5 + (raw * 2);
+        if (raw <= 25) return 35 + (raw - 15) * 5;
+        if (raw <= 35) return 85 + (raw - 25) * 6;
+        if (raw <= 45) return 145 + (raw - 35) * 6;
+        if (raw <= 55) return 205 + (raw - 45) * 6;
+        if (raw <= 65) return 265 + (raw - 55) * 6;
+        if (raw <= 75) return 325 + (raw - 65) * 5;
+        if (raw <= 85) return 375 + (raw - 75) * 5;
+        if (raw <= 95) return 425 + (raw - 85) * 5;
+        return Math.Min(495, 475 + (raw - 95) * 4);
+    }
+}
