@@ -5888,7 +5888,7 @@
       "titleVi": "Chuyên Đề VPN & Proxy: Bản Chất Mạng, Định Vị Geolocation, Rò Rỉ Vị Trí & Nghệ Thuật Testing",
       "icon": "bi-globe2",
       "color": "#06b6d4",
-      "badge": "6 Bài Viết",
+      "badge": "7 Bài Viết",
       "description": "Comprehensive guide to network routing, VPN TUN/TAP vs Proxy Layer 7, IP Geolocation vs Browser Wi-Fi/GPS triangulation, WebRTC & DNS leaks, root-cause analysis for intermittent test failures, and bulletproof bug reporting.",
       "descriptionVi": "Giải phẫu chuyên sâu bản chất VPN vs Proxy, bóc mẽ nguyên nhân Google Maps lệch vị trí, các lỗ hổng rò rỉ WebRTC/DNS/IPv6, điều tra nguyên nhân lần 1 đúng lần 2 sai, và quy trình kiểm thử Geolocation đỉnh cao cho Tester & Dev.",
       "articles": [
@@ -6451,6 +6451,134 @@
               "calloutTitleVi": "Lời khuyên chiến lược cho bạn",
               "calloutText": "Hãy tự tin vào chuyên môn của mình: Bạn đã làm đúng khi giữ nguyên VPN và kiểm tra MyIP. Hãy dùng kiến thức trong series này để vừa chỉ ra lỗi kỹ thuật cho Dev, vừa chứng minh với Leader rằng bạn là một Tester có tư duy hệ thống và am hiểu sâu sắc về kiến trúc mạng!",
               "calloutTextVi": "Hãy tự tin vào chuyên môn của mình: Bạn đã làm đúng khi giữ nguyên VPN và kiểm tra MyIP. Hãy dùng kiến thức trong series này để vừa chỉ ra lỗi kỹ thuật cho Dev, vừa chứng minh với Leader rằng bạn là một Tester có tư duy hệ thống và am hiểu sâu sắc về kiến trúc mạng!"
+            }
+          ]
+        },
+        {
+          "id": "vpn-proxy-bai-7-vpn-mobile-vs-web-browser",
+          "seriesId": "vpn-proxy-testing-series",
+          "lessonNumber": "Bài 7",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
+          "title": "So Sánh Toàn Diện: VPN Trên Mobile (iOS/Android) vs VPN Trên Web (Browser Extension)",
+          "titleVi": "So Sánh Toàn Diện: VPN Trên Mobile (iOS/Android) vs VPN Trên Web (Browser Extension)",
+          "readingTime": "14 phút đọc",
+          "publishedDate": "15/10/2026",
+          "summary": "Vạch trần bản chất kỹ thuật: 'VPN trên web' thực chất chỉ là Proxy tiện ích mở rộng, trong khi 'VPN trên Mobile' can thiệp sâu qua VpnService/NetworkExtension. Khám phá 4 'sát thủ lật mặt' vị trí trên điện thoại (GPS phần cứng, SIM MCC/MNC, trạm phát sóng BTS, Battery Doze) và cẩm nang kiểm thử Mobile Geolocation bất bại.",
+          "summaryVi": "Vạch trần bản chất kỹ thuật: 'VPN trên web' thực chất chỉ là Proxy tiện ích mở rộng, trong khi 'VPN trên Mobile' can thiệp sâu qua VpnService/NetworkExtension. Khám phá 4 'sát thủ lật mặt' vị trí trên điện thoại (GPS phần cứng, SIM MCC/MNC, trạm phát sóng BTS, Battery Doze) và cẩm nang kiểm thử Mobile Geolocation bất bại.",
+          "tags": [
+            "Mobile VPN",
+            "Browser Extension",
+            "Android VpnService",
+            "iOS NetworkExtension",
+            "GPS Spoofing",
+            "Mock Location"
+          ],
+          "sections": [
+            {
+              "heading": "1. 'VPN Trên Web' Là Gì? Sự Thật Về Các Extension Trình Duyệt",
+              "headingVi": "1. 'VPN Trên Web' Là Gì? Sự Thật Về Các Extension Trình Duyệt",
+              "paragraphs": [
+                "Rất nhiều người dùng phổ thông và thậm chí cả tester thường cài đặt các tiện ích mở rộng (Extension) trên Chrome Web Store hoặc Firefox Add-ons như Hola VPN, ZenMate, TouchVPN, Surfshark Extension... và gọi đó là 'VPN trên web'.",
+                "SỰ THẬT KỸ THUẬT GÂY SỐC: 99.9% các 'VPN Extension' này HOÀN TOÀN KHÔNG PHẢI LÀ VPN! Trình duyệt web (Chrome, Edge, Firefox) hoạt động trong một môi trường sandbox cô lập an toàn, API của tiện ích mở rộng (Chrome Extensions API) TUYỆT ĐỐI KHÔNG CÓ QUYỀN can thiệp vào kernel hệ điều hành để tạo card mạng ảo TUN/TAP.",
+                "Bản chất thực sự của các 'VPN Extension' này chỉ là một HTTPS Proxy hoặc SOCKS5 Proxy được gắn mác VPN để marketing bán hàng! Khi bạn bật extension, nó chỉ đơn thuần sử dụng hàm `chrome.proxy.settings.set()` để điều hướng các request HTTP/HTTPS phát sinh từ chính trình duyệt đó tới một máy chủ trung gian.",
+                "HẬU QUẢ: Toàn bộ lưu lượng bên ngoài trình duyệt (như terminal, Git, Postman, game, ứng dụng chat Zalo, Telegram...) hoàn toàn KHÔNG ĐƯỢC BẢO VỆ và vẫn chạy bằng IP Việt Nam thật. Thậm chí các giao thức WebRTC STUN hay DNS query ngoài phạm vi HTTP proxy vẫn có thể bị rò rỉ rất dễ dàng!"
+              ],
+              "paragraphsVi": [
+                "Rất nhiều người dùng phổ thông và thậm chí cả tester thường cài đặt các tiện ích mở rộng (Extension) trên Chrome Web Store hoặc Firefox Add-ons như Hola VPN, ZenMate, TouchVPN, Surfshark Extension... và gọi đó là 'VPN trên web'.",
+                "SỰ THẬT KỸ THUẬT GÂY SỐC: 99.9% các 'VPN Extension' này HOÀN TOÀN KHÔNG PHẢI LÀ VPN! Trình duyệt web (Chrome, Edge, Firefox) hoạt động trong một môi trường sandbox cô lập an toàn, API của tiện ích mở rộng (Chrome Extensions API) TUYỆT ĐỐI KHÔNG CÓ QUYỀN can thiệp vào kernel hệ điều hành để tạo card mạng ảo TUN/TAP.",
+                "Bản chất thực sự của các 'VPN Extension' này chỉ là một HTTPS Proxy hoặc SOCKS5 Proxy được gắn mác VPN để marketing bán hàng! Khi bạn bật extension, nó chỉ đơn thuần sử dụng hàm `chrome.proxy.settings.set()` để điều hướng các request HTTP/HTTPS phát sinh từ chính trình duyệt đó tới một máy chủ trung gian.",
+                "HẬU QUẢ: Toàn bộ lưu lượng bên ngoài trình duyệt (như terminal, Git, Postman, game, ứng dụng chat Zalo, Telegram...) hoàn toàn KHÔNG ĐƯỢC BẢO VỆ và vẫn chạy bằng IP Việt Nam thật. Thậm chí các giao thức WebRTC STUN hay DNS query ngoài phạm vi HTTP proxy vẫn có thể bị rò rỉ rất dễ dàng!"
+              ],
+              "codeTitle": "Bản chất code của một 'VPN Extension' trên Chrome (manifest.json & background.js)",
+              "codeLanguage": "javascript",
+              "codeContent": "// Bản chất một 'VPN Extension' chỉ dùng API Proxy của Chrome:\nconst config = {\n  mode: \"fixed_servers\",\n  rules: {\n    singleProxy: {\n      scheme: \"https\",\n      host: \"india-proxy.vpnprovider.com\",\n      port: 443\n    },\n    bypassList: [\"localhost\", \"127.0.0.1\"]\n  }\n};\n\n// Đổi proxy cho Chrome - KHÔNG PHẢI LÀ VPN TẦNG HỆ ĐIỀU HÀNH!\nchrome.proxy.settings.set({ value: config, scope: \"regular\" }, () => {\n  console.log(\"Proxy Ấn Độ đã kích hoạt cho trình duyệt!\");\n});",
+              "calloutType": "warning",
+              "calloutTitle": "Điểm cốt tử cần nhớ",
+              "calloutTitleVi": "Điểm cốt tử cần nhớ",
+              "calloutText": "'VPN trên web' thực chất chỉ là Proxy cấp ứng dụng. Nó chỉ có tác dụng trong phạm vi cửa sổ trình duyệt đó, độ bảo mật và tính toàn vẹn định tuyến kém xa một giải pháp VPN thực thụ.",
+              "calloutTextVi": "'VPN trên web' thực chất chỉ là Proxy cấp ứng dụng. Nó chỉ có tác dụng trong phạm vi cửa sổ trình duyệt đó, độ bảo mật và tính toàn vẹn định tuyến kém xa một giải pháp VPN thực thụ."
+            },
+            {
+              "heading": "2. 'VPN Trên Mobile' Hoạt Động Ra Sao Ở Cấp Hệ Điều Hành (iOS & Android)?",
+              "headingVi": "2. 'VPN Trên Mobile' Hoạt Động Ra Sao Ở Cấp Hệ Điều Hành (iOS & Android)?",
+              "paragraphs": [
+                "Trái ngược hoàn toàn với Browser Extension, các ứng dụng VPN cài đặt trên điện thoại di động (như 1.1.1.1 WARP, OpenVPN, WireGuard, NordVPN, Surfshark app trên App Store / Google Play) là VPN ĐÍCH THỰC (System-wide True VPN).",
+                "Trên hệ điều hành Android, app VPN sử dụng API hệ thống cấp thấp là `android.net.VpnService`. API này tạo một Virtual TUN Interface (thường là `/dev/tun`) ngay trong Linux Kernel của Android. Hệ điều hành sẽ chuyển hướng 100% tất cả socket mạng (TCP, UDP, ICMP) từ TẤT CẢ các app (Chrome mobile, Safari mobile, Native App, Game, Banking app) đi qua hầm mã hóa này.",
+                "Trên hệ điều hành iOS (iPhone/iPad), Apple cung cấp framework `NetworkExtension` với lớp `NEPacketTunnelProvider`. Khi người dùng bấm 'Allow' cho phép cấu hình VPN Profile trong Settings, iOS sẽ thiết lập đường hầm mạng mã hóa ở tầng IP cho toàn bộ thiết bị.",
+                "Do đó, khi bật VPN trên điện thoại, IP của bạn trên mọi ứng dụng và mọi trang web mở trên Safari/Chrome đều trở thành IP của máy chủ Ấn Độ."
+              ],
+              "paragraphsVi": [
+                "Trái ngược hoàn toàn với Browser Extension, các ứng dụng VPN cài đặt trên điện thoại di động (như 1.1.1.1 WARP, OpenVPN, WireGuard, NordVPN, Surfshark app trên App Store / Google Play) là VPN ĐÍCH THỰC (System-wide True VPN).",
+                "Trên hệ điều hành Android, app VPN sử dụng API hệ thống cấp thấp là `android.net.VpnService`. API này tạo một Virtual TUN Interface (thường là `/dev/tun`) ngay trong Linux Kernel của Android. Hệ điều hành sẽ chuyển hướng 100% tất cả socket mạng (TCP, UDP, ICMP) từ TẤT CẢ các app (Chrome mobile, Safari mobile, Native App, Game, Banking app) đi qua hầm mã hóa này.",
+                "Trên hệ điều hành iOS (iPhone/iPad), Apple cung cấp framework `NetworkExtension` với lớp `NEPacketTunnelProvider`. Khi người dùng bấm 'Allow' cho phép cấu hình VPN Profile trong Settings, iOS sẽ thiết lập đường hầm mạng mã hóa ở tầng IP cho toàn bộ thiết bị.",
+                "Do đó, khi bật VPN trên điện thoại, IP của bạn trên mọi ứng dụng và mọi trang web mở trên Safari/Chrome đều trở thành IP của máy chủ Ấn Độ."
+              ],
+              "codeTitle": "Cách Android thiết lập VPN ảo ở tầng Linux Kernel bằng VpnService",
+              "codeLanguage": "java",
+              "codeContent": "// Mã nguồn Android Native VpnService (Java / Kotlin)\npublic class MyVpnService extends VpnService {\n    @Override\n    public int onStartCommand(Intent intent, int flags, int startId) {\n        Builder builder = new Builder();\n        builder.setSession(\"IndiaVpnTunnel\")\n               .addAddress(\"10.0.0.2\", 24)        // IP nội bộ trong hầm\n               .addRoute(\"0.0.0.0\", 0)            // Định tuyến TOÀN BỘ internet qua VPN\n               .addDnsServer(\"1.1.1.1\");          // Ép dùng DNS chống rò rỉ\n               \n        ParcelFileDescriptor vpnInterface = builder.establish();\n        // Toàn bộ socket mạng của Android giờ đây đã bị bọc kín 100%!\n        return START_STICKY;\n    }\n}",
+              "calloutType": "info",
+              "calloutTitle": "Sức mạnh của Mobile VPN",
+              "calloutTitleVi": "Sức mạnh của Mobile VPN",
+              "calloutText": "VPN trên Mobile là VPN cấp hệ điều hành (OS-level). Nó bảo vệ và bọc toàn bộ ứng dụng cài trên điện thoại, không chừa bất kỳ một ngóc ngách nào.",
+              "calloutTextVi": "VPN trên Mobile là VPN cấp hệ điều hành (OS-level). Nó bảo vệ và bọc toàn bộ ứng dụng cài trên điện thoại, không chừa bất kỳ một ngóc ngách nào."
+            },
+            {
+              "heading": "3. 4 'Sát Thủ Lật Mặt' Vị Trí Trên Mobile Mà VPN Hoàn Toàn Bó Tay!",
+              "headingVi": "3. 4 'Sát Thủ Lật Mặt' Vị Trí Trên Mobile Mà VPN Hoàn Toàn Bó Tay!",
+              "paragraphs": [
+                "Tuy VPN trên mobile là VPN thực sự, nhưng việc kiểm thử Geolocation trên điện thoại lại KHÓ KHĂN HƠN TRÊN PC GẤP 10 LẦN! Tại sao?",
+                "Vì trên điện thoại di động tích hợp 4 'sát thủ phần cứng' lật tẩy vị trí thực tế của bạn ngay cả khi IP của bạn đã là Ấn Độ 100%:",
+                "1. Chip GPS Phần Cứng (Hardware GPS/GLONASS): Điện thoại có chip antenna bắt sóng vệ tinh ngoài không gian. Nếu bạn mở trang web hoặc app mà bấm 'Cho phép truy cập vị trí', chip GPS sẽ gửi tọa độ vĩ độ/kinh độ chính xác tới từng milimet tại Việt Nam. VPN KHÔNG THỂ mã hóa hay thay đổi sóng vệ tinh của chip GPS!",
+                "2. Thẻ SIM & Mã Nhà Mạng Di Động (Cellular MCC/MNC): Ứng dụng mobile hoặc API trình duyệt di động có thể đọc thông tin SIM qua Telephony API. Mã Mobile Country Code (MCC) của Việt Nam là 452 (Viettel: 452-04, VinaPhone: 452-02). Khi app thấy IP Ấn Độ nhưng SIM lại mang mã `452`, hệ thống lập tức phát hiện bạn đang fake IP!",
+                "3. Trạm Thu Phát Sóng Di Động (Cell Tower ID): Điện thoại liên tục ping tới các trạm phát sóng BTS gần nhất ở phố nhà bạn. Vị trí này hoàn toàn độc lập với kết nối internet.",
+                "4. Cơ Chế Tiết Kiệm Pin (Battery Optimization / Doze Mode): Trên Android và iOS, khi bạn tắt màn hình hoặc để app chạy nền, hệ điều hành thường tự động 'bóp' (kill) tiến trình VPN chạy ngầm để tiết kiệm pin. Hậu quả là kết nối VPN bị đứt ngầm trong vài giây, làm lộ IP thật mà bạn không hề hay biết."
+              ],
+              "paragraphsVi": [
+                "Tuy VPN trên mobile là VPN thực sự, nhưng việc kiểm thử Geolocation trên điện thoại lại KHÓ KHĂN HƠN TRÊN PC GẤP 10 LẦN! Tại sao?",
+                "Vì trên điện thoại di động tích hợp 4 'sát thủ phần cứng' lật tẩy vị trí thực tế của bạn ngay cả khi IP của bạn đã là Ấn Độ 100%:",
+                "1. Chip GPS Phần Cứng (Hardware GPS/GLONASS): Điện thoại có chip antenna bắt sóng vệ tinh ngoài không gian. Nếu bạn mở trang web hoặc app mà bấm 'Cho phép truy cập vị trí', chip GPS sẽ gửi tọa độ vĩ độ/kinh độ chính xác tới từng milimet tại Việt Nam. VPN KHÔNG THỂ mã hóa hay thay đổi sóng vệ tinh của chip GPS!",
+                "2. Thẻ SIM & Mã Nhà Mạng Di Động (Cellular MCC/MNC): Ứng dụng mobile hoặc API trình duyệt di động có thể đọc thông tin SIM qua Telephony API. Mã Mobile Country Code (MCC) của Việt Nam là 452 (Viettel: 452-04, VinaPhone: 452-02). Khi app thấy IP Ấn Độ nhưng SIM lại mang mã `452`, hệ thống lập tức phát hiện bạn đang fake IP!",
+                "3. Trạm Thu Phát Sóng Di Động (Cell Tower ID): Điện thoại liên tục ping tới các trạm phát sóng BTS gần nhất ở phố nhà bạn. Vị trí này hoàn toàn độc lập với kết nối internet.",
+                "4. Cơ Chế Tiết Kiệm Pin (Battery Optimization / Doze Mode): Trên Android và iOS, khi bạn tắt màn hình hoặc để app chạy nền, hệ điều hành thường tự động 'bóp' (kill) tiến trình VPN chạy ngầm để tiết kiệm pin. Hậu quả là kết nối VPN bị đứt ngầm trong vài giây, làm lộ IP thật mà bạn không hề hay biết."
+              ],
+              "codeTitle": "Cách ứng dụng Android vạch mặt người dùng fake IP bằng mã SIM",
+              "codeLanguage": "kotlin",
+              "codeContent": "// Đoạn code Native Android phát hiện người dùng bật VPN nhưng lắp SIM Việt Nam:\nval telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager\n\nval simCountry = telephonyManager.simCountryIso // Trả về \"vn\"\nval networkCountry = telephonyManager.networkCountryIso // Trả về \"vn\"\nval networkOperator = telephonyManager.networkOperator // Trả về \"45204\" (Viettel)\n\n// So sánh với Country lấy từ IP Public:\nval ipCountry = geoService.getCountryFromIp() // Trả về \"IN\" (Ấn Độ do VPN)\n\nif (simCountry.equals(\"vn\", ignoreCase = true) && ipCountry == \"IN\") {\n    Log.w(\"FRAUD\", \"CẢNH BÁO: Phát hiện người dùng bật VPN Ấn Độ trên thiết bị cắm SIM Việt Nam!\");\n}",
+              "calloutType": "warning",
+              "calloutTitle": "Cạm bẫy khi test trên mobile",
+              "calloutTitleVi": "Cạm bẫy khi test trên mobile",
+              "calloutText": "Nếu website hoặc app của bạn có yêu cầu quyền vị trí (Location Permission) hoặc đọc dữ liệu thiết bị, chỉ bật VPN trên mobile là CHƯA ĐỦ để test pass!",
+              "calloutTextVi": "Nếu website hoặc app của bạn có yêu cầu quyền vị trí (Location Permission) hoặc đọc dữ liệu thiết bị, chỉ bật VPN trên mobile là CHƯA ĐỦ để test pass!"
+            },
+            {
+              "heading": "4. Cẩm Nang & Checklist Kiểm Thử Geolocation Chuẩn Mực Trên Mobile",
+              "headingVi": "4. Cẩm Nang & Checklist Kiểm Thử Geolocation Chuẩn Mực Trên Mobile",
+              "paragraphs": [
+                "Để test Geolocation trên điện thoại (cả Mobile Web lẫn Mobile App) chuẩn 100% không bị lật tẩy bởi các cơ chế phần cứng, Tester chuyên nghiệp cần tuân thủ 5 bước vàng sau:",
+                "Bước 1 (Vô hiệu hóa sóng di động): Bật Chế độ máy bay (Airplane Mode), sau đó chỉ bật kết nối Wi-Fi. Thao tác này sẽ ngắt toàn bộ sóng trạm BTS và vô hiệu hóa mã mạng SIM `MCC/MNC`.",
+                "Bước 2 (Giả lập tọa độ GPS bằng Mock Location): Trên Android, vào Cài đặt -> Tùy chọn nhà phát triển (Developer Options) -> Bật 'Chọn ứng dụng vị trí giả' (Select mock location app) -> Chọn ứng dụng 'Fake GPS Location'. Ghim vị trí tại Mumbai hoặc New Delhi, Ấn Độ.",
+                "Bước 3 (Tắt tối ưu hóa pin cho VPN): Vào Cài đặt pin -> Chọn app VPN -> Chuyển sang chế độ 'Không giới hạn' (Unrestricted) để Android không tự động kill VPN ngầm.",
+                "Bước 4 (Bật VPN và kiểm tra rò rỉ): Mở VPN kết nối Ấn Độ. Mở Chrome/Safari mobile truy cập `ipinfo.io` (kiểm tra IP) và `browserleaks.com/webrtc` (kiểm tra WebRTC).",
+                "Bước 5 (Kiểm thử thực tế): Mở website của công ty hoặc ứng dụng mobile để kiểm tra luồng nhận diện vị trí. Kết quả lúc này sẽ đồng nhất 100% từ IP cho đến GPS vệ tinh!"
+              ],
+              "paragraphsVi": [
+                "Để test Geolocation trên điện thoại (cả Mobile Web lẫn Mobile App) chuẩn 100% không bị lật tẩy bởi các cơ chế phần cứng, Tester chuyên nghiệp cần tuân thủ 5 bước vàng sau:",
+                "Bước 1 (Vô hiệu hóa sóng di động): Bật Chế độ máy bay (Airplane Mode), sau đó chỉ bật kết nối Wi-Fi. Thao tác này sẽ ngắt toàn bộ sóng trạm BTS và vô hiệu hóa mã mạng SIM `MCC/MNC`.",
+                "Bước 2 (Giả lập tọa độ GPS bằng Mock Location): Trên Android, vào Cài đặt -> Tùy chọn nhà phát triển (Developer Options) -> Bật 'Chọn ứng dụng vị trí giả' (Select mock location app) -> Chọn ứng dụng 'Fake GPS Location'. Ghim vị trí tại Mumbai hoặc New Delhi, Ấn Độ.",
+                "Bước 3 (Tắt tối ưu hóa pin cho VPN): Vào Cài đặt pin -> Chọn app VPN -> Chuyển sang chế độ 'Không giới hạn' (Unrestricted) để Android không tự động kill VPN ngầm.",
+                "Bước 4 (Bật VPN và kiểm tra rò rỉ): Mở VPN kết nối Ấn Độ. Mở Chrome/Safari mobile truy cập `ipinfo.io` (kiểm tra IP) và `browserleaks.com/webrtc` (kiểm tra WebRTC).",
+                "Bước 5 (Kiểm thử thực tế): Mở website của công ty hoặc ứng dụng mobile để kiểm tra luồng nhận diện vị trí. Kết quả lúc này sẽ đồng nhất 100% từ IP cho đến GPS vệ tinh!"
+              ],
+              "codeTitle": "Bảng so sánh 3 mô hình: VPN Extension (Web) vs VPN Mobile vs VPN Desktop",
+              "codeLanguage": "markdown",
+              "codeContent": "| Đặc Tính | VPN Trên Web (Extension) | VPN Trên Mobile (App) | VPN Trên PC Desktop (App) |\n| :--- | :--- | :--- | :--- |\n| **Bản chất công nghệ** | HTTPS/SOCKS5 Proxy | System-wide TUN Interface | System-wide TUN/TAP Adapter |\n| **Phạm vi bảo vệ** | Chỉ trong tab browser đó | Toàn bộ máy điện thoại | Toàn bộ máy vi tính |\n| **Rò rỉ WebRTC** | Rất dễ bị rò rỉ | Thấp (Tùy nhà mạng/App) | Rất thấp (Có KillSwitch) |\n| **Lỗ hổng phần cứng** | Không có GPS phần cứng | Bị lộ bởi GPS, SIM, BTS | Bị lộ bởi Wi-Fi BSSID Google |\n| **Cách khắc phục để test**| Bật Incognito, tắt WebRTC | Fake GPS + Airplane mode | Chrome Sensors giả lập |\n| **Mức độ khuyến nghị** | Chỉ test nhanh lướt web | **Bắt buộc khi test Mobile** | **Chuẩn mực cho Web Tester** |",
+              "calloutType": "tip",
+              "calloutTitle": "Tổng kết kinh nghiệm",
+              "calloutTitleVi": "Tổng kết kinh nghiệm",
+              "calloutText": "Nắm vững sự khác nhau giữa VPN trên Mobile và VPN trên Web giúp bạn tự tin làm chủ mọi môi trường test, từ Web desktop, Web responsive cho đến Native Mobile App mà không bao giờ bị các cơ chế bảo mật làm khó!",
+              "calloutTextVi": "Nắm vững sự khác nhau giữa VPN trên Mobile và VPN trên Web giúp bạn tự tin làm chủ mọi môi trường test, từ Web desktop, Web responsive cho đến Native Mobile App mà không bao giờ bị các cơ chế bảo mật làm khó!"
             }
           ]
         }
