@@ -6,263 +6,241 @@
 @using System.Text.Json
 @using BlazorWasmPortfolioGhAction.Pages
 
-<div class="dev-hub-app">
-    <div class="dev-hub-container">
-        <!-- Top Hero Banner -->
-        <header class="dev-hero">
-            <div class="dev-hero-badge-row">
-                <span class="dev-pill-badge">
-                    <span class="dev-pulse-dot"></span> ENGINEERING PLAYBOOK
+<div class="dev-master-app">
+    <div class="dev-wrapper">
+        <!-- Top Hero Banner (Follows Portfolio Design Language) -->
+        <header class="dev-top-hero">
+            <div class="dev-ambient-glow" aria-hidden="true"></div>
+            <div class="dev-brand-row">
+                <span class="dev-brand-pill">
+                    <span class="dev-live-dot"></span> ENGINEERING PLAYBOOK
                 </span>
-                <span class="dev-pill-badge outline">
-                    10 DOMAINS · CLI & BLUEPRINTS
+                <span class="dev-brand-pill outline">
+                    CORE BLUEPRINT & PRODUCTION ARSENAL
                 </span>
                 @if (_bookmarkedIds.Count > 0)
                 {
                     <button type="button" 
-                            class="dev-pill-badge" 
+                            class="dev-brand-pill" 
                             style="cursor: pointer; background: rgba(250, 204, 21, 0.15); color: #facc15; border-color: #facc15;"
-                            @onclick="ToggleShowOnlyFavorites">
+                            @onclick="() => SwitchTabAndFilterBookmarks()">
                         <i class="bi bi-star-fill"></i> @(_showOnlyFavorites ? (CultureService.IsEnglish ? "Show All Commands" : "Hiện Tất Cả") : $"{_bookmarkedIds.Count} {(CultureService.IsEnglish ? "Pinned" : "Đã Ghim")}")
                     </button>
                 }
             </div>
 
             <h1 class="dev-title">
-                @(CultureService.IsEnglish ? "Fullstack & Cloud Engineering Knowledge Hub" : "Sổ Tay Thực Chiến & Tra Cứu Lệnh Toàn Diện")
+                @(CultureService.IsEnglish ? "Fullstack & Cloud Engineering Knowledge Hub" : "Cẩm Nang Kỹ Thuật Phần Mềm & Tra Cứu Lệnh Thực Chiến")
             </h1>
             <p class="dev-subtitle">
-                @(CultureService.IsEnglish 
-                    ? "Production-tested command-line workflows, architecture blueprints, performance profiling, and troubleshooting guides across .NET 9/10, FastAPI, Model Context Protocol (MCP), Docker, AWS, PostgreSQL, and Linux."
-                    : "Hệ thống tra cứu câu lệnh thực chiến, kiến trúc hệ thống, bắt lỗi rò rỉ bộ nhớ, và mẹo vận hành sản xuất: .NET 9/10, FastAPI, Model Context Protocol (MCP), Docker đa nền tảng, AWS ECS/S3, PostgreSQL và Linux Sysadmin.")
+                Hệ thống tài liệu & lộ trình học chuẩn hóa cho <b>Khôi</b> · Lộ trình từ cơ bản đến nâng cao cho <b>Docker, Kubernetes, AWS, .NET Chuyên Sâu, AI/MCP</b>; bộ sinh câu lệnh tham số động, mổ xẻ cờ lệnh production và kỹ năng bắt bệnh sự cố hệ thống.
             </p>
 
             @if (_data != null)
             {
-                <div class="dev-stats-row">
-                    <div class="dev-stat-item">
-                        <span class="dev-stat-val">@_data.Domains.Count</span>
-                        <span class="dev-stat-lbl">@(CultureService.IsEnglish ? "Domains" : "Miền Tri Thức")</span>
+                <div class="dev-stats-ticker">
+                    <div class="dev-ticker-item">
+                        <span class="dev-ticker-val">@_data.Roadmaps.Count Lộ Trình</span>
+                        <span class="dev-ticker-lbl">Từ Cơ Bản Đến Nâng Cao</span>
                     </div>
-                    <div class="dev-stat-item">
-                        <span class="dev-stat-val">@_data.Commands.Count</span>
-                        <span class="dev-stat-lbl">@(CultureService.IsEnglish ? "Playbooks & Commands" : "Lệnh & Kiến Trúc")</span>
+                    <div class="dev-ticker-sep"></div>
+                    <div class="dev-ticker-item">
+                        <span class="dev-ticker-val">@_data.Domains.Count Miền</span>
+                        <span class="dev-ticker-lbl">Chuyên Đề Công Nghệ</span>
                     </div>
-                    <div class="dev-stat-item">
-                        <span class="dev-stat-val">@FilteredCommands.Count()</span>
-                        <span class="dev-stat-lbl">@(CultureService.IsEnglish ? "Matching Results" : "Kết Quả Khớp")</span>
+                    <div class="dev-ticker-sep"></div>
+                    <div class="dev-ticker-item">
+                        <span class="dev-ticker-val">@_data.Commands.Count</span>
+                        <span class="dev-ticker-lbl">Lệnh & Blueprints</span>
                     </div>
-                    <div class="dev-stat-item">
-                        <span class="dev-stat-val">@_bookmarkedIds.Count</span>
-                        <span class="dev-stat-lbl">@(CultureService.IsEnglish ? "Bookmarked" : "Đã Lưu Yêu Thích")</span>
+                    <div class="dev-ticker-sep"></div>
+                    <div class="dev-ticker-item highlight">
+                        <span class="dev-ticker-val">@_bookmarkedIds.Count</span>
+                        <span class="dev-ticker-lbl">Lệnh Đã Ghim</span>
                     </div>
                 </div>
             }
         </header>
 
-        <!-- Global Interactive Parameter Substitution Drawer -->
-        @if (_data?.DefaultParameters != null && _data.DefaultParameters.Any())
-        {
-            <section class="dev-param-drawer">
-                <div class="dev-param-header">
-                    <div class="dev-param-title">
-                        <i class="bi bi-sliders2-vertical" style="color: #38bdf8;"></i>
-                        <span>@(CultureService.IsEnglish ? "Live Parameter Substitution (Auto-fills into all commands)" : "Bộ Sinh Lệnh Tự Động (Tự điền giá trị vào mọi câu lệnh)")</span>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" style="font-size: 0.75rem;" @onclick="ResetDefaultParameters">
-                        <i class="bi bi-arrow-counterclockwise"></i> @(CultureService.IsEnglish ? "Reset Defaults" : "Khôi phục mặc định")
-                    </button>
-                </div>
-                <div class="dev-param-grid">
-                    @foreach (var p in _data.DefaultParameters)
-                    {
-                        var key = p.Key;
-                        var val = _paramValues.ContainsKey(key) ? _paramValues[key] : p.DefaultValue;
-                        <div class="dev-param-card">
-                            <label class="dev-param-label" for="@($"param-{key}")">@p.Label (@($"{{{{{key}}}}}"))</label>
-                            <div class="dev-param-input-wrapper">
-                                <input id="@($"param-{key}")"
-                                       type="text" 
-                                       class="dev-param-input" 
-                                       value="@val" 
-                                       placeholder="@p.Placeholder"
-                                       @oninput="(e) => UpdateParam(key, e.Value?.ToString() ?? string.Empty)" />
-                            </div>
-                        </div>
-                    }
-                </div>
-            </section>
-        }
-
-        <!-- Search & Filter Controls -->
-        <section class="dev-filter-bar">
-            <!-- Full-text instant search -->
-            <div class="dev-search-input-box">
-                <i class="bi bi-search dev-search-icon"></i>
-                <input type="text" 
-                       class="dev-search-input" 
-                       placeholder="@(CultureService.IsEnglish ? "Search by keyword, command, tag (e.g. AOT, FastMCP, ECS, EXPLAIN, ripgrep)..." : "Tìm kiếm theo từ khóa, lệnh, tag (ví dụ: AOT, FastMCP, ECS, EXPLAIN, ripgrep)...")" 
-                       @bind="_searchTerm" 
-                       @bind:event="oninput" />
-            </div>
-
-            <!-- Domain Pills Selector -->
-            @if (_data?.Domains != null)
+        <!-- Main Tab Navigation Bar -->
+        <nav class="dev-tab-bar" role="tablist" aria-label="Các phân hệ Development Learning">
+            @foreach (var tab in _mainTabs)
             {
-                <nav class="dev-domains-nav" aria-label="Lọc theo miền tri thức">
-                    <button type="button" 
-                            class="dev-domain-btn @(_selectedDomainId == null ? "active" : "")"
-                            @onclick="() => SelectDomain(null)">
-                        <i class="bi bi-grid-fill"></i>
-                        <span>@(CultureService.IsEnglish ? "All Domains" : "Tất Cả")</span>
-                        <span class="dev-domain-badge">@_data.Commands.Count</span>
-                    </button>
-                    @foreach (var domain in _data.Domains)
+                var isActive = _activeMainTab == tab.Key;
+                <button type="button"
+                        role="tab"
+                        aria-selected="@isActive"
+                        class="dev-nav-btn @(isActive ? "active" : "")"
+                        @onclick="() => _activeMainTab = tab.Key">
+                    <i class="bi @tab.Icon" aria-hidden="true"></i>
+                    <span>@tab.Label</span>
+                    @if (!string.IsNullOrEmpty(tab.Badge))
                     {
-                        var isAct = _selectedDomainId == domain.Id;
-                        var count = _data.Commands.Count(c => c.DomainId == domain.Id);
-                        <button type="button" 
-                                class="dev-domain-btn @(isAct ? "active" : "")"
-                                style="@(isAct ? $"border-color: {domain.Color}; background: {domain.Color}22;" : "")"
-                                @onclick="() => SelectDomain(domain.Id)">
-                            <i class="bi @domain.Icon" style="@(isAct ? $"color: {domain.Color};" : "")"></i>
-                            <span>@(CultureService.IsEnglish ? domain.Name : domain.NameVi)</span>
-                            <span class="dev-domain-badge">@count</span>
-                        </button>
+                        <span class="dev-nav-btn-badge">@tab.Badge</span>
                     }
-                </nav>
+                </button>
             }
+        </nav>
 
-            <!-- Level Pills Selector -->
-            <div class="dev-level-nav">
-                <span class="dev-level-label"><i class="bi bi-funnel"></i> @(CultureService.IsEnglish ? "Level:" : "Mức độ:")</span>
-                <button type="button" class="dev-level-pill @(_selectedLevel == null ? "active" : "")" @onclick="() => SelectLevel(null)">
-                    @(CultureService.IsEnglish ? "All" : "Tất cả")
-                </button>
-                <button type="button" class="dev-level-pill @(_selectedLevel == "Daily Practical" ? "active" : "")" @onclick='() => SelectLevel("Daily Practical")'>
-                    🟢 Daily Practical
-                </button>
-                <button type="button" class="dev-level-pill @(_selectedLevel == "Production Tuning" ? "active" : "")" @onclick='() => SelectLevel("Production Tuning")'>
-                    🟡 Production Tuning
-                </button>
-                <button type="button" class="dev-level-pill @(_selectedLevel == "Disaster Recovery" ? "active" : "")" @onclick='() => SelectLevel("Disaster Recovery")'>
-                    🔴 Disaster Recovery
-                </button>
-                <button type="button" class="dev-level-pill @(_selectedLevel == "Senior Architecture" ? "active" : "")" @onclick='() => SelectLevel("Senior Architecture")'>
-                    🟣 Senior Architecture
-                </button>
-            </div>
-        </section>
-
-        <!-- Main Commands Grid -->
         @if (_isLoading)
         {
-            <div style="text-align: center; padding: 4rem 1rem; color: var(--dev-text-muted);">
+            <div style="text-align: center; padding: 4rem 1rem; color: var(--color-text-muted);">
                 <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; margin-bottom: 1rem;"></div>
-                <p>@(CultureService.IsEnglish ? "Loading Developer Playbook & Command Hub..." : "Đang tải dữ liệu thực chiến Development Learning...")</p>
+                <p>Đang tải tài liệu Development Learning Hub...</p>
             </div>
         }
-        else if (!FilteredCommands.Any())
+        else if (_data != null)
         {
-            <div class="dev-empty-state">
-                <i class="bi bi-search dev-empty-icon"></i>
-                <h4>@(CultureService.IsEnglish ? "No matching commands found" : "Không tìm thấy câu lệnh phù hợp")</h4>
-                <p>@(CultureService.IsEnglish ? "Try clearing filters or searching for another keyword." : "Vui lòng thử từ khóa khác hoặc xóa bộ lọc.")</p>
-                <button type="button" class="btn btn-outline-primary btn-sm mt-2" @onclick="ClearFilters">
-                    @(CultureService.IsEnglish ? "Reset All Filters" : "Xóa Tất Cả Bộ Lọc")
-                </button>
-            </div>
-        }
-        else
-        {
-            <main class="dev-cards-grid">
-                @foreach (var cmd in FilteredCommands)
+            <main class="dev-viewport">
+                @switch (_activeMainTab)
                 {
-                    var isBookmarked = _bookmarkedIds.Contains(cmd.Id);
-                    var domain = _data?.Domains.FirstOrDefault(d => d.Id == cmd.DomainId);
-                    var renderedCommand = ReplaceParameters(cmd.RawCommand);
-                    var isCopied = _copiedId == cmd.Id;
-                    var showFlags = _expandedFlags.Contains(cmd.Id);
-                    var levelClass = cmd.Level.Replace(" ", "-");
-
-                    <article class="dev-card" id="@($"cmd-{cmd.Id}")">
-                        <!-- Card Header -->
-                        <div class="dev-card-header">
-                            <div>
-                                <div class="dev-card-meta-row">
-                                    @if (domain != null)
-                                    {
-                                        <span class="dev-meta-tag" style="color: @domain.Color; border: 1px solid @(domain.Color)44; background: @(domain.Color)11;">
-                                            <i class="bi @domain.Icon"></i> @(CultureService.IsEnglish ? domain.Name : domain.NameVi)
-                                        </span>
-                                    }
-                                    <span class="dev-meta-tag">@cmd.Subcategory</span>
-                                    <span class="dev-level-badge @levelClass">@cmd.Level</span>
-                                    @foreach (var tag in cmd.Tags.Take(3))
-                                    {
-                                        <span class="dev-meta-tag">#@tag</span>
-                                    }
-                                </div>
-                                <h3 class="dev-card-title">
-                                    @(CultureService.IsEnglish ? cmd.Title : cmd.TitleVi)
-                                </h3>
-                                <p class="dev-card-desc">
-                                    @(CultureService.IsEnglish ? cmd.Description : cmd.DescriptionVi)
-                                </p>
+                    case "roadmaps":
+                        <!-- ===================================================================
+                             TAB 1: LỘ TRÌNH TỪ CƠ BẢN ĐẾN NÂNG CAO (DOCKER, K8S, AWS, .NET)
+                             =================================================================== -->
+                        <div class="dev-roadmaps-section">
+                            <!-- Roadmap Selector Pills -->
+                            <div class="dev-roadmap-selector">
+                                @foreach (var r in _data.Roadmaps)
+                                {
+                                    var isAct = _selectedRoadmapId == r.Id;
+                                    <button type="button"
+                                            class="dev-filter-chip @(isAct ? "active" : "")"
+                                            @onclick="() => _selectedRoadmapId = r.Id">
+                                        <i class="bi @r.Icon me-1"></i>
+                                        <span>@(CultureService.IsEnglish ? r.Title : r.TitleVi)</span>
+                                    </button>
+                                }
                             </div>
 
-                            <div class="dev-card-actions">
-                                <button type="button" 
-                                        class="dev-icon-btn @(isBookmarked ? "bookmarked" : "")" 
-                                        title="@(isBookmarked ? "Bỏ ghim" : "Ghim lệnh này")"
-                                        @onclick="() => ToggleBookmark(cmd.Id)">
-                                    <i class="bi @(isBookmarked ? "bi-star-fill" : "bi-star")"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- macOS Styled Terminal Code Block -->
-                        <div class="dev-terminal">
-                            <div class="dev-terminal-topbar">
-                                <div class="dev-window-dots">
-                                    <span class="dev-dot red"></span>
-                                    <span class="dev-dot yellow"></span>
-                                    <span class="dev-dot green"></span>
-                                </div>
-                                <span class="dev-terminal-lang">@cmd.CodeLanguage</span>
-                                <button type="button" 
-                                        class="dev-copy-btn @(isCopied ? "copied" : "")"
-                                        @onclick="() => CopyToClipboard(cmd.Id, renderedCommand)">
-                                    <i class="bi @(isCopied ? "bi-check2" : "bi-clipboard")"></i>
-                                    <span>@(isCopied ? (CultureService.IsEnglish ? "Copied!" : "Đã Chép!") : (CultureService.IsEnglish ? "Copy" : "Sao Chép"))</span>
-                                </button>
-                            </div>
-                            <pre class="dev-code-pre"><code>@renderedCommand</code></pre>
-                        </div>
-
-                        <!-- Card Body: Flags & Tips -->
-                        <div class="dev-card-body">
-                            <!-- Flag Inspector Accordion -->
-                            @if (cmd.Flags != null && cmd.Flags.Any())
+                            @if (ActiveRoadmap != null)
                             {
-                                <div class="dev-flags-accordion">
-                                    <div class="dev-flags-header" @onclick="() => ToggleFlags(cmd.Id)">
-                                        <span>
-                                            <i class="bi bi-info-circle me-1"></i>
-                                            @(CultureService.IsEnglish ? $"Flag Inspector ({cmd.Flags.Count} flags explained)" : $"Giải Thích Cờ / Tham Số ({cmd.Flags.Count} flags)")
-                                        </span>
-                                        <i class="bi @(showFlags ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                                <!-- Roadmap Hero Card -->
+                                <div class="dev-roadmap-hero-card">
+                                    <div>
+                                        <h2 class="dev-roadmap-hero-title">
+                                            <i class="bi @ActiveRoadmap.Icon" style="color: @ActiveRoadmap.Color;"></i>
+                                            @(CultureService.IsEnglish ? ActiveRoadmap.Title : ActiveRoadmap.TitleVi)
+                                        </h2>
+                                        <p class="dev-roadmap-hero-desc">
+                                            @(CultureService.IsEnglish ? ActiveRoadmap.Summary : ActiveRoadmap.SummaryVi)
+                                        </p>
                                     </div>
-                                    @if (showFlags)
+                                    <span class="dev-brand-pill" style="border-color: @ActiveRoadmap.Color; color: @ActiveRoadmap.Color;">
+                                        @ActiveRoadmap.Stages.Count Cấp Độ Học Tập
+                                    </span>
+                                </div>
+
+                                <!-- 3-Stage Progression Cards (Cơ bản -> Trung cấp -> Nâng cao) -->
+                                <div class="dev-stages-grid">
+                                    @foreach (var stage in ActiveRoadmap.Stages)
                                     {
-                                        <div class="dev-flags-content">
-                                            @foreach (var flag in cmd.Flags)
+                                        var lvlClass = stage.Level.Replace(" ", "-");
+                                        <div class="dev-stage-card">
+                                            <div class="dev-stage-card-header">
+                                                <span class="dev-stage-level-badge @lvlClass">
+                                                    @stage.Badge
+                                                </span>
+                                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted);">
+                                                    @(CultureService.IsEnglish ? stage.LevelEn : stage.Level)
+                                                </span>
+                                            </div>
+
+                                            <div class="dev-stage-goal-box">
+                                                <b><i class="bi bi-bullseye text-primary me-1"></i> Mục Tiêu:</b>
+                                                @(CultureService.IsEnglish ? stage.Goal : stage.GoalVi)
+                                            </div>
+
+                                            <div class="dev-stage-section-title">
+                                                <i class="bi bi-check2-circle text-success"></i> Kiến Thức Then Chốt:
+                                            </div>
+                                            <ul class="dev-stage-list">
+                                                @foreach (var c in (CultureService.IsEnglish ? stage.KeyConcepts : stage.KeyConceptsVi))
+                                                {
+                                                    <li>@c</li>
+                                                }
+                                            </ul>
+
+                                            <div class="dev-stage-section-title">
+                                                <i class="bi bi-laptop text-info"></i> Thực Hành Thực Chiến:
+                                            </div>
+                                            <ul class="dev-stage-list">
+                                                @foreach (var task in (CultureService.IsEnglish ? stage.PracticalTasks : stage.PracticalTasksVi))
+                                                {
+                                                    <li>@task</li>
+                                                }
+                                            </ul>
+
+                                            @if (stage.RecommendedCommands != null && stage.RecommendedCommands.Any())
                                             {
-                                                <div class="dev-flag-row">
-                                                    <span class="dev-flag-pill">@flag.Flag</span>
-                                                    <span class="dev-flag-desc">
-                                                        @(CultureService.IsEnglish ? flag.Explanation : flag.ExplanationVi)
-                                                    </span>
+                                                <div class="dev-stage-section-title">
+                                                    <i class="bi bi-terminal text-warning"></i> Lệnh Cốt Lõi:
+                                                </div>
+                                                <div class="dev-stage-cmd-box">
+                                                    @foreach (var cmd in stage.RecommendedCommands)
+                                                    {
+                                                        <div>$ @cmd</div>
+                                                    }
+                                                </div>
+                                            }
+
+                                            <div class="dev-stage-gotcha-box">
+                                                <b><i class="bi bi-exclamation-triangle-fill me-1"></i> Cạm bẫy:</b>
+                                                @(CultureService.IsEnglish ? stage.CommonGotchas : stage.CommonGotchasVi)
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        break;
+
+                    case "playbook":
+                        <!-- ===================================================================
+                             TAB 2: KHO TRA CỨU LỆNH & BLUEPRINTS (WITH FIXED PARAMETER DRAWER)
+                             =================================================================== -->
+                        <div class="dev-playbook-section">
+                            <!-- Fixed & Redesigned Parameter Substitution Drawer -->
+                            @if (_data.DefaultParameters != null && _data.DefaultParameters.Any())
+                            {
+                                <div class="dev-param-card">
+                                    <div class="dev-param-header">
+                                        <div class="dev-param-title-group">
+                                            <i class="bi bi-sliders2-vertical text-primary" style="font-size: 1.15rem;"></i>
+                                            <span>Bộ Sinh Lệnh Tự Động (Auto-fills parameters into all commands)</span>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-link text-decoration-none p-0 ms-2" 
+                                                    style="font-size: 0.8rem;" 
+                                                    @onclick="() => _showParamDrawer = !_showParamDrawer">
+                                                <i class="bi @(_showParamDrawer ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                                                @(_showParamDrawer ? "Thu gọn" : "Mở rộng cấu hình")
+                                            </button>
+                                        </div>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-secondary" 
+                                                style="font-size: 0.78rem; border-radius: 6px;" 
+                                                @onclick="ResetDefaultParameters">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Khôi phục mặc định
+                                        </button>
+                                    </div>
+
+                                    @if (_showParamDrawer)
+                                    {
+                                        <div class="dev-param-grid">
+                                            @foreach (var p in _data.DefaultParameters)
+                                            {
+                                                var key = p.Key;
+                                                var val = _paramValues.ContainsKey(key) ? _paramValues[key] : p.DefaultValue;
+                                                <div class="dev-param-field">
+                                                    <div class="dev-param-label-row">
+                                                        <span>@(CultureService.IsEnglish ? p.Label : p.LabelVi)</span>
+                                                        <span class="dev-param-key-tag">@($"{{{{{key}}}}}")</span>
+                                                    </div>
+                                                    <input type="text" 
+                                                           class="dev-param-input" 
+                                                           value="@val" 
+                                                           placeholder="@p.Placeholder"
+                                                           @oninput="(e) => UpdateParam(key, e.Value?.ToString() ?? string.Empty)" />
                                                 </div>
                                             }
                                         </div>
@@ -270,31 +248,188 @@
                                 </div>
                             }
 
-                            <!-- When To Use Alert -->
-                            @if (!string.IsNullOrWhiteSpace(cmd.WhenToUse))
+                            <!-- Search Bar & Filters -->
+                            <div class="dev-search-bar-row">
+                                <div class="dev-search-input-wrapper">
+                                    <i class="bi bi-search dev-search-icon"></i>
+                                    <input type="text" 
+                                           class="dev-search-input-field" 
+                                           placeholder="Tìm kiếm lệnh, flag, kiến trúc (ví dụ: AOT, FastMCP, ECS, EXPLAIN, worktree)..." 
+                                           @bind="_searchTerm" 
+                                           @bind:event="oninput" />
+                                </div>
+                            </div>
+
+                            <!-- Domains Selector Pills -->
+                            <div class="dev-roadmap-selector" style="margin-bottom: 1.25rem;">
+                                <button type="button" 
+                                        class="dev-filter-chip @(_selectedDomainId == null ? "active" : "")"
+                                        @onclick="() => _selectedDomainId = null">
+                                    <i class="bi bi-grid-fill me-1"></i>
+                                    <span>Tất Cả (@_data.Commands.Count)</span>
+                                </button>
+                                @foreach (var d in _data.Domains)
+                                {
+                                    var isAct = _selectedDomainId == d.Id;
+                                    var count = _data.Commands.Count(c => c.DomainId == d.Id);
+                                    <button type="button" 
+                                            class="dev-filter-chip @(isAct ? "active" : "")"
+                                            @onclick="() => _selectedDomainId = d.Id">
+                                        <i class="bi @d.Icon me-1"></i>
+                                        <span>@(CultureService.IsEnglish ? d.Name : d.NameVi) (@count)</span>
+                                    </button>
+                                }
+                            </div>
+
+                            <!-- Level Chips -->
+                            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                                <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-text-secondary); margin-right: 0.25rem;">
+                                    <i class="bi bi-funnel"></i> Mức độ:
+                                </span>
+                                <button type="button" class="btn btn-sm @(_selectedLevel == null ? "btn-primary" : "btn-outline-secondary")" style="font-size: 0.75rem;" @onclick="() => _selectedLevel = null">
+                                    Tất cả
+                                </button>
+                                <button type="button" class="btn btn-sm @(_selectedLevel == "Daily Practical" ? "btn-success" : "btn-outline-secondary")" style="font-size: 0.75rem;" @onclick='() => _selectedLevel = "Daily Practical"'>
+                                    🟢 Daily Practical
+                                </button>
+                                <button type="button" class="btn btn-sm @(_selectedLevel == "Production Tuning" ? "btn-warning" : "btn-outline-secondary")" style="font-size: 0.75rem;" @onclick='() => _selectedLevel = "Production Tuning"'>
+                                    🟡 Production Tuning
+                                </button>
+                                <button type="button" class="btn btn-sm @(_selectedLevel == "Disaster Recovery" ? "btn-danger" : "btn-outline-secondary")" style="font-size: 0.75rem;" @onclick='() => _selectedLevel = "Disaster Recovery"'>
+                                    🔴 Disaster Recovery
+                                </button>
+                                <button type="button" class="btn btn-sm @(_selectedLevel == "Senior Architecture" ? "btn-info" : "btn-outline-secondary")" style="font-size: 0.75rem;" @onclick='() => _selectedLevel = "Senior Architecture"'>
+                                    🟣 Senior Architecture
+                                </button>
+                            </div>
+
+                            <!-- Commands Grid -->
+                            @if (!FilteredCommands.Any())
                             {
-                                <div class="dev-alert-box when-to-use">
-                                    <i class="bi bi-check-circle-fill dev-alert-icon"></i>
-                                    <div>
-                                        <strong>@(CultureService.IsEnglish ? "When to use:" : "Khi nào nên dùng:")</strong>
-                                        <span>@(CultureService.IsEnglish ? cmd.WhenToUse : cmd.WhenToUseVi)</span>
-                                    </div>
+                                <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-muted); background: var(--color-bg-surface); border: 1px dashed var(--color-border); border-radius: var(--radius-xl, 1rem);">
+                                    <i class="bi bi-search" style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem; color: var(--color-brand-symbol);"></i>
+                                    <h5>Không tìm thấy câu lệnh phù hợp</h5>
+                                    <p>Vui lòng xóa bộ lọc hoặc thử từ khóa tìm kiếm khác.</p>
+                                    <button type="button" class="btn btn-sm btn-primary mt-2" @onclick="ClearFilters">
+                                        Xóa Tất Cả Bộ Lọc
+                                    </button>
                                 </div>
                             }
-
-                            <!-- Pitfalls & Gotchas Alert -->
-                            @if (!string.IsNullOrWhiteSpace(cmd.Pitfalls))
+                            else
                             {
-                                <div class="dev-alert-box pitfalls">
-                                    <i class="bi bi-exclamation-triangle-fill dev-alert-icon"></i>
-                                    <div>
-                                        <strong>@(CultureService.IsEnglish ? "Production Gotchas & Pitfalls:" : "Cạm bẫy thực chiến cần tránh:")</strong>
-                                        <span>@(CultureService.IsEnglish ? cmd.Pitfalls : cmd.PitfallsVi)</span>
-                                    </div>
+                                <div class="dev-cards-grid">
+                                    @foreach (var cmd in FilteredCommands)
+                                    {
+                                        var isBookmarked = _bookmarkedIds.Contains(cmd.Id);
+                                        var domain = _data.Domains.FirstOrDefault(d => d.Id == cmd.DomainId);
+                                        var renderedCommand = ReplaceParameters(cmd.RawCommand);
+                                        var isCopied = _copiedId == cmd.Id;
+                                        var showFlags = _expandedFlags.Contains(cmd.Id);
+
+                                        <article class="dev-card" id="@($"cmd-{cmd.Id}")">
+                                            <div class="dev-card-header">
+                                                <div>
+                                                    <div class="dev-card-meta-row">
+                                                        @if (domain != null)
+                                                        {
+                                                            <span class="dev-meta-pill" style="color: @domain.Color; border-color: @domain.Color;">
+                                                                <i class="bi @domain.Icon"></i> @(CultureService.IsEnglish ? domain.Name : domain.NameVi)
+                                                            </span>
+                                                        }
+                                                        <span class="dev-meta-pill">@cmd.Subcategory</span>
+                                                        <span class="dev-meta-pill">@cmd.Level</span>
+                                                    </div>
+                                                    <h3 class="dev-card-title">
+                                                        @(CultureService.IsEnglish ? cmd.Title : cmd.TitleVi)
+                                                    </h3>
+                                                    <p class="dev-card-desc">
+                                                        @(CultureService.IsEnglish ? cmd.Description : cmd.DescriptionVi)
+                                                    </p>
+                                                </div>
+
+                                                <button type="button" 
+                                                        class="btn btn-sm @(isBookmarked ? "btn-warning" : "btn-outline-secondary")"
+                                                        style="border-radius: 8px;"
+                                                        title="@(isBookmarked ? "Bỏ ghim" : "Ghim lệnh này")"
+                                                        @onclick="() => ToggleBookmark(cmd.Id)">
+                                                    <i class="bi @(isBookmarked ? "bi-star-fill" : "bi-star")"></i>
+                                                </button>
+                                            </div>
+
+                                            <!-- Terminal Code Block -->
+                                            <div class="dev-terminal">
+                                                <div class="dev-terminal-topbar">
+                                                    <div class="dev-window-dots">
+                                                        <span class="dev-dot red"></span>
+                                                        <span class="dev-dot yellow"></span>
+                                                        <span class="dev-dot green"></span>
+                                                    </div>
+                                                    <span class="dev-terminal-lang">@cmd.CodeLanguage</span>
+                                                    <button type="button" 
+                                                            class="dev-copy-btn @(isCopied ? "copied" : "")"
+                                                            @onclick="() => CopyToClipboard(cmd.Id, renderedCommand)">
+                                                        <i class="bi @(isCopied ? "bi-check2" : "bi-clipboard")"></i>
+                                                        <span>@(isCopied ? "Đã Chép!" : "Sao Chép")</span>
+                                                    </button>
+                                                </div>
+                                                <pre class="dev-code-pre"><code>@renderedCommand</code></pre>
+                                            </div>
+
+                                            <!-- Card Body -->
+                                            <div class="dev-card-body">
+                                                @if (cmd.Flags != null && cmd.Flags.Any())
+                                                {
+                                                    <div class="dev-flag-accordion">
+                                                        <div class="dev-flag-accordion-header" @onclick="() => ToggleFlags(cmd.Id)">
+                                                            <span>
+                                                                <i class="bi bi-info-circle me-1"></i>
+                                                                Giải thích cờ & tham số (@cmd.Flags.Count cờ)
+                                                            </span>
+                                                            <i class="bi @(showFlags ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                                                        </div>
+                                                        @if (showFlags)
+                                                        {
+                                                            <div class="dev-flag-accordion-body">
+                                                                @foreach (var flag in cmd.Flags)
+                                                                {
+                                                                    <div class="dev-flag-item">
+                                                                        <span class="dev-flag-code">@flag.Flag</span>
+                                                                        <span class="dev-flag-desc">
+                                                                            @(CultureService.IsEnglish ? flag.Explanation : flag.ExplanationVi)
+                                                                        </span>
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
+
+                                                @if (!string.IsNullOrWhiteSpace(cmd.WhenToUse))
+                                                {
+                                                    <div class="dev-tip-box when-to-use">
+                                                        <i class="bi bi-check-circle-fill text-success" style="font-size: 1.1rem; margin-top: 1px;"></i>
+                                                        <div>
+                                                            <b>Khi nào nên dùng:</b> @(CultureService.IsEnglish ? cmd.WhenToUse : cmd.WhenToUseVi)
+                                                        </div>
+                                                    </div>
+                                                }
+
+                                                @if (!string.IsNullOrWhiteSpace(cmd.Pitfalls))
+                                                {
+                                                    <div class="dev-tip-box pitfalls">
+                                                        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 1.1rem; margin-top: 1px;"></i>
+                                                        <div>
+                                                            <b>Cạm bẫy thực chiến:</b> @(CultureService.IsEnglish ? cmd.Pitfalls : cmd.PitfallsVi)
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </article>
+                                    }
                                 </div>
                             }
                         </div>
-                    </article>
+                        break;
                 }
             </main>
         }
@@ -304,15 +439,24 @@
 @code {
     private DevLearningData? _data;
     private bool _isLoading = true;
-    private string _searchTerm = "";
+    private string _activeMainTab = "roadmaps"; // roadmaps, playbook
+    private string _selectedRoadmapId = "docker";
     private string? _selectedDomainId = null;
     private string? _selectedLevel = null;
+    private string _searchTerm = "";
     private bool _showOnlyFavorites = false;
+    private bool _showParamDrawer = true;
     private string? _copiedId = null;
 
     private Dictionary<string, string> _paramValues = new(StringComparer.OrdinalIgnoreCase);
     private HashSet<string> _bookmarkedIds = new();
     private HashSet<string> _expandedFlags = new();
+
+    private readonly List<(string Key, string Label, string Icon, string Badge)> _mainTabs = new()
+    {
+        ("roadmaps", "Lộ Trình Học: Từ Cơ Bản Đến Nâng Cao", "bi-diagram-3-fill", "4 Lộ Trình"),
+        ("playbook", "Kho Tra Cứu Lệnh & Blueprints", "bi-terminal-fill", "Live Params")
+    };
 
     private static readonly JsonSerializerOptions _jsonOpts = new()
     {
@@ -363,6 +507,8 @@
         }
     }
 
+    private DevRoadmap? ActiveRoadmap => _data?.Roadmaps.FirstOrDefault(r => r.Id == _selectedRoadmapId);
+
     private IEnumerable<DevCommandItem> FilteredCommands
     {
         get
@@ -403,9 +549,11 @@
         }
     }
 
-    private void SelectDomain(string? domainId) => _selectedDomainId = domainId;
-    private void SelectLevel(string? level) => _selectedLevel = level;
-    private void ToggleShowOnlyFavorites() => _showOnlyFavorites = !_showOnlyFavorites;
+    private void SwitchTabAndFilterBookmarks()
+    {
+        _activeMainTab = "playbook";
+        _showOnlyFavorites = !_showOnlyFavorites;
+    }
 
     private void ClearFilters()
     {
@@ -415,10 +563,7 @@
         _showOnlyFavorites = false;
     }
 
-    private void UpdateParam(string key, string val)
-    {
-        _paramValues[key] = val;
-    }
+    private void UpdateParam(string key, string val) => _paramValues[key] = val;
 
     private void ResetDefaultParameters()
     {
