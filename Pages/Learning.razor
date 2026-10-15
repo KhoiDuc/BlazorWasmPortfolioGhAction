@@ -1,0 +1,248 @@
+@page "/learning"
+@page "/{lang:regex(^(en|vn)$)}/learning"
+@inherits CultureAwareComponent
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<div class="learning-hub-app">
+    <div class="learning-hub-wrapper">
+        <!-- Unified Sub-Navigation Sticky Bar -->
+        <LearningSubNav ActiveSection="hub" />
+
+        <!-- Hero Section -->
+        <header class="learning-top-hero">
+            <div class="learning-ambient-glow" aria-hidden="true"></div>
+            
+            <div class="learning-brand-row">
+                <span class="learning-brand-pill">
+                    <span class="learning-live-dot"></span> LEARNING ECOSYSTEM
+                </span>
+                <span class="learning-brand-pill outline">
+                    @(CultureService.IsEnglish ? "KHOI NGUYEN · MASTERY HUB" : "PHÁT TRIỂN TOÀN DIỆN · KHÔI NGUYỄN")
+                </span>
+            </div>
+
+            <h1 class="learning-title">
+                @(CultureService.IsEnglish ? "Knowledge & Engineering Mastery Hub" : "Trung Tâm Học Tập & Nâng Cao Kỹ Năng")
+            </h1>
+
+            <p class="learning-subtitle">
+                @(CultureService.IsEnglish 
+                    ? "A comprehensive ecosystem integrating reflexive English speaking with A-R-E-A framework, standardized 4-skills TOEIC exam blueprint, and real-world software engineering deep-dive blog series."
+                    : "Hệ sinh thái tri thức toàn diện cho Khôi Nguyễn: Kết hợp hài hòa giữa Giao tiếp tiếng Anh phản xạ tự nhiên (Speaking Studio), Cẩm nang luyện thi chuẩn hóa (TOEIC Hub) và Lộ trình công nghệ chuyên sâu từ cơ bản đến thực chiến (Dev Learning).")
+            </p>
+
+            <!-- Quick Global Stats Ticker -->
+            <div class="learning-stats-ticker">
+                <div class="learning-ticker-item">
+                    <span class="learning-ticker-val val-speaking">500+</span>
+                    <span class="learning-ticker-lbl">@(CultureService.IsEnglish ? "Speaking Vocab & Frames" : "Từ vựng & Mẫu câu phản xạ")</span>
+                </div>
+                <div class="learning-ticker-sep" aria-hidden="true"></div>
+                <div class="learning-ticker-item">
+                    <span class="learning-ticker-val val-toeic">7 Parts · 28</span>
+                    <span class="learning-ticker-lbl">@(CultureService.IsEnglish ? "TOEIC Modules & ETS Tool" : "Chuyên đề TOEIC & ETS Converter")</span>
+                </div>
+                <div class="learning-ticker-sep" aria-hidden="true"></div>
+                <div class="learning-ticker-item">
+                    <span class="learning-ticker-val val-dev">Zero &rarr; Pro</span>
+                    <span class="learning-ticker-lbl">@(CultureService.IsEnglish ? "Dev Engineering Roadmaps" : "Lộ trình Dev thực chiến")</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Gateway Showcase Section -->
+        <section class="learning-section-head">
+            <span class="learning-section-badge">@(CultureService.IsEnglish ? "EXPLORE MODULES" : "CHỌN CHỨC NĂNG HỌC TẬP")</span>
+            <h2 class="learning-section-title">@(CultureService.IsEnglish ? "Select Your Focus Area" : "Ba Trụ Cột Nâng Tầm Bản Thân")</h2>
+            <p class="learning-section-desc">
+                @(CultureService.IsEnglish 
+                    ? "Choose a module below to enter dedicated learning studios equipped with interactive tools, audio, and curated resources."
+                    : "Chọn một trong ba phân hệ bên dưới để bắt đầu luyện tập với các công cụ tương tác, audio và cẩm nang kiến thức chuyên sâu.")
+            </p>
+        </section>
+
+        <!-- 3 Gateway Feature Cards -->
+        <div class="learning-cards-grid">
+            <!-- Card 1: Speaking Studio -->
+            <div class="learning-card card-speaking">
+                <div class="card-top-row">
+                    <div class="card-icon-box">
+                        <i class="bi bi-mic-fill" aria-hidden="true"></i>
+                    </div>
+                    <span class="card-category-tag">A-R-E-A Method</span>
+                </div>
+
+                <h3 class="card-title">Speaking Studio</h3>
+                <p class="card-description">
+                    @(CultureService.IsEnglish
+                        ? "Reflexive English speaking practice powered by the A-R-E-A method (Answer, Reason, Example, Alternative). Features native audio synthesis, interactive flashcards, and tech/everyday vocabulary."
+                        : "Phòng luyện nói phản xạ theo chuẩn A-R-E-A (Answer - Reason - Example - Alternative). Tích hợp phát âm âm thanh tương tác Web Speech API, thẻ phản xạ nhanh và hơn 500 từ vựng thực tế theo chủ đề Web Dev, DevOps, AI và đời sống.")
+                </p>
+
+                <ul class="card-features-list">
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>@(CultureService.IsEnglish ? "A-R-E-A framework for structural fluency" : "Khung tư duy A-R-E-A trả lời mạch lạc")</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>@(CultureService.IsEnglish ? "Native Web Speech API pronunciation audio" : "Âm thanh phát âm bản xứ tương tác")</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>@(CultureService.IsEnglish ? "Interactive 3D flashcards & mastery tracker" : "Flashcard phản xạ 3D & đếm từ đã thuộc")</span>
+                    </li>
+                </ul>
+
+                <div class="card-tags-row">
+                    <span class="card-tag-pill">500+ Vocab</span>
+                    <span class="card-tag-pill">Web Dev & DevOps</span>
+                    <span class="card-tag-pill">Phản xạ tự nhiên</span>
+                </div>
+
+                <a href="@LangHref("learning/speaking")" class="card-cta-btn">
+                    <span>@(CultureService.IsEnglish ? "Launch Speaking Studio" : "Vào Phòng Speaking Studio")</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Card 2: TOEIC Mastery Hub -->
+            <div class="learning-card card-toeic">
+                <div class="card-top-row">
+                    <div class="card-icon-box">
+                        <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
+                    </div>
+                    <span class="card-category-tag">ETS 4-Skills</span>
+                </div>
+
+                <h3 class="card-title">TOEIC Mastery Hub</h3>
+                <p class="card-description">
+                    @(CultureService.IsEnglish
+                        ? "Comprehensive preparation suite for TOEIC 4-Skills (Listening, Reading, Speaking, Writing). Includes real ETS score conversion calculator, 28 knowledge topics, trap dissections, and test room guides."
+                        : "Cẩm nang ôn luyện toàn diện 4 kỹ năng TOEIC (Nghe, Đọc, Nói, Viết). Bao gồm bộ chuyển đổi điểm ETS 990 chuẩn xác, 28 chuyên đề kiến thức, giải mã cạm bẫy Part 1–7, Flashcard 3D và kinh nghiệm phòng thi IIG.")
+                </p>
+
+                <ul class="card-features-list">
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>@(CultureService.IsEnglish ? "Official ETS score conversion calculator" : "Công cụ tính quy đổi điểm ETS 990 chuẩn")</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>@(CultureService.IsEnglish ? "Part 1–7 traps & strategic time management" : "Bóc tách cạm bẫy Part 1–7 & quản trị 120 phút")</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>@(CultureService.IsEnglish ? "28 core grammar & vocabulary topics" : "28 chuyên đề ngữ pháp & cặp từ dễ nhầm")</span>
+                    </li>
+                </ul>
+
+                <div class="card-tags-row">
+                    <span class="card-tag-pill">ETS 990</span>
+                    <span class="card-tag-pill">4-Skills Guide</span>
+                    <span class="card-tag-pill">Exam Blueprint</span>
+                </div>
+
+                <a href="@LangHref("learning/toeic")" class="card-cta-btn">
+                    <span>@(CultureService.IsEnglish ? "Enter TOEIC Hub" : "Vào Phòng TOEIC Mastery")</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Card 3: Dev Learning Blog -->
+            <div class="learning-card card-dev">
+                <div class="card-top-row">
+                    <div class="card-icon-box">
+                        <i class="bi bi-code-slash" aria-hidden="true"></i>
+                    </div>
+                    <span class="card-category-tag">Engineering Blog</span>
+                </div>
+
+                <h3 class="card-title">Dev Learning Blog</h3>
+                <p class="card-description">
+                    @(CultureService.IsEnglish
+                        ? "Curated software engineering roadmaps and blog articles ranging from Fundamentals to Advanced Production. Covers Docker, Kubernetes, C# 12/.NET 9, Microservices, and CI/CD."
+                        : "Hệ thống chuyên đề kỹ thuật phân bổ theo từng bài viết blog từ Cơ bản &rarr; Trung cấp &rarr; Nâng cao &rarr; Thực chiến. Chuyên sâu về Docker, Kubernetes, C# 12/.NET 9, Kiến trúc phần mềm và CI/CD GitHub Actions kèm code mẫu.")
+                </p>
+
+                <ul class="card-features-list">
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>@(CultureService.IsEnglish ? "Structured Zero-to-Production series roadmaps" : "Lộ trình học bài bản từ Cơ bản đến Nâng cao")</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>@(CultureService.IsEnglish ? "Real-world configs, code snippets & architectures" : "Code mẫu thực tế, file cấu hình & kiến trúc")</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>@(CultureService.IsEnglish ? "Article bookmarks & offline-ready storage" : "Đánh dấu bài viết yêu thích & tìm kiếm nhanh")</span>
+                    </li>
+                </ul>
+
+                <div class="card-tags-row">
+                    <span class="card-tag-pill">Docker & K8s</span>
+                    <span class="card-tag-pill">C# & .NET 9</span>
+                    <span class="card-tag-pill">CI/CD & DevOps</span>
+                </div>
+
+                <a href="@LangHref("learning/dev-learning")" class="card-cta-btn">
+                    <span>@(CultureService.IsEnglish ? "Read Dev Blog" : "Khám Phá Dev Learning Blog")</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- T-Shaped Engineer Philosophy Banner -->
+        <section class="learning-philosophy-card">
+            <div class="philosophy-grid">
+                <div>
+                    <div class="philosophy-badge">@(CultureService.IsEnglish ? "ENGINEERING MINDSET" : "TRIẾT LÝ PHÁT TRIỂN")</div>
+                    <h3 class="philosophy-title">
+                        @(CultureService.IsEnglish ? "The T-Shaped Software Engineer" : "Mô Hình Kỹ Sư T-Shaped")
+                    </h3>
+                </div>
+                <div class="philosophy-pillars">
+                    <div class="pillar-item">
+                        <div class="pillar-icon-row">
+                            <i class="bi bi-cpu text-primary"></i>
+                            <span>@(CultureService.IsEnglish ? "Deep Tech Mastery" : "Chuyên Môn Sâu")</span>
+                        </div>
+                        <p class="pillar-desc">
+                            @(CultureService.IsEnglish 
+                                ? "Mastering backend architecture, system design, scalable databases, and resilient cloud infrastructure."
+                                : "Nắm vững bản chất kiến trúc hệ thống, cơ sở dữ liệu tối ưu và hạ tầng DevOps triển khai thực tế.")
+                        </p>
+                    </div>
+                    <div class="pillar-item">
+                        <div class="pillar-icon-row">
+                            <i class="bi bi-chat-quote text-success"></i>
+                            <span>@(CultureService.IsEnglish ? "Global Fluency" : "Giao Tiếp Quốc Tế")</span>
+                        </div>
+                        <p class="pillar-desc">
+                            @(CultureService.IsEnglish 
+                                ? "Confidently presenting technical decisions, participating in international standups, and explaining architectures."
+                                : "Tự tin tranh luận kỹ thuật, làm việc nhóm trong môi trường quốc tế với phản xạ tiếng Anh tự nhiên.")
+                        </p>
+                    </div>
+                    <div class="pillar-item">
+                        <div class="pillar-icon-row">
+                            <i class="bi bi-award text-warning"></i>
+                            <span>@(CultureService.IsEnglish ? "Standardized Metrics" : "Chuẩn Hóa Chứng Chỉ")</span>
+                        </div>
+                        <p class="pillar-desc">
+                            @(CultureService.IsEnglish 
+                                ? "Validating English competencies through standardized benchmarks recognized by leading engineering firms."
+                                : "Minh chứng năng lực ngoại ngữ qua chứng chỉ chuẩn hóa ETS, mở rộng cơ hội phát triển sự nghiệp.")
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+@code {
+    private string LangHref(string path) => CulturePath.Combine(CultureService.UrlLang, path);
+}

@@ -1,0 +1,42 @@
+@inherits CultureAwareComponent
+
+<div class="learning-subnav-wrapper" role="navigation" aria-label="Learning Sub Navigation">
+    <div class="learning-subnav-bar">
+        <NavLink href="@LangHref("learning")" 
+                 Match="NavLinkMatch.All" 
+                 class="@($"learning-subnav-tab {(ActiveSection == "hub" ? "active" : "")}")">
+            <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i>
+            <span>@(CultureService.IsEnglish ? "Hub Gateway" : "Tổng Quan")</span>
+        </NavLink>
+
+        <NavLink href="@LangHref("learning/speaking")" 
+                 class="@($"learning-subnav-tab {(ActiveSection == "speaking" ? "active" : "")}")">
+            <span class="tab-indicator indicator-speaking" aria-hidden="true"></span>
+            <i class="bi bi-mic-fill" aria-hidden="true"></i>
+            <span>Speaking Studio</span>
+            <span class="tab-badge">500+</span>
+        </NavLink>
+
+        <NavLink href="@LangHref("learning/toeic")" 
+                 class="@($"learning-subnav-tab {(ActiveSection == "toeic" ? "active" : "")}")">
+            <span class="tab-indicator indicator-toeic" aria-hidden="true"></span>
+            <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
+            <span>TOEIC Hub</span>
+            <span class="tab-badge">4-Skills</span>
+        </NavLink>
+
+        <NavLink href="@LangHref("learning/dev-learning")" 
+                 class="@($"learning-subnav-tab {(ActiveSection == "dev-learning" ? "active" : "")}")">
+            <span class="tab-indicator indicator-dev" aria-hidden="true"></span>
+            <i class="bi bi-code-slash" aria-hidden="true"></i>
+            <span>Dev Learning</span>
+            <span class="tab-badge">Roadmap</span>
+        </NavLink>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? ActiveSection { get; set; }
+
+    private string LangHref(string path) => CulturePath.Combine(CultureService.UrlLang, path);
+}

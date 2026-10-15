@@ -1,5 +1,7 @@
 @page "/dev-learning"
 @page "/{lang:regex(^(en|vn)$)}/dev-learning"
+@page "/learning/dev-learning"
+@page "/{lang:regex(^(en|vn)$)}/learning/dev-learning"
 @inherits CultureAwareComponent
 @inject HttpClient Http
 @inject IJSRuntime JS
@@ -8,6 +10,8 @@
 
 <div class="dev-master-app">
     <div class="dev-wrapper">
+        <LearningSubNav ActiveSection="dev-learning" />
+
         <!-- Top Hero Banner (Portfolio Midnight Gold / Crisp Slate Design System) -->
         <header class="dev-top-hero">
             <div class="dev-ambient-glow" aria-hidden="true"></div>
@@ -116,7 +120,7 @@
                         </span>
                         <i class="bi bi-chevron-right dev-bc-sep"></i>
                         <span class="dev-bc-item">
-                            <a href="@LangHref("dev-learning")">Dev Learning</a>
+                            <a href="@LangHref("learning/dev-learning")">Dev Learning</a>
                         </span>
                         <i class="bi bi-chevron-right dev-bc-sep"></i>
                         <span class="dev-bc-item">
@@ -332,13 +336,15 @@
                             <footer class="dev-article-footer-nav">
                                 @if (PreviousArticle != null)
                                 {
+                                    var prevTitle = $"{PreviousArticle.LessonNumber}: {(CultureService.IsEnglish ? PreviousArticle.Title : PreviousArticle.TitleVi)}";
                                     <button type="button" 
                                             class="dev-nav-btn prev"
+                                            title="@prevTitle"
                                             @onclick="() => ReadArticle(PreviousArticle)">
                                         <i class="bi bi-arrow-left"></i>
                                         <div class="dev-nav-btn-text">
                                             <span class="dev-nav-sub">Bài Trước · @PreviousArticle.LevelVi</span>
-                                            <span class="dev-nav-main">@PreviousArticle.LessonNumber: @(CultureService.IsEnglish ? PreviousArticle.Title : PreviousArticle.TitleVi)</span>
+                                            <span class="dev-nav-main">@prevTitle</span>
                                         </div>
                                     </button>
                                 }
@@ -349,12 +355,14 @@
 
                                 @if (NextArticle != null)
                                 {
+                                    var nextTitle = $"{NextArticle.LessonNumber}: {(CultureService.IsEnglish ? NextArticle.Title : NextArticle.TitleVi)}";
                                     <button type="button" 
                                             class="dev-nav-btn next"
+                                            title="@nextTitle"
                                             @onclick="() => ReadArticle(NextArticle)">
                                         <div class="dev-nav-btn-text">
                                             <span class="dev-nav-sub">Bài Tiếp Theo · @NextArticle.LevelVi</span>
-                                            <span class="dev-nav-main">@NextArticle.LessonNumber: @(CultureService.IsEnglish ? NextArticle.Title : NextArticle.TitleVi)</span>
+                                            <span class="dev-nav-main">@nextTitle</span>
                                         </div>
                                         <i class="bi bi-arrow-right"></i>
                                     </button>
