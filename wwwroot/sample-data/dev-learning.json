@@ -1062,7 +1062,7 @@
               ],
               "codeTitle": "Ví dụ truy vấn tối ưu cao độ trong EF Core",
               "codeLanguage": "csharp",
-              "codeContent": "public async Task<List<OrderSummaryDto>> GetRecentOrdersAsync(int customerId, CancellationToken ct)\n{\n    return await _context.Orders\n        .AsNoTracking()\n        .Where(o => o.CustomerId == customerId)\n        .OrderByDescending(o => o.CreatedAt)\n        .Take(20)\n        // Dùng AsSplitQuery khi có nhiều collection Include\n        .AsSplitQuery()\n        .Include(o => o.Items)\n        .Select(o => new OrderSummaryDto\n        {\n            OrderId = o.Id,\n            OrderDate = o.CreatedAt,\n            TotalAmount = o.TotalAmount,\n            ItemCount = o.Items.Count\n        })\n        .ToListAsync(ct);\n}",
+              "codeContent": "public async Task<List<OrderDetailDto>> GetRecentOrdersAsync(int customerId, CancellationToken ct)\n{\n    return await _context.Orders\n        .AsNoTracking()\n        .Where(o => o.CustomerId == customerId)\n        .OrderByDescending(o => o.CreatedAt)\n        .Take(20)\n        // Dùng AsSplitQuery khi materialize nhiều collection con để tránh Cartesian Explosion\n        .AsSplitQuery()\n        .Select(o => new OrderDetailDto\n        {\n            OrderId = o.Id,\n            OrderDate = o.CreatedAt,\n            TotalAmount = o.TotalAmount,\n            Items = o.Items.Select(i => new OrderItemDto(i.ProductId, i.Quantity)).ToList(),\n            Payments = o.PaymentLogs.Select(p => new PaymentLogDto(p.TransactionId, p.Status)).ToList()\n        })\n        .ToListAsync(ct);\n}",
               "calloutType": "tip",
               "calloutTitle": "Cảnh báo N+1 Query",
               "calloutTitleVi": "Cảnh báo N+1 Query",
@@ -1954,7 +1954,7 @@
               ],
               "codeTitle": "Mã nguồn C# .NET 10 MCP Server hoàn chỉnh",
               "codeLanguage": "csharp",
-              "codeContent": "using ModelContextProtocol.Server;\nusing System.ComponentModel;\n\nvar builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddMcpServer()\n    .AddToolHandler<ProductCatalogTools>();\n\nvar app = builder.Build();\nawait app.RunMcpAsync(); // Lắng nghe giao thức MCP qua stdio\n\npublic class ProductCatalogTools\n{\n    [McpTool(\"search_products\")]\n    [Description(\"Tìm kiếm danh sách sản phẩm theo từ khóa và trả về giá tiền, tồn kho\")]\n    public async Task<string> SearchProducts(\n        [Description(\"Tên sản phẩm hoặc mã SKU\")] string keyword,\n        [Description(\"Số lượng kết quả tối đa\")] int maxResults = 5)\n    {\n        // Gọi Database hoặc ERP service thực tế\n        var results = await Task.FromResult(new[]\n        {\n            new { Sku = \"IPHONE16-PRO\", Name = \"iPhone 16 Pro 256GB\", Price = \"28.990.000 VND\", Stock = 12 },\n            new { Sku = \"MACBOOK-M4\", Name = \"MacBook Pro M4 32GB\", Price = \"49.990.000 VND\", Stock = 4 }\n        });\n\n        return System.Text.Json.JsonSerializer.Serialize(results);\n    }\n}",
+              "codeContent": "using Microsoft.Extensions.DependencyInjection;\nusing Microsoft.Extensions.Hosting;\nusing ModelContextProtocol.Server;\nusing System.ComponentModel;\n\nvar builder = Host.CreateApplicationBuilder(args);\nbuilder.Services\n    .AddMcpServer()\n    .WithStdioServerTransport()\n    .WithToolsFromAssembly();\n\nawait builder.Build().RunAsync();\n\n[McpServerToolType]\npublic static class ProductCatalogTools\n{\n    [McpServerTool, Description(\"Tìm kiếm danh sách sản phẩm theo từ khóa và trả về giá tiền, tồn kho\")]\n    public static async Task<string> SearchProducts(\n        [Description(\"Tên sản phẩm hoặc mã SKU\")] string keyword,\n        [Description(\"Số lượng kết quả tối đa\")] int maxResults = 5)\n    {\n        var results = await Task.FromResult(new[]\n        {\n            new { Sku = \"IPHONE16-PRO\", Name = \"iPhone 16 Pro 256GB\", Price = \"28.990.000 VND\", Stock = 12 },\n            new { Sku = \"MACBOOK-M4\", Name = \"MacBook Pro M4 32GB\", Price = \"49.990.000 VND\", Stock = 4 }\n        });\n\n        return System.Text.Json.JsonSerializer.Serialize(results);\n    }\n}",
               "calloutType": "tip",
               "calloutTitle": "Đóng gói thành Tool chạy độc lập",
               "calloutTitleVi": "Đóng gói thành Tool chạy độc lập",
@@ -2210,7 +2210,7 @@
               ],
               "codeTitle": "Code C# IdempotencyFilter.cs chuẩn Production",
               "codeLanguage": "csharp",
-              "codeContent": "public class IdempotencyFilter : IEndpointFilter\n{\n    private readonly IDatabase _redis;\n    public IdempotencyFilter(IConnectionMultiplexer mux) => _redis = mux.GetDatabase();\n\n    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext ctx, EndpointFilterDelegate next)\n    {\n        var httpContext = ctx.HttpContext;\n        if (!httpContext.Request.Headers.TryGetValue(\"Idempotency-Key\", out var keyHeader) ||\n            string.IsNullOrWhiteSpace(keyHeader))\n        {\n            return Results.BadRequest(new { error = \"Missing required Idempotency-Key header\" });\n        }\n\n        string key = $\"idempotency:{keyHeader}\";\n        string lockKey = $\"lock:{key}\";\n        string fingerprint = await ComputeBodyHash(httpContext.Request);\n\n        // 1. Kiểm tra xem key đã hoàn thành chưa\n        var existing = await _redis.StringGetAsync(key);\n        if (!existing.IsNullOrEmpty)\n        {\n            var cached = JsonSerializer.Deserialize<CachedResponse>(existing!);\n            if (cached!.Fingerprint != fingerprint)\n            {\n                return Results.Problem(\"Idempotency key reused with different parameters\", statusCode: 422);\n            }\n            httpContext.Response.Headers.Append(\"X-Cache-Lookup\", \"HIT-IDEMPOTENT\");\n            return Results.Content(cached.Body, \"application/json\", statusCode: cached.StatusCode);\n        }\n\n        // 2. Thử lấy lock phân tán trong 30 giây (tránh race condition song song)\n        bool lockAcquired = await _redis.StringSetAsync(lockKey, \"locked\", TimeSpan.FromSeconds(30), When.NotExists);\n        if (!lockAcquired)\n        {\n            return Results.Problem(\"A request with this idempotency key is currently being processed\", statusCode: 409);\n        }\n\n        try\n        {\n            // Thực thi nghiệp vụ thanh toán gốc\n            var result = await next(ctx);\n\n            // Lưu kết quả vào Redis 24 giờ\n            var toCache = new CachedResponse { Fingerprint = fingerprint, StatusCode = 200, Body = JsonSerializer.Serialize(result) };\n            await _redis.StringSetAsync(key, JsonSerializer.Serialize(toCache), TimeSpan.FromHours(24));\n\n            return result;\n        }\n        finally\n        {\n            await _redis.KeyDeleteAsync(lockKey);\n        }\n    }\n}",
+              "codeContent": "public class IdempotencyFilter : IEndpointFilter\n{\n    private readonly IDatabase _redis;\n    public IdempotencyFilter(IConnectionMultiplexer mux) => _redis = mux.GetDatabase();\n\n    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext ctx, EndpointFilterDelegate next)\n    {\n        var httpContext = ctx.HttpContext;\n        if (!httpContext.Request.Headers.TryGetValue(\"Idempotency-Key\", out var keyHeader) ||\n            string.IsNullOrWhiteSpace(keyHeader))\n        {\n            return Results.BadRequest(new { error = \"Missing required Idempotency-Key header\" });\n        }\n\n        string key = $\"idempotency:{keyHeader}\";\n        string lockKey = $\"lock:{key}\";\n        string fingerprint = await ComputeBodyHashAsync(httpContext.Request);\n\n        // 1. Kiểm tra xem key đã hoàn thành chưa\n        var existing = await _redis.StringGetAsync(key);\n        if (!existing.IsNullOrEmpty)\n        {\n            var cached = JsonSerializer.Deserialize<CachedResponse>(existing!);\n            if (cached!.Fingerprint != fingerprint)\n            {\n                return Results.Problem(\"Idempotency key reused with different parameters\", statusCode: 422);\n            }\n            httpContext.Response.Headers.Append(\"X-Cache-Lookup\", \"HIT-IDEMPOTENT\");\n            return Results.Content(cached.Body, \"application/json\", statusCode: cached.StatusCode);\n        }\n\n        // 2. Thử lấy lock phân tán trong 30 giây (tránh race condition song song)\n        bool lockAcquired = await _redis.StringSetAsync(lockKey, \"locked\", TimeSpan.FromSeconds(30), When.NotExists);\n        if (!lockAcquired)\n        {\n            return Results.Problem(\"A request with this idempotency key is currently being processed\", statusCode: 409);\n        }\n\n        try\n        {\n            var result = await next(ctx);\n            if (result is IStatusCodeHttpResult statusResult && result is IValueHttpResult valueResult)\n            {\n                int statusCode = statusResult.StatusCode ?? 200;\n                var toCache = new CachedResponse\n                {\n                    Fingerprint = fingerprint,\n                    StatusCode = statusCode,\n                    Body = JsonSerializer.Serialize(valueResult.Value)\n                };\n                await _redis.StringSetAsync(key, JsonSerializer.Serialize(toCache), TimeSpan.FromHours(24));\n            }\n            return result;\n        }\n        finally\n        {\n            await _redis.KeyDeleteAsync(lockKey);\n        }\n    }\n\n    private static async Task<string> ComputeBodyHashAsync(HttpRequest request)\n    {\n        request.EnableBuffering();\n        using var reader = new StreamReader(request.Body, Encoding.UTF8, leaveOpen: true);\n        string body = await reader.ReadToEndAsync();\n        request.Body.Position = 0; // Tua lại stream về 0 cho Controller đọc\n        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes($\"{request.Method}:{request.Path}:{body}\"));\n        return Convert.ToHexString(hash);\n    }\n}",
               "calloutType": "tip",
               "calloutTitle": "Header phản hồi X-Cache-Lookup",
               "calloutTitleVi": "Header phản hồi X-Cache-Lookup",
@@ -3207,12 +3207,12 @@
               ],
               "codeTitle": "Cấu hình tự động Masking dữ liệu nhạy cảm với Serilog",
               "codeLanguage": "csharp",
-              "codeContent": "// Cài đặt: dotnet add package Serilog.Enrichers.Sensitive\n\nconfiguration\n    .Enrich.WithSensitiveDataMasking(options =>\n    {\n        options.MaskingOperators = new List<IMaskingOperator>\n        {\n            new CreditCardMaskingOperator(), // Tự động mask 4111-xxxx-xxxx-1111\n            new EmailAddressMaskingOperator(), // Tự động mask j***@domain.com\n            new RegexMaskingOperator(@\"(?i)password[\"\"']?\\s*[:=]\\s*[\"\"']?([^\"\"'\\s]+)\") // Mask mật khẩu\n        };\n    });",
+              "codeContent": "// Cài đặt: dotnet add package Serilog.Enrichers.Sensitive\n\nconfiguration\n    .Enrich.WithSensitiveDataMasking(options =>\n    {\n        options.MaskingOperators = new List<IMaskingOperator>\n        {\n            new EmailAddressMaskingOperator(),\n            new CreditCardMaskingOperator(),\n            new IbanMaskingOperator()\n        };\n        // Tự động che giấu mọi thuộc tính JSON có tên nhạy cảm\n        options.MaskProperties.Add(\"Password\");\n        options.MaskProperties.Add(\"SecretKey\");\n        options.MaskProperties.Add(\"Cvv\");\n        options.MaskProperties.Add(\"AccessToken\");\n    });",
               "calloutType": "warning",
-              "calloutTitle": "Cảnh báo an toàn dữ liệu",
-              "calloutTitleVi": "Cảnh báo an toàn dữ liệu",
-              "calloutText": "Log server thường được nhiều kỹ sư vận hành và bên thứ 3 tiếp cận. Không bao giờ lưu trữ Token JWT, API Key bí mật hoặc CVV của thẻ thanh toán vào bất kỳ dòng log nào.",
-              "calloutTextVi": "Log server thường được nhiều kỹ sư vận hành và bên thứ 3 tiếp cận. Không bao giờ lưu trữ Token JWT, API Key bí mật hoặc CVV của thẻ thanh toán vào bất kỳ dòng log nào."
+              "calloutTitle": "Tuân thủ PCI-DSS & GDPR",
+              "calloutTitleVi": "Tuân thủ PCI-DSS & GDPR",
+              "calloutText": "Trong các hệ thống cổng thanh toán như Adyen hay Stripe, việc để lộ số thẻ PAN đầy đủ hoặc mã CVV trong file log sẽ khiến doanh nghiệp trượt kỳ kiểm toán PCI-DSS ngay lập tức. Hãy luôn kích hoạt Sensitive Data Masking ở cấp độ toàn cục.",
+              "calloutTextVi": "Trong các hệ thống cổng thanh toán như Adyen hay Stripe, việc để lộ số thẻ PAN đầy đủ hoặc mã CVV trong file log sẽ khiến doanh nghiệp trượt kỳ kiểm toán PCI-DSS ngay lập tức. Hãy luôn kích hoạt Sensitive Data Masking ở cấp độ toàn cục."
             }
           ]
         },
@@ -10723,6 +10723,273 @@
               "calloutTitleVi": "",
               "calloutText": "",
               "calloutTextVi": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "enterprise-auth-series",
+      "title": "Enterprise Identity & Access Management (OAuth 2.1, OIDC, Okta & Claims)",
+      "titleVi": "Chuyên Đề Xác Thực & Bảo Mật Định Danh: OAuth 2.1, OIDC, Okta & Claims trong .NET",
+      "icon": "bi-shield-lock-fill",
+      "color": "#7c3aed",
+      "badge": "4 Bài Viết",
+      "description": "Làm chủ kiến trúc xác thực doanh nghiệp: Tích hợp Okta/OIDC, chuyển đổi từ Legacy Session sang Stateless Claims, Policy-based Authorization và bảo mật Token.",
+      "descriptionVi": "Làm chủ kiến trúc xác thực doanh nghiệp: Tích hợp Okta/OIDC, chuyển đổi từ Legacy Session sang Stateless Claims, Policy-based Authorization và bảo mật Token.",
+      "articles": [
+        {
+          "id": "auth-bai-1-oidc-okta-claims",
+          "seriesId": "enterprise-auth-series",
+          "lessonNumber": "Bài 1",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 1,
+          "title": "Giải phẫu OAuth 2.1 / OIDC & Chiến lược Di trú từ Session sang Claims Authentication với Okta",
+          "titleVi": "Giải phẫu OAuth 2.1 / OIDC & Chiến lược Di trú từ Session sang Claims Authentication với Okta",
+          "readingTime": "15 phút đọc",
+          "publishedDate": "16/10/2026",
+          "summary": "Hiểu sâu sắc Authorization Code Flow with PKCE, sự khác biệt giữa ID Token và Access Token, cách loại bỏ Backdoor/Session cũ kỹ để chuẩn hóa hoàn toàn trên kiến trúc ClaimsPrincipal và IClaimsTransformation.",
+          "summaryVi": "Hiểu sâu sắc Authorization Code Flow with PKCE, sự khác biệt giữa ID Token và Access Token, cách loại bỏ Backdoor/Session cũ kỹ để chuẩn hóa hoàn toàn trên kiến trúc ClaimsPrincipal và IClaimsTransformation.",
+          "tags": [
+            "oauth2",
+            "oidc",
+            "okta",
+            "claims",
+            "security",
+            "dotnet"
+          ],
+          "sections": [
+            {
+              "heading": "1. Tại Sao Phải Khai Tử In-Memory Session & Chuyển Sang Claims-Based Identity?",
+              "headingVi": "1. Tại Sao Phải Khai Tử In-Memory Session & Chuyển Sang Claims-Based Identity?",
+              "paragraphs": [
+                "Trong các hệ thống cũ, thông tin đăng nhập và quyền hạn thường được nhét vào `HttpContext.Session` hoặc các cơ chế đăng nhập nội bộ tự chế. Cách tiếp cận này gây ra 3 vấn đề lớn:",
+                "1. **Khó mở rộng ngang (Scale-out)**: Các dịch vụ Microservices hoặc SPA/Mobile không thể chia sẻ `Session` một cách chuẩn mực qua nhiều tên miền.",
+                "2. **Phụ thuộc chặt vào trạng thái máy chủ**: Gây khó khăn khi triển khai Zero-Downtime trên Kubernetes.",
+                "3. **Rủi ro bảo mật**: Các cơ chế xác thực tự viết (như backdoor login trong môi trường test) rất dễ bị bỏ quên cấu hình khi lên Production.",
+                "Khi tích hợp **Identity Provider (IdP)** chuẩn quốc tế như **Okta**, Azure Entra ID hoặc Keycloak qua giao thức **OpenID Connect (OIDC)**, toàn bộ danh tính người dùng được chuẩn hóa thành `ClaimsPrincipal` bất biến, được ký số bằng thuật toán bất đối xứng `RS256`."
+              ],
+              "paragraphsVi": [
+                "Trong các hệ thống cũ, thông tin đăng nhập và quyền hạn thường được nhét vào `HttpContext.Session` hoặc các cơ chế đăng nhập nội bộ tự chế. Cách tiếp cận này gây ra 3 vấn đề lớn:",
+                "1. **Khó mở rộng ngang (Scale-out)**: Các dịch vụ Microservices hoặc SPA/Mobile không thể chia sẻ `Session` một cách chuẩn mực qua nhiều tên miền.",
+                "2. **Phụ thuộc chặt vào trạng thái máy chủ**: Gây khó khăn khi triển khai Zero-Downtime trên Kubernetes.",
+                "3. **Rủi ro bảo mật**: Các cơ chế xác thực tự viết (như backdoor login trong môi trường test) rất dễ bị bỏ quên cấu hình khi lên Production.",
+                "Khi tích hợp **Identity Provider (IdP)** chuẩn quốc tế như **Okta**, Azure Entra ID hoặc Keycloak qua giao thức **OpenID Connect (OIDC)**, toàn bộ danh tính người dùng được chuẩn hóa thành `ClaimsPrincipal` bất biến, được ký số bằng thuật toán bất đối xứng `RS256`."
+              ],
+              "codeTitle": "Tích hợp Okta JWT & Làm giàu quyền hạn với IClaimsTransformation",
+              "codeLanguage": "csharp",
+              "codeContent": "// 1. Cấu hình xác thực JWT Bearer với Okta Authority trong Program.cs\nbuilder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)\n    .AddJwtBearer(options =>\n    {\n        options.Authority = \"https://dev-123456.okta.com/oauth2/default\";\n        options.Audience = \"api://enterprise-order-service\";\n        options.TokenValidationParameters = new TokenValidationParameters\n        {\n            ValidateIssuer = true,\n            ValidateAudience = true,\n            ValidateLifetime = true,\n            ClockSkew = TimeSpan.FromSeconds(30) // Giảm độ trễ dung sai từ 5p mặc định xuống 30s\n        };\n    });\n\n// 2. Dùng IClaimsTransformation để map Okta Sub sang quyền nội bộ mà không làm phình kích thước JWT\npublic class EnterpriseClaimsTransformation : IClaimsTransformation\n{\n    private readonly IPermissionCacheService _permCache;\n    public EnterpriseClaimsTransformation(IPermissionCacheService permCache) => _permCache = permCache;\n\n    public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)\n    {\n        var clone = principal.Clone();\n        var newIdentity = (ClaimsIdentity)clone.Identity!;\n\n        var oktaUserId = principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? principal.FindFirstValue(\"sub\");\n        if (!string.IsNullOrEmpty(oktaUserId))\n        {\n            var permissions = await _permCache.GetUserPermissionsAsync(oktaUserId);\n            foreach (var perm in permissions)\n            {\n                newIdentity.AddClaim(new Claim(\"permission\", perm));\n            }\n        }\n        return clone;\n    }\n}",
+              "calloutType": "warning",
+              "calloutTitle": "Tránh lỗi JWT Bloating (Phình to Token)",
+              "calloutTitleVi": "Tránh lỗi JWT Bloating (Phình to Token)",
+              "calloutText": "Đừng bao giờ nhồi nhét 200 quyền chi tiết vào trong chuỗi JWT từ phía Okta! Điều đó làm kích thước Header vượt quá 8KB và bị Nginx/Kestrel từ chối với lỗi `HTTP 431 Request Header Fields Too Large`. Hãy chỉ giữ `sub`, `email`, `groups` cơ bản trong JWT và dùng `IClaimsTransformation` kết hợp HybridCache để nạp quyền nội bộ.",
+              "calloutTextVi": "Đừng bao giờ nhồi nhét 200 quyền chi tiết vào trong chuỗi JWT từ phía Okta! Điều đó làm kích thước Header vượt quá 8KB và bị Nginx/Kestrel từ chối với lỗi `HTTP 431 Request Header Fields Too Large`. Hãy chỉ giữ `sub`, `email`, `groups` cơ bản trong JWT và dùng `IClaimsTransformation` kết hợp HybridCache để nạp quyền nội bộ."
+            }
+          ]
+        },
+        {
+          "id": "auth-bai-2-policy-authorization",
+          "seriesId": "enterprise-auth-series",
+          "lessonNumber": "Bài 2",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 2,
+          "title": "Phân quyền Chuyên sâu: Policy-Based & Resource-Based Authorization trong Clean Architecture",
+          "titleVi": "Phân quyền Chuyên sâu: Policy-Based & Resource-Based Authorization trong Clean Architecture",
+          "readingTime": "14 phút đọc",
+          "publishedDate": "16/10/2026",
+          "summary": "Vượt qua giới hạn của [Authorize(Roles = \"Admin\")] truyền thống: Thiết kế Custom IAuthorizationRequirement, IAuthorizationHandler và kiểm tra quyền sở hữu dữ liệu (Resource-based) chống lỗ hổng BOLA / IDOR.",
+          "summaryVi": "Vượt qua giới hạn của [Authorize(Roles = \"Admin\")] truyền thống: Thiết kế Custom IAuthorizationRequirement, IAuthorizationHandler và kiểm tra quyền sở hữu dữ liệu (Resource-based) chống lỗ hổng BOLA / IDOR.",
+          "tags": [
+            "authorization",
+            "policy-based",
+            "bola",
+            "security",
+            "csharp"
+          ],
+          "sections": [
+            {
+              "heading": "1. Phòng Chống Lỗ Hổng BOLA (Broken Object Level Authorization - OWASP API #1)",
+              "headingVi": "1. Phòng Chống Lỗ Hổng BOLA (Broken Object Level Authorization - OWASP API #1)",
+              "paragraphs": [
+                "Lỗ hổng bảo mật nguy hiểm số 1 trong danh sách OWASP API Security Top 10 là **BOLA (hay IDOR)**: Người dùng A đã đăng nhập hợp lệ (có JWT Token chuẩn), nhưng sửa tham số URL từ `GET /api/orders/100` sang `GET /api/orders/101` để xem trộm hóa đơn của Người dùng B.",
+                "Thuộc tính `[Authorize]` thông thường trên Controller chỉ kiểm tra *ai đang gọi*, chứ không biết *dữ liệu 101 thuộc về ai*. Để giải quyết triệt để, ta sử dụng `IAuthorizationService` với Resource-Based Authorization."
+              ],
+              "paragraphsVi": [
+                "Lỗ hổng bảo mật nguy hiểm số 1 trong danh sách OWASP API Security Top 10 là **BOLA (hay IDOR)**: Người dùng A đã đăng nhập hợp lệ (có JWT Token chuẩn), nhưng sửa tham số URL từ `GET /api/orders/100` sang `GET /api/orders/101` để xem trộm hóa đơn của Người dùng B.",
+                "Thuộc tính `[Authorize]` thông thường trên Controller chỉ kiểm tra *ai đang gọi*, chứ không biết *dữ liệu 101 thuộc về ai*. Để giải quyết triệt để, ta sử dụng `IAuthorizationService` với Resource-Based Authorization."
+              ],
+              "codeTitle": "Triển khai Resource-Based Authorization chống IDOR/BOLA",
+              "codeLanguage": "csharp",
+              "codeContent": "public class OrderOwnerRequirement : IAuthorizationRequirement { }\n\npublic class OrderAuthorizationHandler : AuthorizationHandler<OrderOwnerRequirement, OrderEntity>\n{\n    protected override Task HandleRequirementAsync(\n        AuthorizationHandlerContext context,\n        OrderOwnerRequirement requirement,\n        OrderEntity resource)\n    {\n        var currentUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);\n        bool isAdmin = context.User.IsInRole(\"SystemAdmin\");\n\n        // Chỉ cho phép nếu là chủ sở hữu đơn hàng hoặc Admin\n        if (isAdmin || resource.CustomerId == currentUserId)\n        {\n            context.Succeed(requirement);\n        }\n        return Task.CompletedTask;\n    }\n}",
+              "calloutType": "tip",
+              "calloutTitle": "Kết hợp Global Query Filter trong EF Core",
+              "calloutTitleVi": "Kết hợp Global Query Filter trong EF Core",
+              "calloutText": "Trong hệ thống Multi-Tenant, bên cạnh Authorization Handler, bạn nên cấu hình thêm `modelBuilder.Entity<Order>().HasQueryFilter(o => o.TenantId == _currentTenant.Id)` trong `DbContext` để đảm bảo không bao giờ truy vấn nhầm dữ liệu giữa các khách hàng.",
+              "calloutTextVi": "Trong hệ thống Multi-Tenant, bên cạnh Authorization Handler, bạn nên cấu hình thêm `modelBuilder.Entity<Order>().HasQueryFilter(o => o.TenantId == _currentTenant.Id)` trong `DbContext` để đảm bảo không bao giờ truy vấn nhầm dữ liệu giữa các khách hàng."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sql-server-tuning-series",
+      "title": "SQL Server Database Engineering & Performance Tuning",
+      "titleVi": "Chuyên Đề SQL Server Chuyên Sâu: Tối Ưu Truy Vấn, Indexing & Xử Lý Deadlock",
+      "icon": "bi-database-fill-gear",
+      "color": "#dc2626",
+      "badge": "4 Bài Viết",
+      "description": "Từ thiết kế Schema, ràng buộc toàn vẹn, giải phẫu Clustered/Covering Index, đọc Execution Plan đến xử lý Deadlock và Isolation Levels trong hệ thống giao dịch cao.",
+      "descriptionVi": "Từ thiết kế Schema, ràng buộc toàn vẹn, giải phẫu Clustered/Covering Index, đọc Execution Plan đến xử lý Deadlock và Isolation Levels trong hệ thống giao dịch cao.",
+      "articles": [
+        {
+          "id": "sql-bai-1-indexing-execution-plan",
+          "seriesId": "sql-server-tuning-series",
+          "lessonNumber": "Bài 1",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 1,
+          "title": "Giải phẫu B-Tree Index trong SQL Server: Clustered, Covering Index & Triệt tiêu Key Lookup",
+          "titleVi": "Giải phẫu B-Tree Index trong SQL Server: Clustered, Covering Index & Triệt tiêu Key Lookup",
+          "readingTime": "15 phút đọc",
+          "publishedDate": "16/10/2026",
+          "summary": "Hiểu cấu trúc trang dữ liệu 8KB (Data Page), quy tắc Left-Prefix khi đánh Composite Index, lý do hàm trên cột WHERE làm mù Index (Non-SARGable) và kỹ thuật INCLUDE cột để đạt 100% Index Seek.",
+          "summaryVi": "Hiểu cấu trúc trang dữ liệu 8KB (Data Page), quy tắc Left-Prefix khi đánh Composite Index, lý do hàm trên cột WHERE làm mù Index (Non-SARGable) và kỹ thuật INCLUDE cột để đạt 100% Index Seek.",
+          "tags": [
+            "sql-server",
+            "indexing",
+            "execution-plan",
+            "performance",
+            "database"
+          ],
+          "sections": [
+            {
+              "heading": "1. SARGable Queries & Thảm Họa Key Lookup Trên Bảng Triệu Dòng",
+              "headingVi": "1. SARGable Queries & Thảm Họa Key Lookup Trên Bảng Triệu Dòng",
+              "paragraphs": [
+                "Một câu truy vấn được gọi là **SARGable (Search Argument Able)** khi bộ tối ưu hóa SQL Server có thể sử dụng cấu trúc cây B-Tree để nhảy thẳng tới nhánh dữ liệu (**Index Seek**) thay vì phải quét toàn bộ bảng từ đầu đến cuối (**Index Scan / Table Scan**).",
+                "Hai sai lầm phổ biến nhất phá hỏng hoàn toàn Index:",
+                "1. **Bọc cột trong hàm ở mệnh đề WHERE**: Ví dụ `WHERE YEAR(EnrollmentDate) = 2026` hoặc `WHERE LOWER(Email) = 'abc@gmail.com'`. SQL Server buộc phải tính giá trị hàm cho toàn bộ 10 triệu dòng trước khi so sánh!",
+                "2. **Thảm họa Key Lookup (Bookmark Lookup)**: Khi bạn đánh Index trên cột `StudentId`, nhưng câu lệnh `SELECT` lại lấy thêm cột `Status` và `Score` không nằm trong Index. SQL Server tìm được `StudentId` ở Non-Clustered Index xong phải nhảy ngược về Clustered Index hàng ngàn lần để nhặt nốt 2 cột kia."
+              ],
+              "paragraphsVi": [
+                "Một câu truy vấn được gọi là **SARGable (Search Argument Able)** khi bộ tối ưu hóa SQL Server có thể sử dụng cấu trúc cây B-Tree để nhảy thẳng tới nhánh dữ liệu (**Index Seek**) thay vì phải quét toàn bộ bảng từ đầu đến cuối (**Index Scan / Table Scan**).",
+                "Hai sai lầm phổ biến nhất phá hỏng hoàn toàn Index:",
+                "1. **Bọc cột trong hàm ở mệnh đề WHERE**: Ví dụ `WHERE YEAR(EnrollmentDate) = 2026` hoặc `WHERE LOWER(Email) = 'abc@gmail.com'`. SQL Server buộc phải tính giá trị hàm cho toàn bộ 10 triệu dòng trước khi so sánh!",
+                "2. **Thảm họa Key Lookup (Bookmark Lookup)**: Khi bạn đánh Index trên cột `StudentId`, nhưng câu lệnh `SELECT` lại lấy thêm cột `Status` và `Score` không nằm trong Index. SQL Server tìm được `StudentId` ở Non-Clustered Index xong phải nhảy ngược về Clustered Index hàng ngàn lần để nhặt nốt 2 cột kia."
+              ],
+              "codeTitle": "Tối ưu truy vấn SARGable và tạo Covering Index chuẩn",
+              "codeLanguage": "sql",
+              "codeContent": "-- ❌ SAI (Non-SARGable): Gây Index Scan toàn bảng\nSELECT EnrollmentId, CourseId, FinalGrade\nFROM Enrollments\nWHERE YEAR(CreatedAt) = 2026 AND Status = 'ACTIVE';\n\n-- ✅ ĐÚNG (SARGable): Giữ nguyên cột gốc để tận dụng Index Seek\nSELECT EnrollmentId, CourseId, FinalGrade\nFROM Enrollments\nWHERE CreatedAt >= '2026-01-01' AND CreatedAt < '2027-01-01'\n  AND Status = 'ACTIVE';\n\n-- ✅ TẠO COVERING INDEX: Loại bỏ 100% Key Lookup\n-- Đặt cột so sánh bằng (Equality: Status) lên trước cột khoảng (Inequality: CreatedAt)\nCREATE NONCLUSTERED INDEX IX_Enrollments_Status_CreatedAt\nON dbo.Enrollments (Status ASC, CreatedAt ASC)\nINCLUDE (CourseId, FinalGrade);",
+              "calloutType": "tip",
+              "calloutTitle": "Quy tắc Equality trước, Inequality sau",
+              "calloutTitleVi": "Quy tắc Equality trước, Inequality sau",
+              "calloutText": "Khi tạo Composite Index nhiều cột, hãy luôn đặt các cột tìm kiếm chính xác (`=`, `IN`) ở bên trái ngoài cùng, tiếp theo là các cột tìm kiếm theo khoảng (`>`, `<`, `BETWEEN`), và đưa các cột chỉ xuất hiện ở `SELECT` vào mệnh đề `INCLUDE`.",
+              "calloutTextVi": "Khi tạo Composite Index nhiều cột, hãy luôn đặt các cột tìm kiếm chính xác (`=`, `IN`) ở bên trái ngoài cùng, tiếp theo là các cột tìm kiếm theo khoảng (`>`, `<`, `BETWEEN`), và đưa các cột chỉ xuất hiện ở `SELECT` vào mệnh đề `INCLUDE`."
+            }
+          ]
+        },
+        {
+          "id": "sql-bai-2-deadlock-isolation",
+          "seriesId": "sql-server-tuning-series",
+          "lessonNumber": "Bài 2",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 2,
+          "title": "Xử lý Tranh chấp Giao dịch: Read Committed Snapshot (RCSI), UPDLOCK và Phòng chống Deadlock",
+          "titleVi": "Xử lý Tranh chấp Giao dịch: Read Committed Snapshot (RCSI), UPDLOCK và Phòng chống Deadlock",
+          "readingTime": "16 phút đọc",
+          "publishedDate": "16/10/2026",
+          "summary": "Giải thích tại sao SQL Server mặc định hay bị khóa đọc-ghi (Reader-Writer Blocking), cách bật RCSI để đọc không khóa như PostgreSQL, và xử lý Race Condition trừ số lượng tồn kho / sĩ số lớp học bằng UPDLOCK.",
+          "summaryVi": "Giải thích tại sao SQL Server mặc định hay bị khóa đọc-ghi (Reader-Writer Blocking), cách bật RCSI để đọc không khóa như PostgreSQL, và xử lý Race Condition trừ số lượng tồn kho / sĩ số lớp học bằng UPDLOCK.",
+          "tags": [
+            "sql-server",
+            "deadlock",
+            "transactions",
+            "concurrency",
+            "rcsi"
+          ],
+          "sections": [
+            {
+              "heading": "1. Bật Read Committed Snapshot Isolation (RCSI) & Khóa Giao Dịch An Toàn",
+              "headingVi": "1. Bật Read Committed Snapshot Isolation (RCSI) & Khóa Giao Dịch An Toàn",
+              "paragraphs": [
+                "Mặc định, mức cô lập `READ COMMITTED` của SQL Server sử dụng cơ chế khóa chia sẻ (**Shared Locks**): Khi một giao dịch đang `UPDATE` một dòng chưa commit, mọi câu lệnh `SELECT` đọc qua dòng đó đều bị đứng hình chờ đợi (Blocking)!",
+                "Khi kích hoạt **Read Committed Snapshot Isolation (RCSI)**, SQL Server chuyển sang dùng cơ chế đa phiên bản dòng (**Row Versioning** trong `tempdb`): Người đọc không bao giờ chặn người ghi, và người ghi không bao giờ chặn người đọc.",
+                "Đối với bài toán kiểm tra rồi cập nhật (ví dụ: Kiểm tra lớp học còn chỗ trống hay không rồi mới cho học viên đăng ký), nếu dùng `SELECT` bình thường sẽ bị lỗi **Lost Update** khi 2 request chạy song song. Giải pháp chuẩn là dùng gợi ý khóa `WITH (UPDLOCK, ROWLOCK)`."
+              ],
+              "paragraphsVi": [
+                "Mặc định, mức cô lập `READ COMMITTED` của SQL Server sử dụng cơ chế khóa chia sẻ (**Shared Locks**): Khi một giao dịch đang `UPDATE` một dòng chưa commit, mọi câu lệnh `SELECT` đọc qua dòng đó đều bị đứng hình chờ đợi (Blocking)!",
+                "Khi kích hoạt **Read Committed Snapshot Isolation (RCSI)**, SQL Server chuyển sang dùng cơ chế đa phiên bản dòng (**Row Versioning** trong `tempdb`): Người đọc không bao giờ chặn người ghi, và người ghi không bao giờ chặn người đọc.",
+                "Đối với bài toán kiểm tra rồi cập nhật (ví dụ: Kiểm tra lớp học còn chỗ trống hay không rồi mới cho học viên đăng ký), nếu dùng `SELECT` bình thường sẽ bị lỗi **Lost Update** khi 2 request chạy song song. Giải pháp chuẩn là dùng gợi ý khóa `WITH (UPDLOCK, ROWLOCK)`."
+              ],
+              "codeTitle": "Kích hoạt RCSI và Stored Procedure đăng ký an toàn chống Race Condition",
+              "codeLanguage": "sql",
+              "codeContent": "-- 1. Kích hoạt RCSI cho Database (bắt buộc cho mọi DB Production)\nALTER DATABASE EduCenterDB SET READ_COMMITTED_SNAPSHOT ON WITH ROLLBACK IMMEDIATE;\nGO\n\n-- 2. Giao dịch kiểm tra và trừ chỗ trống an toàn tuyệt đối với UPDLOCK\nCREATE OR ALTER PROCEDURE dbo.usp_RegisterStudentToClass\n    @ClassId INT,\n    @StudentId INT\nAS\nBEGIN\n    SET NOCOUNT ON;\n    SET XACT_ABORT ON; -- Tự động rollback toàn bộ nếu có bất kỳ lỗi runtime nào\n\n    BEGIN TRANSACTION;\n\n    DECLARE @CurrentCount INT, @MaxCapacity INT;\n\n    -- Giữ khóa Update trên đúng dòng ClassId này ngay từ lúc đọc để chặn các luồng song song\n    SELECT @CurrentCount = CurrentEnrolled, @MaxCapacity = MaxCapacity\n    FROM dbo.Classes WITH (UPDLOCK, ROWLOCK)\n    WHERE ClassId = @ClassId;\n\n    IF (@CurrentCount >= @MaxCapacity)\n    BEGIN\n        ROLLBACK TRANSACTION;\n        THROW 50001, N'Lớp học đã đủ sĩ số tối đa.', 1;\n    END\n\n    INSERT INTO dbo.Enrollments (ClassId, StudentId, EnrolledAt)\n    VALUES (@ClassId, @StudentId, SYSUTCDATETIME());\n\n    UPDATE dbo.Classes\n    SET CurrentEnrolled = CurrentEnrolled + 1\n    WHERE ClassId = @ClassId;\n\n    COMMIT TRANSACTION;\nEND;",
+              "calloutType": "warning",
+              "calloutTitle": "Luôn bật SET XACT_ABORT ON",
+              "calloutTitleVi": "Luôn bật SET XACT_ABORT ON",
+              "calloutText": "Trong SQL Server, nếu không có `SET XACT_ABORT ON`, khi một câu lệnh bên trong Transaction gặp lỗi (như vi phạm khóa ngoại hoặc chia cho 0), Transaction có thể vẫn giữ trạng thái mở (Open/Zombie Transaction) và giữ chặt khóa dòng làm treo toàn bộ hệ thống.",
+              "calloutTextVi": "Trong SQL Server, nếu không có `SET XACT_ABORT ON`, khi một câu lệnh bên trong Transaction gặp lỗi (như vi phạm khóa ngoại hoặc chia cho 0), Transaction có thể vẫn giữ trạng thái mở (Open/Zombie Transaction) và giữ chặt khóa dòng làm treo toàn bộ hệ thống."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "blazor-fullstack-series",
+      "title": "Modern Blazor & .NET 10 Full-Stack Architecture",
+      "titleVi": "Chuyên Đề Blazor & .NET 10: Kiến Trúc Full-Stack, Bảo Mật WASM & Tối Ưu Render",
+      "icon": "bi-window-stack",
+      "color": "#ec4899",
+      "badge": "3 Bài Viết",
+      "description": "Làm chủ Blazor trong .NET 10: Chọn Render Mode tối ưu, bảo mật API Key cho Blazor WASM qua Serverless Proxy/BFF và tối ưu hiệu năng giao diện.",
+      "descriptionVi": "Làm chủ Blazor trong .NET 10: Chọn Render Mode tối ưu, bảo mật API Key cho Blazor WASM qua Serverless Proxy/BFF và tối ưu hiệu năng giao diện.",
+      "articles": [
+        {
+          "id": "blazor-bai-1-wasm-security-bff",
+          "seriesId": "blazor-fullstack-series",
+          "lessonNumber": "Bài 1",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 1,
+          "title": "Bảo mật Blazor WebAssembly: Tuyệt đối không lưu API Key ở Client & Mô hình Serverless Proxy / BFF",
+          "titleVi": "Bảo mật Blazor WebAssembly: Tuyệt đối không lưu API Key ở Client & Mô hình Serverless Proxy / BFF",
+          "readingTime": "13 phút đọc",
+          "publishedDate": "16/10/2026",
+          "summary": "Tại sao mọi cấu hình trong wwwroot/appsettings.json của Blazor WASM đều bị phơi bày công khai trên trình duyệt và cách sử dụng Backend-For-Frontend (BFF) hoặc Serverless API trên Vercel/Cloudflare để bảo vệ khóa bí mật.",
+          "summaryVi": "Tại sao mọi cấu hình trong wwwroot/appsettings.json của Blazor WASM đều bị phơi bày công khai trên trình duyệt và cách sử dụng Backend-For-Frontend (BFF) hoặc Serverless API trên Vercel/Cloudflare để bảo vệ khóa bí mật.",
+          "tags": [
+            "blazor",
+            "wasm",
+            "security",
+            "serverless",
+            "bff",
+            "dotnet"
+          ],
+          "sections": [
+            {
+              "heading": "1. Cạm Bẫy Chết Người Khi Lưu Secret Key Trong Blazor WebAssembly",
+              "headingVi": "1. Cạm Bẫy Chết Người Khi Lưu Secret Key Trong Blazor WebAssembly",
+              "paragraphs": [
+                "Khác với Blazor Server (code C# chạy trên máy chủ), toàn bộ các file DLL/WebAssembly và `wwwroot/appsettings.json` của **Blazor WebAssembly (WASM)** đều được tải nguyên vẹn xuống trình duyệt của người dùng.",
+                "Bất kỳ ai nhấn `F12 -> Network` đều có thể đọc toàn bộ nội dung file `appsettings.json`, hoặc dùng công cụ dịch ngược (ILSpy/dnSpy) để đọc các hằng số `const string ApiKey` nằm cứng trong code C#.",
+                "Giải pháp chuẩn: **Không bao giờ gọi trực tiếp 3rd-party API có gắn Secret Key (như OpenAI, Gemini, Adyen) từ Blazor WASM**. Thay vào đó, hãy đi qua một tầng **Serverless Proxy Function** (như Vercel Serverless Functions hoặc ASP.NET Core Minimal API BFF)."
+              ],
+              "paragraphsVi": [
+                "Khác với Blazor Server (code C# chạy trên máy chủ), toàn bộ các file DLL/WebAssembly và `wwwroot/appsettings.json` của **Blazor WebAssembly (WASM)** đều được tải nguyên vẹn xuống trình duyệt của người dùng.",
+                "Bất kỳ ai nhấn `F12 -> Network` đều có thể đọc toàn dung file `appsettings.json`, hoặc dùng công cụ dịch ngược (ILSpy/dnSpy) để đọc các hằng số `const string ApiKey` nằm cứng trong code C#.",
+                "Giải pháp chuẩn: **Không bao giờ gọi trực tiếp 3rd-party API có gắn Secret Key (như OpenAI, Gemini, Adyen) từ Blazor WASM**. Thay vào đó, hãy đi qua một tầng **Serverless Proxy Function** (như Vercel Serverless Functions hoặc ASP.NET Core Minimal API BFF)."
+              ],
+              "codeTitle": "Kiến trúc BFF / Serverless Proxy bảo vệ API Key cho Blazor WASM",
+              "codeLanguage": "csharp",
+              "codeContent": "// 1. Tại Blazor WASM Client: Chỉ gọi tới Proxy nội bộ, KHÔNG cầm API Key\npublic class AiAssistantClient(HttpClient http)\n{\n    public async Task<string> AskQuestionAsync(string prompt, CancellationToken ct)\n    {\n        var response = await http.PostAsJsonAsync(\"/api/ai-proxy/chat\", new { Prompt = prompt }, ct);\n        response.EnsureSuccessStatusCode();\n        return await response.Content.ReadAsStringAsync(ct);\n    }\n}\n\n// 2. Tại Backend Proxy / Serverless Endpoint: Đọc API Key từ biến môi trường Server an toàn\napp.MapPost(\"/api/ai-proxy/chat\", async (ChatRequest req, IConfiguration config, IHttpClientFactory factory) =>\n{\n    var secretApiKey = config[\"AI_PROVIDER_SECRET_KEY\"]; // Nằm trên Server, trình duyệt không thể thấy\n    var client = factory.CreateClient();\n    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(\"Bearer\", secretApiKey);\n    \n    // Chuyển tiếp request lên nhà cung cấp AI...\n    return Results.Ok(new { reply = \"Phản hồi an toàn từ Proxy\" });\n}).RequireRateLimiting(\"IpRateLimitPolicy\");",
+              "calloutType": "tip",
+              "calloutTitle": "Giải quyết vấn đề Double-Fetch khi Prerendering",
+              "calloutTitleVi": "Giải quyết vấn đề Double-Fetch khi Prerendering",
+              "calloutText": "Trong Blazor .NET 8/9/10, khi bật Prerendering, hàm `OnInitializedAsync` sẽ chạy 2 lần (1 lần trên Server để tạo HTML tĩnh, 1 lần khi WASM khởi động xong). Hãy tiêm `PersistentComponentState` hoặc thuộc tính `[SupplyParameterFromPersistentComponentState]` để lưu trạng thái từ lần render đầu tiên, giúp tiết kiệm 50% lượng gọi API!",
+              "calloutTextVi": "Trong Blazor .NET 8/9/10, khi bật Prerendering, hàm `OnInitializedAsync` sẽ chạy 2 lần (1 lần trên Server để tạo HTML tĩnh, 1 lần khi WASM khởi động xong). Hãy tiêm `PersistentComponentState` hoặc thuộc tính `[SupplyParameterFromPersistentComponentState]` để lưu trạng thái từ lần render đầu tiên, giúp tiết kiệm 50% lượng gọi API!"
             }
           ]
         }
