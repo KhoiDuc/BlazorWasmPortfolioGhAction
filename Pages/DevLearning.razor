@@ -668,13 +668,16 @@
                             var isCopied = _copiedCatalogSeriesId == s.Id;
                             var catKey = GetSeriesCategory(s.Id);
                             var catLabel = GetCategoryLabel(catKey);
+                            var cardColor = !string.IsNullOrWhiteSpace(s.Color) ? s.Color : "#0284c7";
+                            var cardIcon = !string.IsNullOrWhiteSpace(s.Icon) ? s.Icon : "bi-journal-code";
+                            var iconBg = cardColor.StartsWith("#") && cardColor.Length == 7 ? $"{cardColor}18" : "rgba(2, 132, 199, 0.12)";
 
-                            <div class="dev-catalog-card" style="--card-accent: @s.Color; --icon-bg: @(s.Color)18;">
+                            <div class="dev-catalog-card" style="--card-accent: @cardColor; --icon-bg: @iconBg;">
                                 <div class="dev-catalog-accent-stripe"></div>
 
                                 <div class="dev-catalog-card-header">
                                     <div class="dev-catalog-icon-box">
-                                        <i class="bi @s.Icon"></i>
+                                        <i class="bi @cardIcon"></i>
                                     </div>
                                     <div class="dev-catalog-badge-group">
                                         <span class="dev-catalog-cat-pill">@catLabel</span>
@@ -701,10 +704,11 @@
                                         <ul class="dev-catalog-lessons-list">
                                             @foreach (var art in s.Articles.Take(3))
                                             {
+                                                var lessonLabel = !string.IsNullOrWhiteSpace(art.LessonNumber) ? art.LessonNumber : $"Bài {s.Articles.IndexOf(art) + 1}";
                                                 <li class="dev-catalog-preview-item" 
                                                     title="@(CultureService.IsEnglish ? art.Title : art.TitleVi)"
                                                     @onclick="() => ReadArticle(art)">
-                                                    <span class="dev-catalog-lesson-num">@art.LessonNumber:</span>
+                                                    <span class="dev-catalog-lesson-num">@lessonLabel:</span>
                                                     <span class="dev-catalog-lesson-name">@(CultureService.IsEnglish ? art.Title : art.TitleVi)</span>
                                                 </li>
                                             }
