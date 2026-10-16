@@ -75,26 +75,6 @@
             }
         </header>
 
-        <!-- Series Selector Bar (Chuyên Đề Docker, K8s, .NET, AWS, AI MCP) -->
-        @if (_data?.SeriesList != null)
-        {
-            <section class="dev-series-pills-bar">
-                <div class="dev-series-pills">
-                    @foreach (var s in _data.SeriesList)
-                    {
-                        var isAct = _selectedSeries?.Id == s.Id && !_showOnlyBookmarks;
-                        <button type="button" 
-                                class="dev-series-pill-btn @(isAct ? "active" : "")"
-                                style="@(isAct ? $"--pill-accent: {s.Color}; border-color: {s.Color};" : "")"
-                                @onclick="() => SelectSeries(s)">
-                            <i class="bi @s.Icon"></i>
-                            <span class="dev-pill-title">@(CultureService.IsEnglish ? s.Title : s.TitleVi)</span>
-                            <span class="dev-pill-badge">@s.Articles.Count Bài</span>
-                        </button>
-                    }
-                </div>
-            </section>
-        }
 
         @if (_isLoading)
         {
@@ -398,21 +378,58 @@
                 </div>
             </div>
         }
-        else
+        else if (_viewMode == ViewMode.Feed && (_selectedSeries != null || _showOnlyBookmarks))
         {
             <!-- ========================================================================= -->
             <!-- MODE 1: BLOG POSTS LIST / FEED VIEW (Danh Sách Bài Viết Theo Chuyên Đề)   -->
             <!-- ========================================================================= -->
             <section class="dev-series-feed-section">
+                <!-- Feed Top Navigation Bar (Back to Catalog + Series Dropdown Switcher) -->
+                <div class="dev-feed-top-nav">
+                    <div class="dev-feed-nav-left">
+                        <button type="button" class="dev-feed-back-btn" @onclick="BackToCatalog">
+                            <i class="bi bi-grid-fill"></i>
+                            <span>@(CultureService.IsEnglish ? "All Series Catalog" : "Tất Cả Chuyên Đề")</span>
+                        </button>
+                        <i class="bi bi-chevron-right dev-feed-bc-sep"></i>
+                        <span class="dev-feed-bc-current">
+                            @if (_showOnlyBookmarks)
+                            {
+                                @(CultureService.IsEnglish ? "Saved Articles" : "Bài Viết Đã Lưu")
+                            }
+                            else
+                            {
+                                @(CultureService.IsEnglish ? _selectedSeries?.Title : _selectedSeries?.TitleVi)
+                            }
+                        </span>
+                    </div>
+
+                    @if (!_showOnlyBookmarks && _data?.SeriesList != null)
+                    {
+                        <div class="dev-feed-switcher-wrap">
+                            <label class="dev-feed-switcher-label">
+                                <i class="bi bi-arrow-left-right"></i>
+                                <span>@(CultureService.IsEnglish ? "Switch Series:" : "Đổi Chuyên Đề:")</span>
+                            </label>
+                            <select class="dev-feed-select" value="@_selectedSeries?.Id" @onchange="OnSeriesDropdownChanged">
+                                @foreach (var s in _data.SeriesList)
+                                {
+                                    <option value="@s.Id">@(CultureService.IsEnglish ? s.Title : s.TitleVi) (@s.Articles.Count)</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                </div>
+
                 <!-- Chuyên Đề Header Card -->
                 <div class="dev-feed-series-banner" style="--banner-accent: @(_selectedSeries?.Color ?? "#0284c7");">
                     <div class="dev-feed-banner-content">
                         <div class="dev-feed-banner-badge-row">
                             <div class="dev-feed-banner-badge">
                                 <i class="bi @(_selectedSeries?.Icon ?? "bi-box-seam-fill")"></i>
-                                <span>@(_selectedSeries?.Badge ?? "Chuyên Đề")</span>
+                                <span>@(_showOnlyBookmarks ? (CultureService.IsEnglish ? "Bookmarks" : "Bộ Sưu Tập") : (_selectedSeries?.Badge ?? "Chuyên Đề"))</span>
                             </div>
-                            @if (_selectedSeries != null)
+                            @if (_selectedSeries != null && !_showOnlyBookmarks)
                             {
                                 <button type="button" 
                                         class="dev-share-btn @(_copiedSeriesUrl ? "copied" : "")"
@@ -424,10 +441,24 @@
                             }
                         </div>
                         <h2 class="dev-feed-series-title">
-                            @(CultureService.IsEnglish ? _selectedSeries?.Title : _selectedSeries?.TitleVi)
+                            @if (_showOnlyBookmarks)
+                            {
+                                @(CultureService.IsEnglish ? "Saved Articles Collection" : "Bộ Sưu Tập Bài Viết Đã Lưu")
+                            }
+                            else
+                            {
+                                @(CultureService.IsEnglish ? _selectedSeries?.Title : _selectedSeries?.TitleVi)
+                            }
                         </h2>
                         <p class="dev-feed-series-desc">
-                            @(CultureService.IsEnglish ? _selectedSeries?.Description : _selectedSeries?.DescriptionVi)
+                            @if (_showOnlyBookmarks)
+                            {
+                                @(CultureService.IsEnglish ? "Here are all the technical lessons you bookmarked for offline review and quick practice." : "Tổng hợp toàn bộ các bài viết kỹ thuật bạn đã đánh dấu lưu lại để tiện tra cứu và thực hành.")
+                            }
+                            else
+                            {
+                                @(CultureService.IsEnglish ? _selectedSeries?.Description : _selectedSeries?.DescriptionVi)
+                            }
                         </p>
                     </div>
                 </div>
@@ -439,7 +470,7 @@
                                 class="dev-level-chip @(_selectedLevelFilter == null ? "active" : "")"
                                 @onclick="() => _selectedLevelFilter = null">
                             <span>Tất Cả Bài Viết</span>
-                            <span class="dev-level-count">@(_selectedSeries?.Articles.Count ?? 0)</span>
+                            <span class="dev-level-count">@(_showOnlyBookmarks ? _bookmarkedIds.Count : (_selectedSeries?.Articles.Count ?? 0))</span>
                         </button>
                         <button type="button" 
                                 class="dev-level-chip level-1 @(_selectedLevelFilter == 1 ? "active" : "")"
@@ -470,7 +501,7 @@
                     <div class="dev-feed-search-box">
                         <i class="bi bi-search"></i>
                         <input type="text" 
-                               placeholder="Tìm bài viết trong chuyên đề này..." 
+                               placeholder="@(CultureService.IsEnglish ? "Search articles in this feed..." : "Tìm bài viết trong danh sách này...")" 
                                @bind="_searchTerm" 
                                @bind:event="oninput" />
                     </div>
@@ -553,11 +584,160 @@
                 }
             </section>
         }
+        else
+        {
+            <!-- ========================================================================= -->
+            <!-- MODE 3: SERIES CATALOG DASHBOARD (Showcase Tất Cả 16+ Chuyên Đề)          -->
+            <!-- ========================================================================= -->
+            <section class="dev-catalog-section">
+                <!-- Catalog Toolbar: Search + Category Chips -->
+                <div class="dev-catalog-toolbar">
+                    <div class="dev-catalog-search-wrap">
+                        <i class="bi bi-search dev-catalog-search-icon"></i>
+                        <input type="text" 
+                               class="dev-catalog-search-input" 
+                               placeholder="@(CultureService.IsEnglish ? "Search series by title, tech stack (Docker, .NET, AWS, AI, JWT...), or keyword..." : "Tìm kiếm chuyên đề theo tên, công nghệ (Docker, .NET, AWS, AI, JWT...) hoặc nội dung...")"
+                               @bind="_catalogSearch" 
+                               @bind:event="oninput" />
+                        @if (!string.IsNullOrEmpty(_catalogSearch))
+                        {
+                            <button type="button" class="dev-catalog-clear-btn" @onclick="() => _catalogSearch = string.Empty" title="Xóa tìm kiếm">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                        }
+                    </div>
+
+                    <div class="dev-catalog-chips">
+                        <button type="button" 
+                                class="dev-catalog-chip @(_selectedCatalogCategory == "all" ? "active" : "")"
+                                @onclick='() => _selectedCatalogCategory = "all"'>
+                            <span>@(CultureService.IsEnglish ? "All Series" : "Tất Cả Chuyên Đề")</span>
+                            <span class="dev-catalog-chip-badge">@GetCategoryCount("all")</span>
+                        </button>
+                        <button type="button" 
+                                class="dev-catalog-chip @(_selectedCatalogCategory == "devops" ? "active" : "")"
+                                @onclick='() => _selectedCatalogCategory = "devops"'>
+                            <span>🐳 @GetCategoryLabel("devops")</span>
+                            <span class="dev-catalog-chip-badge">@GetCategoryCount("devops")</span>
+                        </button>
+                        <button type="button" 
+                                class="dev-catalog-chip @(_selectedCatalogCategory == "backend" ? "active" : "")"
+                                @onclick='() => _selectedCatalogCategory = "backend"'>
+                            <span>⚡ @GetCategoryLabel("backend")</span>
+                            <span class="dev-catalog-chip-badge">@GetCategoryCount("backend")</span>
+                        </button>
+                        <button type="button" 
+                                class="dev-catalog-chip @(_selectedCatalogCategory == "cloud" ? "active" : "")"
+                                @onclick='() => _selectedCatalogCategory = "cloud"'>
+                            <span>☁️ @GetCategoryLabel("cloud")</span>
+                            <span class="dev-catalog-chip-badge">@GetCategoryCount("cloud")</span>
+                        </button>
+                        <button type="button" 
+                                class="dev-catalog-chip @(_selectedCatalogCategory == "ai" ? "active" : "")"
+                                @onclick='() => _selectedCatalogCategory = "ai"'>
+                            <span>🤖 @GetCategoryLabel("ai")</span>
+                            <span class="dev-catalog-chip-badge">@GetCategoryCount("ai")</span>
+                        </button>
+                        <button type="button" 
+                                class="dev-catalog-chip @(_selectedCatalogCategory == "standards" ? "active" : "")"
+                                @onclick='() => _selectedCatalogCategory = "standards"'>
+                            <span>🎯 @GetCategoryLabel("standards")</span>
+                            <span class="dev-catalog-chip-badge">@GetCategoryCount("standards")</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Series Showcase Cards Grid -->
+                @if (!FilteredCatalogSeries.Any())
+                {
+                    <div class="dev-empty-feed">
+                        <i class="bi bi-search"></i>
+                        <h5>@(CultureService.IsEnglish ? "No matching series found" : "Không tìm thấy chuyên đề phù hợp")</h5>
+                        <p>@(CultureService.IsEnglish ? "Try clearing search keywords or choosing another category filter." : "Thử xóa từ khóa tìm kiếm hoặc chọn danh mục khác.")</p>
+                        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="ClearCatalogFilters">
+                            @(CultureService.IsEnglish ? "Show All Series" : "Xem tất cả chuyên đề")
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="dev-catalog-grid">
+                        @foreach (var s in FilteredCatalogSeries)
+                        {
+                            var isCopied = _copiedCatalogSeriesId == s.Id;
+                            var catKey = GetSeriesCategory(s.Id);
+                            var catLabel = GetCategoryLabel(catKey);
+
+                            <div class="dev-catalog-card" style="--card-accent: @s.Color; --icon-bg: @(s.Color)18;">
+                                <div class="dev-catalog-accent-stripe"></div>
+
+                                <div class="dev-catalog-card-header">
+                                    <div class="dev-catalog-icon-box">
+                                        <i class="bi @s.Icon"></i>
+                                    </div>
+                                    <div class="dev-catalog-badge-group">
+                                        <span class="dev-catalog-cat-pill">@catLabel</span>
+                                        <span class="dev-catalog-count-pill">@(s.Articles?.Count ?? 0) Bài</span>
+                                    </div>
+                                </div>
+
+                                <h3 class="dev-catalog-card-title" @onclick="() => SelectSeries(s)">
+                                    @(CultureService.IsEnglish ? s.Title : s.TitleVi)
+                                </h3>
+
+                                <p class="dev-catalog-card-desc">
+                                    @(CultureService.IsEnglish ? s.Description : s.DescriptionVi)
+                                </p>
+
+                                <!-- Preview Lessons Box -->
+                                @if (s.Articles != null && s.Articles.Count > 0)
+                                {
+                                    <div class="dev-catalog-lessons-box">
+                                        <div class="dev-catalog-lessons-header">
+                                            <span>@(CultureService.IsEnglish ? "Featured Lessons" : "Lộ Trình Bài Học")</span>
+                                            <span>@s.Articles.Count Bài</span>
+                                        </div>
+                                        <ul class="dev-catalog-lessons-list">
+                                            @foreach (var art in s.Articles.Take(3))
+                                            {
+                                                <li class="dev-catalog-preview-item" 
+                                                    title="@(CultureService.IsEnglish ? art.Title : art.TitleVi)"
+                                                    @onclick="() => ReadArticle(art)">
+                                                    <span class="dev-catalog-lesson-num">@art.LessonNumber:</span>
+                                                    <span class="dev-catalog-lesson-name">@(CultureService.IsEnglish ? art.Title : art.TitleVi)</span>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+
+                                <!-- Card Footer with Action Buttons -->
+                                <div class="dev-catalog-card-footer">
+                                    <button type="button" 
+                                            class="dev-catalog-share-btn @(isCopied ? "copied" : "")"
+                                            title="@(CultureService.IsEnglish ? "Copy link to this series" : "Sao chép link chuyên đề này")"
+                                            @onclick="() => ShareCatalogSeries(s)">
+                                        <i class="bi @(isCopied ? "bi-check2" : "bi-share")"></i>
+                                    </button>
+
+                                    <button type="button" 
+                                            class="dev-catalog-explore-btn"
+                                            @onclick="() => SelectSeries(s)">
+                                        <span>@(CultureService.IsEnglish ? "Explore Series" : "Khám Phá Chuyên Đề")</span>
+                                        <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+        }
     </div>
 </div>
 
 @code {
-    private enum ViewMode { Feed, Reader }
+    private enum ViewMode { Catalog, Feed, Reader }
 
     [Parameter] public string? SeriesId { get; set; }
     [Parameter] public string? ArticleId { get; set; }
@@ -566,11 +746,15 @@
     private bool _isLoading = true;
     private DevSeries? _selectedSeries;
     private DevArticle? _activeArticle;
-    private ViewMode _viewMode = ViewMode.Feed;
+    private ViewMode _viewMode = ViewMode.Catalog;
     private int? _selectedLevelFilter = null;
     private string _searchTerm = "";
     private bool _showOnlyBookmarks = false;
     private string? _copiedCodeId = null;
+
+    private string _catalogSearch = "";
+    private string _selectedCatalogCategory = "all";
+    private string? _copiedCatalogSeriesId = null;
 
     private string? _lastAppliedSeriesId;
     private string? _lastAppliedArticleId;
@@ -666,12 +850,9 @@
             }
         }
 
-        if (_selectedSeries == null && _data.SeriesList.Count > 0)
-        {
-            _selectedSeries = _data.SeriesList[0];
-        }
+        _selectedSeries = null;
         _activeArticle = null;
-        _viewMode = ViewMode.Feed;
+        _viewMode = ViewMode.Catalog;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -699,16 +880,135 @@
 
     private int CountArticlesByLevel(int levelOrder)
     {
+        if (_showOnlyBookmarks)
+        {
+            return _data?.SeriesList.SelectMany(s => s.Articles).Count(a => _bookmarkedIds.Contains(a.Id) && a.LevelOrder == levelOrder) ?? 0;
+        }
         if (_selectedSeries == null) return 0;
         return _selectedSeries.Articles.Count(a => a.LevelOrder == levelOrder);
+    }
+
+    private string GetSeriesCategory(string seriesId) => seriesId switch
+    {
+        "docker-series" or "k8s-series" or "logging-observability-series" or "load-balancing-series" => "devops",
+        "dotnet-series" or "idempotency-key-series" or "jwt-deep-dive-series" => "backend",
+        "aws-series" or "cloudflare-series" or "app-insights-series" or "free-cloud-deploy-db-series" or "vpn-proxy-testing-series" => "cloud",
+        "ai-mcp-series" or "vibe-coding-series" or "rag-gemini-series" => "ai",
+        "wcag-accessibility-series" => "standards",
+        _ => "other"
+    };
+
+    private string GetCategoryLabel(string category)
+    {
+        if (CultureService.IsEnglish)
+        {
+            return category switch
+            {
+                "devops" => "DevOps & Containers",
+                "backend" => "Backend & Architecture",
+                "cloud" => "Cloud & Infrastructure",
+                "ai" => "AI & LLM",
+                "standards" => "Frontend & Standards",
+                _ => "General"
+            };
+        }
+        return category switch
+        {
+            "devops" => "DevOps & Container",
+            "backend" => "Backend & Kiến Trúc",
+            "cloud" => "Cloud & Hạ Tầng",
+            "ai" => "AI & LLM",
+            "standards" => "Frontend & Tiêu Chuẩn",
+            _ => "Khác"
+        };
+    }
+
+    private int GetCategoryCount(string category)
+    {
+        if (_data?.SeriesList == null) return 0;
+        if (category == "all") return _data.SeriesList.Count;
+        return _data.SeriesList.Count(s => GetSeriesCategory(s.Id) == category);
+    }
+
+    private IEnumerable<DevSeries> FilteredCatalogSeries
+    {
+        get
+        {
+            if (_data?.SeriesList == null) return Enumerable.Empty<DevSeries>();
+            var list = _data.SeriesList.AsEnumerable();
+
+            if (_selectedCatalogCategory != "all")
+            {
+                list = list.Where(s => GetSeriesCategory(s.Id) == _selectedCatalogCategory);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_catalogSearch))
+            {
+                var q = _catalogSearch.Trim().ToLowerInvariant();
+                list = list.Where(s =>
+                    s.Title.ToLowerInvariant().Contains(q) ||
+                    s.TitleVi.ToLowerInvariant().Contains(q) ||
+                    s.Description.ToLowerInvariant().Contains(q) ||
+                    s.DescriptionVi.ToLowerInvariant().Contains(q) ||
+                    s.Articles.Any(a => 
+                        a.Title.ToLowerInvariant().Contains(q) || 
+                        a.TitleVi.ToLowerInvariant().Contains(q) ||
+                        a.Tags.Any(t => t.ToLowerInvariant().Contains(q))));
+            }
+
+            return list;
+        }
+    }
+
+    private void ClearCatalogFilters()
+    {
+        _catalogSearch = "";
+        _selectedCatalogCategory = "all";
+    }
+
+    private void BackToCatalog()
+    {
+        _viewMode = ViewMode.Catalog;
+        _selectedSeries = null;
+        _activeArticle = null;
+        _showOnlyBookmarks = false;
+        _selectedLevelFilter = null;
+        _searchTerm = "";
+        Navigation.NavigateTo(GetDevLearningHomeUrl());
+    }
+
+    private void OnSeriesDropdownChanged(ChangeEventArgs e)
+    {
+        var newId = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(newId))
+        {
+            var targetSeries = _data?.SeriesList.FirstOrDefault(s => s.Id == newId);
+            if (targetSeries != null)
+            {
+                SelectSeries(targetSeries);
+            }
+        }
+    }
+
+    private async Task ShareCatalogSeries(DevSeries s)
+    {
+        try
+        {
+            var url = Navigation.ToAbsoluteUri(GetSeriesUrl(s.Id)).ToString();
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", url);
+            _copiedCatalogSeriesId = s.Id;
+            StateHasChanged();
+            await Task.Delay(2000);
+            _copiedCatalogSeriesId = null;
+            StateHasChanged();
+        }
+        catch { }
     }
 
     private IEnumerable<DevArticle> FilteredArticles
     {
         get
         {
-            if (_selectedSeries == null) return Enumerable.Empty<DevArticle>();
-
             IEnumerable<DevArticle> list;
             if (_showOnlyBookmarks)
             {
@@ -716,6 +1016,7 @@
             }
             else
             {
+                if (_selectedSeries == null) return Enumerable.Empty<DevArticle>();
                 list = _selectedSeries.Articles;
             }
 
@@ -779,8 +1080,22 @@
     private void ToggleBookmarkFilter()
     {
         _showOnlyBookmarks = !_showOnlyBookmarks;
-        _viewMode = ViewMode.Feed;
-        _activeArticle = null;
+        if (_showOnlyBookmarks)
+        {
+            _viewMode = ViewMode.Feed;
+            _activeArticle = null;
+        }
+        else
+        {
+            if (_selectedSeries != null)
+            {
+                _viewMode = ViewMode.Feed;
+            }
+            else
+            {
+                _viewMode = ViewMode.Catalog;
+            }
+        }
     }
 
     private void ClearFilters()
@@ -808,15 +1123,16 @@
 
     private void BackToFeed()
     {
-        _viewMode = ViewMode.Feed;
         _activeArticle = null;
         if (_selectedSeries != null)
         {
+            _viewMode = ViewMode.Feed;
             Navigation.NavigateTo(GetSeriesUrl(_selectedSeries.Id));
         }
         else
         {
-            Navigation.NavigateTo(GetDevLearningHomeUrl());
+            BackToCatalog();
+            return;
         }
         try
         {
