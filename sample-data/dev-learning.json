@@ -50,7 +50,7 @@
               ],
               "codeTitle": "Bảng so sánh kiến trúc Container vs Virtual Machine",
               "codeLanguage": "text",
-              "codeContent": "┌───────────────────────┬──────────────────────────────┬──────────────────────────────┐\n│ Tiêu Chí              │ Virtual Machine (VM)         │ Docker Container             │\n├───────────────────────┼──────────────────────────────┼──────────────────────────────┤\n│ Tầng ảo hóa           │ Ảo hóa phần cứng (Hypervisor)│ Ảo hóa OS (Namespaces/cgroups)│\n│ Hệ điều hành          │ Mỗi VM có 1 Guest OS riêng   │ Dùng chung Linux Host Kernel │\n│ Tốc độ khởi động      │ Từ 30 giây đến vài phút      │ Vài mili-giây đến vài giây   │\n│ Kích thước lưu trữ    │ Hàng chục GB (ISO Guest OS)  │ Hàng MB đến vài trăm MB      │\n│ Mức độ ngốn RAM idle  │ Rất cao (1 - 2 GB cho OS)    │ Cực thấp (~5MB - 30MB)       │\n│ Hiệu năng xử lý CPU   │ Bị suy hao qua Hypervisor    │ Native (gần như 100% native) │\n└───────────────────────┴──────────────────────────────┴──────────────────────────────┘",
+              "codeContent": "┌───────────────────────┬──────────────────────────────┬──────────────────────────────┐\n│ Tiêu Chí              │ Virtual Machine (VM)         │ Docker Container             │\n├───────────────────────┼──────────────────────────────┼──────────────────────────────┤\n│ Tầng ảo hóa           │ Ảo hóa phần cứng (Hypervisor)│ Ảo hóa OS (Namespaces/cgroups)│\n│ Hệ điều hành          │ Mỗi VM có 1 Guest OS riêng   │ Dùng chung Linux Host Kernel │\n│ Tốc độ khởi động      │ Từ 30 giây đến vài phút      │ Vài mili-giây đến vài giây   │\n│ Kích thước lưu trữ    │ Hàng chục GB (ISO Guest OS)  │ Hàng MB đến vài trăm MB      │\n│ Mức độ ngốn RAM idle  │ Rất cao (1 - 2 GB cho OS)    │ Thấp (tùy app: 30MB→200MB+)  │\n│ Hiệu năng xử lý CPU   │ ~95-99% native (VT-x/AMD-V)  │ Native (100% native kernel)  │\n└───────────────────────┴──────────────────────────────┴──────────────────────────────┘",
               "calloutType": "info",
               "calloutTitle": "Quy tắc tâm niệm cốt lõi",
               "calloutTitleVi": "Quy tắc tâm niệm cốt lõi",
@@ -360,7 +360,7 @@
               "calloutType": "tip",
               "calloutTitle": "Lệnh Compose V2 hiện đại",
               "calloutTitleVi": "Lệnh Compose V2 hiện đại",
-              "calloutText": "Trong Docker hiện đại, hãy dùng lệnh `docker compose up -d` (có dấu cách) thay cho công cụ python cũ `docker-compose up -d`. Lệnh V2 được viết trực tiếp bằng Golang nhúng trong Docker CLI, mang lại tốc độ thực thi vượt trội.",
+              "calloutText": "Trong Docker hiện đại, hãy dùng lệnh `docker compose up -d` (có dấu cách) thay cho công cụ python cũ `docker-compose up -d`. Lệnh V2 được viết bằng Go dưới dạng CLI Plugin tích hợp trong bộ Docker CE / Docker Desktop, mang lại tốc độ thực thi vượt trội so với bản Python cũ.",
               "calloutTextVi": "Trong Docker hiện đại, hãy dùng lệnh `docker compose up -d` (có dấu cách) thay cho công cụ python cũ `docker-compose up -d`. Lệnh V2 được viết trực tiếp bằng Golang nhúng trong Docker CLI, mang lại tốc độ thực thi vượt trội."
             },
             {
@@ -473,7 +473,7 @@
               "heading": "1. Nguy Cơ Khi Chạy Container Dưới Quyền Root Mặc Định",
               "headingVi": "1. Nguy Cơ Khi Chạy Container Dưới Quyền Root Mặc Định",
               "paragraphs": [
-                "Mặc định, nếu không chỉ định, tiến trình bên trong container sẽ chạy dưới quyền `root` (`UID=0`). Mặc dù container bị cô lập bằng Namespaces, nhưng nếu xuất hiện một lỗ hổng vượt rào container (Container Escape Vulnerability - như Dirty COW hoặc CVE trong runc), kẻ tấn công sẽ lập tức có toàn quyền root trên máy chủ vật lý VPS!",
+                "Mặc định, nếu không chỉ định, tiến trình bên trong container sẽ chạy dưới quyền `root` (`UID=0`). Mặc dù container bị cô lập bằng Namespaces, nhưng nếu xuất hiện một lỗ hổng vượt rào container (Container Escape Vulnerability - như CVE-2024-21626 (Leaky Vessels trong runc) hoặc CVE-2019-5736), kẻ tấn công sẽ lập tức có toàn quyền root trên máy chủ vật lý VPS!",
                 "Nguyên tắc cốt lõi: **Luôn tạo và chuyển sang một Non-Root User không có quyền sudo trước khi khởi chạy ứng dụng**."
               ],
               "paragraphsVi": [
@@ -917,7 +917,7 @@
               "heading": "2. Xử Lý OOMKilled: Exit Code 137 & Kỹ Thuật Điều Chỉnh .NET GC trong Container",
               "headingVi": "2. Xử Lý OOMKilled: Exit Code 137 & Kỹ Thuật Điều Chỉnh .NET GC trong Container",
               "paragraphs": [
-                "Khi bạn thấy trong `kubectl describe pod` ghi: `Last State: Terminated, Reason: OOMKilled, Exit Code: 137`, điều đó khẳng định chắc chắn tiến trình đã sử dụng RAM vượt quá con số `limits.memory` đã khai báo và bị cgroups của nhân Linux cưỡng chế gửi tín hiệu `SIGKILL` (Signal 9, mã 128 + 9 = 137).",
+                "Khi bạn thấy trong `kubectl describe pod` ghi: `Last State: Terminated, Reason: OOMKilled, Exit Code: 137`, điều đó khẳng định chắc chắn tiến trình đã sử dụng RAM vượt quá con số `limits.memory` đã khai báo và bị Linux Kernel OOM Killer (phát hiện tiến trình vượt ngưỡng cgroups memory limit) cưỡng chế gửi tín hiệu `SIGKILL` (Signal 9, mã 128 + 9 = 137).",
                 "Với các ứng dụng .NET 8 / 10, .NET Garbage Collector mặc định nhận diện RAM theo tổng RAM máy chủ vật lý nếu chạy trên K8s cũ. Để .NET tuân thủ nghiêm ngặt giới hạn cgroups của Pod, cần bật cờ Server GC phù hợp."
               ],
               "paragraphsVi": [
@@ -1153,7 +1153,7 @@
               "calloutType": "tip",
               "calloutTitle": "Tính năng RemoveByTag",
               "calloutTitleVi": "Tính năng RemoveByTag",
-              "calloutText": "Khả năng xóa cache theo Tag (`RemoveByTagAsync`) là một tính năng cực mạnh giúp bạn xóa toàn bộ cache của một danh mục sản phẩm chỉ với 1 dòng code duy nhất thay vì phải nhớ và quét từng key riêng lẻ.",
+              "calloutText": "Khả năng xóa cache theo Tag (`RemoveByTagAsync`) rất mạnh nhưng **yêu cầu L2 backend hỗ trợ tag-based eviction** (ví dụ Redis). Tính năng Tags trong HybridCache hiện vẫn đang trong giai đoạn hoàn thiện — hãy kiểm tra release notes .NET chính thức trước khi dùng trên Production.",
               "calloutTextVi": "Khả năng xóa cache theo Tag (`RemoveByTagAsync`) là một tính năng cực mạnh giúp bạn xóa toàn bộ cache của một danh mục sản phẩm chỉ với 1 dòng code duy nhất thay vì phải nhớ và quét từng key riêng lẻ."
             }
           ]
@@ -2879,7 +2879,7 @@
               ],
               "codeTitle": "docker-compose.yml hoàn chỉnh cho cụm YARP HA",
               "codeLanguage": "yaml",
-              "codeContent": "version: '3.8'\n\nservices:\n  # ── CỤM YARP API GATEWAY KÉP ──────────────────\n  yarp-gateway-1:\n    image: mycompany/yarp-gateway:latest\n    container_name: yarp-gateway-1\n    restart: unless-stopped\n    ports:\n      - \"8000:8080\"\n    environment:\n      - ASPNETCORE_ENVIRONMENT=Production\n      - ConnectionStrings__Redis=redis-cache:6379\n    networks:\n      - internal-mesh\n\n  yarp-gateway-2:\n    image: mycompany/yarp-gateway:latest\n    container_name: yarp-gateway-2\n    restart: unless-stopped\n    ports:\n      - \"8001:8080\"\n    environment:\n      - ASPNETCORE_ENVIRONMENT=Production\n      - ConnectionStrings__Redis=redis-cache:6379\n    networks:\n      - internal-mesh\n\n  # ── ORDER MICROSERVICES (2 REPLICAS) ──────────\n  order-service-a:\n    image: mycompany/order-service:latest\n    restart: unless-stopped\n    networks:\n      - internal-mesh\n\n  order-service-b:\n    image: mycompany/order-service:latest\n    restart: unless-stopped\n    networks:\n      - internal-mesh\n\n  # ── REDIS DISTRIBUTED CACHE & RATE LIMIT ──────\n  redis-cache:\n    image: redis:7-alpine\n    container_name: redis-mesh\n    restart: unless-stopped\n    command: [\"redis-server\", \"--save\", \"60\", \"1\", \"--loglevel\", \"warning\"]\n    networks:\n      - internal-mesh\n\nnetworks:\n  internal-mesh:\n    driver: bridge",
+              "codeContent": "services:\n  # ── CỤM YARP API GATEWAY KÉP ──────────────────\n  yarp-gateway-1:\n    image: mycompany/yarp-gateway:latest\n    container_name: yarp-gateway-1\n    restart: unless-stopped\n    ports:\n      - \"8000:8080\"\n    environment:\n      - ASPNETCORE_ENVIRONMENT=Production\n      - ConnectionStrings__Redis=redis-cache:6379\n    networks:\n      - internal-mesh\n\n  yarp-gateway-2:\n    image: mycompany/yarp-gateway:latest\n    container_name: yarp-gateway-2\n    restart: unless-stopped\n    ports:\n      - \"8001:8080\"\n    environment:\n      - ASPNETCORE_ENVIRONMENT=Production\n      - ConnectionStrings__Redis=redis-cache:6379\n    networks:\n      - internal-mesh\n\n  # ── ORDER MICROSERVICES (2 REPLICAS) ──────────\n  order-service-a:\n    image: mycompany/order-service:latest\n    restart: unless-stopped\n    networks:\n      - internal-mesh\n\n  order-service-b:\n    image: mycompany/order-service:latest\n    restart: unless-stopped\n    networks:\n      - internal-mesh\n\n  # ── REDIS DISTRIBUTED CACHE & RATE LIMIT ──────\n  redis-cache:\n    image: redis:7-alpine\n    container_name: redis-mesh\n    restart: unless-stopped\n    command: [\"redis-server\", \"--save\", \"60\", \"1\", \"--loglevel\", \"warning\"]\n    networks:\n      - internal-mesh\n\nnetworks:\n  internal-mesh:\n    driver: bridge",
               "calloutType": "info",
               "calloutTitle": "Kiến trúc mạng an toàn",
               "calloutTitleVi": "Kiến trúc mạng an toàn",
@@ -9202,7 +9202,7 @@
                 "  • Cắt bỏ toàn bộ rác rưởi của PC cổ điển: Firecracker loại bỏ hoàn toàn các thiết bị mô phỏng không cần thiết (không có card âm thanh, không có chuột bàn phím, không có cổng PCI phức tạp, không có BIOS cồng kềnh).",
                 "  • Chỉ giữ lại 4 thiết bị ảo tối thiểu: Network, Block storage, Serial console và đồng hồ Minimal timer.",
                 "KẾT QUẢ ĐO LƯỜNG VÔ TIỀN KHOÁNG HẬU:",
-                "  • Thời gian khởi động MicroVM: **DƯỚI 5 MILI-GIÂY**!",
+                "  • Thời gian tạo MicroVM object: **~5 mili-giây** | Boot đến guest OS sẵn sàng: **dưới 125 mili-giây**!",
                 "  • Mức chiếm dụng RAM nền: **CHỈ CẦN 5 MB RAM** cho mỗi máy ảo!",
                 "  • Mật độ: Một máy chủ vật lý có thể khởi chạy và duy trì **hàng chục ngàn MicroVM độc lập cùng một lúc**!"
               ],
