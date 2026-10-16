@@ -174,7 +174,7 @@
                             <header class="dev-article-main-header">
                                 <!-- Top Metadata Row -->
                                 <div class="dev-article-meta-bar">
-                                    <span class="dev-level-badge-large @GetLevelCssClass(_activeArticle.LevelOrder)">
+                                    <span class="dev-level-badge-large @GetLevelCssClass(_activeArticle!.LevelOrder)">
                                         @GetLevelIcon(_activeArticle.LevelOrder) @_activeArticle.LevelVi
                                     </span>
                                     <span class="dev-series-tag" style="background: @(_selectedSeries?.Color ?? "#0284c7")18; color: @(_selectedSeries?.Color ?? "#0284c7"); border-color: @(_selectedSeries?.Color ?? "#0284c7")40;">
@@ -213,12 +213,13 @@
                                 </h1>
 
                                 <!-- Lead Summary Callout -->
+                                <!-- Lead Summary Callout -->
                                 <div class="dev-lead-summary">
                                     <div class="dev-lead-icon">
                                         <i class="bi bi-quote"></i>
                                     </div>
                                     <div class="dev-lead-text">
-                                        @(CultureService.IsEnglish ? _activeArticle.Summary : _activeArticle.SummaryVi)
+                                        @RenderFormattedText(CultureService.IsEnglish ? _activeArticle.Summary : _activeArticle.SummaryVi)
                                     </div>
                                 </div>
 
@@ -272,7 +273,7 @@
 
                                         @foreach (var p in paragraphs)
                                         {
-                                            <p class="dev-section-paragraph">@p</p>
+                                            @RenderFormattedText(p)
                                         }
 
                                         <!-- Code Block (macOS Terminal Style) -->
@@ -324,8 +325,8 @@
                                                     }
                                                 </div>
                                                 <div class="dev-callout-content">
-                                                    <div class="dev-callout-title">@cTitle</div>
-                                                    <div class="dev-callout-text">@cText</div>
+                                                    <div class="dev-callout-title">@RenderFormattedText(cTitle)</div>
+                                                    <div class="dev-callout-text">@RenderFormattedText(cText)</div>
                                                 </div>
                                             </div>
                                         }
@@ -874,6 +875,15 @@
             }
             catch { }
         }
+
+        if (_viewMode == ViewMode.Reader)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("hljs.highlightAll");
+            }
+            catch { }
+        }
     }
 
     private int TotalArticlesCount => _data?.SeriesList?.Sum(s => s.Articles.Count) ?? 0;
@@ -1241,6 +1251,118 @@
         4 => "🚀",
         _ => "📌"
     };
+
+    private async Task TriggerSyntaxHighlightAsync()
+    {
+        await Task.Delay(60);
+        try
+        {
+            await JS.InvokeVoidAsync("hljs.highlightAll");
+        }
+        catch { }
+    }
+
+    private static MarkupString RenderFormattedText(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return new MarkupString("");
+
+        var lines = raw.Replace("\r\n", "\n").Split('\n');
+        var sb = new System.Text.StringBuilder();
+
+        bool inUl = false;
+        bool inOl = false;
+        bool inQuote = false;
+
+        foreach (var line in lines)
+        {
+            var trimmed = line.Trim();
+
+            // Check blockquote
+            if (trimmed.StartsWith("> "))
+            {
+                if (inUl) { sb.Append("</ul>"); inUl = false; }
+                if (inOl) { sb.Append("</ol>"); inOl = false; }
+                if (!inQuote) { sb.Append("<blockquote class=\"dev-article-quote\">"); inQuote = true; }
+                var qText = trimmed.Substring(2).Trim();
+                sb.Append(FormatInline(qText)).Append("<br />");
+                continue;
+            }
+            else if (inQuote)
+            {
+                sb.Append("</blockquote>");
+                inQuote = false;
+            }
+
+            // Check bullet list: - or *
+            if (trimmed.StartsWith("- ") || trimmed.StartsWith("* "))
+            {
+                if (inOl) { sb.Append("</ol>"); inOl = false; }
+                if (!inUl) { sb.Append("<ul class=\"dev-article-list\">"); inUl = true; }
+                var itemText = trimmed.Substring(2).Trim();
+                sb.Append("<li class=\"dev-article-list-item\">").Append(FormatInline(itemText)).Append("</li>");
+                continue;
+            }
+
+            // Check numbered list: 1. , 2. 
+            var matchNum = System.Text.RegularExpressions.Regex.Match(trimmed, @"^(\d+)\.\s+(.*)$");
+            if (matchNum.Success)
+            {
+                if (inUl) { sb.Append("</ul>"); inUl = false; }
+                if (!inOl) { sb.Append("<ol class=\"dev-article-olist\">"); inOl = true; }
+                sb.Append("<li class=\"dev-article-list-item\">").Append(FormatInline(matchNum.Groups[2].Value)).Append("</li>");
+                continue;
+            }
+
+            // Close any open lists
+            if (inUl) { sb.Append("</ul>"); inUl = false; }
+            if (inOl) { sb.Append("</ol>"); inOl = false; }
+
+            // Sub-headings: #### or ###
+            if (trimmed.StartsWith("#### "))
+            {
+                sb.Append("<h4 class=\"dev-sub-heading\">").Append(FormatInline(trimmed.Substring(5).Trim())).Append("</h4>");
+                continue;
+            }
+            if (trimmed.StartsWith("### "))
+            {
+                sb.Append("<h3 class=\"dev-sub-heading\">").Append(FormatInline(trimmed.Substring(4).Trim())).Append("</h3>");
+                continue;
+            }
+
+            // Regular paragraph line
+            if (trimmed.Length > 0)
+            {
+                sb.Append("<p class=\"dev-section-paragraph\">").Append(FormatInline(trimmed)).Append("</p>");
+            }
+        }
+
+        if (inUl) sb.Append("</ul>");
+        if (inOl) sb.Append("</ol>");
+        if (inQuote) sb.Append("</blockquote>");
+
+        return new MarkupString(sb.ToString());
+    }
+
+    private static string FormatInline(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+
+        var s = System.Net.WebUtility.HtmlEncode(text);
+
+        // Convert inline code `code` (before bold to prevent collision)
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"`([^`]+)`", "<code class=\"dev-inline-code\">$1</code>");
+
+        // Convert bold **text**
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"\*\*([^*]+)\*\*", "<strong class=\"dev-bold\">$1</strong>");
+
+        // Convert italic *text* (single asterisk)
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"(?<!\*)\*([^*]+)\*(?!\*)", "<em>$1</em>");
+
+        // Convert markdown links: [label](url)
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"\[([^\]]+)\]\((https?://[^)]+)\)", "<a href=\"$2\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"dev-inline-link\">$1</a>");
+
+        return s;
+    }
 
     private string LangHref(string path) => CulturePath.Combine(CultureService.UrlLang, path);
 }
