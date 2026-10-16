@@ -1318,6 +1318,463 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   SERIES CATALOG DASHBOARD (Showcase View)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.dev-catalog-section {
+    margin-top: 1.5rem;
+    margin-bottom: 3.5rem;
+    animation: devCatalogFadeIn 0.3s ease-out;
+}
+
+@keyframes devCatalogFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Catalog Toolbar: Search & Category Chips ── */
+.dev-catalog-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 2.25rem;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl, 1.25rem);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.dev-catalog-search-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.dev-catalog-search-icon {
+    position: absolute;
+    left: 1.15rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    pointer-events: none;
+}
+
+.dev-catalog-search-input {
+    width: 100%;
+    padding: 0.85rem 2.85rem 0.85rem 3rem;
+    background: var(--color-bg-app);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg, 0.85rem);
+    color: var(--color-text-primary);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.dev-catalog-search-input:focus {
+    outline: none;
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    background: var(--color-bg-surface);
+}
+
+.dev-catalog-clear-btn {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: color 0.15s;
+}
+
+.dev-catalog-clear-btn:hover {
+    color: var(--color-text-primary);
+}
+
+.dev-catalog-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.dev-catalog-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--color-bg-app);
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dev-catalog-chip:hover {
+    color: var(--color-text-primary);
+    border-color: var(--color-border-hover);
+    transform: translateY(-1px);
+    background: var(--color-bg-surface-elevated, var(--color-bg-surface));
+}
+
+.dev-catalog-chip.active {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+.dev-catalog-chip-badge {
+    font-size: 0.72rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.15);
+    color: inherit;
+    font-weight: 700;
+}
+
+.dev-catalog-chip:not(.active) .dev-catalog-chip-badge {
+    background: var(--color-bg-surface);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+}
+
+/* ── Catalog Showcase Grid ── */
+.dev-catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.dev-catalog-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl, 1.25rem);
+    padding: 1.6rem;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+}
+
+.dev-catalog-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-border-hover);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.dev-catalog-accent-stripe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--card-accent, #0284c7);
+}
+
+.dev-catalog-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.dev-catalog-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    background: var(--icon-bg, rgba(2, 132, 199, 0.12));
+    color: var(--card-accent, #0284c7);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.dev-catalog-badge-group {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.dev-catalog-cat-pill {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.25rem 0.6rem;
+    border-radius: 9999px;
+    background: var(--color-bg-app);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+}
+
+.dev-catalog-count-pill {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 9999px;
+    background: var(--icon-bg, rgba(2, 132, 199, 0.12));
+    color: var(--card-accent, #0284c7);
+    border: 1px solid transparent;
+}
+
+.dev-catalog-card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin: 0 0 0.6rem;
+    color: var(--color-text-primary);
+    transition: color 0.2s ease;
+    cursor: pointer;
+}
+
+.dev-catalog-card-title:hover {
+    color: var(--card-accent, #0284c7);
+}
+
+.dev-catalog-card-desc {
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: var(--color-text-secondary);
+    margin: 0 0 1.25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+/* ── Lessons Preview Box ── */
+.dev-catalog-lessons-box {
+    background: var(--color-bg-app);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg, 0.85rem);
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.dev-catalog-lessons-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    margin-bottom: 0.6rem;
+}
+
+.dev-catalog-lessons-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.dev-catalog-preview-item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: color 0.15s ease;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dev-catalog-preview-item:hover {
+    color: var(--card-accent, #0284c7);
+}
+
+.dev-catalog-lesson-num {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--card-accent, #0284c7);
+    flex-shrink: 0;
+}
+
+.dev-catalog-lesson-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Card Footer ── */
+.dev-catalog-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+    margin-top: auto;
+}
+
+.dev-catalog-share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-bg-app);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dev-catalog-share-btn:hover {
+    color: var(--card-accent, #0284c7);
+    border-color: var(--card-accent, #0284c7);
+    transform: scale(1.08);
+}
+
+.dev-catalog-share-btn.copied {
+    color: #22c55e;
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.12);
+}
+
+.dev-catalog-explore-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.15rem;
+    background: var(--card-accent, #0284c7);
+    color: #ffffff;
+    border: none;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dev-catalog-explore-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    filter: brightness(1.1);
+}
+
+.dev-catalog-explore-btn i {
+    transition: transform 0.2s ease;
+}
+
+.dev-catalog-explore-btn:hover i {
+    transform: translateX(4px);
+}
+
+/* ── Feed Top Navigation Bar (Back to Catalog + Series Dropdown Switcher) ── */
+.dev-feed-top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl, 1.25rem);
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1.75rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.dev-feed-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.dev-feed-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.95rem;
+    background: var(--color-bg-app);
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dev-feed-back-btn:hover {
+    color: var(--color-text-primary);
+    border-color: var(--color-border-hover);
+    background: var(--color-bg-surface-elevated, var(--color-bg-surface));
+    transform: translateX(-2px);
+}
+
+.dev-feed-bc-sep {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+}
+
+.dev-feed-bc-current {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.dev-feed-switcher-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.dev-feed-switcher-label {
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.dev-feed-select {
+    padding: 0.45rem 1.85rem 0.45rem 0.85rem;
+    background: var(--color-bg-app);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md, 0.5rem);
+    color: var(--color-text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    max-width: 260px;
+}
+
+.dev-feed-select:focus {
+    outline: none;
+    border-color: #0284c7;
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    RESPONSIVE DESIGN (TABLET & MOBILE)
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 992px) {
@@ -1329,11 +1786,38 @@
         position: static;
         max-height: none;
     }
+
+    .dev-catalog-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
 }
 
 @media (max-width: 768px) {
     .dev-title {
         font-size: 1.75rem;
+    }
+
+    .dev-catalog-toolbar {
+        padding: 1rem;
+    }
+
+    .dev-catalog-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dev-feed-top-nav {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dev-feed-switcher-wrap {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .dev-feed-select {
+        flex-grow: 1;
+        max-width: none;
     }
 
     .dev-feed-series-banner {
@@ -1369,3 +1853,4 @@
         justify-content: flex-start;
     }
 }
+
