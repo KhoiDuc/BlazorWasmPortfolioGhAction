@@ -35,6 +35,7 @@ public class DevBlogData
 public class DevSeries
 {
     [JsonPropertyName("id")] public string Id { get; set; } = "";
+    [JsonPropertyName("category")] public string Category { get; set; } = "";
     [JsonPropertyName("title")] public string Title { get; set; } = "";
     [JsonPropertyName("titleVi")] public string TitleVi { get; set; } = "";
     [JsonPropertyName("icon")] public string Icon { get; set; } = "";
