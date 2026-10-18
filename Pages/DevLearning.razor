@@ -237,7 +237,7 @@
 
                                 <!-- Article Main Title -->
                                 <h1 class="dev-article-h1">
-                                    @(CultureService.IsEnglish ? _activeArticle.Title : _activeArticle.TitleVi)
+                                    @CleanText(CultureService.IsEnglish ? _activeArticle.Title : _activeArticle.TitleVi)
                                 </h1>
 
                                 <!-- Lead Summary Callout -->
@@ -426,7 +426,7 @@
                                                 <span>@(CultureService.IsEnglish ? rSeries?.Title : rSeries?.TitleVi)</span>
                                             </div>
                                             <h5 class="dev-reader-rec-title">
-                                                @(CultureService.IsEnglish ? recArt.Title : recArt.TitleVi)
+                                                @CleanText(CultureService.IsEnglish ? recArt.Title : recArt.TitleVi)
                                             </h5>
                                             <div class="dev-reader-rec-footer">
                                                 <span class="dev-reader-rec-level @GetLevelCssClass(recArt.LevelOrder)">@recArt.LessonNumber · @recArt.LevelVi</span>
@@ -626,14 +626,10 @@
                                                   @onclick:stopPropagation="true"
                                                   title="Xem chuyên đề: @(CultureService.IsEnglish ? parentS.Title : parentS.TitleVi)">
                                                 <i class="bi @parentS.Icon"></i>
-                                                @(CultureService.IsEnglish ? parentS.Badge : parentS.Badge)
+                                                @CleanText(CultureService.IsEnglish ? parentS.Title : parentS.TitleVi)
                                             </span>
                                         }
                                     }
-                                    <span class="dev-level-badge @GetLevelCssClass(article.LevelOrder)">
-                                        @GetLevelIcon(article.LevelOrder) @article.LevelVi
-                                    </span>
-                                    <span class="dev-post-lesson-pill">@article.LessonNumber</span>
                                     <div class="dev-post-card-actions">
                                         <button type="button" 
                                                 class="dev-post-card-bookmark @(_copiedArticleCardId == article.Id ? "copied" : "")"
@@ -652,12 +648,24 @@
                                     </div>
                                 </div>
 
+                                <div class="dev-post-meta-row">
+                                    <div class="dev-meta-row-left">
+                                        <span class="dev-level-badge @GetLevelCssClass(article.LevelOrder)">
+                                            @GetLevelIcon(article.LevelOrder) @article.LevelVi
+                                        </span>
+                                        <span class="dev-post-lesson-pill">@article.LessonNumber</span>
+                                    </div>
+                                    <span class="dev-meta-date-badge">
+                                        <i class="bi bi-calendar3"></i> @article.PublishedDate
+                                    </span>
+                                </div>
+
                                 <h3 class="dev-post-card-title" @onclick="() => ReadArticle(article)">
-                                    @(CultureService.IsEnglish ? article.Title : article.TitleVi)
+                                    @CleanText(CultureService.IsEnglish ? article.Title : article.TitleVi)
                                 </h3>
 
                                 <p class="dev-post-card-summary">
-                                    @(CultureService.IsEnglish ? article.Summary : article.SummaryVi)
+                                    @CleanText(CultureService.IsEnglish ? article.Summary : article.SummaryVi)
                                 </p>
 
                                 <div class="dev-post-tags">
@@ -670,13 +678,12 @@
                                 <div class="dev-post-card-footer">
                                     <div class="dev-post-meta">
                                         <span><i class="bi bi-clock"></i> @article.ReadingTime</span>
-                                        <span><i class="bi bi-calendar3"></i> @article.PublishedDate</span>
                                     </div>
 
                                     <button type="button" 
                                             class="dev-post-read-btn" 
                                             @onclick="() => ReadArticle(article)">
-                                        <span>Đọc Bài Viết</span>
+                                        <span>@(CultureService.IsEnglish ? "Read Article" : "Đọc Bài Viết")</span>
                                         <i class="bi bi-arrow-right"></i>
                                     </button>
                                 </div>
@@ -835,14 +842,12 @@
                                         {
                                             <span class="dev-recent-series-tag" 
                                                   @onclick="() => SelectSeries(parentSeries)"
-                                                  @onclick:stopPropagation="true">
+                                                  @onclick:stopPropagation="true"
+                                                  title="Xem chuyên đề: @(CultureService.IsEnglish ? parentSeries.Title : parentSeries.TitleVi)">
                                                 <i class="bi @parentSeries.Icon"></i>
-                                                @(CultureService.IsEnglish ? parentSeries.Title : parentSeries.TitleVi)
+                                                @CleanText(CultureService.IsEnglish ? parentSeries.Title : parentSeries.TitleVi)
                                             </span>
                                         }
-                                        <span class="dev-level-badge @GetLevelCssClass(article.LevelOrder)">
-                                            @GetLevelIcon(article.LevelOrder) @article.LevelVi
-                                        </span>
                                         <div class="dev-post-card-actions">
                                             <button type="button" 
                                                     class="dev-post-card-bookmark @(_copiedArticleCardId == article.Id ? "copied" : "")"
@@ -861,17 +866,24 @@
                                         </div>
                                     </div>
 
-                                    <div class="dev-recent-lesson-bar">
-                                        <span class="dev-post-lesson-pill">@article.LessonNumber</span>
-                                        <span class="dev-recent-date-badge"><i class="bi bi-clock-history"></i> @article.PublishedDate</span>
+                                    <div class="dev-post-meta-row">
+                                        <div class="dev-meta-row-left">
+                                            <span class="dev-level-badge @GetLevelCssClass(article.LevelOrder)">
+                                                @GetLevelIcon(article.LevelOrder) @article.LevelVi
+                                            </span>
+                                            <span class="dev-post-lesson-pill">@article.LessonNumber</span>
+                                        </div>
+                                        <span class="dev-meta-date-badge">
+                                            <i class="bi bi-calendar3"></i> @article.PublishedDate
+                                        </span>
                                     </div>
 
                                     <h3 class="dev-post-card-title" @onclick="() => ReadArticle(article)">
-                                        @(CultureService.IsEnglish ? article.Title : article.TitleVi)
+                                        @CleanText(CultureService.IsEnglish ? article.Title : article.TitleVi)
                                     </h3>
 
                                     <p class="dev-post-card-summary">
-                                        @(CultureService.IsEnglish ? article.Summary : article.SummaryVi)
+                                        @CleanText(CultureService.IsEnglish ? article.Summary : article.SummaryVi)
                                     </p>
 
                                     <div class="dev-post-tags">
@@ -884,7 +896,6 @@
                                     <div class="dev-post-card-footer">
                                         <div class="dev-post-meta">
                                             <span><i class="bi bi-clock"></i> @article.ReadingTime</span>
-                                            <span><i class="bi bi-calendar3"></i> @article.PublishedDate</span>
                                         </div>
 
                                         <button type="button" 
@@ -940,7 +951,7 @@
                                                       @onclick="() => SelectSeries(pSeries)"
                                                       @onclick:stopPropagation="true">
                                                     <i class="bi @pSeries.Icon"></i>
-                                                    @(CultureService.IsEnglish ? pSeries.Title : pSeries.TitleVi)
+                                                    @CleanText(CultureService.IsEnglish ? pSeries.Title : pSeries.TitleVi)
                                                 </span>
                                             }
                                             <span class="dev-badge-new-shine">
@@ -956,11 +967,11 @@
                                         </div>
 
                                         <h4 class="dev-new-card-title" @onclick="() => ReadArticle(art)">
-                                            @(CultureService.IsEnglish ? art.Title : art.TitleVi)
+                                            @CleanText(CultureService.IsEnglish ? art.Title : art.TitleVi)
                                         </h4>
 
                                         <p class="dev-new-card-summary">
-                                            @(CultureService.IsEnglish ? art.Summary : art.SummaryVi)
+                                            @CleanText(CultureService.IsEnglish ? art.Summary : art.SummaryVi)
                                         </p>
 
                                         <div class="dev-post-tags">
@@ -1891,7 +1902,7 @@
     {
         if (string.IsNullOrEmpty(text)) return "";
 
-        var s = System.Net.WebUtility.HtmlEncode(text);
+        var s = System.Net.WebUtility.HtmlEncode(CleanText(text));
 
         // Convert inline code `code` (before bold to prevent collision)
         s = System.Text.RegularExpressions.Regex.Replace(s, @"`([^`]+)`", "<code class=\"dev-inline-code\">$1</code>");
@@ -1906,6 +1917,14 @@
         s = System.Text.RegularExpressions.Regex.Replace(s, @"\[([^\]]+)\]\((https?://[^)]+)\)", "<a href=\"$2\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"dev-inline-link\">$1</a>");
 
         return s;
+    }
+
+    private static string CleanText(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+        var res = System.Text.RegularExpressions.Regex.Replace(text, @"\\?\$?\\rightarrow\\?\$?", "→");
+        res = System.Text.RegularExpressions.Regex.Replace(res, @"\\?\$?\\leftarrow\\?\$?", "←");
+        return res;
     }
 
     private string LangHref(string path) => CulturePath.Combine(CultureService.UrlLang, path);
