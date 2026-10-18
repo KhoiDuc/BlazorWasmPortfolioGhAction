@@ -18,4 +18,24 @@ public class DevLearningJsonTest
         Assert.NotNull(data);
         Assert.NotEmpty(data.SeriesList);
     }
+
+    [Theory]
+    [InlineData(@"Dev $\rightarrow$ Staging", "Dev → Staging")]
+    [InlineData(@"Dev $\\rightarrow$ Staging", "Dev → Staging")]
+    [InlineData(@"Dev \rightarrow Staging", "Dev → Staging")]
+    [InlineData(@"$\rightarrow$", "→")]
+    [InlineData(@"$\\rightarrow$", "→")]
+    public void TestCleanText(string input, string expected)
+    {
+        var cleaned = CleanText(input);
+        Assert.Equal(expected, cleaned);
+    }
+
+    public static string CleanText(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+        var res = System.Text.RegularExpressions.Regex.Replace(text, @"\$?\\*rightarrow\$?", "→");
+        res = System.Text.RegularExpressions.Regex.Replace(res, @"\$?\\*leftarrow\$?", "←");
+        return res;
+    }
 }

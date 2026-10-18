@@ -918,11 +918,11 @@
                         <section class="dev-newly-added-section">
                             <div class="dev-newly-added-header">
                                 <div class="dev-newly-added-title-wrap">
-                                    <span class="dev-new-sparkle-icon"><i class="bi bi-sparkles"></i></span>
+                                    <span class="dev-new-sparkle-icon"><i class="bi bi-stars"></i></span>
                                     <div>
                                         <div class="dev-newly-added-title-row">
                                             <h3 class="dev-newly-added-title">@(CultureService.IsEnglish ? "Newly Added Articles" : "Bài Viết Mới Thêm Gần Đây")</h3>
-                                            <span class="dev-new-badge-pill">MỚI</span>
+                                            <span class="dev-new-badge-pill">@(CultureService.IsEnglish ? "NEW" : "MỚI")</span>
                                         </div>
                                         <p class="dev-newly-added-subtitle">
                                             @(CultureService.IsEnglish ? "Explore the latest engineering posts and production lessons published recently" : "Các bài viết kỹ thuật, kiến trúc và lộ trình thực chiến mới nhất vừa được bổ sung vào hệ thống")
@@ -949,21 +949,27 @@
                                             {
                                                 <span class="dev-recent-series-tag" 
                                                       @onclick="() => SelectSeries(pSeries)"
-                                                      @onclick:stopPropagation="true">
+                                                      @onclick:stopPropagation="true"
+                                                      title="Xem chuyên đề: @(CultureService.IsEnglish ? pSeries.Title : pSeries.TitleVi)">
                                                     <i class="bi @pSeries.Icon"></i>
                                                     @CleanText(CultureService.IsEnglish ? pSeries.Title : pSeries.TitleVi)
                                                 </span>
                                             }
                                             <span class="dev-badge-new-shine">
-                                                <i class="bi bi-stars"></i> @art.PublishedDate
+                                                <i class="bi bi-stars"></i> @(CultureService.IsEnglish ? "NEW" : "MỚI")
                                             </span>
                                         </div>
 
-                                        <div class="dev-new-card-mid">
-                                            <span class="dev-level-badge @GetLevelCssClass(art.LevelOrder)">
-                                                @GetLevelIcon(art.LevelOrder) @art.LevelVi
+                                        <div class="dev-post-meta-row">
+                                            <div class="dev-meta-row-left">
+                                                <span class="dev-level-badge @GetLevelCssClass(art.LevelOrder)">
+                                                    @GetLevelIcon(art.LevelOrder) @art.LevelVi
+                                                </span>
+                                                <span class="dev-post-lesson-pill">@art.LessonNumber</span>
+                                            </div>
+                                            <span class="dev-meta-date-badge">
+                                                <i class="bi bi-calendar3"></i> @art.PublishedDate
                                             </span>
-                                            <span class="dev-post-lesson-pill">@art.LessonNumber</span>
                                         </div>
 
                                         <h4 class="dev-new-card-title" @onclick="() => ReadArticle(art)">
@@ -1133,7 +1139,7 @@
     {
         try
         {
-            _data = await Http.GetFromJsonAsync<DevBlogData>("sample-data/dev-learning.json", _jsonOpts);
+            _data = await Http.GetFromJsonAsync<DevBlogData>($"sample-data/dev-learning.json?v={DateTime.UtcNow.Ticks}", _jsonOpts);
             ApplyRouteParameters();
         }
         catch (Exception ex)
@@ -1922,8 +1928,8 @@
     private static string CleanText(string? text)
     {
         if (string.IsNullOrEmpty(text)) return "";
-        var res = System.Text.RegularExpressions.Regex.Replace(text, @"\\?\$?\\rightarrow\\?\$?", "→");
-        res = System.Text.RegularExpressions.Regex.Replace(res, @"\\?\$?\\leftarrow\\?\$?", "←");
+        var res = System.Text.RegularExpressions.Regex.Replace(text, @"\$?\\*rightarrow\$?", "→");
+        res = System.Text.RegularExpressions.Regex.Replace(res, @"\$?\\*leftarrow\$?", "←");
         return res;
     }
 
