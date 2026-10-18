@@ -12947,6 +12947,812 @@
           ]
         }
       ]
+    },
+    {
+      "id": "cicd-masterclass-series",
+      "title": "CI/CD Masterclass: Từ Cơ Bản Đến Nâng Cao, Miễn Phí Đến Enterprise (GitHub Actions, GitLab, Jenkins & ArgoCD)",
+      "titleVi": "CI/CD Toàn Tập: Từ Dễ Đến Khó, Từ Miễn Phí Đến Doanh Nghiệp (GitHub Actions, GitLab, Jenkins & GitOps ArgoCD)",
+      "icon": "bi-infinity",
+      "color": "#10b981",
+      "badge": "6 Bài Viết",
+      "description": "Lộ trình làm chủ CI/CD toàn diện từ số 0 đến cấp độ Enterprise: Khái niệm bản chất, GitHub Actions miễn phí, tối ưu cache, tự host runner với Jenkins, phân tầng môi trường Dev-Staging-Prod, Blue-Green / Canary Zero-Downtime và đỉnh cao GitOps với ArgoCD.",
+      "descriptionVi": "Lộ trình làm chủ CI/CD toàn diện từ số 0 đến cấp độ Enterprise: Khái niệm bản chất, GitHub Actions miễn phí, tối ưu cache, tự host runner với Jenkins, phân tầng môi trường Dev-Staging-Prod, Blue-Green / Canary Zero-Downtime và đỉnh cao GitOps với ArgoCD.",
+      "articles": [
+        {
+          "id": "cicd-bai-1-fundamentals-free-github-actions",
+          "seriesId": "cicd-masterclass-series",
+          "lessonNumber": "Bài 1",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
+          "title": "Nhập Môn CI/CD Cho Người Mới Bắt Đầu: Khái Niệm Bản Chất & Pipeline Miễn Phí Đầu Tiên Với GitHub Actions",
+          "titleVi": "Nhập Môn CI/CD Cho Người Mới Bắt Đầu: Khái Niệm Bản Chất & Pipeline Miễn Phí Đầu Tiên Với GitHub Actions",
+          "readingTime": "10 phút đọc",
+          "publishedDate": "18/10/2026",
+          "summary": "Xóa tan nỗi sợ triển khai thủ công qua FTP/SSH. Hiểu rõ sự khác biệt giữa Continuous Integration (CI), Continuous Delivery và Continuous Deployment (CD). Hướng dẫn từng bước viết file workflow .github/workflows/ci.yml đầu tiên hoàn toàn miễn phí với GitHub Actions.",
+          "summaryVi": "Xóa tan nỗi sợ triển khai thủ công qua FTP/SSH. Hiểu rõ sự khác biệt giữa Continuous Integration (CI), Continuous Delivery và Continuous Deployment (CD). Hướng dẫn từng bước viết file workflow .github/workflows/ci.yml đầu tiên hoàn toàn miễn phí với GitHub Actions.",
+          "tags": [
+            "CI/CD",
+            "GitHub Actions",
+            "DevOps",
+            "Automation",
+            "Beginner Friendly",
+            "Free Tier"
+          ],
+          "sections": [
+            {
+              "heading": "1. Nỗi Đau Deploy Thủ Công & Bản Chất Của CI/CD",
+              "headingVi": "1. Nỗi Đau Deploy Thủ Công & Bản Chất Của CI/CD",
+              "paragraphs": [
+                "Hãy nhớ lại quy trình phát hành phần mềm truyền thống: Lập trình viên viết code xong trên máy cá nhân, gõ lệnh build ra thư mục `bin` hoặc `dist`, mở phần mềm FileZilla hoặc WinSCP để kéo thả đè file lên máy chủ Production, rồi SSH vào server gõ lệnh khởi động lại service.",
+                "Quy trình thủ công này chứa đựng vô vàn rủi ro:",
+                "- **'Nó chạy tốt trên máy em mà!' (It works on my machine):** Môi trường dev khác biệt với môi trường server về phiên bản SDK, biến môi trường, hệ điều hành (Windows vs Linux).",
+                "- **Quên chạy Unit Tests:** Dev vội vàng deploy mà không test lại, đẩy thẳng bug nghiêm trọng lên người dùng.",
+                "- **Lỗi con người:** Kéo thả thiếu 1 file cấu hình, mất điện giữa chừng khi upload làm corrupt file nhị phân, gây sập server (Downtime).",
+                "**CI/CD (Continuous Integration & Continuous Delivery/Deployment)** sinh ra để tự động hóa 100% quy trình này, biến việc phát hành code từ một sự kiện căng thẳng thành một việc diễn ra đều đặn, an toàn và nhàm chán mỗi ngày."
+              ],
+              "paragraphsVi": [
+                "Hãy nhớ lại quy trình phát hành phần mềm truyền thống: Lập trình viên viết code xong trên máy cá nhân, gõ lệnh build ra thư mục `bin` hoặc `dist`, mở phần mềm FileZilla hoặc WinSCP để kéo thả đè file lên máy chủ Production, rồi SSH vào server gõ lệnh khởi động lại service.",
+                "Quy trình thủ công này chứa đựng vô vàn rủi ro:",
+                "- **'Nó chạy tốt trên máy em mà!' (It works on my machine):** Môi trường dev khác biệt với môi trường server về phiên bản SDK, biến môi trường, hệ điều hành (Windows vs Linux).",
+                "- **Quên chạy Unit Tests:** Dev vội vàng deploy mà không test lại, đẩy thẳng bug nghiêm trọng lên người dùng.",
+                "- **Lỗi con người:** Kéo thả thiếu 1 file cấu hình, mất điện giữa chừng khi upload làm corrupt file nhị phân, gây sập server (Downtime).",
+                "**CI/CD (Continuous Integration & Continuous Delivery/Deployment)** sinh ra để tự động hóa 100% quy trình này, biến việc phát hành code từ một sự kiện căng thẳng thành một việc diễn ra đều đặn, an toàn và nhàm chán mỗi ngày."
+              ],
+              "codeTitle": "Sơ đồ giải phẫu luồng CI vs CD (Delivery vs Deployment)",
+              "codeLanguage": "text",
+              "codeContent": "┌────────────────────────────────────────────────────────┐\n│ CONTINUOUS INTEGRATION (CI)                            │\n│ Git Push ──► Linter ──► Build Code ──► Run Unit Tests  │\n└───────────────────────────┬────────────────────────────┘\n                            │ (Artifact đã sẵn sàng)\n                            ▼\n┌────────────────────────────────────────────────────────┐\n│ CONTINUOUS DELIVERY (CD - Có kiểm soát)                │\n│ Deploy Staging ──► E2E Tests ──► 🛑 CẦN CON NGƯỜI DUYỆT│\n└───────────────────────────┬────────────────────────────┘\n                            │ (Bấm nút Deploy)\n                            ▼\n┌────────────────────────────────────────────────────────┐\n│ CONTINUOUS DEPLOYMENT (CD - Tự động 100%)              │\n│ 🚀 Tự động phát hành thẳng lên Production Server       │\n└────────────────────────────────────────────────────────┘",
+              "calloutType": "info",
+              "calloutTitle": "Phân biệt Delivery vs Deployment",
+              "calloutTitleVi": "Phân biệt Delivery vs Deployment",
+              "calloutText": "**Continuous Delivery** đảm bảo code luôn ở trạng thái sẵn sàng deploy bất cứ lúc nào, nhưng bước lên Production cần con người phê duyệt (Manual Trigger). Còn **Continuous Deployment** là tự động 100%: Mỗi commit merge vào `main` sẽ tự bay thẳng lên máy chủ Production mà không cần ai can thiệp.",
+              "calloutTextVi": "**Continuous Delivery** đảm bảo code luôn ở trạng thái sẵn sàng deploy bất cứ lúc nào, nhưng bước lên Production cần con người phê duyệt (Manual Trigger). Còn **Continuous Deployment** là tự động 100%: Mỗi commit merge vào `main` sẽ tự bay thẳng lên máy chủ Production mà không cần ai can thiệp."
+            },
+            {
+              "heading": "2. Bắt Đầu Miễn Phí Với GitHub Actions: Viết File Workflow Đầu Tiên",
+              "headingVi": "2. Bắt Đầu Miễn Phí Với GitHub Actions: Viết File Workflow Đầu Tiên",
+              "paragraphs": [
+                "GitHub Actions là giải pháp CI/CD tuyệt vời nhất cho người mới bắt đầu vì hoàn toàn **MIỄN PHÍ** (2.000 phút chạy runner/tháng cho tài khoản cá nhân, và không giới hạn phút cho các repository Public nguồn mở).",
+                "Mọi cấu hình pipeline đều được định nghĩa trong file YAML đặt tại thư mục `.github/workflows/ci.yml`. Dưới đây là workflow hoàn chỉnh tự động build và chạy test cho ứng dụng .NET mỗi khi có ai push code hoặc mở Pull Request:"
+              ],
+              "paragraphsVi": [
+                "GitHub Actions là giải pháp CI/CD tuyệt vời nhất cho người mới bắt đầu vì hoàn toàn **MIỄN PHÍ** (2.000 phút chạy runner/tháng cho tài khoản cá nhân, và không giới hạn phút cho các repository Public nguồn mở).",
+                "Mọi cấu hình pipeline đều được định nghĩa trong file YAML đặt tại thư mục `.github/workflows/ci.yml`. Dưới đây là workflow hoàn chỉnh tự động build và chạy test cho ứng dụng .NET mỗi khi có ai push code hoặc mở Pull Request:"
+              ],
+              "codeTitle": ".github/workflows/ci.yml - Pipeline kiểm thử tự động",
+              "codeLanguage": "yaml",
+              "codeContent": "name: Continuous Integration (Build & Test)\n\n# Kích hoạt khi có commit push lên main hoặc mở PR\non:\n  push:\n    branches: [ main, develop ]\n  pull_request:\n    branches: [ main ]\n\njobs:\n  build-and-test:\n    name: Build & Run Unit Tests\n    runs-on: ubuntu-latest # Máy ảo miễn phí của GitHub (2 Core, 7GB RAM)\n\n    steps:\n      - name: 1. Checkout Mã Nguồn\n        uses: actions/checkout@v4\n\n      - name: 2. Cài Đặt Môi Trường .NET SDK\n        uses: actions/setup-dotnet@v4\n        with:\n          dotnet-version: '10.0.x'\n\n      - name: 3. Khôi Phục Thư Viện (Restore Dependencies)\n        run: dotnet restore\n\n      - name: 4. Biên Dịch Dự Án (Build Code)\n        run: dotnet build --no-restore --configuration Release\n\n      - name: 5. Chạy Toàn Bộ Unit Tests\n        run: dotnet test --no-build --configuration Release --verbosity normal\n\n      - name: 6. Đóng Gói Artifact\n        run: dotnet publish -c Release -o ./publish-output\n\n      - name: 7. Lưu Trữ File Build Lên GitHub Artifacts\n        uses: actions/upload-artifact@v4\n        with:\n          name: my-app-bundle\n          path: ./publish-output\n          retention-days: 7",
+              "calloutType": "tip",
+              "calloutTitle": "Ghi nhớ cơ chế Fail-Fast",
+              "calloutTitleVi": "Ghi nhớ cơ chế Fail-Fast",
+              "calloutText": "Nếu bất kỳ bài unit test nào ở bước 5 bị thất bại (`Exit code != 0`), GitHub Actions sẽ lập tức hủy bỏ pipeline, đánh dấu PR bằng màu đỏ ❌ và ngăn chặn tuyệt đối việc merge mã nguồn bị lỗi.",
+              "calloutTextVi": "Nếu bất kỳ bài unit test nào ở bước 5 bị thất bại (`Exit code != 0`), GitHub Actions sẽ lập tức hủy bỏ pipeline, đánh dấu PR bằng màu đỏ ❌ và ngăn chặn tuyệt đối việc merge mã nguồn bị lỗi."
+            }
+          ]
+        },
+        {
+          "id": "cicd-bai-2-docker-registry-ssh-vps-caching",
+          "seriesId": "cicd-masterclass-series",
+          "lessonNumber": "Bài 2",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Tự Động Hóa Deploy Lên VPS Qua SSH & Docker Registry: Bí Kíp Tối Ưu Cache Giảm 80% Thời Gian Build",
+          "titleVi": "Tự Động Hóa Deploy Lên VPS Qua SSH & Docker Registry: Bí Kíp Tối Ưu Cache Giảm 80% Thời Gian Build",
+          "readingTime": "11 phút đọc",
+          "publishedDate": "18/10/2026",
+          "summary": "Kết nối an toàn giữa GitHub Actions và VPS bằng SSH Private Key (Secrets). Đóng gói ứng dụng thành Docker Image, đẩy lên GitHub Container Registry (GHCR) miễn phí, và mẹo sử dụng GitHub Actions Cache giúp rút ngắn thời gian build từ 8 phút xuống 45 giây.",
+          "summaryVi": "Kết nối an toàn giữa GitHub Actions và VPS bằng SSH Private Key (Secrets). Đóng gói ứng dụng thành Docker Image, đẩy lên GitHub Container Registry (GHCR) miễn phí, và mẹo sử dụng GitHub Actions Cache giúp rút ngắn thời gian build từ 8 phút xuống 45 giây.",
+          "tags": [
+            "Docker",
+            "VPS",
+            "SSH",
+            "GitHub Secrets",
+            "GHCR",
+            "Caching",
+            "Performance"
+          ],
+          "sections": [
+            {
+              "heading": "1. Kiến Trúc Deploy An Toàn: GitHub Actions $\rightarrow$ Container Registry $\rightarrow$ VPS",
+              "headingVi": "1. Kiến Trúc Deploy An Toàn: GitHub Actions $\rightarrow$ Container Registry $\rightarrow$ VPS",
+              "paragraphs": [
+                "Sau khi code đã pass vòng CI ở Bài 1, bước tiếp theo là tự động triển khai (CD) lên máy chủ VPS. Nhiều bạn mới bắt đầu thường làm theo cách: SSH vào VPS rồi gõ `git pull` rồi `npm run build` trực tiếp trên máy chủ.",
+                "**Cách làm đó rất nguy hiểm** vì:",
+                "- Ngốn cạn CPU/RAM của VPS lúc đang phục vụ người dùng để build code.",
+                "- Dễ bị lỗi do thiếu phụ thuộc hoặc mạng tải gói thư viện bị đứt đoạn.",
+                "**Kiến trúc chuẩn DevOps:**",
+                "1. Máy ảo GitHub Runner đảm nhận toàn bộ việc nặng: build code và đóng gói thành **Docker Image**.",
+                "2. Đẩy Docker Image đã kiểm định lên Registry (Docker Hub hoặc GitHub Container Registry - GHCR hoàn toàn miễn phí).",
+                "3. Runner SSH vào VPS và chỉ phát lệnh cho Docker trên server kéo Image mới về chạy (`docker compose pull && docker compose up -d`). Quá trình này diễn ra chỉ trong vài giây!"
+              ],
+              "paragraphsVi": [
+                "Sau khi code đã pass vòng CI ở Bài 1, bước tiếp theo là tự động triển khai (CD) lên máy chủ VPS. Nhiều bạn mới bắt đầu thường làm theo cách: SSH vào VPS rồi gõ `git pull` rồi `npm run build` trực tiếp trên máy chủ.",
+                "**Cách làm đó rất nguy hiểm** vì:",
+                "- Ngốn cạn CPU/RAM của VPS lúc đang phục vụ người dùng để build code.",
+                "- Dễ bị lỗi do thiếu phụ thuộc hoặc mạng tải gói thư viện bị đứt đoạn.",
+                "**Kiến trúc chuẩn DevOps:**",
+                "1. Máy ảo GitHub Runner đảm nhận toàn bộ việc nặng: build code và đóng gói thành **Docker Image**.",
+                "2. Đẩy Docker Image đã kiểm định lên Registry (Docker Hub hoặc GitHub Container Registry - GHCR hoàn toàn miễn phí).",
+                "3. Runner SSH vào VPS và chỉ phát lệnh cho Docker trên server kéo Image mới về chạy (`docker compose pull && docker compose up -d`). Quá trình này diễn ra chỉ trong vài giây!"
+              ],
+              "codeTitle": "Sơ đồ luồng Deploy qua Container Registry",
+              "codeLanguage": "text",
+              "codeContent": "  [ Git Push 'main' ]\n          │\n          ▼\n[ GitHub Actions Runner ]\n  ├─ 1. Build Docker Image (Gán Tag: git-sha256)\n  ├─ 2. Push Image ────────► [ GitHub Container Registry (ghcr.io) ]\n  └─ 3. Gửi lệnh qua SSH                 │\n          │                               │ (Pull Image mới)\n          ▼                               ▼\n[ Production VPS Server ] ◄────────────────┘\n  ├─ docker compose pull web-api\n  └─ docker compose up -d web-api (Khởi động container mới siêu tốc!)",
+              "calloutType": "warning",
+              "calloutTitle": "Bảo mật SSH Key trong GitHub Secrets",
+              "calloutTitleVi": "Bảo mật SSH Key trong GitHub Secrets",
+              "calloutText": "Tuyệt đối không bao giờ hardcode SSH Key, IP máy chủ hoặc Mật khẩu trong file mã nguồn. Tất cả phải được lưu vào **Repository Settings $\rightarrow$ Secrets and Variables $\rightarrow$ Actions** với tiền tố `SSH_PRIVATE_KEY`, `VPS_HOST`, `VPS_USER`.",
+              "calloutTextVi": "Tuyệt đối không bao giờ hardcode SSH Key, IP máy chủ hoặc Mật khẩu trong file mã nguồn. Tất cả phải được lưu vào **Repository Settings $\rightarrow$ Secrets and Variables $\rightarrow$ Actions** với tiền tố `SSH_PRIVATE_KEY`, `VPS_HOST`, `VPS_USER`."
+            },
+            {
+              "heading": "2. Kỹ Thuật Caching Docker Buildx: Rút Ngắn Thời Gian Từ 8 Phút Xuống 45 Giây",
+              "headingVi": "2. Kỹ Thuật Caching Docker Buildx: Rút Ngắn Thời Gian Từ 8 Phút Xuống 45 Giây",
+              "paragraphs": [
+                "Mỗi khi GitHub Runner khởi động, nó là một máy ảo hoàn toàn sạch sẽ (Ephemeral VM). Nếu không cấu hình cache, mỗi lần build Docker sẽ phải tải lại từ đầu các base image và hàng nghìn thư viện NuGet/NPM.",
+                "Bằng cách kết hợp `docker/setup-buildx-action` và cache backend `type=gha` (GitHub Actions Cache), các layer Docker không thay đổi sẽ được tái sử dụng nguyên vẹn:"
+              ],
+              "paragraphsVi": [
+                "Mỗi khi GitHub Runner khởi động, nó là một máy ảo hoàn toàn sạch sẽ (Ephemeral VM). Nếu không cấu hình cache, mỗi lần build Docker sẽ phải tải lại từ đầu các base image và hàng nghìn thư viện NuGet/NPM.",
+                "Bằng cách kết hợp `docker/setup-buildx-action` và cache backend `type=gha` (GitHub Actions Cache), các layer Docker không thay đổi sẽ được tái sử dụng nguyên vẹn:"
+              ],
+              "codeTitle": ".github/workflows/deploy-vps.yml - Build Docker & SSH Deploy",
+              "codeLanguage": "yaml",
+              "codeContent": "name: Build Docker & Deploy to VPS\n\non:\n  push:\n    branches: [ main ]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n\n      - name: Đăng nhập GitHub Container Registry\n        uses: docker/login-action@v3\n        with:\n          registry: ghcr.io\n          username: ${{ github.actor }}\n          password: ${{ secrets.GITHUB_TOKEN }}\n\n      - name: Thiết lập Docker Buildx\n        uses: docker/setup-buildx-action@v3\n\n      - name: Build & Push Docker Image (Áp dụng Cache ma thuật)\n        uses: docker/build-push-action@v5\n        with:\n          context: .\n          push: true\n          tags: ghcr.io/${{ github.repository }}:latest, ghcr.io/${{ github.repository }}:${{ github.sha }}\n          cache-from: type=gha\n          cache-to: type=gha,mode=max # Lưu toàn bộ intermediate layers\n\n      - name: Kích hoạt Deploy trên VPS qua SSH\n        uses: appleboy/ssh-action@v1.0.3\n        with:\n          host: ${{ secrets.VPS_HOST }}\n          username: ${{ secrets.VPS_USER }}\n          key: ${{ secrets.SSH_PRIVATE_KEY }}\n          script: |\n            cd /opt/my-app\n            echo \"Pulling latest image...\"\n            docker compose pull\n            docker compose up -d\n            docker image prune -f # Xóa các image cũ để tránh đầy ổ cứng VPS",
+              "calloutType": "tip",
+              "calloutTitle": "Tối ưu dung lượng đĩa VPS",
+              "calloutTitleVi": "Tối ưu dung lượng đĩa VPS",
+              "calloutText": "Luôn thêm lệnh `docker image prune -f` vào cuối script deploy trên VPS để tự động dọn dẹp các dangling image cũ, tránh lỗi đầy đĩa cứng 100% sau vài chục lần deploy.",
+              "calloutTextVi": "Luôn thêm lệnh `docker image prune -f` vào cuối script deploy trên VPS để tự động dọn dẹp các dangling image cũ, tránh lỗi đầy đĩa cứng 100% sau vài chục lần deploy."
+            }
+          ]
+        },
+        {
+          "id": "cicd-bai-3-tools-comparison-jenkins-gitlab-github-cost",
+          "seriesId": "cicd-masterclass-series",
+          "lessonNumber": "Bài 3",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Bản Đồ Các Công Cụ CI/CD: Jenkins Tự Host, GitLab CI vs GitHub Actions - Bài Toán Chi Phí & Lựa Chọn Doanh Nghiệp",
+          "titleVi": "Bản Đồ Các Công Cụ CI/CD: Jenkins Tự Host, GitLab CI vs GitHub Actions - Bài Toán Chi Phí & Lựa Chọn Doanh Nghiệp",
+          "readingTime": "11 phút đọc",
+          "publishedDate": "18/10/2026",
+          "summary": "So sánh toàn diện giữa 3 ông lớn Jenkins, GitLab CI và GitHub Actions. Khi nào nên tự host server CI (Self-Hosted Runner) để tiết kiệm 100% chi phí phút chạy cloud? Phân tích bài toán kinh tế giữa chi phí hạ tầng và chi phí bảo trì nhân sự (Ops Overhead).",
+          "summaryVi": "So sánh toàn diện giữa 3 ông lớn Jenkins, GitLab CI và GitHub Actions. Khi nào nên tự host server CI (Self-Hosted Runner) để tiết kiệm 100% chi phí phút chạy cloud? Phân tích bài toán kinh tế giữa chi phí hạ tầng và chi phí bảo trì nhân sự (Ops Overhead).",
+          "tags": [
+            "Jenkins",
+            "GitLab CI",
+            "GitHub Actions",
+            "Self-Hosted Runner",
+            "Cost Optimization"
+          ],
+          "sections": [
+            {
+              "heading": "1. Cuộc Chiến Tam Mã: Jenkins vs GitLab CI vs GitHub Actions",
+              "headingVi": "1. Cuộc Chiến Tam Mã: Jenkins vs GitLab CI vs GitHub Actions",
+              "paragraphs": [
+                "Trên thị trường có hàng chục giải pháp CI/CD, nhưng ba cái tên chiếm hơn 80% thị phần doanh nghiệp là: **Jenkins**, **GitLab CI** và **GitHub Actions**.",
+                "Mỗi công cụ đại diện cho một trường phái triết lý khác nhau:"
+              ],
+              "paragraphsVi": [
+                "Trên thị trường có hàng chục giải pháp CI/CD, nhưng ba cái tên chiếm hơn 80% thị phần doanh nghiệp là: **Jenkins**, **GitLab CI** và **GitHub Actions**.",
+                "Mỗi công cụ đại diện cho một trường phái triết lý khác nhau:"
+              ],
+              "codeTitle": "Bảng so sánh chi tiết tính năng, chi phí & độ phức tạp",
+              "codeLanguage": "text",
+              "codeContent": "┌──────────────────────┬───────────────────────────────┬───────────────────────────────┬───────────────────────────────┐\n│ Tiêu Chí             │ Jenkins (The Veteran)         │ GitLab CI (The All-in-One)    │ GitHub Actions (The Modern)   │\n├──────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────────────────────┤\n│ Mô hình triển khai   │ Tự Host 100% trên VPS/Server  │ SaaS Cloud hoặc Tự Host       │ SaaS Cloud hoặc Hybrid Runner │\n│ Chi phí bản quyền    │ Miễn phí 100% (Open Source)   │ Free tier -> Trả phí theo user│ 2.000 phút free -> Tính theo p│\n│ Độ phức tạp vận hành │ 🔴 Rất cao (Cần DevOps bảo trì│ 🟡 Trung bình                  │ 🟢 Rất thấp (Zero maintenance)│\n│ Cú pháp định nghĩa   │ Groovy Pipeline / Jenkinsfile │ .gitlab-ci.yml                │ YAML workflow                 │\n│ Hệ sinh thái Plugin  │ > 1.800 plugin (Dễ conflict)  │ Tích hợp sẵn trọn bộ DevOps   │ > 20.000 GitHub Marketplace   │\n│ Phù hợp nhất cho     │ Dự án On-premise, ngân hàng   │ Doanh nghiệp dùng Git tự host │ Dự án mã nguồn mở & Startup   │\n└──────────────────────┴───────────────────────────────┴───────────────────────────────┴───────────────────────────────┘",
+              "calloutType": "info",
+              "calloutTitle": "Bài toán chi phí: Miễn phí chưa chắc là rẻ!",
+              "calloutTitleVi": "Bài toán chi phí: Miễn phí chưa chắc là rẻ!",
+              "calloutText": "Jenkins bản quyền miễn phí 100%, nhưng bạn phải trả tiền thuê máy chủ chạy Jenkins Master/Agent và trả lương cho một kỹ sư DevOps chuyên ngồi vá lỗi plugin, backup dữ liệu và update Java. Với startup nhỏ, trả 20-50$/tháng cho GitHub Actions vẫn rẻ hơn rất nhiều!",
+              "calloutTextVi": "Jenkins bản quyền miễn phí 100%, nhưng bạn phải trả tiền thuê máy chủ chạy Jenkins Master/Agent và trả lương cho một kỹ sư DevOps chuyên ngồi vá lỗi plugin, backup dữ liệu và update Java. Với startup nhỏ, trả 20-50$/tháng cho GitHub Actions vẫn rẻ hơn rất nhiều!"
+            },
+            {
+              "heading": "2. Giải Pháp 'Vô Hạn Phút': Cài Đặt GitHub Self-Hosted Runner Trên Server Riêng",
+              "headingVi": "2. Giải Pháp 'Vô Hạn Phút': Cài Đặt GitHub Self-Hosted Runner Trên Server Riêng",
+              "paragraphs": [
+                "Nếu dự án của bạn chạy test hàng trăm lần mỗi ngày và nhanh chóng dùng hết 2.000 phút miễn phí của GitHub, bạn có thể áp dụng giải pháp lai (Hybrid): **Biến một con VPS 5$/tháng của bạn thành một Self-Hosted Runner cho GitHub Actions**.",
+                "Khi đó, toàn bộ việc build và test sẽ chạy trực tiếp trên phần cứng của VPS, tiêu thụ 0 phút của GitHub, không tốn thêm 1 xu phí nào!",
+                "Chỉ cần vào **Settings $\rightarrow$ Actions $\rightarrow$ Runners $\rightarrow$ New self-hosted runner** và chạy 3 dòng lệnh cài đặt daemon agent trên server."
+              ],
+              "paragraphsVi": [
+                "Nếu dự án của bạn chạy test hàng trăm lần mỗi ngày và nhanh chóng dùng hết 2.000 phút miễn phí của GitHub, bạn có thể áp dụng giải pháp lai (Hybrid): **Biến một con VPS 5$/tháng của bạn thành một Self-Hosted Runner cho GitHub Actions**.",
+                "Khi đó, toàn bộ việc build và test sẽ chạy trực tiếp trên phần cứng của VPS, tiêu thụ 0 phút của GitHub, không tốn thêm 1 xu phí nào!",
+                "Chỉ cần vào **Settings $\rightarrow$ Actions $\rightarrow$ Runners $\rightarrow$ New self-hosted runner** và chạy 3 dòng lệnh cài đặt daemon agent trên server."
+              ],
+              "codeTitle": "Khai báo sử dụng Self-Hosted Runner trong Workflow",
+              "codeLanguage": "yaml",
+              "codeContent": "jobs:\n  heavy-build:\n    # Thay vì dùng 'ubuntu-latest' (ngốn phút GitHub),\n    # dùng nhãn 'self-hosted' để chạy trên VPS riêng!\n    runs-on: [ self-hosted, linux, x64 ]\n    \n    steps:\n      - uses: actions/checkout@v4\n      - name: Build ứng dụng khổng lồ không lo tốn tiền\n        run: |\n          echo \"Đang build trên phần cứng VPS nội bộ...\"\n          docker build -t big-app:latest .",
+              "calloutType": "warning",
+              "calloutTitle": "Cảnh báo bảo mật Self-Hosted Runner",
+              "calloutTitleVi": "Cảnh báo bảo mật Self-Hosted Runner",
+              "calloutText": "TUYỆT ĐỐI KHÔNG sử dụng Self-Hosted Runner cho các kho chứa mã nguồn Public (Public Repository). Người lạ có thể mở Pull Request chứa mã độc để chiếm quyền điều khiển toàn bộ con VPS của bạn!",
+              "calloutTextVi": "TUYỆT ĐỐI KHÔNG sử dụng Self-Hosted Runner cho các kho chứa mã nguồn Public (Public Repository). Người lạ có thể mở Pull Request chứa mã độc để chiếm quyền điều khiển toàn bộ con VPS của bạn!"
+            }
+          ]
+        },
+        {
+          "id": "cicd-bai-4-multi-environment-pipelines-approval-gates",
+          "seriesId": "cicd-masterclass-series",
+          "lessonNumber": "Bài 4",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Multi-Environment Pipelines (Dev $\\rightarrow$ Staging $\\rightarrow$ Prod): Phân Tầng Môi Trường, Approval Gates & DORA Metrics",
+          "titleVi": "Multi-Environment Pipelines (Dev $\\rightarrow$ Staging $\\rightarrow$ Prod): Phân Tầng Môi Trường, Approval Gates & DORA Metrics",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "18/10/2026",
+          "summary": "Thiết kế luồng phân tầng môi trường chuẩn doanh nghiệp. Thiết lập cổng phê duyệt thủ công (Manual Approval Gates) bảo vệ Production, quản lý Secret Rotation theo từng Environment và đo lường sức khỏe đội ngũ bằng 4 chỉ số DORA Metrics.",
+          "summaryVi": "Thiết kế luồng phân tầng môi trường chuẩn doanh nghiệp. Thiết lập cổng phê duyệt thủ công (Manual Approval Gates) bảo vệ Production, quản lý Secret Rotation theo từng Environment và đo lường sức khỏe đội ngũ bằng 4 chỉ số DORA Metrics.",
+          "tags": [
+            "Enterprise CI/CD",
+            "Environments",
+            "Approval Gates",
+            "DORA Metrics",
+            "Governance"
+          ],
+          "sections": [
+            {
+              "heading": "1. Kiến Trúc Phân Tầng 3 Môi Trường Chuẩn Doanh Nghiệp",
+              "headingVi": "1. Kiến Trúc Phân Tầng 3 Môi Trường Chuẩn Doanh Nghiệp",
+              "paragraphs": [
+                "Trong môi trường doanh nghiệp chuyên nghiệp, bạn tuyệt đối không bao giờ deploy thẳng một phát từ máy tính cá nhân lên Production. Pipeline phải đi qua 3 tầng phễu lọc nghiêm ngặt:",
+                "1. **Môi Trường Development (Dev):** Tự động deploy mỗi khi commit được merge vào nhánh `develop`. Dành cho nội bộ developer kiểm tra tích hợp.",
+                "2. **Môi Trường Staging / UAT (User Acceptance Testing):** Cấu hình phần cứng và database tương đồng 99% với Production. Dành cho đội ngũ QA/Tester kiểm thử hồi quy và Product Owner nghiệm thu tính năng.",
+                "3. **Môi Trường Production (Live):** Hệ thống phục vụ khách hàng thật. Bước deploy này bắt buộc phải có **Cổng Phê Duyệt (Approval Gate)**: Chỉ khi Release Manager hoặc Tech Lead nhấn nút 'Approve' trên giao diện thì job deploy mới được phép chạy."
+              ],
+              "paragraphsVi": [
+                "Trong môi trường doanh nghiệp chuyên nghiệp, bạn tuyệt đối không bao giờ deploy thẳng một phát từ máy tính cá nhân lên Production. Pipeline phải đi qua 3 tầng phễu lọc nghiêm ngặt:",
+                "1. **Môi Trường Development (Dev):** Tự động deploy mỗi khi commit được merge vào nhánh `develop`. Dành cho nội bộ developer kiểm tra tích hợp.",
+                "2. **Môi Trường Staging / UAT (User Acceptance Testing):** Cấu hình phần cứng và database tương đồng 99% với Production. Dành cho đội ngũ QA/Tester kiểm thử hồi quy và Product Owner nghiệm thu tính năng.",
+                "3. **Môi Trường Production (Live):** Hệ thống phục vụ khách hàng thật. Bước deploy này bắt buộc phải có **Cổng Phê Duyệt (Approval Gate)**: Chỉ khi Release Manager hoặc Tech Lead nhấn nút 'Approve' trên giao diện thì job deploy mới được phép chạy."
+              ],
+              "codeTitle": "Cấu hình Environment & Approval Gate trong GitHub Actions",
+              "codeLanguage": "yaml",
+              "codeContent": "jobs:\n  deploy-staging:\n    runs-on: ubuntu-latest\n    environment: \n      name: staging\n      url: https://staging.myapp.com\n    steps:\n      - run: echo \"Tự động deploy lên Staging sau khi pass test...\"\n\n  deploy-production:\n    needs: deploy-staging # Phải deploy Staging thành công trước\n    runs-on: ubuntu-latest\n    environment: \n      name: production # Được cấu hình 'Required reviewers' trong GitHub Settings\n      url: https://myapp.com\n    steps:\n      - name: Deploy Production\n        run: echo \"Chỉ chạy khi Tech Lead đã nhấn nút Phê Duyệt (Approve)!\"",
+              "calloutType": "tip",
+              "calloutTitle": "Đo lường năng lực với 4 chỉ số DORA Metrics",
+              "calloutTitleVi": "Đo lường năng lực với 4 chỉ số DORA Metrics",
+              "calloutText": "Các tổ chức công nghệ hàng đầu đánh giá năng lực DevOps thông qua: **Deployment Frequency** (Tần suất deploy), **Lead Time for Changes** (Thời gian từ lúc viết code đến khi lên Prod), **Change Failure Rate** (Tỷ lệ deploy bị lỗi), và **Time to Restore Service** (Thời gian khắc phục sự cố MTTR).",
+              "calloutTextVi": "Các tổ chức công nghệ hàng đầu đánh giá năng lực DevOps thông qua: **Deployment Frequency** (Tần suất deploy), **Lead Time for Changes** (Thời gian từ lúc viết code đến khi lên Prod), **Change Failure Rate** (Tỷ lệ deploy bị lỗi), và **Time to Restore Service** (Thời gian khắc phục sự cố MTTR)."
+            }
+          ]
+        },
+        {
+          "id": "cicd-bai-5-zero-downtime-blue-green-canary",
+          "seriesId": "cicd-masterclass-series",
+          "lessonNumber": "Bài 5",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
+          "title": "Chiến Lược Triển Khai Không Downtime: Blue-Green Deployment, Canary Releases & Kỹ Thuật Rollback Tức Thì",
+          "titleVi": "Chiến Lược Triển Khai Không Downtime: Blue-Green Deployment, Canary Releases & Kỹ Thuật Rollback Tức Thì",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "18/10/2026",
+          "summary": "Làm thế nào để cập nhật phần mềm phục vụ hàng triệu người dùng mà không có 1 giây gián đoạn? Bản chất kỹ thuật của Blue-Green Deployment, Canary Releases điều tiết luồng traffic, kết hợp kỹ thuật Expand-Contract di trú database an toàn.",
+          "summaryVi": "Làm thế nào để cập nhật phần mềm phục vụ hàng triệu người dùng mà không có 1 giây gián đoạn? Bản chất kỹ thuật của Blue-Green Deployment, Canary Releases điều tiết luồng traffic, kết hợp kỹ thuật Expand-Contract di trú database an toàn.",
+          "tags": [
+            "Zero Downtime",
+            "Blue-Green Deployment",
+            "Canary Release",
+            "Database Migration",
+            "High Availability"
+          ],
+          "sections": [
+            {
+              "heading": "1. Blue-Green Deployment: Đổi Chiều Luồng Traffic Trong 1 Mili-giây",
+              "headingVi": "1. Blue-Green Deployment: Đổi Chiều Luồng Traffic Trong 1 Mili-giây",
+              "paragraphs": [
+                "Trong kiến trúc Blue-Green, chúng ta duy trì **hai môi trường Production giống hệt nhau**:",
+                "- **Môi trường BLUE:** Đang chạy phiên bản hiện tại (v1.0), tiếp nhận 100% traffic từ người dùng.",
+                "- **Môi trường GREEN:** Đang rảnh rỗi. Pipeline CI/CD sẽ nạp phiên bản mới (v2.0) vào đây.",
+                "Sau khi nạp xong bản v2.0 lên GREEN, hệ thống tự động chạy các bài kiểm tra sức khỏe sâu (Deep Smoke Tests). Nếu mọi thứ hoàn hảo 100%, Router / Load Balancer (Nginx, Traefik, AWS ALB) sẽ lập tức chuyển hướng 100% lưu lượng người dùng từ BLUE sang GREEN chỉ trong 1 mili-giây!",
+                "Nếu sau 5 phút phát hiện lỗi nghiêm trọng? **Chỉ cần đổi ngược Router về BLUE ngay lập tức!** Thời gian Rollback chỉ tính bằng giây, loại bỏ hoàn toàn rủi ro downtime kéo dài."
+              ],
+              "paragraphsVi": [
+                "Trong kiến trúc Blue-Green, chúng ta duy trì **hai môi trường Production giống hệt nhau**:",
+                "- **Môi trường BLUE:** Đang chạy phiên bản hiện tại (v1.0), tiếp nhận 100% traffic từ người dùng.",
+                "- **Môi trường GREEN:** Đang rảnh rỗi. Pipeline CI/CD sẽ nạp phiên bản mới (v2.0) vào đây.",
+                "Sau khi nạp xong bản v2.0 lên GREEN, hệ thống tự động chạy các bài kiểm tra sức khỏe sâu (Deep Smoke Tests). Nếu mọi thứ hoàn hảo 100%, Router / Load Balancer (Nginx, Traefik, AWS ALB) sẽ lập tức chuyển hướng 100% lưu lượng người dùng từ BLUE sang GREEN chỉ trong 1 mili-giây!",
+                "Nếu sau 5 phút phát hiện lỗi nghiêm trọng? **Chỉ cần đổi ngược Router về BLUE ngay lập tức!** Thời gian Rollback chỉ tính bằng giây, loại bỏ hoàn toàn rủi ro downtime kéo dài."
+              ],
+              "codeTitle": "Sơ đồ chuyển mạch Blue-Green thông qua Reverse Proxy Router",
+              "codeLanguage": "text",
+              "codeContent": "TRƯỚC KHI DEPLOY (Traffic vào BLUE):\n[ Users ] ──► [ Load Balancer (Nginx) ] ──► [ 🔵 BLUE: v1.0 (Live 100%) ]\n                                        [ 🟢 GREEN: Đang nạp v2.0... ]\n\nSAU KHI TEST PASS (Đổi Router sang GREEN trong 1ms):\n[ Users ] ──► [ Load Balancer (Nginx) ] ──► [ 🟢 GREEN: v2.0 (Live 100%) ]\n                                        [ 🔵 BLUE: Dự phòng Rollback! ]",
+              "calloutType": "tip",
+              "calloutTitle": "Canary Release: Thử nghiệm an toàn theo %",
+              "calloutTitleVi": "Canary Release: Thử nghiệm an toàn theo %",
+              "calloutText": "Với các hệ thống siêu lớn (như Netflix, Facebook), người ta áp dụng **Canary Release**: Chỉ mở 2% traffic cho cụm server mới. Nếu tỷ lệ lỗi HTTP 500 không tăng sau 30 phút, tăng dần lên 10% $\rightarrow$ 50% $\rightarrow$ 100%.",
+              "calloutTextVi": "Với các hệ thống siêu lớn (như Netflix, Facebook), người ta áp dụng **Canary Release**: Chỉ mở 2% traffic cho cụm server mới. Nếu tỷ lệ lỗi HTTP 500 không tăng sau 30 phút, tăng dần lên 10% $\rightarrow$ 50% $\rightarrow$ 100%."
+            },
+            {
+              "heading": "2. Cạm Bẫy Database: Quy Tắc 'Expand-Contract' Khi Đổi Cấu Trúc Bảng",
+              "headingVi": "2. Cạm Bẫy Database: Quy Tắc 'Expand-Contract' Khi Đổi Cấu Trúc Bảng",
+              "paragraphs": [
+                "Dù Blue-Green rất tuyệt vời cho web server, nhưng **Database chỉ có một cơ sở dữ liệu duy nhất dùng chung**!",
+                "Nếu bản v2.0 xóa hoặc đổi tên một cột trong Database trong khi bản v1.0 vẫn đang chạy, bản v1.0 sẽ lập tức bị crash hàng loạt.",
+                "**Quy tắc Expand-Contract bất di bất dịch:**",
+                "- **Giai đoạn 1 (Expand):** Thêm cột mới `FullAddress`, nhưng giữ nguyên cột cũ `Address`. Code v2.0 ghi vào cả 2 cột. Cả v1.0 và v2.0 đều hoạt động bình thường.",
+                "- **Giai đoạn 2:** Deploy v2.0 thành công 100%, chạy script di trú dữ liệu cũ sang cột mới.",
+                "- **Giai đoạn 3 (Contract):** Trong bản release tiếp theo, xóa bỏ hoàn toàn cột cũ `Address`."
+              ],
+              "paragraphsVi": [
+                "Dù Blue-Green rất tuyệt vời cho web server, nhưng **Database chỉ có một cơ sở dữ liệu duy nhất dùng chung**!",
+                "Nếu bản v2.0 xóa hoặc đổi tên một cột trong Database trong khi bản v1.0 vẫn đang chạy, bản v1.0 sẽ lập tức bị crash hàng loạt.",
+                "**Quy tắc Expand-Contract bất di bất dịch:**",
+                "- **Giai đoạn 1 (Expand):** Thêm cột mới `FullAddress`, nhưng giữ nguyên cột cũ `Address`. Code v2.0 ghi vào cả 2 cột. Cả v1.0 và v2.0 đều hoạt động bình thường.",
+                "- **Giai đoạn 2:** Deploy v2.0 thành công 100%, chạy script di trú dữ liệu cũ sang cột mới.",
+                "- **Giai đoạn 3 (Contract):** Trong bản release tiếp theo, xóa bỏ hoàn toàn cột cũ `Address`."
+              ],
+              "codeTitle": "Ba bước di trú Database không gây downtime",
+              "codeLanguage": "sql",
+              "codeContent": "-- BƯỚC 1: EXPAND (Thêm cột mới, KHÔNG xóa cột cũ)\nALTER TABLE Users ADD FullAddress NVARCHAR(500) NULL;\n\n-- BƯỚC 2: MIGRATION (Đồng bộ dữ liệu ngầm không khóa bảng)\nUPDATE Users SET FullAddress = Address WHERE FullAddress IS NULL;\n\n-- BƯỚC 3: CONTRACT (Sau khi release v2.0 thành công 1 tuần mới xóa cột cũ)\nALTER TABLE Users DROP COLUMN Address;",
+              "calloutType": "warning",
+              "calloutTitle": "Không bao giờ Breaking Change Database",
+              "calloutTitleVi": "Không bao giờ Breaking Change Database",
+              "calloutText": "Mọi thay đổi database trong hệ thống Zero-Downtime bắt buộc phải tương thích ngược (Backward Compatible) với phiên bản code trước đó ít nhất một chu kỳ release.",
+              "calloutTextVi": "Mọi thay đổi database trong hệ thống Zero-Downtime bắt buộc phải tương thích ngược (Backward Compatible) với phiên bản code trước đó ít nhất một chu kỳ release."
+            }
+          ]
+        },
+        {
+          "id": "cicd-bai-6-gitops-argocd-kubernetes-future",
+          "seriesId": "cicd-masterclass-series",
+          "lessonNumber": "Bài 6",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
+          "title": "Đỉnh Cao GitOps Với Kubernetes, ArgoCD & FluxCD: Hạ Tầng Dưới Dạng Mã Nguồn (IaC) & Tự Động Đồng Bộ Khép Kín",
+          "titleVi": "Đỉnh Cao GitOps Với Kubernetes, ArgoCD & FluxCD: Hạ Tầng Dưới Dạng Mã Nguồn (IaC) & Tự Động Đồng Bộ Khép Kín",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "18/10/2026",
+          "summary": "Tại sao mô hình Push-based CI/CD truyền thống đang dần nhường chỗ cho Pull-based GitOps? Tìm hiểu nguyên lý hoạt động của ArgoCD trong cụm Kubernetes: Tự động phát hiện sai lệch (Drift Detection), tự phục hồi (Self-Healing) và tổng kết lộ trình lựa chọn CI/CD từ 0$ đến Enterprise.",
+          "summaryVi": "Tại sao mô hình Push-based CI/CD truyền thống đang dần nhường chỗ cho Pull-based GitOps? Tìm hiểu nguyên lý hoạt động của ArgoCD trong cụm Kubernetes: Tự động phát hiện sai lệch (Drift Detection), tự phục hồi (Self-Healing) và tổng kết lộ trình lựa chọn CI/CD từ 0$ đến Enterprise.",
+          "tags": [
+            "GitOps",
+            "Kubernetes",
+            "ArgoCD",
+            "Infrastructure as Code",
+            "Enterprise DevOps"
+          ],
+          "sections": [
+            {
+              "heading": "1. Sự Khác Biệt Giữa Push-based CI/CD Và Pull-based GitOps",
+              "headingVi": "1. Sự Khác Biệt Giữa Push-based CI/CD Và Pull-based GitOps",
+              "paragraphs": [
+                "Trong mô hình **Push-based** cổ điển (GitHub Actions, GitLab CI), runner ở bên ngoài phải nắm giữ chứng chỉ quản trị (Kubeconfig, SSH Key) của toàn bộ hệ thống máy chủ để 'bắn lệnh' vào bên trong. Nếu hệ thống CI bị tấn công, kẻ xấu sẽ có toàn quyền kiểm soát hạ tầng.",
+                "Mô hình **Pull-based (GitOps)** đảo ngược hoàn toàn quy trình này:",
+                "- Hệ thống CI bên ngoài **chỉ làm nhiệm vụ đóng gói Docker Image** và cập nhật file manifest định nghĩa (YAML) trong Git repo.",
+                "- Một Agent nội bộ (như **ArgoCD** hoặc **FluxCD**) chạy sẵn bên trong lòng cụm Kubernetes. Cứ mỗi 3 phút, nó tự động thăm dò (Poll) Git repo.",
+                "- Khi thấy Git có phiên bản mới, **chính ArgoCD tự kéo cấu hình về và áp dụng vào cụm**.",
+                "Không có bất kỳ cổng mạng hay chứng chỉ bí mật nào bị mở ra ngoài Internet!"
+              ],
+              "paragraphsVi": [
+                "Trong mô hình **Push-based** cổ điển (GitHub Actions, GitLab CI), runner ở bên ngoài phải nắm giữ chứng chỉ quản trị (Kubeconfig, SSH Key) của toàn bộ hệ thống máy chủ để 'bắn lệnh' vào bên trong. Nếu hệ thống CI bị tấn công, kẻ xấu sẽ có toàn quyền kiểm soát hạ tầng.",
+                "Mô hình **Pull-based (GitOps)** đảo ngược hoàn toàn quy trình này:",
+                "- Hệ thống CI bên ngoài **chỉ làm nhiệm vụ đóng gói Docker Image** và cập nhật file manifest định nghĩa (YAML) trong Git repo.",
+                "- Một Agent nội bộ (như **ArgoCD** hoặc **FluxCD**) chạy sẵn bên trong lòng cụm Kubernetes. Cứ mỗi 3 phút, nó tự động thăm dò (Poll) Git repo.",
+                "- Khi thấy Git có phiên bản mới, **chính ArgoCD tự kéo cấu hình về và áp dụng vào cụm**.",
+                "Không có bất kỳ cổng mạng hay chứng chỉ bí mật nào bị mở ra ngoài Internet!"
+              ],
+              "codeTitle": "So sánh kiến trúc Push-based vs GitOps Pull-based",
+              "codeLanguage": "text",
+              "codeContent": "MÔ HÌNH CŨ: PUSH-BASED (BẮN LỆNH VÀO TỪ NGOÀI)\n[ GitHub Actions ] ──(Cầm Kubeconfig Admin)──► [ Firewall ] ──► [ K8s Cluster ] 💥 Rủi ro lộ quyền lực tối cao!\n\nMÔ HÌNH HIỆN ĐẠI: GITOPS PULL-BASED (KÉO CẤU HÌNH TỪ BÊN TRONG)\n[ App Git Repo ] ──► CI Build Image ──► [ Container Registry ]\n                                                 ▲\n[ Config Git Repo ] (Chứa K8s YAML)               │\n         ▲                                        │ Tự kéo Image về nạp\n         │ Poll định kỳ                           │\n   ┌─────┴────────────────────────────────────────┴──────┐\n   │ Kubernetes Cluster (Tường lửa đóng kín 100%)        │\n   │ [ ArgoCD Agent ] ──► Tự động phát hiện thay đổi     │\n   │                  ──► Tự động Self-Healing sai lệch! │\n   └─────────────────────────────────────────────────────┘",
+              "calloutType": "info",
+              "calloutTitle": "Tính năng Self-Healing (Tự phục hồi kỳ diệu)",
+              "calloutTitleVi": "Tính năng Self-Healing (Tự phục hồi kỳ diệu)",
+              "calloutText": "Nếu một kỹ sư táy máy SSH vào cụm K8s và gõ lệnh sửa trực tiếp số lượng Pod, ArgoCD sẽ phát hiện trạng thái thực tế bị sai lệch (Drift) so với Git và **lập tức tự động đè lại đúng cấu hình chuẩn trong Git trong vòng vài giây**!",
+              "calloutTextVi": "Nếu một kỹ sư táy máy SSH vào cụm K8s và gõ lệnh sửa trực tiếp số lượng Pod, ArgoCD sẽ phát hiện trạng thái thực tế bị sai lệch (Drift) so với Git và **lập tức tự động đè lại đúng cấu hình chuẩn trong Git trong vòng vài giây**!"
+            },
+            {
+              "heading": "2. Tổng Kết Lộ Trình Lựa Chọn CI/CD Dành Cho Mọi Cấp Độ",
+              "headingVi": "2. Tổng Kết Lộ Trình Lựa Chọn CI/CD Dành Cho Mọi Cấp Độ",
+              "paragraphs": [
+                "Để kết thúc series, bảng ma trận dưới đây tổng kết lộ trình lựa chọn giải pháp CI/CD từ mức $0 cho solo dev đến kiến trúc Enterprise:"
+              ],
+              "paragraphsVi": [
+                "Để kết thúc series, bảng ma trận dưới đây tổng kết lộ trình lựa chọn giải pháp CI/CD từ mức $0 cho solo dev đến kiến trúc Enterprise:"
+              ],
+              "codeTitle": "Bảng lộ trình lựa chọn CI/CD theo quy mô và ngân sách",
+              "codeLanguage": "text",
+              "codeContent": "┌──────────────────────┬───────────────────────┬───────────────────────────────┬───────────────────────────────┐\n│ Giai Đoạn            │ Ngân Sách             │ Công Cụ Đề Xuất               │ Đặc Điểm Quy Trình            │\n├──────────────────────┼───────────────────────┼───────────────────────────────┼───────────────────────────────┤\n│ 1. Solo Dev / SinhViên│ 0$ (Miễn phí)         │ GitHub Actions Free + GHCR    │ Build, test & deploy SSH VPS  │\n│ 2. Startup / Team nhỏ│ 10$ - 50$/tháng       │ GitHub Actions + Self-Hosted  │ Multi-Environment (Dev/Prod)  │\n│ 3. Doanh nghiệp On-Prem│ Tiết kiệm chi phí cloud│ Jenkins / GitLab CI Tự Host   │ Tận dụng hạ tầng máy chủ cty  │\n│ 4. Mid-Market Cloud  │ 100$ - 500$/tháng     │ GitHub Actions Enterprise     │ Approval Gates, Blue-Green    │\n│ 5. Enterprise / K8s  │ Ngân sách lớn         │ ArgoCD / FluxCD + Kubernetes  │ GitOps hoàn toàn, Canary depl │\n└──────────────────────┴───────────────────────┴───────────────────────────────┴───────────────────────────────┘",
+              "calloutType": "tip",
+              "calloutTitle": "Lời khuyên kết luận",
+              "calloutTitleVi": "Lời khuyên kết luận",
+              "calloutText": "Đừng vội vàng triển khai những công nghệ phức tạp như ArgoCD hay Kubernetes khi dự án mới chỉ có 1 server đơn lẻ. Hãy bắt đầu đơn giản nhất với **GitHub Actions và Docker**, làm tốt bài toán tự động hóa kiểm thử và deploy, sau đó mới nâng cấp dần theo đà tăng trưởng của doanh nghiệp!",
+              "calloutTextVi": "Đừng vội vàng triển khai những công nghệ phức tạp như ArgoCD hay Kubernetes khi dự án mới chỉ có 1 server đơn lẻ. Hãy bắt đầu đơn giản nhất với **GitHub Actions và Docker**, làm tốt bài toán tự động hóa kiểm thử và deploy, sau đó mới nâng cấp dần theo đà tăng trưởng của doanh nghiệp!"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "architecture-evolution-series",
+      "title": "Software Architecture Masterclass: Monolith, Modular Monolith, Microservices & Micro-Frontend",
+      "titleVi": "Kiến Trúc Phần Mềm Toàn Tập: Monolith, Modular Monolith, Microservices & Micro-Frontend",
+      "icon": "bi-diagram-3-fill",
+      "color": "#8b5cf6",
+      "badge": "5 Bài Viết",
+      "description": "Lộ trình giải mã toàn diện 4 mô hình kiến trúc phần mềm cốt lõi: Vẻ đẹp và giới hạn của Monolith truyền thống, cái giá đắt đỏ của Microservices, vị thế 'điểm cân bằng vàng' của Modular Monolith và nghệ thuật chia tách giao diện với Micro-Frontend.",
+      "descriptionVi": "Lộ trình giải mã toàn diện 4 mô hình kiến trúc phần mềm cốt lõi: Vẻ đẹp và giới hạn của Monolith truyền thống, cái giá đắt đỏ của Microservices, vị thế 'điểm cân bằng vàng' của Modular Monolith và nghệ thuật chia tách giao diện với Micro-Frontend.",
+      "articles": [
+        {
+          "id": "arch-bai-1-monolith-simplicity-mud-trap",
+          "seriesId": "architecture-evolution-series",
+          "lessonNumber": "Bài 1",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
+          "title": "Monolithic Architecture: Vẻ Đẹp Của Sự Đơn Giản, Cái Bẫy 'Big Ball of Mud' & Khi Nào Nên Bắt Đầu Với Monolith?",
+          "titleVi": "Monolithic Architecture: Vẻ Đẹp Của Sự Đơn Giản, Cái Bẫy 'Big Ball of Mud' & Khi Nào Nên Bắt Đầu Với Monolith?",
+          "readingTime": "11 phút đọc",
+          "publishedDate": "18/10/2026",
+          "summary": "Tại sao 90% dự án nên bắt đầu bằng Monolith? Giải mã các ưu điểm vượt trội: Latency bằng 0, giao dịch ACID đơn giản, chi phí hạ tầng $5/tháng. Phân tích nguyên nhân biến Monolith thành 'Bó rơm rác' (Big Ball of Mud) và ngưỡng giới hạn buộc phải tiến hóa.",
+          "summaryVi": "Tại sao 90% dự án nên bắt đầu bằng Monolith? Giải mã các ưu điểm vượt trội: Latency bằng 0, giao dịch ACID đơn giản, chi phí hạ tầng $5/tháng. Phân tích nguyên nhân biến Monolith thành 'Bó rơm rác' (Big Ball of Mud) và ngưỡng giới hạn buộc phải tiến hóa.",
+          "tags": [
+            "Software Architecture",
+            "Monolith",
+            "System Design",
+            "Clean Architecture",
+            "Trade-offs"
+          ],
+          "sections": [
+            {
+              "heading": "1. Bản Chất Của Monolith: Một Khối Duy Nhất",
+              "headingVi": "1. Bản Chất Của Monolith: Một Khối Duy Nhất",
+              "paragraphs": [
+                "Kiến trúc nguyên khối (**Monolithic Architecture**) là mô hình trong đó toàn bộ các thành phần của ứng dụng (Giao diện người dùng, Business Logic, Tác vụ nền, Xử lý thanh toán, Gửi email và Truy cập cơ sở dữ liệu) được đóng gói và chạy bên trong **MỘT TIẾN TRÌNH DUY NHẤT (Single Process)**.",
+                "Nhiều người trẻ hiện nay thường có cái nhìn sai lệch rằng: *'Monolith là đồ cổ hủ, lỗi thời, chỉ có Microservices mới là thời thượng'*. Đây là nhận thức cực kỳ nguy hiểm!",
+                "Những nền tảng khổng lồ như **Shopify, GitHub, Stack Overflow, Basecamp** vẫn đang vận hành hàng chục triệu người dùng mỗi ngày chủ yếu dựa trên nền tảng Monolith được tối ưu hóa xuất sắc."
+              ],
+              "paragraphsVi": [
+                "Kiến trúc nguyên khối (**Monolithic Architecture**) là mô hình trong đó toàn bộ các thành phần của ứng dụng (Giao diện người dùng, Business Logic, Tác vụ nền, Xử lý thanh toán, Gửi email và Truy cập cơ sở dữ liệu) được đóng gói và chạy bên trong **MỘT TIẾN TRÌNH DUY NHẤT (Single Process)**.",
+                "Nhiều người trẻ hiện nay thường có cái nhìn sai lệch rằng: *'Monolith là đồ cổ hủ, lỗi thời, chỉ có Microservices mới là thời thượng'*. Đây là nhận thức cực kỳ nguy hiểm!",
+                "Những nền tảng khổng lồ như **Shopify, GitHub, Stack Overflow, Basecamp** vẫn đang vận hành hàng chục triệu người dùng mỗi ngày chủ yếu dựa trên nền tảng Monolith được tối ưu hóa xuất sắc."
+              ],
+              "codeTitle": "Mô hình kiến trúc Monolith cổ điển",
+              "codeLanguage": "text",
+              "codeContent": "┌────────────────────────────────────────────────────────┐\n│ MONOLITHIC APPLICATION (Single Process / Single Deploy) │\n│                                                        │\n│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │\n│  │ Auth Module  │  │ Order Module │  │ Payment Mod  │  │\n│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  │\n│         │                 │                 │          │\n│         └─────────────────┼─────────────────┘          │\n│                           ▼ In-Memory Method Calls     │\n│                    [ Shared Data Layer ]               │\n└─────────────────────────────┬──────────────────────────┘\n                              ▼ Giao dịch ACID (BeginTran)\n             [ Single Relational Database ]",
+              "calloutType": "info",
+              "calloutTitle": "Ưu thế vô song của Monolith",
+              "calloutTitleVi": "Ưu thế vô song của Monolith",
+              "calloutText": "Gọi hàm trong bộ nhớ (In-memory Call) chỉ tốn vài **nano-giây**, trong khi gọi HTTP/gRPC giữa các microservices tốn từ **5 đến 50 mili-giây** (chậm hơn hàng triệu lần). Hơn nữa, bạn có thể thực hiện giao dịch ACID hoàn hảo chỉ với một lệnh `using var transaction = connection.BeginTransaction()`.",
+              "calloutTextVi": "Gọi hàm trong bộ nhớ (In-memory Call) chỉ tốn vài **nano-giây**, trong khi gọi HTTP/gRPC giữa các microservices tốn từ **5 đến 50 mili-giây** (chậm hơn hàng triệu lần). Hơn nữa, bạn có thể thực hiện giao dịch ACID hoàn hảo chỉ với một lệnh `using var transaction = connection.BeginTransaction()`."
+            },
+            {
+              "heading": "2. Cạm Bẫy 'Bó Rơm Rác' (Big Ball of Mud) & Giới Hạn Khi Scale",
+              "headingVi": "2. Cạm Bẫy 'Bó Rơm Rác' (Big Ball of Mud) & Giới Hạn Khi Scale",
+              "paragraphs": [
+                "Vậy tại sao người ta lại sợ hãi Monolith? Vấn đề không nằm ở bản thân kiến trúc Monolith, mà nằm ở **kỷ luật của người viết code**.",
+                "Sau 2-3 năm phát triển nhanh không kiểm soát:",
+                "- **Spaghetti Code & Tight Coupling:** Bảng `Orders` gọi thẳng bảng `Users`, module Báo cáo query trực tiếp vào bảng Thanh toán, các lớp logic đan xen chằng chịt.",
+                "- **Một lỗi nhỏ làm sập toàn bộ:** Module xuất báo cáo PDF bị tràn RAM hoặc CPU 100% sẽ kéo sập luôn API giỏ hàng và thanh toán của toàn bộ khách hàng.",
+                "- **Ùn tắc triển khai (Deployment Bottleneck):** 50 lập trình viên cùng commit vào một repository. Chỉ cần 1 dòng code bị lỗi là toàn bộ đợt phát hành bị chặn lại."
+              ],
+              "paragraphsVi": [
+                "Vậy tại sao người ta lại sợ hãi Monolith? Vấn đề không nằm ở bản thân kiến trúc Monolith, mà nằm ở **kỷ luật của người viết code**.",
+                "Sau 2-3 năm phát triển nhanh không kiểm soát:",
+                "- **Spaghetti Code & Tight Coupling:** Bảng `Orders` gọi thẳng bảng `Users`, module Báo cáo query trực tiếp vào bảng Thanh toán, các lớp logic đan xen chằng chịt.",
+                "- **Một lỗi nhỏ làm sập toàn bộ:** Module xuất báo cáo PDF bị tràn RAM hoặc CPU 100% sẽ kéo sập luôn API giỏ hàng và thanh toán của toàn bộ khách hàng.",
+                "- **Ùn tắc triển khai (Deployment Bottleneck):** 50 lập trình viên cùng commit vào một repository. Chỉ cần 1 dòng code bị lỗi là toàn bộ đợt phát hành bị chặn lại."
+              ],
+              "codeTitle": "Bảng đối chiếu điểm mạnh và rào cản của Monolith",
+              "codeLanguage": "text",
+              "codeContent": "┌─────────────────────────────────────┬─────────────────────────────────────┐\n│ LÝ DO NÊN CHỌN MONOLITH             │ KHI NÀO MONOLITH BẮT ĐẦU 'ĐAU ĐỚN'? │\n├─────────────────────────────────────┼─────────────────────────────────────┤\n│ • Team < 15 kỹ sư, dự án mới bắt đầu│ • Team > 30-50 kỹ sư tranh giành git│\n│ • Chi phí hạ tầng tối thiểu ($5-20) │ • Thời gian build test kéo dài > 30p│\n│ • Không có chuyên gia DevOps/K8s    │ • 1 lỗi module nhỏ làm sập cả app   │\n│ • Cần tốc độ ra mắt thị trường (MVP)│ • Cần scale riêng 1 tính năng hot   │\n└─────────────────────────────────────┴─────────────────────────────────────┘",
+              "calloutType": "tip",
+              "calloutTitle": "Châm ngôn kiến trúc",
+              "calloutTitleVi": "Châm ngôn kiến trúc",
+              "calloutText": "Nếu bạn không thể xây dựng một Monolith gọn gàng và có ranh giới rõ ràng, bạn chắc chắn sẽ tạo ra một thảm họa phân tán khi bước chân vào Microservices!",
+              "calloutTextVi": "Nếu bạn không thể xây dựng một Monolith gọn gàng và có ranh giới rõ ràng, bạn chắc chắn sẽ tạo ra một thảm họa phân tán khi bước chân vào Microservices!"
+            }
+          ]
+        },
+        {
+          "id": "arch-bai-2-microservices-dream-vs-distributed-nightmare",
+          "seriesId": "architecture-evolution-series",
+          "lessonNumber": "Bài 2",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Microservices Architecture: Giấc Mơ Scale Độc Lập vs Cơn Ác Mộng 'Distributed Monolith'",
+          "titleVi": "Microservices Architecture: Giấc Mơ Scale Độc Lập vs Cơn Ác Mộng 'Distributed Monolith'",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "18/10/2026",
+          "summary": "Tại sao Netflix và Amazon thành công với Microservices trong khi hàng nghìn công ty khác lại thất bại thảm hại? Giải mã cạm bẫy 'Distributed Monolith', 8 ngộ nhận về hệ phân tán (Fallacies of Distributed Computing), thảm họa mất dữ liệu và chi phí hạ tầng K8s khổng lồ.",
+          "summaryVi": "Tại sao Netflix và Amazon thành công với Microservices trong khi hàng nghìn công ty khác lại thất bại thảm hại? Giải mã cạm bẫy 'Distributed Monolith', 8 ngộ nhận về hệ phân tán (Fallacies of Distributed Computing), thảm họa mất dữ liệu và chi phí hạ tầng K8s khổng lồ.",
+          "tags": [
+            "Microservices",
+            "Distributed Systems",
+            "Saga Pattern",
+            "Kubernetes",
+            "DevOps"
+          ],
+          "sections": [
+            {
+              "heading": "1. Lời Hứa Màu Hồng Của Microservices & Định Luật Conway",
+              "headingVi": "1. Lời Hứa Màu Hồng Của Microservices & Định Luật Conway",
+              "paragraphs": [
+                "**Microservices** chia nhỏ hệ thống thành một tập hợp các dịch vụ độc lập, mỗi dịch vụ phụ trách một Bounded Context nghiệp vụ, sở hữu database riêng biệt (Database-per-Service) và giao tiếp qua mạng (HTTP REST, gRPC hoặc Message Broker).",
+                "Lời hứa hẹn lớn nhất của Microservices là **Giải quyết bài toán con người theo Định luật Conway (Conway's Law)**:",
+                "> *'Kiến trúc hệ thống phần mềm phản chiếu cơ cấu giao tiếp của tổ chức xây dựng nên nó.'*",
+                "Khi công ty có 200 kỹ sư chia làm 20 team độc lập (Team Thanh toán, Team Vận chuyển, Team Kho bãi). Mỗi team tự do deploy service của mình lên Kubernetes 10 lần mỗi ngày mà không cần xin phép hay sợ ảnh hưởng đến team khác."
+              ],
+              "paragraphsVi": [
+                "**Microservices** chia nhỏ hệ thống thành một tập hợp các dịch vụ độc lập, mỗi dịch vụ phụ trách một Bounded Context nghiệp vụ, sở hữu database riêng biệt (Database-per-Service) và giao tiếp qua mạng (HTTP REST, gRPC hoặc Message Broker).",
+                "Lời hứa hẹn lớn nhất của Microservices là **Giải quyết bài toán con người theo Định luật Conway (Conway's Law)**:",
+                "> *'Kiến trúc hệ thống phần mềm phản chiếu cơ cấu giao tiếp của tổ chức xây dựng nên nó.'*",
+                "Khi công ty có 200 kỹ sư chia làm 20 team độc lập (Team Thanh toán, Team Vận chuyển, Team Kho bãi). Mỗi team tự do deploy service của mình lên Kubernetes 10 lần mỗi ngày mà không cần xin phép hay sợ ảnh hưởng đến team khác."
+              ],
+              "codeTitle": "Kiến trúc Microservices chuẩn: Database-per-service & Event-Driven",
+              "codeLanguage": "text",
+              "codeContent": "                  [ API Gateway / YARP ]\n                            │\n         ┌──────────────────┼──────────────────┐\n         ▼ gRPC             ▼ REST             ▼ HTTP\n┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐\n│ User Service    │ │ Order Service   │ │ Payment Service │\n│ DB: user_db     │ │ DB: order_db    │ │ DB: payment_db  │\n└────────┬────────┘ └────────┬────────┘ └────────┬────────┘\n         │                   │                   │\n         └───────────────────┼───────────────────┘\n                             ▼ Pub/Sub Asynchronous Events\n             [ Message Broker: Kafka / RabbitMQ ]",
+              "calloutType": "info",
+              "calloutTitle": "Nguyên tắc sống còn của Microservices",
+              "calloutTitleVi": "Nguyên tắc sống còn của Microservices",
+              "calloutText": "Mỗi Microservice **bắt buộc phải sở hữu cơ sở dữ liệu riêng**. Tuyệt đối không bao giờ để Service A chọc thẳng vào database của Service B qua câu lệnh SQL!",
+              "calloutTextVi": "Mỗi Microservice **bắt buộc phải sở hữu cơ sở dữ liệu riêng**. Tuyệt đối không bao giờ để Service A chọc thẳng vào database của Service B qua câu lệnh SQL!"
+            },
+            {
+              "heading": "2. Cơn Ác Mộng Thực Tế: Distributed Monolith & Chi Phí Vận Hành",
+              "headingVi": "2. Cơn Ác Mộng Thực Tế: Distributed Monolith & Chi Phí Vận Hành",
+              "paragraphs": [
+                "Nếu áp dụng Microservices mà không có năng lực kiến trúc và đội ngũ DevOps tinh nhuệ, bạn sẽ tạo ra một quái vật mang tên: **Distributed Monolith (Nguyên khối phân tán)**.",
+                "Các dấu hiệu nhận biết:",
+                "1. **Chuỗi gọi đồng bộ (Sync Cascade):** Để hiển thị 1 trang chi tiết đơn hàng, Frontend gọi Gateway $\rightarrow$ Gateway gọi Order Service $\rightarrow$ Order Service gọi tiếp User, Inventory, Payment, Promotion qua HTTP. Nếu 1 service bị chậm hoặc đứt mạng, toàn bộ chuỗi sụp đổ theo dây chuyền!",
+                "2. **Mất giao dịch ACID:** Không thể dùng lệnh `JOIN` giữa 2 bảng ở 2 database khác nhau. Không thể dùng transaction truyền thống. Bạn phải học và cài đặt các mẫu phức tạp như **Saga Pattern (Choreography / Orchestration)** và chấp nhận tính nhất quán sau (Eventual Consistency).",
+                "3. **Gánh nặng DevOps & Observability:** Bạn cần Kubernetes, Istio Service Mesh, Jaeger Distributed Tracing, Prometheus, ELK Stack, Kafka Cluster... Hóa đơn đám mây (AWS/GCP) tăng từ $50/tháng lên $3.000/tháng chỉ để nuôi hạ tầng."
+              ],
+              "paragraphsVi": [
+                "Nếu áp dụng Microservices mà không có năng lực kiến trúc và đội ngũ DevOps tinh nhuệ, bạn sẽ tạo ra một quái vật mang tên: **Distributed Monolith (Nguyên khối phân tán)**.",
+                "Các dấu hiệu nhận biết:",
+                "1. **Chuỗi gọi đồng bộ (Sync Cascade):** Để hiển thị 1 trang chi tiết đơn hàng, Frontend gọi Gateway $\rightarrow$ Gateway gọi Order Service $\rightarrow$ Order Service gọi tiếp User, Inventory, Payment, Promotion qua HTTP. Nếu 1 service bị chậm hoặc đứt mạng, toàn bộ chuỗi sụp đổ theo dây chuyền!",
+                "2. **Mất giao dịch ACID:** Không thể dùng lệnh `JOIN` giữa 2 bảng ở 2 database khác nhau. Không thể dùng transaction truyền thống. Bạn phải học và cài đặt các mẫu phức tạp như **Saga Pattern (Choreography / Orchestration)** và chấp nhận tính nhất quán sau (Eventual Consistency).",
+                "3. **Gánh nặng DevOps & Observability:** Bạn cần Kubernetes, Istio Service Mesh, Jaeger Distributed Tracing, Prometheus, ELK Stack, Kafka Cluster... Hóa đơn đám mây (AWS/GCP) tăng từ $50/tháng lên $3.000/tháng chỉ để nuôi hạ tầng."
+              ],
+              "codeTitle": "Thảm họa Distributed Monolith vs Chuỗi trễ mạng",
+              "codeLanguage": "text",
+              "codeContent": "CHÙM LỖI CASCADE FAILURE TRONG DISTRIBUTED MONOLITH:\n[ Client ] ──► [ Service A (40ms) ]\n                     │ Gọi HTTP\n                     ▼\n               [ Service B (120ms) ]\n                     │ Gọi HTTP\n                     ▼\n               [ Service C (💥 CRASH/TIMEOUT 30s!) ]\n\n===> SERVICE A VÀ B TREO THEO, CẠN KIỆT THREAD POOL, CẢ HỆ THỐNG LIỆT GIƯỜNG!",
+              "calloutType": "warning",
+              "calloutTitle": "Cảnh báo đắt giá",
+              "calloutTitleVi": "Cảnh báo đắt giá",
+              "calloutText": "Microservices không làm cho hệ thống của bạn nhanh hơn. Trên thực tế, **nó làm hệ thống chậm hơn** do chi phí tuần tự hóa (Serialization), mã hóa TLS và độ trễ mạng giữa các node.",
+              "calloutTextVi": "Microservices không làm cho hệ thống của bạn nhanh hơn. Trên thực tế, **nó làm hệ thống chậm hơn** do chi phí tuần tự hóa (Serialization), mã hóa TLS và độ trễ mạng giữa các node."
+            }
+          ]
+        },
+        {
+          "id": "arch-bai-3-modular-monolith-the-sweet-spot",
+          "seriesId": "architecture-evolution-series",
+          "lessonNumber": "Bài 3",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Modular Monolith: 'Điểm Cân Bằng Vàng' (Sweet Spot) Được Các Tech Lead Ưa Chuộng Nhất",
+          "titleVi": "Modular Monolith: 'Điểm Cân Bằng Vàng' (Sweet Spot) Được Các Tech Lead Ưa Chuộng Nhất",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "18/10/2026",
+          "summary": "Tại sao Modular Monolith lại là xu hướng kiến trúc thống trị từ 2024-2026? Cách kết hợp ưu điểm tốt nhất của cả hai thế giới: Tốc độ và chi phí rẻ của Monolith cùng ranh giới cô lập Domain (DDD) chặt chẽ của Microservices. Sẵn sàng bóc tách service chỉ trong vài ngày.",
+          "summaryVi": "Tại sao Modular Monolith lại là xu hướng kiến trúc thống trị từ 2024-2026? Cách kết hợp ưu điểm tốt nhất của cả hai thế giới: Tốc độ và chi phí rẻ của Monolith cùng ranh giới cô lập Domain (DDD) chặt chẽ của Microservices. Sẵn sàng bóc tách service chỉ trong vài ngày.",
+          "tags": [
+            "Modular Monolith",
+            "Clean Architecture",
+            "DDD",
+            "MediatR",
+            "Enterprise Architecture"
+          ],
+          "sections": [
+            {
+              "heading": "1. Modular Monolith Là Gì? Điểm Cân Bằng Hoàn Hảo",
+              "headingVi": "1. Modular Monolith Là Gì? Điểm Cân Bằng Hoàn Hảo",
+              "paragraphs": [
+                "**Modular Monolith (Kiến trúc nguyên khối mô-đun hóa)** là câu trả lời xuất sắc nhất cho tình thế tiến thoái lưỡng nan giữa Monolith lộn xộn và Microservices quá đắt đỏ.",
+                "Về mặt vật lý (Deployment View): Nó vẫn chỉ là **MỘT TIẾN TRÌNH DUY NHẤT** (1 file `.dll` / 1 container Docker) deploy lên 1 máy chủ, dùng chung 1 database.",
+                "Nhưng về mặt logic (Logical View): Mã nguồn được chia thành các **Mô-đun hoàn toàn độc lập** tương ứng với các Bounded Contexts trong Domain-Driven Design (DDD):",
+                "- `Modules.Users`",
+                "- `Modules.Orders`",
+                "- `Modules.Payments`",
+                "Mỗi Module có DB Schema riêng (`users.Users`, `orders.Orders`), Entity riêng và Dependency Injection container riêng."
+              ],
+              "paragraphsVi": [
+                "**Modular Monolith (Kiến trúc nguyên khối mô-đun hóa)** là câu trả lời xuất sắc nhất cho tình thế tiến thoái lưỡng nan giữa Monolith lộn xộn và Microservices quá đắt đỏ.",
+                "Về mặt vật lý (Deployment View): Nó vẫn chỉ là **MỘT TIẾN TRÌNH DUY NHẤT** (1 file `.dll` / 1 container Docker) deploy lên 1 máy chủ, dùng chung 1 database.",
+                "Nhưng về mặt logic (Logical View): Mã nguồn được chia thành các **Mô-đun hoàn toàn độc lập** tương ứng với các Bounded Contexts trong Domain-Driven Design (DDD):",
+                "- `Modules.Users`",
+                "- `Modules.Orders`",
+                "- `Modules.Payments`",
+                "Mỗi Module có DB Schema riêng (`users.Users`, `orders.Orders`), Entity riêng và Dependency Injection container riêng."
+              ],
+              "codeTitle": "Kiến trúc Modular Monolith: Cô lập module bên trong 1 process",
+              "codeLanguage": "text",
+              "codeContent": "┌────────────────────────────────────────────────────────────────────────┐\n│ MODULAR MONOLITH APPLICATION (Single Deployable Unit)                  │\n│                                                                        │\n│ ┌────────────────────────┐         ┌────────────────────────┐          │\n│ │ MODULE: USERS          │         │ MODULE: ORDERS         │          │\n│ │ • Internal Logic       │         │ • Internal Logic       │          │\n│ │ • Private Entities     │         │ • Private Entities     │          │\n│ │ • Schema: users.*      │         │ • Schema: orders.*     │          │\n│ └───────────┬────────────┘         └───────────┬────────────┘          │\n│             │                                  │                       │\n│             ▼                                  ▼                       │\n│    [ Public Interface ]               [ Public Interface ]             │\n│             ▲                                  ▲                       │\n│             └─────────── In-Memory Bus ────────┘                       │\n│                 (MediatR / Domain Events: Nano-giây!)                  │\n└───────────────────────────────────┬────────────────────────────────────┘\n                                    ▼\n                  [ Single PostgreSQL / SQL Server DB ]\n                  ├─ Schema: users (Chỉ Module Users được sờ vào)\n                  └─ Schema: orders (Chỉ Module Orders được sờ vào)",
+              "calloutType": "tip",
+              "calloutTitle": "Quy tắc cấm kỵ cốt lõi",
+              "calloutTitleVi": "Quy tắc cấm kỵ cốt lõi",
+              "calloutText": "Module Orders **tuyệt đối không được reference** tới project nội bộ hay gọi DbContext của Module Users. Nếu Orders cần thông tin User, nó chỉ được phép gọi qua `IUserModuleApi` hoặc lắng nghe sự kiện in-memory `UserCreatedEvent` qua MediatR.",
+              "calloutTextVi": "Module Orders **tuyệt đối không được reference** tới project nội bộ hay gọi DbContext của Module Users. Nếu Orders cần thông tin User, nó chỉ được phép gọi qua `IUserModuleApi` hoặc lắng nghe sự kiện in-memory `UserCreatedEvent` qua MediatR."
+            },
+            {
+              "heading": "2. Tại Sao Modular Monolith Là Sự Chuẩn Bị Tốt Nhất Cho Microservices?",
+              "headingVi": "2. Tại Sao Modular Monolith Là Sự Chuẩn Bị Tốt Nhất Cho Microservices?",
+              "paragraphs": [
+                "Nếu bạn bắt đầu bằng Modular Monolith, bạn hưởng trọn vẹn: Tốc độ dev siêu nhanh, latency mạng bằng 0, chi phí server cực rẻ ($10 VPS).",
+                "Đến một ngày doanh nghiệp của bạn phát triển bùng nổ, tính năng `Modules.Payments` chịu tải quá lớn cần mở rộng riêng:",
+                "Vì Module Payments đã có Database Schema riêng, code riêng và chỉ giao tiếp qua Events/Interface, **bạn chỉ mất vỏn vẹn 2-3 ngày để 'bứng' project đó ra thành một Microservice độc lập trên container riêng**!",
+                "Bạn không hề phải đập đi xây lại hệ thống. Đó chính là lý do các công ty công nghệ thực tế ngày nay đều chọn Modular Monolith làm kiến trúc mặc định."
+              ],
+              "paragraphsVi": [
+                "Nếu bạn bắt đầu bằng Modular Monolith, bạn hưởng trọn vẹn: Tốc độ dev siêu nhanh, latency mạng bằng 0, chi phí server cực rẻ ($10 VPS).",
+                "Đến một ngày doanh nghiệp của bạn phát triển bùng nổ, tính năng `Modules.Payments` chịu tải quá lớn cần mở rộng riêng:",
+                "Vì Module Payments đã có Database Schema riêng, code riêng và chỉ giao tiếp qua Events/Interface, **bạn chỉ mất vỏn vẹn 2-3 ngày để 'bứng' project đó ra thành một Microservice độc lập trên container riêng**!",
+                "Bạn không hề phải đập đi xây lại hệ thống. Đó chính là lý do các công ty công nghệ thực tế ngày nay đều chọn Modular Monolith làm kiến trúc mặc định."
+              ],
+              "codeTitle": "Đoạn code giao tiếp Module qua In-Memory Mediator trong C#",
+              "codeLanguage": "csharp",
+              "codeContent": "// Module Orders gửi yêu cầu xác thực sang Module Users mà KHÔNG cần biết Users cài đặt ra sao\npublic class CreateOrderHandler : IRequestHandler<CreateOrderCommand, OrderResult>\n{\n    private readonly IUserModuleApi _userModuleApi;\n    private readonly IMediator _mediator;\n\n    public CreateOrderHandler(IUserModuleApi userModuleApi, IMediator mediator)\n    {\n        _userModuleApi = userModuleApi;\n        _mediator = mediator;\n    }\n\n    public async Task<OrderResult> Handle(CreateOrderCommand request, CancellationToken ct)\n    {\n        // 1. Gọi qua Interface công khai (In-memory, tốc độ nano-giây, 0 network latency!)\n        var user = await _userModuleApi.GetUserSummaryAsync(request.UserId, ct);\n        if (user == null) throw new NotFoundException(\"User not found\");\n\n        // 2. Tạo đơn hàng và bắn sự kiện In-Memory Event\n        var order = new Order(request.UserId, request.Amount);\n        await _mediator.Publish(new OrderPlacedDomainEvent(order.Id), ct);\n\n        return new OrderResult(order.Id, \"Success\");\n    }\n}",
+              "calloutType": "info",
+              "calloutTitle": "Bảo vệ kiến trúc bằng ArchUnit",
+              "calloutTitleVi": "Bảo vệ kiến trúc bằng ArchUnit",
+              "calloutText": "Bạn có thể viết các bài test kiểm tra kiến trúc tự động bằng thư viện **NetArchTest** (trong .NET) hoặc ArchUnit. Nếu ai đó vô tình viết code để Module A gọi lén vào ruột của Module B, bài test sẽ báo lỗi đỏ ngay trên CI/CD!",
+              "calloutTextVi": "Bạn có thể viết các bài test kiểm tra kiến trúc tự động bằng thư viện **NetArchTest** (trong .NET) hoặc ArchUnit. Nếu ai đó vô tình viết code để Module A gọi lén vào ruột của Module B, bài test sẽ báo lỗi đỏ ngay trên CI/CD!"
+            }
+          ]
+        },
+        {
+          "id": "arch-bai-4-micro-frontend-mfe-deep-dive",
+          "seriesId": "architecture-evolution-series",
+          "lessonNumber": "Bài 4",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Micro-Frontend (MFE): Đưa Tư Duy Microservices Lên Tầng Giao Diện Người Dùng",
+          "titleVi": "Micro-Frontend (MFE): Đưa Tư Duy Microservices Lên Tầng Giao Diện Người Dùng",
+          "readingTime": "11 phút đọc",
+          "publishedDate": "18/10/2026",
+          "summary": "Khám phá kiến trúc chia nhỏ Single Page Application (SPA). So sánh 4 giải pháp: Module Federation (Webpack/Vite), Single-spa, Web Components và iFrames. Cách các team Checkout, Catalog, Profile phát triển và deploy frontend độc lập mà không dẫm chân lên nhau.",
+          "summaryVi": "Khám phá kiến trúc chia nhỏ Single Page Application (SPA). So sánh 4 giải pháp: Module Federation (Webpack/Vite), Single-spa, Web Components và iFrames. Cách các team Checkout, Catalog, Profile phát triển và deploy frontend độc lập mà không dẫm chân lên nhau.",
+          "tags": [
+            "Micro Frontend",
+            "Module Federation",
+            "Webpack",
+            "Single-spa",
+            "Frontend Architecture"
+          ],
+          "sections": [
+            {
+              "heading": "1. Tại Sao Lại Cần Micro-Frontend?",
+              "headingVi": "1. Tại Sao Lại Cần Micro-Frontend?",
+              "paragraphs": [
+                "Khi backend đã chia tách thành công theo Bounded Contexts, nhưng tầng Frontend vẫn là một cục **Monolithic SPA khổng lồ** (500.000 dòng React/Vue code, bundle size 15 MB).",
+                "Mỗi khi Team Checkout muốn sửa 1 cái nút bấm, họ phải build lại toàn bộ ứng dụng web, chạy lại 1.000 bài test của các team khác và nguy cơ làm vỡ trang Home của Team Marketing.",
+                "**Micro-Frontend (MFE)** giải quyết bài toán này bằng cách chia ứng dụng web thành các mảnh nhỏ độc lập:"
+              ],
+              "paragraphsVi": [
+                "Khi backend đã chia tách thành công theo Bounded Contexts, nhưng tầng Frontend vẫn là một cục **Monolithic SPA khổng lồ** (500.000 dòng React/Vue code, bundle size 15 MB).",
+                "Mỗi khi Team Checkout muốn sửa 1 cái nút bấm, họ phải build lại toàn bộ ứng dụng web, chạy lại 1.000 bài test của các team khác và nguy cơ làm vỡ trang Home của Team Marketing.",
+                "**Micro-Frontend (MFE)** giải quyết bài toán này bằng cách chia ứng dụng web thành các mảnh nhỏ độc lập:"
+              ],
+              "codeTitle": "Mô hình trang web tích hợp nhiều Micro-Frontend",
+              "codeLanguage": "text",
+              "codeContent": "┌────────────────────────────────────────────────────────────────────────┐\n│ HOST APPLICATION (Shell / Container App - Team Core Infra)             │\n│ • Quản lý Navigation, Auth Token, Global State, Layout                │\n│                                                                        │\n│ ┌────────────────────────────────────────────────────────────────────┐ │\n│ │ [ Header & Search MFE ] (Team Search - React 19)                   │ │\n│ └────────────────────────────────────────────────────────────────────┘ │\n│                                                                        │\n│ ┌──────────────────────────────────┐  ┌──────────────────────────────┐ │\n│ │ [ Product Catalog MFE ]          │  │ [ Mini-Cart & Checkout MFE ] │ │\n│ │ Team Catalog - Vue 3 / Svelte    │  │ Team Payments - React 18     │ │\n│ └──────────────────────────────────┘  └──────────────────────────────┘ │\n│                                                                        │\n│ ┌────────────────────────────────────────────────────────────────────┐ │\n│ │ [ Recommendations MFE ] (Team AI - Vanilla Web Components)          │ │\n│ └────────────────────────────────────────────────────────────────────┘ │\n└────────────────────────────────────────────────────────────────────────┘",
+              "calloutType": "info",
+              "calloutTitle": "Ưu điểm của MFE",
+              "calloutTitleVi": "Ưu điểm của MFE",
+              "calloutText": "Team Checkout có thể tự deploy phiên bản mới của nút mua hàng lên Production lúc 2h chiều mà không cần báo trước cho Team Catalog hay chờ build lại toàn bộ website.",
+              "calloutTextVi": "Team Checkout có thể tự deploy phiên bản mới của nút mua hàng lên Production lúc 2h chiều mà không cần báo trước cho Team Catalog hay chờ build lại toàn bộ website."
+            },
+            {
+              "heading": "2. Các Giải Pháp Kỹ Thuật & Cạm Bẫy Phải Trả Giá Của MFE",
+              "headingVi": "2. Các Giải Pháp Kỹ Thuật & Cạm Bẫy Phải Trả Giá Của MFE",
+              "paragraphs": [
+                "Hiện nay có 4 cách tiếp cận phổ biến để xây dựng Micro-Frontend:",
+                "1. **Module Federation (Webpack 5 / Vite):** Chuẩn phổ biến nhất hiện nay. Cho phép nạp dynamically các component từ máy chủ từ xa vào ứng dụng Shell lúc runtime, hỗ trợ chia sẻ thư viện dùng chung (như React, Lodash) để tránh tải trùng lặp.",
+                "2. **Single-spa / qiankun:** Bộ khung meta-routing, mount và unmount các ứng dụng con độc lập dựa trên đường dẫn URL (ví dụ: `/products` nạp Vue app, `/orders` nạp React app).",
+                "3. **Web Components (Custom Elements):** Tiêu chuẩn chuẩn hóa của trình duyệt, đóng gói Shadow DOM độc lập CSS.",
+                "4. **iFrames (Cổ điển):** Cách ly 100% nhưng trải nghiệm UX kém, khó đồng bộ state và SEO kém.",
+                "**CÁI GIÁ ĐẮT ĐỎ CỦA MFE:**",
+                "- **Phình to dung lượng tải:** Nếu không cấu hình Shared Dependencies chuẩn, người dùng phải tải 3 phiên bản React và 2 thư viện UI khác nhau (Web chậm, ngốn 4G).",
+                "- **CSS Tràn Lề (Style Leaking):** CSS của team này vô tình ghi đè font chữ hoặc màu sắc của team khác nếu không dùng CSS Modules hoặc Shadow DOM.",
+                "- **Trải nghiệm người dùng chắp vá:** Mỗi team thiết kế một kiểu nút bấm, một animation khác nhau làm giao diện thiếu tính đồng bộ."
+              ],
+              "paragraphsVi": [
+                "Hiện nay có 4 cách tiếp cận phổ biến để xây dựng Micro-Frontend:",
+                "1. **Module Federation (Webpack 5 / Vite):** Chuẩn phổ biến nhất hiện nay. Cho phép nạp dynamically các component từ máy chủ từ xa vào ứng dụng Shell lúc runtime, hỗ trợ chia sẻ thư viện dùng chung (như React, Lodash) để tránh tải trùng lặp.",
+                "2. **Single-spa / qiankun:** Bộ khung meta-routing, mount và unmount các ứng dụng con độc lập dựa trên đường dẫn URL (ví dụ: `/products` nạp Vue app, `/orders` nạp React app).",
+                "3. **Web Components (Custom Elements):** Tiêu chuẩn chuẩn hóa của trình duyệt, đóng gói Shadow DOM độc lập CSS.",
+                "4. **iFrames (Cổ điển):** Cách ly 100% nhưng trải nghiệm UX kém, khó đồng bộ state và SEO kém.",
+                "**CÁI GIÁ ĐẮT ĐỎ CỦA MFE:**",
+                "- **Phình to dung lượng tải:** Nếu không cấu hình Shared Dependencies chuẩn, người dùng phải tải 3 phiên bản React và 2 thư viện UI khác nhau (Web chậm, ngốn 4G).",
+                "- **CSS Tràn Lề (Style Leaking):** CSS của team này vô tình ghi đè font chữ hoặc màu sắc của team khác nếu không dùng CSS Modules hoặc Shadow DOM.",
+                "- **Trải nghiệm người dùng chắp vá:** Mỗi team thiết kế một kiểu nút bấm, một animation khác nhau làm giao diện thiếu tính đồng bộ."
+              ],
+              "codeTitle": "Cấu hình Module Federation trong Webpack 5",
+              "codeLanguage": "javascript",
+              "codeContent": "// Host Shell webpack.config.js\nnew ModuleFederationPlugin({\n  name: 'shell_app',\n  remotes: {\n    // Nạp component Checkout từ máy chủ từ xa lúc runtime\n    checkoutApp: 'checkoutApp@https://checkout.mycdn.com/remoteEntry.js',\n  },\n  shared: {\n    react: { singleton: true, requiredVersion: '^18.0.0' },\n    'react-dom': { singleton: true, requiredVersion: '^18.0.0' },\n  },\n});",
+              "calloutType": "warning",
+              "calloutTitle": "Khi nào KHÔNG NÊN dùng Micro-Frontend?",
+              "calloutTitleVi": "Khi nào KHÔNG NÊN dùng Micro-Frontend?",
+              "calloutText": "Nếu đội ngũ frontend của bạn chỉ có dưới 15 người và chỉ phát triển 1 sản phẩm duy nhất, **tuyệt đối đừng dùng Micro-Frontend**! Độ phức tạp trong việc debug và đồng bộ design system sẽ làm giảm 50% năng suất làm việc của cả team.",
+              "calloutTextVi": "Nếu đội ngũ frontend của bạn chỉ có dưới 15 người và chỉ phát triển 1 sản phẩm duy nhất, **tuyệt đối đừng dùng Micro-Frontend**! Độ phức tạp trong việc debug và đồng bộ design system sẽ làm giảm 50% năng suất làm việc của cả team."
+            }
+          ]
+        },
+        {
+          "id": "arch-bai-5-decision-matrix-strangler-fig-migration",
+          "seriesId": "architecture-evolution-series",
+          "lessonNumber": "Bài 5",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
+          "title": "Ma Trận Ra Quyết Định Kiến Trúc & Chiến Lược Di Trú (Strangler Fig Pattern): Đừng Vội Microservices Khi Chưa Đủ 50 Kỹ Sư",
+          "titleVi": "Ma Trận Ra Quyết Định Kiến Trúc & Chiến Lược Di Trú (Strangler Fig Pattern): Đừng Vội Microservices Khi Chưa Đủ 50 Kỹ Sư",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "18/10/2026",
+          "summary": "Bảng ma trận so sánh toàn diện 4 mô hình: Monolith vs Modular Monolith vs Microservices vs Micro-frontend. Chiến lược di trú 'Cây đa siết cổ' (Strangler Fig Pattern) từng bước thay thế Monolith cũ mà không có 1 giây downtime.",
+          "summaryVi": "Bảng ma trận so sánh toàn diện 4 mô hình: Monolith vs Modular Monolith vs Microservices vs Micro-frontend. Chiến lược di trú 'Cây đa siết cổ' (Strangler Fig Pattern) từng bước thay thế Monolith cũ mà không có 1 giây downtime.",
+          "tags": [
+            "Strangler Fig Pattern",
+            "Migration",
+            "System Design",
+            "Decision Matrix",
+            "Tech Lead"
+          ],
+          "sections": [
+            {
+              "heading": "1. Bảng Ma Trận Ra Quyết Định Kiến Trúc Toàn Diện",
+              "headingVi": "1. Bảng Ma Trận Ra Quyết Định Kiến Trúc Toàn Diện",
+              "paragraphs": [
+                "Không có kiến trúc nào là 'tốt nhất', chỉ có kiến trúc **phù hợp nhất với quy mô đội ngũ, ngân sách và bài toán kinh doanh** tại từng thời điểm:",
+                "Dưới đây là bảng ma trận tổng kết giúp các Tech Lead và Solution Architect đưa ra quyết định chính xác:"
+              ],
+              "paragraphsVi": [
+                "Không có kiến trúc nào là 'tốt nhất', chỉ có kiến trúc **phù hợp nhất với quy mô đội ngũ, ngân sách và bài toán kinh doanh** tại từng thời điểm:",
+                "Dưới đây là bảng ma trận tổng kết giúp các Tech Lead và Solution Architect đưa ra quyết định chính xác:"
+              ],
+              "codeTitle": "Bảng so sánh 4 mô hình kiến trúc phần mềm",
+              "codeLanguage": "text",
+              "codeContent": "┌──────────────────────┬───────────────────────┬───────────────────────┬───────────────────────┬───────────────────────┐\n│ Tiêu Chí             │ Classic Monolith      │ Modular Monolith      │ Microservices         │ Micro-Frontend        │\n├──────────────────────┼───────────────────────┼───────────────────────┼───────────────────────┼───────────────────────┤\n│ Quy mô Team tối ưu   │ 1 - 15 kỹ sư          │ 10 - 50 kỹ sư         │ > 50 - 200 kỹ sư      │ > 30 kỹ sư frontend   │\n│ Chi phí hạ tầng      │ 🟢 Cực thấp ($5-50/th)│ 🟢 Rất thấp ($20-100) │ 🔴 Rất cao ($1k-10k)  │ 🟡 Trung bình (CDN/S3)│\n│ Độ phức tạp DevOps   │ 🟢 Rất đơn giản       │ 🟢 Đơn giản (1 deploy)│ 🔴 Cực kỳ phức tạp(K8s│ 🟡 Khá phức tạp       │\n│ Network Latency      │ 0 ms (In-memory)      │ 0 ms (In-memory)      │ 5 - 50 ms (Mạng chập) │ N/A (Client-side)     │\n│ Tính nhất quán dữ liệu│ ⭐ ACID Transactions  │ ⭐ ACID Transactions  │ ⚠️ Eventual Consist   │ N/A (State share)     │\n│ Tốc độ ra mắt MVP    │ 🚀 Nhanh nhất         │ ⚡ Nhanh              │ 🐌 Chậm (Setup infra) │ 🐌 Chậm ban đầu       │\n│ Khả năng scale độc lập│ ⚠️ Scale cả cụm       │ ⚠️ Scale cả cụm       │ ⭐ Scale từng pod nhỏ │ ⭐ Scale từng app     │\n└──────────────────────┴───────────────────────┴───────────────────────┴───────────────────────┴───────────────────────┘",
+              "calloutType": "tip",
+              "calloutTitle": "Lời khuyên vàng cho khởi nghiệp",
+              "calloutTitleVi": "Lời khuyên vàng cho khởi nghiệp",
+              "calloutText": "**Hãy luôn bắt đầu với Modular Monolith!** Nó cho phép bạn ra mắt sản phẩm nhanh chóng với chi phí tối thiểu, nhưng giữ cho mã nguồn luôn sạch sẽ để sẵn sàng tách thành Microservices khi công ty gọi vốn thành công hoặc quy mô team vượt mốc 50 người.",
+              "calloutTextVi": "**Hãy luôn bắt đầu với Modular Monolith!** Nó cho phép bạn ra mắt sản phẩm nhanh chóng với chi phí tối thiểu, nhưng giữ cho mã nguồn luôn sạch sẽ để sẵn sàng tách thành Microservices khi công ty gọi vốn thành công hoặc quy mô team vượt mốc 50 người."
+            },
+            {
+              "heading": "2. Chiến Lược Di Trú: Strangler Fig Pattern (Cây Đa Siết Cổ)",
+              "headingVi": "2. Chiến Lược Di Trú: Strangler Fig Pattern (Cây Đa Siết Cổ)",
+              "paragraphs": [
+                "Nếu bạn đang phải thừa kế một hệ thống Monolith cũ kỹ hàng triệu dòng code, **tuyệt đối không bao giờ chọn phương án 'Đập đi viết lại từ đầu' (The Big Bang Rewrite)**! 80% các dự án đập đi viết lại đều thất bại, cạn kiệt ngân sách hoặc trễ hạn hàng năm trời.",
+                "Chiến lược di trú được Martin Fowler đề xuất là **Strangler Fig Pattern (Cây đa siết cổ)**:",
+                "Tương tự như loài dây leo siết quanh thân cây cổ thụ, bạn đặt một **API Gateway / Reverse Proxy (YARP, Nginx)** ở phía trước Monolith:",
+                "1. Mọi traffic ban đầu vẫn đi 100% vào Monolith.",
+                "2. Khi phát triển tính năng mới (hoặc bóc tách module Notification), bạn dựng service mới bên cạnh.",
+                "3. Cấu hình Reverse Proxy chuyển hướng đường dẫn `/api/v1/notifications` sang Service mới, trong khi các API còn lại vẫn trỏ vào Monolith.",
+                "4. Lặp lại quy trình bóc tách từng phần cho đến khi Monolith cũ teo tóp dần và biến mất hoàn toàn!",
+                "Hệ thống vận hành liên tục 24/7 mà người dùng không hề nhận ra sự thay đổi bên dưới."
+              ],
+              "paragraphsVi": [
+                "Nếu bạn đang phải thừa kế một hệ thống Monolith cũ kỹ hàng triệu dòng code, **tuyệt đối không bao giờ chọn phương án 'Đập đi viết lại từ đầu' (The Big Bang Rewrite)**! 80% các dự án đập đi viết lại đều thất bại, cạn kiệt ngân sách hoặc trễ hạn hàng năm trời.",
+                "Chiến lược di trú được Martin Fowler đề xuất là **Strangler Fig Pattern (Cây đa siết cổ)**:",
+                "Tương tự như loài dây leo siết quanh thân cây cổ thụ, bạn đặt một **API Gateway / Reverse Proxy (YARP, Nginx)** ở phía trước Monolith:",
+                "1. Mọi traffic ban đầu vẫn đi 100% vào Monolith.",
+                "2. Khi phát triển tính năng mới (hoặc bóc tách module Notification), bạn dựng service mới bên cạnh.",
+                "3. Cấu hình Reverse Proxy chuyển hướng đường dẫn `/api/v1/notifications` sang Service mới, trong khi các API còn lại vẫn trỏ vào Monolith.",
+                "4. Lặp lại quy trình bóc tách từng phần cho đến khi Monolith cũ teo tóp dần và biến mất hoàn toàn!",
+                "Hệ thống vận hành liên tục 24/7 mà người dùng không hề nhận ra sự thay đổi bên dưới."
+              ],
+              "codeTitle": "Sơ đồ di trú Strangler Fig qua API Gateway",
+              "codeLanguage": "text",
+              "codeContent": "BƯỚC 1: ĐẶT GATEWAY PHÍA TRƯỚC\n[ Client ] ──► [ API Gateway / YARP ] ──(100% Traffic)──► [ Cụm Monolith Cũ ]\n\nBƯỚC 2: BÓC TÁCH TÍNH NĂNG ĐẦU TIÊN (VD: NOTIFICATION)\n[ Client ] ──► [ API Gateway / YARP ]\n                      ├─ /api/notifications ──► [ ✨ New Notification Service ]\n                      └─ /api/* (Tất cả còn lại) ──► [ Cụm Monolith Cũ ]\n\nBƯỚC 3: SAU 6 THÁNG (Monolith teo tóp, hệ thống hoàn toàn hiện đại!)\n[ Client ] ──► [ API Gateway ] ──► [ Service Auth ] | [ Service Order ] | [ Service Payment ]\n(Monolith cũ chính thức ngừng hoạt động và xóa bỏ!)",
+              "calloutType": "info",
+              "calloutTitle": "Tổng kết toàn bộ series",
+              "calloutTitleVi": "Tổng kết toàn bộ series",
+              "calloutText": "Kiến trúc tốt không phải là kiến trúc thời thượng nhất, mà là kiến trúc giúp doanh nghiệp của bạn tồn tại, phát triển và thích ứng linh hoạt trước sự thay đổi của thị trường!",
+              "calloutTextVi": "Kiến trúc tốt không phải là kiến trúc thời thượng nhất, mà là kiến trúc giúp doanh nghiệp của bạn tồn tại, phát triển và thích ứng linh hoạt trước sự thay đổi của thị trường!"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
