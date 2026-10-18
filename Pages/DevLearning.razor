@@ -31,6 +31,12 @@
                 <span class="dev-brand-pill outline">
                     LỘ TRÌNH TỪ CƠ BẢN ĐẾN NÂNG CAO
                 </span>
+                <button type="button" 
+                        class="dev-brand-pill" 
+                        style="cursor: pointer; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: #f59e0b;"
+                        @onclick="() => ShowNewlyAddedTab()">
+                    <i class="bi bi-sparkles"></i> @(CultureService.IsEnglish ? $"{NewlyAddedCount} Newly Added" : $"{NewlyAddedCount} Bài Mới Thêm")
+                </button>
                 @if (_bookmarkedIds.Count > 0)
                 {
                     <button type="button" 
@@ -38,6 +44,15 @@
                             style="cursor: pointer; background: rgba(250, 204, 21, 0.15); color: #facc15; border-color: #facc15;"
                             @onclick="() => ToggleBookmarkFilter()">
                         <i class="bi bi-bookmark-star-fill"></i> @(_showOnlyBookmarks ? (CultureService.IsEnglish ? "Show All Articles" : "Hiện Tất Cả Bài Viết") : $"{_bookmarkedIds.Count} {(CultureService.IsEnglish ? "Saved Articles" : "Bài Đã Lưu")}")
+                    </button>
+                }
+                @if (_recentArticleIds.Count > 0)
+                {
+                    <button type="button" 
+                            class="dev-brand-pill" 
+                            style="cursor: pointer; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: #38bdf8;"
+                            @onclick="() => ToggleRecentReadFilter()">
+                        <i class="bi bi-clock-history"></i> @(_showOnlyRecentRead ? (CultureService.IsEnglish ? "Show All Series" : "Hiện Tất Cả Chuyên Đề") : $"{_recentArticleIds.Count} {(CultureService.IsEnglish ? "Recently Read" : "Đã Đọc Gần Đây")}")
                     </button>
                 }
             </div>
@@ -67,10 +82,23 @@
                         <span class="dev-ticker-lbl">Lộ Trình Chuẩn</span>
                     </div>
                     <div class="dev-ticker-sep"></div>
+                    <div class="dev-ticker-item highlight" style="cursor: pointer;" @onclick="() => ShowNewlyAddedTab()" title="Xem tất cả bài viết mới thêm gần đây">
+                        <span class="dev-ticker-val" style="color: #f59e0b;"><i class="bi bi-sparkles"></i> @NewlyAddedCount</span>
+                        <span class="dev-ticker-lbl">Mới Thêm Gần Đây</span>
+                    </div>
+                    <div class="dev-ticker-sep"></div>
                     <div class="dev-ticker-item">
                         <span class="dev-ticker-val">@_bookmarkedIds.Count</span>
                         <span class="dev-ticker-lbl">Bài Đã Lưu</span>
                     </div>
+                    @if (_recentArticleIds.Count > 0)
+                    {
+                        <div class="dev-ticker-sep"></div>
+                        <div class="dev-ticker-item" style="cursor: pointer;" @onclick="() => ToggleRecentReadFilter()" title="Xem danh sách bài viết đã đọc gần đây">
+                            <span class="dev-ticker-val" style="color: #38bdf8;">@_recentArticleIds.Count</span>
+                            <span class="dev-ticker-lbl">Đã Đọc Gần Đây</span>
+                        </div>
+                    }
                 </div>
             }
         </header>
@@ -374,12 +402,46 @@
                                     <div class="dev-nav-btn-placeholder"></div>
                                 }
                             </footer>
+
+                            <!-- Recommended & Recent Articles Section -->
+                            <div class="dev-reader-recent-box">
+                                <div class="dev-reader-recent-header">
+                                    <div class="dev-reader-recent-title">
+                                        <i class="bi bi-fire text-warning"></i>
+                                        <span>@(CultureService.IsEnglish ? "Recent Articles & Next Reads" : "Bài Viết Gần Đây & Gợi Ý Đọc Tiếp")</span>
+                                    </div>
+                                    <button type="button" class="dev-reader-see-all-btn" @onclick="BackToCatalog">
+                                        <span>@(CultureService.IsEnglish ? "All Series" : "Tất Cả Chuyên Đề")</span>
+                                        <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                                <div class="dev-reader-recent-grid">
+                                    @foreach (var recArt in GetRecommendedRecentArticles(3))
+                                    {
+                                        var rSeries = GetParentSeries(recArt.SeriesId);
+                                        var sColor = rSeries?.Color ?? "#0284c7";
+                                        <div class="dev-reader-rec-card" style="--rec-accent: @sColor;" @onclick="() => ReadArticle(recArt)">
+                                            <div class="dev-reader-rec-series">
+                                                <i class="bi @(rSeries?.Icon ?? "bi-box-seam")"></i>
+                                                <span>@(CultureService.IsEnglish ? rSeries?.Title : rSeries?.TitleVi)</span>
+                                            </div>
+                                            <h5 class="dev-reader-rec-title">
+                                                @(CultureService.IsEnglish ? recArt.Title : recArt.TitleVi)
+                                            </h5>
+                                            <div class="dev-reader-rec-footer">
+                                                <span class="dev-reader-rec-level @GetLevelCssClass(recArt.LevelOrder)">@recArt.LessonNumber · @recArt.LevelVi</span>
+                                                <span class="dev-reader-rec-action">@(CultureService.IsEnglish ? "Read" : "Đọc tiếp") <i class="bi bi-arrow-right"></i></span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
                         </article>
                     </main>
                 </div>
             </div>
         }
-        else if (_viewMode == ViewMode.Feed && (_selectedSeries != null || _showOnlyBookmarks))
+        else if (_viewMode == ViewMode.Feed && (_selectedSeries != null || _showOnlyBookmarks || _showOnlyRecentRead))
         {
             <!-- ========================================================================= -->
             <!-- MODE 1: BLOG POSTS LIST / FEED VIEW (Danh Sách Bài Viết Theo Chuyên Đề)   -->
@@ -398,6 +460,10 @@
                             {
                                 @(CultureService.IsEnglish ? "Saved Articles" : "Bài Viết Đã Lưu")
                             }
+                            else if (_showOnlyRecentRead)
+                            {
+                                @(CultureService.IsEnglish ? "Recently Read Articles" : "Bài Viết Đã Đọc Gần Đây")
+                            }
                             else
                             {
                                 @(CultureService.IsEnglish ? _selectedSeries?.Title : _selectedSeries?.TitleVi)
@@ -405,7 +471,7 @@
                         </span>
                     </div>
 
-                    @if (!_showOnlyBookmarks && _data?.SeriesList != null)
+                    @if (!_showOnlyBookmarks && !_showOnlyRecentRead && _data?.SeriesList != null)
                     {
                         <div class="dev-feed-switcher-wrap">
                             <label class="dev-feed-switcher-label">
@@ -423,14 +489,14 @@
                 </div>
 
                 <!-- Chuyên Đề Header Card -->
-                <div class="dev-feed-series-banner" style="--banner-accent: @(_selectedSeries?.Color ?? "#0284c7");">
+                <div class="dev-feed-series-banner" style="--banner-accent: @(_showOnlyBookmarks ? "#facc15" : (_showOnlyRecentRead ? "#38bdf8" : (_selectedSeries?.Color ?? "#0284c7")));">
                     <div class="dev-feed-banner-content">
                         <div class="dev-feed-banner-badge-row">
                             <div class="dev-feed-banner-badge">
-                                <i class="bi @(_selectedSeries?.Icon ?? "bi-box-seam-fill")"></i>
-                                <span>@(_showOnlyBookmarks ? (CultureService.IsEnglish ? "Bookmarks" : "Bộ Sưu Tập") : (_selectedSeries?.Badge ?? "Chuyên Đề"))</span>
+                                <i class="bi @(_showOnlyBookmarks ? "bi-bookmark-star-fill" : (_showOnlyRecentRead ? "bi-clock-history" : (_selectedSeries?.Icon ?? "bi-box-seam-fill")))"></i>
+                                <span>@(_showOnlyBookmarks ? (CultureService.IsEnglish ? "Bookmarks" : "Bộ Sưu Tập") : (_showOnlyRecentRead ? (CultureService.IsEnglish ? "Reading History" : "Lịch Sử Đọc") : (_selectedSeries?.Badge ?? "Chuyên Đề")))</span>
                             </div>
-                            @if (_selectedSeries != null && !_showOnlyBookmarks)
+                            @if (_selectedSeries != null && !_showOnlyBookmarks && !_showOnlyRecentRead)
                             {
                                 <button type="button" 
                                         class="dev-share-btn @(_copiedSeriesUrl ? "copied" : "")"
@@ -440,11 +506,26 @@
                                     <span>@(_copiedSeriesUrl ? (CultureService.IsEnglish ? "Copied Series Link!" : "Đã Chép Link Chuyên Đề!") : (CultureService.IsEnglish ? "Share Series" : "Chia Sẻ Chuyên Đề"))</span>
                                 </button>
                             }
+                            @if (_showOnlyRecentRead)
+                            {
+                                <button type="button" 
+                                        class="dev-share-btn"
+                                        style="border-color: rgba(239, 68, 68, 0.4); color: #ef4444;"
+                                        title="Xóa toàn bộ lịch sử đọc"
+                                        @onclick="ClearRecentHistory">
+                                    <i class="bi bi-trash3"></i>
+                                    <span>@(CultureService.IsEnglish ? "Clear History" : "Xóa Lịch Sử Đọc")</span>
+                                </button>
+                            }
                         </div>
                         <h2 class="dev-feed-series-title">
                             @if (_showOnlyBookmarks)
                             {
                                 @(CultureService.IsEnglish ? "Saved Articles Collection" : "Bộ Sưu Tập Bài Viết Đã Lưu")
+                            }
+                            else if (_showOnlyRecentRead)
+                            {
+                                @(CultureService.IsEnglish ? "Recently Read Articles" : "Lịch Sử Các Bài Viết Đã Đọc Gần Đây")
                             }
                             else
                             {
@@ -455,6 +536,10 @@
                             @if (_showOnlyBookmarks)
                             {
                                 @(CultureService.IsEnglish ? "Here are all the technical lessons you bookmarked for offline review and quick practice." : "Tổng hợp toàn bộ các bài viết kỹ thuật bạn đã đánh dấu lưu lại để tiện tra cứu và thực hành.")
+                            }
+                            else if (_showOnlyRecentRead)
+                            {
+                                @(CultureService.IsEnglish ? "Review technical articles you have read recently or pick up right where you left off." : "Xem lại các bài viết kỹ thuật bạn đã đọc gần đây hoặc tiếp tục nội dung đang theo dõi.")
                             }
                             else
                             {
@@ -471,7 +556,7 @@
                                 class="dev-level-chip @(_selectedLevelFilter == null ? "active" : "")"
                                 @onclick="() => _selectedLevelFilter = null">
                             <span>Tất Cả Bài Viết</span>
-                            <span class="dev-level-count">@(_showOnlyBookmarks ? _bookmarkedIds.Count : (_selectedSeries?.Articles.Count ?? 0))</span>
+                            <span class="dev-level-count">@(_showOnlyBookmarks ? _bookmarkedIds.Count : (_showOnlyRecentRead ? _recentArticleIds.Count : (_selectedSeries?.Articles.Count ?? 0)))</span>
                         </button>
                         <button type="button" 
                                 class="dev-level-chip level-1 @(_selectedLevelFilter == 1 ? "active" : "")"
@@ -526,9 +611,25 @@
                         @foreach (var article in FilteredArticles)
                         {
                             var isSaved = _bookmarkedIds.Contains(article.Id);
+                            var parentS = GetParentSeries(article.SeriesId);
+                            var postAccentColor = (_showOnlyBookmarks || _showOnlyRecentRead) ? (parentS?.Color ?? "#0284c7") : (_selectedSeries?.Color ?? "#0284c7");
 
-                            <div class="dev-article-post-card" style="--post-accent: @(_selectedSeries?.Color ?? "#0284c7");">
+                            <div class="dev-article-post-card" style="--post-accent: @postAccentColor;">
                                 <div class="dev-post-card-top">
+                                    @if (_showOnlyBookmarks || _showOnlyRecentRead)
+                                    {
+                                        if (parentS != null)
+                                        {
+                                            <span class="dev-recent-series-tag" 
+                                                  style="cursor: pointer;"
+                                                  @onclick="() => SelectSeries(parentS)"
+                                                  @onclick:stopPropagation="true"
+                                                  title="Xem chuyên đề: @(CultureService.IsEnglish ? parentS.Title : parentS.TitleVi)">
+                                                <i class="bi @parentS.Icon"></i>
+                                                @(CultureService.IsEnglish ? parentS.Badge : parentS.Badge)
+                                            </span>
+                                        }
+                                    }
                                     <span class="dev-level-badge @GetLevelCssClass(article.LevelOrder)">
                                         @GetLevelIcon(article.LevelOrder) @article.LevelVi
                                     </span>
@@ -645,23 +746,254 @@
                             <span>🎯 @GetCategoryLabel("standards")</span>
                             <span class="dev-catalog-chip-badge">@GetCategoryCount("standards")</span>
                         </button>
+                        <button type="button" 
+                                class="dev-catalog-chip recent-highlight @(_selectedCatalogCategory == "recent" ? "active" : "")"
+                                style="@(_selectedCatalogCategory == "recent" ? "background: #f59e0b; border-color: #f59e0b; color: #fff; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);" : "")"
+                                @onclick='() => _selectedCatalogCategory = "recent"'>
+                            <span>✨ @(CultureService.IsEnglish ? "Newly Added Articles" : "Bài Viết Mới Thêm")</span>
+                            <span class="dev-catalog-chip-badge">@NewlyAddedCount</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Series Showcase Cards Grid -->
-                @if (!FilteredCatalogSeries.Any())
+                <!-- Tiếp tục đọc / Đã xem gần đây Shelf -->
+                @if (_selectedCatalogCategory == "all" && _recentArticleIds.Count > 0 && string.IsNullOrWhiteSpace(_catalogSearch))
                 {
-                    <div class="dev-empty-feed">
-                        <i class="bi bi-search"></i>
-                        <h5>@(CultureService.IsEnglish ? "No matching series found" : "Không tìm thấy chuyên đề phù hợp")</h5>
-                        <p>@(CultureService.IsEnglish ? "Try clearing search keywords or choosing another category filter." : "Thử xóa từ khóa tìm kiếm hoặc chọn danh mục khác.")</p>
-                        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="ClearCatalogFilters">
-                            @(CultureService.IsEnglish ? "Show All Series" : "Xem tất cả chuyên đề")
-                        </button>
+                    <div class="dev-recently-viewed-shelf">
+                        <div class="dev-shelf-header">
+                            <div class="dev-shelf-title-wrap">
+                                <span class="dev-shelf-icon"><i class="bi bi-clock-history"></i></span>
+                                <div>
+                                    <h4 class="dev-shelf-title">@(CultureService.IsEnglish ? "Continue Reading / Recently Viewed" : "Tiếp Tục Đọc / Đã Xem Gần Đây")</h4>
+                                    <p class="dev-shelf-subtitle">@(CultureService.IsEnglish ? "Pick up where you left off from your recent study sessions" : "Tiếp tục bài viết bạn đang đọc dở hoặc xem lại các nội dung vừa tra cứu")</p>
+                                </div>
+                            </div>
+                            <div class="dev-shelf-actions">
+                                <button type="button" class="dev-shelf-btn-viewall" @onclick="ToggleRecentReadFilter">
+                                    <span>@(CultureService.IsEnglish ? $"View All ({_recentArticleIds.Count})" : $"Xem Tất Cả ({_recentArticleIds.Count})")</span>
+                                    <i class="bi bi-arrow-right"></i>
+                                </button>
+                                <button type="button" class="dev-shelf-btn-clear" @onclick="ClearRecentHistory" title="Xóa lịch sử bài đọc gần đây">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span>@(CultureService.IsEnglish ? "Clear" : "Xóa")</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="dev-shelf-cards">
+                            @foreach (var art in GetRecentlyViewedArticles(6))
+                            {
+                                var pSeries = GetParentSeries(art.SeriesId);
+                                var color = pSeries?.Color ?? "#0284c7";
+                                <div class="dev-shelf-card" style="--shelf-accent: @color;" @onclick="() => ReadArticle(art)">
+                                    <div class="dev-shelf-card-badge">
+                                        <span class="dev-shelf-series-name">
+                                            <i class="bi @(pSeries?.Icon ?? "bi-journal-text")"></i>
+                                            @(CultureService.IsEnglish ? pSeries?.Badge ?? "Chuyên Đề" : pSeries?.Badge ?? "Chuyên Đề")
+                                        </span>
+                                        <span class="dev-shelf-lesson-pill">@art.LessonNumber</span>
+                                    </div>
+                                    <h5 class="dev-shelf-card-title">
+                                        @(CultureService.IsEnglish ? art.Title : art.TitleVi)
+                                    </h5>
+                                    <div class="dev-shelf-card-meta">
+                                        <span class="dev-shelf-level @GetLevelCssClass(art.LevelOrder)">@art.LevelVi</span>
+                                        <span class="dev-shelf-time"><i class="bi bi-clock"></i> @art.ReadingTime</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
                     </div>
+                }
+
+                @if (_selectedCatalogCategory == "recent")
+                {
+                    <!-- Recent / Latest Articles Grid -->
+                    @if (!FilteredRecentArticles.Any())
+                    {
+                        <div class="dev-empty-feed">
+                            <i class="bi bi-search"></i>
+                            <h5>@(CultureService.IsEnglish ? "No matching articles found" : "Không tìm thấy bài viết nào phù hợp")</h5>
+                            <p>@(CultureService.IsEnglish ? "Try clearing search keywords." : "Thử xóa từ khóa tìm kiếm để xem các bài viết mới nhất.")</p>
+                            <button type="button" class="btn btn-sm btn-outline-primary" @onclick="ClearCatalogFilters">
+                                @(CultureService.IsEnglish ? "Show All Recent Articles" : "Xem tất cả bài viết mới nhất")
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="dev-recent-articles-grid">
+                            @foreach (var article in FilteredRecentArticles)
+                            {
+                                var parentSeries = GetParentSeries(article.SeriesId);
+                                var seriesColor = parentSeries?.Color ?? "#0284c7";
+                                var isSaved = _bookmarkedIds.Contains(article.Id);
+
+                                <div class="dev-article-post-card dev-recent-post-card" style="--post-accent: @seriesColor;">
+                                    <div class="dev-post-card-top">
+                                        @if (parentSeries != null)
+                                        {
+                                            <span class="dev-recent-series-tag" 
+                                                  @onclick="() => SelectSeries(parentSeries)"
+                                                  @onclick:stopPropagation="true">
+                                                <i class="bi @parentSeries.Icon"></i>
+                                                @(CultureService.IsEnglish ? parentSeries.Title : parentSeries.TitleVi)
+                                            </span>
+                                        }
+                                        <span class="dev-level-badge @GetLevelCssClass(article.LevelOrder)">
+                                            @GetLevelIcon(article.LevelOrder) @article.LevelVi
+                                        </span>
+                                        <div class="dev-post-card-actions">
+                                            <button type="button" 
+                                                    class="dev-post-card-bookmark @(_copiedArticleCardId == article.Id ? "copied" : "")"
+                                                    title="Sao chép link bài viết"
+                                                    @onclick="() => ShareSpecificArticle(article)"
+                                                    @onclick:stopPropagation="true">
+                                                <i class="bi @(_copiedArticleCardId == article.Id ? "bi-check2" : "bi-share")"></i>
+                                            </button>
+                                            <button type="button" 
+                                                    class="dev-post-card-bookmark @(isSaved ? "saved" : "")"
+                                                    title="@(isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết này")"
+                                                    @onclick="() => ToggleBookmark(article.Id)"
+                                                    @onclick:stopPropagation="true">
+                                                <i class="bi @(isSaved ? "bi-bookmark-star-fill" : "bi-bookmark")"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="dev-recent-lesson-bar">
+                                        <span class="dev-post-lesson-pill">@article.LessonNumber</span>
+                                        <span class="dev-recent-date-badge"><i class="bi bi-clock-history"></i> @article.PublishedDate</span>
+                                    </div>
+
+                                    <h3 class="dev-post-card-title" @onclick="() => ReadArticle(article)">
+                                        @(CultureService.IsEnglish ? article.Title : article.TitleVi)
+                                    </h3>
+
+                                    <p class="dev-post-card-summary">
+                                        @(CultureService.IsEnglish ? article.Summary : article.SummaryVi)
+                                    </p>
+
+                                    <div class="dev-post-tags">
+                                        @foreach (var tag in article.Tags.Take(3))
+                                        {
+                                            <span class="dev-post-tag">#@tag</span>
+                                        }
+                                    </div>
+
+                                    <div class="dev-post-card-footer">
+                                        <div class="dev-post-meta">
+                                            <span><i class="bi bi-clock"></i> @article.ReadingTime</span>
+                                            <span><i class="bi bi-calendar3"></i> @article.PublishedDate</span>
+                                        </div>
+
+                                        <button type="button" 
+                                                class="dev-post-read-btn" 
+                                                @onclick="() => ReadArticle(article)">
+                                            <span>@(CultureService.IsEnglish ? "Read Article" : "Đọc Bài Viết")</span>
+                                            <i class="bi bi-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
                 }
                 else
                 {
+                    @if (_selectedCatalogCategory == "all" && string.IsNullOrWhiteSpace(_catalogSearch))
+                    {
+                        <!-- SECTION: BÀI VIẾT MỚI THÊM GẦN ĐÂY -->
+                        <section class="dev-newly-added-section">
+                            <div class="dev-newly-added-header">
+                                <div class="dev-newly-added-title-wrap">
+                                    <span class="dev-new-sparkle-icon"><i class="bi bi-sparkles"></i></span>
+                                    <div>
+                                        <div class="dev-newly-added-title-row">
+                                            <h3 class="dev-newly-added-title">@(CultureService.IsEnglish ? "Newly Added Articles" : "Bài Viết Mới Thêm Gần Đây")</h3>
+                                            <span class="dev-new-badge-pill">MỚI</span>
+                                        </div>
+                                        <p class="dev-newly-added-subtitle">
+                                            @(CultureService.IsEnglish ? "Explore the latest engineering posts and production lessons published recently" : "Các bài viết kỹ thuật, kiến trúc và lộ trình thực chiến mới nhất vừa được bổ sung vào hệ thống")
+                                        </p>
+                                    </div>
+                                </div>
+                                <button type="button" 
+                                        class="dev-view-all-new-btn"
+                                        @onclick='() => ShowNewlyAddedTab()'>
+                                    <span>@(CultureService.IsEnglish ? $"View All ({NewlyAddedCount})" : $"Xem Tất Cả ({NewlyAddedCount} Bài)")</span>
+                                    <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
+
+                            <div class="dev-newly-added-grid">
+                                @foreach (var art in GetNewlyAddedArticles(6))
+                                {
+                                    var pSeries = GetParentSeries(art.SeriesId);
+                                    var cardColor = pSeries?.Color ?? "#0284c7";
+
+                                    <div class="dev-new-post-card" style="--card-accent: @cardColor;">
+                                        <div class="dev-new-card-top">
+                                            @if (pSeries != null)
+                                            {
+                                                <span class="dev-recent-series-tag" 
+                                                      @onclick="() => SelectSeries(pSeries)"
+                                                      @onclick:stopPropagation="true">
+                                                    <i class="bi @pSeries.Icon"></i>
+                                                    @(CultureService.IsEnglish ? pSeries.Title : pSeries.TitleVi)
+                                                </span>
+                                            }
+                                            <span class="dev-badge-new-shine">
+                                                <i class="bi bi-stars"></i> @art.PublishedDate
+                                            </span>
+                                        </div>
+
+                                        <div class="dev-new-card-mid">
+                                            <span class="dev-level-badge @GetLevelCssClass(art.LevelOrder)">
+                                                @GetLevelIcon(art.LevelOrder) @art.LevelVi
+                                            </span>
+                                            <span class="dev-post-lesson-pill">@art.LessonNumber</span>
+                                        </div>
+
+                                        <h4 class="dev-new-card-title" @onclick="() => ReadArticle(art)">
+                                            @(CultureService.IsEnglish ? art.Title : art.TitleVi)
+                                        </h4>
+
+                                        <p class="dev-new-card-summary">
+                                            @(CultureService.IsEnglish ? art.Summary : art.SummaryVi)
+                                        </p>
+
+                                        <div class="dev-post-tags">
+                                            @foreach (var tag in art.Tags.Take(3))
+                                            {
+                                                <span class="dev-post-tag">#@tag</span>
+                                            }
+                                        </div>
+
+                                        <div class="dev-new-card-footer">
+                                            <span class="dev-post-meta-item"><i class="bi bi-clock"></i> @art.ReadingTime</span>
+                                            <button type="button" 
+                                                    class="dev-post-read-btn" 
+                                                    @onclick="() => ReadArticle(art)">
+                                                <span>@(CultureService.IsEnglish ? "Read Now" : "Đọc Ngay")</span>
+                                                <i class="bi bi-arrow-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </section>
+
+                        <!-- Header phân mục chuyên đề -->
+                        <div class="dev-catalog-section-divider">
+                            <div class="dev-divider-title">
+                                <i class="bi bi-collection-play-fill text-primary"></i>
+                                <span>@(CultureService.IsEnglish ? "All Learning Series & Tracks" : "Tất Cả Chuyên Đề & Lộ Trình Học Tập")</span>
+                            </div>
+                            <span class="dev-divider-count">@FilteredCatalogSeries.Count() Chuyên Đề</span>
+                        </div>
+                    }
+
                     <div class="dev-catalog-grid">
                         @foreach (var s in FilteredCatalogSeries)
                         {
@@ -736,6 +1068,7 @@
                         }
                     </div>
                 }
+                }
             </section>
         }
     </div>
@@ -755,6 +1088,7 @@
     private int? _selectedLevelFilter = null;
     private string _searchTerm = "";
     private bool _showOnlyBookmarks = false;
+    private bool _showOnlyRecentRead = false;
     private string? _copiedCodeId = null;
 
     private string _catalogSearch = "";
@@ -768,6 +1102,7 @@
     private string? _copiedArticleCardId = null;
 
     private HashSet<string> _bookmarkedIds = new();
+    private List<string> _recentArticleIds = new();
 
     private static readonly JsonSerializerOptions _jsonOpts = new()
     {
@@ -832,6 +1167,7 @@
                 _activeArticle = matchedArticle;
                 _selectedSeries = _data.SeriesList.FirstOrDefault(s => s.Id == matchedArticle.SeriesId) ?? _selectedSeries;
                 _viewMode = ViewMode.Reader;
+                _ = RecordRecentArticle(matchedArticle.Id);
                 try
                 {
                     _ = JS.InvokeVoidAsync("window.scrollTo", new { top = 180, behavior = "smooth" });
@@ -873,9 +1209,19 @@
                     if (list != null)
                     {
                         _bookmarkedIds = new HashSet<string>(list);
-                        StateHasChanged();
                     }
                 }
+
+                var recentStored = await JS.InvokeAsync<string?>("localStorage.getItem", "dev_blog_recent_reads");
+                if (!string.IsNullOrEmpty(recentStored))
+                {
+                    var rList = JsonSerializer.Deserialize<List<string>>(recentStored);
+                    if (rList != null)
+                    {
+                        _recentArticleIds = rList;
+                    }
+                }
+                StateHasChanged();
             }
             catch { }
         }
@@ -891,6 +1237,7 @@
     }
 
     private int TotalArticlesCount => _data?.SeriesList?.Sum(s => s.Articles.Count) ?? 0;
+    private int RecentArticlesCount => Math.Min(30, TotalArticlesCount);
 
     private int CountArticlesByLevel(int levelOrder)
     {
@@ -898,8 +1245,150 @@
         {
             return _data?.SeriesList.SelectMany(s => s.Articles).Count(a => _bookmarkedIds.Contains(a.Id) && a.LevelOrder == levelOrder) ?? 0;
         }
+        if (_showOnlyRecentRead)
+        {
+            return GetRecentlyViewedArticles(100).Count(a => a.LevelOrder == levelOrder);
+        }
         if (_selectedSeries == null) return 0;
         return _selectedSeries.Articles.Count(a => a.LevelOrder == levelOrder);
+    }
+
+    private DevSeries? GetParentSeries(string seriesId) =>
+        _data?.SeriesList.FirstOrDefault(s => string.Equals(s.Id, seriesId, StringComparison.OrdinalIgnoreCase));
+
+    private static DateTime ParseArticleDate(string? dateStr)
+    {
+        if (DateTime.TryParseExact(dateStr, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dt))
+        {
+            return dt;
+        }
+        return DateTime.MinValue;
+    }
+
+    private List<DevArticle> GetRecentlyViewedArticles(int take = 10)
+    {
+        if (_data?.SeriesList == null || _recentArticleIds.Count == 0) return new List<DevArticle>();
+        var allArticles = _data.SeriesList.SelectMany(s => s.Articles).ToDictionary(a => a.Id, a => a);
+        var list = new List<DevArticle>();
+        foreach (var id in _recentArticleIds)
+        {
+            if (allArticles.TryGetValue(id, out var art))
+            {
+                list.Add(art);
+                if (list.Count >= take) break;
+            }
+        }
+        return list;
+    }
+
+    private IEnumerable<DevArticle> GetRecommendedRecentArticles(int count = 3)
+    {
+        if (_data?.SeriesList == null) return Enumerable.Empty<DevArticle>();
+        return _data.SeriesList
+            .SelectMany(s => s.Articles)
+            .Where(a => _activeArticle == null || a.Id != _activeArticle.Id)
+            .OrderByDescending(a => ParseArticleDate(a.PublishedDate))
+            .ThenByDescending(a => a.LevelOrder)
+            .Take(count);
+    }
+
+    private static bool IsNewArticle(DevArticle? article)
+    {
+        if (article == null) return false;
+        return ParseArticleDate(article.PublishedDate) >= new DateTime(2026, 10, 17);
+    }
+
+    private int NewlyAddedCount
+    {
+        get
+        {
+            var count = _data?.SeriesList.SelectMany(s => s.Articles).Count(IsNewArticle) ?? 0;
+            return count > 0 ? count : Math.Min(25, TotalArticlesCount);
+        }
+    }
+
+    private IEnumerable<DevArticle> GetNewlyAddedArticles(int count = 6)
+    {
+        if (_data?.SeriesList == null) return Enumerable.Empty<DevArticle>();
+        return _data.SeriesList
+            .SelectMany(s => s.Articles)
+            .OrderByDescending(a => ParseArticleDate(a.PublishedDate))
+            .ThenByDescending(a => a.LevelOrder)
+            .Take(count);
+    }
+
+    private void ShowNewlyAddedTab()
+    {
+        _selectedCatalogCategory = "recent";
+        _viewMode = ViewMode.Catalog;
+        _selectedSeries = null;
+        _activeArticle = null;
+        _showOnlyBookmarks = false;
+        _showOnlyRecentRead = false;
+        _catalogSearch = "";
+        try
+        {
+            _ = JS.InvokeVoidAsync("window.scrollTo", new { top = 260, behavior = "smooth" });
+        }
+        catch { }
+    }
+
+    private async Task RecordRecentArticle(string articleId)
+    {
+        if (string.IsNullOrWhiteSpace(articleId)) return;
+        _recentArticleIds.Remove(articleId);
+        _recentArticleIds.Insert(0, articleId);
+        if (_recentArticleIds.Count > 25)
+        {
+            _recentArticleIds = _recentArticleIds.Take(25).ToList();
+        }
+        try
+        {
+            var json = JsonSerializer.Serialize(_recentArticleIds);
+            await JS.InvokeVoidAsync("localStorage.setItem", "dev_blog_recent_reads", json);
+        }
+        catch { }
+        StateHasChanged();
+    }
+
+    private async Task ClearRecentHistory()
+    {
+        _recentArticleIds.Clear();
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.removeItem", "dev_blog_recent_reads");
+        }
+        catch { }
+        if (_showOnlyRecentRead)
+        {
+            BackToCatalog();
+        }
+        else
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleRecentReadFilter()
+    {
+        _showOnlyRecentRead = !_showOnlyRecentRead;
+        if (_showOnlyRecentRead)
+        {
+            _showOnlyBookmarks = false;
+            _viewMode = ViewMode.Feed;
+            _activeArticle = null;
+        }
+        else
+        {
+            if (_selectedSeries != null)
+            {
+                _viewMode = ViewMode.Feed;
+            }
+            else
+            {
+                _viewMode = ViewMode.Catalog;
+            }
+        }
     }
 
     private string GetSeriesCategory(string seriesId)
@@ -950,6 +1439,7 @@
     {
         if (_data?.SeriesList == null) return 0;
         if (category == "all") return _data.SeriesList.Count;
+        if (category == "recent") return RecentArticlesCount;
         return _data.SeriesList.Count(s => GetSeriesCategory(s.Id) == category);
     }
 
@@ -983,6 +1473,33 @@
         }
     }
 
+    private IEnumerable<DevArticle> FilteredRecentArticles
+    {
+        get
+        {
+            if (_data?.SeriesList == null) return Enumerable.Empty<DevArticle>();
+            var list = _data.SeriesList
+                .SelectMany(s => s.Articles)
+                .OrderByDescending(a => ParseArticleDate(a.PublishedDate))
+                .ThenByDescending(a => a.LevelOrder);
+
+            if (!string.IsNullOrWhiteSpace(_catalogSearch))
+            {
+                var q = _catalogSearch.Trim().ToLowerInvariant();
+                return list.Where(a =>
+                    a.Title.ToLowerInvariant().Contains(q) ||
+                    a.TitleVi.ToLowerInvariant().Contains(q) ||
+                    a.Summary.ToLowerInvariant().Contains(q) ||
+                    a.SummaryVi.ToLowerInvariant().Contains(q) ||
+                    a.Tags.Any(t => t.ToLowerInvariant().Contains(q)) ||
+                    (GetParentSeries(a.SeriesId)?.Title.ToLowerInvariant().Contains(q) ?? false) ||
+                    (GetParentSeries(a.SeriesId)?.TitleVi.ToLowerInvariant().Contains(q) ?? false));
+            }
+
+            return list.Take(RecentArticlesCount);
+        }
+    }
+
     private void ClearCatalogFilters()
     {
         _catalogSearch = "";
@@ -995,6 +1512,7 @@
         _selectedSeries = null;
         _activeArticle = null;
         _showOnlyBookmarks = false;
+        _showOnlyRecentRead = false;
         _selectedLevelFilter = null;
         _searchTerm = "";
         Navigation.NavigateTo(GetDevLearningHomeUrl());
@@ -1037,6 +1555,10 @@
             {
                 list = _data?.SeriesList.SelectMany(s => s.Articles).Where(a => _bookmarkedIds.Contains(a.Id)) ?? Enumerable.Empty<DevArticle>();
             }
+            else if (_showOnlyRecentRead)
+            {
+                list = GetRecentlyViewedArticles(50);
+            }
             else
             {
                 if (_selectedSeries == null) return Enumerable.Empty<DevArticle>();
@@ -1060,6 +1582,11 @@
                     a.Summary.ToLowerInvariant().Contains(t) ||
                     a.SummaryVi.ToLowerInvariant().Contains(t) ||
                     a.Tags.Any(tag => tag.ToLowerInvariant().Contains(t)));
+            }
+
+            if (_showOnlyRecentRead)
+            {
+                return list;
             }
 
             // Order by LevelOrder then lesson
@@ -1093,6 +1620,7 @@
     {
         _selectedSeries = series;
         _showOnlyBookmarks = false;
+        _showOnlyRecentRead = false;
         _selectedLevelFilter = null;
         _searchTerm = "";
         _viewMode = ViewMode.Feed;
@@ -1105,6 +1633,7 @@
         _showOnlyBookmarks = !_showOnlyBookmarks;
         if (_showOnlyBookmarks)
         {
+            _showOnlyRecentRead = false;
             _viewMode = ViewMode.Feed;
             _activeArticle = null;
         }
@@ -1126,9 +1655,10 @@
         _selectedLevelFilter = null;
         _searchTerm = "";
         _showOnlyBookmarks = false;
+        _showOnlyRecentRead = false;
     }
 
-    private void ReadArticle(DevArticle article)
+    private async Task ReadArticle(DevArticle article)
     {
         _activeArticle = article;
         if (_selectedSeries == null || _selectedSeries.Id != article.SeriesId)
@@ -1137,6 +1667,7 @@
         }
         _viewMode = ViewMode.Reader;
         Navigation.NavigateTo(GetArticleUrl(article.SeriesId, article.Id));
+        await RecordRecentArticle(article.Id);
         try
         {
             _ = JS.InvokeVoidAsync("window.scrollTo", new { top = 180, behavior = "smooth" });
