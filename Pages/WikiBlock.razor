@@ -1,4 +1,4 @@
-﻿@inject IHtmlSanitizerService Sanitizer
+@inject IHtmlSanitizerService Sanitizer
 @using BlazorWasmPortfolioGhAction.Services
 @inject IState<ContentState> contentState
 @inject IDispatcher Dispatcher
@@ -30,9 +30,7 @@
                     else
                     {
                         <div class="dotted-lines">
-                            <MarkdownEditor Value="@tempContent?.content"
-                                            ValueChanged="@(EventCallback.Factory.Create<string?>(this, v => tempContent!.content = v))"
-                                            ShowPreview="false" Rows="4" />
+                            <StiloEditor @bind-Value="tempContent!.content" Options="_inlineEditorOptions" />
                         </div>
                     }
                 </td>
@@ -52,8 +50,7 @@
                     }
                     else
                     {
-                        <MarkdownEditor Value="@tempContent?.content"
-                                        ValueChanged="@(EventCallback.Factory.Create<string?>(this, v => tempContent!.content = v))" />
+                        <StiloEditor @bind-Value="tempContent!.content" Options="_editorOptions" />
                     }
                 </div>
                 <footer class="wiki-article-toolbar">
@@ -79,9 +76,7 @@
                 else
                 {
                     <div class="wiki-article-body dotted-lines">
-                        <MarkdownEditor Value="@tempContent?.content"
-                                        ValueChanged="@(EventCallback.Factory.Create<string?>(this, v => tempContent!.content = v))"
-                                        ShowPreview="false" Rows="4" />
+                        <StiloEditor @bind-Value="tempContent!.content" Options="_inlineEditorOptions" />
                         <button type="button" class="tool-btn tool-btn-danger inlineBTN" @onclick="(() => RemoveSection(indexParsed, username!))">Delete</button>
                     </div>
                 }
@@ -99,8 +94,7 @@
                 }
                 else
                 {
-                    <MarkdownEditor Value="@tempContent?.content"
-                                    ValueChanged="@(EventCallback.Factory.Create<string?>(this, v => tempContent!.content = v))" />
+                    <StiloEditor @bind-Value="tempContent!.content" Options="_editorOptions" />
                 }
             </div>
             <footer class="wiki-article-toolbar">
@@ -132,6 +126,24 @@
     [Parameter] public string username { get; set; } = "";
 
     private ContentHolder? tempContent;
+
+    private readonly EditorOptions _editorOptions = new()
+    {
+        MinHeight = 320,
+        ShowStatusBar = true,
+        Ribbon = new RibbonOptions { DefaultTab = "home" }
+            .HideTabs("file")
+            .HideGroups("restricted", "page")
+    };
+
+    private readonly EditorOptions _inlineEditorOptions = new()
+    {
+        MinHeight = 180,
+        ShowStatusBar = false,
+        Ribbon = new RibbonOptions { DefaultTab = "home" }
+            .HideTabs("file", "markdown")
+            .HideGroups("restricted", "page", "view")
+    };
 
     private static bool IsHtml(string? raw) =>
         !string.IsNullOrWhiteSpace(raw) && raw.TrimStart().StartsWith('<');
@@ -249,11 +261,10 @@
 
     private async Task Edit(int globalSectionNo)
     {
-        // ponytail: lazy HTML→Markdown convert on first edit. Old HTML content becomes Markdown.
-        if (IsHtml(tempContent?.content))
+        // Ensure content is HTML so Stilo WYSIWYG editor can display and edit it visually
+        if (!string.IsNullOrWhiteSpace(tempContent?.content) && !IsHtml(tempContent.content))
         {
-            var converter = new Converter();
-            tempContent!.content = converter.Convert(tempContent.content);
+            tempContent.content = Markdown.ToHtml(tempContent.content, Pipeline);
         }
         if (IsHtml(tempContent?.section))
         {

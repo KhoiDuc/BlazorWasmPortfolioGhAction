@@ -23,6 +23,8 @@ using Microsoft.JSInterop;
 using Blazored.LocalStorage;
 using Soenneker.Blazor.CreditCards.Registrars;
 using Soenneker.Blazor.Turnstile.Registrars;
+using Stilo.Editor;
+using Stilo.Maestro;
 
 public static partial class Program
 {
@@ -56,6 +58,8 @@ public static partial class Program
         builder.Services.AddTurnstileInteropAsScoped();
         builder.Services.AddScoped<IMobileDetectionService, BlazorWebAssemblyMobileDetectionService>();
         builder.Services.AddCreditCardsInteropAsScoped();
+        builder.Services.AddStiloEditor();
+        builder.Services.AddStiloMaestro();
 
         // MSAL / Azure AD — disabled (was for learning only)
         // builder.Services.AddMsalAuthentication(options =>
