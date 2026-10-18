@@ -10,6 +10,11 @@
 @using BlazorWasmPortfolioGhAction.Store.Actions
 @using BlazorWasmPortfolioGhAction.Store.State
 @using Fluxor
+@using System.Text
+@using System.IO
+@using System.Threading
+@using Markdig
+@using Stilo.Documents.Converters
 @inject IDispatcher Dispatcher
 @inject IState<ContentState> ContentState
 @inject IConfiguration Configuration
@@ -29,6 +34,36 @@
                     <p class="wiki-hero-lead">@L["Wiki_Lead"]</p>
                 </div>
                 <div class="wiki-hero-actions">
+                    @if (IsContentReady && FilteredContents.Count > 0)
+                    {
+                        <div class="wiki-export-group" role="group" aria-label="Export options">
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="() => ExportDocumentAsync(ExportFormat.Pdf)" disabled="@_isExporting" title="Export as PDF">
+                                @if (_isExporting && _currentExportFormat == ExportFormat.Pdf)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-file-earmark-pdf text-danger" aria-hidden="true"></i>
+                                }
+                                <span>PDF</span>
+                            </button>
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="() => ExportDocumentAsync(ExportFormat.Docx)" disabled="@_isExporting" title="Export as Word DOCX">
+                                @if (_isExporting && _currentExportFormat == ExportFormat.Docx)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-file-earmark-word text-primary" aria-hidden="true"></i>
+                                }
+                                <span>DOCX</span>
+                            </button>
+                            <button type="button" class="tool-btn tool-btn-secondary" @onclick="() => ExportDocumentAsync(ExportFormat.Markdown)" disabled="@_isExporting" title="Export as Markdown">
+                                <i class="bi bi-markdown" aria-hidden="true"></i> <span>MD</span>
+                            </button>
+                        </div>
+                    }
                     <AuthorizeView>
                         <Authorized>
                             @if (!IsEditMode)
@@ -268,6 +303,102 @@
     }
 
     private void OnContentStateChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+
+    private enum ExportFormat { Pdf, Docx, Markdown }
+    private bool _isExporting;
+    private ExportFormat _currentExportFormat;
+
+    private static readonly MarkdownPipeline WikiExportPipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .UseEmojiAndSmiley(true)
+        .Build();
+
+    private static bool IsHtmlContent(string? raw) =>
+        !string.IsNullOrWhiteSpace(raw) && raw.TrimStart().StartsWith('<');
+
+    private async Task ExportDocumentAsync(ExportFormat format)
+    {
+        if (FilteredContents.Count == 0 || _isExporting) return;
+        _isExporting = true;
+        _currentExportFormat = format;
+        StateHasChanged();
+
+        try
+        {
+            var title = string.IsNullOrEmpty(PageName) || PageName == "all" ? "Portfolio-Wiki" : PageName;
+            var safeFileName = string.Concat(title.Split(Path.GetInvalidFileNameChars())).Replace(" ", "-");
+
+            if (format == ExportFormat.Markdown)
+            {
+                var sbMd = new StringBuilder();
+                sbMd.AppendLine($"# {title}");
+                sbMd.AppendLine();
+                foreach (var item in FilteredContents)
+                {
+                    if (!string.IsNullOrWhiteSpace(item.Section))
+                        sbMd.AppendLine($"## {item.Section}");
+                    if (!string.IsNullOrWhiteSpace(item.SubSection))
+                        sbMd.AppendLine($"### {item.SubSection}");
+                    var content = item.Content ?? "";
+                    if (IsHtmlContent(content))
+                    {
+                        content = MarkdownConverter.HtmlToMarkdown(content);
+                    }
+                    sbMd.AppendLine(content);
+                    sbMd.AppendLine();
+                }
+                var mdBytes = Encoding.UTF8.GetBytes(sbMd.ToString());
+                using var ms = new MemoryStream(mdBytes);
+                using var streamRef = new DotNetStreamReference(stream: ms);
+                await JSRuntime.InvokeVoidAsync("downloadFileFromStream", $"{safeFileName}.md", streamRef);
+            }
+            else
+            {
+                var sbHtml = new StringBuilder();
+                sbHtml.Append("<!DOCTYPE html><html><head><meta charset='utf-8'>");
+                sbHtml.Append($"<title>{title}</title>");
+                sbHtml.Append("<style>body{font-family:Segoe UI,Helvetica,Arial,sans-serif;line-height:1.6;color:#1e293b;padding:32px;max-width:850px;margin:auto;} h1{color:#1e40af;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:24px;} h2{color:#2563eb;margin-top:24px;border-bottom:1px solid #f1f5f9;padding-bottom:4px;} h3{color:#3b82f6;margin-top:16px;} code{background:#f1f5f9;color:#0f172a;padding:2px 6px;border-radius:4px;font-family:Consolas,monospace;font-size:0.9em;} pre{background:#f8fafc;padding:12px;border:1px solid #e2e8f0;border-radius:6px;overflow-x:auto;} table{border-collapse:collapse;width:100%;margin:16px 0;} th,td{border:1px solid #cbd5e1;padding:8px 12px;text-align:left;} th{background:#f1f5f9;} blockquote{border-left:4px solid #3b82f6;margin:16px 0;padding-left:12px;color:#64748b;}</style>");
+                sbHtml.Append("</head><body>");
+                sbHtml.Append($"<h1>{title}</h1>");
+                foreach (var item in FilteredContents)
+                {
+                    if (!string.IsNullOrWhiteSpace(item.Section))
+                        sbHtml.Append($"<h2>{item.Section}</h2>");
+                    if (!string.IsNullOrWhiteSpace(item.SubSection))
+                        sbHtml.Append($"<h3>{item.SubSection}</h3>");
+                    var raw = item.Content ?? "";
+                    var rendered = IsHtmlContent(raw) ? raw : Markdig.Markdown.ToHtml(raw, WikiExportPipeline);
+                    sbHtml.Append($"<div class='wiki-export-section'>{rendered}</div>");
+                }
+                sbHtml.Append("</body></html>");
+                var fullHtml = sbHtml.ToString();
+
+                if (format == ExportFormat.Pdf)
+                {
+                    var converter = new HtmlToPdfConverter();
+                    using var pdfStream = await converter.ConvertAsync(fullHtml, CancellationToken.None);
+                    using var streamRef = new DotNetStreamReference(stream: pdfStream);
+                    await JSRuntime.InvokeVoidAsync("downloadFileFromStream", $"{safeFileName}.pdf", streamRef);
+                }
+                else if (format == ExportFormat.Docx)
+                {
+                    var converter = new HtmlToDocxConverter();
+                    using var docxStream = await converter.ConvertAsync(fullHtml, CancellationToken.None);
+                    using var streamRef = new DotNetStreamReference(stream: docxStream);
+                    await JSRuntime.InvokeVoidAsync("downloadFileFromStream", $"{safeFileName}.docx", streamRef);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Export error: {ex.Message}");
+        }
+        finally
+        {
+            _isExporting = false;
+            StateHasChanged();
+        }
+    }
 
     public override void Dispose()
     {

@@ -143,5 +143,119 @@ namespace BlazorWasmPortfolioGhAction.Pages
             using var streamRef = new DotNetStreamReference(stream: fileStream);
             await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
         }
+
+        // --- Stilo.Documents Barcode Generator ---
+        public enum ModeTab { Qr, Barcode }
+        private ModeTab ActiveTab { get; set; } = ModeTab.Qr;
+
+        private Stilo.Documents.Bars.BarcodeType SelectedBarcodeType { get; set; } = Stilo.Documents.Bars.BarcodeType.Code128;
+        private string BarcodeValue { get; set; } = "PORTFOLIO-12345";
+        private int BarcodeModuleSize { get; set; } = 3;
+        private int BarcodeHeight { get; set; } = 50;
+        private string? BarcodeImage { get; set; }
+        private byte[]? BarcodeBytes { get; set; }
+        private string? BarcodeError { get; set; }
+        private bool isBarcodeLoading { get; set; }
+
+        private readonly List<Stilo.Documents.Bars.BarcodeType> SupportedBarcodeTypes = new()
+        {
+            Stilo.Documents.Bars.BarcodeType.Code128,
+            Stilo.Documents.Bars.BarcodeType.Code39,
+            Stilo.Documents.Bars.BarcodeType.Code93,
+            Stilo.Documents.Bars.BarcodeType.Ean13,
+            Stilo.Documents.Bars.BarcodeType.Ean8,
+            Stilo.Documents.Bars.BarcodeType.Codabar,
+            Stilo.Documents.Bars.BarcodeType.I25,
+            Stilo.Documents.Bars.BarcodeType.Pdf417
+        };
+
+        private void SetTab(ModeTab tab)
+        {
+            ActiveTab = tab;
+            if (ActiveTab == ModeTab.Barcode && string.IsNullOrEmpty(BarcodeImage))
+            {
+                GenerateBarcode();
+            }
+        }
+
+        private void OnBarcodeTypeChange(ChangeEventArgs e)
+        {
+            if (Enum.TryParse<Stilo.Documents.Bars.BarcodeType>(e?.Value?.ToString(), out var parsed))
+            {
+                SelectedBarcodeType = parsed;
+                if (SelectedBarcodeType == Stilo.Documents.Bars.BarcodeType.Ean13 && (string.IsNullOrWhiteSpace(BarcodeValue) || !BarcodeValue.All(char.IsDigit) || BarcodeValue.Length != 13))
+                {
+                    BarcodeValue = "1234567890128";
+                }
+                else if (SelectedBarcodeType == Stilo.Documents.Bars.BarcodeType.Ean8 && (string.IsNullOrWhiteSpace(BarcodeValue) || !BarcodeValue.All(char.IsDigit) || BarcodeValue.Length != 8))
+                {
+                    BarcodeValue = "12345670";
+                }
+                GenerateBarcode();
+            }
+        }
+
+        private void OnBarcodeValueChange(ChangeEventArgs e)
+        {
+            BarcodeValue = e?.Value?.ToString() ?? string.Empty;
+            GenerateBarcode();
+        }
+
+        private void OnBarcodeModuleSizeChange(ChangeEventArgs e)
+        {
+            if (int.TryParse(e?.Value?.ToString(), out var size) && size >= 1 && size <= 10)
+            {
+                BarcodeModuleSize = size;
+                GenerateBarcode();
+            }
+        }
+
+        private void OnBarcodeHeightChange(ChangeEventArgs e)
+        {
+            if (int.TryParse(e?.Value?.ToString(), out var height) && height >= 20 && height <= 200)
+            {
+                BarcodeHeight = height;
+                GenerateBarcode();
+            }
+        }
+
+        private void GenerateBarcode()
+        {
+            BarcodeError = null;
+            if (string.IsNullOrWhiteSpace(BarcodeValue))
+            {
+                BarcodeError = "Barcode value cannot be empty.";
+                BarcodeImage = null;
+                BarcodeBytes = null;
+                return;
+            }
+
+            try
+            {
+                isBarcodeLoading = true;
+                BarcodeBytes = Stilo.Documents.Bars.BarcodeImageWriter.GeneratePng(SelectedBarcodeType, BarcodeValue.Trim(), BarcodeModuleSize, BarcodeHeight);
+                BarcodeImage = $"data:image/png;base64,{Convert.ToBase64String(BarcodeBytes)}";
+            }
+            catch (Exception ex)
+            {
+                BarcodeError = $"Cannot generate {SelectedBarcodeType}: {ex.Message}";
+                BarcodeImage = null;
+                BarcodeBytes = null;
+            }
+            finally
+            {
+                isBarcodeLoading = false;
+            }
+        }
+
+        private async Task DownloadBarcode()
+        {
+            if (BarcodeBytes is null) return;
+            var fileStream = new MemoryStream(BarcodeBytes);
+            var safeVal = string.Concat(BarcodeValue.Trim().Split(Path.GetInvalidFileNameChars())).Replace(" ", "-");
+            var fileName = $"Barcode_{SelectedBarcodeType}_{safeVal}.png";
+            using var streamRef = new DotNetStreamReference(stream: fileStream);
+            await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+        }
     }
 }

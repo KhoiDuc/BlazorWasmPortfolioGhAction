@@ -1,81 +1,160 @@
-﻿@using BlazorWasmPortfolioGhAction.Store.Services
+@using BlazorWasmPortfolioGhAction.Store.Services
 @inject QRCodeService _qrService
 @inject IJSRuntime JS
 
-<ToolShell Title="QR Code Generator" Icon="bi-qr-code" Description="Generate customizable SVG QR codes with optional logo overlay.">
+<ToolShell Title="QR & Barcode Studio" Icon="bi-qr-code" Description="Generate customizable SVG QR codes and 1D barcodes powered by Stilo.Documents.">
 
-    @if (!string.IsNullOrEmpty(validationError))
-    {
-        <div class="tool-alert tool-alert-danger">@validationError</div>
-    }
-
-    @if (isLoading)
-    {
-        <div class="tool-alert tool-alert-info">Generating QR code...</div>
-    }
-
-    <div class="qr-layout">
-        <div class="qr-preview">
-            @if (!string.IsNullOrEmpty(QRImage))
-            {
-                <img src="@QRImage" width="250" height="250" alt="Generated QR code preview" />
-            }
-            else
-            {
-                <div class="qr-preview-empty">QR preview will appear here</div>
-            }
-        </div>
-
-        <div class="tool-form">
-            <div class="tool-field">
-                <label class="tool-label" for="select-box">QR Type</label>
-                <select class="tool-input" id="select-box" value="@Request.QRType" @onchange="OnSelectChange">
-                    @foreach (var qr in Enum.GetValues<EnumQrType>())
-                    {
-                        <option value="@qr">@qr</option>
-                    }
-                </select>
-            </div>
-
-            <div class="tool-field">
-                <label class="tool-label" for="qr-value">QR Value</label>
-                <input type="text" @onchange="OnInputChange" value="@Request.QRValue" class="tool-input" id="qr-value" placeholder="Enter QR code content..." />
-            </div>
-
-            <div class="tool-field">
-                <label class="tool-label" for="white-color">QR Color</label>
-                <div class="qr-color-row">
-                    <input type="color" @onchange="OnWhiteColorHexChange" value="@Request.WhiteColorHex" class="qr-color-swatch" id="white-color" aria-label="QR foreground color" />
-                    <input type="text" @onchange="OnWhiteColorHexChange" value="@Request.WhiteColorHex" class="tool-input" />
-                </div>
-            </div>
-
-            <div class="tool-field">
-                <label class="tool-label" for="dark-color">Background Color</label>
-                <div class="qr-color-row">
-                    <input type="color" @onchange="OnDarkColorHexChange" value="@Request.DarkColorHex" class="qr-color-swatch" id="dark-color" aria-label="QR background color" />
-                    <input type="text" @onchange="OnDarkColorHexChange" value="@Request.DarkColorHex" class="tool-input" />
-                </div>
-            </div>
-
-            <div class="tool-field">
-                <label class="tool-label" for="logo">Logo</label>
-                <InputFile accept="image/jpeg,image/png" OnChange="OnLogoChange" class="tool-input" id="logo" />
-            </div>
-
-            @if (!string.IsNullOrEmpty(LogoPreview))
-            {
-                <div class="qr-logo-preview">
-                    <img src="@LogoPreview" alt="Selected logo preview" />
-                    <button type="button" @onclick="RemoveLogo" class="tool-btn tool-btn-danger">Remove logo</button>
-                </div>
-            }
-
-            <div class="tool-actions">
-                <button type="button" @onclick="DownloadImage" class="tool-btn tool-btn-primary">
-                    <i class="bi bi-download" aria-hidden="true"></i> Download
-                </button>
-            </div>
-        </div>
+    <div class="qr-mode-tabs mb-4">
+        <button type="button" class="tool-btn @(ActiveTab == ModeTab.Qr ? "tool-btn-primary" : "tool-btn-secondary")" @onclick="() => SetTab(ModeTab.Qr)">
+            <i class="bi bi-qr-code"></i> QR Code (SVG)
+        </button>
+        <button type="button" class="tool-btn @(ActiveTab == ModeTab.Barcode ? "tool-btn-primary" : "tool-btn-secondary")" @onclick="() => SetTab(ModeTab.Barcode)">
+            <i class="bi bi-upc-scan"></i> Barcode 1D (Stilo)
+        </button>
     </div>
+
+    @if (ActiveTab == ModeTab.Qr)
+    {
+        @if (!string.IsNullOrEmpty(validationError))
+        {
+            <div class="tool-alert tool-alert-danger">@validationError</div>
+        }
+
+        @if (isLoading)
+        {
+            <div class="tool-alert tool-alert-info">Generating QR code...</div>
+        }
+
+        <div class="qr-layout">
+            <div class="qr-preview">
+                @if (!string.IsNullOrEmpty(QRImage))
+                {
+                    <img src="@QRImage" width="250" height="250" alt="Generated QR code preview" />
+                }
+                else
+                {
+                    <div class="qr-preview-empty">QR preview will appear here</div>
+                }
+            </div>
+
+            <div class="tool-form">
+                <div class="tool-field">
+                    <label class="tool-label" for="select-box">QR Type</label>
+                    <select class="tool-input" id="select-box" value="@Request.QRType" @onchange="OnSelectChange">
+                        @foreach (var qr in Enum.GetValues<EnumQrType>())
+                        {
+                            <option value="@qr">@qr</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="tool-field">
+                    <label class="tool-label" for="qr-value">QR Value</label>
+                    <input type="text" @onchange="OnInputChange" value="@Request.QRValue" class="tool-input" id="qr-value" placeholder="Enter QR code content..." />
+                </div>
+
+                <div class="tool-field">
+                    <label class="tool-label" for="white-color">QR Color</label>
+                    <div class="qr-color-row">
+                        <input type="color" @onchange="OnWhiteColorHexChange" value="@Request.WhiteColorHex" class="qr-color-swatch" id="white-color" aria-label="QR foreground color" />
+                        <input type="text" @onchange="OnWhiteColorHexChange" value="@Request.WhiteColorHex" class="tool-input" />
+                    </div>
+                </div>
+
+                <div class="tool-field">
+                    <label class="tool-label" for="dark-color">Background Color</label>
+                    <div class="qr-color-row">
+                        <input type="color" @onchange="OnDarkColorHexChange" value="@Request.DarkColorHex" class="qr-color-swatch" id="dark-color" aria-label="QR background color" />
+                        <input type="text" @onchange="OnDarkColorHexChange" value="@Request.DarkColorHex" class="tool-input" />
+                    </div>
+                </div>
+
+                <div class="tool-field">
+                    <label class="tool-label" for="logo">Logo</label>
+                    <InputFile accept="image/jpeg,image/png" OnChange="OnLogoChange" class="tool-input" id="logo" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(LogoPreview))
+                {
+                    <div class="qr-logo-preview">
+                        <img src="@LogoPreview" alt="Selected logo preview" />
+                        <button type="button" @onclick="RemoveLogo" class="tool-btn tool-btn-danger">Remove logo</button>
+                    </div>
+                }
+
+                <div class="tool-actions">
+                    <button type="button" @onclick="DownloadImage" class="tool-btn tool-btn-primary">
+                        <i class="bi bi-download" aria-hidden="true"></i> Download SVG
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(BarcodeError))
+        {
+            <div class="tool-alert tool-alert-danger">@BarcodeError</div>
+        }
+
+        @if (isBarcodeLoading)
+        {
+            <div class="tool-alert tool-alert-info">Generating Barcode PNG...</div>
+        }
+
+        <div class="qr-layout">
+            <div class="barcode-preview">
+                @if (!string.IsNullOrEmpty(BarcodeImage))
+                {
+                    <img src="@BarcodeImage" alt="Generated barcode preview" />
+                    <span class="barcode-preview-text">@BarcodeValue</span>
+                }
+                else
+                {
+                    <div class="qr-preview-empty">Barcode preview will appear here</div>
+                }
+            </div>
+
+            <div class="tool-form">
+                <div class="tool-field">
+                    <label class="tool-label" for="barcode-symbology">Symbology</label>
+                    <select class="tool-input" id="barcode-symbology" value="@SelectedBarcodeType" @onchange="OnBarcodeTypeChange">
+                        @foreach (var type in SupportedBarcodeTypes)
+                        {
+                            <option value="@type">@type</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="tool-field">
+                    <label class="tool-label" for="barcode-val">Barcode Value</label>
+                    <input type="text" @onchange="OnBarcodeValueChange" value="@BarcodeValue" class="tool-input" id="barcode-val" placeholder="Enter barcode text or numbers..." />
+                    @if (SelectedBarcodeType == Stilo.Documents.Bars.BarcodeType.Ean13)
+                    {
+                        <span class="tool-hint">EAN-13 requires exactly 13 digits (e.g. 1234567890128).</span>
+                    }
+                    else if (SelectedBarcodeType == Stilo.Documents.Bars.BarcodeType.Ean8)
+                    {
+                        <span class="tool-hint">EAN-8 requires exactly 8 digits (e.g. 12345670).</span>
+                    }
+                </div>
+
+                <div class="tool-field">
+                    <label class="tool-label" for="barcode-module">Module Pixel Size (1 - 8)</label>
+                    <input type="number" min="1" max="8" value="@BarcodeModuleSize" @onchange="OnBarcodeModuleSizeChange" class="tool-input" id="barcode-module" />
+                </div>
+
+                <div class="tool-field">
+                    <label class="tool-label" for="barcode-height">Bar Height in Modules (20 - 150)</label>
+                    <input type="number" min="20" max="150" value="@BarcodeHeight" @onchange="OnBarcodeHeightChange" class="tool-input" id="barcode-height" />
+                </div>
+
+                <div class="tool-actions">
+                    <button type="button" @onclick="DownloadBarcode" class="tool-btn tool-btn-primary" disabled="@(BarcodeBytes is null)">
+                        <i class="bi bi-download" aria-hidden="true"></i> Download PNG
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
 </ToolShell>
