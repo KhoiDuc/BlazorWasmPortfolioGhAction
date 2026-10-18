@@ -753,13 +753,6 @@
                             <span>🎯 @GetCategoryLabel("standards")</span>
                             <span class="dev-catalog-chip-badge">@GetCategoryCount("standards")</span>
                         </button>
-                        <button type="button" 
-                                class="dev-catalog-chip recent-highlight @(_selectedCatalogCategory == "recent" ? "active" : "")"
-                                style="@(_selectedCatalogCategory == "recent" ? "background: #f59e0b; border-color: #f59e0b; color: #fff; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);" : "")"
-                                @onclick='() => _selectedCatalogCategory = "recent"'>
-                            <span>✨ @(CultureService.IsEnglish ? "Newly Added Articles" : "Bài Viết Mới Thêm")</span>
-                            <span class="dev-catalog-chip-badge">@NewlyAddedCount</span>
-                        </button>
                     </div>
                 </div>
 
@@ -813,205 +806,19 @@
                     </div>
                 }
 
-                @if (_selectedCatalogCategory == "recent")
+                @if (_selectedCatalogCategory == "all" && string.IsNullOrWhiteSpace(_catalogSearch))
                 {
-                    <!-- Recent / Latest Articles Grid -->
-                    @if (!FilteredRecentArticles.Any())
-                    {
-                        <div class="dev-empty-feed">
-                            <i class="bi bi-search"></i>
-                            <h5>@(CultureService.IsEnglish ? "No matching articles found" : "Không tìm thấy bài viết nào phù hợp")</h5>
-                            <p>@(CultureService.IsEnglish ? "Try clearing search keywords." : "Thử xóa từ khóa tìm kiếm để xem các bài viết mới nhất.")</p>
-                            <button type="button" class="btn btn-sm btn-outline-primary" @onclick="ClearCatalogFilters">
-                                @(CultureService.IsEnglish ? "Show All Recent Articles" : "Xem tất cả bài viết mới nhất")
-                            </button>
+                    <!-- Header phân mục chuyên đề -->
+                    <div class="dev-catalog-section-divider">
+                        <div class="dev-divider-title">
+                            <i class="bi bi-collection-play-fill text-primary"></i>
+                            <span>@(CultureService.IsEnglish ? "All Learning Series & Tracks" : "Tất Cả Chuyên Đề & Lộ Trình Học Tập")</span>
                         </div>
-                    }
-                    else
-                    {
-                        <div class="dev-recent-articles-grid">
-                            @foreach (var article in FilteredRecentArticles)
-                            {
-                                var parentSeries = GetParentSeries(article.SeriesId);
-                                var seriesColor = parentSeries?.Color ?? "#0284c7";
-                                var isSaved = _bookmarkedIds.Contains(article.Id);
-
-                                <div class="dev-article-post-card dev-recent-post-card" style="--post-accent: @seriesColor;">
-                                    <div class="dev-post-card-top">
-                                        @if (parentSeries != null)
-                                        {
-                                            <span class="dev-recent-series-tag" 
-                                                  @onclick="() => SelectSeries(parentSeries)"
-                                                  @onclick:stopPropagation="true"
-                                                  title="Xem chuyên đề: @(CultureService.IsEnglish ? parentSeries.Title : parentSeries.TitleVi)">
-                                                <i class="bi @parentSeries.Icon"></i>
-                                                @CleanText(CultureService.IsEnglish ? parentSeries.Title : parentSeries.TitleVi)
-                                            </span>
-                                        }
-                                        <div class="dev-post-card-actions">
-                                            <button type="button" 
-                                                    class="dev-post-card-bookmark @(_copiedArticleCardId == article.Id ? "copied" : "")"
-                                                    title="Sao chép link bài viết"
-                                                    @onclick="() => ShareSpecificArticle(article)"
-                                                    @onclick:stopPropagation="true">
-                                                <i class="bi @(_copiedArticleCardId == article.Id ? "bi-check2" : "bi-share")"></i>
-                                            </button>
-                                            <button type="button" 
-                                                    class="dev-post-card-bookmark @(isSaved ? "saved" : "")"
-                                                    title="@(isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết này")"
-                                                    @onclick="() => ToggleBookmark(article.Id)"
-                                                    @onclick:stopPropagation="true">
-                                                <i class="bi @(isSaved ? "bi-bookmark-star-fill" : "bi-bookmark")"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="dev-post-meta-row">
-                                        <div class="dev-meta-row-left">
-                                            <span class="dev-level-badge @GetLevelCssClass(article.LevelOrder)">
-                                                @GetLevelIcon(article.LevelOrder) @article.LevelVi
-                                            </span>
-                                            <span class="dev-post-lesson-pill">@article.LessonNumber</span>
-                                        </div>
-                                        <span class="dev-meta-date-badge">
-                                            <i class="bi bi-calendar3"></i> @article.PublishedDate
-                                        </span>
-                                    </div>
-
-                                    <h3 class="dev-post-card-title" @onclick="() => ReadArticle(article)">
-                                        @CleanText(CultureService.IsEnglish ? article.Title : article.TitleVi)
-                                    </h3>
-
-                                    <p class="dev-post-card-summary">
-                                        @CleanText(CultureService.IsEnglish ? article.Summary : article.SummaryVi)
-                                    </p>
-
-                                    <div class="dev-post-tags">
-                                        @foreach (var tag in article.Tags.Take(3))
-                                        {
-                                            <span class="dev-post-tag">#@tag</span>
-                                        }
-                                    </div>
-
-                                    <div class="dev-post-card-footer">
-                                        <div class="dev-post-meta">
-                                            <span><i class="bi bi-clock"></i> @article.ReadingTime</span>
-                                        </div>
-
-                                        <button type="button" 
-                                                class="dev-post-read-btn" 
-                                                @onclick="() => ReadArticle(article)">
-                                            <span>@(CultureService.IsEnglish ? "Read Article" : "Đọc Bài Viết")</span>
-                                            <i class="bi bi-arrow-right"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    }
+                        <span class="dev-divider-count">@FilteredCatalogSeries.Count() Chuyên Đề</span>
+                    </div>
                 }
-                else
-                {
-                    @if (_selectedCatalogCategory == "all" && string.IsNullOrWhiteSpace(_catalogSearch))
-                    {
-                        <!-- SECTION: BÀI VIẾT MỚI THÊM GẦN ĐÂY -->
-                        <section class="dev-newly-added-section">
-                            <div class="dev-newly-added-header">
-                                <div class="dev-newly-added-title-wrap">
-                                    <span class="dev-new-sparkle-icon"><i class="bi bi-stars"></i></span>
-                                    <div>
-                                        <div class="dev-newly-added-title-row">
-                                            <h3 class="dev-newly-added-title">@(CultureService.IsEnglish ? "Newly Added Articles" : "Bài Viết Mới Thêm Gần Đây")</h3>
-                                            <span class="dev-new-badge-pill">@(CultureService.IsEnglish ? "NEW" : "MỚI")</span>
-                                        </div>
-                                        <p class="dev-newly-added-subtitle">
-                                            @(CultureService.IsEnglish ? "Explore the latest engineering posts and production lessons published recently" : "Các bài viết kỹ thuật, kiến trúc và lộ trình thực chiến mới nhất vừa được bổ sung vào hệ thống")
-                                        </p>
-                                    </div>
-                                </div>
-                                <button type="button" 
-                                        class="dev-view-all-new-btn"
-                                        @onclick='() => ShowNewlyAddedTab()'>
-                                    <span>@(CultureService.IsEnglish ? $"View All ({NewlyAddedCount})" : $"Xem Tất Cả ({NewlyAddedCount} Bài)")</span>
-                                    <i class="bi bi-arrow-right"></i>
-                                </button>
-                            </div>
 
-                            <div class="dev-newly-added-grid">
-                                @foreach (var art in GetNewlyAddedArticles(6))
-                                {
-                                    var pSeries = GetParentSeries(art.SeriesId);
-                                    var cardColor = pSeries?.Color ?? "#0284c7";
-
-                                    <div class="dev-new-post-card" style="--card-accent: @cardColor;">
-                                        <div class="dev-new-card-top">
-                                            @if (pSeries != null)
-                                            {
-                                                <span class="dev-recent-series-tag" 
-                                                      @onclick="() => SelectSeries(pSeries)"
-                                                      @onclick:stopPropagation="true"
-                                                      title="Xem chuyên đề: @(CultureService.IsEnglish ? pSeries.Title : pSeries.TitleVi)">
-                                                    <i class="bi @pSeries.Icon"></i>
-                                                    @CleanText(CultureService.IsEnglish ? pSeries.Title : pSeries.TitleVi)
-                                                </span>
-                                            }
-                                            <span class="dev-badge-new-shine">
-                                                <i class="bi bi-stars"></i> @(CultureService.IsEnglish ? "NEW" : "MỚI")
-                                            </span>
-                                        </div>
-
-                                        <div class="dev-post-meta-row">
-                                            <div class="dev-meta-row-left">
-                                                <span class="dev-level-badge @GetLevelCssClass(art.LevelOrder)">
-                                                    @GetLevelIcon(art.LevelOrder) @art.LevelVi
-                                                </span>
-                                                <span class="dev-post-lesson-pill">@art.LessonNumber</span>
-                                            </div>
-                                            <span class="dev-meta-date-badge">
-                                                <i class="bi bi-calendar3"></i> @art.PublishedDate
-                                            </span>
-                                        </div>
-
-                                        <h4 class="dev-new-card-title" @onclick="() => ReadArticle(art)">
-                                            @CleanText(CultureService.IsEnglish ? art.Title : art.TitleVi)
-                                        </h4>
-
-                                        <p class="dev-new-card-summary">
-                                            @CleanText(CultureService.IsEnglish ? art.Summary : art.SummaryVi)
-                                        </p>
-
-                                        <div class="dev-post-tags">
-                                            @foreach (var tag in art.Tags.Take(3))
-                                            {
-                                                <span class="dev-post-tag">#@tag</span>
-                                            }
-                                        </div>
-
-                                        <div class="dev-new-card-footer">
-                                            <span class="dev-post-meta-item"><i class="bi bi-clock"></i> @art.ReadingTime</span>
-                                            <button type="button" 
-                                                    class="dev-post-read-btn" 
-                                                    @onclick="() => ReadArticle(art)">
-                                                <span>@(CultureService.IsEnglish ? "Read Now" : "Đọc Ngay")</span>
-                                                <i class="bi bi-arrow-right"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        </section>
-
-                        <!-- Header phân mục chuyên đề -->
-                        <div class="dev-catalog-section-divider">
-                            <div class="dev-divider-title">
-                                <i class="bi bi-collection-play-fill text-primary"></i>
-                                <span>@(CultureService.IsEnglish ? "All Learning Series & Tracks" : "Tất Cả Chuyên Đề & Lộ Trình Học Tập")</span>
-                            </div>
-                            <span class="dev-divider-count">@FilteredCatalogSeries.Count() Chuyên Đề</span>
-                        </div>
-                    }
-
-                    <div class="dev-catalog-grid">
+                <div class="dev-catalog-grid">
                         @foreach (var s in FilteredCatalogSeries)
                         {
                             var isCopied = _copiedCatalogSeriesId == s.Id;
@@ -1254,7 +1061,6 @@
     }
 
     private int TotalArticlesCount => _data?.SeriesList?.Sum(s => s.Articles.Count) ?? 0;
-    private int RecentArticlesCount => Math.Min(30, TotalArticlesCount);
 
     private int CountArticlesByLevel(int levelOrder)
     {
@@ -1307,47 +1113,6 @@
             .OrderByDescending(a => ParseArticleDate(a.PublishedDate))
             .ThenByDescending(a => a.LevelOrder)
             .Take(count);
-    }
-
-    private static bool IsNewArticle(DevArticle? article)
-    {
-        if (article == null) return false;
-        return ParseArticleDate(article.PublishedDate) >= new DateTime(2026, 10, 17);
-    }
-
-    private int NewlyAddedCount
-    {
-        get
-        {
-            var count = _data?.SeriesList.SelectMany(s => s.Articles).Count(IsNewArticle) ?? 0;
-            return count > 0 ? count : Math.Min(25, TotalArticlesCount);
-        }
-    }
-
-    private IEnumerable<DevArticle> GetNewlyAddedArticles(int count = 6)
-    {
-        if (_data?.SeriesList == null) return Enumerable.Empty<DevArticle>();
-        return _data.SeriesList
-            .SelectMany(s => s.Articles)
-            .OrderByDescending(a => ParseArticleDate(a.PublishedDate))
-            .ThenByDescending(a => a.LevelOrder)
-            .Take(count);
-    }
-
-    private void ShowNewlyAddedTab()
-    {
-        _selectedCatalogCategory = "recent";
-        _viewMode = ViewMode.Catalog;
-        _selectedSeries = null;
-        _activeArticle = null;
-        _showOnlyBookmarks = false;
-        _showOnlyRecentRead = false;
-        _catalogSearch = "";
-        try
-        {
-            _ = JS.InvokeVoidAsync("window.scrollTo", new { top = 260, behavior = "smooth" });
-        }
-        catch { }
     }
 
     private async Task RecordRecentArticle(string articleId)
@@ -1456,7 +1221,6 @@
     {
         if (_data?.SeriesList == null) return 0;
         if (category == "all") return _data.SeriesList.Count;
-        if (category == "recent") return RecentArticlesCount;
         return _data.SeriesList.Count(s => GetSeriesCategory(s.Id) == category);
     }
 
@@ -1487,33 +1251,6 @@
             }
 
             return list;
-        }
-    }
-
-    private IEnumerable<DevArticle> FilteredRecentArticles
-    {
-        get
-        {
-            if (_data?.SeriesList == null) return Enumerable.Empty<DevArticle>();
-            var list = _data.SeriesList
-                .SelectMany(s => s.Articles)
-                .OrderByDescending(a => ParseArticleDate(a.PublishedDate))
-                .ThenByDescending(a => a.LevelOrder);
-
-            if (!string.IsNullOrWhiteSpace(_catalogSearch))
-            {
-                var q = _catalogSearch.Trim().ToLowerInvariant();
-                return list.Where(a =>
-                    a.Title.ToLowerInvariant().Contains(q) ||
-                    a.TitleVi.ToLowerInvariant().Contains(q) ||
-                    a.Summary.ToLowerInvariant().Contains(q) ||
-                    a.SummaryVi.ToLowerInvariant().Contains(q) ||
-                    a.Tags.Any(t => t.ToLowerInvariant().Contains(q)) ||
-                    (GetParentSeries(a.SeriesId)?.Title.ToLowerInvariant().Contains(q) ?? false) ||
-                    (GetParentSeries(a.SeriesId)?.TitleVi.ToLowerInvariant().Contains(q) ?? false));
-            }
-
-            return list.Take(RecentArticlesCount);
         }
     }
 
