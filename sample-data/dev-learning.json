@@ -14271,6 +14271,38 @@
               "calloutTitleVi": "Tóm lược chiến lược",
               "calloutText": "Dùng **Offset** khi cần nhảy trang tự do trong Admin Panel ít dữ liệu. Dùng **Keyset** khi xử lý dữ liệu lớn nội bộ hoặc ETL data pipeline. Dùng **Cursor** khi xây dựng Public REST/GraphQL API và Infinite Scroll trên ứng dụng di động.",
               "calloutTextVi": "Dùng **Offset** khi cần nhảy trang tự do trong Admin Panel ít dữ liệu. Dùng **Keyset** khi xử lý dữ liệu lớn nội bộ hoặc ETL data pipeline. Dùng **Cursor** khi xây dựng Public REST/GraphQL API và Infinite Scroll trên ứng dụng di động."
+            },
+            {
+              "heading": "4. Thực Nghiệm Từ Data Mẫu: Code Thực Thi & Dữ Liệu Trả Về (Offset vs Keyset vs Cursor)",
+              "headingVi": "4. Thực Nghiệm Từ Data Mẫu: Code Thực Thi & Dữ Liệu Trả Về (Offset vs Keyset vs Cursor)",
+              "paragraphs": [
+                "Để hiểu rõ bản chất sự khác biệt giữa 3 kỹ thuật, chúng ta hãy cùng chạy thực tế trên một bảng dữ liệu mẫu `Orders` gồm 10 đơn hàng (được sắp xếp theo ID giảm dần - đơn mới nhất lên đầu):",
+                "Giả sử kích thước mỗi trang là `pageSize = 3`:",
+                "1. **Offset Pagination (Trang 1: OFFSET 0 LIMIT 3):** Trả về ID `[10, 9, 8]`. Sang Trang 2 (`OFFSET 3 LIMIT 3`), trả về ID `[7, 6, 5]`.",
+                "   * *Hiện tượng Data Drift:* Nếu trong lúc người dùng đang xem Trang 1, có đơn hàng mới `ID = 11` được thêm vào bảng. Khi user bấm sang Trang 2 (`OFFSET 3 LIMIT 3`), database sẽ bốc từ vị trí số 3 mới, dẫn đến kết quả trả về là `[8, 7, 6]`. **Bản ghi ID = 8 bị lặp lại 2 lần!**",
+                "2. **Keyset Pagination (Trang 1: LIMIT 3):** Trả về ID `[10, 9, 8]`. Bản ghi cuối cùng có `last_id = 8`.",
+                "   * Sang Trang 2, query: `WHERE id < 8 ORDER BY id DESC LIMIT 3`. Kết quả trả về chính xác là `[7, 6, 5]`.",
+                "   * *Miễn nhiễm Data Drift:* Dù có đơn `ID = 11` hay 100 đơn mới chèn vào, điều kiện `WHERE id < 8` vẫn bất biến, đảm bảo Trang 2 luôn lấy đúng `[7, 6, 5]`, không bao giờ bị trùng lặp!",
+                "3. **Cursor Pagination (Opaque Token ở API):** Backend bọc `last_id = 8` thành chuỗi Base64 `cursor=eyJpZCI6OH0=`. Client gọi `GET /orders?limit=3&cursor=eyJpZCI6OH0=`. Server giải mã token lấy `id = 8`, thực thi câu lệnh Keyset và trả về danh sách kèm theo `endCursor` cho trang tiếp theo."
+              ],
+              "paragraphsVi": [
+                "Để hiểu rõ bản chất sự khác biệt giữa 3 kỹ thuật, chúng ta hãy cùng chạy thực tế trên một bảng dữ liệu mẫu `Orders` gồm 10 đơn hàng (được sắp xếp theo ID giảm dần - đơn mới nhất lên đầu):",
+                "Giả sử kích thước mỗi trang là `pageSize = 3`:",
+                "1. **Offset Pagination (Trang 1: OFFSET 0 LIMIT 3):** Trả về ID `[10, 9, 8]`. Sang Trang 2 (`OFFSET 3 LIMIT 3`), trả về ID `[7, 6, 5]`.",
+                "   * *Hiện tượng Data Drift:* Nếu trong lúc người dùng đang xem Trang 1, có đơn hàng mới `ID = 11` được thêm vào bảng. Khi user bấm sang Trang 2 (`OFFSET 3 LIMIT 3`), database sẽ bốc từ vị trí số 3 mới, dẫn đến kết quả trả về là `[8, 7, 6]`. **Bản ghi ID = 8 bị lặp lại 2 lần!**",
+                "2. **Keyset Pagination (Trang 1: LIMIT 3):** Trả về ID `[10, 9, 8]`. Bản ghi cuối cùng có `last_id = 8`.",
+                "   * Sang Trang 2, query: `WHERE id < 8 ORDER BY id DESC LIMIT 3`. Kết quả trả về chính xác là `[7, 6, 5]`.",
+                "   * *Miễn nhiễm Data Drift:* Dù có đơn `ID = 11` hay 100 đơn mới chèn vào, điều kiện `WHERE id < 8` vẫn bất biến, đảm bảo Trang 2 luôn lấy đúng `[7, 6, 5]`, không bao giờ bị trùng lặp!",
+                "3. **Cursor Pagination (Opaque Token ở API):** Backend bọc `last_id = 8` thành chuỗi Base64 `cursor=eyJpZCI6OH0=`. Client gọi `GET /orders?limit=3&cursor=eyJpZCI6OH0=`. Server giải mã token lấy `id = 8`, thực thi câu lệnh Keyset và trả về danh sách kèm theo `endCursor` cho trang tiếp theo."
+              ],
+              "codeTitle": "Bảng dữ liệu mẫu, Câu lệnh thực thi và Dữ liệu trả về (Data Output)",
+              "codeLanguage": "sql",
+              "codeContent": "-- 1. DATA MẪU (10 bản ghi trong bảng Orders)\n-- ID:  10,       9,       8,       7,       6,       5,       4,       3,       2,       1\n-- Tiền: $120,    $85,     $200,    $45,     $310,    $99,     $150,    $60,     $220,    $110\n\n-- ========================================================\n-- PHƯƠNG PHÁP 1: OFFSET PAGINATION (PageSize = 3)\n-- ========================================================\n-- Trang 1:\nSELECT id, amount, created_at FROM Orders ORDER BY id DESC LIMIT 3 OFFSET 0;\n-- => DATA RA TRANG 1: [ID 10 ($120), ID 9 ($85), ID 8 ($200)]\n\n-- Giả sử lúc này có INSERT đơn mới: ID 11 ($500)\n-- Người dùng bấm sang Trang 2:\nSELECT id, amount, created_at FROM Orders ORDER BY id DESC LIMIT 3 OFFSET 3;\n-- => DATA RA TRANG 2 BỊ DRIFT: [ID 8 ($200), ID 7 ($45), ID 6 ($310)]\n-- !!! THẢM HỌA: ID 8 xuất hiện lại lần thứ 2 ở cả Trang 1 và Trang 2!\n\n-- ========================================================\n-- PHƯƠNG PHÁP 2: KEYSET PAGINATION (SEEK METHOD)\n-- ========================================================\n-- Trang 1 (Chưa có con trỏ):\nSELECT id, amount, created_at FROM Orders ORDER BY id DESC LIMIT 3;\n-- => DATA RA TRANG 1: [ID 10 ($120), ID 9 ($85), ID 8 ($200)]  => last_id = 8\n\n-- Dù có INSERT thêm ID 11, Trang 2 vẫn truy vấn theo last_id:\nSELECT id, amount, created_at FROM Orders WHERE id < 8 ORDER BY id DESC LIMIT 3;\n-- => DATA RA TRANG 2: [ID 7 ($45), ID 6 ($310), ID 5 ($99)]  => last_id = 5\n-- Tuyệt đối chuẩn xác 100%, không bị lặp hay sót dữ liệu!\n\n-- Trang 3:\nSELECT id, amount, created_at FROM Orders WHERE id < 5 ORDER BY id DESC LIMIT 3;\n-- => DATA RA TRANG 3: [ID 4 ($150), ID 3 ($60), ID 2 ($220)]",
+              "calloutType": "success",
+              "calloutTitle": "Kết luận thực nghiệm",
+              "calloutTitleVi": "Kết luận thực nghiệm",
+              "calloutText": "Keyset Pagination không những chạy với tốc độ O(log N) trên Index B-Tree mà còn triệt tiêu hoàn toàn vấn đề Data Drift. Khi đưa lên tầng API, Keyset được mã hóa thành Cursor Token để client sử dụng an toàn.",
+              "calloutTextVi": "Keyset Pagination không những chạy với tốc độ O(log N) trên Index B-Tree mà còn triệt tiêu hoàn toàn vấn đề Data Drift. Khi đưa lên tầng API, Keyset được mã hóa thành Cursor Token để client sử dụng an toàn."
             }
           ]
         },
@@ -14423,6 +14455,38 @@
               "calloutTitleVi": "Chuẩn thiết kế của Stripe & GitHub",
               "calloutText": "Cả Stripe và GitHub REST API đều sử dụng tham số `starting_after` và `ending_before` chứa ID của bản ghi để phân trang tiến và lùi, mang lại trải nghiệm tích hợp cực kỳ nhất quán và ổn định cho lập trình viên toàn cầu.",
               "calloutTextVi": "Cả Stripe và GitHub REST API đều sử dụng tham số `starting_after` và `ending_before` chứa ID của bản ghi để phân trang tiến và lùi, mang lại trải nghiệm tích hợp cực kỳ nhất quán và ổn định cho lập trình viên toàn cầu."
+            },
+            {
+              "heading": "2. Code Triển Khai Thực Tế C# & TypeScript: Từ Request $\\rightarrow$ SQL $\\rightarrow$ Output Data JSON",
+              "headingVi": "2. Code Triển Khai Thực Tế C# & TypeScript: Từ Request $\\rightarrow$ SQL $\\rightarrow$ Output Data JSON",
+              "paragraphs": [
+                "Để thấy rõ cách dữ liệu di chuyển từ Client đến Database và dữ liệu trả về (Data Output) trông như thế nào, dưới đây là quy trình xử lý 3 bước chuẩn Production:",
+                "1. **Client Request:** Gửi `GET /api/v1/orders?limit=3` (không có cursor cho trang đầu).",
+                "2. **Server Xử Lý:**",
+                "   - Kiểm tra `cursor`: nếu rỗng, query `TOP (limit + 1)` đầu tiên.",
+                "   - Mẹo `limit + 1`: Query 4 bản ghi để kiểm tra xem có `hasNextPage` hay không mà không cần chạy `COUNT(*)` tốn kém.",
+                "   - Nếu có bản ghi thứ 4, `hasNextPage = true`, cắt bỏ bản ghi thứ 4 khỏi kết quả trả về.",
+                "   - Lấy bản ghi cuối cùng (bản ghi thứ 3) để đóng gói thành Opaque Cursor Base64 (`endCursor`).",
+                "3. **Client Tiếp Tục:** Gọi `GET /api/v1/orders?limit=3&cursor={endCursor}` cho trang tiếp theo."
+              ],
+              "paragraphsVi": [
+                "Để thấy rõ cách dữ liệu di chuyển từ Client đến Database và dữ liệu trả về (Data Output) trông như thế nào, dưới đây là quy trình xử lý 3 bước chuẩn Production:",
+                "1. **Client Request:** Gửi `GET /api/v1/orders?limit=3` (không có cursor cho trang đầu).",
+                "2. **Server Xử Lý:**",
+                "   - Kiểm tra `cursor`: nếu rỗng, query `TOP (limit + 1)` đầu tiên.",
+                "   - Mẹo `limit + 1`: Query 4 bản ghi để kiểm tra xem có `hasNextPage` hay không mà không cần chạy `COUNT(*)` tốn kém.",
+                "   - Nếu có bản ghi thứ 4, `hasNextPage = true`, cắt bỏ bản ghi thứ 4 khỏi kết quả trả về.",
+                "   - Lấy bản ghi cuối cùng (bản ghi thứ 3) để đóng gói thành Opaque Cursor Base64 (`endCursor`).",
+                "3. **Client Tiếp Tục:** Gọi `GET /api/v1/orders?limit=3&cursor={endCursor}` cho trang tiếp theo."
+              ],
+              "codeTitle": "Code C# / ASP.NET Core & Dữ liệu Output JSON trả về",
+              "codeLanguage": "csharp",
+              "codeContent": "// 1. DTO VÀ HÀM ENCODE / DECODE CURSOR TOKEN\npublic record CursorPayload(int LastId, DateTime LastCreatedAt);\n\npublic static class CursorHelper\n{\n    public static string Encode(int id, DateTime createdAt)\n    {\n        var json = JsonSerializer.Serialize(new CursorPayload(id, createdAt));\n        return Convert.ToBase64String(Encoding.UTF8.GetBytes(json));\n    }\n\n    public static CursorPayload? Decode(string? cursor)\n    {\n        if (string.IsNullOrWhiteSpace(cursor)) return null;\n        try {\n            var json = Encoding.UTF8.GetString(Convert.FromBase64String(cursor));\n            return JsonSerializer.Deserialize<CursorPayload>(json);\n        } catch { return null; }\n    }\n}\n\n// 2. ENDPOINT API XỬ LÝ (SỬ DỤNG EF CORE / LINQ)\napp.MapGet(\"/api/v1/orders\", async (string? cursor, int limit = 3, AppDbContext db) =>\n{\n    var cursorData = CursorHelper.Decode(cursor);\n    \n    // Mẹo Limit + 1 để kiểm tra hasNextPage mà không cần COUNT(*)\n    var query = db.Orders.AsNoTracking();\n    if (cursorData != null)\n    {\n        // Seek trực tiếp trên Composite Index (CreatedAt DESC, Id DESC)\n        query = query.Where(o => o.CreatedAt < cursorData.LastCreatedAt \n                              || (o.CreatedAt == cursorData.LastCreatedAt && o.Id < cursorData.LastId));\n    }\n    \n    var items = await query\n        .OrderByDescending(o => o.CreatedAt)\n        .ThenByDescending(o => o.Id)\n        .Take(limit + 1)\n        .ToListAsync();\n\n    bool hasNextPage = items.Count > limit;\n    if (hasNextPage) items.RemoveAt(limit); // Loại bỏ phần tử kiểm tra thứ 4\n\n    var lastItem = items.LastOrDefault();\n    string? endCursor = lastItem != null ? CursorHelper.Encode(lastItem.Id, lastItem.CreatedAt) : null;\n\n    return Results.Ok(new {\n        data = items,\n        pageInfo = new {\n            hasNextPage,\n            endCursor\n        }\n    });\n});\n\n/* ========================================================\n3. DATA OUTPUT JSON TRẢ VỀ THỰC TẾ CHO CLIENT (Trang 1)\n========================================================\nGET /api/v1/orders?limit=3\nStatus: 200 OK\n{\n  \"data\": [\n    { \"id\": 10, \"amount\": 120.0, \"createdAt\": \"2026-10-19T10:00:00Z\" },\n    { \"id\": 9,  \"amount\": 85.0,  \"createdAt\": \"2026-10-19T09:45:00Z\" },\n    { \"id\": 8,  \"amount\": 200.0, \"createdAt\": \"2026-10-19T09:30:00Z\" }\n  ],\n  \"pageInfo\": {\n    \"hasNextPage\": true,\n    \"endCursor\": \"eyJMYXN0SWQiOjgsIkxhc3RDcmVhdGVkQXQiOiIyMDI2LTEwLTE5VDA5OjMwOjAwWiJ9\"\n  }\n}\n\n========================================================\n4. REQUEST TRANG 2: Client gửi kèm endCursor vừa nhận\n========================================================\nGET /api/v1/orders?limit=3&cursor=eyJMYXN0SWQiOjgsIkxhc3RDcmVhdGVkQXQiOiIyMDI2LTEwLTE5VDA5OjMwOjAwWiJ9\nStatus: 200 OK\n{\n  \"data\": [\n    { \"id\": 7,  \"amount\": 45.0,  \"createdAt\": \"2026-10-19T09:15:00Z\" },\n    { \"id\": 6,  \"amount\": 310.0, \"createdAt\": \"2026-10-19T09:00:00Z\" },\n    { \"id\": 5,  \"amount\": 99.0,  \"createdAt\": \"2026-10-19T08:45:00Z\" }\n  ],\n  \"pageInfo\": {\n    \"hasNextPage\": true,\n    \"endCursor\": \"eyJMYXN0SWQiOjUsIkxhc3RDcmVhdGVkQXQiOiIyMDI2LTEwLTE5VDA4OjQ1OjAwWiJ9\"\n  }\n}\n*/",
+              "calloutType": "info",
+              "calloutTitle": "Tại sao Opaque Cursor là tiêu chuẩn vàng của Modern APIs?",
+              "calloutTitleVi": "Tại sao Opaque Cursor là tiêu chuẩn vàng của Modern APIs?",
+              "calloutText": "Client không cần và không nên biết cấu trúc bên trong con trỏ là gì. Khi bạn thay đổi chiến lược sắp xếp từ ID sang (TenantId, CreatedAt, Id), mã Client hoàn toàn không phải thay đổi một dòng nào!",
+              "calloutTextVi": "Client không cần và không nên biết cấu trúc bên trong con trỏ là gì. Khi bạn thay đổi chiến lược sắp xếp từ ID sang (TenantId, CreatedAt, Id), mã Client hoàn toàn không phải thay đổi một dòng nào!"
             }
           ]
         },
