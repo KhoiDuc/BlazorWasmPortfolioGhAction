@@ -14219,8 +14219,8 @@
               "calloutType": "warning",
               "calloutTitle": "Cái giá của OFFSET",
               "calloutTitleVi": "Cái giá của OFFSET",
-              "calloutText": "Ở trang thứ 500.000 (`OFFSET 10000000 LIMIT 20`), database phải đọc tuần tự toàn bộ **10 triệu bản ghi từ đĩa**, duyệt qua bộ nhớ, rồi vứt bỏ 9.999.980 bản ghi đi chỉ để lấy đúng 20 dòng cuối cùng! Độ phức tạp là $O(N)$ tuyến tính.",
-              "calloutTextVi": "Ở trang thứ 500.000 (`OFFSET 10000000 LIMIT 20`), database phải đọc tuần tự toàn bộ **10 triệu bản ghi từ đĩa**, duyệt qua bộ nhớ, rồi vứt bỏ 9.999.980 bản ghi đi chỉ để lấy đúng 20 dòng cuối cùng! Độ phức tạp là $O(N)$ tuyến tính."
+              "calloutText": "Ở trang thứ 500.000 (`OFFSET 10000000 LIMIT 20`), database phải đọc tuần tự toàn bộ **10 triệu bản ghi từ đĩa**, duyệt qua bộ nhớ, rồi vứt bỏ 9.999.980 bản ghi đi chỉ để lấy đúng 20 dòng cuối cùng! Độ phức tạp là `O(N)` tuyến tính.",
+              "calloutTextVi": "Ở trang thứ 500.000 (`OFFSET 10000000 LIMIT 20`), database phải đọc tuần tự toàn bộ **10 triệu bản ghi từ đĩa**, duyệt qua bộ nhớ, rồi vứt bỏ 9.999.980 bản ghi đi chỉ để lấy đúng 20 dòng cuối cùng! Độ phức tạp là `O(N)` tuyến tính."
             },
             {
               "heading": "2. Cạm Bẫy 'Nhảy Trang & Trùng Lặp Dữ Liệu' (Data Drift / Phantom Rows)",
@@ -14382,12 +14382,12 @@
               "paragraphs": [
                 "**Keyset Pagination (phương pháp Seek)** hoạt động dựa trên nguyên lý cơ bản:",
                 "> Thay vì bảo database: *'Bỏ qua 1 triệu dòng đầu tiên rồi lấy 20 dòng'*, bạn bảo database: *'Bắt đầu ngay sau bản ghi có ID là 10.500.230 và lấy 20 dòng kế tiếp'*.",
-                "Nhờ cây chỉ mục **B-Tree**, database thực hiện phép tìm kiếm nhị phân $O(log N)$ để định vị ngay trang đĩa chứa ID đó và đọc thẳng 20 dòng tiếp theo trong vài mili-giây. Thời gian thực thi ở trang thứ 1 triệu y hệt như ở trang đầu tiên!"
+                "Nhờ cây chỉ mục **B-Tree**, database thực hiện phép tìm kiếm nhị phân `O(log N)` để định vị ngay trang đĩa chứa ID đó và đọc thẳng 20 dòng tiếp theo trong vài mili-giây. Thời gian thực thi ở trang thứ 1 triệu y hệt như ở trang đầu tiên!"
               ],
               "paragraphsVi": [
                 "**Keyset Pagination (phương pháp Seek)** hoạt động dựa trên nguyên lý cơ bản:",
                 "> Thay vì bảo database: *'Bỏ qua 1 triệu dòng đầu tiên rồi lấy 20 dòng'*, bạn bảo database: *'Bắt đầu ngay sau bản ghi có ID là 10.500.230 và lấy 20 dòng kế tiếp'*.",
-                "Nhờ cây chỉ mục **B-Tree**, database thực hiện phép tìm kiếm nhị phân $O(log N)$ để định vị ngay trang đĩa chứa ID đó và đọc thẳng 20 dòng tiếp theo trong vài mili-giây. Thời gian thực thi ở trang thứ 1 triệu y hệt như ở trang đầu tiên!"
+                "Nhờ cây chỉ mục **B-Tree**, database thực hiện phép tìm kiếm nhị phân `O(log N)` để định vị ngay trang đĩa chứa ID đó và đọc thẳng 20 dòng tiếp theo trong vài mili-giây. Thời gian thực thi ở trang thứ 1 triệu y hệt như ở trang đầu tiên!"
               ],
               "codeTitle": "Cú pháp Tuple Comparison trong PostgreSQL & MySQL",
               "codeLanguage": "sql",
@@ -14457,8 +14457,8 @@
               "calloutTextVi": "Cả Stripe và GitHub REST API đều sử dụng tham số `starting_after` và `ending_before` chứa ID của bản ghi để phân trang tiến và lùi, mang lại trải nghiệm tích hợp cực kỳ nhất quán và ổn định cho lập trình viên toàn cầu."
             },
             {
-              "heading": "2. Code Triển Khai Thực Tế C# & TypeScript: Từ Request $\\rightarrow$ SQL $\\rightarrow$ Output Data JSON",
-              "headingVi": "2. Code Triển Khai Thực Tế C# & TypeScript: Từ Request $\\rightarrow$ SQL $\\rightarrow$ Output Data JSON",
+              "heading": "2. Code Triển Khai Thực Tế C# & TypeScript: Từ Request → SQL → Output Data JSON",
+              "headingVi": "2. Code Triển Khai Thực Tế C# & TypeScript: Từ Request → SQL → Output Data JSON",
               "paragraphs": [
                 "Để thấy rõ cách dữ liệu di chuyển từ Client đến Database và dữ liệu trả về (Data Output) trông như thế nào, dưới đây là quy trình xử lý 3 bước chuẩn Production:",
                 "1. **Client Request:** Gửi `GET /api/v1/orders?limit=3` (không có cursor cho trang đầu).",
@@ -14640,7 +14640,7 @@
                 "Kho tài liệu được tổ chức một cách vô cùng khoa học thành 11 module toàn diện bao phủ từ nền tảng máy ảo đến hệ thống mạng đám mây cấp doanh nghiệp:",
                 "1. ☸️ **Kubernetes Networking (Series chuyên sâu 46 tập):**",
                 "   - Đi sâu vào kiến trúc Data Plane và cách K8s tương tác với Linux kernel (Network Namespaces, veth pairs, iptables, eBPF).",
-                "   - Mổ xẻ chi tiết 3 CNI phổ biến nhất trong thực tế: **Flannel $\rightarrow$ Calico $\rightarrow$ Cilium**.",
+                "   - Mổ xẻ chi tiết 3 CNI phổ biến nhất trong thực tế: **Flannel → Calico → Cilium**.",
                 "   - Phân tích hiện tượng *'Thuế ndots:5'* của CoreDNS (tại sao mỗi request tốn tới 5 DNS query làm nghẽn server) và nguyên lý hoạt động của `kube-proxy` (ClusterIP, NodePort, LoadBalancer dưới góc nhìn gói tin).",
                 "2. 🔍 **Debug Mạng Từ A-Z:**",
                 "   - Phương pháp luận chẩn đoán lỗi mạng có hệ thống bám sát mô hình 7 tầng OSI.",
@@ -14666,7 +14666,7 @@
                 "Kho tài liệu được tổ chức một cách vô cùng khoa học thành 11 module toàn diện bao phủ từ nền tảng máy ảo đến hệ thống mạng đám mây cấp doanh nghiệp:",
                 "1. ☸️ **Kubernetes Networking (Series chuyên sâu 46 tập):**",
                 "   - Đi sâu vào kiến trúc Data Plane và cách K8s tương tác với Linux kernel (Network Namespaces, veth pairs, iptables, eBPF).",
-                "   - Mổ xẻ chi tiết 3 CNI phổ biến nhất trong thực tế: **Flannel $\rightarrow$ Calico $\rightarrow$ Cilium**.",
+                "   - Mổ xẻ chi tiết 3 CNI phổ biến nhất trong thực tế: **Flannel → Calico → Cilium**.",
                 "   - Phân tích hiện tượng *'Thuế ndots:5'* của CoreDNS (tại sao mỗi request tốn tới 5 DNS query làm nghẽn server) và nguyên lý hoạt động của `kube-proxy` (ClusterIP, NodePort, LoadBalancer dưới góc nhìn gói tin).",
                 "2. 🔍 **Debug Mạng Từ A-Z:**",
                 "   - Phương pháp luận chẩn đoán lỗi mạng có hệ thống bám sát mô hình 7 tầng OSI.",
@@ -14694,8 +14694,8 @@
               "calloutType": "tip",
               "calloutTitle": "Lộ trình học khuyến nghị",
               "calloutTitleVi": "Lộ trình học khuyến nghị",
-              "calloutText": "Bạn nên học theo thứ tự: **Debug Mạng Từ A-Z** $\rightarrow$ **Container Networking** $\rightarrow$ **Kubernetes Networking** để nắm chắc gốc rễ từ tầng Linux kernel trước khi bước vào các khái niệm mạng K8s phức tạp.",
-              "calloutTextVi": "Bạn nên học theo thứ tự: **Debug Mạng Từ A-Z** $\rightarrow$ **Container Networking** $\rightarrow$ **Kubernetes Networking** để nắm chắc gốc rễ từ tầng Linux kernel trước khi bước vào các khái niệm mạng K8s phức tạp."
+              "calloutText": "Bạn nên học theo thứ tự: **Debug Mạng Từ A-Z** → **Container Networking** → **Kubernetes Networking** để nắm chắc gốc rễ từ tầng Linux kernel trước khi bước vào các khái niệm mạng K8s phức tạp.",
+              "calloutTextVi": "Bạn nên học theo thứ tự: **Debug Mạng Từ A-Z** → **Container Networking** → **Kubernetes Networking** để nắm chắc gốc rễ từ tầng Linux kernel trước khi bước vào các khái niệm mạng K8s phức tạp."
             },
             {
               "heading": "3. Hướng Dẫn Bắt Đầu Nhanh (Quick Start) & Dựng Lab K8s 3-Node",
