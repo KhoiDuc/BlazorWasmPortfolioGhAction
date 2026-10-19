@@ -1405,8 +1405,9 @@
     private static string CleanText(string? text)
     {
         if (string.IsNullOrEmpty(text)) return "";
-        var res = System.Text.RegularExpressions.Regex.Replace(text, @"\$?\\*rightarrow\$?", "→");
-        res = System.Text.RegularExpressions.Regex.Replace(res, @"\$?\\*leftarrow\$?", "←");
+        var res = System.Text.RegularExpressions.Regex.Replace(text, @"\$[^$\w]*?\\*r?ightarrow[^$\w]*?\$|\\+r?ightarrow|[\r\n\t]+ightarrow", "→", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        res = System.Text.RegularExpressions.Regex.Replace(res, @"\$[^$\w]*?\\*l?eftarrow[^$\w]*?\$|\\+l?eftarrow|[\r\n\t]+eftarrow", "←", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        res = System.Text.RegularExpressions.Regex.Replace(res, @"\$[^$\w]*?\\+to[^$\w]*?\$|\\+to", "→", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
         return res;
     }
 

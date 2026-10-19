@@ -25,6 +25,9 @@ public class DevLearningJsonTest
     [InlineData(@"Dev \rightarrow Staging", "Dev → Staging")]
     [InlineData(@"$\rightarrow$", "→")]
     [InlineData(@"$\\rightarrow$", "→")]
+    [InlineData("Dev $ ightarrow$ Staging", "Dev → Staging")]
+    [InlineData("Dev $\r\nightarrow$ Staging", "Dev → Staging")]
+    [InlineData("Dev $\nightarrow$ Staging", "Dev → Staging")]
     public void TestCleanText(string input, string expected)
     {
         var cleaned = CleanText(input);
@@ -34,8 +37,9 @@ public class DevLearningJsonTest
     public static string CleanText(string? text)
     {
         if (string.IsNullOrEmpty(text)) return "";
-        var res = System.Text.RegularExpressions.Regex.Replace(text, @"\$?\\*rightarrow\$?", "→");
-        res = System.Text.RegularExpressions.Regex.Replace(res, @"\$?\\*leftarrow\$?", "←");
+        var res = System.Text.RegularExpressions.Regex.Replace(text, @"\$[^$\w]*?\\*r?ightarrow[^$\w]*?\$|\\+r?ightarrow|[\r\n\t]+ightarrow", "→", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        res = System.Text.RegularExpressions.Regex.Replace(res, @"\$[^$\w]*?\\*l?eftarrow[^$\w]*?\$|\\+l?eftarrow|[\r\n\t]+eftarrow", "←", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        res = System.Text.RegularExpressions.Regex.Replace(res, @"\$[^$\w]*?\\+to[^$\w]*?\$|\\+to", "→", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
         return res;
     }
 }
