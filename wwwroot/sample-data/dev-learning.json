@@ -14162,13 +14162,13 @@
     },
     {
       "id": "database-api-pagination-series",
-      "title": "Database & API Pagination Masterclass: Offset vs Keyset vs Cursor Pagination",
-      "titleVi": "Kỹ Thuật Phân Trang Dữ Liệu Toàn Tập: Offset vs Keyset vs Cursor Pagination (Hiệu Năng & Thực Chiến)",
+      "title": "Full-Stack Pagination Masterclass: From Database & API to UI Components, TanStack Query & Virtualization",
+      "titleVi": "Phân Trang Toàn Diện (Full-Stack Pagination): Từ Database, API Đến UI Components & Thư Viện Hiện Đại",
       "icon": "bi-file-earmark-break-fill",
       "color": "#f59e0b",
-      "badge": "6 Bài Viết",
-      "description": "Bộ cẩm nang toàn diện về kỹ thuật phân trang dữ liệu trong Cơ sở dữ liệu và REST/GraphQL API: So sánh trực diện Offset vs Keyset vs Cursor Pagination, đo đạc hiệu năng trên 10 triệu bản ghi, giải quyết thảm họa Data Drift và thiết kế Opaque Cursor Token chuẩn Stripe/GitHub.",
-      "descriptionVi": "Bộ cẩm nang toàn diện về kỹ thuật phân trang dữ liệu trong Cơ sở dữ liệu và REST/GraphQL API: So sánh trực diện Offset vs Keyset vs Cursor Pagination, đo đạc hiệu năng trên 10 triệu bản ghi, giải quyết thảm họa Data Drift và thiết kế Opaque Cursor Token chuẩn Stripe/GitHub.",
+      "badge": "7 Bài Viết",
+      "description": "Bức tranh hoàn chỉnh về phân trang xuyên suốt toàn bộ ngăn xếp công nghệ: Tối ưu B-Tree Database (Offset vs Keyset), thiết kế REST/GraphQL API (Opaque Cursor), liên kết với các mẫu giao diện UI (Numbered Pager, Infinite Scroll) và thư viện quản lý state/ảo hóa hàng đầu (TanStack Query, React Virtual, Blazor Virtualize).",
+      "descriptionVi": "Bức tranh hoàn chỉnh về phân trang xuyên suốt toàn bộ ngăn xếp công nghệ: Tối ưu B-Tree Database (Offset vs Keyset), thiết kế REST/GraphQL API (Opaque Cursor), liên kết với các mẫu giao diện UI (Numbered Pager, Infinite Scroll) và thư viện quản lý state/ảo hóa hàng đầu (TanStack Query, React Virtual, Blazor Virtualize).",
       "articles": [
         {
           "id": "pagination-bai-1-offset-vs-keyset-vs-cursor-showdown",
@@ -14682,6 +14682,140 @@
               "calloutTitleVi": "Ghi nhớ cốt lõi",
               "calloutText": "Caching chỉ giải quyết được dữ liệu đọc tĩnh và chậm thay đổi. Đối với dữ liệu thời gian thực (Real-time), dữ liệu có bộ lọc phức tạp (Dynamic Filtering) và các quy trình xử lý dữ liệu ngầm (ETL/Worker), kỹ thuật Keyset/Cursor Pagination là giải pháp duy nhất đảm bảo tính toàn vẹn và hiệu năng ổn định.",
               "calloutTextVi": "Caching chỉ giải quyết được dữ liệu đọc tĩnh và chậm thay đổi. Đối với dữ liệu thời gian thực (Real-time), dữ liệu có bộ lọc phức tạp (Dynamic Filtering) và các quy trình xử lý dữ liệu ngầm (ETL/Worker), kỹ thuật Keyset/Cursor Pagination là giải pháp duy nhất đảm bảo tính toàn vẹn và hiệu năng ổn định."
+            }
+          ]
+        },
+        {
+          "id": "pagination-bai-7-ui-pagination-and-modern-libraries",
+          "seriesId": "database-api-pagination-series",
+          "lessonNumber": "Bài 7",
+          "level": "Architecture",
+          "levelVi": "Kiến trúc",
+          "levelOrder": 5,
+          "title": "UI Pagination Masterclass: Mối Liên Kết Giữa Giao Diện, Data Fetching & Ảo Hóa DOM (TanStack Query, Virtualize)",
+          "titleVi": "UI Pagination Masterclass: Mối Liên Kết Giữa Giao Diện, Data Fetching & Ảo Hóa DOM (TanStack Query, Virtualize)",
+          "readingTime": "15 phút đọc",
+          "publishedDate": "20/10/2026",
+          "summary": "Khép lại vòng lặp Full-Stack: Kết nối Database và Backend API lên giao diện người dùng. Phân tích 4 mô hình UI Pagination (Numbered Bar, Load More, Infinite Scroll, Windowing). Giải quyết thảm họa tràn bộ nhớ DOM bằng Virtual Scrolling và triển khai thực tế với TanStack Query (React Query) cùng Blazor Virtualize.",
+          "summaryVi": "Khép lại vòng lặp Full-Stack: Kết nối Database và Backend API lên giao diện người dùng. Phân tích 4 mô hình UI Pagination (Numbered Bar, Load More, Infinite Scroll, Windowing). Giải quyết thảm họa tràn bộ nhớ DOM bằng Virtual Scrolling và triển khai thực tế với TanStack Query (React Query) cùng Blazor Virtualize.",
+          "tags": [
+            "UI Pagination",
+            "Infinite Scroll",
+            "TanStack Query",
+            "Virtualization",
+            "React Virtual",
+            "Blazor Virtualize",
+            "Frontend Architecture",
+            "DOM Optimization"
+          ],
+          "sections": [
+            {
+              "heading": "1. Bản Đồ Liên Kết Toàn Ngăn Xếp (Full-Stack): UI Pattern Nào Đi Với API & Database Nào?",
+              "headingVi": "1. Bản Đồ Liên Kết Toàn Ngăn Xếp (Full-Stack): UI Pattern Nào Đi Với API & Database Nào?",
+              "paragraphs": [
+                "Một sai lầm rất phổ biến của lập trình viên là thiết kế Backend API một đằng nhưng Frontend UI lại đòi hỏi một nẻo. Phân trang không thể hoạt động hiệu quả nếu thiếu sự ăn khớp nhịp nhàng giữa 3 tầng: **Database Engine → Backend API → Frontend UI**.",
+                "Dưới đây là 4 mô hình giao diện UI kinh điển và sự tương thích kỹ thuật của chúng:",
+                "**1. Thanh Phân Trang Có Đánh Số (Numbered Pagination Bar: [1] [2] [3] ... [100]):**",
+                "- *Đặc điểm UI:* Người dùng muốn biết chính xác mình đang ở trang mấy và có khả năng click nhảy cóc (như nhảy thẳng từ Trang 1 sang Trang 8).",
+                "- *API & DB tương thích:* Bắt buộc dùng **Offset-based Pagination** (`page=8&limit=20` → `OFFSET 140 LIMIT 20`).",
+                "- *Thách thức:* UI đòi hỏi biến `totalPages = totalCount / pageSize`. Nếu bảng có 50 triệu dòng, câu lệnh `SELECT COUNT(*)` sẽ làm sập Database. Giải pháp là UI chỉ hiển thị ước lượng (*'Có hơn 1.000 kết quả'*) hoặc dùng `reltuples` trong PostgreSQL.",
+                "**2. Nút Bấm 'Xem Thêm' (Load More Button):**",
+                "- *Đặc điểm UI:* Người dùng chủ động click nút 'Xem thêm 20 sản phẩm', dữ liệu mới được nối (append) vào cuối danh sách.",
+                "- *API & DB tương thích:* Phù hợp hoàn hảo với **Keyset Pagination** hoặc **Cursor Pagination**. Không yêu cầu đếm tổng số bản ghi (`COUNT(*)`), chỉ cần cờ `hasNextPage` từ kỹ thuật `LIMIT + 1`.",
+                "**3. Cuộn Vô Tận (Infinite Scroll):**",
+                "- *Đặc điểm UI:* Danh sách tự động tải thêm khi người dùng cuộn tới gần đáy màn hình (dùng Web API `IntersectionObserver`).",
+                "- *API & DB tương thích:* **Bắt buộc phải dùng Cursor Pagination**. Tuyệt đối không dùng Offset vì sẽ gặp hiện tượng Data Drift (lặp lại bài viết khi có dữ liệu mới chèn vào đầu nguồn cấp dữ liệu).",
+                "**4. Ảo Hóa Danh Sách (Virtual Scrolling / List Windowing):**",
+                "- *Đặc điểm UI:* Cho phép cuộn mượt mà qua hàng chục ngàn phần tử mà trình duyệt không hề bị giật lag hay tràn bộ nhớ RAM."
+              ],
+              "paragraphsVi": [
+                "Một sai lầm rất phổ biến của lập trình viên là thiết kế Backend API một đằng nhưng Frontend UI lại đòi hỏi một nẻo. Phân trang không thể hoạt động hiệu quả nếu thiếu sự ăn khớp nhịp nhàng giữa 3 tầng: **Database Engine → Backend API → Frontend UI**.",
+                "Dưới đây là 4 mô hình giao diện UI kinh điển và sự tương thích kỹ thuật của chúng:",
+                "**1. Thanh Phân Trang Có Đánh Số (Numbered Pagination Bar: [1] [2] [3] ... [100]):**",
+                "- *Đặc điểm UI:* Người dùng muốn biết chính xác mình đang ở trang mấy và có khả năng click nhảy cóc (như nhảy thẳng từ Trang 1 sang Trang 8).",
+                "- *API & DB tương thích:* Bắt buộc dùng **Offset-based Pagination** (`page=8&limit=20` → `OFFSET 140 LIMIT 20`).",
+                "- *Thách thức:* UI đòi hỏi biến `totalPages = totalCount / pageSize`. Nếu bảng có 50 triệu dòng, câu lệnh `SELECT COUNT(*)` sẽ làm sập Database. Giải pháp là UI chỉ hiển thị ước lượng (*'Có hơn 1.000 kết quả'*) hoặc dùng `reltuples` trong PostgreSQL.",
+                "**2. Nút Bấm 'Xem Thêm' (Load More Button):**",
+                "- *Đặc điểm UI:* Người dùng chủ động click nút 'Xem thêm 20 sản phẩm', dữ liệu mới được nối (append) vào cuối danh sách.",
+                "- *API & DB tương thích:* Phù hợp hoàn hảo với **Keyset Pagination** hoặc **Cursor Pagination**. Không yêu cầu đếm tổng số bản ghi (`COUNT(*)`), chỉ cần cờ `hasNextPage` từ kỹ thuật `LIMIT + 1`.",
+                "**3. Cuộn Vô Tận (Infinite Scroll):**",
+                "- *Đặc điểm UI:* Danh sách tự động tải thêm khi người dùng cuộn tới gần đáy màn hình (dùng Web API `IntersectionObserver`).",
+                "- *API & DB tương thích:* **Bắt buộc phải dùng Cursor Pagination**. Tuyệt đối không dùng Offset vì sẽ gặp hiện tượng Data Drift (lặp lại bài viết khi có dữ liệu mới chèn vào đầu nguồn cấp dữ liệu).",
+                "**4. Ảo Hóa Danh Sách (Virtual Scrolling / List Windowing):**",
+                "- *Đặc điểm UI:* Cho phép cuộn mượt mà qua hàng chục ngàn phần tử mà trình duyệt không hề bị giật lag hay tràn bộ nhớ RAM."
+              ],
+              "codeTitle": "Bảng đối chiếu mối liên kết Full-Stack giữa UI, API và Database",
+              "codeLanguage": "text",
+              "codeContent": "┌──────────────────────┬──────────────────────┬────────────────────────┬──────────────────────────────────┐\n│ Mô Hình UI           │ Backend API Chuẩn    │ Cơ Chế Database        │ Thư Viện Frontend Khuyên Dùng    │\n├──────────────────────┼──────────────────────┼────────────────────────┼──────────────────────────────────┤\n│ Numbered Pager       │ GET ?page=2&limit=20 │ OFFSET 20 LIMIT 20     │ Ant Design, MUI, Radzen Pager    │\n│ Load More Button     │ GET ?cursor=eyJ...   │ WHERE id < :last_id    │ TanStack Query, SWR, Blazor      │\n│ Infinite Scroll      │ GET ?cursor=eyJ...   │ Keyset Seek B-Tree     │ IntersectionObserver, React-Inf  │\n│ Virtualized Scroll   │ Dynamic Window Batch │ Keyset / Seek Stream   │ TanStack Virtual, Blazor Virtual │\n└──────────────────────┴──────────────────────┴────────────────────────┴──────────────────────────────────┘",
+              "calloutType": "info",
+              "calloutTitle": "Quy tắc vàng trong thiết kế hệ thống",
+              "calloutTitleVi": "Quy tắc vàng trong thiết kế hệ thống",
+              "calloutText": "Nếu giao diện người dùng bắt buộc phải dùng Infinite Scroll hoặc Load More, tầng Backend và Database KHÔNG BAO GIỜ được dùng OFFSET. Bắt buộc phải triển khai Cursor Pagination để đảm bảo trải nghiệm người dùng không bị lặp hay sót dữ liệu.",
+              "calloutTextVi": "Nếu giao diện người dùng bắt buộc phải dùng Infinite Scroll hoặc Load More, tầng Backend và Database KHÔNG BAO GIỜ được dùng OFFSET. Bắt buộc phải triển khai Cursor Pagination để đảm bảo trải nghiệm người dùng không bị lặp hay sót dữ liệu."
+            },
+            {
+              "heading": "2. Thảm Họa Tràn Bộ Nhớ DOM & Kỹ Thuật Ảo Hóa (Virtual Scrolling / Windowing)",
+              "headingVi": "2. Thảm Họa Tràn Bộ Nhớ DOM & Kỹ Thuật Ảo Hóa (Virtual Scrolling / Windowing)",
+              "paragraphs": [
+                "Nhiều lập trình viên tối ưu Database rất kỹ (chạy chỉ mất 1ms), nhưng khi người dùng cuộn màn hình Infinite Scroll qua 5.000 sản phẩm, **trình duyệt bỗng nhiên bị đơ cứng, giật lag và quạt tản nhiệt laptop rú ầm ĩ!**",
+                "Nguyên nhân là: **Thảm họa DOM Tree Bloat**:",
+                "- Mỗi sản phẩm gồm nhiều thẻ HTML (`div`, `img`, `span`, `button`, CSS styles, event listeners...).",
+                "- Khi nối 5.000 sản phẩm vào trang, cây DOM có thể phình to lên tới **100.000 DOM Nodes**!",
+                "- Mỗi lần người dùng cuộn 1 pixel, trình duyệt phải tính toán lại Reflow, Layout và Repaint cho 100.000 phần tử, ngốn từ 500MB đến 1GB RAM của trình duyệt.",
+                "**Giải pháp Virtualization (Windowing):**",
+                "- Trình duyệt không render toàn bộ 5.000 phần tử.",
+                "- Nó chỉ render đúng **15 đến 20 phần tử thực tế đang nằm trong vùng nhìn thấy (Viewport)** của màn hình người dùng!",
+                "- Khi người dùng cuộn xuống, các phần tử trôi ra khỏi màn hình sẽ bị gỡ bỏ khỏi DOM, và các phần tử mới bước vào vùng nhìn sẽ được render thay thế vào.",
+                "- Nhờ đó, dù danh sách có 100.000 phần tử, số lượng DOM Node luôn cố định ở con số ~20, đảm bảo tốc độ khung hình luôn đạt chuẩn mượt mà 60 FPS!"
+              ],
+              "paragraphsVi": [
+                "Nhiều lập trình viên tối ưu Database rất kỹ (chạy chỉ mất 1ms), nhưng khi người dùng cuộn màn hình Infinite Scroll qua 5.000 sản phẩm, **trình duyệt bỗng nhiên bị đơ cứng, giật lag và quạt tản nhiệt laptop rú ầm ĩ!**",
+                "Nguyên nhân là: **Thảm họa DOM Tree Bloat**:",
+                "- Mỗi sản phẩm gồm nhiều thẻ HTML (`div`, `img`, `span`, `button`, CSS styles, event listeners...).",
+                "- Khi nối 5.000 sản phẩm vào trang, cây DOM có thể phình to lên tới **100.000 DOM Nodes**!",
+                "- Mỗi lần người dùng cuộn 1 pixel, trình duyệt phải tính toán lại Reflow, Layout và Repaint cho 100.000 phần tử, ngốn từ 500MB đến 1GB RAM của trình duyệt.",
+                "**Giải pháp Virtualization (Windowing):**",
+                "- Trình duyệt không render toàn bộ 5.000 phần tử.",
+                "- Nó chỉ render đúng **15 đến 20 phần tử thực tế đang nằm trong vùng nhìn thấy (Viewport)** của màn hình người dùng!",
+                "- Khi người dùng cuộn xuống, các phần tử trôi ra khỏi màn hình sẽ bị gỡ bỏ khỏi DOM, và các phần tử mới bước vào vùng nhìn sẽ được render thay thế vào.",
+                "- Nhờ đó, dù danh sách có 100.000 phần tử, số lượng DOM Node luôn cố định ở con số ~20, đảm bảo tốc độ khung hình luôn đạt chuẩn mượt mà 60 FPS!"
+              ],
+              "codeTitle": "Triển khai Virtualize tích hợp sẵn trong Blazor WebAssembly (.NET)",
+              "codeLanguage": "csharp",
+              "codeContent": "@* Blazor cung cấp sẵn component Virtualize với ItemsProvider siêu mượt *@\n<div class=\"orders-scroll-container\" style=\"height: 600px; overflow-y: auto;\">\n    <Virtualize ItemsProvider=\"LoadOrdersPagedAsync\" SpacerElement=\"div\" Context=\"order\">\n        <ItemContent>\n            <div class=\"order-card\" style=\"height: 60px;\">\n                <span class=\"order-id\">#@order.Id</span>\n                <span class=\"customer\">@order.CustomerName</span>\n                <span class=\"amount\">@order.Amount.ToString(\"C\")</span>\n            </div>\n        </ItemContent>\n        <Placeholder>\n            <div class=\"order-card skeleton\" style=\"height: 60px;\">Đang tải dữ liệu...</div>\n        </Placeholder>\n    </Virtualize>\n</div>\n\n@code {\n    [Inject] private HttpClient Http { get; set; } = default!;\n\n    // Virtualize tự động tính toán startIndex và count theo độ cuộn chuột!\n    private async ValueTask<ItemsProviderResult<OrderDto>> LoadOrdersPagedAsync(ItemsProviderRequest request)\n    {\n        var response = await Http.GetFromJsonAsync<PagedResult<OrderDto>>(\n            $\"/api/v1/orders/virtual?startIndex={request.StartIndex}&count={request.Count}\");\n\n        return new ItemsProviderResult<OrderDto>(response.Items, response.TotalEstimateCount);\n    }\n}",
+              "calloutType": "success",
+              "calloutTitle": "Sức mạnh của Blazor Virtualize",
+              "calloutTitleVi": "Sức mạnh của Blazor Virtualize",
+              "calloutText": "Component Virtualize của Blazor tự động đo chiều cao của phần tử, lắng nghe sự kiện scroll và chỉ yêu cầu Backend nạp đúng số lượng phần tử cần hiển thị trong Viewport. Đây là tính năng native đỉnh cao của Blazor mà không cần cài thêm bất kỳ thư viện JS bên ngoài nào.",
+              "calloutTextVi": "Component Virtualize của Blazor tự động đo chiều cao của phần tử, lắng nghe sự kiện scroll và chỉ yêu cầu Backend nạp đúng số lượng phần tử cần hiển thị trong Viewport. Đây là tính năng native đỉnh cao của Blazor mà không cần cài thêm bất kỳ thư viện JS bên ngoài nào."
+            },
+            {
+              "heading": "3. Tích Hợp Các Thư Viện State Management & Data Fetching Hàng Đầu (TanStack Query / SWR)",
+              "headingVi": "3. Tích Hợp Các Thư Viện State Management & Data Fetching Hàng Đầu (TanStack Query / SWR)",
+              "paragraphs": [
+                "Trong thế giới Frontend hiện đại (React, Next.js, Vue, Svelte), tiêu chuẩn công nghiệp số 1 để xử lý Cursor Pagination và Infinite Scroll là **TanStack Query (React Query)** và **Vercel SWR**.",
+                "Thay vì tự viết mã thủ công quản lý mảng dữ liệu, cờ loading, nút tải thêm và con trỏ cursor, hàm `useInfiniteQuery` của TanStack Query tự động giải quyết toàn bộ bài toán:",
+                "- **Tự động lưu bộ nhớ đệm (Caching & Deduplication):** Không bao giờ gọi API trùng lặp cho cùng một cursor.",
+                "- **Hợp nhất các trang (Page Merging):** Tự động gom tất cả dữ liệu của các trang đã tải vào một mảng phẳng duy nhất `data.pages.flatMap(page => page.items)`.",
+                "- **Quản lý con trỏ tự động:** Hàm `getNextPageParam` tự động trích xuất `endCursor` từ phản hồi của API để truyền vào request tiếp theo.",
+                "- **Hỗ trợ cuộn 2 chiều:** Hỗ trợ cả `getPreviousPageParam` khi người dùng cuộn ngược lên trên."
+              ],
+              "paragraphsVi": [
+                "Trong thế giới Frontend hiện đại (React, Next.js, Vue, Svelte), tiêu chuẩn công nghiệp số 1 để xử lý Cursor Pagination và Infinite Scroll là **TanStack Query (React Query)** và **Vercel SWR**.",
+                "Thay vì tự viết mã thủ công quản lý mảng dữ liệu, cờ loading, nút tải thêm và con trỏ cursor, hàm `useInfiniteQuery` của TanStack Query tự động giải quyết toàn bộ bài toán:",
+                "- **Tự động lưu bộ nhớ đệm (Caching & Deduplication):** Không bao giờ gọi API trùng lặp cho cùng một cursor.",
+                "- **Hợp nhất các trang (Page Merging):** Tự động gom tất cả dữ liệu của các trang đã tải vào một mảng phẳng duy nhất `data.pages.flatMap(page => page.items)`.",
+                "- **Quản lý con trỏ tự động:** Hàm `getNextPageParam` tự động trích xuất `endCursor` từ phản hồi của API để truyền vào request tiếp theo.",
+                "- **Hỗ trợ cuộn 2 chiều:** Hỗ trợ cả `getPreviousPageParam` khi người dùng cuộn ngược lên trên."
+              ],
+              "codeTitle": "Code React & TanStack Query useInfiniteQuery kết nối trực tiếp với Cursor API",
+              "codeLanguage": "javascript",
+              "codeContent": "import { useInfiniteQuery } from '@tanstack/react-query';\nimport { useInView } from 'react-intersection-observer';\nimport { useEffect } from 'react';\n\n// 1. Hàm gọi API phân trang theo Cursor\nconst fetchOrders = async ({ pageParam = null }) => {\n  const url = pageParam \n    ? `/api/v1/orders?limit=20&cursor=${encodeURIComponent(pageParam)}`\n    : '/api/v1/orders?limit=20';\n  const res = await fetch(url);\n  return res.json();\n};\n\nexport function OrderInfiniteFeed() {\n  const { ref, inView } = useInView();\n\n  const {\n    data,\n    fetchNextPage,\n    hasNextPage,\n    isFetchingNextPage,\n    status\n  } = useInfiniteQuery({\n    queryKey: ['orders-feed'],\n    queryFn: fetchOrders,\n    // Trích xuất endCursor từ backend trả về để làm tham số cho trang sau:\n    getNextPageParam: (lastPage) => \n      lastPage.pageInfo.hasNextPage ? lastPage.pageInfo.endCursor : undefined,\n  });\n\n  // Tự động tải trang tiếp theo khi phần tử đáy màn hình xuất hiện trong Viewport\n  useEffect(() => {\n    if (inView && hasNextPage && !isFetchingNextPage) {\n      fetchNextPage();\n    }\n  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);\n\n  if (status === 'pending') return <div>Đang tải bảng tin...</div>;\n\n  // Hợp nhất dữ liệu tất cả các trang\n  const allOrders = data.pages.flatMap((page) => page.data);\n\n  return (\n    <div className=\"orders-feed\">\n      {allOrders.map((order) => (\n        <div key={order.id} className=\"order-item\">\n          <h4>Đơn hàng #{order.id}</h4>\n          <p>Khách hàng: {order.customerName} - {order.amount}$</p>\n        </div>\n      ))}\n\n      {/* Trigger element nằm ở cuối danh sách */}\n      <div ref={ref} className=\"loading-trigger\">\n        {isFetchingNextPage ? 'Đang tải thêm đơn hàng...' : hasNextPage ? 'Cuộn để tải thêm' : 'Đã tải hết đơn hàng!'}\n      </div>\n    </div>\n  );\n}",
+              "calloutType": "tip",
+              "calloutTitle": "Trọn vẹn vòng đời Full-Stack",
+              "calloutTitleVi": "Trọn vẹn vòng đời Full-Stack",
+              "calloutText": "Khi kết hợp TanStack Query (quản lý state/caching/cursor) ở tầng Frontend, Cursor API (đóng gói Opaque token) ở tầng Backend và B-Tree Index Keyset ở tầng Database, bạn đã tạo ra một hệ thống phân trang chuẩn mực cấp độ doanh nghiệp, có khả năng phục vụ hàng triệu người dùng đồng thời với hiệu năng cực đỉnh.",
+              "calloutTextVi": "Khi kết hợp TanStack Query (quản lý state/caching/cursor) ở tầng Frontend, Cursor API (đóng gói Opaque token) ở tầng Backend và B-Tree Index Keyset ở tầng Database, bạn đã tạo ra một hệ thống phân trang chuẩn mực cấp độ doanh nghiệp, có khả năng phục vụ hàng triệu người dùng đồng thời với hiệu năng cực đỉnh."
             }
           ]
         }
