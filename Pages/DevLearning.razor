@@ -937,13 +937,37 @@
 
         return seriesId switch
         {
-            "docker-series" or "k8s-series" or "logging-observability-series" or "load-balancing-series" or "container-vs-vm-series" or "cicd-masterclass-series" => "devops",
-            "dotnet-series" or "idempotency-key-series" or "jwt-deep-dive-series" or "db-interview-low-series" or "db-interview-mid-series" or "db-interview-high-series" or "enterprise-auth-series" or "sql-server-tuning-series" or "large-scale-data-processing-series" or "architecture-evolution-series" => "backend",
+            "docker-series" or "k8s-series" or "logging-observability-series" or "load-balancing-series" or "container-vs-vm-series" or "cicd-masterclass-series" or "ssh-masterclass-series" => "devops",
+            "dotnet-series" or "idempotency-key-series" or "jwt-deep-dive-series" or "db-interview-low-series" or "db-interview-mid-series" or "db-interview-high-series" or "enterprise-auth-series" or "sql-server-tuning-series" or "large-scale-data-processing-series" or "architecture-evolution-series" or "polyglot-persistence-database-series" or "database-api-pagination-series" or "system-design-caching-masterclass-series" => "backend",
             "aws-series" or "cloudflare-series" or "app-insights-series" or "free-cloud-deploy-db-series" or "vpn-proxy-testing-series" => "cloud",
             "ai-mcp-series" or "vibe-coding-series" or "rag-gemini-series" or "pr-ai-code-review-series" => "ai",
-            "wcag-accessibility-series" or "blazor-fullstack-series" or "tech-career-interview-playbook-series" => "standards",
+            "wcag-accessibility-series" or "blazor-fullstack-series" or "tech-career-interview-playbook-series" or "awesome-github-learning-series" => "standards",
             _ => "other"
         };
+    }
+
+    private static DateTime ParsePublishedDate(string? dateStr)
+    {
+        if (string.IsNullOrWhiteSpace(dateStr)) return DateTime.MinValue;
+        var parts = dateStr.Trim().Split('/');
+        if (parts.Length == 3 &&
+            int.TryParse(parts[0], out var d) &&
+            int.TryParse(parts[1], out var m) &&
+            int.TryParse(parts[2], out var y))
+        {
+            return new DateTime(y, m, d);
+        }
+        if (DateTime.TryParse(dateStr.Trim(), out var dt))
+        {
+            return dt;
+        }
+        return DateTime.MinValue;
+    }
+
+    private static DateTime GetSeriesLatestDate(DevSeries s)
+    {
+        if (s.Articles == null || s.Articles.Count == 0) return DateTime.MinValue;
+        return s.Articles.Max(a => ParsePublishedDate(a.PublishedDate));
     }
 
     private string GetCategoryLabel(string category)
@@ -1004,7 +1028,7 @@
                         a.Tags.Any(t => t.ToLowerInvariant().Contains(q))));
             }
 
-            return list;
+            return list.OrderByDescending(s => GetSeriesLatestDate(s));
         }
     }
 
