@@ -8,8 +8,8 @@
       "icon": "bi-terminal-split",
       "color": "#10b981",
       "badge": "DevOps & SysAdmin",
-      "description": "Comprehensive guide to SSH (Secure Shell): What can you do once SSH is installed, asymmetric key cryptography (Ed25519), SSH Port Forwarding / Tunneling (Local, Remote, Dynamic SOCKS5), Jump Hosts, and VPS security hardening with Fail2ban and 2FA.",
-      "descriptionVi": "Cẩm nang toàn diện về SSH (Secure Shell): Cài SSH thì làm được gì? Bản chất giao thức, xác thực khóa Ed25519, làm chủ Port Forwarding (Local, Remote, Dynamic SOCKS5 Proxy), xuyên Bastion Host và Hardening bảo mật VPS chuẩn Production với Fail2ban & 2FA.",
+      "description": "Comprehensive guide to SSH (Secure Shell): What can you do once SSH is installed, asymmetric key cryptography (Ed25519), SSH Port Forwarding / Tunneling (Local, Remote, Dynamic SOCKS5), Jump Hosts, VPS security hardening with Fail2ban & 2FA, and remote Windows Server & IIS automation with OpenSSH and Plink.",
+      "descriptionVi": "Cẩm nang toàn diện về SSH (Secure Shell): Cài SSH thì làm được gì? Bản chất giao thức, xác thực khóa Ed25519, làm chủ Port Forwarding (Local, Remote, Dynamic SOCKS5 Proxy), xuyên Bastion Host, Hardening bảo mật VPS với Fail2ban & 2FA, và thực chiến quản trị Windows Server / IIS từ xa bằng OpenSSH & Plink.",
       "articles": [
         {
           "id": "ssh-article-1-fundamentals-and-capabilities",
@@ -482,6 +482,154 @@
               "calloutTitleVi": "Hoàn Tất Lộ Trình Hardening",
               "calloutText": "With Ed25519 keys, password authentication disabled, custom ports, Fail2ban active, and 2FA enforced, your VPS has achieved enterprise-grade military-level security compliance.",
               "calloutTextVi": "Với cặp khóa Ed25519, khai tử mật khẩu, đổi port, kích hoạt lá chắn Fail2ban và xác thực 2 lớp 2FA, máy chủ VPS của bạn đã đạt tiêu chuẩn an toàn bảo mật cấp độ doanh nghiệp cao nhất."
+            }
+          ]
+        },
+        {
+          "id": "ssh-article-5-windows-openssh-plink-iis-automation",
+          "seriesId": "ssh-masterclass-series",
+          "lessonNumber": "Bài 5",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 5,
+          "title": "Remote Windows Server & IIS Administration via OpenSSH and Plink (PuTTY Link)",
+          "titleVi": "Thực Chiến Quản Trị Windows Server & IIS Từ Xa Bằng OpenSSH Và Plink (PuTTY Link): Tự Động Hóa Không Cần RDP",
+          "readingTime": "18 phút đọc",
+          "publishedDate": "24/10/2026",
+          "summary": "Master headless Windows Server administration without sluggish RDP: Install and configure OpenSSH Server on Windows Server, set PowerShell as the default SSH shell, leverage Plink (PuTTY Link CLI) on your client machine, manage IIS remotely (restarting web server, recycling AppPools, managing sites via appcmd & PowerShell, live W3C log streaming), and build automated 1-click deployment scripts.",
+          "summaryVi": "Cẩm nang thực chiến quản trị Windows Server từ xa không cần mở Remote Desktop (RDP) nặng nề: Hướng dẫn cài đặt OpenSSH Server trên Windows Server, đổi default shell sang PowerShell, cài đặt và sử dụng Plink (PuTTY Link CLI) từ máy client, điều khiển và 'vọc vạch' IIS (bật/tắt site, recycle AppPool, sửa web.config, soi log W3C realtime) và xây dựng script 1-click tự động hóa triển khai ứng dụng.",
+          "tags": [
+            "OpenSSH Windows",
+            "Plink",
+            "PuTTY",
+            "IIS",
+            "Windows Server",
+            "PowerShell",
+            "Automation",
+            "SysAdmin"
+          ],
+          "sections": [
+            {
+              "heading": "1. The Pain of Remote Desktop (RDP) & The OpenSSH + Plink Solution",
+              "headingVi": "1. Nỗi Đau Remote Desktop (RDP) & Vì Sao Nên Dùng OpenSSH + Plink?",
+              "paragraphs": [
+                "For decades, the standard way to administer a Windows Server has been RDP (Remote Desktop Protocol - Port 3389). However, RDP has noticeable drawbacks: (1) Heavy and resource-intensive, consuming significant CPU, RAM, and bandwidth. (2) Highly sensitive to network latency, causing annoying cursor lag and screen freezing over slow connections. (3) Cannot be easily integrated into automated CI/CD pipelines or headless batch scripts.",
+                "Imagine you just need to restart a stuck IIS application pool or inspect the last 20 lines of a production log file. Opening RDP, waiting for user session login, loading desktop tiles, and navigating the GUI takes minutes.",
+                "The modern solution: Install OpenSSH Server directly on Windows Server, and use Plink (PuTTY Link CLI) on your client workstation or CI/CD runner. You get instantaneous command execution, rock-solid security over Port 22, and the ability to script any Windows/IIS task in seconds."
+              ],
+              "paragraphsVi": [
+                "Trong suốt nhiều năm, cách thức phổ biến nhất để quản trị một chiếc máy chủ Windows Server là mở Remote Desktop (RDP qua cổng 3389). Thế nhưng, RDP tồn tại những nỗi đau rất lớn: (1) Rất nặng nề, ngốn nhiều tài nguyên CPU, RAM và băng thông của server. (2) Phụ thuộc nhiều vào độ trễ mạng (latency), nếu mạng yếu hoặc kết nối từ xa thì chuột bị giật lag, màn hình bị xé hình rất khó chịu. (3) Hoàn toàn bất khả thi nếu muốn nhúng vào các pipeline tự động hóa CI/CD hoặc chạy script âm thầm dưới nền (headless automation).",
+                "Hãy tưởng tượng: Bạn chỉ muốn tái khởi động (recycle) một Application Pool đang bị treo RAM trên IIS, hoặc muốn liếc nhanh 20 dòng cuối của file log để xem website vừa phát sinh lỗi gì. Việc phải bật RDP lên, chờ đăng nhập phiên làm việc, load toàn bộ giao diện Desktop rồi click chuột qua từng menu là vô cùng tốn thời gian và rườm rà.",
+                "Giải pháp hiện đại và tinh gọn: Cài đặt OpenSSH Server trực tiếp lên Windows Server, và dùng Plink (PuTTY Link CLI) từ máy làm việc hoặc máy chủ build. Bạn có thể gửi lệnh điều khiển tức thì, mã hóa an toàn qua Port 22, và 'vọc vạch' tự động hóa toàn bộ hệ sinh thái Windows / IIS một cách nhẹ nhàng như mây."
+              ],
+              "codeTitle": "RDP GUI vs OpenSSH + Plink Architecture Comparison",
+              "codeLanguage": "text",
+              "codeContent": "[CÁCH TRUYỀN THỐNG: RDP (Port 3389)]\nClient Laptop ===(RDP Session: Đồ họa màn hình nặng nề, lag, chậm)===> Windows Server\n  * Phải đăng nhập màn hình đồ họa\n  * Không tự động hóa bằng script batch/CI-CD được\n  * Tốn băng thông và tài nguyên server\n\n[CÁCH HIỆN ĐẠI: OPENSSH SERVER + PLINK (Port 22)]\nClient Machine ---(Plink.exe / SSH: Payload dòng lệnh mã hóa siêu nhẹ)---> Windows Server (OpenSSH)\n  * Tốc độ phản hồi tính bằng mili-giây\n  * Điều khiển trực tiếp IIS qua PowerShell / appcmd / iisreset\n  * Nhúng thẳng vào file script .bat / .ps1 để deploy 1-click hoặc tự động hóa CI/CD!",
+              "calloutType": "tip",
+              "calloutTitle": "Tip: What is Plink?",
+              "calloutTitleVi": "Mẹo: Plink (PuTTY Link) Thực Chất Là Gì?",
+              "calloutText": "Plink (PuTTY Link) is the command-line companion tool inside the famous PuTTY suite. While PuTTY opens an interactive GUI window, Plink is a pure CLI binary (`plink.exe`) specifically engineered for running remote commands from batch scripts, PowerShell, and CI/CD automation without interactive UI prompts.",
+              "calloutTextVi": "Plink (viết tắt của PuTTY Link) là công cụ dòng lệnh (CLI) nằm trong bộ phần mềm PuTTY nổi tiếng. Trong khi PuTTY chuyên mở cửa sổ giao diện tương tác, thì Plink (`plink.exe`) được thiết kế riêng biệt để chạy các lệnh SSH trực tiếp từ Command Prompt, PowerShell hoặc script tự động hóa mà không làm bật bất kỳ cửa sổ đồ họa nào."
+            },
+            {
+              "heading": "2. Installing & Configuring OpenSSH Server on Windows Server",
+              "headingVi": "2. Cài Đặt & Cấu Hình OpenSSH Server Trên Windows Server (Server-Side)",
+              "paragraphs": [
+                "OpenSSH Server has been officially supported by Microsoft as an integrated Windows Feature since Windows Server 2019 and Windows 10/11. Installation takes only a few PowerShell commands executed with Administrator privileges.",
+                "Step 1: Check if the OpenSSH capability is present and install `OpenSSH.Server~~~~0.0.1.0`. Step 2: Start the `sshd` service and configure it to run automatically on system boot (`Set-Service -Name sshd -StartupType 'Automatic'`). Step 3: Ensure Windows Defender Firewall allows incoming TCP traffic on Port 22.",
+                "CRITICAL WINDOWS SSH TRAP #1 (Default Shell): By default, Windows OpenSSH launches `cmd.exe`. To unlock the full power of Windows Server administration, IIS automation, and object pipelines, you MUST configure PowerShell as the default SSH shell via the Windows Registry.",
+                "CRITICAL WINDOWS SSH TRAP #2 (Administrator Authorized Keys): If your SSH user belongs to the local `Administrators` group on Windows, OpenSSH will NOT read `C:\\Users\\<user>\\.ssh\\authorized_keys`! Instead, it strictly requires keys in `C:\\ProgramData\\ssh\\administrators_authorized_keys` with restricted ACL permissions (only SYSTEM and Administrators)."
+              ],
+              "paragraphsVi": [
+                "Kể từ Windows Server 2019 và Windows 10/11 trở đi, Microsoft đã tích hợp chính thức OpenSSH Server thành một tính năng (Windows Feature) có sẵn trong hệ điều hành. Việc cài đặt chỉ mất vỏn vẹn vài dòng lệnh chạy trong PowerShell với quyền Administrator.",
+                "Bước 1: Kiểm tra gói tính năng và cài đặt `OpenSSH.Server~~~~0.0.1.0`. Bước 2: Khởi động dịch vụ `sshd` và chuyển chế độ khởi động sang tự động (`Automatic`). Bước 3: Mở cổng TCP 22 trên tường lửa Windows Defender Firewall.",
+                "BẪY KINH ĐIỂN SỐ 1 TRÊN WINDOWS (Default Shell): Mặc định khi đăng nhập SSH vào Windows, bạn sẽ rơi vào Command Prompt (`cmd.exe`) rất thô sơ. Để khai thác toàn bộ sức mạnh quản trị IIS, điều khiển service và xử lý chuỗi lệnh cao cấp, bạn BẮT BUỘC phải chuyển shell mặc định của OpenSSH sang `PowerShell.exe` bằng cách thêm một khóa trong Registry.",
+                "BẪY KINH ĐIỂN SỐ 2 (authorized_keys của quyền Administrator): Trên Windows, nếu tài khoản của bạn thuộc nhóm `Administrators`, OpenSSH sẽ KHÔNG thèm đọc file `C:\\Users\\<user>\\.ssh\\authorized_keys`! Thay vào đó, nó bắt buộc phải nằm tại đường dẫn hệ thống `C:\\ProgramData\\ssh\\administrators_authorized_keys` và phải phân quyền ACL nghiêm ngặt (chỉ cho phép SYSTEM và Administrators truy cập)."
+              ],
+              "codeTitle": "Full OpenSSH Server Setup Script for Windows Server (PowerShell Admin)",
+              "codeLanguage": "powershell",
+              "codeContent": "# === CHẠY TRÊN WINDOWS SERVER BẰNG POWERSHELL ADMIN ===\n\n# 1. Kiểm tra và Cài đặt OpenSSH Server\nGet-WindowsCapability -Online | Where-Object Name -like 'OpenSSH.Server*'\nAdd-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0\n\n# 2. Khởi động dịch vụ sshd và đặt chế độ tự khởi động cùng Windows\nStart-Service sshd\nSet-Service -Name sshd -StartupType 'Automatic'\n\n# 3. Mở cổng 22 trên Windows Defender Firewall\nNew-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' \\\n    -DisplayName 'OpenSSH Server (sshd)' \\\n    -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22\n\n# 4. ĐỔI DEFAULT SHELL TỪ CMD.EXE SANG POWERSHELL.EXE (RẤT QUAN TRỌNG!)\nNew-ItemProperty -Path \"HKLM:\\SOFTWARE\\OpenSSH\" \\\n    -Name DefaultShell \\\n    -Value \"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" \\\n    -PropertyType String -Force\n\n# 5. CẤU HÌNH SSH KEY CHO USER ADMINISTRATOR (NẾU DÙNG KEY THAY VÌ PASSWORD)\n$adminKeyPath = \"C:\\ProgramData\\ssh\\administrators_authorized_keys\"\nif (-not (Test-Path $adminKeyPath)) { New-Item -ItemType File -Path $adminKeyPath -Force }\n# Dán public key của bạn vào file này\n# Sửa phân quyền ACL chuẩn để OpenSSH không từ chối khóa:\nicacls.exe $adminKeyPath /inheritance:r\nicacls.exe $adminKeyPath /grant \"SYSTEM:(F)\"\nicacls.exe $adminKeyPath /grant \"BUILTIN\\Administrators:(F)\"\n\n# Khởi động lại sshd để áp dụng toàn bộ thay đổi\nRestart-Service sshd\nWrite-Host \"[SUCCESS] OpenSSH Server tren Windows Server da san sang!\" -ForegroundColor Green",
+              "calloutType": "warning",
+              "calloutTitle": "Warning: The administrators_authorized_keys Trap",
+              "calloutTitleVi": "Cảnh Báo: Bẫy Quyền ACL administrators_authorized_keys",
+              "calloutText": "If SSH rejects your public key when connecting as Administrator, check `C:\\ProgramData\\ssh\\logs\\sshd.log`. 99% of the time, it is caused by inherited Windows permissions on the `administrators_authorized_keys` file. Running the `icacls` commands above fixes it instantly.",
+              "calloutTextVi": "Nếu bạn kết nối bằng tài khoản Administrator mà SSH vẫn cứ đòi mật khẩu hoặc từ chối khóa, hãy mở log `C:\\ProgramData\\ssh\\logs\\sshd.log`. 99% nguyên nhân là file `administrators_authorized_keys` bị dính thừa kế quyền (inheritance). Chạy 3 lệnh `icacls` ở trên sẽ xử lý triệt để trong 1 giây."
+            },
+            {
+              "heading": "3. Installing & Mastering Plink (PuTTY Link) on the Client Machine",
+              "headingVi": "3. Cài Đặt & Làm Chủ Plink (PuTTY Link) Trên Máy Client (Client-Side)",
+              "paragraphs": [
+                "With OpenSSH Server running on your remote Windows Server, you need a lightweight, headless client tool on your development laptop or CI/CD machine. This is where Plink (`plink.exe`) shines.",
+                "How to install Plink on Windows: (1) Using `winget`: `winget install PuTTY.PuTTY` (which automatically places `plink.exe`, `putty.exe`, `pscp.exe` in your system PATH). (2) Using Chocolatey: `choco install putty`. (3) Or download the single portable `plink.exe` binary from the official PuTTY website.",
+                "Essential Plink command-line flags you must know: `-ssh` (specifies SSH protocol), `-pw <password>` (supplies password non-interactively for quick prototyping), `-i <private_key.ppk>` (authenticates using a PuTTY Private Key), and critically `-batch` (disables all interactive prompts, making it bulletproof for automated batch scripts).",
+                "Testing your first remote command: Run `plink -ssh user@server_ip -pw your_pass \"Get-ComputerInfo | Select-Object WindowsProductName, OsUptime\"`. Notice how the command runs remotely and prints the result right onto your local terminal without any GUI overhead!"
+              ],
+              "paragraphsVi": [
+                "Sau khi OpenSSH Server đã chạy mượt mà trên máy chủ Windows Server từ xa, bạn cần một công cụ client nhỏ gọn, không giao diện trên máy tính làm việc hoặc server CI/CD. Đó chính là sân khấu của Plink (`plink.exe`).",
+                "Cách cài đặt Plink trên máy Client: (1) Dùng lệnh Windows Package Manager: `winget install PuTTY.PuTTY` (lệnh này sẽ tự động đưa `plink.exe`, `putty.exe`, `pscp.exe` vào biến môi trường PATH của hệ thống). (2) Dùng Chocolatey: `choco install putty`. (3) Hoặc tải trực tiếp file `plink.exe` duy nhất từ trang chủ PuTTY rồi thả vào một thư mục bất kỳ.",
+                "Các cờ lệnh tối quan trọng của Plink cần nắm chắc: `-ssh` (chỉ định giao thức SSH), `-pw <password>` (truyền mật khẩu trực tiếp cho các tình huống thử nghiệm nhanh), `-i <private_key.ppk>` (xác thực bằng file khóa riêng tư của PuTTY), và đặc biệt là `-batch` (tắt toàn bộ các hộp thoại hỏi tương tác, giúp script chạy thông suốt không bao giờ bị treo chờ người dùng nhấn Enter).",
+                "Thử nghiệm câu lệnh đầu tiên: Chạy `plink -ssh user@server_ip -pw your_pass \"Get-ComputerInfo | Select-Object WindowsProductName, OsUptime\"`. Bạn sẽ thấy thông tin hệ điều hành của server từ xa hiện ra ngay lập tức trên terminal máy của bạn mà không tốn một giọt tài nguyên GUI!"
+              ],
+              "codeTitle": "Plink Practical Syntax & Remote Execution Examples",
+              "codeLanguage": "bash",
+              "codeContent": "# 1. Kết nối thử nghiệm nhanh bằng Username & Password\nplink -ssh Administrator@192.168.1.100 -pw \"SuperSecretPass123!\" \"hostname\"\n\n# 2. Kết nối chuẩn bảo mật bằng SSH Key (.ppk) với cờ -batch (Dành cho Automation)\nplink -batch -i \"C:\\Keys\\winserver.ppk\" Administrator@192.168.1.100 \"Get-Date\"\n\n# 3. Chạy một đoạn script PowerShell kiểm tra service IIS từ máy Client:\nplink -batch -i \"C:\\Keys\\winserver.ppk\" Administrator@192.168.1.100 \"Get-Service -Name w3svc | Select-Object Name, Status, StartType\"\n\n# 4. Kiểm tra Top 5 tiến trình ngốn RAM nhiều nhất trên Windows Server:\nplink -batch -i \"C:\\Keys\\winserver.ppk\" Administrator@192.168.1.100 \"Get-Process | Sort-Object WorkingSet64 -Descending | Select-Object -First 5 ProcessName, @{Name='RAM (MB)';Expression={[math]::Round($_.WorkingSet64/1MB,2)}}\"",
+              "calloutType": "tip",
+              "calloutTitle": "Tip: Converting OpenSSH Key to PuTTY .ppk",
+              "calloutTitleVi": "Mẹo: Chuyển Đổi SSH Key (id_ed25519) Sang Định Dạng .ppk",
+              "calloutText": "Plink expects private keys in PuTTY's `.ppk` format. If you generated an OpenSSH keypair (`ssh-keygen`), you can easily convert your private key to `.ppk` using `puttygen.exe`: Open PuTTYgen -> Conversions -> Import Key -> Select `id_ed25519` -> Save private key as `mykey.ppk`.",
+              "calloutTextVi": "Plink sử dụng định dạng khóa riêng tư `.ppk` của PuTTY. Nếu bạn đã có cặp khóa OpenSSH tạo từ `ssh-keygen` (`id_ed25519`), bạn có thể đổi sang `.ppk` cực nhanh bằng công cụ `puttygen.exe`: Mở PuTTYgen -> Menu Conversions -> Import Key -> Chọn file `id_ed25519` -> Nhấn 'Save private key' để lưu thành `mykey.ppk`."
+            },
+            {
+              "heading": "4. Hands-on IIS Administration Recipes via Plink (No RDP Needed)",
+              "headingVi": "4. Tuyệt Kỹ 'Vọc Vạch' & Quản Trị IIS Từ Xa Bằng Plink (Không Cần RDP)",
+              "paragraphs": [
+                "Once OpenSSH and Plink are married together, IIS (Internet Information Services) administration becomes an absolute joy. You have three primary weapons at your disposal on the remote Windows Server: `iisreset.exe`, `appcmd.exe` (the robust built-in IIS CLI tool located in `C:\\Windows\\System32\\inetsrv\\`), and native PowerShell IIS cmdlets (`WebAdministration` / `IISAdministration`).",
+                "Recipe 1 - Restarting IIS & Checking Status: When the web server is unresponsive, instead of opening RDP and opening IIS Manager GUI, a single Plink command triggers `iisreset /restart` or queries `iisreset /status` in milliseconds.",
+                "Recipe 2 - Recycling Stuck Application Pools: In real-world production, .NET web applications occasionally leak memory or lock files. You can recycle a specific AppPool without affecting other websites on the server using `appcmd.exe recycle apppool /apppool.name:\"MyAppPool\"`.",
+                "Recipe 3 - Starting, Stopping & Listing Web Sites: Enumerate all configured websites with `appcmd.exe list site`, or start/stop a specific site on-demand.",
+                "Recipe 4 - Live W3C Log Streaming (The Linux tail -f equivalent on Windows!): IIS stores incoming HTTP access logs in `C:\\inetpub\\logs\\LogFiles\\W3SVC*\\`. By running `Get-Content ... -Tail 30 -Wait` over Plink, you can monitor HTTP status codes (200, 404, 500) streaming live on your client terminal!",
+                "Recipe 5 - Inspecting & Tweaking web.config: Read remote configuration keys or update connection strings without downloading the entire file."
+              ],
+              "paragraphsVi": [
+                "Khi OpenSSH Server và Plink đã được kết hợp ăn ý, việc quản trị IIS (Internet Information Services) trở thành một trải nghiệm cực kỳ sướng tay. Bạn sở hữu 3 vũ khí hủy diệt trên máy chủ từ xa: `iisreset.exe`, `appcmd.exe` (công cụ dòng lệnh chính thống siêu mạnh của IIS nằm tại `C:\\Windows\\System32\\inetsrv\\`), và các lệnh PowerShell chuyên dụng (`WebAdministration` / `IISAdministration`).",
+                "Công thức 1 - Kiểm tra trạng thái & Restart IIS: Khi web server bị đơ hoặc vừa cập nhật chứng chỉ SSL, thay vì mở RDP rồi click chuột trong IIS Manager, chỉ cần 1 câu lệnh Plink là bạn có thể thực hiện `iisreset /restart` hoặc xem `iisreset /status` trong chớp mắt.",
+                "Công thức 2 - Tái khởi động (Recycle) Application Pool: Trong môi trường thực tế, ứng dụng web .NET đôi khi bị rò rỉ RAM (memory leak) hoặc bị deadlock. Bạn có thể giải phóng bộ nhớ ngay lập tức bằng lệnh recycle riêng AppPool đó mà không hề làm gián đoạn các website khác: `appcmd.exe recycle apppool /apppool.name:\"MyAppPool\"`.",
+                "Công thức 3 - Liệt kê, Bật và Tắt Website: Lấy toàn bộ danh sách website đang chạy cùng ID và Bindings bằng `appcmd.exe list site`, hoặc bật/tắt một website cụ thể khi cần bảo trì.",
+                "Công thức 4 - Soi log IIS trực tiếp theo thời gian thực (Tính năng `tail -f` kinh điển trên Windows): IIS ghi log truy cập HTTP vào thư mục `C:\\inetpub\\logs\\LogFiles\\W3SVC*\\`. Nhờ Plink đẩy lệnh `Get-Content ... -Tail 30 -Wait`, bạn có thể ngồi tại máy cá nhân xem từng dòng request 200, 404, 500 bắn về màn hình theo thời gian thực!",
+                "Công thức 5 - Đọc và kiểm tra file cấu hình web.config từ xa: Xem nhanh nội dung các thẻ cấu hình nhạy cảm mà không cần tải cả file về máy."
+              ],
+              "codeTitle": "Practical IIS Management Recipes via Plink",
+              "codeLanguage": "bash",
+              "codeContent": "# 1. KIỂM TRA TRẠNG THÁI VÀ RESTART TOÀN BỘ DỊCH VỤ IIS\nplink -batch -i C:\\Keys\\winserver.ppk Administrator@192.168.1.100 \"iisreset /status\"\nplink -batch -i C:\\Keys\\winserver.ppk Administrator@192.168.1.100 \"iisreset /restart\"\n\n# 2. LIỆT KÊ TẤT CẢ WEBSITE ĐANG CHẠY TRÊN IIS\nplink -batch -i C:\\Keys\\winserver.ppk Administrator@192.168.1.100 \"C:\\Windows\\System32\\inetsrv\\appcmd.exe list site\"\n\n# 3. RECYCLE APPLICATION POOL (GIẢI PHÓNG RAM CHO SITE CỤ THỂ KHÔNG LÀM CHẾT CÁC SITE KHÁC)\nplink -batch -i C:\\Keys\\winserver.ppk Administrator@192.168.1.100 \"C:\\Windows\\System32\\inetsrv\\appcmd.exe recycle apppool /apppool.name:\\\"DefaultAppPool\\\"\"\n\n# 4. STOP HOẶC START MỘT WEBSITE KHI CẦN BẢO TRÌ\nplink -batch -i C:\\Keys\\winserver.ppk Administrator@192.168.1.100 \"C:\\Windows\\System32\\inetsrv\\appcmd.exe stop site /site.name:\\\"MyBlazorPortfolio\\\"\"\nplink -batch -i C:\\Keys\\winserver.ppk Administrator@192.168.1.100 \"C:\\Windows\\System32\\inetsrv\\appcmd.exe start site /site.name:\\\"MyBlazorPortfolio\\\"\"\n\n# 5. SOI LOG TRUY CẬP IIS REALTIME (HTTP REQUEST LIVE STREAMING NHƯ TAIL -F)\nplink -batch -i C:\\Keys\\winserver.ppk Administrator@192.168.1.100 \"Get-ChildItem -Path 'C:\\inetpub\\logs\\LogFiles\\W3SVC1' | Sort-Object LastWriteTime -Descending | Select-Object -First 1 | ForEach-Object { Get-Content $_.FullName -Tail 20 -Wait }\"\n\n# 6. ĐỌC NHANH NỘI DUNG WEB.CONFIG CỦA WEBSITE TỪ XA\nplink -batch -i C:\\Keys\\winserver.ppk Administrator@192.168.1.100 \"Get-Content 'C:\\inetpub\\wwwroot\\MyBlazorPortfolio\\web.config' -TotalCount 40\"",
+              "calloutType": "info",
+              "calloutTitle": "Info: The Power of appcmd.exe",
+              "calloutTitleVi": "Thông Tin: Sức Mạnh Tuyệt Đối Của appcmd.exe",
+              "calloutText": "`appcmd.exe` is the native command-line management tool included with every IIS installation. It is lightning-fast and requires no special PowerShell module imports. Any operation you can perform in the graphical IIS Manager console can be executed via `appcmd`.",
+              "calloutTextVi": "`appcmd.exe` là công cụ dòng lệnh nguyên bản có sẵn trong mọi bản cài đặt IIS. Nó thực thi cực nhanh và không yêu cầu import module PowerShell rườm rà. Bất kỳ thao tác click chuột nào bạn làm được trên giao diện đồ họa IIS Manager đều có thể thực hiện chính xác bằng `appcmd`."
+            },
+            {
+              "heading": "5. Automation Mastery: 1-Click Deploy Script & SSH Tunneling into Private IIS",
+              "headingVi": "5. Tự Động Hóa Thực Chiến: Script 1-Click Deploy & Đào Hầm Tunnel Vào IIS Nội Bộ",
+              "paragraphs": [
+                "Now let's assemble everything into two high-value production workflows:",
+                "Workflow 1: The 1-Click Build, Upload & IIS Recycle Script. Instead of manually copying DLL files via Remote Desktop clipboard, you can write a simple `.bat` or `.ps1` script on your local machine. It uses `dotnet publish` to build your app, `pscp.exe` (PuTTY SCP) to securely copy the files to `C:\\inetpub\\wwwroot\\`, and `plink.exe` to recycle the AppPool and verify the site responds with HTTP 200.",
+                "Workflow 2: SSH Port Forwarding into a Private IIS Web Server. In many corporate environments, the Windows Server sits inside a private subnet (e.g. `192.168.1.100` or AWS VPC) without a public IP on port 80/443; only Port 22 SSH is accessible via a VPN or jump host. Using Plink Local Port Forwarding (`plink -N -L 8080:localhost:80 ...`), you can map the remote IIS web server directly to `http://localhost:8080` in your local laptop browser!",
+                "With OpenSSH and Plink in your toolbelt, Windows Server administration feels just as nimble, powerful, and scriptable as a Linux DevOps workflow."
+              ],
+              "paragraphsVi": [
+                "Bây giờ, hãy ghép nối tất cả các kỹ thuật trên thành hai kịch bản tự động hóa giá trị nhất trong thực tế:",
+                "Kịch bản 1: Viết Script 1-Click Build, Upload & Tái khởi động IIS. Thay vì phải copy từng file DLL qua clipboard của Remote Desktop rồi paste thủ công, bạn chỉ cần tạo 1 file script `.bat` hoặc `.ps1` ngay trên máy local. Script này sẽ tự động: Chạy `dotnet publish` để build source code -> Dùng `pscp.exe` (PuTTY SCP) bắn toàn bộ file lên thư mục `C:\\inetpub\\wwwroot\\` -> Dùng `plink.exe` để recycle AppPool và test kết quả trả về HTTP 200 OK.",
+                "Kịch bản 2: Đào hầm Port Forwarding xem Website IIS nội bộ. Rất nhiều trường hợp máy chủ Windows Server nằm sâu trong mạng LAN công ty hoặc Private Subnet (chỉ có IP nội bộ `192.168.1.100`), không mở cổng 80/443 ra ngoài mà chỉ mở duy nhất cổng 22 SSH. Nhờ tính năng Local Port Forwarding của Plink (`plink -N -L 8080:localhost:80 ...`), bạn có thể ánh xạ cổng web của IIS từ xa về thẳng `http://localhost:8080` trên trình duyệt máy tính cá nhân!",
+                "Với sự phối hợp của OpenSSH và Plink, việc quản trị Windows Server giờ đây trở nên thanh thoát, tốc độ và đậm chất DevOps không thua kém gì thế giới Linux."
+              ],
+              "codeTitle": "1-Click Deploy Script & Plink Port Forwarding Tunnel",
+              "codeLanguage": "bash",
+              "codeContent": "# ==========================================================================\n# KỊCH BẢN 1: FILE DEPLOY TỰ ĐỘNG (deploy-to-iis.bat trên máy Client)\n# ==========================================================================\n@echo off\necho [1/4] Dang build va publish ung dung Blazor / ASP.NET...\ndotnet publish -c Release -o .\\publish_output\n\necho [2/4] Uploading files len Windows Server qua pscp.exe...\npscp -batch -r -i C:\\Keys\\winserver.ppk .\\publish_output\\* Administrator@192.168.1.100:C:/inetpub/wwwroot/MyBlazorPortfolio/\n\necho [3/4] Ra lenh cho IIS recycle AppPool qua plink.exe...\nplink -batch -i C:\\Keys\\winserver.ppk Administrator@192.168.1.100 \"C:\\Windows\\System32\\inetsrv\\appcmd.exe recycle apppool /apppool.name:\\\"MyBlazorPortfolioAppPool\\\"\"\n\necho [4/4] Kiem tra ket qua Web HTTP Response...\ncurl -I http://192.168.1.100\necho [HOAN TAT] Deploy thanh cong khong can cham vao chuot!\n\n# ==========================================================================\n# KỊCH BẢN 2: ĐÀO HẦM PORT FORWARDING XEM WEB IIS NỘI BỘ\n# ==========================================================================\n# Chay lenh duoi day tren may Client de mo cong 8080 cuc bo tro vao port 80 cua IIS Server:\nplink -ssh -N -L 8080:127.0.0.1:80 -i C:\\Keys\\winserver.ppk Administrator@192.168.1.100\n\n# Bay gio mo Chrome / Edge tren may ban go: http://localhost:8080\n# => Ban dang duyet Web IIS chay tren Windows Server tu xa thong qua duong ham SSH ma hoa 100%!",
+              "calloutType": "tip",
+              "calloutTitle": "Mastery Achieved",
+              "calloutTitleVi": "Hoàn Tất Chuyên Đề Thực Chiến",
+              "calloutText": "You have unlocked the full potential of SSH on Windows! From OpenSSH service configuration, bypassing shell traps, and mastering Plink command-line execution, to manipulating IIS AppPools, streaming logs, and tunneling private sites, you can now manage Windows Server environments with pure DevOps agility.",
+              "calloutTextVi": "Bạn đã mở khóa trọn vẹn sức mạnh của SSH trên nền tảng Windows! Từ việc thiết lập OpenSSH Server, vượt qua các bẫy phân quyền, làm chủ dòng lệnh Plink, cho đến điều khiển AppPool của IIS, xem log thời gian thực và đào hầm xem web nội bộ, bạn đã có thể quản trị toàn diện máy chủ Windows với tốc độ và sự linh hoạt chuẩn DevOps."
             }
           ]
         }
