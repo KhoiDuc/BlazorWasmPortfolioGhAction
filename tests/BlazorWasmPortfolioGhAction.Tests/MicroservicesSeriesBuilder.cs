@@ -1079,8 +1079,8 @@ volumes:
         }
     }
 
-    [Fact]
-    public void UpdateDevLearningJsonWithModernInfrastructureSeries()
+    // Helper method to regenerate or update json if needed
+    internal static void UpdateDevLearningJsonWithModernInfrastructureSeries()
     {
         var path = Path.GetFullPath("../../../../../wwwroot/sample-data/dev-learning.json");
         Assert.True(File.Exists(path), $"File not found at: {path}");
