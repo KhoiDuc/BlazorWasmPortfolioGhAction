@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using BlazorWasmPortfolioGhAction.Pages;
@@ -13,1042 +14,1036 @@ public class MicroservicesSeriesBuilder
         {
             Id = "dotnet-microservices-docker-k8s-ecosystem-series",
             Category = "devops",
-            Title = "The Production .NET Microservices Survival Kit: Seq, Kubernetes Probes, Polly Resilience, MassTransit & OpenTelemetry",
-            TitleVi = "Bộ Thư Viện Sống Còn Cho .NET Microservices Trong Docker & Kubernetes: Seq, K8s Probes, Polly, MassTransit & OpenTelemetry",
-            Icon = "bi-boxes",
-            Color = "#0ea5e9",
-            Badge = "Microservices & K8s Ecosystem",
-            Description = "Essential production library stack for containerized .NET microservices in Docker and Kubernetes: Centralized structured logging with Serilog & Seq, robust Kubernetes Liveness/Readiness/Startup health probes, fault tolerance with Polly & Microsoft.Extensions.Resilience, event-driven transactional Outbox with MassTransit, and distributed tracing with OpenTelemetry.",
-            DescriptionVi = "Bộ thư viện thiết yếu chuẩn Production cho các dự án .NET Microservices đóng gói Docker và triển khai Kubernetes: Quản lý log có cấu trúc tập trung với Serilog & Seq, hệ thống đầu dò sức khỏe Liveness/Readiness/Startup chuẩn K8s, khả năng chịu lỗi liên dịch vụ với Polly & Microsoft.Extensions.Resilience, mẫu thiết kế Transactional Outbox đảm bảo tin cậy với MassTransit, và phân tích truy vết phân tán với OpenTelemetry.",
+            Title = "Modern Infrastructure Tools Masterclass: Containerization (Docker, OCI), Orchestration (Kubernetes, Docker Swarm), Ingress (Kong, NGINX), Message Queues (RabbitMQ, Kafka, SQS) & Observability (Prometheus, Grafana, ELK)",
+            TitleVi = "Hệ Sinh Thái Công Cụ Hạ Tầng Hiện Đại: OCI, Docker, Kubernetes, Docker Swarm, Kong, NGINX, RabbitMQ, Kafka & Prometheus, Grafana, ELK",
+            Icon = "bi-diagram-3-fill",
+            Color = "#0284c7",
+            Badge = "Modern Infrastructure & Cloud-Native",
+            Description = "A comprehensive masterclass on core modern infrastructure tools for distributed systems and microservices: Low-level containerization with Docker & OCI (runc/containerd), cluster orchestration with Kubernetes vs Docker Swarm, edge API gateways & reverse proxies with Kong & NGINX, asynchronous message queues with RabbitMQ, Kafka & AWS SQS, and centralized observability stacks with Prometheus, Grafana & ELK Stack.",
+            DescriptionVi = "Chuyên đề phân tích toàn diện hệ sinh thái công cụ hạ tầng hiện đại cho kiến trúc Microservices và Cloud-Native: Đóng gói Container tầng sâu với Docker & OCI (runc/containerd), điều phối cụm phân tán với Kubernetes vs Docker Swarm, cổng vào API Gateway & Ingress với Kong & NGINX, truyền thông điệp bất đồng bộ tin cậy với RabbitMQ, Kafka & AWS SQS, cùng hạ tầng giám sát toàn diện với Prometheus, Grafana & ELK Stack.",
             Articles = new List<DevArticle>()
         };
 
-        // BÀI 1
+        // =========================================================================
+        // BÀI 1: CONTAINERIZATION & OCI
+        // =========================================================================
         var article1 = new DevArticle
         {
-            Id = "dotnet-microservices-article-1-serilog-seq-in-containers",
+            Id = "infra-tools-article-1-containerization-oci-docker-runtime",
             SeriesId = series.Id,
             LessonNumber = "Bài 1",
             Level = "Beginner",
             LevelVi = "Cơ bản",
             LevelOrder = 1,
-            Title = "Seq & Serilog in Containers: Centralized Structured Logging & Instant Microservice Troubleshooting",
-            TitleVi = "Seq & Serilog Trong Container: Tập Trung Hóa Log Có Cấu Trúc & Truy Vết Sự Cố Microservices",
-            ReadingTime = "15 phút đọc",
-            PublishedDate = "24/10/2026",
-            Summary = "Eliminate the pain of debugging 50 scattered containers. Master structured logging in ASP.NET Core with Serilog and Seq: Understanding Compact Log Event Format (CLEF), non-blocking asynchronous buffering (WriteTo.Async), auto-enriching Pod metadata (ContainerId, MachineName), and writing SQL-like queries in Seq to isolate production incidents in seconds.",
-            SummaryVi = "Xóa bỏ cơn ác mộng debug giữa hàng chục container phân tán. Làm chủ hệ thống ghi log có cấu trúc trong ASP.NET Core với Serilog và Seq: Bản chất định dạng Compact Log Event Format (CLEF), cơ chế đệm bất đồng bộ (WriteTo.Async) không nghẽn luồng xử lý, tự động gắn nhãn metadata của Pod (ContainerId, MachineName) và truy vấn SQL-like trong Seq để bắt lỗi chỉ trong vài giây.",
-            Tags = new List<string> { "Serilog", "Seq", "Docker", "Kubernetes", "Microservices", "Structured Logging" },
+            Title = "Deep-Dive Containerization & OCI: Linux Namespaces, cgroups v2, containerd, runc & Production Packaging",
+            TitleVi = "Containerization & Chuẩn OCI Tầng Sâu: Namespaces, cgroups v2, containerd, runc & Kỹ Thuật Đóng Gói Container Chuẩn Production",
+            ReadingTime = "16 phút đọc",
+            PublishedDate = "25/10/2026",
+            Summary = "Look beyond Docker as a black box. Understand how Linux Kernel primitives (Namespaces, cgroups v2, OverlayFS) isolate processes, the Open Container Initiative (OCI) Image and Runtime specifications, how Docker CLI delegates to containerd and runc, and master production multi-stage Dockerfile packaging using Distroless/Chisel minimal base images.",
+            SummaryVi = "Vượt ra ngoài việc xem Docker như một chiếc hộp đen thần bí. Nắm vững bản chất cô lập tiến trình của Linux Kernel (Namespaces, cgroups v2, OverlayFS), sự ra đời của chuẩn OCI (Open Container Initiative) tách biệt Image Spec và Runtime Spec, luồng thực thi Docker CLI → containerd → runc, cùng kỹ thuật tối ưu hóa Dockerfile đa tầng (Multi-stage build) kết hợp Distroless/Chisel giảm kích thước tới 90% và triệt tiêu lỗ hổng bảo mật CVE.",
+            Tags = new List<string> { "Docker", "OCI", "containerd", "runc", "Linux Namespaces", "cgroups", "Multi-Stage Build" },
             Sections = new List<DevArticleSection>
             {
                 new DevArticleSection
                 {
-                    Heading = "1. The Container Logging Dilemma: Why Plain Text Logs Fail in Microservices",
-                    HeadingVi = "1. Nghịch Lý Ghi Log Trong Container: Vì Sao Log Văn Bản Truyền Thống Thất Bại",
+                    Heading = "1. Container Foundations: Why Containers Are Just Isolated Linux Processes",
+                    HeadingVi = "1. Bản Chất Của Container: Vì Sao Container Không Phải Là Máy Ảo (VM)?",
                     Paragraphs = new List<string>
                     {
-                        "In a monolithic application running on a single server, writing plaintext logs to disk or console was often sufficient. A developer could SSH into the VM and run 'grep error /var/log/app.log' to understand what happened.",
-                        "In a distributed microservice architecture running inside Docker and Kubernetes, that approach collapses completely. You may have 50 different microservice pods dynamically scaling, restarting, and sharing workload. A single user order might trigger API calls across 6 services. If one service fails, grepping plaintext logs across 50 ephemeral containers is impossible.",
-                        "Furthermore, plaintext logs lose type information. If you log 'User 123 purchased item 456 for $99.50', a machine cannot easily query all orders where Price > 100 without brittle regex parsing. The solution is Structured Logging with Serilog, emitting Compact Log Event Format (CLEF) JSON events where parameters remain typed first-class citizens."
+                        "A common misconception among developers is that containers are lightweight virtual machines. In reality, a container does not run a hypervisor, does not boot a guest operating system, and possesses no virtual hardware. A container is simply a standard Linux process isolated by the host Linux kernel using three core primitives: Namespaces, Control Groups (cgroups), and OverlayFS.",
+                        "Linux Namespaces partition kernel resources so that a process inside a container believes it has its own dedicated system. PID namespace ensures the process sees itself as PID 1; Mount namespace provides an isolated filesystem mount table; Network namespace gives a dedicated virtual ethernet interface (veth) and routing table; IPC and UTS namespaces isolate inter-process communication and hostnames.",
+                        "Control Groups (specifically cgroups v2) enforce resource governance: restricting maximum CPU shares, capping memory ceilings to prevent Out-Of-Memory (OOM) cascades, and throttling disk I/O. OverlayFS combines read-only lower image layers with a thin writable container layer via Copy-on-Write (CoW), enabling instant startup and microscopic storage overhead."
                     },
                     ParagraphsVi = new List<string>
                     {
-                        "Trong một ứng dụng Monolith truyền thống chạy trên một máy chủ duy nhất, việc ghi log dưới dạng văn bản thuần túy (Plaintext) ra file hoặc console thường là đủ dùng. Lập trình viên chỉ cần SSH vào máy chủ và gõ lệnh 'grep error /var/log/app.log' là có thể nắm được sự cố.",
-                        "Thế nhưng trong kiến trúc Microservices phân tán trên Docker và Kubernetes, cách làm này hoàn toàn phá sản. Hệ thống có thể gồm 50 Pods khác nhau liên tục co giãn, tự động khởi động lại và luân chuyển tải. Một thao tác đặt hàng của người dùng có thể kích hoạt chuỗi gọi API xuyên suốt 6 dịch vụ. Khi một mắt xích bị gãy, việc lục tìm file log văn bản giữa 50 container tạm bợ là nhiệm vụ bất khả thi.",
-                        "Thêm vào đó, log văn bản làm mất hoàn toàn kiểu dữ liệu. Khi bạn ghi log 'Khách hàng 123 mua đơn 456 với giá 99.50', máy móc không thể nào lọc nhanh các giao dịch có giá > 100 mà không phải viết regex chắp vá. Giải pháp sống còn là Ghi Log Có Cấu Trúc (Structured Logging) với Serilog, xuất ra định dạng JSON chuẩn CLEF (Compact Log Event Format) bảo toàn nguyên vẹn kiểu dữ liệu của từng tham số."
+                        "Một hiểu lầm rất phổ biến của nhiều kỹ sư là coi container như một chiếc máy ảo (VM) thu nhỏ. Trên thực tế, container không có Hypervisor, không khởi động hệ điều hành khách (Guest OS) và không có phần cứng ảo hóa. Một container về bản chất chỉ là một tiến trình (process) Linux bình thường nhưng được cách ly bởi Kernel thông qua 3 trụ cột: Namespaces, Control Groups (cgroups) và OverlayFS.",
+                        "Linux Namespaces phân mảnh tài nguyên của kernel để tiến trình bên trong container tin rằng nó đang sở hữu toàn bộ hệ điều hành: PID namespace biến tiến trình chính thành PID 1; Mount namespace cô lập cấu trúc thư mục; Network namespace cung cấp card mạng ảo (veth) và bảng định tuyến riêng; IPC và UTS namespace cô lập giao tiếp liên tiến trình và hostname.",
+                        "Control Groups (đặc biệt là cgroups v2 hiện đại) đảm nhận vai trò quản trị tài nguyên: giới hạn xung nhịp CPU, thiết lập trần bộ nhớ RAM để ngăn chặn lỗi sập toàn bộ máy chủ (Out-Of-Memory), và điều tiết băng thông đọc ghi đĩa. OverlayFS xếp chồng các layer chỉ đọc (read-only) với một layer ghi tạm thời (read-write) theo cơ chế Copy-on-Write (CoW), giúp container khởi động chỉ trong vài phần nghìn giây."
                     },
-                    CodeTitle = "Plaintext Fragile Log vs Structured Typed Event (CLEF)",
-                    CodeLanguage = "json",
+                    CodeTitle = "Linux Kernel Primitives: Inspecting Container Namespaces & cgroups v2",
+                    CodeLanguage = "bash",
                     CodeContent = """
-// ==================== CÁCH GHI LOG VĂN BẢN TRUYỀN THỐNG ====================
-// Console/File: [2026-10-24 21:00:01 INFO] User 8821 created order 5012 with amount 450.00
-// Nhược điểm: Không thể truy vấn toán tử: Amount > 400 mà phải viết Regular Expression cồng kềnh!
+# 1. Kiểm tra các Namespaces mà một tiến trình Docker container đang sở hữu:
+# Lấy PID thực tế của container trên Linux Host:
+CONTAINER_PID=$(docker inspect --format '{{.State.Pid}}' my-web-app)
 
-// ==================== ĐỊNH DẠNG LOG CÓ CẤU TRÚC CLEF VỚI SERILOG ====================
-{
-  "@t": "2026-10-24T14:00:01.1245000Z",
-  "@l": "Information",
-  "@mt": "User {UserId} created order {OrderId} with amount {Amount}",
-  "@m": "User 8821 created order 5012 with amount 450.00",
-  "UserId": 8821,
-  "OrderId": 5012,
-  "Amount": 450.00,
-  "Currency": "USD",
-  "Environment": "Production",
-  "ContainerId": "order-service-7d8f99c8-4x2lm",
-  "TraceId": "4bf92f3577b34da6a3ce929d0e0e4736"
-}
-// Ưu điểm: Seq hiểu rõ UserId là Integer, Amount là Decimal, có thể lọc: Amount >= 400 ngay tức khắc!
+# Liệt kê tất cả các namespace được ánh xạ trong thư mục /proc:
+ls -l /proc/$CONTAINER_PID/ns
+# Kết quả:
+# ipc -> ipc:[4026532450]
+# mnt -> mnt:[4026532448]
+# net -> net:[4026532453]   <-- Card mạng ảo riêng biệt
+# pid -> pid:[4026532451]   <-- PID 1 bên trong, nhưng là $CONTAINER_PID trên Host!
+# uts -> uts:[4026532449]
+
+# 2. Quan sát giới hạn bộ nhớ qua cgroups v2 trên Host:
+cat /sys/fs/cgroup/system.slice/docker-*.scope/memory.max
+# Trả về giới hạn RAM tính bằng bytes (ví dụ: 536870912 = 512MB)
+
+# 3. Thử nghiệm tạo 'container thủ công' bằng lệnh unshare của Linux kernel:
+sudo unshare --fork --pid --mount-proc --net /bin/bash
+# Ngay lập tức, bạn ở trong một shell mới có PID = 1 và không thấy tiến trình của Host!
 """,
                     CalloutType = "warning",
-                    CalloutTitle = "Never String-Interpolate in Logger Calls",
-                    CalloutTitleVi = "Cảnh Báo: Tuyệt Đối Không Dùng String Interpolation Khi Ghi Log",
-                    CalloutText = "Never write: logger.LogInformation($\"User {userId} bought {orderId}\"). Using the '$' dollar sign formats the string immediately into plaintext before Serilog can capture parameter names and data types. Always use message templates: logger.LogInformation(\"User {UserId} bought {OrderId}\", userId, orderId).",
-                    CalloutTextVi = "Tuyệt đối không viết: logger.LogInformation($\"User {userId} bought {orderId}\"). Ký tự '$' sẽ ép chuỗi thành văn bản thuần trước khi Serilog kịp lưu lại tên và kiểu dữ liệu của biến. Luôn dùng cú pháp Template: logger.LogInformation(\"User {UserId} bought {OrderId}\", userId, orderId)."
+                    CalloutTitle = "Root Inside Container is Root on Host Kernel",
+                    CalloutTitleVi = "Cảnh Báo Sống Còn: Quyền Root Trong Container Có Thể Xâm Nhập Host",
+                    CalloutText = "Because containers share the host Linux kernel directly, running an application as root inside a container grants potential root-level access to the host machine if a container escape vulnerability exists. Always create a dedicated non-root user (e.g. USER appuser) in your production Dockerfiles.",
+                    CalloutTextVi = "Vì container chia sẻ trực tiếp Kernel của máy chủ, việc chạy ứng dụng dưới quyền root bên trong container đồng nghĩa với nguy cơ kẻ tấn công chiếm toàn quyền kiểm soát Host nếu xảy ra lỗ hổng thoát container (Container Escape). Luôn khai báo user thường (ví dụ: USER appuser) trong Dockerfile Production."
                 },
                 new DevArticleSection
                 {
-                    Heading = "2. Configuring Serilog with Seq Sink & Async Non-Blocking Buffers",
-                    HeadingVi = "2. Cấu Hình Serilog Với Seq Sink & Đệm Bất Đồng Bộ Không Chặn Luồng",
+                    Heading = "2. The OCI Standard: How Docker CLI, containerd & runc Work Together",
+                    HeadingVi = "2. Chuẩn OCI (Open Container Initiative): Docker, containerd & runc Liên Kết Thế Nào?",
                     Paragraphs = new List<string>
                     {
-                        "Seq is a purpose-built, high-performance structured log aggregation server tailored specifically for .NET and modern container environments. Unlike the heavy ElasticSearch / Logstash / Kibana (ELK) stack which demands gigabytes of RAM just to boot, Seq runs in a lightweight container using under 250MB of memory.",
-                        "When shipping logs from a high-throughput microservice, you must never allow HTTP network latency to block user request threads. Serilog solves this via the 'Serilog.Sinks.Async' wrapper: log events are placed into an in-memory ring buffer and flushed in background batches to Seq.",
-                        "By utilizing Serilog Enrichers, every single log event automatically inherits contextual metadata: Pod Name (via Environment.MachineName), Application Name, Environment, and Correlation/Trace IDs without manual logger parameters."
+                        "In the early days, Docker was a monolithic daemon combining image building, network routing, storage management, and process execution into a single binary. To foster an open ecosystem, Docker and industry leaders founded the Open Container Initiative (OCI) in 2015, establishing two critical open standards: the OCI Image Specification and the OCI Runtime Specification.",
+                        "Today, when you run 'docker run', execution flows through a decoupled architecture. The Docker CLI talks via REST API to the Docker Daemon (dockerd). The daemon delegates container lifecycle management to 'containerd' via gRPC. 'containerd' pulls the OCI image layers, unpacks them into an OCI bundle (rootfs + config.json), and invokes 'runc'.",
+                        "'runc' is the lightweight reference CLI implementation of the OCI Runtime Spec. It executes the low-level Linux syscalls (clone, pivot_root, setns), attaches cgroups, starts the container process, and immediately exits. A tiny daemon called 'containerd-shim' remains to hold open standard I/O streams and collect the container's exit code without keeping the Docker daemon tied up."
                     },
                     ParagraphsVi = new List<string>
                     {
-                        "Seq là máy chủ quản lý và thu thập log có cấu trúc chuyên dụng, được tối ưu hóa đặc biệt cho .NET và môi trường container hiện đại. Khác với bộ ba cồng kềnh ELK (Elasticsearch/Logstash/Kibana) ngốn hàng gigabyte RAM chỉ để khởi động, Seq chạy trong container siêu nhẹ với mức tiêu thụ RAM thông thường chỉ dưới 250MB.",
-                        "Khi truyền tải log từ các microservice có lượng truy cập lớn, bạn tuyệt đối không được để độ trễ mạng HTTP ghi log làm nghẽn luồng xử lý (threads) của khách hàng. Serilog giải quyết xuất sắc điều này qua gói 'Serilog.Sinks.Async': các log event được đưa vào hàng đợi bộ nhớ (Ring Buffer) và được một luồng nền đẩy theo từng đợt (batch) về Seq.",
-                        "Nhờ cơ chế Serilog Enrichers, từng dòng log sinh ra sẽ tự động thừa hưởng toàn bộ siêu dữ liệu ngữ cảnh: Tên Pod (qua Environment.MachineName), Tên Dịch Vụ, Môi Trường và Trace ID phân tán mà lập trình viên không cần truyền tay."
+                        "Thời kỳ đầu, Docker là một khối daemon nguyên khối (Monolithic daemon) gộp chung mọi thứ từ build image, quản lý network, storage đến khởi chạy tiến trình. Để phá vỡ thế độc quyền và tiêu chuẩn hóa ngành công nghiệp, Docker cùng các ông lớn công nghệ đã thành lập OCI (Open Container Initiative) vào năm 2015 với 2 chuẩn mực cốt lõi: OCI Image Spec và OCI Runtime Spec.",
+                        "Ngày nay, khi bạn gõ 'docker run', luồng xử lý diễn ra qua một kiến trúc tách rời cực kỳ tinh gọn. Docker CLI gửi lệnh qua REST API tới Docker Daemon (dockerd). Daemon này chuyển tiếp yêu cầu sang 'containerd' qua giao thức gRPC. 'containerd' tải các image layers chuẩn OCI, giải nén thành một thư mục OCI Bundle (gồm rootfs và file config.json) rồi triệu gọi 'runc'.",
+                        "'runc' là công cụ thực thi tiêu chuẩn của OCI Runtime. Nó trực tiếp gọi các Linux syscalls (clone, pivot_root, setns), gắn cgroups, trao quyền cho ứng dụng rồi lập tức thoát ra. Một tiến trình siêu nhỏ mang tên 'containerd-shim' sẽ ở lại để duy trì đường ống I/O (stdout/stderr) và lắng nghe exit code của container mà không làm gián đoạn hệ thống khi daemon khởi động lại."
                     },
-                    CodeTitle = "Production Program.cs Configuration for Serilog with Async Seq Sink",
-                    CodeLanguage = "csharp",
+                    CodeTitle = "The Container Execution Chain & Direct containerd (ctr) Usage",
+                    CodeLanguage = "bash",
                     CodeContent = """
-// Cài đặt NuGet:
-// dotnet add package Serilog.AspNetCore
-// dotnet add package Serilog.Sinks.Seq
-// dotnet add package Serilog.Sinks.Async
-// dotnet add package Serilog.Enrichers.Environment
-// dotnet add package Serilog.Enrichers.Process
+# ==================== LUỒNG THỰC THI CHUẨN OCI ====================
+# [Developer CLI] (docker run)
+#       │ (REST / Unix Socket)
+#       ▼
+# [Docker Daemon] (dockerd)
+#       │ (gRPC)
+#       ▼
+# [containerd] (Quản lý images, bundles, lifecycle)
+#       │ (triệu gọi runc CLI)
+#       ▼
+# [runc] (Tương tác Linux Kernel Syscalls: clone, pivot_root)
+#       │
+#       ▼
+# [containerd-shim] ──> [Tiến trình Ứng Dụng của bạn]
 
-using Serilog;
-using Serilog.Events;
+# ==================== THỰC HÀNH CHẠY CONTAINER VỚI CTR (CONTAINERD) ====================
+# Trên các cụm Kubernetes hiện đại, Docker daemon đã bị gỡ bỏ, chỉ còn containerd:
+# Tải OCI image trực tiếp bằng containerd:
+sudo ctr images pull docker.io/library/alpine:latest
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Khởi tạo Serilog trước khi nạp Web Host để bắt được cả lỗi khởi động sớm
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
-    .MinimumLevel.Override("System", LogEventLevel.Warning)
-    // Tự động gắn thêm MachineName (Pod name trên K8s), ProcessId, ThreadId
-    .Enrich.FromLogContext()
-    .Enrich.WithMachineName()
-    .Enrich.WithProperty("Application", "OrderService")
-    .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
-    // Ghi log ra Console chuẩn cho Docker daemon đọc (kubectl logs)
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{Application}] {Message:lj} {Properties:j}{NewLine}{Exception}")
-    // Đẩy log bất đồng bộ về Seq server: Không bao giờ làm chậm request HTTP!
-    .WriteTo.Async(wt => wt.Seq(
-        serverUrl: builder.Configuration["Seq:ServerUrl"] ?? "http://seq:5341",
-        apiKey: builder.Configuration["Seq:ApiKey"], // API Key phân quyền theo từng Service
-        bufferBaseFilename: Path.Combine(AppContext.BaseDirectory, "logs", "seq-buffer"), // Lưu file đệm nếu rớt mạng
-        batchPostingLimit: 100,
-        period: TimeSpan.FromSeconds(2)
-    ))
-    .CreateLogger();
-
-builder.Host.UseSerilog();
-
-var app = builder.Build();
-
-app.MapPost("/api/orders", (OrderRequest request, ILogger<Program> logger) =>
-{
-    logger.LogInformation("Bắt đầu xử lý đơn hàng {OrderId} của khách hàng {CustomerId} với tổng tiền {TotalAmount}",
-        request.OrderId, request.CustomerId, request.TotalAmount);
-
-    // Business logic...
-    return Results.Created($"/api/orders/{request.OrderId}", new { status = "Success" });
-});
-
-app.Run();
-
-record OrderRequest(string OrderId, string CustomerId, decimal TotalAmount);
+# Khởi chạy container trực tiếp qua containerd và runc:
+sudo ctr run --rm -t docker.io/library/alpine:latest my-isolated-task sh
 """,
                     CalloutType = "tip",
-                    CalloutTitle = "Disk-Backed Buffer for 100% Zero Log Loss",
-                    CalloutTitleVi = "Bộ Đệm Ổ Đĩa Dự Phòng Chống Mất Log Khi Rớt Mạng",
-                    CalloutText = "Configuring bufferBaseFilename instructs Serilog to spill unsent logs into local container storage if the Seq server or internal network temporarily fails. As soon as Seq connectivity is restored, all buffered logs are automatically replayed.",
-                    CalloutTextVi = "Tham số bufferBaseFilename hướng dẫn Serilog tự động ghi tạm log ra ổ đĩa local của container nếu Seq Server hoặc mạng nội bộ gặp sự cố. Ngay khi kết nối được tái lập, Serilog sẽ tự động đồng bộ lại toàn bộ dữ liệu log còn thiếu."
+                    CalloutTitle = "Why Kubernetes Deprecated Dockershim",
+                    CalloutTitleVi = "Vì Sao Kubernetes Khai Tử Dockershim?",
+                    CalloutText = "Kubernetes communicates with container runtimes using the Container Runtime Interface (CRI). Because Docker was not CRI-compliant, K8s had to maintain a translation layer called 'dockershim'. In Kubernetes v1.24+, dockershim was permanently removed, allowing K8s to communicate directly with containerd or CRI-O, eliminating memory overhead and boosting pod startup speed.",
+                    CalloutTextVi = "Kubernetes giao tiếp với các bộ thực thi qua chuẩn CRI (Container Runtime Interface). Vì Docker Engine không tuân theo chuẩn CRI, K8s từng phải duy trì một cầu nối trung gian gọi là 'dockershim'. Từ bản K8s v1.24+, dockershim bị loại bỏ hoàn toàn để K8s gọi thẳng vào containerd hoặc CRI-O, giúp tiết kiệm bộ nhớ và tăng tốc độ khởi tạo Pod."
                 },
                 new DevArticleSection
                 {
-                    Heading = "3. Docker Compose Setup for Seq & High-Speed SQL-Like Filtering",
-                    HeadingVi = "3. Triển Khai Docker Compose Cho Seq & Kỹ Thuật Truy Vấn SQL-Like Tốc Độ Cao",
+                    Heading = "3. Production Packaging: Multi-Stage Builds, Distroless/Chisel & Security Hardening",
+                    HeadingVi = "3. Đóng Gói Dockerfile Chuẩn Production: Multi-Stage Build, Chisel & Bảo Mật Non-Root",
                     Paragraphs = new List<string>
                     {
-                        "Spinning up Seq locally or in your staging Kubernetes cluster is remarkably straightforward. A single official Docker image 'datalust/seq:latest' provides the ingestion engine, web UI dashboard, and alerting triggers.",
-                        "In Seq's web dashboard, filtering does not require cumbersome search syntax. You write standard SQL-like expressions: 'Application = \"OrderService\" and TotalAmount > 500 and @Level = \"Error\"'.",
-                        "You can also group events, calculate 95th percentile latency over time, and configure Webhook alerts to notify your engineering Slack or Discord channel the moment an unhandled exception spikes."
+                        "Writing a naive Dockerfile (e.g. copying source code and running build tools inside the final runtime image) is an anti-pattern. The resulting image often bloats to 800MB - 1.5GB, containing compilers, package managers (apt, apk), shells (bash, sh), and dozens of critical CVE vulnerabilities that malicious actors can exploit.",
+                        "Production Dockerfiles must leverage Multi-Stage Builds: Phase 1 utilizes a heavy SDK image to compile binaries and run tests; Phase 2 copies only the compiled output into an ultra-minimal runtime base image such as Google's Distroless or Ubuntu Chisel.",
+                        "By stripping away the shell, curl, package managers, and running as an unprivileged user (UID 10001), your final container size shrinks to under 50MB, attack surface drops to near zero, and container start times become virtually instantaneous."
                     },
                     ParagraphsVi = new List<string>
                     {
-                        "Triển khai Seq trên máy phát triển hoặc trên cụm Kubernetes nội bộ cực kỳ đơn giản. Chỉ với một image chính thức 'datalust/seq:latest', bạn đã có ngay hệ thống tiếp nhận log, giao diện web dashboard trực quan và hệ thống bắn cảnh báo tự động.",
-                        "Trong giao diện web của Seq, việc tìm kiếm sự cố không đòi hỏi cú pháp phức tạp. Bạn viết các mệnh đề tương tự ngôn ngữ SQL: 'Application = \"OrderService\" and TotalAmount > 500 and @Level = \"Error\"'.",
-                        "Bạn cũng có thể nhóm sự kiện theo thời gian, tính toán độ trễ trung vị P95 của API, và cấu hình Webhook tự động bắn tin nhắn cảnh báo về kênh Slack hoặc Discord của đội ngũ kỹ thuật ngay khi phát hiện số lượng ngoại lệ tăng đột biến."
+                        "Viết Dockerfile ngây thơ (copy toàn bộ mã nguồn và chạy lệnh build bên trong cùng một image vận hành) là một sai lầm phổ biến. Kích thước image sinh ra thường phình to từ 800MB đến 1.5GB, chứa đầy bộ biên dịch, công cụ quản lý gói (apt, apk), shell (bash, sh) và hàng chục lỗ hổng bảo mật CVE nguy hiểm.",
+                        "Dockerfile chuẩn Production bắt buộc phải sử dụng kỹ thuật Đa tầng (Multi-Stage Build): Giai đoạn 1 sử dụng Base Image SDK đầy đủ để biên dịch mã nguồn và chạy unit tests; Giai đoạn 2 chỉ copy file nhị phân (binary) đã đóng gói sang một Base Image Runtime tối giản như Google Distroless hoặc Ubuntu Chisel.",
+                        "Nhờ việc loại bỏ hoàn toàn shell, curl, trình quản lý gói và thiết lập quyền người dùng không đặc quyền (UID 10001), kích thước image giảm xuống dưới 50MB, triệt tiêu gần như 100% bề mặt tấn công của hacker và giúp container khởi động tức thì."
                     },
-                    CodeTitle = "Docker Compose Configuration & Common Seq Query Cheat Sheet",
-                    CodeLanguage = "yaml",
+                    CodeTitle = "Hardened Multi-Stage Dockerfile with Non-Root User & Resource Constraints",
+                    CodeLanguage = "dockerfile",
                     CodeContent = """
-# docker-compose.yml khởi chạy Seq Server nội bộ
-version: '3.8'
+# =========================================================================
+# GIAI ĐOẠN 1: BUILD & COMPILE (Sử dụng SDK Image đầy đủ công cụ)
+# =========================================================================
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env
+WORKDIR /src
 
-services:
-  seq:
-    image: datalust/seq:latest
-    container_name: dev-seq
-    restart: unless-stopped
-    environment:
-      - ACCEPT_EULA=Y
-    ports:
-      - "5341:80" # Cổng truy cập Web Dashboard UI của Seq
-    volumes:
-      - seq_data:/data
+# Tối ưu hóa Docker Layer Cache: Copy file project và restore trước
+COPY ["OrderService.csproj", "./"]
+RUN dotnet restore "OrderService.csproj"
 
-volumes:
-  seq_data:
+# Copy toàn bộ mã nguồn và biên dịch Release
+COPY . .
+RUN dotnet publish "OrderService.csproj" -c Release -o /app/publish \
+    --no-restore \
+    /p:UseAppHost=false
 
-# ==================== CÚ PHÁP TRUY VẤN SQL-LIKE TRONG SEQ ====================
-# 1. Tìm tất cả lỗi nghiêm trọng trong OrderService:
-# Application = 'OrderService' and @Level = 'Error'
+# =========================================================================
+# GIAI ĐOẠN 2: RUNTIME CHUẨN PRODUCTION (Siêu nhẹ, bảo mật, non-root)
+# =========================================================================
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-noble-chiseled AS final
+WORKDIR /app
 
-# 2. Lọc đơn hàng có giá trị cao của khách hàng VIP:
-# CustomerId = 'cust-99' and TotalAmount >= 1000
+# Tạo biến môi trường chuẩn Production
+ENV ASPNETCORE_ENVIRONMENT=Production \
+    DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
+    ASPNETCORE_URLS=http://+:8080
 
-# 3. Đếm số lượng lỗi theo từng Exception Type trong 1 giờ qua:
-# select count(*) from stream where @Level = 'Error' group by Exception.Type
+# Chisel image đã tự động loại bỏ bash, apt và chạy dưới user UID 1654 (non-root)
+USER $APP_UID
 
-# 4. Tìm kiếm request có thời gian xử lý chậm hơn 2 giây:
-# ElapsedMilliseconds > 2000
+# Chỉ copy file nhị phân đã build từ Giai đoạn 1
+COPY --from=build-env --chown=$APP_UID:$APP_UID /app/publish .
+
+# Mở cổng giao tiếp không đặc quyền (> 1024)
+EXPOSE 8080
+
+# Khởi chạy ứng dụng
+ENTRYPOINT ["dotnet", "OrderService.dll"]
 """,
                     CalloutType = "tip",
-                    CalloutTitle = "Instant Incident Resolution",
-                    CalloutTitleVi = "Giải Cứu Sự Cố Trong Chớp Mắt",
-                    CalloutText = "When customer support reports an issue with Order #5012, simply type 'OrderId = 5012' in Seq. You will instantly see every single log statement emitted by all 5 microservices that touched that order, in chronological millisecond precision.",
-                    CalloutTextVi = "Khi bộ phận chăm sóc khách hàng báo đơn #5012 gặp lỗi, bạn chỉ cần gõ 'OrderId = 5012' trên thanh tìm kiếm của Seq. Toàn bộ hành trình của đơn hàng đi qua 5 dịch vụ khác nhau sẽ hiển thị rành mạch theo thứ tự thời gian tới từng mili-giây."
+                    CalloutTitle = "Enforce CPU and Memory Constraints in Production",
+                    CalloutTitleVi = "Bắt Buộc Giới Hạn Tài Nguyên Khi Khởi Chạy Container",
+                    CalloutText = "Never run a container without resource constraints. A memory leak in one unconstrained container can consume the entire host's RAM, triggering the Linux kernel OOM Killer to terminate critical system services. Use 'docker run --memory=512m --cpus=1.5' or Kubernetes resource limits.",
+                    CalloutTextVi = "Tuyệt đối không chạy container mà không giới hạn tài nguyên. Một lỗi rò rỉ bộ nhớ ở một container vô danh có thể ngốn cạn kiệt RAM của máy chủ, khiến Kernel kích hoạt OOM Killer tiêu diệt các dịch vụ trọng yếu của hệ thống. Luôn dùng 'docker run --memory=512m --cpus=1.5' hoặc Kubernetes Resource Limits."
                 }
             }
         };
         series.Articles.Add(article1);
 
-        // BÀI 2
+        // =========================================================================
+        // BÀI 2: ORCHESTRATION: KUBERNETES VS DOCKER SWARM
+        // =========================================================================
         var article2 = new DevArticle
         {
-            Id = "dotnet-microservices-article-2-k8s-probes-healthchecks",
+            Id = "infra-tools-article-2-orchestration-k8s-vs-docker-swarm",
             SeriesId = series.Id,
             LessonNumber = "Bài 2",
             Level = "Intermediate",
             LevelVi = "Trung cấp",
             LevelOrder = 2,
-            Title = "Kubernetes Probes & ASP.NET Core Health Checks: Liveness, Readiness, Startup & Real-Time Monitoring",
-            TitleVi = "Kubernetes Probes & ASP.NET Core Health Checks: Liveness, Readiness, Startup & Giám Sát Thời Gian Thực",
-            ReadingTime = "16 phút đọc",
-            PublishedDate = "24/10/2026",
-            Summary = "Keep Kubernetes from killing your pods prematurely or routing traffic to dead services. Deep dive into AspNetCore.Diagnostics.HealthChecks: Implementing the tri-probe architecture (/healthz/live, /healthz/ready, /healthz/startup), checking SQL/Redis/RabbitMQ dependencies, and embedding the HealthChecks-UI dashboard.",
-            SummaryVi = "Ngăn chặn Kubernetes tiêu diệt Pod nhầm lúc khởi động hoặc điều hướng người dùng vào Pod bị mất kết nối DB. Tìm hiểu sâu thư viện AspNetCore.Diagnostics.HealthChecks: Hiện thực kiến trúc 3 đầu dò chuẩn K8s (/healthz/live, /healthz/ready, /healthz/startup), kiểm tra sức khỏe phụ thuộc SQL/Redis/RabbitMQ, và nhúng bảng điều khiển trực quan HealthChecks-UI.",
-            Tags = new List<string> { "Kubernetes", "Health Checks", "Liveness", "Readiness", "Startup Probe", "DevOps" },
+            Title = "Container Orchestration: Kubernetes (K8s) vs Docker Swarm – Architectural Breakdown & Production Strategy",
+            TitleVi = "Orchestration & Điều Phối Cụm: Kubernetes (K8s) vs Docker Swarm – So Sánh Kiến Trúc & Chiến Lược Vận Hành",
+            ReadingTime = "18 phút đọc",
+            PublishedDate = "25/10/2026",
+            Summary = "Moving from a single host to a distributed container cluster. Compare the architectural philosophies of Kubernetes (industry standard for complex, hyperscale workloads) versus Docker Swarm (lightweight, zero-learning-curve native clustering). Master core K8s objects (Pods, Deployments, Services, HPA) alongside Swarm stacks and learn how to make the right choice.",
+            SummaryVi = "Bước chuyển dịch từ máy chủ đơn lẻ lên cụm phân tán nhiều Node. So sánh chi tiết triết lý kiến trúc giữa Kubernetes (chuẩn công nghiệp cho hệ thống quy mô lớn, tính mở rộng vô hạn) và Docker Swarm (nhẹ, tích hợp sẵn, dễ vận hành cho team vừa và nhỏ). Làm chủ các thành phần cốt lõi của K8s (Pod, Deployment, Service, HPA) song song với Docker Swarm Stacks và chiến lược lựa chọn nền tảng tối ưu chi phí.",
+            Tags = new List<string> { "Kubernetes", "Docker Swarm", "Orchestration", "Cluster", "Deployment", "HPA", "High Availability" },
             Sections = new List<DevArticleSection>
             {
                 new DevArticleSection
                 {
-                    Heading = "1. Demystifying the K8s Tri-Probe Model: Liveness vs Readiness vs Startup",
-                    HeadingVi = "1. Giải Mã Bản Chất 3 Đầu Dò K8s: Liveness vs Readiness vs Startup",
+                    Heading = "1. The Orchestration Dilemma: Architectural Philosophies of K8s vs Swarm",
+                    HeadingVi = "1. Cuộc Chiến Orchestration: Triết Lý Kiến Trúc K8s vs Docker Swarm",
                     Paragraphs = new List<string>
                     {
-                        "Kubernetes relies on active probes (Kubelet sending periodic HTTP requests) to make critical life-cycle decisions about your containerized pods. A fundamental mistake made by many engineering teams is implementing a single '/health' endpoint that checks everything.",
-                        "If your single health check tests the database, and the database suffers a temporary network hiccup, Kubernetes interprets the failure as a dead container and restarts the pod. Restarting the pod does not fix the database; instead, it triggers a cascading restart storm across your entire cluster.",
-                        "Kubernetes explicitly provides three distinct probe types to separate these concerns: Startup Probe (has the application finished initializing?), Readiness Probe (is the application currently able to serve incoming traffic?), and Liveness Probe (is the process deadlocked or stuck in an unrecoverable state?)."
+                        "When your application outgrows a single virtual machine, running independent 'docker run' commands across 10 servers becomes unmanageable. If a host crashes at 3:00 AM, who detects the failure, reschedules 15 containers onto surviving servers, updates load balancers, and maintains zero downtime? This is the mission of Container Orchestration.",
+                        "Kubernetes (K8s) was designed by Google based on 15 years of operating the Borg system. It features an extensive, distributed Control Plane: 'etcd' provides a distributed transactional key-value store with Raft consensus; 'kube-apiserver' validates and configures state; 'kube-scheduler' assigns pods to nodes based on resource topology; 'kube-controller-manager' regulates desired states. On worker nodes, 'kubelet' manages container runtimes and 'kube-proxy' manages IP tables.",
+                        "Docker Swarm, conversely, takes a minimalist, batteries-included approach built directly into the Docker Engine. It requires zero external tools or complex manifests: a single command 'docker swarm init' turns an engine into a Manager Node. Swarm Manager nodes maintain internal Raft consensus without an external database, orchestrating Worker Nodes through the familiar Docker CLI."
                     },
                     ParagraphsVi = new List<string>
                     {
-                        "Kubernetes vận hành dựa vào các đầu dò định kỳ (Kubelet gửi request HTTP kiểm tra) để đưa ra quyết định sống còn đối với các Pod trong cụm. Sai lầm kinh điển của rất nhiều đội ngũ là chỉ tạo duy nhất một endpoint '/health' chung chung để kiểm tra tất cả mọi thứ.",
-                        "Nếu endpoint chung này kiểm tra cả cơ sở dữ liệu, và database bị nghẽn mạng trong 5 giây, Kubernetes sẽ hiểu nhầm rằng bản thân Pod ứng dụng đã chết và ra lệnh cưỡng chế khởi động lại (restart) Pod. Việc restart Pod không hề giải quyết được sự cố của database; ngược lại, nó tạo ra một cơn bão khởi động lại liên hoàn (Restart Storm) làm tê liệt toàn bộ hệ thống.",
-                        "Kubernetes cung cấp 3 cơ chế đầu dò độc lập để giải quyết triệt để vấn đề này: Startup Probe (Ứng dụng đã nạp xong hết dữ liệu khởi động chưa?), Readiness Probe (Ứng dụng hiện tại có đủ điều kiện để nhận traffic từ người dùng không?), và Liveness Probe (Tiến trình có bị deadlock/treo ngầm không?)."
+                        "Khi hệ thống vượt khỏi quy mô một máy chủ, việc gõ lệnh 'docker run' thủ công rải rác trên 10 server trở thành thảm họa vận hành. Nếu một server đột ngột cháy nguồn lúc 3 giờ sáng, ai sẽ phát hiện sự cố, tự động di dời 15 container sang các server còn sống, cập nhật bảng định tuyến cân bằng tải và duy trì tính liên tục của dịch vụ? Đó chính là sứ mệnh của Container Orchestration (Điều phối cụm).",
+                        "Kubernetes (K8s) được Google thiết kế dựa trên hơn 15 năm kinh nghiệm vận hành hệ thống Borg huyền thoại. Nó sở hữu Control Plane phân tán hùng mạnh: 'etcd' đóng vai trò cơ sở dữ liệu key-value phân tán đạt đồng thuận Raft; 'kube-apiserver' tiếp nhận mọi yêu cầu; 'kube-scheduler' tính toán vị trí đặt Pod tối ưu; 'kube-controller-manager' giám sát trạng thái mong muốn. Ở các Worker Nodes, 'kubelet' chỉ huy runtime và 'kube-proxy' điều phối mạng.",
+                        "Ngược lại hoàn toàn, Docker Swarm đi theo triết lý tối giản, tích hợp sẵn ngay trong Docker Engine. Bạn không cần cài đặt thêm bất kỳ phần mềm phức tạp nào: chỉ một lệnh 'docker swarm init' là biến máy chủ thành Manager Node. Các Manager Node tự duy trì thuật toán đồng thuận Raft nội bộ mà không cần cơ sở dữ liệu ngoài, điều phối toàn bộ Worker Nodes thông qua các lệnh quen thuộc của Docker."
                     },
-                    CodeTitle = "Kubernetes Pod Specification with Tri-Probe Architecture",
+                    CodeTitle = "Architecture Comparison Matrix: Kubernetes vs Docker Swarm",
+                    CodeLanguage = "json",
+                    CodeContent = """
+{
+  "Criteria": "So Sánh Kubernetes vs Docker Swarm",
+  "Metrics": [
+    {
+      "Feature": "Độ phức tạp cài đặt & vận hành",
+      "DockerSwarm": "Cực kỳ thấp (Tích hợp sẵn trong Docker, 5 phút là có cụm)",
+      "Kubernetes": "Rất cao (Đòi hỏi chuyên môn DevOps, etcd, chứng chỉ TLS, CNI network)"
+    },
+    {
+      "Feature": "Tiêu hao tài nguyên Control Plane",
+      "DockerSwarm": "Siêu nhẹ (~100MB RAM cho Manager node)",
+      "Kubernetes": "Khá nặng (Yêu cầu tối thiểu 2-4GB RAM cho Master/Control Plane)"
+    },
+    {
+      "Feature": "Cơ chế tự động mở rộng (Autoscaling)",
+      "DockerSwarm": "Thủ công (docker service scale) hoặc cần script bên thứ ba",
+      "Kubernetes": "Tự động đỉnh cao với HPA (CPU/RAM/Custom metrics) và VPA"
+    },
+    {
+      "Feature": "Quy mô phù hợp (Target Scale)",
+      "DockerSwarm": "1 đến 30 Nodes, đội ngũ kỹ thuật nhỏ, ngân sách tối ưu",
+      "Kubernetes": "Từ hàng chục đến 5000+ Nodes, hệ sinh thái Cloud-Native lớn"
+    }
+  ]
+}
+""",
+                    CalloutType = "tip",
+                    CalloutTitle = "When to Choose Which in Real Projects",
+                    CalloutTitleVi = "Chiến Lược Lựa Chọn Thực Chiến: Swarm Hay K8s?",
+                    CalloutText = "If you have a team of 3-10 engineers without dedicated platform/SRE engineers and your infrastructure consists of 2-15 VPS instances, Docker Swarm provides 80% of orchestration benefits with 5% of K8s operational complexity. Choose Kubernetes when you require automatic autoscaling (HPA), GitOps (ArgoCD), multi-cloud portability, or manage hundreds of microservices.",
+                    CalloutTextVi = "Nếu bạn có một đội ngũ 3-10 kỹ sư không có DevOps/SRE chuyên trách và cụm máy chủ chỉ từ 2-15 VPS, Docker Swarm mang lại 80% sức mạnh điều phối với chỉ 5% độ phức tạp của K8s. Hãy chọn Kubernetes khi bạn bắt buộc phải có tính năng tự động co giãn theo tải (HPA), quy trình GitOps (ArgoCD) hoặc quản lý hàng trăm dịch vụ quy mô lớn."
+                },
+                new DevArticleSection
+                {
+                    Heading = "2. Core Kubernetes Architecture: Pods, Deployments, Services & Ingress",
+                    HeadingVi = "2. Các Khối Hạt Nhân Của Kubernetes: Pod, Deployment, Service & Ingress",
+                    Paragraphs = new List<string>
+                    {
+                        "Kubernetes does not run containers directly; it wraps them in an abstraction called a 'Pod'. A Pod is the atomic unit of deployment in K8s, representing one or more containers that share the same network namespace (same IP address and port space) and storage volumes.",
+                        "To manage Pods reliably, K8s provides higher-level declarative controllers. A 'Deployment' manages a 'ReplicaSet', declaring how many identical replicas of a pod should run. Deployments handle zero-downtime rolling updates, pause/resume rollouts, and automatic rollbacks if new versions crash.",
+                        "Because Pods are ephemeral with dynamic IP addresses that change on restart, the 'Service' abstraction provides a stable virtual IP (ClusterIP) and internal DNS entry. Services load-balance network traffic across matching healthy pods using label selectors."
+                    },
+                    ParagraphsVi = new List<string>
+                    {
+                        "Kubernetes không bao giờ chạy trực tiếp từng container đơn lẻ; nó bọc container trong một đối tượng cơ sở gọi là 'Pod'. Pod là đơn vị triển khai nguyên tử nhỏ nhất trong K8s, đại diện cho một hoặc nhiều container cùng chia sẻ một không gian mạng (chung một địa chỉ IP và dải cổng Port) cũng như chia sẻ ổ đĩa lưu trữ (Volumes).",
+                        "Để quản lý các Pod này một cách bền vững, K8s cung cấp các bộ điều khiển khai báo cấp cao. 'Deployment' quản lý 'ReplicaSet', định nghĩa số lượng bản sao mong muốn. Deployment chịu trách nhiệm cập nhật phiên bản không gián đoạn (Rolling Update), tạm dừng hoặc hoàn tác tự động (Rollback) nếu phiên bản mới gặp sự cố CrashLoopBackOff.",
+                        "Vì các Pod có tính chất tạm thời (ephemeral) với IP thay đổi liên tục mỗi khi khởi động lại, đối tượng 'Service' ra đời để cung cấp một IP ảo cố định (ClusterIP) và tên miền DNS nội bộ ổn định. Service tự động cân bằng tải lưu lượng truy cập tới các Pod khỏe mạnh thông qua cơ chế Label Selector."
+                    },
+                    CodeTitle = "Production Kubernetes Manifest: Deployment, Service & Resource Limits",
                     CodeLanguage = "yaml",
                     CodeContent = """
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: order-service
+  name: order-service-deployment
+  namespace: production
+  labels:
+    app: order-service
 spec:
-  replicas: 3
+  replicas: 3 # Luôn duy trì 3 Pods trên các Node khác nhau
+  selector:
+    matchLabels:
+      app: order-service
   template:
+    metadata:
+      labels:
+        app: order-service
     spec:
       containers:
-      - name: order-api
-        image: company/order-service:1.0.0
+      - name: order-service
+        image: myregistry.azurecr.io/order-service:v2.1.0
         ports:
         - containerPort: 8080
-        
-        # 1. STARTUP PROBE: Cho phép ứng dụng có tối đa 60s để nạp dữ liệu/cache ban đầu
-        startupProbe:
+        resources: # BẮT BUỘC để ngăn ngừa OOMKilled trên Worker Node
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        readinessProbe: # K8s chỉ chuyển traffic khi Pod đã sẵn sàng
           httpGet:
-            path: /healthz/startup
-            port: 8080
-          failureThreshold: 30
-          periodSeconds: 2 # 30 * 2s = 60s tối đa
-          
-        # 2. LIVENESS PROBE: Chỉ kiểm tra tiến trình có sống không. Nếu fail -> RESTART POD!
-        livenessProbe:
-          httpGet:
-            path: /healthz/live
+            path: /health/ready
             port: 8080
           initialDelaySeconds: 5
           periodSeconds: 10
-          failureThreshold: 3
-          
-        # 3. READINESS PROBE: Kiểm tra kết nối DB/Redis. Nếu fail -> NGẮT TRAFFIC, KHÔNG RESTART!
-        readinessProbe:
+        livenessProbe: # Tự động restart Pod nếu ứng dụng bị treo (deadlock)
           httpGet:
-            path: /healthz/ready
+            path: /health/live
             port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          failureThreshold: 2
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service-clusterip
+  namespace: production
+spec:
+  type: ClusterIP
+  selector:
+    app: order-service
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
 """,
                     CalloutType = "warning",
-                    CalloutTitle = "Golden Rule of Liveness Probes",
-                    CalloutTitleVi = "Nguyên Tắc Vàng Của Liveness Probe",
-                    CalloutText = "NEVER check external dependencies (Database, Cache, Message Broker) in your Liveness Probe. The Liveness Probe should only verify that your ASP.NET Core Kestrel process is alive and responsive. If your database goes down, your Readiness probe should fail to stop traffic, NOT your Liveness probe.",
-                    CalloutTextVi = "TUYỆT ĐỐI KHÔNG kiểm tra các thành phần bên ngoài (DB, Redis, RabbitMQ) trong Liveness Probe. Liveness Probe chỉ được phép kiểm tra xem tiến trình ASP.NET Core có bị treo đơ hay không. Khi DB rớt mạng, chỉ Readiness Probe được phép báo đỏ để cắt traffic, còn Liveness Probe phải tiếp tục sống."
+                    CalloutTitle = "Never Omit Resource Limits in Kubernetes",
+                    CalloutTitleVi = "Cảnh Báo: Tuyệt Đối Không Bỏ Quên Requests và Limits",
+                    CalloutText = "Deploying a Pod without 'resources.limits' allows an uncapped memory spike in that pod to starve neighboring pods on the same Kubernetes worker node. When node RAM exhausts, the Linux kernel OOM Killer terminates pods indiscriminately, causing cascading cluster instability.",
+                    CalloutTextVi = "Triển khai Pod mà không cấu hình 'resources.limits' sẽ khiến một Pod bị tràn bộ nhớ có thể nuốt trọn toàn bộ RAM của Worker Node. Khi máy chủ cạn RAM, Linux OOM Killer sẽ tiêu diệt ngẫu nhiên các Pod lân cận, gây ra phản ứng dây chuyền làm sập toàn cụm K8s."
                 },
                 new DevArticleSection
                 {
-                    Heading = "2. Implementing Multi-Tier Health Checks in ASP.NET Core",
-                    HeadingVi = "2. Hiện Thực Hệ Thống Health Check Đa Tầng Trong ASP.NET Core",
+                    Heading = "3. Practical Deployment: Docker Swarm Stack vs Kubernetes HPA Manifests",
+                    HeadingVi = "3. Thực Chiến So Sánh: Docker Swarm Stack Deploy vs Kubernetes Manifests",
                     Paragraphs = new List<string>
                     {
-                        "The official community package 'AspNetCore.Diagnostics.HealthChecks' provides ready-made, battle-tested health probes for virtually every enterprise service: PostgreSQL, SQL Server, Redis, RabbitMQ, Kafka, AWS S3, and Elasticsearch.",
-                        "Using Health Check Tags, we classify each probe into its corresponding tier: Tag 'live' for the internal self-check, Tag 'ready' for external database and queue connectivity, and Tag 'startup' for long-running initialization tasks.",
-                        "By configuring MapHealthChecks with custom ResponseWriters, we can format health outputs into rich JSON structures containing response times and error descriptions for monitoring agents."
+                        "Let's see how high-availability multi-replica microservices are deployed in both environments. Docker Swarm uses standard Compose syntax enriched with the 'deploy:' key, defining placement constraints (e.g. node.role == worker) and rolling update parameters (update_config with parallelism and delay).",
+                        "In Kubernetes, deployments are orchestrated alongside Horizontal Pod Autoscalers (HPA). An HPA controller continuously queries metrics APIs to dynamically scale pod count between minReplicas (e.g. 3) and maxReplicas (e.g. 20) when average CPU or custom request latency thresholds are crossed."
                     },
                     ParagraphsVi = new List<string>
                     {
-                        "Hệ sinh thái thư viện 'AspNetCore.Diagnostics.HealthChecks' cung cấp sẵn các bộ kiểm tra sức khỏe được tôi luyện qua môi trường Production cho hầu hết mọi dịch vụ doanh nghiệp: PostgreSQL, SQL Server, Redis, RabbitMQ, Kafka, AWS S3 và Elasticsearch.",
-                        "Bằng cách sử dụng cơ chế Tags trong Health Check, chúng ta dễ dàng phân loại từng đầu dò: Tag 'live' dành cho kiểm tra nội tại của ứng dụng, Tag 'ready' dành cho kiểm tra kết nối cơ sở dữ liệu và hàng đợi, và Tag 'startup' dành cho các tác vụ khởi động ban đầu.",
-                        "Thông qua việc cấu hình MapHealthChecks với ResponseWriter tùy biến, chúng ta có thể định dạng kết quả trả về dưới dạng JSON chi tiết chứa thời gian phản hồi (latency) và thông điệp lỗi để các công cụ giám sát phân tích."
+                        "Hãy cùng so sánh cách triển khai một dịch vụ có khả năng chịu lỗi cao trên cả 2 nền tảng. Docker Swarm sử dụng trực tiếp cú pháp file Compose được mở rộng với khối 'deploy:', cho phép định nghĩa các ràng buộc vị trí đặt (placement constraints ví dụ: chỉ chạy trên worker node) cùng cấu hình cập nhật cuốn chiếu (parallelism: 2, delay: 10s).",
+                        "Trong khi đó, Kubernetes kết hợp Deployment với Horizontal Pod Autoscaler (HPA). Bộ điều khiển HPA liên tục truy vấn API Metrics Server để tự động co giãn số lượng Pod linh hoạt từ tối thiểu (ví dụ 3 Pods) lên tối đa (ví dụ 20 Pods) ngay khi mức tiêu thụ CPU trung bình vượt ngưỡng 75%."
                     },
-                    CodeTitle = "Configuring Multi-Tier Tagged Probes in Program.cs",
-                    CodeLanguage = "csharp",
+                    CodeTitle = "Docker Swarm Stack File vs Kubernetes Horizontal Pod Autoscaler",
+                    CodeLanguage = "yaml",
                     CodeContent = """
-// Nuget:
-// dotnet add package AspNetCore.HealthChecks.Npgsql
-// dotnet add package AspNetCore.HealthChecks.Redis
-// dotnet add package AspNetCore.HealthChecks.RabbitMQ
+# ==================== CÁCH 1: DOCKER SWARM (docker-stack.yml) ====================
+# Triển khai bằng lệnh: docker stack deploy -c docker-stack.yml ecom-stack
+version: '3.8'
+services:
+  order-service:
+    image: myregistry.azurecr.io/order-service:v2.1.0
+    ports:
+      - "8080:8080"
+    deploy:
+      replicas: 4 # Phân bổ 4 bản sao đều khắp cụm Swarm
+      update_config:
+        parallelism: 1       # Cập nhật từng container một để không gián đoạn
+        delay: 10s           # Chờ 10 giây giữa các đợt cập nhật
+        failure_action: rollback # Tự động quay về phiên bản cũ nếu lỗi
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == worker # Chỉ chạy trên các máy Worker
 
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using System.Text.Json;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Đăng ký dịch vụ Health Checks với các Tags phân loại rành mạch
-builder.Services.AddHealthChecks()
-    // 1. Kiểm tra nội tại ứng dụng (Liveness)
-    .AddCheck("self", () => HealthCheckResult.Healthy("Tiến trình Web API đang hoạt động bình thường"), tags: ["live"])
-    
-    // 2. Kiểm tra các Dependency cơ sở hạ tầng (Readiness)
-    .AddNpgSql(
-        connectionString: builder.Configuration.GetConnectionString("Postgres")!,
-        name: "PostgreSQL Database",
-        failureStatus: HealthStatus.Unhealthy,
-        tags: ["ready"])
-    .AddRedis(
-        redisConnectionString: builder.Configuration.GetConnectionString("Redis")!,
-        name: "Redis Cache Cluster",
-        failureStatus: HealthStatus.Degraded, // Redis lỗi chỉ xem là Degraded, không nhất thiết Unhealthy
-        tags: ["ready"]);
-
-var app = builder.Build();
-
-// Endpoint LIVENESS: Trả về 200 OK nếu self check thành công
-app.MapHealthChecks("/healthz/live", new HealthCheckOptions
-{
-    Predicate = check => check.Tags.Contains("live")
-});
-
-// Endpoint READINESS: Chỉ trả về 200 OK nếu toàn bộ Postgres và Redis đều sẵn sàng
-app.MapHealthChecks("/healthz/ready", new HealthCheckOptions
-{
-    Predicate = check => check.Tags.Contains("ready"),
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
-        var response = new
-        {
-            status = report.Status.ToString(),
-            totalDuration = report.TotalDuration.TotalMilliseconds,
-            checks = report.Entries.Select(e => new
-            {
-                component = e.Key,
-                status = e.Value.Status.ToString(),
-                description = e.Value.Description,
-                durationMs = e.Value.Duration.TotalMilliseconds
-            })
-        };
-        await context.Response.WriteAsync(JsonSerializer.Serialize(response));
-    }
-});
-
-app.Run();
-""",
-                    CalloutType = "info",
-                    CalloutTitle = "Understanding HealthStatus Levels",
-                    CalloutTitleVi = "Hiểu Rõ 3 Cấp Độ HealthStatus",
-                    CalloutText = "ASP.NET Core defines three health statuses: Healthy (everything is optimal), Degraded (a non-critical service like Redis cache is down, but the API can still function using database fallback), and Unhealthy (a critical dependency like Primary SQL is unavailable).",
-                    CalloutTextVi = "ASP.NET Core định nghĩa 3 cấp độ sức khỏe: Healthy (mọi thứ hoàn hảo), Degraded (thành phần phụ như Redis cache bị rớt nhưng hệ thống vẫn chạy được bằng cách đọc thẳng từ DB), và Unhealthy (thành phần sống còn như Database chính bị mất kết nối hoàn toàn)."
-                },
-                new DevArticleSection
-                {
-                    Heading = "3. Visualizing Microservice Health with HealthChecks-UI Dashboard",
-                    HeadingVi = "3. Trực Quan Hóa Sức Khỏe Toàn Cụm Bằng Bảng Điều Khiển HealthChecks-UI",
-                    Paragraphs = new List<string>
-                    {
-                        "While Kubernetes probes operate behind the scenes, operations and DevOps engineers require a visual status dashboard to immediately spot degraded services across multiple clusters.",
-                        "The package 'AspNetCore.HealthChecks.UI' provides a standalone, beautifully styled dashboard that periodically polls the readiness endpoints of all your microservices and renders their historical uptime and latency charts.",
-                        "It can be deployed as an independent lightweight monitoring container or integrated with Webhooks to send instant push notifications to Microsoft Teams or Slack when a service drops below acceptable SLAs."
-                    },
-                    ParagraphsVi = new List<string>
-                    {
-                        "Trong khi các đầu dò Kubernetes hoạt động tự động ở hậu trường, đội ngũ vận hành và DevOps cần một bảng điều khiển trực quan để theo dõi tức thời trạng thái của toàn bộ các dịch vụ trên cụm.",
-                        "Gói thư viện 'AspNetCore.HealthChecks.UI' cung cấp một bảng điều khiển web độc lập với giao diện hiện đại, tự động thăm dò định kỳ endpoint readiness của toàn bộ microservices và hiển thị biểu đồ lịch sử hoạt động cùng độ trễ.",
-                        "Dashboard này có thể được triển khai như một Pod giám sát độc lập, hỗ trợ lưu trữ lịch sử kiểm tra vào SQLite/Postgres và tích hợp Webhook để gửi cảnh báo tức thì về Slack hoặc Teams khi có bất kỳ service nào chuyển sang trạng thái đỏ."
-                    },
-                    CodeTitle = "HealthChecks UI Dashboard Setup in appsettings.json",
-                    CodeLanguage = "json",
-                    CodeContent = """
-{
-  "HealthChecksUI": {
-    "HealthChecks": [
-      {
-        "Name": "Identity Service",
-        "Uri": "http://identity-service:8080/healthz/ready"
-      },
-      {
-        "Name": "Order Service",
-        "Uri": "http://order-service:8080/healthz/ready"
-      },
-      {
-        "Name": "Payment Service",
-        "Uri": "http://payment-service:8080/healthz/ready"
-      }
-    ],
-    "EvaluationTimeInSeconds": 15,
-    "MinimumSecondsBetweenFailureNotifications": 60,
-    "Webhooks": [
-      {
-        "Name": "Slack Alert",
-        "Uri": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
-        "Payload": "{\"text\": \"Cảnh báo: Dịch vụ [[LNAME]] trên môi trường K8s đang bị UNHEALTHY! Chi tiết: [[FAILURE]]\"}"
-      }
-    ]
-  }
-}
+# ==================== CÁCH 2: KUBERNETES AUTOSCALER (k8s-hpa.yaml) ====================
+# Triển khai bằng lệnh: kubectl apply -f k8s-hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: order-service-hpa
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: order-service-deployment
+  minReplicas: 3  # Luôn có tối thiểu 3 Pods trong giờ thấp điểm
+  maxReplicas: 15 # Tự động mở rộng lên tới 15 Pods trong đợt siêu khuyến mãi Flash Sale
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75 # Khi CPU trung bình vượt 75%, tự động nhân thêm Pod!
 """,
                     CalloutType = "tip",
-                    CalloutTitle = "Dedicated Monitoring Pod",
-                    CalloutTitleVi = "Tách Riêng Pod Giám Sát Sức Khỏe",
-                    CalloutText = "In enterprise production architectures, run HealthChecks-UI as its own isolated deployment in a 'monitoring' namespace rather than embedding it inside business microservices, guaranteeing dashboard availability even if business services are under heavy load.",
-                    CalloutTextVi = "Trong môi trường doanh nghiệp, hãy chạy HealthChecks-UI thành một Pod độc lập nằm trong namespace 'monitoring' thay vì nhúng trực tiếp vào các microservice nghiệp vụ, đảm bảo bạn luôn vào được bảng điều khiển kể cả khi các service nghiệp vụ đang bị quá tải."
+                    CalloutTitle = "Zero-Downtime Rolling Update Parameters",
+                    CalloutTitleVi = "Bí Quyết Cập Nhật Zero-Downtime Chuẩn Chỉ",
+                    CalloutText = "In Kubernetes, configure 'maxSurge: 25%' and 'maxUnavailable: 0'. This ensures Kubernetes will always spin up and verify new healthy pods before terminating even a single old pod, guaranteeing 100% uninterrupted availability during production deployments.",
+                    CalloutTextVi = "Trong Kubernetes, hãy cấu hình 'maxSurge: 25%' và 'maxUnavailable: 0' trong phần rollingUpdate. Điều này đảm bảo K8s luôn tạo Pod mới và kiểm tra sức khỏe thành công trước khi xóa bất kỳ một Pod cũ nào, duy trì dịch vụ 100% không gián đoạn."
                 }
             }
         };
         series.Articles.Add(article2);
 
-        // BÀI 3
+        // =========================================================================
+        // BÀI 3: API GATEWAY & REVERSE PROXY: NGINX VS KONG
+        // =========================================================================
         var article3 = new DevArticle
         {
-            Id = "dotnet-microservices-article-3-polly-resilience-fault-tolerance",
+            Id = "infra-tools-article-3-api-gateway-nginx-kong",
             SeriesId = series.Id,
             LessonNumber = "Bài 3",
             Level = "Intermediate",
             LevelVi = "Trung cấp",
-            LevelOrder = 2,
-            Title = "Polly & Microsoft.Extensions.Resilience: Circuit Breaker, Exponential Backoff & Fault Tolerance",
-            TitleVi = "Polly & Microsoft.Extensions.Resilience: Circuit Breaker, Exponential Backoff & Khả Năng Chịu Lỗi",
+            LevelOrder = 3,
+            Title = "API Gateway & Ingress: NGINX vs Kong – Edge Traffic Routing, Load Balancing & Cloud-Native Security",
+            TitleVi = "API Gateway & Ingress: NGINX & Kong – Cửa Ngõ Vào Ra, Điều Hướng Lưu Lượng & Bảo Vệ Toàn Diện Microservices",
             ReadingTime = "17 phút đọc",
-            PublishedDate = "24/10/2026",
-            Summary = "Stop cascading failures from bringing down your microservice cluster. Master modern resilience in .NET with Polly v8 and Microsoft.Extensions.Resilience: Exponential backoff with jitter to solve the thundering herd problem, Circuit Breaker state machines, Hedging for low-latency queries, and standard resilience pipeline configuration.",
-            SummaryVi = "Chặn đứng hiện tượng lỗi dây chuyền (Cascading Failure) làm sập toàn bộ cụm microservices. Làm chủ khả năng chịu lỗi hiện đại trong .NET với Polly v8 và Microsoft.Extensions.Resilience: Thử lại số mũ có độ lệch ngẫu nhiên (Exponential Backoff + Jitter) chống bão request, cỗ máy trạng thái Circuit Breaker, kỹ thuật Hedging cho truy vấn độ trễ thấp và đường ống phục hồi chuẩn hóa.",
-            Tags = new List<string> { "Polly", "Resilience", "Circuit Breaker", "Retry", "Microservices", ".NET" },
+            PublishedDate = "25/10/2026",
+            Summary = "Master the frontline of modern architectures. Understand the critical distinction between a high-performance Reverse Proxy (NGINX) and an extensible Cloud-Native API Gateway (Kong). Dive into NGINX event-driven architecture, upstream load balancing, and SSL offloading. Then explore Kong's Lua/OpenResty foundation, DB-less declarative routing (decK), and enterprise plugins (Rate Limiting, JWT Auth, Prometheus).",
+            SummaryVi = "Làm chủ phòng tuyến tiền tuyến của mọi kiến trúc hệ thống hiện đại. Phân biệt rạch ròi giữa một Reverse Proxy hiệu năng siêu việt (NGINX) và một API Gateway Cloud-Native mở rộng cao cấp (Kong). Giải phẫu kiến trúc hướng sự kiện bất đồng bộ của NGINX, kỹ thuật upstream load balancing và offload SSL/TLS. Tiếp đó khám phá nền tảng OpenResty của Kong, cấu hình Declarative không cơ sở dữ liệu (DB-less) và hệ thống Plugin thực chiến (Rate Limiting chống DDoS, JWT Authentication, Prometheus Metrics).",
+            Tags = new List<string> { "NGINX", "Kong", "API Gateway", "Reverse Proxy", "Load Balancing", "Rate Limiting", "Ingress Controller" },
             Sections = new List<DevArticleSection>
             {
                 new DevArticleSection
                 {
-                    Heading = "1. The Cascading Failure Disaster: Why Microservice Networks Are Fragile",
-                    HeadingVi = "1. Thảm Họa Lỗi Dây Chuyền: Vì Sao Mạng Lưới Microservice Rất Dễ Tổn Thương",
+                    Heading = "1. Strategic Role of Gateways: Reverse Proxy vs Full-Featured API Gateway",
+                    HeadingVi = "1. Vì Sao Microservices Bắt Buộc Phải Có Reverse Proxy Hoặc API Gateway?",
                     Paragraphs = new List<string>
                     {
-                        "In a distributed system, network latency, temporary connection resets, and container redeployments are everyday facts of life. When Service A makes a synchronous HTTP call to Service B, it assumes a fragile dependency.",
-                        "If Service B begins slowing down under heavy database lock contention, incoming requests in Service A will begin waiting. As more user requests arrive, threads in Service A are blocked waiting for Service B. Within minutes, Service A exhausts its .NET Thread Pool, causing Service A to become completely unresponsive.",
-                        "This domino effect is known as Cascading Failure. A minor bug in a non-essential service (like Recommendation or Reviews) can easily bring down your critical Checkout and Payment flows unless strict fault isolation policies are enforced."
+                        "Exposing internal microservices directly to the public internet is an architectural catastrophe. If a client app connects directly to 30 microservices, internal IP addresses are exposed, CORS must be configured in 30 places, SSL certificates must be rotated across 30 services, and malicious clients can overwhelm backend databases with unthrottled requests.",
+                        "An Edge Gateway provides a Single Point of Ingress. It handles SSL/TLS Termination, L4 (TCP/UDP) and L7 (HTTP/gRPC) path-based routing, Centralized Authentication, Rate Limiting, and hides the internal network topology.",
+                        "However, engineers must distinguish between a Reverse Proxy and an API Gateway. A Reverse Proxy (like NGINX) focuses on high-throughput network plumbing: static file serving, SSL offloading, and upstream connection pooling. An API Gateway (like Kong) operates at the API lifecycle layer: dynamic consumer authentication, per-client rate limits, request/response transformations, and real-time observability plugins."
                     },
                     ParagraphsVi = new List<string>
                     {
-                        "Trong hệ thống phân tán, độ trễ mạng bất thường, mất kết nối chớp nhoáng và việc container tự động tái khởi động là những điều xảy ra như cơm bữa. Khi Service A thực hiện một cuộc gọi HTTP đồng bộ sang Service B, nó đã thiết lập một mắt xích phụ thuộc đầy rủi ro.",
-                        "Nếu Service B bị chậm do nghẽn khóa dữ liệu dưới database, các request gửi từ Service A sẽ phải xếp hàng chờ đợi. Khi lượng người dùng tiếp tục ồ ạt đổ vào, toàn bộ luồng xử lý (Threads) trong Service A sẽ bị khóa cứng để đợi Service B. Chỉ trong vài phút, Service A sẽ cạn kiệt Thread Pool và tê liệt hoàn toàn.",
-                        "Hiệu ứng domino này được gọi là Thảm họa lỗi dây chuyền (Cascading Failure). Một trục trặc nhỏ ở một dịch vụ phụ (như Gợi ý sản phẩm hay Đánh giá) hoàn toàn có thể kéo sập luôn cả quy trình Đặt hàng và Thanh toán cốt lõi nếu không có cơ chế cô lập lỗi nghiêm ngặt."
+                        "Để các dịch vụ Microservices nội bộ giao tiếp trực tiếp với môi trường Internet công cộng là một thảm họa kiến trúc. Nếu ứng dụng di động của người dùng kết nối thẳng tới 30 microservice khác nhau: toàn bộ IP mạng nội bộ bị lộ, cấu hình CORS phải viết lại ở 30 nơi, chứng chỉ SSL phải cài đặt trên 30 dịch vụ, và kẻ tấn công có thể dễ dàng dập tắt cơ sở dữ liệu backend bằng các đợt spam request liên tục.",
+                        "Hạ tầng Cửa ngõ (Edge Gateway) giải quyết triệt để điều này bằng cách tạo ra một Điểm tiếp nhận duy nhất (Single Point of Ingress). Nó chịu trách nhiệm giải mã chứng chỉ SSL/TLS, định tuyến lưu lượng tầng L4 (TCP/UDP) và L7 (HTTP/gRPC) theo đường dẫn, xác thực tập trung, giới hạn tần suất gọi (Rate Limiting) và che giấu hoàn toàn mạng nội bộ.",
+                        "Dù vậy, cần phân biệt rõ giữa Reverse Proxy và API Gateway. Một Reverse Proxy thuần túy (như NGINX) tập trung tối đa vào hiệu năng mạng: phục vụ file tĩnh, offload SSL và gộp kết nối upstream. Trong khi đó, một API Gateway chuyên dụng (như Kong) vận hành ở tầng nghiệp vụ API: phân quyền theo từng khách hàng (Consumer), giới hạn hạn ngạch gọi API động, biến đổi dữ liệu request/response và gắn các plugin đo lường thời gian thực."
                     },
-                    CodeTitle = "Timeline of a Cascading Failure Disaster",
-                    CodeLanguage = "text",
+                    CodeTitle = "Architectural Comparison: NGINX vs Kong API Gateway",
+                    CodeLanguage = "json",
                     CodeContent = """
-[Người Dùng] ---> [Order Service] ---> [Inventory Service] (Bị quá tải DB, phản hồi mất 30s)
-      |                  |                       |
-(100 req/s)       (100 luồng bị khóa)      (Tắc nghẽn kết nối)
-      |                  |                       |
-      v                  v                       v
-[Order Service cạn Thread Pool] ---> [Kubelet Liveness Probe gửi request vào /healthz bị Timeout!]
-      |
-      v
-[K8s tưởng Order Service chết, tiêu diệt Pod và tạo mới] ---> [Pod mới khởi động lại tiếp tục bị treo!]
-      |
-      v
-=====> TOÀN BỘ HỆ THỐNG SẬP ĐỒNG LOẠT (RESTART STORM CASCADING COLLAPSE) <=====
+{
+  "Comparison": "NGINX vs Kong API Gateway",
+  "KeyDifferences": [
+    {
+      "Dimension": "Nền tảng cốt lõi (Core Engine)",
+      "NGINX": "C thuần túy, hướng sự kiện bất đồng bộ (epoll), hiệu năng thô đỉnh cao",
+      "Kong": "Xây dựng trên NGINX + OpenResty (LuaJIT) + Plugin Framework"
+    },
+    {
+      "Dimension": "Quản lý cấu hình (Configuration)",
+      "NGINX": "File văn bản nginx.conf tĩnh (cần nginx -s reload khi đổi)",
+      "Kong": "Động 100%: Quản lý qua Admin REST API hoặc Declarative YAML (decK)"
+    },
+    {
+      "Dimension": "Hệ sinh thái Plugin mở rộng",
+      "NGINX": "Cần biên dịch lại C module hoặc dùng NGINX Plus trả phí",
+      "Kong": "Kho Plugin khổng lồ: Rate-limiting, JWT, OAuth2, Prometheus, CORS, v.v."
+    },
+    {
+      "Dimension": "Trường hợp sử dụng lý tưởng",
+      "NGINX": "Cân bằng tải cụm máy chủ, Reverse Proxy, Ingress Controller cơ bản, Web server",
+      "Kong": "API Gateway doanh nghiệp, quản lý hàng trăm API, phân quyền Consumer đa tầng"
+    }
+  ]
+}
 """,
                     CalloutType = "warning",
-                    CalloutTitle = "The Danger of Naive Fixed Retries",
-                    CalloutTitleVi = "Cạm Bẫy Của Thử Lại (Retry) Cố Định Thô Sơ",
-                    CalloutText = "Never retry failed HTTP calls immediately with a fixed interval (e.g., retrying every 500ms). If 1,000 requests fail because downstream Service B is overloaded, immediately retrying multiplied by 3 attempts turns 1,000 requests into a 4,000-request tsunami, permanently hammering the failing service into oblivion (Thundering Herd Problem).",
-                    CalloutTextVi = "Tuyệt đối không thử lại (Retry) với khoảng thời gian cố định. Nếu 1.000 requests thất bại vì Service B đang bị quá tải, việc retry dồn dập ngay tức khắc sẽ biến 1.000 requests thành một cơn sóng thần 4.000 requests dội thẳng vào Service B, khiến dịch vụ này chìm sâu vào tê liệt vĩnh viễn (Vấn nạn Thundering Herd)."
+                    CalloutTitle = "Beware of Smart Gateways, Dumb Pipes Anti-Pattern",
+                    CalloutTitleVi = "Cảnh Báo: Tuyệt Đối Không Viết Business Logic Vào Gateway",
+                    CalloutText = "An API Gateway should handle cross-cutting infrastructure concerns (TLS, Auth, Rate Limiting, Logging). Never implement complex business logic, database queries, or data merging inside the Gateway. Doing so turns the gateway into an unmaintainable distributed monolith bottleneck.",
+                    CalloutTextVi = "API Gateway chỉ nên xử lý các mối quan tâm hạ tầng dùng chung (TLS, Auth, Rate Limiting, Logging). Tuyệt đối không nhồi nhét nghiệp vụ kinh doanh, truy vấn cơ sở dữ liệu hay tính toán phức tạp vào Gateway. Làm vậy sẽ biến Gateway thành một khối Monolith thắt nút cổ chai khó bảo trì."
                 },
                 new DevArticleSection
                 {
-                    Heading = "2. Polly v8 & Microsoft.Extensions.Resilience: The Next-Gen Pipeline",
-                    HeadingVi = "2. Làm Chủ Polly v8 & Microsoft.Extensions.Resilience: Đường Ống Phục Hồi Thế Hệ Mới",
+                    Heading = "2. NGINX Under the Hood: Event-Driven Core & Upstream Load Balancing",
+                    HeadingVi = "2. NGINX Cốt Lõi: Cấu Trúc Hướng Sự Kiện, Upstream Load Balancing & Ingress K8s",
                     Paragraphs = new List<string>
                     {
-                        "For years, Polly was the gold standard resilience library in .NET, but configuring complex policies in Polly v7 was verbose and suffered from object allocations. With Polly v8 (Polly.Core), the team completely re-architected the library from scratch for zero allocations and exceptional performance.",
-                        "Microsoft officially partnered with the Polly team to ship 'Microsoft.Extensions.Resilience', introducing 'AddStandardResilienceHandler()'. With a single line of code, your HttpClient is shielded with an optimal, production-tuned resilience pipeline.",
-                        "The Standard Resilience Pipeline stacks 5 essential defense layers in precise mathematical order: Total Request Timeout -> Retry with Exponential Backoff and Jitter -> Circuit Breaker -> Per-Attempt Timeout -> Rate Limiter."
+                        "NGINX's legendary performance stems from its asynchronous, event-driven, non-blocking architecture. Traditional web servers (like classic Apache) spawned a new thread or process for each incoming HTTP connection, causing context-switching overhead and memory exhaustion at high concurrency.",
+                        "NGINX uses a single Master process and a small number of Worker processes (typically one per CPU core). Each Worker process utilizes kernel multiplexing mechanisms like 'epoll' (Linux) or 'kqueue' (BSD) to process tens of thousands of simultaneous connections within a single thread without blocking.",
+                        "In microservice environments, NGINX acts as a battle-tested load balancer. It supports multiple upstream distribution algorithms: Round Robin (default), Least Connections ('least_conn' for long-running transactions), and IP Hash ('ip_hash' for stateful sessions). When configured with 'keepalive', NGINX reuses TCP connections to backend services, slashing latency."
                     },
                     ParagraphsVi = new List<string>
                     {
-                        "Suốt nhiều năm, Polly là tiêu chuẩn vàng về khả năng phục hồi lỗi trong .NET, nhưng cách cấu hình ở phiên bản Polly v7 khá rườm rà và tốn tài nguyên cấp phát bộ nhớ. Với phiên bản Polly v8 (Polly.Core), đội ngũ phát triển đã viết lại toàn bộ từ gốc, tối ưu hóa triệt để không cấp phát bộ nhớ rác (Zero Allocations) và đạt hiệu năng đỉnh cao.",
-                        "Microsoft đã chính thức bắt tay với Polly để phát hành gói 'Microsoft.Extensions.Resilience' tích hợp sẵn phương thức 'AddStandardResilienceHandler()'. Chỉ với duy nhất một dòng code, HttpClient của bạn sẽ được bảo vệ bởi một đường ống phòng thủ chuẩn mực nhất của các kỹ sư Microsoft.",
-                        "Đường ống phục hồi tiêu chuẩn này sắp xếp 5 lớp lá chắn theo thứ tự toán học tối ưu: Timeout toàn cục -> Thử lại số mũ kèm độ lệch ngẫu nhiên (Exponential Backoff + Jitter) -> Cắt mạch (Circuit Breaker) -> Timeout cho từng lần thử -> Giới hạn tần suất (Rate Limiter)."
+                        "Hiệu năng huyền thoại của NGINX bắt nguồn từ kiến trúc hướng sự kiện bất đồng bộ không chặn (Asynchronous Event-Driven Non-blocking). Các web server truyền thống (như Apache đời cũ) tạo một thread hoặc process riêng cho mỗi kết nối HTTP gửi đến, dẫn đến chi phí chuyển đổi ngữ cảnh (Context Switching) khổng lồ và làm sập RAM khi có hàng vạn người truy cập đồng thời.",
+                        "NGINX sử dụng một Master process duy nhất và một số lượng Worker processes rất nhỏ (thông thường bằng đúng số lõi CPU của máy chủ). Mỗi Worker process tận dụng cơ chế dồn kênh của Kernel như 'epoll' (trên Linux) để xử lý đồng thời hàng chục ngàn kết nối song song trong một luồng duy nhất mà không bao giờ bị nghẽn.",
+                        "Trong môi trường Microservices, NGINX là bộ cân bằng tải hàng đầu. Nó hỗ trợ nhiều thuật toán phân bổ tải upstream: Round Robin (mặc định xoay vòng), Least Connections ('least_conn' ưu tiên server đang rảnh rỗi nhất) và IP Hash ('ip_hash' duy trì phiên). Khi được cấu hình 'keepalive', NGINX tái sử dụng các kết nối TCP tới backend, triệt tiêu độ trễ bắt tay mạng (TCP Handshake)."
                     },
-                    CodeTitle = "Configuring AddStandardResilienceHandler in Program.cs (.NET 8/9+)",
-                    CodeLanguage = "csharp",
+                    CodeTitle = "Production nginx.conf: Upstream Keepalive, Rate Limiting & SSL Offloading",
+                    CodeLanguage = "nginx",
                     CodeContent = """
-// Cài đặt NuGet:
-// dotnet add package Microsoft.Extensions.Http.Resilience
+events {
+    worker_connections 10240; # Mỗi worker có thể giữ tới 10,240 kết nối đồng thời
+    multi_accept on;
+    use epoll;
+}
 
-using Polly;
-using Polly.CircuitBreaker;
-using Polly.Retry;
-using System.Net;
+http {
+    # 1. Định nghĩa bộ đệm Rate Limiting chống spam/DDoS (10 requests/giây theo IP)
+    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Đăng ký HttpClient có gắn sẵn Standard Resilience Pipeline
-builder.Services.AddHttpClient("InventoryClient", client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["Services:InventoryUrl"] ?? "http://inventory-service:8080");
-})
-.AddStandardResilienceHandler(options =>
-{
-    // 1. CẤU HÌNH TIMEOUT TOÀN BỘ CUỘC GỌI (Bao gồm cả các lần retry)
-    options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(10);
-
-    // 2. CẤU HÌNH THỬ LẠI EXPONENTIAL BACKOFF + JITTER
-    options.Retry.MaxRetryAttempts = 3;
-    options.Retry.BackoffType = DelayBackoffType.Exponential;
-    options.Retry.Delay = TimeSpan.FromMilliseconds(500); // Thử lại sau: ~500ms, ~1s, ~2s (+/- ngẫu nhiên vài chục ms)
-    options.Retry.ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
-        .Handle<HttpRequestException>()
-        .HandleResult(res => res.StatusCode == HttpStatusCode.RequestTimeout ||
-                             res.StatusCode == HttpStatusCode.BadGateway ||
-                             res.StatusCode == HttpStatusCode.ServiceUnavailable);
-
-    // 3. CẤU HÌNH CIRCUIT BREAKER (NGẮT MẠCH BẢO VỆ DỊCH VỤ)
-    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(15);
-    options.CircuitBreaker.FailureRatio = 0.5; // Nếu >= 50% request bị lỗi trong 15s -> NGẮT MẠCH (Open)
-    options.CircuitBreaker.MinimumThroughput = 10; // Phải có ít nhất 10 request trong cửa sổ mới tính tỷ lệ
-    options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30); // Giữ mạch ngắt trong 30s trước khi thử lại (Half-Open)
-
-    // 4. TIMEOUT CHO TỪNG LẦN GỌI ĐƠN LẺ
-    options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(2.5);
-});
-
-var app = builder.Build();
-
-app.MapGet("/api/products/{id}", async (string id, IHttpClientFactory factory) =>
-{
-    var client = factory.CreateClient("InventoryClient");
-    
-    try
-    {
-        var response = await client.GetAsync($"/api/inventory/{id}");
-        var data = await response.Content.ReadAsStringAsync();
-        return Results.Ok(data);
+    # 2. Cấu hình Upstream Pool với cơ chế Keepalive tái sử dụng TCP socket
+    upstream backend_order_cluster {
+        least_conn; # Chuyển request tới instance đang có ít kết nối nhất
+        server order-service-1:8080 max_fails=3 fail_timeout=10s;
+        server order-service-2:8080 max_fails=3 fail_timeout=10s;
+        server order-service-3:8080 max_fails=3 fail_timeout=10s;
+        keepalive 64; # Giữ 64 kết nối TCP nhàn rỗi sẵn sàng phục vụ
     }
-    catch (BrokenCircuitException)
-    {
-        // Khi mạch đang ngắt (Circuit Open), trả về dữ liệu fallback thay vì để người dùng chờ đợi!
-        return Results.Ok(new { productId = id, stock = 0, isFallback = true, message = "Kho hàng tạm bảo trì" });
-    }
-});
 
-app.Run();
-""",
-                    CalloutType = "tip",
-                    CalloutTitle = "Understanding Circuit Breaker States",
-                    CalloutTitleVi = "Hiểu Rõ 3 Trạng Thái Của Circuit Breaker",
-                    CalloutText = "Closed (Normal operation, requests pass through) -> Open (Error threshold breached, requests fail-fast immediately without touching the network, protecting the downstream service) -> Half-Open (Break duration expires, a trial request is sent; if it succeeds, the circuit heals back to Closed).",
-                    CalloutTextVi = "Closed (Bình thường, cho mọi request đi qua) -> Open (Mạch ngắt vì lỗi vượt ngưỡng, lập tức trả về lỗi ngay tức khắc không gửi qua mạng nữa, cho phép service kia hồi phục) -> Half-Open (Hết thời gian ngắt, gửi thử 1 request thăm dò; nếu thành công thì đóng mạch về lại Closed)."
-                },
-                new DevArticleSection
-                {
-                    Heading = "3. Advanced Strategies: Hedging & Graceful Fallbacks",
-                    HeadingVi = "3. Chiến Lược Nâng Cao: Kỹ Thuật Hedging Dự Phòng & Phục Hồi Duyên Dáng (Graceful Fallback)",
-                    Paragraphs = new List<string>
-                    {
-                        "While retries help recover from hard failures, they significantly increase latency. For read-heavy, idempotent endpoints (like retrieving product catalogs, currency exchange rates, or recommendation cards), Hedging is a superior pattern.",
-                        "Hedging works by initiating a parallel backup request if the original request does not return within a tight threshold (e.g., 800ms). Whichever request responds first is accepted, and the slower one is cancelled, effectively shaving off the P99 latency tail.",
-                        "Combined with Graceful Fallbacks (returning cached Redis data or static defaults when circuits are open), your user experience remains buttery smooth even when half of your cloud dependencies are having an outage."
-                    },
-                    ParagraphsVi = new List<string>
-                    {
-                        "Mặc dù cơ chế thử lại (Retry) giúp vượt qua các lỗi tạm thời, nó lại làm gia tăng độ trễ cho người dùng. Đối với các thao tác chỉ đọc và an toàn (Idempotent) như xem danh mục hàng hóa, tỷ giá hối đoái hoặc gợi ý sản phẩm, kỹ thuật Hedging là vũ khí lợi hại hơn rất nhiều.",
-                        "Hedging hoạt động bằng cách kích hoạt thêm một request dự phòng chạy song song nếu request đầu tiên chưa kịp phản hồi sau một khoảng thời gian ngắn (ví dụ sau 800ms). Request nào trả về kết quả trước sẽ được chấp nhận ngay lập tức, và request chậm hơn sẽ bị hủy bỏ, giúp loại bỏ triệt để độ trễ đuôi P99.",
-                        "Khi kết hợp với Graceful Fallbacks (trả về dữ liệu lưu tạm trong cache Redis hoặc giá trị mặc định khi mạch đang ngắt), trải nghiệm của khách hàng vẫn mượt mà không hề hay biết rằng một vài dịch vụ đám mây phía sau đang gặp sự cố."
-                    },
-                    CodeTitle = "Configuring Hedging with Custom Fallback Strategy",
-                    CodeLanguage = "csharp",
-                    CodeContent = """
-// Cấu hình Hedging Pipeline cho các thao tác đọc dữ liệu quan trọng
-var resiliencePipeline = new ResiliencePipelineBuilder<ProductDto>()
-    .AddFallback(new FallbackStrategyOptions<ProductDto>
-    {
-        FallbackAction = args =>
-        {
-            // Trả về sản phẩm mặc định từ bộ nhớ đệm In-Memory khi tất cả cuộc gọi đều thất bại
-            var cached = new ProductDto("prod-default", "Sản phẩm đang cập nhật", 0);
-            return Outcome.FromResultAsValueTask(cached);
+    server {
+        listen 443 ssl http2;
+        server_name api.mycompany.com;
+
+        # Cấu hình SSL/TLS Hardening
+        ssl_certificate /etc/nginx/certs/fullchain.pem;
+        ssl_certificate_key /etc/nginx/certs/privkey.pem;
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers HIGH:!aNULL:!MD5;
+
+        location /api/v1/orders/ {
+            # Kích hoạt Rate Limit với burst buffer lên tới 20 req
+            limit_req zone=api_limit burst=20 nodelay;
+
+            proxy_pass http://backend_order_cluster;
+            proxy_http_version 1.1;
+            proxy_set_header Connection ""; # Cho phép keepalive upstream hoạt động
+
+            # Bảo toàn thông tin Client thực tế gửi tới Microservice
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            proxy_connect_timeout 5s;
+            proxy_read_timeout 30s;
         }
-    })
-    .AddHedging(new HedgingStrategyOptions<ProductDto>
-    {
-        MaxHedgedAttempts = 2,
-        Delay = TimeSpan.FromMilliseconds(700), // Nếu sau 700ms chưa có kết quả, tự động bắn thêm request thứ 2
-        ShouldHandle = new PredicateBuilder<ProductDto>().Handle<Exception>()
-    })
-    .Build();
-
-record ProductDto(string Id, string Name, decimal Price);
+    }
+}
 """,
                     CalloutType = "tip",
-                    CalloutTitle = "Hedging Is Only For Idempotent Calls",
-                    CalloutTitleVi = "Hedging Chỉ Áp Dụng Cho Thao Tác Đọc (Idempotent)",
-                    CalloutText = "Never use Hedging on POST or mutating requests (like 'ChargeCreditCard' or 'CreateOrder'), as it could result in charging the customer twice. Restrict Hedging strictly to GET, idempotent, and side-effect-free operations.",
-                    CalloutTextVi = "Tuyệt đối không dùng Hedging cho các request POST làm thay đổi trạng thái (như Trừ tiền thẻ hay Đặt hàng), vì nó có thể khiến khách hàng bị trừ tiền hai lần. Chỉ dùng Hedging cho các thao tác GET đọc dữ liệu thuần túy."
+                    CalloutTitle = "Always Preserve Client IP Headers",
+                    CalloutTitleVi = "Bí Quyết: Không Bao Giờ Làm Mất IP Thật Của Khách Hàng",
+                    CalloutText = "When traffic passes through NGINX, backend microservices see NGINX's IP address rather than the end-user's IP. Always pass 'proxy_set_header X-Real-IP $remote_addr;' and 'proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' so downstream audit logs and fraud detection filters retain real client provenance.",
+                    CalloutTextVi = "Khi lưu lượng đi qua NGINX, các microservice backend sẽ chỉ nhìn thấy IP nội bộ của NGINX. Luôn thiết lập 'proxy_set_header X-Real-IP $remote_addr;' và 'proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' để hệ thống ghi log và các bộ lọc chống gian lận bảo toàn được IP thật của người dùng."
+                },
+                new DevArticleSection
+                {
+                    Heading = "3. Kong API Gateway: OpenResty Engine, DB-less Mode & Enterprise Plugins",
+                    HeadingVi = "3. Kong API Gateway: Nền Tảng OpenResty, DB-less Mode & Hệ Sinh Thái Plugin Thực Chiến",
+                    Paragraphs = new List<string>
+                    {
+                        "Kong builds directly on top of NGINX and OpenResty, embedding LuaJIT into NGINX worker processes. This architecture gives Kong the raw, blistering execution speed of NGINX while providing the dynamic programmability needed for modern cloud-native API management.",
+                        "Kong can run in two modes: with a PostgreSQL database backing its cluster configuration, or in modern 'DB-less mode' using declarative YAML configuration files (managed via decK or GitOps pipelines). DB-less mode is especially beloved in Kubernetes environments because it eliminates database operational dependencies, prevents configuration drift, and restarts in sub-seconds.",
+                        "Kong's true superpower lies in its Plugin architecture. Rather than writing custom authentication, rate limiting, and observability logic in every microservice, you configure plugins at the Service, Route, or Global scope: 'key-auth', 'jwt', 'rate-limiting', 'request-transformer', and 'prometheus'."
+                    },
+                    ParagraphsVi = new List<string>
+                    {
+                        "Kong được xây dựng trực tiếp trên nền tảng NGINX và OpenResty, nhúng trình thông dịch LuaJIT vào các worker process của NGINX. Kiến trúc này mang lại cho Kong cả hai ưu điểm tối thượng: tốc độ truyền tải mạng cực nhanh của NGINX kết hợp cùng khả năng lập trình động linh hoạt của ngôn ngữ Lua.",
+                        "Kong hỗ trợ 2 chế độ vận hành: Chế độ có cơ sở dữ liệu (sử dụng PostgreSQL lưu trữ cấu hình cluster) hoặc Chế độ Declarative không cơ sở dữ liệu (DB-less mode) sử dụng file YAML (quản lý qua công cụ decK hoặc GitOps CI/CD). Chế độ DB-less cực kỳ được ưa chuộng trên Kubernetes vì loại bỏ hoàn toàn gánh nặng vận hành database, chống sai lệch cấu hình và khởi động chỉ trong chớp mắt.",
+                        "Sức mạnh thực sự của Kong nằm ở Hệ sinh thái Plugin. Thay vì phải tự viết code xác thực token, chống DDoS và xuất metrics trong từng microservice, bạn chỉ cần bật các Plugin ở tầng Gateway: 'key-auth', 'jwt', 'rate-limiting', 'request-transformer' và 'prometheus'."
+                    },
+                    CodeTitle = "Declarative Kong Configuration (kong.yml) with Rate Limiting & Auth Plugins",
+                    CodeLanguage = "yaml",
+                    CodeContent = """
+# ==================== KONG DECLARATIVE CONFIGURATION (DB-LESS) ====================
+_format_version: "3.0"
+
+# 1. Định nghĩa các Backend Microservices (Upstream Services)
+services:
+  - name: order-microservice
+    url: http://order-service:8080/api/v1
+    connect_timeout: 5000
+    read_timeout: 30000
+    # 2. Định nghĩa các đường dẫn công khai (Routes)
+    routes:
+      - name: order-routes
+        paths:
+          - /orders
+        strip_path: true
+        protocols:
+          - http
+          - https
+    # 3. Gắn các Plugin chuyên dụng bảo vệ Service này
+    plugins:
+      # Plugin Giới hạn tần suất gọi chống spam/DDoS
+      - name: rate-limiting
+        config:
+          minute: 60       # Tối đa 60 requests / phút
+          hour: 2000       # Tối đa 2000 requests / giờ
+          policy: local    # Lưu bộ đếm trong bộ nhớ của Kong node
+          hide_client_headers: false # Trả về X-RateLimit-Remaining cho client biết
+
+      # Plugin Xác thực API Key trước khi cho phép vào backend
+      - name: key-auth
+        config:
+          key_names:
+            - apikey
+            - X-API-Key
+
+# 4. Định nghĩa Khách Hàng (Consumers) và cấp phát API Key
+consumers:
+  - username: mobile-app-partner
+    keyauth_credentials:
+      - key: sec_live_98a7sd8f7a6sd5f87as6df5 # API Key hợp lệ
+""",
+                    CalloutType = "tip",
+                    CalloutTitle = "Run Kong in DB-Less Mode with Docker",
+                    CalloutTitleVi = "Khởi Chạy Kong Gateway DB-Less Siêu Nhanh Bằng Docker",
+                    CalloutText = "You can run a production-ready Kong API Gateway using Docker with a single command without installing PostgreSQL: 'docker run -d --name kong -e KONG_DATABASE=off -e KONG_DECLARATIVE_CONFIG=/kong/kong.yml -v ./kong.yml:/kong/kong.yml -p 8000:8000 -p 8001:8001 kong:latest'.",
+                    CalloutTextVi = "Bạn có thể khởi chạy Kong API Gateway chế độ DB-less bằng một container Docker duy nhất mà không cần cài đặt PostgreSQL: 'docker run -d --name kong -e KONG_DATABASE=off -e KONG_DECLARATIVE_CONFIG=/kong/kong.yml -v ./kong.yml:/kong/kong.yml -p 8000:8000 -p 8001:8001 kong:latest'."
                 }
             }
         };
         series.Articles.Add(article3);
 
-        // BÀI 4
+        // =========================================================================
+        // BÀI 4: MESSAGE QUEUES & EVENT STREAMING: RABBITMQ VS KAFKA VS AWS SQS
+        // =========================================================================
         var article4 = new DevArticle
         {
-            Id = "dotnet-microservices-article-4-masstransit-outbox-event-driven",
+            Id = "infra-tools-article-4-message-queues-rabbitmq-kafka-sqs",
             SeriesId = series.Id,
             LessonNumber = "Bài 4",
             Level = "Advanced",
             LevelVi = "Nâng cao",
-            LevelOrder = 3,
-            Title = "MassTransit & Transactional Outbox Pattern: Event-Driven Microservices Without Data Loss",
-            TitleVi = "MassTransit & Transactional Outbox: Microservices Hướng Sự Kiện Không Sợ Mất Dữ Liệu",
-            ReadingTime = "19 phút đọc",
-            PublishedDate = "24/10/2026",
-            Summary = "Solve the dreaded Dual-Write problem in distributed architectures. Learn how MassTransit with Entity Framework Core implements the Transactional Outbox Pattern over RabbitMQ/Kafka: Atomic database-and-event commits, Idempotent Consumers to prevent duplicate processing, and Dead Letter Queues (DLQ) for self-healing message pipelines.",
-            SummaryVi = "Giải quyết triệt để vấn nạn ghi kép (Dual-Write Problem) trong kiến trúc phân tán. Tìm hiểu cách MassTransit kết hợp Entity Framework Core hiện thực mẫu thiết kế Transactional Outbox trên nền RabbitMQ/Kafka: Cam kết đồng thời đơn hàng và event trong một transaction duy nhất, Idempotent Consumer chống trùng lặp dữ liệu, và Dead Letter Queue (DLQ) tự phục hồi lỗi.",
-            Tags = new List<string> { "MassTransit", "RabbitMQ", "Kafka", "Outbox Pattern", "Event-Driven", "Idempotency" },
+            LevelOrder = 4,
+            Title = "Message Queues & Event Streaming: RabbitMQ vs Apache Kafka vs AWS SQS – Comprehensive Architectural Comparison",
+            TitleVi = "Message Queue & Event Streaming: RabbitMQ vs Apache Kafka vs AWS SQS – So Sánh Toàn Diện & Lựa Chọn Chuẩn Hạ Tầng",
+            ReadingTime = "20 phút đọc",
+            PublishedDate = "25/10/2026",
+            Summary = "Demystify asynchronous communication in distributed systems. Contrast the three foundational messaging paradigms: Smart Broker with Dumb Consumers (RabbitMQ / AMQP), Dumb Broker with Smart Consumers using Distributed Append-Only Logs (Apache Kafka), and Fully-Managed Cloud Queues (AWS SQS). Master Exchanges, Partitions, Consumer Groups, DLQs, and trade-off matrices.",
+            SummaryVi = "Giải mã các cơ chế truyền thông điệp bất đồng bộ trong hệ thống phân tán. So sánh đối đầu 3 mô hình kiến trúc cốt lõi: Message Broker truyền thống có bộ định tuyến thông minh (RabbitMQ / AMQP), Nhật ký phân tán hiệu năng cực đại với Consumer tự quản lý vị trí đọc (Apache Kafka), và Hàng đợi đám mây Serverless không cần quản trị máy chủ (AWS SQS). Làm chủ Exchanges, Partitions, Consumer Groups, Dead Letter Queues (DLQ) và ma trận ra quyết định kiến trúc.",
+            Tags = new List<string> { "RabbitMQ", "Apache Kafka", "AWS SQS", "Message Queue", "Event Streaming", "AMQP", "Dead Letter Queue" },
             Sections = new List<DevArticleSection>
             {
                 new DevArticleSection
                 {
-                    Heading = "1. The Dual-Write Trap: Why DB + Message Broker Commits Secretly Fail",
-                    HeadingVi = "1. Cạm Bẫy Ghi Kép (Dual-Write): Vì Sao Vừa Lưu DB Vừa Bắn Message Thường Xuyên Lỗi",
+                    Heading = "1. Three Messaging Paradigms: Traditional Broker vs Distributed Log vs Cloud Serverless",
+                    HeadingVi = "1. Ba Triết Lý Nhắn Tin Khác Biệt: Broker Truyền Thống vs Distributed Log vs Cloud Serverless",
                     Paragraphs = new List<string>
                     {
-                        "In modern event-driven microservices, services communicate asynchronously via messages. For instance, when an order is submitted, the Order Service must persist the order in its database and publish an 'OrderCreatedEvent' to RabbitMQ or Kafka so that Payment and Email services can react.",
-                        "Almost every developer initially writes code like this: save to database via DbContext.SaveChangesAsync(), then call messageBus.PublishAsync(event). This is known as the Dual-Write Problem, and it is mathematically broken.",
-                        "What happens if the database commit succeeds, but the pod crashes, the network disconnects, or RabbitMQ is temporarily unreachable right before PublishAsync()? The order exists in the database, but the event is lost forever! The customer was charged, but the warehouse never ships the item.",
-                        "Conversely, if you publish the event first and the database transaction rolls back due to a constraint violation, other microservices process a ghost order that does not exist in the database!"
+                        "Synchronous HTTP REST communication binds microservices in tight temporal coupling: if Service A calls Service B, and Service B calls Service C, any slow database query or network hiccup in Service C immediately blocks threads across the entire chain, creating cascading failures. Asynchronous messaging decouples systems in both time and space, smoothing out traffic spikes through peak shaving.",
+                        "However, distributed infrastructure utilizes three profoundly different messaging architectures:",
+                        "1) Traditional Message Broker (RabbitMQ): Built on the AMQP standard with a 'Smart Broker, Dumb Consumer' philosophy. RabbitMQ actively routes messages using exchange rules, tracks acknowledgment per message, and deletes messages as soon as consumers acknowledge them.",
+                        "2) Distributed Append-Only Commit Log (Apache Kafka): Built with a 'Dumb Broker, Smart Consumer' philosophy. Kafka does not treat messages as transient queue items; it appends them sequentially to immutable, partitioned commit logs on disk. Messages are retained for days or months, allowing consumers to read at their own pace and replay history arbitrarily.",
+                        "3) Fully-Managed Cloud Serverless Queue (AWS SQS): Zero server maintenance, infinite auto-scaling, pay-per-request pricing, and native integration with cloud services like AWS Lambda, ECS, and S3."
                     },
                     ParagraphsVi = new List<string>
                     {
-                        "Trong kiến trúc Microservices hướng sự kiện (Event-Driven), các dịch vụ giao tiếp bất đồng bộ qua thông điệp. Ví dụ khi người dùng tạo đơn hàng, Order Service vừa phải lưu đơn vào database của mình, vừa phải phát sự kiện 'OrderCreatedEvent' lên RabbitMQ hoặc Kafka để Payment Service và Email Service cùng xử lý.",
-                        "Hầu hết lập trình viên lúc đầu đều viết theo bản năng: gọi DbContext.SaveChangesAsync() để lưu vào cơ sở dữ liệu, sau đó gọi messageBus.PublishAsync(event). Đây chính là cạm bẫy Ghi Kép (Dual-Write Problem) kinh điển trong hệ thống phân tán.",
-                        "Điều gì xảy ra nếu đơn hàng vừa lưu vào DB xong thì Pod bất ngờ bị restart, sập nguồn, hoặc kết nối tới RabbitMQ bị chập chờn ngay trước dòng PublishAsync()? Đơn hàng đã nằm trong DB nhưng sự kiện bị bốc hơi vĩnh viễn! Khách hàng đã thanh toán nhưng kho hàng không hề nhận được thông báo để xuất kho.",
-                        "Ngược lại, nếu bạn bắn event lên RabbitMQ trước rồi mới lưu DB, và câu lệnh DB bị lỗi rollback do vi phạm khóa ngoại, các microservice khác sẽ xử lý một đơn hàng ma không hề tồn tại trong cơ sở dữ liệu!"
+                        "Giao tiếp đồng bộ qua HTTP REST ràng buộc các microservice chặt chẽ về mặt thời gian: Nếu Dịch vụ A gọi Dịch vụ B, và Dịch vụ B lại gọi Dịch vụ C, thì bất kỳ một truy vấn chậm chạp hay sự cố mạng nào tại C cũng sẽ lập tức khóa chặt các luồng xử lý (threads) của toàn bộ chuỗi dịch vụ. Giao tiếp bất đồng bộ qua thông điệp (Asynchronous Messaging) giải phóng sự phụ thuộc thời gian và san phẳng các đỉnh tải đột biến (Peak Shaving).",
+                        "Tuy nhiên, thế giới hạ tầng phân tán được định hình bởi 3 trường phái kiến trúc hoàn toàn khác biệt:",
+                        "1) Message Broker Truyền Thống (RabbitMQ): Xây dựng trên chuẩn AMQP với triết lý 'Smart Broker, Dumb Consumer'. RabbitMQ chủ động định tuyến thông điệp qua các Exchange, theo dõi từng xác nhận (ACK), và tự động xóa tin nhắn ngay khi consumer xử lý xong.",
+                        "2) Nhật Ký Phân Tán Bất Biến (Apache Kafka): Vận hành theo triết lý 'Dumb Broker, Smart Consumer'. Kafka không xem tin nhắn là các mục hàng đợi tạm thời; nó ghi nối tiếp thông điệp vào các file Commit Log phân tán trên ổ đĩa. Dữ liệu được lưu trữ nhiều ngày hoặc nhiều tháng, cho phép Consumer tự quản lý vị trí đọc (Offset) và tua lại (Replay) dữ liệu lịch sử bất cứ lúc nào.",
+                        "3) Hàng Đợi Đám Mây Serverless (AWS SQS): Không cần cài đặt hay bảo trì máy chủ, tự động mở rộng không giới hạn, tính tiền theo số lượng request và tích hợp chặt chẽ với hệ sinh thái Cloud."
                     },
-                    CodeTitle = "Naive Dual-Write Bug vs Transactional Outbox Solution",
-                    CodeLanguage = "csharp",
+                    CodeTitle = "10-Point Decision Matrix: RabbitMQ vs Apache Kafka vs AWS SQS",
+                    CodeLanguage = "json",
                     CodeContent = """
-// ==================== CÁCH VIẾT SAI KINH ĐIỂN (DUAL-WRITE BUG) ====================
-public async Task CreateOrderNaive(Order order)
 {
-    _dbContext.Orders.Add(order);
-    await _dbContext.SaveChangesAsync(); // Bước 1: Lưu thành công vào SQL
-    
-    // NGUY HIỂM: Nếu Pod bị kill tại đây hoặc mạng RabbitMQ chập chờn -> Event mất vĩnh viễn!
-    await _bus.Publish(new OrderCreatedEvent(order.Id, order.Total)); // Bước 2
+  "InfrastructureComparison": "RabbitMQ vs Apache Kafka vs AWS SQS",
+  "Matrix": [
+    {
+      "Criteria": "Triết lý kiến trúc lõi",
+      "RabbitMQ": "Queue-based (Xóa message sau khi ACK)",
+      "ApacheKafka": "Append-Only Commit Log (Lưu trữ bền vững)",
+      "AWSSQS": "Distributed Serverless Queue (Managed)"
+    },
+    {
+      "Criteria": "Thông lượng (Throughput)",
+      "RabbitMQ": "Trung bình (20K - 80K msg/giây)",
+      "ApacheKafka": "Cực khủng (Hàng triệu event/giây)",
+      "AWSSQS": "Gần như vô hạn (Tự động scale)"
+    },
+    {
+      "Criteria": "Khả năng đọc lại dữ liệu (Replayability)",
+      "RabbitMQ": "Không hỗ trợ (Đã đọc là xóa khỏi queue)",
+      "ApacheKafka": "Hoàn hảo (Tua lại Offset về quá khứ bất kỳ lúc nào)",
+      "AWSSQS": "Không hỗ trợ (Xóa sau khi hoàn tất)"
+    },
+    {
+      "Criteria": "Định tuyến phức tạp (Complex Routing)",
+      "RabbitMQ": "Vô địch (Topic, Direct, Fanout, Headers)",
+      "ApacheKafka": "Cơ bản (Dựa trên Topic và Key Partitioning)",
+      "AWSSQS": "Cơ bản (Cần kết hợp với AWS SNS để Fanout)"
+    },
+    {
+      "Criteria": "Gánh nặng vận hành (Ops Overhead)",
+      "RabbitMQ": "Trung bình (Cần giám sát RAM/Erlang cluster)",
+      "ApacheKafka": "Cao (Cần tinh chỉnh JVM, Disk I/O, Partitions)",
+      "AWSSQS": "Zero Ops (Amazon quản lý 100%)"
+    }
+  ]
 }
+""",
+                    CalloutType = "tip",
+                    CalloutTitle = "Rule of Thumb for Technology Selection",
+                    CalloutTitleVi = "Quy Tắc Vàng Khi Lựa Chọn Hạ Tầng Hàng Đợi",
+                    CalloutText = "Choose RabbitMQ for transactional microservice workflows requiring complex routing, instant acknowledgments, and priority queues (e.g. Order processing, Payment notifications). Choose Kafka for high-throughput event streaming, telemetry ingestion, event sourcing, or real-time analytics. Choose AWS SQS if your architecture is entirely hosted on AWS and you want zero operational maintenance.",
+                    CalloutTextVi = "Chọn RabbitMQ cho các quy trình giao dịch Microservices cần định tuyến phức tạp, xác nhận tin nhắn tức thì và hàng đợi ưu tiên (ví dụ: Xử lý đơn hàng, Gửi email, Thông báo thanh toán). Chọn Kafka cho luồng dữ liệu thông lượng cực lớn, thu thập telemetry, Event Sourcing hoặc phân tích dữ liệu thời gian thực. Chọn AWS SQS nếu toàn bộ hệ thống của bạn nằm trên AWS và không muốn tốn một giây nào cho việc bảo trì máy chủ."
+                },
+                new DevArticleSection
+                {
+                    Heading = "2. Deep Dive: RabbitMQ Exchanges vs Kafka Partitions & Consumer Groups",
+                    HeadingVi = "2. Giải Phẫu Chuyên Sâu: Cơ Chế Routing Trong RabbitMQ vs Phân Vùng Trong Kafka",
+                    Paragraphs = new List<string>
+                    {
+                        "In RabbitMQ, producers never publish directly to a queue. Instead, they publish to an 'Exchange'. The Exchange inspects message attributes and routing keys, distributing copies into queues based on 'Bindings'. A 'Direct' exchange matches exact routing keys; a 'Topic' exchange matches wildcards (e.g. 'order.*.europe'); a 'Fanout' exchange broadcasts to all bound queues. RabbitMQ's Dead Letter Exchange (DLX) automatically captures rejected, unacknowledged, or expired messages for safety.",
+                        "In Apache Kafka, a 'Topic' is divided into multiple 'Partitions' spread across cluster brokers. Each message has a key: messages with the same key are guaranteed to land on the exact same partition in strict chronological order. Parallelism is achieved through 'Consumer Groups': each partition is read by exactly one consumer within the group, enabling seamless linear scaling."
+                    },
+                    ParagraphsVi = new List<string>
+                    {
+                        "Trong RabbitMQ, Producer không bao giờ gửi tin nhắn trực tiếp vào Queue mà gửi qua 'Exchange'. Exchange phân tích routing key và chuyển tiếp tin nhắn vào các Queue dựa trên 'Bindings'. Exchange loại 'Direct' so khớp chính xác key; loại 'Topic' so khớp ký tự đại diện (ví dụ: 'order.*.europe'); loại 'Fanout' phát tán (broadcast) tới mọi queue. Cơ chế Dead Letter Exchange (DLX) tự động hứng các tin nhắn bị từ chối hoặc hết hạn để xử lý sự cố.",
+                        "Trong Apache Kafka, mỗi 'Topic' được phân tách thành nhiều 'Partitions' lưu trữ trên các Broker khác nhau. Mỗi tin nhắn có một Key: các tin nhắn cùng Key luôn được đưa vào cùng một Partition và bảo toàn thứ tự thời gian tuyệt đối. Khả năng xử lý song song đạt được nhờ 'Consumer Groups': mỗi partition chỉ được một consumer trong cùng group đọc tại một thời điểm, cho phép mở rộng thông lượng theo cấp số nhân."
+                    },
+                    CodeTitle = "Docker Compose for Production-Ready RabbitMQ (Management UI) & Kafka (KRaft)",
+                    CodeLanguage = "yaml",
+                    CodeContent = """
+version: '3.8'
 
-// ==================== GIẢI PHÁP TRANSACTIONAL OUTBOX ====================
-// Đơn hàng VÀ Sự kiện cùng được ghi vào CÙNG MỘT DATABASE TRANSACTION!
-// Nếu thành công -> Cả 2 cùng lưu. Nếu lỗi -> Cả 2 cùng rollback.
-// Một Worker nền ngầm sẽ đọc bảng Outbox để đẩy lên RabbitMQ đảm bảo 100% không mất tin nhắn.
+services:
+  # ==================== 1. RABBITMQ VỚI MANAGEMENT DASHBOARD ====================
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: dev-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"   # Cổng kết nối AMQP cho ứng dụng Microservices
+      - "15672:15672" # Cổng Web UI quản trị (User/Pass: admin/admin123)
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  # ==================== 2. APACHE KAFKA (CHẾ ĐỘ KRAFT - KHÔNG CẦN ZOOKEEPER) ====================
+  kafka:
+    image: bashj79/kafka-kraft:latest
+    container_name: dev-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"   # Cổng kết nối Kafka Broker nội bộ
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:9093'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:9092'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka_data:/tmp/kraft-combined-logs
+
+volumes:
+  rabbitmq_data:
+  kafka_data:
 """,
                     CalloutType = "warning",
-                    CalloutTitle = "2-Phase Commit (2PC) Is An Anti-Pattern",
-                    CalloutTitleVi = "Không Được Dùng 2-Phase Commit (2PC) Phân Tán",
-                    CalloutText = "Do not try to solve this with distributed transactions (like MSDTC or 2PC). Distributed locking kills performance, creates tight coupling, and is completely unsupported in cloud-native containerized architectures.",
-                    CalloutTextVi = "Đừng cố giải quyết bằng giao dịch phân tán 2-Phase Commit (như MSDTC). Việc khóa tài nguyên phân tán sẽ bóp nghẹt hiệu năng, gây phụ thuộc chặt chẽ và không thể hoạt động được trong môi trường container đám mây."
+                    CalloutTitle = "Monitor Kafka Consumer Lag Constantly",
+                    CalloutTitleVi = "Cảnh Báo: Luôn Giám Sát Consumer Lag Trong Kafka",
+                    CalloutText = "Consumer Lag is the delta between the latest offset produced in a partition and the offset committed by your consumer. A spiking consumer lag indicates your backend services cannot keep up with traffic, heralding message processing delays or eventual data dropouts.",
+                    CalloutTextVi = "Consumer Lag là khoảng cách giữa Offset tin nhắn mới nhất được ghi vào Kafka và Offset mà ứng dụng của bạn đã đọc. Khi Consumer Lag tăng vọt, điều đó báo hiệu backend của bạn đang quá tải nghiêm trọng, dẫn đến độ trễ xử lý dữ liệu kéo dài."
                 },
                 new DevArticleSection
                 {
-                    Heading = "2. Configuring MassTransit with RabbitMQ & EF Core Outbox",
-                    HeadingVi = "2. Cấu Hình MassTransit Kết Hợp RabbitMQ & EF Core Outbox Chuẩn Chỉ",
+                    Heading = "3. AWS SQS & Dead Letter Queues (DLQ): Poison Message Resilience & Idempotency",
+                    HeadingVi = "3. AWS SQS & Mô Hình Dead-Letter Queue (DLQ) Chống Mất Mát Dữ Liệu",
                     Paragraphs = new List<string>
                     {
-                        "MassTransit is the most advanced, enterprise-proven message bus framework for .NET. It abstracts messaging topologies across RabbitMQ, Azure Service Bus, Amazon SQS, and Apache Kafka.",
-                        "Most crucially, MassTransit includes native, battle-tested support for the Transactional Outbox Pattern integrated directly with Entity Framework Core.",
-                        "When you call IPublishEndpoint.Publish() within an EF Core transaction, MassTransit does not talk to the network immediately. Instead, it serializes the event into an 'OutboxMessages' table within the exact same SQL transaction. An integrated background worker pulls committed outbox messages and reliably dispatches them to RabbitMQ."
+                        "AWS SQS offers two queue types: Standard Queues (nearly unlimited throughput, at-least-once delivery, best-effort ordering) and FIFO Queues (guaranteed first-in-first-out ordering and strictly exactly-once processing, limited to 300 - 3000 msg/sec).",
+                        "A critical operational concept in message processing is the 'Poison Message'—a malformed payload that triggers an unhandled exception every time a consumer processes it. Without safety nets, the consumer fails, the message returns to the queue via Visibility Timeout expiry, and an infinite crash loop ensues.",
+                        "The solution is a Dead Letter Queue (DLQ). When a message fails processing more than MaxReceiveCount (e.g. 5 times), AWS SQS automatically routes it into the DLQ, isolating the defect while allowing healthy business traffic to proceed unimpeded."
                     },
                     ParagraphsVi = new List<string>
                     {
-                        "MassTransit là framework hướng sự kiện và Message Bus mạnh mẽ nhất cho hệ sinh thái .NET. Nó trừu tượng hóa toàn bộ kiến trúc kết nối trên RabbitMQ, Azure Service Bus, Amazon SQS và Apache Kafka.",
-                        "Đặc biệt nhất, MassTransit tích hợp sẵn mẫu thiết kế Transactional Outbox Pattern chuẩn mực kết hợp trực tiếp với Entity Framework Core.",
-                        "Khi bạn gọi IPublishEndpoint.Publish() bên trong một transaction của EF Core, MassTransit không hề gửi qua mạng ngay. Thay vào đó, nó lưu sự kiện vào bảng 'OutboxMessages' trong cùng một SQL Transaction với đơn hàng. Một tiến trình chạy ngầm (Outbox Delivery Service) sẽ định kỳ quét các tin nhắn trong bảng này và đẩy lên RabbitMQ với độ tin cậy tuyệt đối."
+                        "AWS SQS cung cấp 2 loại hàng đợi: Standard Queue (thông lượng gần như vô hạn, cơ chế At-Least-Once Delivery, thứ tự tương đối) và FIFO Queue (đảm bảo chuẩn xác thứ tự First-In-First-Out và Exactly-Once Processing qua Message Deduplication ID, giới hạn 300 - 3000 msg/giây).",
+                        "Một khái niệm sống còn trong vận hành hàng đợi là 'Poison Message' (Tin nhắn độc)—đây là những tin nhắn bị sai cấu trúc hoặc chứa dữ liệu bất thường khiến consumer ném ngoại lệ mỗi khi đọc. Nếu không có cơ chế bảo vệ, tin nhắn này sẽ quay lại hàng đợi sau khi hết thời gian Visibility Timeout, tạo thành vòng lặp sập ứng dụng vô tận (Crash Loop).",
+                        "Giải pháp chuẩn là thiết lập Hàng Đợi Chết (Dead Letter Queue - DLQ). Khi một tin nhắn xử lý thất bại vượt quá số lần quy định (MaxReceiveCount ví dụ 5 lần), AWS SQS sẽ tự động cô lập nó sang DLQ, giúp luồng nghiệp vụ chính tiếp tục vận hành thông suốt."
                     },
-                    CodeTitle = "MassTransit Setup with RabbitMQ and EF Core Outbox in Program.cs",
-                    CodeLanguage = "csharp",
+                    CodeTitle = "AWS SQS Redrive Policy (DLQ) Configuration & Consumer Idempotency Pattern",
+                    CodeLanguage = "json",
                     CodeContent = """
-// Nuget:
-// dotnet add package MassTransit
-// dotnet add package MassTransit.RabbitMQ
-// dotnet add package MassTransit.EntityFrameworkCore
-
-using MassTransit;
-using Microsoft.EntityFrameworkCore;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Cấu hình DbContext
-builder.Services.AddDbContext<OrderDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
-
-// Cấu hình MassTransit với Transactional Outbox
-builder.Services.AddMassTransit(x =>
 {
-    // Đăng ký Consumer nhận message
-    x.AddConsumer<PaymentCompletedConsumer>();
-
-    // CẤU HÌNH EF CORE TRANSACTIONAL OUTBOX
-    x.AddEntityFrameworkOutbox<OrderDbContext>(o =>
-    {
-        o.UsePostgres(); // Hỗ trợ Postgres, SqlServer, MySql, Sqlite...
-        o.UseBusOutbox(); // Tự động chặn các lệnh publish để lưu vào bảng Outbox
-        o.DuplicateDetectionWindow = TimeSpan.FromMinutes(30); // Chống gửi đúp message trong 30 phút
-    });
-
-    // Cấu hình kết nối tới RabbitMQ Container
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.Host(builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq", "/", h =>
-        {
-            h.Username(builder.Configuration["RabbitMQ:User"] ?? "guest");
-            h.Password(builder.Configuration["RabbitMQ:Pass"] ?? "guest");
-        });
-
-        // Tự động cấu hình endpoint nhận message cho các Consumer đã đăng ký
-        cfg.ConfigureEndpoints(context);
-    });
-});
-
-var app = builder.Build();
-
-app.MapPost("/api/orders/checkout", async (CheckoutRequest request, OrderDbContext db, IPublishEndpoint publishEndpoint) =>
-{
-    // Tạo đơn hàng
-    var order = new Order { Id = Guid.NewGuid(), CustomerId = request.CustomerId, Total = request.Total };
-    db.Orders.Add(order);
-
-    // Bắn event qua MassTransit: Event sẽ tự động lưu vào bảng Outbox trong cùng DbContext!
-    await publishEndpoint.Publish(new OrderCreatedEvent(order.Id, order.CustomerId, order.Total));
-
-    // LƯU CẢ 2 VÀO POSTGRES TRONG MỘT TRANSACTION DUY NHẤT!
-    await db.SaveChangesAsync();
-
-    return Results.Ok(new { orderId = order.Id, status = "OrderCreated" });
-});
-
-app.Run();
-
-public record OrderCreatedEvent(Guid OrderId, string CustomerId, decimal Total);
-public class Order { public Guid Id { get; set; } public string CustomerId { get; set; } = ""; public decimal Total { get; set; } }
-public class OrderDbContext : DbContext {
-    public OrderDbContext(DbContextOptions<OrderDbContext> options) : base(options) {}
-    public DbSet<Order> Orders => Set<Order>();
-    protected override void OnModelCreating(ModelBuilder modelBuilder) {
-        base.OnModelCreating(modelBuilder);
-        // Tự động tạo các bảng Outbox: OutboxMessage, OutboxState, InboxState
-        modelBuilder.AddInboxStateEntity();
-        modelBuilder.AddOutboxMessageEntity();
-        modelBuilder.AddOutboxStateEntity();
-    }
+  "QueueName": "production-orders-queue",
+  "Attributes": {
+    "VisibilityTimeout": "30",
+    "MessageRetentionPeriod": "345600",
+    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:ap-southeast-1:123456789012:production-orders-dlq\",\"maxReceiveCount\":5}"
+  },
+  "IdempotencyNotice": {
+    "Problem": "Vì mạng phân tán sử dụng cơ chế At-Least-Once Delivery, một tin nhắn có thể được gửi tới Consumer 2 lần!",
+    "Solution": "Consumer bắt buộc phải kiểm tra MessageId hoặc Business TransactionId trong Redis/Database trước khi trừ tiền!",
+    "PseudoCode": "if (await redis.SetNxAsync(message.TransactionId, 'PROCESSED', TimeSpan.FromHours(24)) == false) return; // Đã xử lý rồi, bỏ qua!"
+  }
 }
 """,
                     CalloutType = "tip",
-                    CalloutTitle = "Outbox Table Schema Migrations",
-                    CalloutTitleVi = "Tự Động Tạo Bảng Outbox Bằng EF Migrations",
-                    CalloutText = "Calling modelBuilder.AddOutboxMessageEntity() enables EF Core to automatically create the necessary Outbox tables when you run 'dotnet ef migrations add AddOutbox'. No manual SQL script authoring is needed.",
-                    CalloutTextVi = "Lệnh modelBuilder.AddOutboxMessageEntity() giúp EF Core tự động sinh cấu trúc bảng Outbox khi bạn chạy 'dotnet ef migrations add AddOutbox'. Bạn không cần phải viết tay bất kỳ dòng lệnh SQL nào."
-                },
-                new DevArticleSection
-                {
-                    Heading = "3. Idempotent Consumer & Dead Letter Queue (DLQ) Handling",
-                    HeadingVi = "3. Người Nhận Bất Biến (Idempotent Consumer) & Xử Lý Tin Nhắn Độc Với Dead Letter Queue",
-                    Paragraphs = new List<string>
-                    {
-                        "In distributed messaging, the gold standard guarantee is 'At-Least-Once Delivery'. This means RabbitMQ guarantees your message will arrive, but in rare network reconnections, a message might arrive twice.",
-                        "If your Payment Service charges a credit card upon receiving 'OrderCreatedEvent', processing that message twice would cause a double charge! Therefore, every Consumer in a microservice must be Idempotent (processing the same message twice produces the exact same outcome).",
-                        "MassTransit provides an Inbox State pattern that tracks processed MessageIds. Furthermore, if a poisoned message persistently throws unhandled exceptions, MassTransit routes it to an '_error' Dead Letter Queue (DLQ) after configured retries, preventing the queue from being blocked."
-                    },
-                    ParagraphsVi = new List<string>
-                    {
-                        "Trong kiến trúc hướng sự kiện phân tán, tiêu chuẩn truyền tải thực tế luôn là 'At-Least-Once Delivery' (Giao ít nhất một lần). Điều đó có nghĩa là Message Broker cam kết tin nhắn sẽ đến đích, nhưng khi có sự cố chập chờn mạng, một tin nhắn có thể bị gửi lặp lại 2 lần.",
-                        "Nếu Payment Service thực hiện trừ tiền thẻ tín dụng khi nhận sự kiện 'OrderCreatedEvent', việc xử lý lặp lại tin nhắn này sẽ khiến khách hàng bị trừ tiền 2 lần! Do đó, mọi Consumer trong microservice bắt buộc phải đạt tính chất Bất Biến (Idempotent: xử lý một tin nhắn nhiều lần cũng chỉ tạo ra một kết quả duy nhất).",
-                        "MassTransit cung cấp sẵn cơ chế Inbox State tự động kiểm tra MessageId đã từng xử lý chưa để bỏ qua tin nhắn trùng lặp. Đồng thời, nếu gặp tin nhắn độc hại liên tục văng lỗi, MassTransit sẽ tự động chuyển tin nhắn đó sang hàng đợi lỗi Dead Letter Queue ('_error') sau khi đã thử lại đủ số lần, giữ cho luồng thông điệp chính luôn thông suốt."
-                    },
-                    CodeTitle = "Idempotent Consumer Implementation with Retry and Dead Letter Routing",
-                    CodeLanguage = "csharp",
-                    CodeContent = """
-public class PaymentCompletedConsumer : IConsumer<OrderCreatedEvent>
-{
-    private readonly ILogger<PaymentCompletedConsumer> _logger;
-    private readonly IPaymentGateway _paymentGateway;
-
-    public PaymentCompletedConsumer(ILogger<PaymentCompletedConsumer> logger, IPaymentGateway paymentGateway)
-    {
-        _logger = logger;
-        _paymentGateway = paymentGateway;
-    }
-
-    public async Task Consume(ConsumeContext<OrderCreatedEvent> context)
-    {
-        var message = context.Message;
-        _logger.LogInformation("Đang xử lý thanh toán cho đơn hàng {OrderId}, MessageId: {MessageId}", 
-            message.OrderId, context.MessageId);
-
-        // Giả lập thanh toán qua cổng ngân hàng
-        var isSuccess = await _paymentGateway.ProcessPaymentAsync(message.OrderId, message.Total);
-
-        if (!isSuccess)
-        {
-            _logger.LogError("Thanh toán thất bại cho đơn hàng {OrderId}. Ném ngoại lệ để kích hoạt retry...", message.OrderId);
-            throw new PaymentFailedException($"Cổng thanh toán từ chối đơn hàng {message.OrderId}");
-            // Khi ném ngoại lệ: MassTransit sẽ retry theo cấu hình.
-            // Nếu retry 3 lần vẫn lỗi -> Tự động đưa message vào 'order-created_error' (Dead Letter Queue)!
-        }
-
-        _logger.LogInformation("Thanh toán thành công mỹ mãn cho đơn hàng {OrderId}!", message.OrderId);
-    }
-}
-
-public interface IPaymentGateway { Task<bool> ProcessPaymentAsync(Guid orderId, decimal amount); }
-public class PaymentFailedException : Exception { public PaymentFailedException(string msg) : base(msg) {} }
-""",
-                    CalloutType = "tip",
-                    CalloutTitle = "Zero-Stuck Queues with DLQ",
-                    CalloutTitleVi = "Hàng Đợi Không Bao Giờ Bị Tắc Nhờ DLQ",
-                    CalloutText = "Dead Letter Queues isolate problematic messages into a separate queue without halting the processing of healthy messages. Engineers can inspect the payload in RabbitMQ UI, fix the root bug, and click 'Move messages' to replay them back into the main pipeline.",
-                    CalloutTextVi = "Dead Letter Queue giúp cô lập các tin nhắn bị lỗi sang một hàng đợi riêng biệt mà không làm tắc nghẽn các tin nhắn khỏe mạnh phía sau. Kỹ sư có thể vào giao diện RabbitMQ xem nội dung tin nhắn lỗi, sửa bug và bấm nút 'Move' để bắn lại vào hệ thống xử lý bình thường."
+                    CalloutTitle = "Never Trust Once-Only Delivery Blindly",
+                    CalloutTitleVi = "Nguyên Tắc Bất Di Bất Dịch: Mọi Consumer Đều Phải Idempotent",
+                    CalloutText = "In distributed systems, hardware failures and network timeouts make true once-and-only-once delivery physically impossible without consumer-side coordination. Always make your consumers idempotent by deduplicating idempotency keys in Redis or a relational database.",
+                    CalloutTextVi = "Trong hệ thống mạng phân tán, lỗi kết nối khiến cơ chế gửi đúng-duy-nhất-1-lần (Once-Only Delivery) là điều bất khả thi về mặt vật lý nếu không có sự phối hợp từ Consumer. Luôn thiết kế Consumer có tính chất Idempotent bằng cách kiểm tra trùng lặp Idempotency Key trong Redis hoặc Database."
                 }
             }
         };
         series.Articles.Add(article4);
 
-        // BÀI 5
+        // =========================================================================
+        // BÀI 5: OBSERVABILITY & MONITORING: PROMETHEUS, GRAFANA & ELK STACK
+        // =========================================================================
         var article5 = new DevArticle
         {
-            Id = "dotnet-microservices-article-5-opentelemetry-tracing-and-k8s-config",
+            Id = "infra-tools-article-5-observability-prometheus-grafana-elk",
             SeriesId = series.Id,
             LessonNumber = "Bài 5",
             Level = "Production",
             LevelVi = "Thực chiến",
-            LevelOrder = 4,
-            Title = "Distributed Tracing & Cloud-Native Observability: OpenTelemetry, W3C Trace Context & K8s ConfigMaps",
-            TitleVi = "Distributed Tracing & Khả Năng Giám Sát Phân Tán: OpenTelemetry, W3C Trace Context & K8s ConfigMaps",
-            ReadingTime = "20 phút đọc",
-            PublishedDate = "24/10/2026",
-            Summary = "Track end-to-end user transactions across 20 containers without missing a beat. Implement OpenTelemetry (OTel) in .NET: W3C traceparent header propagation across HTTP & RabbitMQ, exporting telemetry to Seq / Jaeger / Prometheus / Aspire Dashboard, and hot-reloading Kubernetes ConfigMaps without restarting containers using KeyPerFile.",
-            SummaryVi = "Theo dõi hành trình của một request từ cổng Ingress xuyên qua 20 container dịch vụ mà không đứt gãy. Triển khai OpenTelemetry (OTel) trong .NET: Cơ chế lan truyền W3C traceparent header qua HTTP & RabbitMQ, xuất dữ liệu Trace/Metrics về Seq / Jaeger / Prometheus / .NET Aspire Dashboard, và kỹ thuật nạp lại cấu hình ConfigMap động không cần restart Pod bằng KeyPerFile.",
-            Tags = new List<string> { "OpenTelemetry", "Distributed Tracing", "Jaeger", "Prometheus", "ConfigMaps", "Aspire Dashboard" },
+            LevelOrder = 5,
+            Title = "Production Observability: Prometheus, Grafana & ELK Stack – Metrics Monitoring, Alerts & Centralized Log Analytics",
+            TitleVi = "Observability & Giám Sát Hạ Tầng: Prometheus, Grafana & ELK Stack – Hệ Thống Thu Thập Metrics & Log Tập Trung",
+            ReadingTime = "22 phút đọc",
+            PublishedDate = "25/10/2026",
+            Summary = "Construct a battle-tested observability infrastructure for containerized distributed systems. Master Prometheus Time-Series Database (TSDB) metrics scraping and PromQL querying alongside Node Exporter and cAdvisor. Build Grafana operational dashboards with proactive alerting. Then deploy the ELK Stack (Elasticsearch, Filebeat/Logstash, Kibana) for full-text distributed log aggregation and instant incident triage.",
+            SummaryVi = "Thiết lập hệ thống hạ tầng giám sát và quan sát chuẩn thực chiến cho cụm container phân tán. Làm chủ cơ chế kéo dữ liệu (Pull model) của Prometheus Time-Series Database (TSDB), viết các câu truy vấn PromQL phân tích hiệu năng (P90/P99 latency, rate, counter) cùng Node Exporter và cAdvisor. Xây dựng giao diện Dashboard trực quan và hệ thống cảnh báo tự động trên Grafana. Tiếp đó làm chủ bộ ba ELK Stack (Elasticsearch, Filebeat/Logstash, Kibana) để gom log tập trung từ hàng trăm container và truy vết sự cố trong vài nốt nhạc.",
+            Tags = new List<string> { "Prometheus", "Grafana", "ELK Stack", "Elasticsearch", "Logstash", "Kibana", "Filebeat", "PromQL", "Monitoring" },
             Sections = new List<DevArticleSection>
             {
                 new DevArticleSection
                 {
-                    Heading = "1. The Mystery of Distributed Latency Spikes: Why Server Metrics Fall Short",
-                    HeadingVi = "1. Bí Ẩn Tắc Nghẽn Phân Tán: Vì Sao Chỉ Đo CPU/RAM Là Hoàn Toàn Bất Lực",
+                    Heading = "1. The Pillars of Observability: Metrics vs Logs in Modern Distributed Systems",
+                    HeadingVi = "1. Ba Trụ Cột Của Observability: Metrics, Logs & Vai Trò Của Hạ Tầng Giám Sát",
                     Paragraphs = new List<string>
                     {
-                        "When an end-user clicks 'Place Order' on your website and the spinning wheel spins for 8 seconds, looking at individual CPU or RAM utilization graphs in Kubernetes will not tell you which component caused the delay.",
-                        "That single button click traversed an Ingress Gateway, routed to the Order Service, validated user claims against Identity Service, verified product inventory in Inventory Service, issued a SQL command, and published an event.",
-                        "Which specific link in that chain took 7.5 seconds? Was it a slow SQL query in Inventory, or network latency between clusters? The only way to answer this is Distributed Tracing with OpenTelemetry (OTel), stitching together every asynchronous span using W3C Trace Context headers ('traceparent')."
+                        "In monolithic applications, checking server CPU and reading local log files was often sufficient. In microservice and Kubernetes clusters running hundreds of ephemeral containers, traditional monitoring fails. When an incident occurs, you need full Observability—the capability to infer the internal health of a distributed system from its external telemetry outputs.",
+                        "Observability rests on three foundational pillars:",
+                        "1) Metrics: Numeric time-series values representing system behavior over time (e.g. CPU load, memory consumption, request rates, error counters). Metrics are cheap to store, aggregate efficiently across thousands of pods, and trigger instant alerts when system health degrades.",
+                        "2) Logs: Rich, timestamped event records containing deep context (exception traces, customer IDs, SQL queries). Logs are high-volume and expensive to index, but they are essential for root-cause analysis after an alert fires.",
+                        "3) Traces: Distributed call chains tracking a single user request as it traverses across multiple microservices. A complete production stack combines Prometheus for metrics, Grafana for visualization, and the ELK Stack (Elasticsearch, Logstash, Kibana) for centralized full-text log analytics."
                     },
                     ParagraphsVi = new List<string>
                     {
-                        "Khi một người dùng bấm nút 'Đặt hàng' trên trang web và vòng xoay tải dữ liệu quay tít mù suốt 8 giây, việc nhìn vào biểu đồ tiêu thụ CPU hay RAM của từng Pod trong Kubernetes hoàn toàn không thể chỉ ra được mắt xích nào đang gây nghẽn cổ chai.",
-                        "Một cú click chuột đó đã đi qua Ingress Gateway, chuyển tiếp đến Order Service, gọi sang Identity Service để kiểm tra quyền, truy vấn Inventory Service để kiểm tra tồn kho, thực thi một câu lệnh SQL và bắn event qua hàng đợi.",
-                        "Mắt xích cụ thể nào trong chuỗi mắt xích trên đã ngốn mất 7.5 giây? Do câu lệnh SQL bị thiếu index ở Inventory, hay do đường truyền mạng nội bộ giữa các cụm? Câu trả lời duy nhất nằm ở Kỹ Thuật Truy Vết Phân Tán (Distributed Tracing) với chuẩn OpenTelemetry (OTel), gắn kết từng Span xử lý thông qua header W3C 'traceparent'."
+                        "Trong kiến trúc Monolith cổ điển, việc mở task manager xem CPU và đọc file log trên đĩa là đủ dùng. Thế nhưng trong cụm Kubernetes chạy hàng trăm container tạm bợ liên tục khởi tạo rồi biến mất, giám sát kiểu cũ hoàn toàn tê liệt. Khi có sự cố, bạn cần một Hệ Thống Quan Sát Toàn Diện (Observability)—khả năng suy luận trạng thái nội tại của hệ sinh thái phân tán dựa trên các dữ liệu viễn trắc đầu ra.",
+                        "Observability được xây dựng trên 3 trụ cột vững chắc:",
+                        "1) Metrics (Chỉ số): Các giá trị định lượng theo chuỗi thời gian (như phần trăm CPU, dung lượng RAM, số lượng request/giây, bộ đếm lỗi 5xx). Metrics lưu trữ rất nhẹ, tổng hợp cực nhanh trên hàng ngàn Pods, giúp phát hiện ngay lập tức 'Hệ thống có đang bất thường không?'.",
+                        "2) Logs (Nhật ký): Bản ghi chi tiết có dấu thời gian (timestamp) chứa đầy đủ ngữ cảnh sự kiện (Stacktrace lỗi, ID khách hàng, câu lệnh SQL). Logs dung lượng lớn và tốn dung lượng ổ đĩa, nhưng là chìa khóa để trả lời 'Chuyện gì đã xảy ra và lỗi do đâu?'.",
+                        "3) Traces (Truy vết phân tán): Hành trình một request xuyên qua chuỗi các microservice. Một hạ tầng Production hoàn chỉnh kết hợp Prometheus để gom Metrics, Grafana để trực quan hóa cảnh báo, và bộ ba ELK Stack (Elasticsearch, Logstash, Kibana) để lập chỉ mục và tìm kiếm log tập trung."
                     },
-                    CodeTitle = "W3C Traceparent Header Anatomy & Trace Hierarchy",
-                    CodeLanguage = "text",
+                    CodeTitle = "Observability Pipeline Architecture: Metrics vs Logs Flow",
+                    CodeLanguage = "json",
                     CodeContent = """
-HTTP Header: traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
-                          |  |                                |                |
-                       Version TraceId (Định danh toàn chuỗi)  Parent SpanId    Flags (01 = Sampled)
-
-[Ingress Gateway] -------------------- (Tổng thời gian: 8.2s) --------------------> [TraceId: 4bf9...]
-       |
-       +---> [Order Service HTTP POST] (Mất: 8.1s)
-                  |
-                  +---> [Identity Check] (Mất: 45ms)
-                  |
-                  +---> [Inventory Service HTTP GET] (Mất: 7.8s)  <==== THỦ PHẠM NẰM Ở ĐÂY!
-                             |
-                             +---> [SQL Query: SELECT * FROM Products] (Mất: 7.75s - THIẾU INDEX!)
-""",
-                    CalloutType = "info",
-                    CalloutTitle = "W3C Trace Context Standard",
-                    CalloutTitleVi = "Chuẩn Quốc Tế W3C Trace Context",
-                    CalloutText = "The W3C Trace Context specification ensures that whether your services are written in .NET, Go, Java, or Node.js, the 'traceparent' header is transparently understood and propagated across process boundaries and messaging brokers.",
-                    CalloutTextVi = "Chuẩn quốc tế W3C Trace Context đảm bảo rằng dù các microservice của bạn viết bằng .NET, Go, Java hay Node.js, header 'traceparent' vẫn được nhận diện và truyền tải xuyên suốt qua các ranh giới tiến trình và message broker."
-                },
-                new DevArticleSection
-                {
-                    Heading = "2. Configuring OpenTelemetry in ASP.NET Core: Traces, Metrics & OTLP",
-                    HeadingVi = "2. Cấu Hình OpenTelemetry Toàn Diện: Traces, Metrics & Xuất Ra OTLP Exporter",
-                    Paragraphs = new List<string>
-                    {
-                        "OpenTelemetry is the vendor-neutral cloud-native observability standard governed by the CNCF (Cloud Native Computing Foundation). In .NET, OpenTelemetry provides seamless auto-instrumentation for incoming HTTP requests, outgoing HttpClient calls, Entity Framework Core queries, and MassTransit messages.",
-                        "Using the OTLP (OpenTelemetry Protocol) exporter, telemetry is exported over gRPC to any backend of your choice: modern Seq (which natively supports OTel traces in recent versions), Jaeger, Prometheus, or the phenomenal new .NET Aspire Dashboard.",
-                        "Auto-instrumentation means you rarely need to write manual span creation code; .NET automatically records endpoint routes, HTTP status codes, SQL query parameters, and unhandled exceptions."
-                    },
-                    ParagraphsVi = new List<string>
-                    {
-                        "OpenTelemetry là tiêu chuẩn quan sát đám mây phi lợi nhuận do tổ chức CNCF (Cloud Native Computing Foundation) quản lý. Trong .NET, OpenTelemetry hỗ trợ tự động thu thập (Auto-instrumentation) mọi request HTTP gửi đến, các cuộc gọi HttpClient ra ngoài, câu lệnh truy vấn Entity Framework Core và thông điệp qua MassTransit.",
-                        "Thông qua giao thức chuẩn OTLP (OpenTelemetry Protocol), dữ liệu quan sát được xuất qua gRPC về bất kỳ hệ thống nào: Seq thế hệ mới (hỗ trợ hiển thị OTel Traces trực quan), Jaeger, Prometheus hoặc bảng điều khiển .NET Aspire Dashboard cực kỳ hiện đại.",
-                        "Nhờ cơ chế tự động hóa, bạn hầu như không cần phải viết code tạo Span thủ công; .NET tự động ghi lại URL endpoint, mã lỗi HTTP, thời gian thực thi câu lệnh SQL và toàn bộ dấu vết ngoại lệ."
-                    },
-                    CodeTitle = "OpenTelemetry Setup with Traces, Metrics & OTLP Exporter in Program.cs",
-                    CodeLanguage = "csharp",
-                    CodeContent = """
-// Nuget:
-// dotnet add package OpenTelemetry.Extensions.Hosting
-// dotnet add package OpenTelemetry.Instrumentation.AspNetCore
-// dotnet add package OpenTelemetry.Instrumentation.Http
-// dotnet add package OpenTelemetry.Instrumentation.EntityFrameworkCore
-// dotnet add package OpenTelemetry.Exporter.OpenTelemetryProtocol
-
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-
-var builder = WebApplication.CreateBuilder(args);
-
-const string serviceName = "OrderService";
-
-// CẤU HÌNH TOÀN DIỆN OPENTELEMETRY TRACES & METRICS
-builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource
-        .AddService(serviceName: serviceName, serviceVersion: "1.0.0")
-        .AddAttributes(new Dictionary<string, object>
-        {
-            ["deployment.environment"] = builder.Environment.EnvironmentName,
-            ["k8s.pod.name"] = Environment.MachineName
-        }))
-    .WithTracing(tracing => tracing
-        .AddAspNetCoreInstrumentation(opts => opts.RecordException = true) // Tự động đo lường request API
-        .AddHttpClientInstrumentation() // Tự động đo lường và đính kèm traceparent khi gọi service khác
-        .AddEntityFrameworkCoreInstrumentation(opts => opts.SetDbStatementForText = true) // Tự động đo lường SQL
-        .AddSource("MassTransit") // Tự động đo lường message qua RabbitMQ
-        .AddOtlpExporter(opts =>
-        {
-            // Trỏ về OTel Collector, Seq OTLP endpoint (port 5341), hoặc .NET Aspire Dashboard (port 4317)
-            opts.Endpoint = new Uri(builder.Configuration["OTel:Endpoint"] ?? "http://aspire-dashboard:4317");
-        }))
-    .WithMetrics(metrics => metrics
-        .AddAspNetCoreInstrumentation()
-        .AddHttpClientInstrumentation()
-        .AddRuntimeInstrumentation() // Đo lường bộ nhớ GC, ThreadPool, CPU usage của .NET runtime
-        .AddOtlpExporter(opts =>
-        {
-            opts.Endpoint = new Uri(builder.Configuration["OTel:Endpoint"] ?? "http://aspire-dashboard:4317");
-        }));
-
-var app = builder.Build();
-
-app.MapGet("/api/checkout", async (IHttpClientFactory factory) =>
 {
-    var client = factory.CreateClient();
-    // Header W3C 'traceparent' sẽ được HttpClient tự động sinh và đính kèm hoàn toàn ngầm định!
-    var paymentResponse = await client.GetAsync("http://payment-service:8080/api/pay");
-    return Results.Ok(new { status = "CheckedOut" });
-});
-
-app.Run();
-""",
-                    CalloutType = "tip",
-                    CalloutTitle = "Experience .NET Aspire Dashboard",
-                    CalloutTitleVi = "Trải Nghiệm .NET Aspire Dashboard",
-                    CalloutText = "You can run the official .NET Aspire Dashboard standalone in Docker: 'docker run -p 18888:18888 -p 4317:4317 mcr.microsoft.com/dotnet/aspire-dashboard:latest'. It provides the slickest, most intuitive distributed trace and structured log visualization interface ever created for .NET developers.",
-                    CalloutTextVi = "Bạn có thể chạy bảng điều khiển .NET Aspire Dashboard độc lập qua Docker: 'docker run -p 18888:18888 -p 4317:4317 mcr.microsoft.com/dotnet/aspire-dashboard:latest'. Đây là giao diện xem Trace phân tán và Log có cấu trúc đẹp mắt và mượt mà nhất từng được tạo ra cho lập trình viên .NET."
-                },
-                new DevArticleSection
-                {
-                    Heading = "3. Dynamic Kubernetes ConfigMap & Secret Reloads with KeyPerFile",
-                    HeadingVi = "3. Nạp Lại Cấu Hình Động K8s ConfigMaps & Secrets Bằng KeyPerFile Không Cần Restart Pod",
-                    Paragraphs = new List<string>
-                    {
-                        "In production Kubernetes, configuration settings (endpoints, feature flags, thresholds) and sensitive secrets (connection strings, API keys) are managed in ConfigMaps and Secrets, mounted as volume files inside container directories.",
-                        "When an engineer updates a ConfigMap via 'kubectl apply', Kubernetes updates the mounted files inside the container. However, by default, ASP.NET Core only reads configuration once at startup; without dynamic reloading, you must restart your pods, causing unnecessary downtime and cache invalidation.",
-                        "The built-in package 'Microsoft.Extensions.Configuration.KeyPerFile' solves this gracefully. It watches the mounted directory for file changes and automatically updates 'IOptionsMonitor<T>' or 'IConfiguration' in real time, enabling zero-downtime hot-reloads of microservice configurations."
-                    },
-                    ParagraphsVi = new List<string>
-                    {
-                        "Trên môi trường Kubernetes thực tế, các biến cấu hình (địa chỉ service, cờ bật tắt tính năng, ngưỡng chịu lỗi) và thông tin mật (chuỗi kết nối DB, API Key) được quản lý qua ConfigMap và Secret, rồi gắn (mount) dưới dạng thư mục file vào trong container.",
-                        "Khi kỹ sư cập nhật ConfigMap qua lệnh 'kubectl apply', Kubernetes sẽ tự động cập nhật nội dung các file bên trong container. Tuy nhiên, mặc định ASP.NET Core chỉ đọc cấu hình một lần lúc khởi động; nếu không có cơ chế nạp lại động, bạn bắt buộc phải restart Pod, gây gián đoạn dịch vụ và xóa sạch bộ nhớ đệm cache.",
-                        "Gói chính chủ 'Microsoft.Extensions.Configuration.KeyPerFile' giải quyết bài toán này một cách duyên dáng. Nó liên tục theo dõi thư mục mounted và tự động cập nhật giá trị trong 'IOptionsMonitor<T>' hoặc 'IConfiguration' theo thời gian thực, giúp thay đổi cấu hình nóng (Hot-reload) mà không cần chạm vào tiến trình Pod."
-                    },
-                    CodeTitle = "Adding KeyPerFile Configuration Provider & K8s Volume Mount YAML",
-                    CodeLanguage = "csharp",
-                    CodeContent = """
-// 1. CẤU HÌNH TRONG C# PROGRAM.CS
-var builder = WebApplication.CreateBuilder(args);
-
-// Đọc thư mục ConfigMap được Kubernetes mount vào container
-var configMapPath = "/etc/config/app";
-if (Directory.Exists(configMapPath))
-{
-    builder.Configuration.AddKeyPerFile(directoryPath: configMapPath, optional: true, reloadOnChange: true);
+  "ObservabilityPipeline": {
+    "MetricsStream": {
+      "Collector": "Prometheus Scraper (Kéo dữ liệu định kỳ mỗi 15s)",
+      "Sources": ["Node Exporter (Host)", "cAdvisor (Containers)", "App /metrics"],
+      "Storage": "Prometheus TSDB (Time-Series Database)",
+      "Visualization": "Grafana Dashboards & Alertmanager"
+    },
+    "LogsStream": {
+      "Collector": "Filebeat DaemonSet (Đọc file /var/lib/docker/containers/*/*.log)",
+      "Processing": "Logstash (Chuyển đổi, lọc PII nhạy cảm, enrich GeoIP)",
+      "Storage": "Elasticsearch Cluster (Lập chỉ mục Inverted Index phân tán)",
+      "Visualization": "Kibana Discover & Heatmap Dashboards"
+    }
+  }
 }
-
-// Khi inject IOptionsMonitor<PaymentSettings>, settings.CurrentValue sẽ tự động cập nhật ngay khi file đổi!
-
-// ==================== KUBERNETES DEPLOYMENT MOUNT YAML ====================
-// spec:
-//   containers:
-//   - name: order-api
-//     volumeMounts:
-//     - name: config-volume
-//       mountPath: /etc/config/app
-//   volumes:
-//   - name: config-volume
-//     configMap:
-//       name: order-service-config
 """,
                     CalloutType = "tip",
-                    CalloutTitle = "Zero-Downtime Dynamic Configuration",
-                    CalloutTitleVi = "Cấu Hình Động Không Downtime",
-                    CalloutText = "By combining reloadOnChange: true with IOptionsMonitor<T>, you can tune circuit breaker failure thresholds or adjust logging levels from Information to Debug in live production pods without a single millisecond of downtime.",
-                    CalloutTextVi = "Bằng cách kết hợp reloadOnChange: true với IOptionsMonitor<T>, bạn có thể điều chỉnh ngưỡng chịu lỗi của Circuit Breaker hoặc nâng log level từ Information lên Debug trên cụm Production đang chạy mà không gây ra bất kỳ một mili-giây downtime nào."
+                    CalloutTitle = "Metrics Find the Fire, Logs Identify the Match",
+                    CalloutTitleVi = "Triết Lý Giám Sát: Metrics Chỉ Ra Đám Cháy, Logs Chỉ Ra Kẻ Bật Que Diêm",
+                    CalloutText = "Never attempt to store detailed contextual data (like user emails or stack traces) inside Prometheus metric labels. High-cardinality label explosion will crash Prometheus's in-memory index. Use Prometheus to detect anomalies, then pivot into Elasticsearch/Kibana using timestamp and TraceId to inspect the underlying logs.",
+                    CalloutTextVi = "Tuyệt đối không lưu dữ liệu chi tiết (như email người dùng hoặc stacktrace lỗi) vào labels của Prometheus. Việc bùng nổ số lượng chiều (High-Cardinality) sẽ làm sập RAM của Prometheus. Hãy dùng Prometheus để phát hiện sự cố, rồi dùng TraceId và mốc thời gian sang Kibana để đọc chi tiết log."
+                },
+                new DevArticleSection
+                {
+                    Heading = "2. Prometheus & Grafana: Pull Model, Node Exporter & PromQL Analytics",
+                    HeadingVi = "2. Prometheus & Grafana: Thu Thập Metrics Với Exporters & Truy Vấn PromQL Thần Tốc",
+                    Paragraphs = new List<string>
+                    {
+                        "Unlike push-based monitoring systems, Prometheus uses a 'Pull Model': it periodically scrapes HTTP '/metrics' endpoints exposed by target systems at configured intervals (e.g. scrape_interval: 15s). This design ensures that a slow or unresponsive microservice cannot overwhelm the monitoring server.",
+                        "To monitor infrastructure components that don't natively expose Prometheus metrics, 'Exporters' act as translation proxies. 'Node Exporter' exposes Linux host OS metrics (CPU, RAM, disk I/O, network bandwidth); 'cAdvisor' (Container Advisor) exposes per-container resource metrics in Docker and Kubernetes.",
+                        "Engineers write queries using PromQL (Prometheus Query Language) to compute critical operational signals: error rates over 5-minute rolling windows, and 95th/99th percentile latencies using histogram quantiles. Grafana connects to Prometheus as a datasource, rendering real-time dashboards and dispatching alerts to Slack or Telegram."
+                    },
+                    ParagraphsVi = new List<string>
+                    {
+                        "Khác với các hệ thống đẩy dữ liệu thụ động, Prometheus vận hành theo cơ chế Kéo (Pull Model): Định kỳ mỗi chu kỳ (ví dụ 15 giây), Prometheus chủ động gửi HTTP GET request tới các endpoint '/metrics' của từng dịch vụ để thu thập dữ liệu. Thiết kế này giúp máy chủ giám sát luôn kiểm soát được tốc độ nạp dữ liệu và không bị nghẽn khi hệ thống gặp tải lớn.",
+                        "Để giám sát các thành phần hạ tầng không có sẵn endpoint Prometheus, các 'Exporters' đóng vai trò là cầu nối chuyển đổi. 'Node Exporter' thu thập thông số phần cứng của máy chủ Linux (CPU, RAM, băng thông mạng, IOPS ổ đĩa); 'cAdvisor' thu thập thông số chi tiết của từng container đang chạy trên Docker hoặc K8s.",
+                        "Kỹ sư sử dụng ngôn ngữ PromQL (Prometheus Query Language) để tính toán các chỉ số vận hành sống còn: Tỉ lệ lỗi 5xx trên cửa sổ trượt 5 phút, và độ trễ phân vị P95/P99. Grafana kết nối trực tiếp với Prometheus để vẽ biểu đồ và tự động bắn cảnh báo về Slack, Discord hoặc Telegram."
+                    },
+                    CodeTitle = "Production prometheus.yml Configuration & Essential PromQL Cheat Sheet",
+                    CodeLanguage = "yaml",
+                    CodeContent = """
+# ==================== FILE CẤU HÌNH PROMETHEUS (prometheus.yml) ====================
+global:
+  scrape_interval: 15s     # Thu thập dữ liệu mỗi 15 giây
+  evaluation_interval: 15s # Đánh giá các luật cảnh báo mỗi 15 giây
+
+# Danh sách các mục tiêu cần giám sát (Scrape Targets)
+scrape_configs:
+  - job_name: 'node-exporter-host'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  - job_name: 'cadvisor-containers'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  - job_name: 'microservices-app'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['order-service:8080', 'payment-service:8081']
+
+# ==================== CÁC CÂU TRUY VẤN PROMQL THẦN TỐC ====================
+# 1. Tính toán tỉ lệ Request Lỗi HTTP 5xx trên tổng số Request trong 5 phút qua (% Lỗi):
+# sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) * 100
+
+# 2. Tính độ trễ phân vị P99 (99% người dùng trải nghiệm độ trễ dưới mức này):
+# histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))
+
+# 3. Phát hiện máy chủ sắp cạn kiệt RAM (Dung lượng RAM còn trống < 10%):
+# (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 < 10
+""",
+                    CalloutType = "warning",
+                    CalloutTitle = "Never Use High-Cardinality Labels in Prometheus",
+                    CalloutTitleVi = "Cảnh Báo: Tuyệt Đối Tránh High-Cardinality Labels Trong Metrics",
+                    CalloutText = "Do not attach dynamic, unbounded values (such as UserId, OrderId, or Email) as Prometheus metric labels. Each unique label combination creates a brand new Time-Series in memory. 100,000 unique UserIds will generate 100,000 time series, causing Prometheus to run out of RAM and crash instantly.",
+                    CalloutTextVi = "Không gắn các giá trị động không giới hạn (như UserId, OrderId, UUID hay Email) vào nhãn (labels) của Prometheus. Mỗi tổ hợp nhãn duy nhất sẽ tạo ra một chuỗi thời gian (Time-Series) độc lập trong bộ nhớ. 100,000 User ID khác nhau sẽ tạo ra 100,000 time series làm Prometheus cạn kiệt RAM và sập ngay lập tức."
+                },
+                new DevArticleSection
+                {
+                    Heading = "3. The ELK Stack in Production: Elasticsearch, Filebeat & Kibana Log Analytics",
+                    HeadingVi = "3. ELK Stack Trong Thực Chiến: Filebeat, Elasticsearch & Kibana Phân Tích Log Cụm",
+                    Paragraphs = new List<string>
+                    {
+                        "When an application scales across 50 container instances, finding why an order failed using 'docker logs' is impossible. The ELK Stack solves this by centralizing and indexing all container logs:",
+                        "1) Filebeat: A lightweight, low-footprint log shipper written in Go. Installed as a daemon on each host node, it tails container log files from disk and forwards them with zero impact on host CPU/memory.",
+                        "2) Logstash: An optional data processing pipeline that ingests data from Filebeat, parses complex formats (Grok patterns), masks sensitive customer information (PII), and normalizes structures before shipping to storage.",
+                        "3) Elasticsearch: A distributed, JSON-based search engine built on Apache Lucene. It shards log data across nodes, builds inverted indexes, and delivers sub-second full-text searches across billions of log events.",
+                        "4) Kibana: The web-based visualization UI where developers explore logs, filter by TraceId or Container Name, visualize error spikes, and isolate incidents in seconds."
+                    },
+                    ParagraphsVi = new List<string>
+                    {
+                        "Khi ứng dụng mở rộng ra hàng chục container phân tán, việc tìm kiếm nguyên nhân lỗi bằng lệnh 'docker logs' trên từng máy chủ là điều không tưởng. Bộ ba ELK Stack giải quyết triệt để vấn đề này bằng cách tập trung hóa và đánh chỉ mục toàn bộ log của hệ thống:",
+                        "1) Filebeat: Tác nhân thu thập log siêu nhẹ viết bằng ngôn ngữ Go. Chạy dưới dạng daemon trên từng máy chủ, nó trực tiếp đọc các file log của Docker container trên đĩa cứng và đẩy đi mà gần như không chiếm dụng CPU hay RAM.",
+                        "2) Logstash: Trạm trung chuyển và biến đổi dữ liệu, tiếp nhận log từ Filebeat, bóc tách cấu trúc (Grok filter), ẩn giấu thông tin thanh toán nhạy cảm (PII masking) và chuẩn hóa dữ liệu trước khi nạp vào kho.",
+                        "3) Elasticsearch: Cỗ máy tìm kiếm phân tán dựa trên Apache Lucene. Nó phân mảnh dữ liệu (Sharding) trên nhiều node, xây dựng chỉ mục đảo (Inverted Index) và cho phép tìm kiếm văn bản toàn văn (Full-Text Search) trên hàng tỉ bản ghi chỉ trong vài mili-giây.",
+                        "4) Kibana: Giao diện web trực quan giúp lập trình viên tìm kiếm log, lọc theo TraceId hoặc Tên Dịch Vụ, vẽ biểu đồ nhiệt sự cố và cô lập nguyên nhân lỗi chỉ trong vài thao tác."
+                    },
+                    CodeTitle = "Complete Production Observability Stack: Prometheus, Grafana & ELK in Docker Compose",
+                    CodeLanguage = "yaml",
+                    CodeContent = """
+version: '3.8'
+
+services:
+  # ==================== 1. HỆ THỐNG GIÁM SÁT METRICS (PROMETHEUS & GRAFANA) ====================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: obs-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: obs-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: obs-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000" # Web Dashboard (User/Pass mặc định: admin/admin)
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  # ==================== 2. HỆ THỐNG QUẢN LÝ LOG TẬP TRUNG (ELASTICSEARCH & KIBANA) ====================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    container_name: obs-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false # Tắt xác thực cho môi trường Dev/Staging
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g" # Giới hạn 1GB Heap RAM
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.0
+    container_name: obs-kibana
+    restart: unless-stopped
+    ports:
+      - "5601:5601" # Giao diện Web Khám Phá Log
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  es_data:
+""",
+                    CalloutType = "tip",
+                    CalloutTitle = "Configure Index Lifecycle Management (ILM) in Elasticsearch",
+                    CalloutTitleVi = "Thiết Lập Vòng Đời Chỉ Mục (ILM) Chống Tràn Ổ Cứng",
+                    CalloutText = "In high-throughput microservice clusters, log data can consume hundreds of gigabytes per week. Always configure Index Lifecycle Management (ILM) in Elasticsearch to automatically roll over indices daily, transition data from Hot (SSD) to Cold (HDD) tiers, and delete logs older than 30 days.",
+                    CalloutTextVi = "Trong cụm microservices có lưu lượng lớn, dữ liệu log có thể ngốn hàng trăm gigabytes mỗi tuần. Luôn cấu hình Index Lifecycle Management (ILM) trong Elasticsearch để tự động gom log theo ngày, chuyển log cũ sang ổ cứng giá rẻ và tự động xóa dữ liệu sau 30 ngày để chống tràn ổ cứng máy chủ."
                 }
             }
         };
@@ -1082,5 +1077,37 @@ if (Directory.Exists(configMapPath))
             Assert.False(string.IsNullOrWhiteSpace(art.TitleVi));
             Assert.False(string.IsNullOrWhiteSpace(art.SummaryVi));
         }
+    }
+
+    [Fact]
+    public void UpdateDevLearningJsonWithModernInfrastructureSeries()
+    {
+        var path = Path.GetFullPath("../../../../../wwwroot/sample-data/dev-learning.json");
+        Assert.True(File.Exists(path), $"File not found at: {path}");
+
+        var json = File.ReadAllText(path);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
+        var data = JsonSerializer.Deserialize<DevBlogData>(json, options);
+        Assert.NotNull(data);
+
+        var newSeries = BuildSeries();
+        var index = data.SeriesList.FindIndex(s => s.Id == newSeries.Id);
+        if (index >= 0)
+        {
+            data.SeriesList[index] = newSeries;
+        }
+        else
+        {
+            data.SeriesList.Insert(0, newSeries);
+        }
+
+        var updatedJson = JsonSerializer.Serialize(data, options);
+        File.WriteAllText(path, updatedJson);
     }
 }
