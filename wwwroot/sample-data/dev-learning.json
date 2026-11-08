@@ -1,6 +1,918 @@
 {
   "seriesList": [
     {
+      "id": "kontent-ai-masterclass-series",
+      "category": "backend",
+      "title": "Kontent.ai Enterprise Headless CMS: .NET SDKs, Model Generator, Webhooks & MCP Integration",
+      "titleVi": "Làm Chủ Kontent.ai Headless CMS: Bộ Thư Viện .NET SDKs, Model Generator, Webhooks & Tích Hợp AI Qua Giao Thức MCP",
+      "icon": "bi-boxes",
+      "color": "#f05a28",
+      "badge": "Headless CMS & AI",
+      "description": "End-to-end masterclass on Kontent.ai Enterprise Headless CMS: Architecture, .NET Delivery SDK (Kontent.Ai.Delivery), Strongly-Typed Model Generator CLI, Management SDK, Smart Webhook Caching Invalidation, and automated content operations via Model Context Protocol (MCP).",
+      "descriptionVi": "Chuyên đề toàn diện về Kontent.ai Headless CMS chuẩn Enterprise: Kiến trúc API-First, thư viện .NET Delivery SDK (Kontent.Ai.Delivery), CLI Model Generator sinh code C#, Management SDK quản trị content, Webhook xóa cache tự động, và tuyệt kỹ tích hợp AI Agent qua giao thức Model Context Protocol (MCP).",
+      "articles": [
+        {
+          "id": "kontent-ai-art-1-architecture-and-dotnet-delivery-sdk",
+          "seriesId": "kontent-ai-masterclass-series",
+          "lessonNumber": "Bài 1",
+          "level": "Beginner",
+          "levelVi": "Cơ bản",
+          "levelOrder": 1,
+          "title": "Kontent.ai Architecture & The .NET Delivery SDK (Kontent.Ai.Delivery)",
+          "titleVi": "Kiến Trúc Kontent.ai Headless CMS & Bộ Thư Viện .NET Delivery SDK (Kontent.Ai.Delivery)",
+          "readingTime": "15 phút đọc",
+          "publishedDate": "08/11/2026",
+          "summary": "Understanding the paradigm shift from traditional monolithic CMS (WordPress, Sitecore) to Enterprise Headless CMS. Architectural breakdown of Kontent.ai: Global CDN Edge, Fastly Caching, Delivery API (read) vs Management API (write), and installing/configuring the official .NET Delivery SDK (Kontent.Ai.Delivery) in ASP.NET Core & Blazor with Dependency Injection, filtering, taxonomy queries, and image optimization.",
+          "summaryVi": "Hiểu rõ sự chuyển dịch từ Traditional Monolithic CMS (WordPress, Sitecore, Umbraco) sang Enterprise Headless CMS. Bóc tách kiến trúc Kontent.ai: Mạng lưới CDN Edge toàn cầu, Fastly Caching, phân định Delivery API (chỉ đọc siêu tốc) vs Management API (quản trị nội dung), và cách cấu hình thư viện chính thức Kontent.Ai.Delivery trong ASP.NET Core & Blazor qua Dependency Injection, truy vấn lọc taxonomy, linked items và tối ưu ảnh tự động qua CDN.",
+          "tags": [
+            "Kontent.ai",
+            "Headless CMS",
+            ".NET 10",
+            "ASP.NET Core",
+            "Kontent.Ai.Delivery",
+            "API-First"
+          ],
+          "sections": [
+            {
+              "heading": "1. The Paradigm Shift: Monolithic CMS vs Enterprise Headless CMS",
+              "headingVi": "1. Sự Dịch Chuyển Thời Đại: Monolithic CMS vs Enterprise Headless CMS",
+              "paragraphs": [
+                "Trong mô hình CMS truyền thống (Monolithic CMS như WordPress, Drupal, Sitecore cổ điển), tầng quản trị nội dung (Backend Content Authoring), cơ sở dữ liệu (Database) và tầng hiển thị giao diện (Frontend Theme/HTML templates) bị gắn chặt với nhau như một khối bê tông duy nhất.",
+                "Nhược điểm chí mạng của Monolithic CMS:",
+                "- Ràng buộc công nghệ: Muốn đổi mới giao diện sang Blazor, Next.js hay mobile app (Flutter, iOS, Android), bạn phải đập bỏ xây lại toàn bộ.",
+                "- Bảo mật mong manh: Lỗ hổng bảo mật ở giao diện người dùng có thể làm lộ toàn bộ Database và hệ thống quản trị backend.",
+                "- Hiệu năng và khả năng mở rộng (Scale): Mỗi lượt truy cập của người dùng đều phải đánh vào server CMS để render HTML, ngốn tài nguyên máy chủ và dễ bị sập khi traffic tăng vọt.",
+                "**Headless CMS (Kontent.ai)** tách rời hoàn toàn: Kontent.ai đóng vai trò là một kho chứa nội dung tập trung (Content Hub trên Cloud). Nội dung được quản lý dưới dạng dữ liệu phi cấu trúc hoặc có cấu trúc (JSON) và phơi bày ra toàn cầu qua các RESTful API và GraphQL được cache bởi mạng lưới CDN (Fastly).",
+                "Tầng Frontend (ASP.NET Core, Blazor, Mobile, Smart Watch, Digital Signage) hoàn toàn độc lập, chỉ việc gọi API lấy dữ liệu JSON về để hiển thị. Bạn có thể tự do chọn bất kỳ ngôn ngữ hay framework nào bạn yêu thích!"
+              ],
+              "paragraphsVi": [
+                "Trong mô hình CMS truyền thống (Monolithic CMS như WordPress, Drupal, Sitecore cổ điển), tầng quản trị nội dung (Backend Content Authoring), cơ sở dữ liệu (Database) và tầng hiển thị giao diện (Frontend Theme/HTML templates) bị gắn chặt với nhau như một khối bê tông duy nhất.",
+                "Nhược điểm chí mạng của Monolithic CMS:",
+                "- Ràng buộc công nghệ: Muốn đổi mới giao diện sang Blazor, Next.js hay mobile app (Flutter, iOS, Android), bạn phải đập bỏ xây lại toàn bộ.",
+                "- Bảo mật mong manh: Lỗ hổng bảo mật ở giao diện người dùng có thể làm lộ toàn bộ Database và hệ thống quản trị backend.",
+                "- Hiệu năng và khả năng mở rộng (Scale): Mỗi lượt truy cập của người dùng đều phải đánh vào server CMS để render HTML, ngốn tài nguyên máy chủ và dễ bị sập khi traffic tăng vọt.",
+                "**Headless CMS (Kontent.ai)** tách rời hoàn toàn: Kontent.ai đóng vai trò là một kho chứa nội dung tập trung (Content Hub trên Cloud). Nội dung được quản lý dưới dạng dữ liệu phi cấu trúc hoặc có cấu trúc (JSON) và phơi bày ra toàn cầu qua các RESTful API và GraphQL được cache bởi mạng lưới CDN (Fastly).",
+                "Tầng Frontend (ASP.NET Core, Blazor, Mobile, Smart Watch, Digital Signage) hoàn toàn độc lập, chỉ việc gọi API lấy dữ liệu JSON về để hiển thị. Bạn có thể tự do chọn bất kỳ ngôn ngữ hay framework nào bạn yêu thích!"
+              ],
+              "codeTitle": "Monolithic CMS vs Headless CMS Architecture Comparison",
+              "codeLanguage": "text",
+              "codeContent": "[TRADITIONAL MONOLITHIC CMS (WordPress / Classic Sitecore)]\n+-------------------------------------------------------------+\n| Frontend HTML/CSS + Backend Logic + MySQL Database          | -> Gắn chặt thành 1 khối\n+-------------------------------------------------------------+\n                            |\n                     (Scale chậm, dễ sập)\n\n[KONTENT.AI ENTERPRISE HEADLESS CMS]\n+-------------------------------------------------------------+\n| KONTENT.AI CLOUD (Content Authoring, Workflows, Taxonomy)   |\n+-------------------------------------------------------------+\n                            |\n                 (Fastly Global CDN Edge)\n                            |\n            +---------------+---------------+\n            |               |               |\n     [Delivery API]   [Preview API]  [Management API]\n            |               |               |\n   +--------+--------+      |               |\n   |                 |      |          [CI/CD & MCP AI]\n[Blazor WASM]  [ASP.NET Core]      (Automated Ops)\n(Web Client)    (Backend Server)",
+              "calloutType": "info",
+              "calloutTitle": "Info: Delivery API vs Preview API",
+              "calloutTitleVi": "Thông Tin: Phân Biệt Delivery API & Preview API",
+              "calloutText": "Delivery API only returns published content cached by Fastly CDN for maximum throughput and near-zero latency. Preview API requires a secret API key and bypasses caching to return unpublished draft content for real-time editorial previews.",
+              "calloutTextVi": "Delivery API chỉ trả về nội dung ĐÃ XUẤT BẢN (Published) được cache trên CDN toàn cầu để đạt tốc độ tối đa. Preview API yêu cầu API Key bí mật và không qua cache, chuyên dùng để xem trước các bản thảo (Drafts) ngay khi biên tập viên vừa gõ xong."
+            },
+            {
+              "heading": "2. Setting Up Kontent.Ai.Delivery in ASP.NET Core & Blazor",
+              "headingVi": "2. Cài Đặt & Cấu Hình Gói Nuget Kontent.Ai.Delivery Trong .NET",
+              "paragraphs": [
+                "Kontent.ai cung cấp bộ SDK .NET chính thức mã nguồn mở cực kỳ mạnh mẽ trên NuGet: `Kontent.Ai.Delivery`.",
+                "Để bắt đầu, bạn cài đặt package NuGet chính thức:",
+                "`dotnet add package Kontent.Ai.Delivery`",
+                "Trong file `appsettings.json`, bạn chỉ cần khai báo `EnvironmentId` (Mỗi project trên Kontent.ai sở hữu một GUID Environment ID duy nhất). Nếu cần tính năng xem trước bản thảo (Preview), bạn thêm `PreviewApiKey`.",
+                "Sau đó, trong `Program.cs`, bạn đăng ký dịch vụ bằng phương thức mở rộng `builder.Services.AddDeliveryClient(builder.Configuration)`. Dịch vụ này sẽ tự động inject `IDeliveryClient` vào bất kỳ Controller, Service hoặc Blazor Page nào của bạn với vòng đời tối ưu."
+              ],
+              "paragraphsVi": [
+                "Kontent.ai cung cấp bộ SDK .NET chính thức mã nguồn mở cực kỳ mạnh mẽ trên NuGet: `Kontent.Ai.Delivery`.",
+                "Để bắt đầu, bạn cài đặt package NuGet chính thức:",
+                "`dotnet add package Kontent.Ai.Delivery`",
+                "Trong file `appsettings.json`, bạn chỉ cần khai báo `EnvironmentId` (Mỗi project trên Kontent.ai sở hữu một GUID Environment ID duy nhất). Nếu cần tính năng xem trước bản thảo (Preview), bạn thêm `PreviewApiKey`.",
+                "Sau đó, trong `Program.cs`, bạn đăng ký dịch vụ bằng phương thức mở rộng `builder.Services.AddDeliveryClient(builder.Configuration)`. Dịch vụ này sẽ tự động inject `IDeliveryClient` vào bất kỳ Controller, Service hoặc Blazor Page nào của bạn với vòng đời tối ưu."
+              ],
+              "codeTitle": "appsettings.json & Program.cs Dependency Injection",
+              "codeLanguage": "csharp",
+              "codeContent": "// 1. Cấu hình appsettings.json\n{\n  \"DeliveryOptions\": {\n    \"EnvironmentId\": \"975bf280-72e4-0186-bb94-2feb9480bc32\",\n    \"UsePreviewApi\": false,\n    \"PreviewApiKey\": \"YOUR_PREVIEW_API_KEY_HERE\"\n  }\n}\n\n// 2. Đăng ký trong Program.cs (ASP.NET Core / Blazor)\nusing Kontent.Ai.Delivery.Extensions;\n\nvar builder = WebApplication.CreateBuilder(args);\n\n// Đăng ký Kontent.ai Delivery Client vào Service Collection\nbuilder.Services.AddDeliveryClient(builder.Configuration);\n\nvar app = builder.Build();",
+              "calloutType": "tip",
+              "calloutTitle": "Tip: IHttpClientFactory Integration",
+              "calloutTitleVi": "Mẹo: Tích Hợp Sẵn IHttpClientFactory",
+              "calloutText": "Under the hood, `AddDeliveryClient` configures typed HttpClients via `IHttpClientFactory`, preventing socket exhaustion under heavy load and respecting DNS changes automatically.",
+              "calloutTextVi": "Bên dưới, `AddDeliveryClient` sử dụng `IHttpClientFactory` của .NET để tái sử dụng socket TCP hiệu quả, chống cạn kiệt kết nối khi ứng dụng nhận hàng nghìn lượt truy cập đồng thời."
+            },
+            {
+              "heading": "3. Querying Content, Linked Items & CDN Image Transformations",
+              "headingVi": "3. Truy Vấn Nội Dung, Linked Items & Tối Ưu Ảnh Tự Động Qua CDN",
+              "paragraphs": [
+                "SDK cung cấp cú pháp Fluent API mạnh mẽ để truy vấn nội dung từ Kontent.ai:",
+                "1. **Lấy danh sách bài viết theo Content Type:**",
+                "Sử dụng `client.GetItemsAsync()` kết hợp các bộ lọc (Parameters): `EqualsFilter(\"system.type\", \"article\")`, sắp xếp giảm dần theo ngày `OrderParameter(\"elements.post_date\", SortOrder.Descending)`, và phân trang `LimitParameter(10)`.",
+                "2. **Giải quyết quan hệ lồng nhau (Linked Items Depth):**",
+                "Một bài viết Blog có thể chứa danh sách các Tác giả (Author), mỗi Tác giả lại liên kết tới các Khóa học liên quan. Mặc định Delivery API chỉ tải 1 cấp lồng nhau để tối ưu payload. Bằng cách thêm `DepthParameter(2)` hoặc `DepthParameter(3)`, SDK sẽ tự động gom toàn bộ các đối tượng phụ thuộc vào trong 1 lượt gọi API duy nhất!",
+                "3. **Tối ưu hóa hình ảnh tức thời (Fastly Image Optimization):**",
+                "Mọi ảnh upload lên Kontent.ai Asset Management đều hỗ trợ Image Transformation API trên URL. Bạn có thể tự động resize ảnh sang kích thước 800px, crop khuôn mặt thông minh (`fit=crop&crop=face`), và tự động đổi định dạng sang `WebP` để giảm 70% dung lượng mà không cần viết thêm bất kỳ server xử lý ảnh nào!"
+              ],
+              "paragraphsVi": [
+                "SDK cung cấp cú pháp Fluent API mạnh mẽ để truy vấn nội dung từ Kontent.ai:",
+                "1. **Lấy danh sách bài viết theo Content Type:**",
+                "Sử dụng `client.GetItemsAsync()` kết hợp các bộ lọc (Parameters): `EqualsFilter(\"system.type\", \"article\")`, sắp xếp giảm dần theo ngày `OrderParameter(\"elements.post_date\", SortOrder.Descending)`, và phân trang `LimitParameter(10)`.",
+                "2. **Giải quyết quan hệ lồng nhau (Linked Items Depth):**",
+                "Một bài viết Blog có thể chứa danh sách các Tác giả (Author), mỗi Tác giả lại liên kết tới các Khóa học liên quan. Mặc định Delivery API chỉ tải 1 cấp lồng nhau để tối ưu payload. Bằng cách thêm `DepthParameter(2)` hoặc `DepthParameter(3)`, SDK sẽ tự động gom toàn bộ các đối tượng phụ thuộc vào trong 1 lượt gọi API duy nhất!",
+                "3. **Tối ưu hóa hình ảnh tức thời (Fastly Image Optimization):**",
+                "Mọi ảnh upload lên Kontent.ai Asset Management đều hỗ trợ Image Transformation API trên URL. Bạn có thể tự động resize ảnh sang kích thước 800px, crop khuôn mặt thông minh (`fit=crop&crop=face`), và tự động đổi định dạng sang `WebP` để giảm 70% dung lượng mà không cần viết thêm bất kỳ server xử lý ảnh nào!"
+              ],
+              "codeTitle": "Practical Content Query & Image Transformation in C#",
+              "codeLanguage": "csharp",
+              "codeContent": "public class BlogService\n{\n    private readonly IDeliveryClient _deliveryClient;\n\n    public BlogService(IDeliveryClient deliveryClient)\n    {\n        _deliveryClient = deliveryClient;\n    }\n\n    public async Task<IEnumerable<object>> GetFeaturedArticlesAsync()\n    {\n        // Truy vấn 10 bài viết mới nhất có gắn taxonomy 'technology'\n        var response = await _deliveryClient.GetItemsAsync<object>(\n            new EqualsFilter(\"system.type\", \"article\"),\n            new ContainsFilter(\"elements.tags\", new[] { \"technology\" }),\n            new OrderParameter(\"elements.publish_date\", SortOrder.Descending),\n            new LimitParameter(10),\n            new DepthParameter(2) // Lấy kèm tác giả và danh mục liên kết\n        );\n\n        return response.Items;\n    }\n}\n\n// Biến đổi ảnh động ngay trên URL CDN của Kontent.ai:\n// Gốc: https://assets-us-01.kc-usercontent.com/.../banner.png\n// Tối ưu: banner.png?w=800&auto=format&fit=crop&crop=face\n// -> Trả về ảnh WebP 800px nén nhẹ, siêu nét, tải dưới 30ms!",
+              "calloutType": "tip",
+              "calloutTitle": "Next Lesson Preview",
+              "calloutTitleVi": "Bài Tiếp Theo: Thoát Khỏi Magic Strings",
+              "calloutText": "Querying with raw strings like `elements.post_date` is brittle and prone to typos. In Bài 2, we will use the official CLI `kontent-ai-model-generator` to generate 100% type-safe C# classes matching your CMS schema.",
+              "calloutTextVi": "Truy vấn bằng các chuỗi 'magic strings' như `elements.post_date` rất dễ gõ nhầm và khó bảo trì khi đổi tên trường. Ở Bài 2, chúng ta sẽ sử dụng công cụ CLI `kontent-ai-model-generator` để tự động sinh các class C# strongly-typed hoàn hảo 100%!"
+            }
+          ]
+        },
+        {
+          "id": "kontent-ai-art-2-model-generator-and-management-sdk",
+          "seriesId": "kontent-ai-masterclass-series",
+          "lessonNumber": "Bài 2",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Strongly-Typed Models, Model Generator CLI & Kontent.Ai.Management SDK",
+          "titleVi": "Sinh Code Tự Động Với Model Generator CLI & Quản Trị Hệ Thống Bằng Kontent.Ai.Management SDK",
+          "readingTime": "17 phút đọc",
+          "publishedDate": "08/11/2026",
+          "summary": "Eradicate runtime string bugs using the official `kontent-ai-model-generator` global .NET tool. Generating strongly-typed C# models from cloud schemas, custom Type Providers, and deep diving into the `Kontent.Ai.Management` SDK to programmatically create content items, update localized variants, manage taxonomy, and automate editorial workflows.",
+          "summaryVi": "Xóa sổ lỗi runtime do gõ nhầm chuỗi bằng công cụ dòng lệnh toàn cục `kontent-ai-model-generator`. Tự động sinh mã nguồn class C# strongly-typed từ schema trên cloud, cấu hình Type Provider ánh xạ tự động, và đi sâu vào bộ SDK `Kontent.Ai.Management` để lập trình tự động hóa: tạo Content Item, cập nhật bản dịch ngôn ngữ, quản lý Taxonomy và điều phối luồng kiểm duyệt Workflow.",
+          "tags": [
+            "Model Generator",
+            "Kontent.Ai.Management",
+            "Strongly-Typed",
+            "C# Code Gen",
+            "Workflows",
+            "Enterprise"
+          ],
+          "sections": [
+            {
+              "heading": "1. The Perils of Magic Strings & The Model Generator CLI",
+              "headingVi": "1. Nỗi Đau Magic Strings & Công Cụ Sinh Mã Nguồn Model Generator CLI",
+              "paragraphs": [
+                "Khi xây dựng ứng dụng quy mô lớn với hàng chục Content Types (Article, Product, LandingPage, Author, CustomerReview), việc viết code theo kiểu `item.GetString(\"title\")` hay `item.GetNumber(\"price\")` là nguồn cơn của vô số lỗi thời gian chạy (runtime errors):",
+                "- Gõ sai chính tả codename (`titel` thay vì `title`) không được trình biên dịch phát hiện.",
+                "- Khi người quản trị trên Kontent.ai đổi tên trường hoặc kiểu dữ liệu (từ Text sang RichText), code backend không hay biết và quăng NullReferenceException khi chạy thực tế.",
+                "- Không có tính năng tự động gợi ý code (IntelliSense) trong Visual Studio / VS Code.",
+                "Để giải quyết triệt để, Kontent.ai cung cấp công cụ toàn cục .NET Tool: **`kontent-ai-model-generator`**.",
+                "Chỉ với 1 dòng lệnh CLI, công cụ sẽ kết nối thẳng lên cloud project của bạn, đọc toàn bộ Content Models và tự động sinh ra các class C# strongly-typed hoàn chỉnh, bao gồm đầy đủ thuộc tính, kiểu dữ liệu chuẩn (`string`, `decimal`, `DateTime`, `IEnumerable<Asset>`), và một class `CustomTypeProvider` ánh xạ tự động!"
+              ],
+              "paragraphsVi": [
+                "Khi xây dựng ứng dụng quy mô lớn với hàng chục Content Types (Article, Product, LandingPage, Author, CustomerReview), việc viết code theo kiểu `item.GetString(\"title\")` hay `item.GetNumber(\"price\")` là nguồn cơn của vô số lỗi thời gian chạy (runtime errors):",
+                "- Gõ sai chính tả codename (`titel` thay vì `title`) không được trình biên dịch phát hiện.",
+                "- Khi người quản trị trên Kontent.ai đổi tên trường hoặc kiểu dữ liệu (từ Text sang RichText), code backend không hay biết và quăng NullReferenceException khi chạy thực tế.",
+                "- Không có tính năng tự động gợi ý code (IntelliSense) trong Visual Studio / VS Code.",
+                "Để giải quyết triệt để, Kontent.ai cung cấp công cụ toàn cục .NET Tool: **`kontent-ai-model-generator`**.",
+                "Chỉ với 1 dòng lệnh CLI, công cụ sẽ kết nối thẳng lên cloud project của bạn, đọc toàn bộ Content Models và tự động sinh ra các class C# strongly-typed hoàn chỉnh, bao gồm đầy đủ thuộc tính, kiểu dữ liệu chuẩn (`string`, `decimal`, `DateTime`, `IEnumerable<Asset>`), và một class `CustomTypeProvider` ánh xạ tự động!"
+              ],
+              "codeTitle": "Install & Run Kontent.ai Model Generator CLI",
+              "codeLanguage": "bash",
+              "codeContent": "# 1. Cài đặt công cụ toàn cục từ NuGet\ndotnet tool install -g Kontent.Ai.ModelGenerator\n\n# 2. Sinh các class C# strongly-typed từ Environment ID\nkontent-ai-model-generator \\\n  --environment-id \"975bf280-72e4-0186-bb94-2feb9480bc32\" \\\n  --output-dir \"./Models/ContentTypes\" \\\n  --namespace \"MyProject.Models.ContentTypes\" \\\n  --generate-type-provider true\n\n# Kết quả: Tự động sinh Article.cs, Author.cs, CustomTypeProvider.cs!",
+              "calloutType": "tip",
+              "calloutTitle": "Tip: CI/CD Model Generation Check",
+              "calloutTitleVi": "Mẹo: Tích Hợp Kiểm Tra Model Trong CI/CD",
+              "calloutText": "You can add `kontent-ai-model-generator` to your GitHub Actions pipeline. If a Content Author changes the schema on Kontent.ai, your CI pipeline detects model drift and alerts developers immediately before any deployment.",
+              "calloutTextVi": "Bạn có thể đưa lệnh chạy model generator vào GitHub Actions CI/CD. Nếu biên tập viên đổi schema trên Kontent.ai, pipeline sẽ phát hiện ra sự sai lệch model và báo động ngay lập tức trước khi build!"
+            },
+            {
+              "heading": "2. Working with Generated Strongly-Typed Classes in C#",
+              "headingVi": "2. Sử Dụng Các Class Strongly-Typed Trong Ứng Dụng .NET",
+              "paragraphs": [
+                "Khi đã có các class sinh tự động, việc truy vấn và render dữ liệu trở nên cực kỳ thanh lịch và an toàn tuyệt đối.",
+                "Bạn đăng ký `CustomTypeProvider` vào Delivery Client. Kể từ thời điểm này, thay vì gọi `GetItemsAsync<object>()`, bạn truyền trực tiếp generic type: `GetItemsAsync<Article>()`.",
+                "Mọi thuộc tính như `article.Title`, `article.PublishDate`, `article.HeroImage`, `article.Authors` đều có kiểu dữ liệu rõ ràng, hỗ trợ gợi ý code IntelliSense và bắt lỗi ngay khi gõ phím!"
+              ],
+              "paragraphsVi": [
+                "Khi đã có các class sinh tự động, việc truy vấn và render dữ liệu trở nên cực kỳ thanh lịch và an toàn tuyệt đối.",
+                "Bạn đăng ký `CustomTypeProvider` vào Delivery Client. Kể từ thời điểm này, thay vì gọi `GetItemsAsync<object>()`, bạn truyền trực tiếp generic type: `GetItemsAsync<Article>()`.",
+                "Mọi thuộc tính như `article.Title`, `article.PublishDate`, `article.HeroImage`, `article.Authors` đều có kiểu dữ liệu rõ ràng, hỗ trợ gợi ý code IntelliSense và bắt lỗi ngay khi gõ phím!"
+              ],
+              "codeTitle": "Generated Article Class & Strongly-Typed Query",
+              "codeLanguage": "csharp",
+              "codeContent": "// 1. File sinh tự động: Article.cs\nnamespace MyProject.Models.ContentTypes;\n\npublic partial class Article\n{\n    public const string Codename = \"article\";\n    public string Title { get; set; } = string.Empty;\n    public string Summary { get; set; } = string.Empty;\n    public DateTime? PublishDate { get; set; }\n    public IEnumerable<Asset> TeaserImage { get; set; } = Enumerable.Empty<Asset>();\n    public IEnumerable<Author> Authors { get; set; } = Enumerable.Empty<Author>();\n}\n\n// 2. Truy vấn an toàn kiểu dữ liệu trong Controller / Service\npublic async Task<Article?> GetArticleBySlugAsync(string slug)\n{\n    var response = await _deliveryClient.GetItemsAsync<Article>(\n        new EqualsFilter(\"elements.slug\", slug),\n        new DepthParameter(1)\n    );\n\n    var article = response.Items.FirstOrDefault();\n    // IntelliSense đầy đủ, an toàn 100% không lo lỗi chính tả!\n    Console.WriteLine($\"Đang đọc bài: {article?.Title} xuất bản ngày {article?.PublishDate:dd/MM/yyyy}\");\n    return article;\n}",
+              "calloutType": "info",
+              "calloutTitle": "Info: Custom Type Provider",
+              "calloutTitleVi": "Thông Tin: Cơ Chế Ánh Xạ Của CustomTypeProvider",
+              "calloutText": "The generated `CustomTypeProvider` implements `ITypeProvider`. When raw JSON arrives from the CDN, the Delivery SDK inspects `system.type` and instantly instantiates the corresponding C# class.",
+              "calloutTextVi": "`CustomTypeProvider` sinh ra sẽ thực thi giao diện `ITypeProvider`. Khi JSON từ CDN trả về, SDK sẽ nhìn vào trường `system.type` và tự động khởi tạo đúng đối tượng class C# tương ứng."
+            },
+            {
+              "heading": "3. Writing & Managing Content with Kontent.Ai.Management SDK",
+              "headingVi": "3. Quản Trị & Tạo Dữ Liệu Tự Động Bằng Kontent.Ai.Management SDK",
+              "paragraphs": [
+                "Nếu như `Kontent.Ai.Delivery` chỉ phục vụ việc ĐỌC dữ liệu từ CDN (Read-only), thì package **`Kontent.Ai.Management`** là cánh tay phải giúp bạn GHI và ĐIỀU PHỐI (Write & Orchestrate) toàn bộ hệ thống CMS từ mã nguồn C#.",
+                "Các trường hợp thực tế cần dùng Management SDK:",
+                "- **Migration & Import Dữ Liệu**: Chuyển dữ liệu từ 50.000 bài viết trên WordPress cũ sang Kontent.ai.",
+                "- **Automated Ingestion**: Tự động lấy tin tức chứng khoán, tỷ giá ngoại tệ từ API bên ngoài và tạo Content Item mới mỗi giờ.",
+                "- **Điều phối quy trình (Workflow Automation)**: Khi bài viết được duyệt bởi hệ thống kiểm duyệt nội bộ, code C# tự động gọi Management API chuyển trạng thái từ `Draft` sang `Scheduled` hoặc `Published`.",
+                "Management SDK sử dụng Management API Key và hoạt động dựa trên cơ chế REST API v2 với đầy đủ tính năng tạo item, upsert variant theo ngôn ngữ, và cập nhật taxonomy."
+              ],
+              "paragraphsVi": [
+                "Nếu như `Kontent.Ai.Delivery` chỉ phục vụ việc ĐỌC dữ liệu từ CDN (Read-only), thì package **`Kontent.Ai.Management`** là cánh tay phải giúp bạn GHI và ĐIỀU PHỐI (Write & Orchestrate) toàn bộ hệ thống CMS từ mã nguồn C#.",
+                "Các trường hợp thực tế cần dùng Management SDK:",
+                "- **Migration & Import Dữ Liệu**: Chuyển dữ liệu từ 50.000 bài viết trên WordPress cũ sang Kontent.ai.",
+                "- **Automated Ingestion**: Tự động lấy tin tức chứng khoán, tỷ giá ngoại tệ từ API bên ngoài và tạo Content Item mới mỗi giờ.",
+                "- **Điều phối quy trình (Workflow Automation)**: Khi bài viết được duyệt bởi hệ thống kiểm duyệt nội bộ, code C# tự động gọi Management API chuyển trạng thái từ `Draft` sang `Scheduled` hoặc `Published`.",
+                "Management SDK sử dụng Management API Key và hoạt động dựa trên cơ chế REST API v2 với đầy đủ tính năng tạo item, upsert variant theo ngôn ngữ, và cập nhật taxonomy."
+              ],
+              "codeTitle": "Creating a Content Item & Publishing via Management SDK",
+              "codeLanguage": "csharp",
+              "codeContent": "using Kontent.Ai.Management;\nusing Kontent.Ai.Management.Models.Shared;\nusing Kontent.Ai.Management.Models.Items;\nusing Kontent.Ai.Management.Models.LanguageVariants;\n\n// Khởi tạo Management Client với API Key bí mật\nvar client = new ManagementClient(new ManagementOptions\n{\n    EnvironmentId = \"975bf280-72e4-0186-bb94-2feb9480bc32\",\n    ApiKey = \"YOUR_SECRET_MANAGEMENT_API_KEY\"\n});\n\n// Bước 1: Tạo mới Content Item vỏ (Container)\nvar itemResponse = await client.CreateContentItemAsync(new ContentItemCreateModel\n{\n    Name = \"Bài Viết Xuất Bản Tự Động Bằng C#\",\n    Type = Reference.ByCodename(\"article\")\n});\n\n// Bước 2: Cập nhật nội dung bản ngữ (Language Variant - ví dụ tiếng Việt)\nvar variantIdentifier = Reference.ByCodename(\"article\")\n    .ToLanguageVariantIdentifier(Reference.ByCodename(\"vi-VN\"));\n\nawait client.UpsertLanguageVariantAsync(\n    new ItemIdentifier(itemResponse.Id),\n    new LanguageIdentifier(\"vi-VN\"),\n    new LanguageVariantUpsertModel\n    {\n        Elements = new dynamic[]\n        {\n            new { element = Reference.ByCodename(\"title\"), value = \"Tự động hóa Kontent.ai với .NET\" },\n            new { element = Reference.ByCodename(\"summary\"), value = \"Nội dung được import tự động qua Management SDK.\" }\n        }\n    }\n);\n\n// Bước 3: Xuất bản trực tiếp bài viết lên CDN!\nawait client.PublishLanguageVariantAsync(\n    new ItemIdentifier(itemResponse.Id),\n    new LanguageIdentifier(\"vi-VN\")\n);",
+              "calloutType": "warning",
+              "calloutTitle": "Security Notice for Management Key",
+              "calloutTitleVi": "Lưu Ý Bảo Mật Khóa Management API",
+              "calloutText": "Never expose your Management API Key in frontend clients or public repositories. The Management Key has full read/write/delete privileges across your entire CMS environment. Only use it in secure backend services or serverless Azure Functions.",
+              "calloutTextVi": "Tuyệt đối không bao giờ để lộ Management API Key trong code frontend hoặc commit lên Git. Khóa này có toàn quyền đọc/ghi/xóa toàn bộ nội dung trong CMS. Chỉ lưu trữ trong Azure Key Vault hoặc Environment Variables của backend an toàn."
+            }
+          ]
+        },
+        {
+          "id": "kontent-ai-art-3-caching-webhooks-smart-invalidation",
+          "seriesId": "kontent-ai-masterclass-series",
+          "lessonNumber": "Bài 3",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 3,
+          "title": "Performance Optimization: Kontent.Ai.Delivery.Caching & Smart Webhook Invalidation",
+          "titleVi": "Tối Ưu Hiệu Năng Vượt Trội: Bộ Nhớ Đệm Caching & Cơ Chế Webhook Tự Động Xóa Cache",
+          "readingTime": "18 phút đọc",
+          "publishedDate": "08/11/2026",
+          "summary": "High-performance architecture with Kontent.ai in production: Eliminating unnecessary network hops using the `Kontent.Ai.Delivery.Caching` library (Decorator pattern), In-Memory and Distributed Redis Caching strategies, setting up ASP.NET Core Webhook endpoints, verifying HMAC-SHA256 signatures, and implementing surgical smart cache invalidation on content publish events.",
+          "summaryVi": "Kiến trúc hiệu năng cao cho website sử dụng Kontent.ai ở quy mô lớn: Triệt tiêu các lượt gọi mạng dư thừa bằng thư viện `Kontent.Ai.Delivery.Caching` (mẫu thiết kế Decorator), chiến lược In-Memory và Redis Distributed Caching, xây dựng Webhook Endpoint trong ASP.NET Core, xác thực chữ ký số HMAC-SHA256, và kỹ thuật xóa cache chính xác mục tiêu (Smart Invalidation) ngay khi bài viết được xuất bản.",
+          "tags": [
+            "Caching",
+            "Webhooks",
+            "Redis",
+            "Security",
+            "HMAC-SHA256",
+            "High-Performance"
+          ],
+          "sections": [
+            {
+              "heading": "1. The Need for Caching Even When Using Global CDNs",
+              "headingVi": "1. Tại Sao Vẫn Bắt Buộc Phải Cache Dù CDN Của Kontent.ai Đã Rất Nhanh?",
+              "paragraphs": [
+                "Mặc dù Delivery API của Kontent.ai được lưu trữ trên mạng lưới CDN toàn cầu của Fastly với thời gian phản hồi chỉ khoảng 20ms - 50ms, nhưng trong các ứng dụng doanh nghiệp có hàng triệu lượt truy cập:",
+                "- Mỗi HTTP request từ server của bạn ra ngoài internet vẫn tốn chi phí mở kết nối, SSL handshake, và phụ thuộc vào độ ổn định đường truyền viễn thông quốc tế.",
+                "- Giới hạn gói dịch vụ (API Quota & Overages): Mỗi gói thuê bao Kontent.ai đều có giới hạn số lượng Content Delivery API calls hàng tháng. Nếu trang chủ có 10 component gọi 10 API riêng biệt cho mỗi lượt xem trang, bạn sẽ nhanh chóng làm cạn kiệt gói tài khoản!",
+                "- Trải nghiệm người dùng: Đọc dữ liệu từ RAM cục bộ (In-Memory Cache) chỉ mất **dưới 0.1 mili-giây**, nhanh hơn gấp 500 lần so với việc gọi ra ngoài internet.",
+                "Giải pháp chuẩn của Kontent.ai: Sử dụng package chính thức **`Kontent.Ai.Delivery.Caching`**."
+              ],
+              "paragraphsVi": [
+                "Mặc dù Delivery API của Kontent.ai được lưu trữ trên mạng lưới CDN toàn cầu của Fastly với thời gian phản hồi chỉ khoảng 20ms - 50ms, nhưng trong các ứng dụng doanh nghiệp có hàng triệu lượt truy cập:",
+                "- Mỗi HTTP request từ server của bạn ra ngoài internet vẫn tốn chi phí mở kết nối, SSL handshake, và phụ thuộc vào độ ổn định đường truyền viễn thông quốc tế.",
+                "- Giới hạn gói dịch vụ (API Quota & Overages): Mỗi gói thuê bao Kontent.ai đều có giới hạn số lượng Content Delivery API calls hàng tháng. Nếu trang chủ có 10 component gọi 10 API riêng biệt cho mỗi lượt xem trang, bạn sẽ nhanh chóng làm cạn kiệt gói tài khoản!",
+                "- Trải nghiệm người dùng: Đọc dữ liệu từ RAM cục bộ (In-Memory Cache) chỉ mất **dưới 0.1 mili-giây**, nhanh hơn gấp 500 lần so với việc gọi ra ngoài internet.",
+                "Giải pháp chuẩn của Kontent.ai: Sử dụng package chính thức **`Kontent.Ai.Delivery.Caching`**."
+              ],
+              "codeTitle": "Configuring Kontent.Ai.Delivery.Caching in Program.cs",
+              "codeLanguage": "csharp",
+              "codeContent": "// Cài đặt: dotnet add package Kontent.Ai.Delivery.Caching\nusing Kontent.Ai.Delivery.Caching.Extensions;\n\nvar builder = WebApplication.CreateBuilder(args);\n\n// Đăng ký Delivery Client với lớp Decorator Caching tự động\nbuilder.Services.AddDeliveryClient(builder.Configuration);\nbuilder.Services.AddDeliveryClientCache(new DeliveryCacheOptions\n{\n    // Cấu hình thời gian cache mặc định (ví dụ: 60 phút)\n    DefaultExpiration = TimeSpan.FromMinutes(60)\n});\n\n// Thư viện tự động bọc IDeliveryClient bằng CachingDeliveryClient.\n// Mọi truy vấn GetItemsAsync() giống hệt nhau sẽ được lấy trực tiếp từ RAM!",
+              "calloutType": "info",
+              "calloutTitle": "Info: Decorator Design Pattern",
+              "calloutTitleVi": "Thông Tin: Mẫu Thiết Kế Decorator",
+              "calloutText": "`AddDeliveryClientCache` wraps the native `IDeliveryClient` using the classic Gang of Four Decorator pattern. Your existing service classes don't need a single line of code change — they keep injecting `IDeliveryClient` as usual!",
+              "calloutTextVi": "`AddDeliveryClientCache` bọc `IDeliveryClient` gốc bằng mẫu thiết kế Decorator kinh điển. Toàn bộ các service cũ của bạn không cần sửa dù chỉ một chữ — chúng vẫn inject `IDeliveryClient` như bình thường nhưng tốc độ được tăng tốc gấp hàng trăm lần!"
+            },
+            {
+              "heading": "2. The Cache Staleness Problem & Webhook Architecture",
+              "headingVi": "2. Vấn Nạn Cache Quá Hạn & Kiến Trúc Webhook Báo Hiệu Đổi Dữ Liệu",
+              "paragraphs": [
+                "Khi bạn cache dữ liệu trên server 60 phút hoặc 24 giờ, một vấn đề nghiêm trọng xuất hiện: **Dữ liệu bị cũ (Stale Data)**.",
+                "Một biên tập viên sửa giá sản phẩm hoặc đính chính thông tin khẩn cấp trên Kontent.ai CMS. Nhưng người dùng truy cập website vẫn nhìn thấy thông tin cũ vì server vẫn đang phục vụ từ bộ nhớ đệm!",
+                "Nếu đặt thời gian TTL quá ngắn (1 phút) thì lại mất đi ý nghĩa của Caching. Làm sao để đạt được trạng thái lý tưởng: **Cache vĩnh viễn (hoặc rất lâu), nhưng ngay khi có thay đổi trên CMS thì tự động xóa cache tức thời?**",
+                "Câu trả lời là **Webhooks**:",
+                "- Trên giao diện quản trị Kontent.ai, bạn cấu hình một Webhook trỏ về endpoint của bạn: `https://your-domain.com/api/webhooks/kontent`.",
+                "- Khi biên tập viên nhấn nút 'Publish' hoặc 'Unpublish', Kontent.ai sẽ bắn một bản tin HTTP POST chứa thông tin item bị thay đổi về endpoint của bạn trong vòng vài chục mili-giây.",
+                "- Ứng dụng ASP.NET Core nhận webhook và tiến hành xóa chính xác item đó khỏi cache!"
+              ],
+              "paragraphsVi": [
+                "Khi bạn cache dữ liệu trên server 60 phút hoặc 24 giờ, một vấn đề nghiêm trọng xuất hiện: **Dữ liệu bị cũ (Stale Data)**.",
+                "Một biên tập viên sửa giá sản phẩm hoặc đính chính thông tin khẩn cấp trên Kontent.ai CMS. Nhưng người dùng truy cập website vẫn nhìn thấy thông tin cũ vì server vẫn đang phục vụ từ bộ nhớ đệm!",
+                "Nếu đặt thời gian TTL quá ngắn (1 phút) thì lại mất đi ý nghĩa của Caching. Làm sao để đạt được trạng thái lý tưởng: **Cache vĩnh viễn (hoặc rất lâu), nhưng ngay khi có thay đổi trên CMS thì tự động xóa cache tức thời?**",
+                "Câu trả lời là **Webhooks**:",
+                "- Trên giao diện quản trị Kontent.ai, bạn cấu hình một Webhook trỏ về endpoint của bạn: `https://your-domain.com/api/webhooks/kontent`.",
+                "- Khi biên tập viên nhấn nút 'Publish' hoặc 'Unpublish', Kontent.ai sẽ bắn một bản tin HTTP POST chứa thông tin item bị thay đổi về endpoint của bạn trong vòng vài chục mili-giây.",
+                "- Ứng dụng ASP.NET Core nhận webhook và tiến hành xóa chính xác item đó khỏi cache!"
+              ],
+              "codeTitle": "Webhook Notification Flow Architecture",
+              "codeLanguage": "text",
+              "codeContent": "[BIÊN TẬP VIÊN] -> Bấm Publish bài viết \"AI Revolution\" trên Kontent.ai CMS\n                           |\n                           v\n              [KONTENT.AI WEBHOOK ENGINE]\n                           |\n                           | HTTP POST (HMAC-SHA256 Signature Header)\n                           v\n        [ASP.NET CORE WEBHOOK ENDPOINT (/api/webhooks/kontent)]\n                           |\n            1. Xác thực chữ ký bí mật X-KC-Signature\n            2. Trích xuất danh sách Codename bị đổi: [\"ai_revolution\"]\n            3. Gọi IDeliveryCacheManager.InvalidateDependencyAsync(\"ai_revolution\")\n                           |\n                           v\n           [IN-MEMORY / REDIS CACHE BỊ XÓA TỨC THÌ!]\n                           |\n                           v\n        [LƯỢT TRUY CẬP TIẾP THEO SẼ KÉO NGAY BÀI VIẾT MỚI TỪ CDN]",
+              "calloutType": "warning",
+              "calloutTitle": "Security: Verify Webhook Signature",
+              "calloutTitleVi": "Bắt Buộc Xác Thực Chữ Ký Webhook",
+              "calloutText": "Never process a webhook without verifying the `X-KC-Signature` HTTP header. An attacker could flood your webhook endpoint with forged requests, causing cache stampedes and server denial of service.",
+              "calloutTextVi": "Tuyệt đối không xử lý webhook nếu không kiểm tra header `X-KC-Signature`. Kẻ tấn công có thể giả mạo request gửi dồn dập vào endpoint của bạn để liên tục ép server xóa cache và gây nghẽn hệ thống (Cache Stampede)."
+            },
+            {
+              "heading": "3. Writing a Production Webhook Controller with Signature Verification",
+              "headingVi": "3. Xây Dựng Webhook Controller Chuẩn Doanh Nghiệp Với HMAC-SHA256",
+              "paragraphs": [
+                "Dưới đây là mã nguồn chuẩn mẫu cho Controller xử lý Webhook trong ASP.NET Core:",
+                "- Xác thực chữ ký số bằng thuật toán HMAC-SHA256 dựa trên Webhook Secret Key được cấp bởi Kontent.ai.",
+                "- Sử dụng `IDeliveryCacheManager` đi kèm package `Kontent.Ai.Delivery.Caching` để xóa cache thông minh theo các tag phụ thuộc (Dependency Keys) mà không làm ảnh hưởng đến các bài viết khác."
+              ],
+              "paragraphsVi": [
+                "Dưới đây là mã nguồn chuẩn mẫu cho Controller xử lý Webhook trong ASP.NET Core:",
+                "- Xác thực chữ ký số bằng thuật toán HMAC-SHA256 dựa trên Webhook Secret Key được cấp bởi Kontent.ai.",
+                "- Sử dụng `IDeliveryCacheManager` đi kèm package `Kontent.Ai.Delivery.Caching` để xóa cache thông minh theo các tag phụ thuộc (Dependency Keys) mà không làm ảnh hưởng đến các bài viết khác."
+              ],
+              "codeTitle": "KontentWebhookController.cs Implementation",
+              "codeLanguage": "csharp",
+              "codeContent": "using System.Security.Cryptography;\nusing System.Text;\nusing Microsoft.AspNetCore.Mvc;\nusing Kontent.Ai.Delivery.Caching;\n\n[ApiController]\n[Route(\"api/webhooks/kontent\")]\npublic class KontentWebhookController : ControllerBase\n{\n    private readonly IDeliveryCacheManager _cacheManager;\n    private readonly string _webhookSecret;\n\n    public KontentWebhookController(IDeliveryCacheManager cacheManager, IConfiguration config)\n    {\n        _cacheManager = cacheManager;\n        _webhookSecret = config[\"KontentWebhookSecret\"] ?? \"\";\n    }\n\n    [HttpPost]\n    public async Task<IActionResult> HandleWebhook()\n    {\n        // 1. Đọc toàn bộ nội dung body request\n        using var reader = new StreamReader(Request.Body);\n        var body = await reader.ReadToEndAsync();\n\n        // 2. Lấy chữ ký từ header X-KC-Signature\n        if (!Request.Headers.TryGetValue(\"X-KC-Signature\", out var signatureHeader))\n        {\n            return Unauthorized(\"Thiếu chữ ký Webhook!\");\n        }\n\n        // 3. Kiểm tra tính hợp lệ bằng HMAC-SHA256\n        if (!IsValidSignature(body, _webhookSecret, signatureHeader))\n        {\n            return Unauthorized(\"Chữ ký không hợp lệ!\");\n        }\n\n        // 4. Phân tích nội dung JSON và xóa cache các item thay đổi\n        // Xóa thông minh: Invalidate chính xác codename thay đổi\n        await _cacheManager.InvalidateDependenciesAsync(new[] { \"article\", \"author\" });\n\n        return Ok(new { message = \"Xóa cache thành công!\" });\n    }\n\n    private static bool IsValidSignature(string payload, string secret, string expectedSignature)\n    {\n        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));\n        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));\n        var calculated = Convert.ToBase64String(hash);\n        return string.Equals(calculated, expectedSignature, StringComparison.Ordinal);\n    }\n}",
+              "calloutType": "tip",
+              "calloutTitle": "Next Lesson Preview: AI Revolution",
+              "calloutTitleVi": "Bài Tiếp Theo: Cuộc Cách Mạng Tích Hợp AI",
+              "calloutText": "In Bài 4, we explore the most exciting frontier of Kontent.ai: How to use the official Model Context Protocol (MCP) server to turn AI agents (Claude, Cursor, Antigravity) into autonomous content authors and CMS operators.",
+              "calloutTextVi": "Ở Bài 4 tiếp theo, chúng ta sẽ bước vào đỉnh cao hiện đại nhất của Kontent.ai: Cách sử dụng giao thức Model Context Protocol (MCP) để biến AI Agent (Claude, Cursor, Antigravity) thành biên tập viên và quản trị viên CMS tự động hoàn toàn."
+            }
+          ]
+        },
+        {
+          "id": "kontent-ai-art-4-mcp-model-context-protocol-ai-integration",
+          "seriesId": "kontent-ai-masterclass-series",
+          "lessonNumber": "Bài 4",
+          "level": "Production",
+          "levelVi": "Thực chiến",
+          "levelOrder": 4,
+          "title": "Kontent.ai with Model Context Protocol (MCP): Autonomous AI Content Workflows",
+          "titleVi": "Làm Chủ Kontent.ai MCP (Model Context Protocol): Tự Động Hóa Quản Trị & Biên Tập CMS Bằng AI Agent",
+          "readingTime": "20 phút đọc",
+          "publishedDate": "08/11/2026",
+          "summary": "Transforming Kontent.ai into an AI-powered headless powerhouse with the Model Context Protocol (MCP). How Kontent.ai's official MCP server bridges Claude, Cursor, and custom AI agents with CMS operations. Comprehensive breakdown of MCP tools (content types, variants, taxonomy, workflows, assets) and real-world hands-on scenarios: Prompt-driven multilingual content creation, AI taxonomy tagging, and automated editorial publishing.",
+          "summaryVi": "Biến Kontent.ai thành trung tâm sáng tạo nội dung tự động bằng giao thức Model Context Protocol (MCP). Giải mã cách MCP Server của Kontent.ai kết nối các AI Agent (Claude, Cursor, Antigravity) trực tiếp vào CMS. Phân tích chi tiết toàn bộ kho công cụ MCP Tools (quản lý Content Types, Language Variants, Taxonomy, Spaces, Workflows) và kịch bản thực chiến: Tạo bài viết đa ngôn ngữ, tự động gắn thẻ taxonomy và đẩy bài xuất bản hoàn toàn bằng ngôn ngữ tự nhiên.",
+          "tags": [
+            "MCP",
+            "Model Context Protocol",
+            "AI Agent",
+            "Kontent.ai",
+            "LLM Automation",
+            "Production"
+          ],
+          "sections": [
+            {
+              "heading": "1. What is the Kontent.ai MCP Server and Why Does It Change Everything?",
+              "headingVi": "1. Kontent.ai MCP Server Là Gì Và Tại Sao Đây Là Bước Ngoặt Của Ngành CMS?",
+              "paragraphs": [
+                "Trước đây, để tích hợp AI vào quy trình sáng tạo nội dung của doanh nghiệp, các nhóm phát triển phải tự viết các tiện ích plugin rườm rà (Custom Elements) hoặc viết script gọi OpenAI API riêng biệt rồi đẩy ngược vào CMS bằng Management SDK.",
+                "Cuối năm 2024, Anthropic công bố **Model Context Protocol (MCP)** — giao thức mở tiêu chuẩn hóa cách các mô hình AI kết nối với các hệ thống dữ liệu và công cụ bên ngoài.",
+                "**Kontent.ai là một trong những Enterprise Headless CMS tiên phong thế giới ra mắt Kontent.ai MCP Server chính thức!**",
+                "Bản chất của Kontent.ai MCP Server:",
+                "- Nó đóng vai trò là một cầu nối tiêu chuẩn hóa giữa các AI Host (Claude Desktop, Cursor IDE, Antigravity Agent, Cline) với Management API của Kontent.ai.",
+                "- Thay vì lập trình viên phải viết code CRUD từng endpoint, AI Model giờ đây có thể 'nhìn thấy' cấu trúc schema của CMS, hiểu được các trường dữ liệu, tự động truy vấn bài viết cũ, và tự động gọi các Tools chuẩn để tạo hoặc cập nhật nội dung.",
+                "- Người quản lý chỉ cần ra lệnh bằng ngôn ngữ tự nhiên: *'Hãy lấy bài viết giới thiệu sản phẩm X, dịch sang tiếng Nhật với văn phong trang trọng, gắn tag #Enterprise, và chuyển trạng thái sang Ready for Review'* — AI Agent sẽ tự động thực thi tuần tự từng thao tác trên Kontent.ai CMS!"
+              ],
+              "paragraphsVi": [
+                "Trước đây, để tích hợp AI vào quy trình sáng tạo nội dung của doanh nghiệp, các nhóm phát triển phải tự viết các tiện ích plugin rườm rà (Custom Elements) hoặc viết script gọi OpenAI API riêng biệt rồi đẩy ngược vào CMS bằng Management SDK.",
+                "Cuối năm 2024, Anthropic công bố **Model Context Protocol (MCP)** — giao thức mở tiêu chuẩn hóa cách các mô hình AI kết nối với các hệ thống dữ liệu và công cụ bên ngoài.",
+                "**Kontent.ai là một trong những Enterprise Headless CMS tiên phong thế giới ra mắt Kontent.ai MCP Server chính thức!**",
+                "Bản chất của Kontent.ai MCP Server:",
+                "- Nó đóng vai trò là một cầu nối tiêu chuẩn hóa giữa các AI Host (Claude Desktop, Cursor IDE, Antigravity Agent, Cline) với Management API của Kontent.ai.",
+                "- Thay vì lập trình viên phải viết code CRUD từng endpoint, AI Model giờ đây có thể 'nhìn thấy' cấu trúc schema của CMS, hiểu được các trường dữ liệu, tự động truy vấn bài viết cũ, và tự động gọi các Tools chuẩn để tạo hoặc cập nhật nội dung.",
+                "- Người quản lý chỉ cần ra lệnh bằng ngôn ngữ tự nhiên: *'Hãy lấy bài viết giới thiệu sản phẩm X, dịch sang tiếng Nhật với văn phong trang trọng, gắn tag #Enterprise, và chuyển trạng thái sang Ready for Review'* — AI Agent sẽ tự động thực thi tuần tự từng thao tác trên Kontent.ai CMS!"
+              ],
+              "codeTitle": "AI Agent Interaction Architecture via Kontent.ai MCP",
+              "codeLanguage": "text",
+              "codeContent": "[USER PROMPT]\n\"Hãy tạo 1 bài blog về .NET 10 trên Kontent.ai, gắn tag #dotnet và đưa vào Review workflow\"\n       |\n       v\n[AI AGENT (Claude 3.7 / Cursor / Antigravity Agent)]\n       |\n       |  (Giao thức Model Context Protocol - JSON-RPC)\n       v\n[KONTENT.AI MCP SERVER]\n       |-- Tool: list-content-types       -> Khám phá xem có type nào tên là 'article'\n       |-- Tool: get-taxonomy-group       -> Lấy danh sách tag ID của '#dotnet'\n       |-- Tool: create-content-item      -> Khởi tạo Item tên \"Kỷ Nguyên .NET 10\"\n       |-- Tool: patch-content-item-variant -> Điền nội dung Markdown & gắn tag\n       |-- Tool: change-content-item-variant-workflow-step -> Chuyển sang \"In Review\"\n       |\n       v\n[KONTENT.AI CLOUD ENVIRONMENT] -> Nội dung đã sẵn sàng trong CMS mà không cần gõ 1 dòng code!",
+              "calloutType": "info",
+              "calloutTitle": "Info: Native Integration",
+              "calloutTitleVi": "Thông Tin: Tích Hợp Sẵn Trong Hệ Thống",
+              "calloutText": "Notice that our very own development workspace includes the Kontent.ai MCP server natively loaded with dozens of tools, empowering AI assistants to inspect, modify, and publish content seamlessly.",
+              "calloutTextVi": "Ngay trong môi trường trợ lý phát triển Antigravity hiện tại, MCP Server của Kontent.ai đã được tích hợp sẵn với đầy đủ các công cụ quản trị giúp bạn thao tác với CMS chỉ bằng lời nói."
+            },
+            {
+              "heading": "2. Setting Up the Kontent.ai MCP Server in Cursor, Claude & Custom Agents",
+              "headingVi": "2. Cài Đặt & Cấu Hình Kontent.ai MCP Server Trong Cursor, Claude & AI Agents",
+              "paragraphs": [
+                "Để kết nối AI Host với Kontent.ai qua MCP, bạn chỉ cần chuẩn bị 2 thông tin từ Kontent.ai Project Settings:",
+                "1. `KONTENT_AI_ENVIRONMENT_ID`: ID định danh của môi trường CMS.",
+                "2. `KONTENT_AI_MANAGEMENT_API_KEY`: Khóa bí mật Management API (yêu cầu quyền quản trị để thao tác với content items).",
+                "Cấu hình trong file `claude_desktop_config.json` hoặc cấu hình MCP của Cursor/Antigravity vô cùng đơn giản với gói npx chính thức:"
+              ],
+              "paragraphsVi": [
+                "Để kết nối AI Host với Kontent.ai qua MCP, bạn chỉ cần chuẩn bị 2 thông tin từ Kontent.ai Project Settings:",
+                "1. `KONTENT_AI_ENVIRONMENT_ID`: ID định danh của môi trường CMS.",
+                "2. `KONTENT_AI_MANAGEMENT_API_KEY`: Khóa bí mật Management API (yêu cầu quyền quản trị để thao tác với content items).",
+                "Cấu hình trong file `claude_desktop_config.json` hoặc cấu hình MCP của Cursor/Antigravity vô cùng đơn giản với gói npx chính thức:"
+              ],
+              "codeTitle": "MCP Server Configuration (claude_desktop_config.json / mcp_config.json)",
+              "codeLanguage": "json",
+              "codeContent": "{\n  \"mcpServers\": {\n    \"kontent-ai\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@kontent-ai/mcp-server\"],\n      \"env\": {\n        \"KONTENT_AI_ENVIRONMENT_ID\": \"975bf280-72e4-0186-bb94-2feb9480bc32\",\n        \"KONTENT_AI_MANAGEMENT_API_KEY\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n      }\n    }\n  }\n}",
+              "calloutType": "tip",
+              "calloutTitle": "Tip: Zero Deployment Maintenance",
+              "calloutTitleVi": "Mẹo: Chạy Trực Tiếp Qua NPX Không Cần Cài Đặt Phức Tạp",
+              "calloutText": "Using `npx -y @kontent-ai/mcp-server` guarantees your AI environment always runs the latest official version with updated tool schemas and security patches.",
+              "calloutTextVi": "Sử dụng `npx -y @kontent-ai/mcp-server` đảm bảo môi trường AI của bạn luôn tự động nạp phiên bản mới nhất từ Kontent.ai với đầy đủ các tool mới nhất mà không phải bảo trì thủ công."
+            },
+            {
+              "heading": "3. Deep Dive into Kontent.ai MCP Tools: From Schema Discovery to Automated Publishing",
+              "headingVi": "3. Khám Phá Kho Công Cụ MCP Tools: Từ Khám Phá Schema Đến Tự Động Xuất Bản",
+              "paragraphs": [
+                "Khi MCP Server được kích hoạt, LLM sẽ nhận được một danh mục các công cụ (Function Schemas) có thể gọi được:",
+                "1. **Nhóm Khám Phá Schema (Discovery Tools):**",
+                "- `list-content-types`: Liệt kê tất cả các kiểu nội dung đang có trong project.",
+                "- `get-content-type`: Trả về chi tiết các Elements (Text, RichText, Number, Date, Assets, Taxonomy). Nhờ đó AI biết chính xác trường nào bắt buộc, trường nào cho phép nhập gì.",
+                "- `list-taxonomy-groups`: Đọc toàn bộ danh mục cây taxonomy (chủ đề, địa lý, cấp bậc) để AI tự động phân loại bài viết.",
+                "2. **Nhóm Thao Tác Nội Dung (Content Operations Tools):**",
+                "- `create-content-item`: Tạo mới một vỏ item với tên và content type tương ứng.",
+                "- `get-content-item-variant`: Đọc nội dung hiện tại của một bài viết theo mã ngôn ngữ cụ thể.",
+                "- `patch-content-item-variant`: Cập nhật nội dung cho các elements theo định dạng JSON Patch chuẩn RFC 6902 (thêm, thay thế giá trị).",
+                "3. **Nhóm Điều Phối Quy Trình (Workflow & Publishing Tools):**",
+                "- `list-workflows`: Kiểm tra các bước kiểm duyệt (Draft → Review → Ready to Publish → Published).",
+                "- `change-content-item-variant-workflow-step`: Di chuyển bài viết sang bước quy trình mới.",
+                "- `publish-content-item-variant`: Đẩy bài viết trực tiếp lên CDN toàn cầu!"
+              ],
+              "paragraphsVi": [
+                "Khi MCP Server được kích hoạt, LLM sẽ nhận được một danh mục các công cụ (Function Schemas) có thể gọi được:",
+                "1. **Nhóm Khám Phá Schema (Discovery Tools):**",
+                "- `list-content-types`: Liệt kê tất cả các kiểu nội dung đang có trong project.",
+                "- `get-content-type`: Trả về chi tiết các Elements (Text, RichText, Number, Date, Assets, Taxonomy). Nhờ đó AI biết chính xác trường nào bắt buộc, trường nào cho phép nhập gì.",
+                "- `list-taxonomy-groups`: Đọc toàn bộ danh mục cây taxonomy (chủ đề, địa lý, cấp bậc) để AI tự động phân loại bài viết.",
+                "2. **Nhóm Thao Tác Nội Dung (Content Operations Tools):**",
+                "- `create-content-item`: Tạo mới một vỏ item với tên và content type tương ứng.",
+                "- `get-content-item-variant`: Đọc nội dung hiện tại của một bài viết theo mã ngôn ngữ cụ thể.",
+                "- `patch-content-item-variant`: Cập nhật nội dung cho các elements theo định dạng JSON Patch chuẩn RFC 6902 (thêm, thay thế giá trị).",
+                "3. **Nhóm Điều Phối Quy Trình (Workflow & Publishing Tools):**",
+                "- `list-workflows`: Kiểm tra các bước kiểm duyệt (Draft → Review → Ready to Publish → Published).",
+                "- `change-content-item-variant-workflow-step`: Di chuyển bài viết sang bước quy trình mới.",
+                "- `publish-content-item-variant`: Đẩy bài viết trực tiếp lên CDN toàn cầu!"
+              ],
+              "codeTitle": "Under the Hood: How AI Calls patch-content-item-variant",
+              "codeLanguage": "json",
+              "codeContent": "// Bản tin JSON-RPC mà AI Agent gửi qua MCP Server để cập nhật bài viết:\n{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"call_tool\",\n  \"params\": {\n    \"name\": \"patch-content-item-variant\",\n    \"arguments\": {\n      \"item_identifier\": { \"codename\": \"ai_agents_enterprise\" },\n      \"language_identifier\": { \"codename\": \"vi-VN\" },\n      \"operations\": [\n        {\n          \"op\": \"replace\",\n          \"element\": { \"codename\": \"title\" },\n          \"value\": \"Kỷ Nguyên Multi-Agent Trong Doanh Nghiệp\"\n        },\n        {\n          \"op\": \"replace\",\n          \"element\": { \"codename\": \"summary\" },\n          \"value\": \"Tóm tắt chuyên sâu về kiến trúc Agentic AI và ứng dụng trên Kontent.ai.\"\n        },\n        {\n          \"op\": \"replace\",\n          \"element\": { \"codename\": \"tags\" },\n          \"value\": [{ \"codename\": \"artificial_intelligence\" }]\n        }\n      ]\n    }\n  }\n}",
+              "calloutType": "tip",
+              "calloutTitle": "Real-World Workflow: The Autonomous Localization Pipeline",
+              "calloutTitleVi": "Quy Trình Thực Tế: Bản Dịch Đa Ngôn Ngữ Tự Động Hóa 100%",
+              "calloutText": "Imagine a marketing team writing an article in English. A triggered webhook or prompt informs the AI agent. The agent fetches the English variant, translates it into Vietnamese, Japanese, and German while respecting cultural nuances, creates language variants via MCP, and sets them to 'Ready for Human Review'. Weeks of translation work reduced to 60 seconds!",
+              "calloutTextVi": "Hãy tưởng tượng đội ngũ marketing vừa viết xong bài viết tiếng Anh. AI Agent tự động kéo bản gốc, dịch sang tiếng Việt, tiếng Nhật và tiếng Đức với văn phong chuẩn mực từng quốc gia, tự động tạo các Language Variants tương ứng trên Kontent.ai và đưa vào danh sách chờ duyệt. Khối lượng công việc mất nhiều tuần dịch thuật được rút ngắn xuống còn 60 giây!"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "k8s-series",
+      "category": "devops",
+      "title": "Kubernetes (K8s) Production Hands-On",
+      "titleVi": "Chuyên Đề Kubernetes: Điều Phối Container Cụm Thực Chiến",
+      "icon": "bi-boxes",
+      "color": "#326ce5",
+      "badge": "6 Bài Viết",
+      "description": "Lộ trình học K8s từ bản chất kiến trúc Control Plane, Pods, ReplicaSet đến Ingress, Rolling Update và xử lý sự cố OOMKilled trên Production.",
+      "descriptionVi": "Lộ trình học K8s từ bản chất kiến trúc Control Plane, Pods, ReplicaSet đến Ingress, Rolling Update và xử lý sự cố OOMKilled trên Production.",
+      "articles": [
+        {
+          "id": "k8s-bai-1-kien-truc",
+          "seriesId": "k8s-series",
+          "lessonNumber": "Bài 1",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 1,
+          "title": "Giải phẫu kiến trúc K8s: Control Plane, Worker Node & Vòng đời của Pod",
+          "titleVi": "Giải phẫu kiến trúc K8s: Control Plane, Worker Node & Vòng đời của Pod",
+          "readingTime": "14 phút đọc",
+          "publishedDate": "11/10/2026",
+          "summary": "Hiểu tường tận kiến trúc Kubernetes: Control Plane (API Server, etcd, Scheduler, Controller Manager), Worker Node (Kubelet, Kube-proxy, CRI) và chu trình sống một Pod từ lúc Submit YAML đến khi Running.",
+          "summaryVi": "Hiểu tường tận kiến trúc Kubernetes: Control Plane (API Server, etcd, Scheduler, Controller Manager), Worker Node (Kubelet, Kube-proxy, CRI) và chu trình sống một Pod từ lúc Submit YAML đến khi Running.",
+          "tags": [
+            "kubernetes",
+            "k8s",
+            "architecture",
+            "control-plane",
+            "devops"
+          ],
+          "sections": [
+            {
+              "heading": "1. Bộ Não Của Cụm: Các Thành Phần Trong Control Plane (Master Node)",
+              "headingVi": "1. Bộ Não Của Cụm: Các Thành Phần Trong Control Plane (Master Node)",
+              "paragraphs": [
+                "Kubernetes (K8s) hoạt động theo mô hình Master-Worker phân tán. **Control Plane** đóng vai trò là cơ quan đầu não ra quyết định và duy trì trạng thái mong muốn (Desired State) của toàn bộ hệ thống:",
+                "- **kube-apiserver**: Cổng giao tiếp duy nhất (REST API Gateway) của toàn cụm. Mọi lệnh `kubectl`, worker node và controller khác đều chỉ được phép nói chuyện qua API Server.",
+                "- **etcd**: Cơ sở dữ liệu phân tán Key-Value (dựa trên thuật toán đồng thuận Raft) lưu trữ toàn bộ trạng thái sống còn của cụm K8s. Đây là 'Single Source of Truth' cần được backup nghiêm ngặt.",
+                "- **kube-scheduler**: Bộ lập lịch thông minh theo dõi các Pod mới tạo chưa được gán node và chọn ra Worker Node tối ưu nhất (dựa trên tài nguyên CPU/RAM trống, Node Affinity, Taints & Tolerations).",
+                "- **kube-controller-manager**: Chạy các vòng lặp điều khiển liên tục (Reconciliation Loops) để so sánh trạng thái thực tế với trạng thái khai báo trong YAML, tự động bù đắp node hoặc pod khi có sự cố."
+              ],
+              "paragraphsVi": [
+                "Kubernetes (K8s) hoạt động theo mô hình Master-Worker phân tán. **Control Plane** đóng vai trò là cơ quan đầu não ra quyết định và duy trì trạng thái mong muốn (Desired State) của toàn bộ hệ thống:",
+                "- **kube-apiserver**: Cổng giao tiếp duy nhất (REST API Gateway) của toàn cụm. Mọi lệnh `kubectl`, worker node và controller khác đều chỉ được phép nói chuyện qua API Server.",
+                "- **etcd**: Cơ sở dữ liệu phân tán Key-Value (dựa trên thuật toán đồng thuận Raft) lưu trữ toàn bộ trạng thái sống còn của cụm K8s. Đây là 'Single Source of Truth' cần được backup nghiêm ngặt.",
+                "- **kube-scheduler**: Bộ lập lịch thông minh theo dõi các Pod mới tạo chưa được gán node và chọn ra Worker Node tối ưu nhất (dựa trên tài nguyên CPU/RAM trống, Node Affinity, Taints & Tolerations).",
+                "- **kube-controller-manager**: Chạy các vòng lặp điều khiển liên tục (Reconciliation Loops) để so sánh trạng thái thực tế với trạng thái khai báo trong YAML, tự động bù đắp node hoặc pod khi có sự cố."
+              ],
+              "codeTitle": "Sơ đồ luồng tương tác các thành phần K8s",
+              "codeLanguage": "text",
+              "codeContent": "                 ┌────────────────────────────────────────────────────────┐\n                 │                    CONTROL PLANE                       │\n                 │                                                        │\n[kubectl CLI] ──►│  kube-apiserver ◄──► etcd (Distributed State Store)    │\n                 │        │                                               │\n                 │        ├────────► kube-scheduler (Chọn Node tối ưu)    │\n                 │        └────────► kube-controller-manager (Bù đắp Pod) │\n                 └────────┬───────────────────────────────────────────────┘\n                          │ (gRPC / HTTPS)\n        ┌─────────────────┴─────────────────┐\n        ▼                                   ▼\n┌────────────────────────┐         ┌────────────────────────┐\n│     WORKER NODE 1      │         │     WORKER NODE 2      │\n│ ┌────────────────────┐ │         │ ┌────────────────────┐ │\n│ │ Kubelet (Agent)    │ │         │ │ Kubelet (Agent)    │ │\n│ └────────────────────┘ │         │ └────────────────────┘ │\n│ ┌────────────────────┐ │         │ ┌────────────────────┐ │\n│ │ Kube-proxy (iptable│ │         │ │ Kube-proxy (iptable│ │\n│ └────────────────────┘ │         │ └────────────────────┘ │\n│ ┌────────────────────┐ │         │ ┌────────────────────┐ │\n│ │ Container Runtime  │ │         │ │ Container Runtime  │ │\n│ │ (containerd/CRI-O) │ │         │ │ (containerd/CRI-O) │ │\n│ └────────────────────┘ │         │ └────────────────────┘ │\n│   [Pod A]   [Pod B]    │         │   [Pod C]   [Pod D]    │\n└────────────────────────┘         └────────────────────────┘",
+              "calloutType": "info",
+              "calloutTitle": "Đặc điểm của etcd",
+              "calloutTitleVi": "Đặc điểm của etcd",
+              "calloutText": "Nếu Control Plane bị mất dữ liệu etcd mà không có bản backup định kỳ, toàn bộ cụm Kubernetes sẽ bị tê liệt và không thể khôi phục được cấu hình của các ứng dụng đang chạy.",
+              "calloutTextVi": "Nếu Control Plane bị mất dữ liệu etcd mà không có bản backup định kỳ, toàn bộ cụm Kubernetes sẽ bị tê liệt và không thể khôi phục được cấu hình của các ứng dụng đang chạy."
+            },
+            {
+              "heading": "2. Worker Node và Hành Trình Vòng Đời Của Một Pod",
+              "headingVi": "2. Worker Node và Hành Trình Vòng Đời Của Một Pod",
+              "paragraphs": [
+                "Trên mỗi máy **Worker Node**, có 3 tiến trình chủ chốt:",
+                "- **Kubelet**: Agent cài trực tiếp trên OS máy chủ, chịu trách nhiệm nhận chỉ thị từ API Server và yêu cầu Container Runtime tạo, giám sát sức khỏe hoặc hủy container.",
+                "- **Kube-proxy**: Quản lý các luật định tuyến mạng (thông qua `iptables` hoặc `IPVS`) trên Node để các Pod có thể liên lạc với nhau và ra ngoài internet.",
+                "- **Container Runtime (CRI)**: Động cơ chạy container thực tế (tiêu chuẩn hiện nay là `containerd` hoặc `CRI-O`, Docker Engine truyền thống đã bị K8s khai tử từ phiên bản 1.24).",
+                "Khi một Pod được tạo qua lệnh `kubectl apply`, nó sẽ tuần tự trải qua các trạng thái: `Pending` -> `ContainerCreating` -> `Running` -> `Completed` (hoặc `Failed`)."
+              ],
+              "paragraphsVi": [
+                "Trên mỗi máy **Worker Node**, có 3 tiến trình chủ chốt:",
+                "- **Kubelet**: Agent cài trực tiếp trên OS máy chủ, chịu trách nhiệm nhận chỉ thị từ API Server và yêu cầu Container Runtime tạo, giám sát sức khỏe hoặc hủy container.",
+                "- **Kube-proxy**: Quản lý các luật định tuyến mạng (thông qua `iptables` hoặc `IPVS`) trên Node để các Pod có thể liên lạc với nhau và ra ngoài internet.",
+                "- **Container Runtime (CRI)**: Động cơ chạy container thực tế (tiêu chuẩn hiện nay là `containerd` hoặc `CRI-O`, Docker Engine truyền thống đã bị K8s khai tử từ phiên bản 1.24).",
+                "Khi một Pod được tạo qua lệnh `kubectl apply`, nó sẽ tuần tự trải qua các trạng thái: `Pending` -> `ContainerCreating` -> `Running` -> `Completed` (hoặc `Failed`)."
+              ],
+              "codeTitle": "Các lệnh kiểm tra thành phần và node",
+              "codeLanguage": "bash",
+              "codeContent": "# Xem danh sách các Node trong cụm kèm vai trò và phiên bản Kubelet\nkubectl get nodes -o wide\n\n# Xem sức khỏe các Pod hệ thống trong Control Plane\nkubectl get pods -n kube-system\n\n# Mô tả chi tiết tiến trình vòng đời và sự kiện (Events) của 1 Pod cụ thể\nkubectl describe pod my-app-7b9d6c8f4-xyz",
+              "calloutType": "tip",
+              "calloutTitle": "Đọc phần Events khi debug Pod",
+              "calloutTitleVi": "Đọc phần Events khi debug Pod",
+              "calloutText": "90% nguyên nhân Pod bị kẹt ở `Pending` hoặc `ContainerCreating` (như thiếu CPU/RAM, sai Secret, hoặc ImagePullBackOff) đều hiển thị rõ ràng tại mục **Events** ở cuối cùng của lệnh `kubectl describe pod`.",
+              "calloutTextVi": "90% nguyên nhân Pod bị kẹt ở `Pending` hoặc `ContainerCreating` (như thiếu CPU/RAM, sai Secret, hoặc ImagePullBackOff) đều hiển thị rõ ràng tại mục **Events** ở cuối cùng của lệnh `kubectl describe pod`."
+            }
+          ],
+          "content": ""
+        },
+        {
+          "id": "k8s-bai-2-deployments",
+          "seriesId": "k8s-series",
+          "lessonNumber": "Bài 2",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 2,
+          "title": "Tạo Deployment đầu tiên & Quản lý Scale số lượng Pods",
+          "titleVi": "Tạo Deployment đầu tiên & Quản lý Scale số lượng Pods",
+          "readingTime": "12 phút đọc",
+          "publishedDate": "11/10/2026",
+          "summary": "Hướng dẫn viết manifest Deployment YAML chuẩn production, quản lý ReplicaSet, scale ngang số lượng pod tức thời bằng lệnh CLI hoặc cấu hình tự động co giãn Horizontal Pod Autoscaler (HPA).",
+          "summaryVi": "Hướng dẫn viết manifest Deployment YAML chuẩn production, quản lý ReplicaSet, scale ngang số lượng pod tức thời bằng lệnh CLI hoặc cấu hình tự động co giãn Horizontal Pod Autoscaler (HPA).",
+          "tags": [
+            "kubernetes",
+            "deployment",
+            "replicaset",
+            "autoscaling",
+            "hpa"
+          ],
+          "sections": [
+            {
+              "heading": "1. Tại Sao Không Nên Chạy Pod Đơn Lẻ Mà Cần Dùng Deployment?",
+              "headingVi": "1. Tại Sao Không Nên Chạy Pod Đơn Lẻ Mà Cần Dùng Deployment?",
+              "paragraphs": [
+                "Trong Kubernetes, Pod là đơn vị tính toán nhỏ nhất có thể phân phối. Tuy nhiên, nếu bạn tạo một Pod độc lập (`kind: Pod`), khi Worker Node chứa Pod đó bị sập phần cứng, Pod sẽ chết vĩnh viễn và không bao giờ tự hồi sinh.",
+                "**Deployment** là đối tượng quản lý cấp cao kiểm soát **ReplicaSet**. Deployment đảm bảo số lượng bản sao mong muốn (`replicas: 3`) luôn luôn hoạt động. Nếu một Node gặp sự cố, Deployment Controller sẽ ngay lập tức phát hiện và tự động tạo Pod mới bù lại trên một Node còn khỏe mạnh khác (Self-Healing)."
+              ],
+              "paragraphsVi": [
+                "Trong Kubernetes, Pod là đơn vị tính toán nhỏ nhất có thể phân phối. Tuy nhiên, nếu bạn tạo một Pod độc lập (`kind: Pod`), khi Worker Node chứa Pod đó bị sập phần cứng, Pod sẽ chết vĩnh viễn và không bao giờ tự hồi sinh.",
+                "**Deployment** là đối tượng quản lý cấp cao kiểm soát **ReplicaSet**. Deployment đảm bảo số lượng bản sao mong muốn (`replicas: 3`) luôn luôn hoạt động. Nếu một Node gặp sự cố, Deployment Controller sẽ ngay lập tức phát hiện và tự động tạo Pod mới bù lại trên một Node còn khỏe mạnh khác (Self-Healing)."
+              ],
+              "codeTitle": "Manifest deployment.yaml chuẩn với Resource Requests & Limits",
+              "codeLanguage": "yaml",
+              "codeContent": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: order-service-deployment\n  labels:\n    app: order-service\n    tier: backend\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: order-service\n  template:\n    metadata:\n      labels:\n        app: order-service\n    spec:\n      containers:\n      - name: order-api\n        image: mycompany/order-api:1.4.2\n        ports:\n        - containerPort: 8080\n        resources:\n          requests:\n            memory: \"128Mi\"\n            cpu: \"100m\"      # 100 millicores = 0.1 CPU core\n          limits:\n            memory: \"512Mi\"\n            cpu: \"500m\"      # Tối đa 0.5 CPU core",
+              "calloutType": "warning",
+              "calloutTitle": "Bắt buộc khai báo resources",
+              "calloutTitleVi": "Bắt buộc khai báo resources",
+              "calloutText": "Nếu không khai báo `requests` và `limits`, K8s Scheduler sẽ không biết pod cần bao nhiêu tài nguyên và có thể nhồi nhét quá nhiều Pod vào một Node, dẫn đến cạn kiệt RAM và kích hoạt OOMKilled hàng loạt.",
+              "calloutTextVi": "Nếu không khai báo `requests` và `limits`, K8s Scheduler sẽ không biết pod cần bao nhiêu tài nguyên và có thể nhồi nhét quá nhiều Pod vào một Node, dẫn đến cạn kiệt RAM và kích hoạt OOMKilled hàng loạt."
+            },
+            {
+              "heading": "2. Thao Tác Scale Ngang Manual & Auto-scaling với HPA",
+              "headingVi": "2. Thao Tác Scale Ngang Manual & Auto-scaling với HPA",
+              "paragraphs": [
+                "Khi có chiến dịch khuyến mãi hoặc lưu lượng tăng đột biến, bạn có thể tăng nhanh số lượng Pod từ 3 lên 10 bản sao chỉ bằng một câu lệnh `kubectl scale`.",
+                "Trong môi trường Production thực tế, hệ thống nên tự động co giãn bằng **Horizontal Pod Autoscaler (HPA)** dựa trên ngưỡng tải CPU hoặc lượng truy vấn HTTP thực tế."
+              ],
+              "paragraphsVi": [
+                "Khi có chiến dịch khuyến mãi hoặc lưu lượng tăng đột biến, bạn có thể tăng nhanh số lượng Pod từ 3 lên 10 bản sao chỉ bằng một câu lệnh `kubectl scale`.",
+                "Trong môi trường Production thực tế, hệ thống nên tự động co giãn bằng **Horizontal Pod Autoscaler (HPA)** dựa trên ngưỡng tải CPU hoặc lượng truy vấn HTTP thực tế."
+              ],
+              "codeTitle": "Lệnh scale thủ công và cấu hình HPA tự động",
+              "codeLanguage": "bash",
+              "codeContent": "# 1. Scale thủ công ngay lập tức lên 6 Pod\nkubectl scale deployment order-service-deployment --replicas=6\n\n# 2. Tạo chính sách HPA: tự động co giãn từ 3 đến 15 Pod khi CPU trung bình vượt 70%\nkubectl autoscale deployment order-service-deployment --min=3 --max=15 --cpu-percent=70\n\n# 3. Xem trạng thái HPA hiện tại\nkubectl get hpa order-service-deployment",
+              "calloutType": "tip",
+              "calloutTitle": "Yêu cầu Metrics Server",
+              "calloutTitleVi": "Yêu cầu Metrics Server",
+              "calloutText": "Để lệnh `kubectl top nodes` hoặc HPA hoạt động được, cụm Kubernetes của bạn bắt buộc phải được cài đặt thành phần `metrics-server` để thu thập chỉ số CPU/Memory từ cgroups của Kubelet.",
+              "calloutTextVi": "Để lệnh `kubectl top nodes` hoặc HPA hoạt động được, cụm Kubernetes của bạn bắt buộc phải được cài đặt thành phần `metrics-server` để thu thập chỉ số CPU/Memory từ cgroups của Kubelet."
+            }
+          ],
+          "content": ""
+        },
+        {
+          "id": "k8s-bai-3-networking",
+          "seriesId": "k8s-series",
+          "lessonNumber": "Bài 3",
+          "level": "Intermediate",
+          "levelVi": "Trung cấp",
+          "levelOrder": 3,
+          "title": "Mạng trong K8s: Phân biệt ClusterIP, NodePort, LoadBalancer và Ingress",
+          "titleVi": "Mạng trong K8s: Phân biệt ClusterIP, NodePort, LoadBalancer và Ingress",
+          "readingTime": "15 phút đọc",
+          "publishedDate": "11/10/2026",
+          "summary": "Bản đồ toàn diện về mạng K8s: Sự khác nhau bản chất giữa 4 loại Service (ClusterIP, NodePort, LoadBalancer, ExternalName) và cách kết hợp Ingress Controller (Nginx Ingress) để định tuyến domain thông minh.",
+          "summaryVi": "Bản đồ toàn diện về mạng K8s: Sự khác nhau bản chất giữa 4 loại Service (ClusterIP, NodePort, LoadBalancer, ExternalName) và cách kết hợp Ingress Controller (Nginx Ingress) để định tuyến domain thông minh.",
+          "tags": [
+            "kubernetes",
+            "networking",
+            "service",
+            "ingress",
+            "clusterip"
+          ],
+          "sections": [
+            {
+              "heading": "1. Vấn Đề IP Pod Phù Du (Ephemeral IP) và Sự Ra Đời Của K8s Service",
+              "headingVi": "1. Vấn Đề IP Pod Phù Du (Ephemeral IP) và Sự Ra Đời Của K8s Service",
+              "paragraphs": [
+                "Mỗi Pod trong K8s được cấp một địa chỉ IP nội bộ riêng biệt. Nhưng mỗi khi Pod bị crash, bị restart hoặc scale-out, Pod mới sinh ra sẽ mang một địa chỉ IP hoàn toàn khác! Bạn không bao giờ được cấu hình IP của Pod vào Connection String.",
+                "**Kubernetes Service** là một lớp trừu tượng tĩnh (Static Virtual IP & DNS name) đứng trước một tập hợp các Pod (được chọn thông qua `selector: app: my-app`). Dù Pod bên dưới chết đi sinh lại hàng trăm lần, địa chỉ Service vẫn đứng yên bất biến."
+              ],
+              "paragraphsVi": [
+                "Mỗi Pod trong K8s được cấp một địa chỉ IP nội bộ riêng biệt. Nhưng mỗi khi Pod bị crash, bị restart hoặc scale-out, Pod mới sinh ra sẽ mang một địa chỉ IP hoàn toàn khác! Bạn không bao giờ được cấu hình IP của Pod vào Connection String.",
+                "**Kubernetes Service** là một lớp trừu tượng tĩnh (Static Virtual IP & DNS name) đứng trước một tập hợp các Pod (được chọn thông qua `selector: app: my-app`). Dù Pod bên dưới chết đi sinh lại hàng trăm lần, địa chỉ Service vẫn đứng yên bất biến."
+              ],
+              "codeTitle": "Bảng phân loại 4 chế độ Service trong K8s",
+              "codeLanguage": "text",
+              "codeContent": "┌──────────────┬────────────────────────────────────┬────────────────────────────────────┐\n│ Loại Service │ Phạm vi truy cập                   │ Kịch bản áp dụng thực tế           │\n├──────────────┼────────────────────────────────────┼────────────────────────────────────┤\n│ ClusterIP    │ Chỉ nội bộ bên trong cụm K8s       │ Database, Cache, Microservices API │\n│ NodePort     │ Mở cổng tĩnh (30000-32767) trên Node│ Dùng test lab, direct debugging    │\n│ LoadBalancer │ Cấp IP Public từ Cloud Provider    │ Cổng vào chính của Ingress Control │\n│ ExternalName │ Ánh xạ CNAME ra dịch vụ ngoài cụm  │ RDS Database ngoài AWS, SaaS API   │\n└──────────────┴────────────────────────────────────┴────────────────────────────────────┘",
+              "calloutType": "info",
+              "calloutTitle": "CoreDNS nội bộ",
+              "calloutTitleVi": "CoreDNS nội bộ",
+              "calloutText": "Trong K8s, một Service có tên `order-svc` nằm trong namespace `sales` sẽ luôn luôn có một tên miền FQDN chuẩn là `order-svc.sales.svc.cluster.local`. Các microservices chỉ cần gọi domain này là kết nối thành công.",
+              "calloutTextVi": "Trong K8s, một Service có tên `order-svc` nằm trong namespace `sales` sẽ luôn luôn có một tên miền FQDN chuẩn là `order-svc.sales.svc.cluster.local`. Các microservices chỉ cần gọi domain này là kết nối thành công."
+            },
+            {
+              "heading": "2. Ingress Controller: Giải Pháp Tiết Kiệm Chi Phí và Định Tuyến Domain Thông Minh",
+              "headingVi": "2. Ingress Controller: Giải Pháp Tiết Kiệm Chi Phí và Định Tuyến Domain Thông Minh",
+              "paragraphs": [
+                "Nếu bạn có 10 microservices và dùng loại `type: LoadBalancer` cho từng cái, Cloud Provider (AWS, GCP) sẽ tính tiền bạn 10 chiếc Cloud Load Balancer riêng biệt với chi phí cực kỳ đắt đỏ.",
+                "Giải pháp: Chỉ tạo duy nhất 1 LoadBalancer cho **Ingress Controller** (như Ingress-Nginx). Sau đó định nghĩa các luật **Ingress** (Tầng Layer 7 HTTP/HTTPS) để chia luồng dựa trên Hostname (`api.domain.com`) hoặc Path (`/users`, `/orders`) tới các Service `ClusterIP` nội bộ."
+              ],
+              "paragraphsVi": [
+                "Nếu bạn có 10 microservices và dùng loại `type: LoadBalancer` cho từng cái, Cloud Provider (AWS, GCP) sẽ tính tiền bạn 10 chiếc Cloud Load Balancer riêng biệt với chi phí cực kỳ đắt đỏ.",
+                "Giải pháp: Chỉ tạo duy nhất 1 LoadBalancer cho **Ingress Controller** (như Ingress-Nginx). Sau đó định nghĩa các luật **Ingress** (Tầng Layer 7 HTTP/HTTPS) để chia luồng dựa trên Hostname (`api.domain.com`) hoặc Path (`/users`, `/orders`) tới các Service `ClusterIP` nội bộ."
+              ],
+              "codeTitle": "Manifest ingress.yaml định tuyến domain & SSL",
+              "codeLanguage": "yaml",
+              "codeContent": "apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: app-gateway-ingress\n  annotations:\n    kubernetes.io/ingress.class: \"nginx\"\n    cert-manager.io/cluster-issuer: \"letsencrypt-prod\"\nspec:\n  tls:\n  - hosts:\n    - api.mycompany.com\n    secretName: api-tls-cert\n  rules:\n  - host: api.mycompany.com\n    http:\n      paths:\n      - path: /orders\n        pathType: Prefix\n        backend:\n          service:\n            name: order-svc\n            port:\n              number: 8080\n      - path: /users\n        pathType: Prefix\n        backend:\n          service:\n            name: user-svc\n            port:\n              number: 8080",
+              "calloutType": "tip",
+              "calloutTitle": "Tự động hóa với Cert-Manager",
+              "calloutTitleVi": "Tự động hóa với Cert-Manager",
+              "calloutText": "Khi kết hợp annotation `cert-manager.io/cluster-issuer` với Ingress, công cụ Cert-Manager trong K8s sẽ tự động xin chứng chỉ SSL Let's Encrypt và nạp vào Secret `api-tls-cert` mà không cần can thiệp thủ công.",
+              "calloutTextVi": "Khi kết hợp annotation `cert-manager.io/cluster-issuer` với Ingress, công cụ Cert-Manager trong K8s sẽ tự động xin chứng chỉ SSL Let's Encrypt và nạp vào Secret `api-tls-cert` mà không cần can thiệp thủ công."
+            }
+          ],
+          "content": ""
+        },
+        {
+          "id": "k8s-bai-4-rolling-updates",
+          "seriesId": "k8s-series",
+          "lessonNumber": "Bài 4",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 4,
+          "title": "Triển khai không gián đoạn (Zero-Downtime) & Liveness/Readiness Probes",
+          "titleVi": "Triển khai không gián đoạn (Zero-Downtime) & Liveness/Readiness Probes",
+          "readingTime": "15 phút đọc",
+          "publishedDate": "11/10/2026",
+          "summary": "Bí quyết triển khai bản cập nhật Zero-Downtime: cơ chế RollingUpdate strategy (maxSurge, maxUnavailable), phân biệt sâu sắc giữa Liveness Probe, Readiness Probe và Startup Probe trong ASP.NET Core.",
+          "summaryVi": "Bí quyết triển khai bản cập nhật Zero-Downtime: cơ chế RollingUpdate strategy (maxSurge, maxUnavailable), phân biệt sâu sắc giữa Liveness Probe, Readiness Probe và Startup Probe trong ASP.NET Core.",
+          "tags": [
+            "kubernetes",
+            "zero-downtime",
+            "probes",
+            "rolling-update",
+            "resilience"
+          ],
+          "sections": [
+            {
+              "heading": "1. Chiến Lược RollingUpdate: Kiểm Soát maxSurge và maxUnavailable",
+              "headingVi": "1. Chiến Lược RollingUpdate: Kiểm Soát maxSurge và maxUnavailable",
+              "paragraphs": [
+                "Mặc định, K8s Deployment dùng chiến lược **RollingUpdate** để thay thế dần các Pod cũ bằng Pod mới nhằm đạt mục tiêu Zero-Downtime. Tuy nhiên nếu không tinh chỉnh, người dùng vẫn có thể gặp lỗi 502 Bad Gateway khi các pod cũ bị hủy quá sớm.",
+                "Hai thông số quan trọng cần nắm vững:",
+                "- **maxSurge**: Số lượng Pod được phép tạo vượt quá số lượng replica mong muốn trong quá trình deploy (ví dụ `maxSurge: 25%` nghĩa là tạo trước các pod mới trước khi tắt pod cũ).",
+                "- **maxUnavailable**: Số lượng Pod tối đa được phép offline trong quá trình cập nhật (đặt `maxUnavailable: 0` để đảm bảo luôn duy trì 100% năng lực phục vụ traffic trong suốt quá trình triển khai)."
+              ],
+              "paragraphsVi": [
+                "Mặc định, K8s Deployment dùng chiến lược **RollingUpdate** để thay thế dần các Pod cũ bằng Pod mới nhằm đạt mục tiêu Zero-Downtime. Tuy nhiên nếu không tinh chỉnh, người dùng vẫn có thể gặp lỗi 502 Bad Gateway khi các pod cũ bị hủy quá sớm.",
+                "Hai thông số quan trọng cần nắm vững:",
+                "- **maxSurge**: Số lượng Pod được phép tạo vượt quá số lượng replica mong muốn trong quá trình deploy (ví dụ `maxSurge: 25%` nghĩa là tạo trước các pod mới trước khi tắt pod cũ).",
+                "- **maxUnavailable**: Số lượng Pod tối đa được phép offline trong quá trình cập nhật (đặt `maxUnavailable: 0` để đảm bảo luôn duy trì 100% năng lực phục vụ traffic trong suốt quá trình triển khai)."
+              ],
+              "codeTitle": "Cấu hình RollingUpdate an toàn tuyệt đối",
+              "codeLanguage": "yaml",
+              "codeContent": "spec:\n  replicas: 4\n  strategy:\n    type: RollingUpdate\n    rollingUpdate:\n      maxSurge: 1           # Chỉ tạo thêm tối đa 1 Pod mới tại 1 thời điểm\n      maxUnavailable: 0     # Không bao giờ để thiếu pod sẵn sàng phục vụ",
+              "calloutType": "info",
+              "calloutTitle": "Lệnh Rollback khẩn cấp",
+              "calloutTitleVi": "Lệnh Rollback khẩn cấp",
+              "calloutText": "Nếu phiên bản mới phát sinh lỗi nghiêm trọng sau khi deploy, bạn có thể lập tức hoàn tác về phiên bản trước đó chỉ với 1 câu lệnh duy nhất: `kubectl rollout undo deployment/<deployment-name>`.",
+              "calloutTextVi": "Nếu phiên bản mới phát sinh lỗi nghiêm trọng sau khi deploy, bạn có thể lập tức hoàn tác về phiên bản trước đó chỉ với 1 câu lệnh duy nhất: `kubectl rollout undo deployment/<deployment-name>`."
+            },
+            {
+              "heading": "2. Tam Giác Vàng: Startup Probe, Readiness Probe & Liveness Probe",
+              "headingVi": "2. Tam Giác Vàng: Startup Probe, Readiness Probe & Liveness Probe",
+              "paragraphs": [
+                "Hiểu sai về Probe là nguyên nhân hàng đầu khiến Pod bị khởi động lại liên tục:",
+                "1. **Startup Probe**: Dành cho ứng dụng khởi động chậm (load cache lớn, chạy EF Core migration mất 30-60 giây). Trong khi Startup Probe chưa pass, K8s sẽ đóng băng hai probe còn lại, tránh việc app bị giết nhầm vì khởi động lâu.",
+                "2. **Readiness Probe**: Kiểm tra xem Pod **đã sẵn sàng nhận traffic người dùng hay chưa**. Nếu fail (ví dụ DB tạm thời mất mạng), K8s sẽ lập tức gỡ IP của Pod ra khỏi Endpoints của Service (ngừng chuyển request tới), nhưng **KHÔNG giết chết** Pod.",
+                "3. **Liveness Probe**: Kiểm tra xem tiến trình có rơi vào tình trạng chết lâm sàng (**Deadlock / Zombie process**) hay không. Nếu Liveness fail liên tiếp theo số lần quy định, Kubelet sẽ **chém chết (kill) và restart lại Pod**."
+              ],
+              "paragraphsVi": [
+                "Hiểu sai về Probe là nguyên nhân hàng đầu khiến Pod bị khởi động lại liên tục:",
+                "1. **Startup Probe**: Dành cho ứng dụng khởi động chậm (load cache lớn, chạy EF Core migration mất 30-60 giây). Trong khi Startup Probe chưa pass, K8s sẽ đóng băng hai probe còn lại, tránh việc app bị giết nhầm vì khởi động lâu.",
+                "2. **Readiness Probe**: Kiểm tra xem Pod **đã sẵn sàng nhận traffic người dùng hay chưa**. Nếu fail (ví dụ DB tạm thời mất mạng), K8s sẽ lập tức gỡ IP của Pod ra khỏi Endpoints của Service (ngừng chuyển request tới), nhưng **KHÔNG giết chết** Pod.",
+                "3. **Liveness Probe**: Kiểm tra xem tiến trình có rơi vào tình trạng chết lâm sàng (**Deadlock / Zombie process**) hay không. Nếu Liveness fail liên tiếp theo số lần quy định, Kubelet sẽ **chém chết (kill) và restart lại Pod**."
+              ],
+              "codeTitle": "Cấu hình 3 probes chuẩn cho ASP.NET Core API",
+              "codeLanguage": "yaml",
+              "codeContent": "containers:\n- name: backend-api\n  image: myapp:2.0.0\n  # 1. Startup Probe: Cho phép tối đa 60s để khởi động\n  startupProbe:\n    httpGet:\n      path: /health/startup\n      port: 8080\n    failureThreshold: 30\n    periodSeconds: 2\n\n  # 2. Readiness Probe: Kiểm tra kết nối DB trước khi cấp traffic\n  readinessProbe:\n    httpGet:\n      path: /health/ready\n      port: 8080\n    initialDelaySeconds: 5\n    periodSeconds: 5\n\n  # 3. Liveness Probe: Ping in-memory kiểm tra alive\n  livenessProbe:\n    httpGet:\n      path: /health/live\n      port: 8080\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3",
+              "calloutType": "warning",
+              "calloutTitle": "Cạm bẫy với Liveness Probe",
+              "calloutTitleVi": "Cạm bẫy với Liveness Probe",
+              "calloutText": "Tuyệt đối KHÔNG kiểm tra kết nối Database trong endpoint `/health/live` của Liveness Probe! Nếu Database bị sập, tất cả 50 Pod backend của bạn sẽ fail Liveness và đồng loạt bị restart liên tục, tạo ra bão yêu cầu làm cụm sập hoàn toàn (Cascading Failure). Database check chỉ nên thuộc về Readiness Probe.",
+              "calloutTextVi": "Tuyệt đối KHÔNG kiểm tra kết nối Database trong endpoint `/health/live` của Liveness Probe! Nếu Database bị sập, tất cả 50 Pod backend của bạn sẽ fail Liveness và đồng loạt bị restart liên tục, tạo ra bão yêu cầu làm cụm sập hoàn toàn (Cascading Failure). Database check chỉ nên thuộc về Readiness Probe."
+            }
+          ],
+          "content": ""
+        },
+        {
+          "id": "k8s-bai-5-triage-oomkilled",
+          "seriesId": "k8s-series",
+          "lessonNumber": "Bài 5",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 5,
+          "title": "Bắt Bệnh Production: Triage CrashLoopBackOff & OOMKilled cấp tốc",
+          "titleVi": "Bắt Bệnh Production: Triage CrashLoopBackOff & OOMKilled cấp tốc",
+          "readingTime": "16 phút đọc",
+          "publishedDate": "11/10/2026",
+          "summary": "Cẩm nang tác chiến sự cố khẩn cấp trên Production: Phân biệt mã lỗi Exit Code (137 OOMKilled vs 139 Segmentation Fault), quy trình 4 bước truy tìm nguyên nhân CrashLoopBackOff.",
+          "summaryVi": "Cẩm nang tác chiến sự cố khẩn cấp trên Production: Phân biệt mã lỗi Exit Code (137 OOMKilled vs 139 Segmentation Fault), quy trình 4 bước truy tìm nguyên nhân CrashLoopBackOff.",
+          "tags": [
+            "kubernetes",
+            "troubleshooting",
+            "crashloopbackoff",
+            "oomkilled",
+            "production"
+          ],
+          "sections": [
+            {
+              "heading": "1. Giải Mã CrashLoopBackOff: Trạng Thái Phổ Biến Nhất Khi Triển Khai",
+              "headingVi": "1. Giải Mã CrashLoopBackOff: Trạng Thái Phổ Biến Nhất Khi Triển Khai",
+              "paragraphs": [
+                "**CrashLoopBackOff** không phải là lỗi mà là một cơ chế tự vệ của K8s. Khi một container khởi động lên rồi bị sập (crash) ngay lập tức, Kubelet sẽ thử restart lại. Nếu vẫn tiếp tục crash, Kubelet sẽ áp dụng thuật toán lũy thừa lùi dần thời gian thử lại (Exponential Backoff: chờ 10s -> 20s -> 40s -> tối đa 5 phút) để tránh việc đốt cháy CPU máy chủ.",
+                "Quy trình 4 bước cô lập lỗi thần tốc:",
+                "1. `kubectl get pod`: Xem số lần Restart và trạng thái.",
+                "2. `kubectl logs <pod> --previous`: Đọc log của container **ở lần crash trước đó** (cực kỳ quan trọng vì log hiện tại thường rỗng nếu container vừa bị reset).",
+                "3. `kubectl describe pod <pod>`: Đọc mã Exit Code và dòng thông báo lỗi trong mục Last State.",
+                "4. Kiểm tra Secret / ConfigMap / Mount Volume xem có bị thiếu sót hay không."
+              ],
+              "paragraphsVi": [
+                "**CrashLoopBackOff** không phải là lỗi mà là một cơ chế tự vệ của K8s. Khi một container khởi động lên rồi bị sập (crash) ngay lập tức, Kubelet sẽ thử restart lại. Nếu vẫn tiếp tục crash, Kubelet sẽ áp dụng thuật toán lũy thừa lùi dần thời gian thử lại (Exponential Backoff: chờ 10s -> 20s -> 40s -> tối đa 5 phút) để tránh việc đốt cháy CPU máy chủ.",
+                "Quy trình 4 bước cô lập lỗi thần tốc:",
+                "1. `kubectl get pod`: Xem số lần Restart và trạng thái.",
+                "2. `kubectl logs <pod> --previous`: Đọc log của container **ở lần crash trước đó** (cực kỳ quan trọng vì log hiện tại thường rỗng nếu container vừa bị reset).",
+                "3. `kubectl describe pod <pod>`: Đọc mã Exit Code và dòng thông báo lỗi trong mục Last State.",
+                "4. Kiểm tra Secret / ConfigMap / Mount Volume xem có bị thiếu sót hay không."
+              ],
+              "codeTitle": "Lệnh đọc log crash trước đó",
+              "codeLanguage": "bash",
+              "codeContent": "# Đọc log của lần chạy bị crash ngay trước đó\nkubectl logs my-broken-pod -p\n\n# Hoặc chỉ định rõ tên container nếu Pod chạy nhiều container\nkubectl logs my-broken-pod -c app-container --previous",
+              "calloutType": "tip",
+              "calloutTitle": "Lỗi thiếu biến môi trường",
+              "calloutTitleVi": "Lỗi thiếu biến môi trường",
+              "calloutText": "Trong 70% trường hợp CrashLoopBackOff mới deploy, nguyên nhân là ứng dụng văng ngoại lệ `NullReferenceException` ngay tại dòng khởi động do thiếu một biến môi trường hoặc connection string cấu hình trong ConfigMap/Secret.",
+              "calloutTextVi": "Trong 70% trường hợp CrashLoopBackOff mới deploy, nguyên nhân là ứng dụng văng ngoại lệ `NullReferenceException` ngay tại dòng khởi động do thiếu một biến môi trường hoặc connection string cấu hình trong ConfigMap/Secret."
+            },
+            {
+              "heading": "2. Xử Lý OOMKilled: Exit Code 137 & Kỹ Thuật Điều Chỉnh .NET GC trong Container",
+              "headingVi": "2. Xử Lý OOMKilled: Exit Code 137 & Kỹ Thuật Điều Chỉnh .NET GC trong Container",
+              "paragraphs": [
+                "Khi bạn thấy trong `kubectl describe pod` ghi: `Last State: Terminated, Reason: OOMKilled, Exit Code: 137`, điều đó khẳng định chắc chắn tiến trình đã sử dụng RAM vượt quá con số `limits.memory` đã khai báo và bị Linux Kernel OOM Killer (phát hiện tiến trình vượt ngưỡng cgroups memory limit) cưỡng chế gửi tín hiệu `SIGKILL` (Signal 9, mã 128 + 9 = 137).",
+                "Với các ứng dụng .NET 8 / 10, .NET Garbage Collector mặc định nhận diện RAM theo tổng RAM máy chủ vật lý nếu chạy trên K8s cũ. Để .NET tuân thủ nghiêm ngặt giới hạn cgroups của Pod, cần bật cờ Server GC phù hợp."
+              ],
+              "paragraphsVi": [
+                "Khi bạn thấy trong `kubectl describe pod` ghi: `Last State: Terminated, Reason: OOMKilled, Exit Code: 137`, điều đó khẳng định chắc chắn tiến trình đã sử dụng RAM vượt quá con số `limits.memory` đã khai báo và bị cgroups của nhân Linux cưỡng chế gửi tín hiệu `SIGKILL` (Signal 9, mã 128 + 9 = 137).",
+                "Với các ứng dụng .NET 8 / 10, .NET Garbage Collector mặc định nhận diện RAM theo tổng RAM máy chủ vật lý nếu chạy trên K8s cũ. Để .NET tuân thủ nghiêm ngặt giới hạn cgroups của Pod, cần bật cờ Server GC phù hợp."
+              ],
+              "codeTitle": "Cấu hình .NET GC thân thiện với K8s cgroups",
+              "codeLanguage": "xml",
+              "codeContent": "<!-- Thêm vào file .csproj để tối ưu hóa bộ nhớ trong Container K8s -->\n<PropertyGroup>\n  <ServerGarbageCollection>true</ServerGarbageCollection>\n  <!-- Giới hạn heap size của .NET tối đa 75% ngưỡng memory limit của Pod -->\n  <GCHeapHardLimitPercent>75</GCHeapHardLimitPercent>\n</PropertyGroup>",
+              "calloutType": "info",
+              "calloutTitle": "Bảng mã Exit Code phổ biến cần thuộc nằm lòng",
+              "calloutTitleVi": "Bảng mã Exit Code phổ biến cần thuộc nằm lòng",
+              "calloutText": "- **Exit Code 0**: Ứng dụng thoát thành công (thường gặp ở Jobs/CronJobs).\n- **Exit Code 1**: Ngoại lệ ứng dụng chưa được bắt (Unhandled Application Exception).\n- **Exit Code 137**: OOMKilled (Linux Kernel kill vì tràn RAM limit).\n- **Exit Code 139**: Segmentation Fault (Lỗi truy cập vùng nhớ cấp phát sai của thư viện C/C++ native).",
+              "calloutTextVi": "- **Exit Code 0**: Ứng dụng thoát thành công (thường gặp ở Jobs/CronJobs).\n- **Exit Code 1**: Ngoại lệ ứng dụng chưa được bắt (Unhandled Application Exception).\n- **Exit Code 137**: OOMKilled (Linux Kernel kill vì tràn RAM limit).\n- **Exit Code 139**: Segmentation Fault (Lỗi truy cập vùng nhớ cấp phát sai của thư viện C/C++ native)."
+            }
+          ],
+          "content": ""
+        },
+        {
+          "id": "k8s-bai-6-flash-sale-100-replicas-docker-k8s",
+          "seriesId": "k8s-series",
+          "lessonNumber": "Bài 6",
+          "level": "Advanced",
+          "levelVi": "Nâng cao",
+          "levelOrder": 6,
+          "title": "Flash Sale 12.12: 100.000 người vào web cùng lúc — Thêm 100 máy chủ trong vài phút bằng Docker & Kubernetes",
+          "titleVi": "Flash Sale 12.12: 100.000 người vào web cùng lúc — Thêm 100 máy chủ trong vài phút bằng Docker & Kubernetes",
+          "readingTime": "20 phút đọc",
+          "publishedDate": "30/10/2026",
+          "summary": "Bài capstone kết hợp Docker + Kubernetes: Đóng gói ứng dụng thành Image bất biến (Dockerfile → Image → Container), khai báo `replicas: 100` trong 1 file YAML để K8s tự rải 100 Pod lên cụm máy, Pod sập tự dựng lại (Self-Healing), HPA tự co giãn theo tải, Cluster Autoscaler tự thêm Worker Node.",
+          "summaryVi": "Bài capstone kết hợp Docker + Kubernetes: Đóng gói ứng dụng thành Image bất biến (Dockerfile → Image → Container), khai báo `replicas: 100` trong 1 file YAML để K8s tự rải 100 Pod lên cụm máy, Pod sập tự dựng lại (Self-Healing), HPA tự co giãn theo tải, Cluster Autoscaler tự thêm Worker Node.",
+          "tags": [
+            "kubernetes",
+            "docker",
+            "flash-sale",
+            "autoscaling",
+            "hpa",
+            "cluster-autoscaler",
+            "replicas"
+          ],
+          "sections": [
+            {
+              "heading": "1. \"Máy Em Chạy Được Mà!\" — Tại Sao Local Khác Hoàn Toàn Với Production?",
+              "headingVi": "1. \"Máy Em Chạy Được Mà!\" — Tại Sao Local Khác Hoàn Toàn Với Production?",
+              "paragraphs": [
+                "Bạn đã từng nghe câu kinh điển: **\"Máy em chạy được mà!\"** chưa? Đây là câu nói nổi tiếng nhất của mọi developer khi code hoạt động hoàn hảo trên laptop cá nhân (16GB RAM, 8-core CPU, 1 người dùng) nhưng sập thảm khi lên Production (100.000 người đồng loạt vào lúc 00:00 ngày 12.12).",
+                "Sự khác biệt cốt lõi không nằm ở code mà ở **môi trường vận hành**. Trên máy bạn: .NET SDK đầy đủ, OS Windows, biến môi trường cá nhân, thư mục `bin/Debug`, đường dẫn tuyệt đối `C:\\Users\\...`. Lên server Linux: thiếu thư viện, sai phiên bản runtime, đường dẫn khác, cấu hình khác, timezone khác. Đây là nguồn gốc của hàng nghìn lỗi \"works on my machine\".",
+                "**Docker** giải quyết triệt để vấn đề này bằng cách đóng gói toàn bộ ứng dụng + runtime + thư viện + cấu hình vào một **Image bất biến**. Image này chạy giống hệt trên laptop, server staging, server production, cloud AWS/GCP/Azure — không có khái niệm \"máy em khác máy anh\" nữa.",
+                "Quy trình đóng gói Docker gồm 3 bước cốt lõi, ví dụ như quy trình sản xuất công nghiệp:",
+                "- **Dockerfile** = Công thức nấu ăn: File text khai báo từng bước build ứng dụng (FROM base image → COPY source → RUN build → EXPOSE port → ENTRYPOINT).",
+                "- **Docker Image** = Khuôn đúc: Kết quả build từ Dockerfile, là bản snapshot bất biến chứa toàn bộ ứng dụng + môi trường. Image có thể push lên Registry (Docker Hub, ACR, ECR) để chia sẻ.",
+                "- **Docker Container** = Sản phẩm đúc từ khuôn: Một thực thể đang chạy (instance) được tạo từ Image. Từ 1 Image ta có thể chạy 100 Container giống hệt trên 100 máy khác nhau."
+              ],
+              "paragraphsVi": [
+                "Bạn đã từng nghe câu kinh điển: **\"Máy em chạy được mà!\"** chưa? Đây là câu nói nổi tiếng nhất của mọi developer khi code hoạt động hoàn hảo trên laptop cá nhân (16GB RAM, 8-core CPU, 1 người dùng) nhưng sập thảm khi lên Production (100.000 người đồng loạt vào lúc 00:00 ngày 12.12).",
+                "Sự khác biệt cốt lõi không nằm ở code mà ở **môi trường vận hành**. Trên máy bạn: .NET SDK đầy đủ, OS Windows, biến môi trường cá nhân, thư mục `bin/Debug`, đường dẫn tuyệt đối `C:\\Users\\...`. Lên server Linux: thiếu thư viện, sai phiên bản runtime, đường dẫn khác, cấu hình khác, timezone khác. Đây là nguồn gốc của hàng nghìn lỗi \"works on my machine\".",
+                "**Docker** giải quyết triệt để vấn đề này bằng cách đóng gói toàn bộ ứng dụng + runtime + thư viện + cấu hình vào một **Image bất biến**. Image này chạy giống hệt trên laptop, server staging, server production, cloud AWS/GCP/Azure — không có khái niệm \"máy em khác máy anh\" nữa.",
+                "Quy trình đóng gói Docker gồm 3 bước cốt lõi, ví dụ như quy trình sản xuất công nghiệp:",
+                "- **Dockerfile** = Công thức nấu ăn: File text khai báo từng bước build ứng dụng (FROM base image → COPY source → RUN build → EXPOSE port → ENTRYPOINT).",
+                "- **Docker Image** = Khuôn đúc: Kết quả build từ Dockerfile, là bản snapshot bất biến chứa toàn bộ ứng dụng + môi trường. Image có thể push lên Registry (Docker Hub, ACR, ECR) để chia sẻ.",
+                "- **Docker Container** = Sản phẩm đúc từ khuôn: Một thực thể đang chạy (instance) được tạo từ Image. Từ 1 Image ta có thể chạy 100 Container giống hệt trên 100 máy khác nhau."
+              ],
+              "codeTitle": "Dockerfile chuẩn Flash Sale: Multi-Stage Build .NET 9 + Push lên Registry",
+              "codeLanguage": "dockerfile",
+              "codeContent": "# =========================================================================\n# GIAI ĐOẠN 1: BUILD (Công thức nấu — SDK đầy đủ công cụ)\n# =========================================================================\nFROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env\nWORKDIR /src\nCOPY [\"FlashSale.Api.csproj\", \"./\"]\nRUN dotnet restore \"FlashSale.Api.csproj\"\nCOPY . .\nRUN dotnet publish \"FlashSale.Api.csproj\" -c Release -o /app/publish --no-restore /p:UseAppHost=false\n\n# =========================================================================\n# GIAI ĐOẠN 2: RUNTIME (Khuôn đúc — siêu nhẹ, bảo mật, non-root)\n# =========================================================================\nFROM mcr.microsoft.com/dotnet/aspnet:9.0-noble-chiseled AS final\nWORKDIR /app\nENV ASPNETCORE_ENVIRONMENT=Production \\\n    ASPNETCORE_URLS=http://+:8080\nUSER $APP_UID\nCOPY --from=build-env --chown=$APP_UID:$APP_UID /app/publish .\nEXPOSE 8080\nENTRYPOINT [\"dotnet\", \"FlashSale.Api.dll\"]\n\n# =========================================================================\n# BUILD & PUSH: 3 lệnh — từ công thức đến khuôn đúc phân phát toàn cầu\n# =========================================================================\n# 1. Build Image (Tạo khuôn từ công thức):\n#    docker build -t myregistry.azurecr.io/flashsale-api:v1.0 .\n#\n# 2. Push lên Registry (Đưa khuôn lên kho trung tâm):\n#    docker push myregistry.azurecr.io/flashsale-api:v1.0\n#\n# 3. Bất kỳ máy nào trên thế giới đều kéo về và chạy giống hệt:\n#    docker run -d -p 8080:8080 myregistry.azurecr.io/flashsale-api:v1.0",
+              "calloutType": "info",
+              "calloutTitle": "Image bất biến = Xóa sổ câu \"Máy em chạy được mà!\"",
+              "calloutTitleVi": "Image bất biến = Xóa sổ câu \"Máy em chạy được mà!\"",
+              "calloutText": "Khi bạn build Docker Image và push lên Registry, mọi server kéo image đó về đều chạy ứng dụng trong cùng môi trường byte-đối-byte: cùng phiên bản .NET runtime, cùng thư viện hệ thống, cùng cấu hình. Không còn khái niệm \"trên máy em OK\" vì máy em và máy production chạy cùng một Image.",
+              "calloutTextVi": "Khi bạn build Docker Image và push lên Registry, mọi server kéo image đó về đều chạy ứng dụng trong cùng môi trường byte-đối-byte: cùng phiên bản .NET runtime, cùng thư viện hệ thống, cùng cấu hình. Không còn khái niệm \"trên máy em OK\" vì máy em và máy production chạy cùng một Image."
+            },
+            {
+              "heading": "2. Kubernetes: `replicas: 100` — 1 File YAML, Rải 100 Pod Trong Vài Phút",
+              "headingVi": "2. Kubernetes: `replicas: 100` — 1 File YAML, Rải 100 Pod Trong Vài Phút",
+              "paragraphs": [
+                "Docker giải quyết \"chạy giống nhau ở mọi máy\". Nhưng khi Flash Sale 12.12 cần 100 máy chủ chạy cùng ứng dụng trong vài phút, bạn không thể SSH vào từng máy gõ `docker run` 100 lần. Đó là lúc **Kubernetes** — người lái tàu — xuất hiện.",
+                "Kubernetes hoạt động theo nguyên lý **khai báo (Declarative)**: bạn viết 1 file YAML mô tả trạng thái mong muốn (`replicas: 100`), K8s tự động điều phối thực tế khớp với mong muốn. Bạn không cần ra lệnh \"chạy thêm pod\" — K8s tự phát hiện thiếu hụt và tự bù đắp.",
+                "Khi bạn gõ `kubectl apply -f flash-sale-deployment.yaml`, K8s Control Plane tiếp nhận yêu cầu, kube-scheduler chọn 100 vị trí tối ưu trên các Worker Node, kubelet trên từng node kéo Image từ Registry và khởi tạo Container. Toàn bộ quá trình diễn ra tự động trong vài phút.",
+                "Nếu một Worker Node bị sập phần cứng lúc 00:01 (đỉnh Flash Sale), 20 Pod trên node đó chết. **Deployment Controller** (Reconciliation Loop) phát hiện thực tế (80 pod) ≠ mong muốn (100 pod), lập tức tạo 20 Pod mới trên các Node còn sống. Đây gọi là **Self-Healing** — tự phục hồi không cần can thiệp thủ công."
+              ],
+              "paragraphsVi": [
+                "Docker giải quyết \"chạy giống nhau ở mọi máy\". Nhưng khi Flash Sale 12.12 cần 100 máy chủ chạy cùng ứng dụng trong vài phút, bạn không thể SSH vào từng máy gõ `docker run` 100 lần. Đó là lúc **Kubernetes** — người lái tàu — xuất hiện.",
+                "Kubernetes hoạt động theo nguyên lý **khai báo (Declarative)**: bạn viết 1 file YAML mô tả trạng thái mong muốn (`replicas: 100`), K8s tự động điều phối thực tế khớp với mong muốn. Bạn không cần ra lệnh \"chạy thêm pod\" — K8s tự phát hiện thiếu hụt và tự bù đắp.",
+                "Khi bạn gõ `kubectl apply -f flash-sale-deployment.yaml`, K8s Control Plane tiếp nhận yêu cầu, kube-scheduler chọn 100 vị trí tối ưu trên các Worker Node, kubelet trên từng node kéo Image từ Registry và khởi tạo Container. Toàn bộ quá trình diễn ra tự động trong vài phút.",
+                "Nếu một Worker Node bị sập phần cứng lúc 00:01 (đỉnh Flash Sale), 20 Pod trên node đó chết. **Deployment Controller** (Reconciliation Loop) phát hiện thực tế (80 pod) ≠ mong muốn (100 pod), lập tức tạo 20 Pod mới trên các Node còn sống. Đây gọi là **Self-Healing** — tự phục hồi không cần can thiệp thủ công."
+              ],
+              "codeTitle": "flash-sale-deployment.yaml: replicas: 100 — K8s tự rải 100 Pod",
+              "codeLanguage": "yaml",
+              "codeContent": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: flash-sale-api\n  namespace: production\n  labels:\n    app: flash-sale-api\nspec:\n  replicas: 100  # 1 dòng này → K8s tự rải 100 Pod lên các Worker Node!\n  selector:\n    matchLabels:\n      app: flash-sale-api\n  template:\n    metadata:\n      labels:\n        app: flash-sale-api\n    spec:\n      containers:\n      - name: flash-sale-api\n        image: myregistry.azurecr.io/flashsale-api:v1.0  # Image bất biến từ Docker\n        ports:\n        - containerPort: 8080\n        env:\n        - name: ASPNETCORE_ENVIRONMENT\n          value: \"Production\"\n        - name: ConnectionStrings__Database\n          valueFrom:\n            secretKeyRef:\n              name: db-secret\n              key: connection-string\n        resources:\n          requests:\n            memory: \"256Mi\"\n            cpu: \"250m\"\n          limits:\n            memory: \"512Mi\"\n            cpu: \"500m\"\n        readinessProbe:\n          httpGet:\n            path: /health/ready\n            port: 8080\n          initialDelaySeconds: 5\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /health/live\n            port: 8080\n          initialDelaySeconds: 15\n          periodSeconds: 20\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: flash-sale-svc\n  namespace: production\nspec:\n  type: ClusterIP\n  selector:\n    app: flash-sale-api\n  ports:\n  - protocol: TCP\n    port: 80\n    targetPort: 8080\n\n# =========================================================================\n# TRIỂN KHAI: Chỉ 1 lệnh duy nhất!\n# =========================================================================\n# kubectl apply -f flash-sale-deployment.yaml\n#\n# Kiểm tra 100 Pod đã sẵn sàng:\n# kubectl get pods -n production | wc -l  →  101 (100 pods + 1 header)\n#\n# Nếu 1 Node sập → K8s tự tạo lại Pod trên Node khác:\n# kubectl get events --sort-by=.lastTimestamp | tail -20",
+              "calloutType": "tip",
+              "calloutTitle": "Self-Healing: Pod sập tự dựng lại",
+              "calloutTitleVi": "Self-Healing: Pod sập tự dựng lại",
+              "calloutText": "Deployment Controller chạy Reconciliation Loop liên tục: cứ vài giây lại so sánh `spec.replicas` (mong muốn) với `status.readyReplicas` (thực tế). Nếu thực tế < mong muốn do Node sập, Pod crash hoặc OOMKilled, Controller tự động tạo Pod mới bù đắp. Bạn đang ngủ lúc 3 giờ sáng, K8s vẫn tự chữa lành cụm.",
+              "calloutTextVi": "Deployment Controller chạy Reconciliation Loop liên tục: cứ vài giây lại so sánh `spec.replicas` (mong muốn) với `status.readyReplicas` (thực tế). Nếu thực tế < mong muốn do Node sập, Pod crash hoặc OOMKilled, Controller tự động tạo Pod mới bù đắp. Bạn đang ngủ lúc 3 giờ sáng, K8s vẫn tự chữa lành cụm."
+            },
+            {
+              "heading": "3. Tự Động Co Giãn Toàn Cụm: HPA + Cluster Autoscaler — Thêm Máy Chủ Tự Động",
+              "headingVi": "3. Tự Động Co Giãn Toàn Cụm: HPA + Cluster Autoscaler — Thêm Máy Chủ Tự Động",
+              "paragraphs": [
+                "`replicas: 100` cố định là giải pháp thủ công — bạn phải dự đoán trước tải và chỉnh số. Trong thực tế Flash Sale, lượng người vào không đều: 00:00 bùng nổ 100.000 người, 00:30 giảm còn 20.000, 01:00 chỉ còn 5.000. Cố định 100 Pod cả đêm lãng phí tài nguyên và tiền bạc.",
+                "**Horizontal Pod Autoscaler (HPA)** tự động điều chỉnh số Pod theo tải thực tế: khi CPU trung bình vượt 70%, HPA tăng Pod lên tối đa 100; khi tải giảm, HPA giảm Pod xuống tối thiểu 5. HPA quan sát metrics từ Metrics Server (CPU/RAM) hoặc custom metrics (số request/giây từ Prometheus).",
+                "Nhưng có một vấn đề: nếu cụm K8s chỉ có 10 Worker Node, mỗi Node chứa tối đa 10 Pod (giới hạn CPU/RAM), thì tổng sức chứa chỉ 100 Pod. Khi HPA muốn scale lên 100 Pod mà cụm đã đầy, 80 Pod sẽ kẹt ở trạng thái `Pending` (không có Node nào đủ tài nguyên).",
+                "**Cluster Autoscaler** giải quyết: nó phát hiện Pod `Pending` do thiếu tài nguyên, tự động gọi Cloud Provider API (AWS ASG, GCP MIG, Azure VMSS) để thêm Worker Node mới. Khi tải giảm, Cluster Autoscaler dồn Pod và xóa bớt Node thừa để tiết kiệm chi phí. Đây là tầng tự động hóa cao nhất: **từ Pod → Node → toàn cụm đều co giãn tự động**."
+              ],
+              "paragraphsVi": [
+                "`replicas: 100` cố định là giải pháp thủ công — bạn phải dự đoán trước tải và chỉnh số. Trong thực tế Flash Sale, lượng người vào không đều: 00:00 bùng nổ 100.000 người, 00:30 giảm còn 20.000, 01:00 chỉ còn 5.000. Cố định 100 Pod cả đêm lãng phí tài nguyên và tiền bạc.",
+                "**Horizontal Pod Autoscaler (HPA)** tự động điều chỉnh số Pod theo tải thực tế: khi CPU trung bình vượt 70%, HPA tăng Pod lên tối đa 100; khi tải giảm, HPA giảm Pod xuống tối thiểu 5. HPA quan sát metrics từ Metrics Server (CPU/RAM) hoặc custom metrics (số request/giây từ Prometheus).",
+                "Nhưng có một vấn đề: nếu cụm K8s chỉ có 10 Worker Node, mỗi Node chứa tối đa 10 Pod (giới hạn CPU/RAM), thì tổng sức chứa chỉ 100 Pod. Khi HPA muốn scale lên 100 Pod mà cụm đã đầy, 80 Pod sẽ kẹt ở trạng thái `Pending` (không có Node nào đủ tài nguyên).",
+                "**Cluster Autoscaler** giải quyết: nó phát hiện Pod `Pending` do thiếu tài nguyên, tự động gọi Cloud Provider API (AWS ASG, GCP MIG, Azure VMSS) để thêm Worker Node mới. Khi tải giảm, Cluster Autoscaler dồn Pod và xóa bớt Node thừa để tiết kiệm chi phí. Đây là tầng tự động hóa cao nhất: **từ Pod → Node → toàn cụm đều co giãn tự động**."
+              ],
+              "codeTitle": "HPA + Cluster Autoscaler: Tự động co giãn từ 5 đến 100 Pod + tự thêm Node",
+              "codeLanguage": "yaml",
+              "codeContent": "# ==================== HPA: TỰ ĐỘNG CO GIÃN SỐ POD ====================\napiVersion: autoscaling/v2\nkind: HorizontalPodAutoscaler\nmetadata:\n  name: flash-sale-hpa\n  namespace: production\nspec:\n  scaleTargetRef:\n    apiVersion: apps/v1\n    kind: Deployment\n    name: flash-sale-api\n  minReplicas: 5    # Giờ thấp điểm: chỉ 5 Pod tiết kiệm chi phí\n  maxReplicas: 100  # Đỉnh Flash Sale: tự động phình lên 100 Pod\n  metrics:\n  - type: Resource\n    resource:\n      name: cpu\n      target:\n        type: Utilization\n        averageUtilization: 70  # CPU > 70% → tăng Pod ngay\n  - type: Resource\n    resource:\n      name: memory\n      target:\n        type: Utilization\n        averageUtilization: 80\n  behavior:\n    scaleUp:\n      stabilizationWindowSeconds: 30   # Phản ứng nhanh: 30s sau khi CPU tăng\n      policies:\n      - type: Percent\n        value: 100  # Tăng tối đa 100% số Pod hiện tại mỗi lần (5→10→20→40→80→100)\n      selectPolicy: Max\n    scaleDown:\n      stabilizationWindowSeconds: 300  # Chậm giảm: chờ 5 phút tải thấp mới giảm\n---\n# ==================== CLUSTER AUTOSCALER: TỰ THÊM NODE ====================\n# Cluster Autoscaler chạy trên Control Plane, không cần file YAML từ user.\n# Cài đặt trên cụm (ví dụ AWS EKS):\n#   kubectl apply -f cluster-autoscaler.yaml\n#\n# Cấu hình Auto Scaling Group trên AWS/GCP/Azure:\n#   - Min nodes: 3       (giờ thấp điểm)\n#   - Max nodes: 20      (đỉnh Flash Sale)\n#   - Cluster Autoscaler tự gọi API thêm/xóa Node khi có Pod Pending\n#\n# ==================== MÔ PHỎNG FLASH SALE 12.12 ====================\n# T=00:00  100.000 user vào → CPU tăng 95% → HPA scale 5→100 Pod\n#          100 Pod cần 10 Node → Cluster Autoscaler thêm Node 3→10\n#          Toàn bộ diễn ra trong ~3-5 phút, không can thiệp thủ công\n#\n# T=00:30  20.000 user → CPU giảm 30% → HPA scale 100→25 Pod\n#          Cluster Autoscaler dồn Pod, xóa Node 10→5\n#\n# T=01:00  5.000 user → HPA scale 25→5 Pod → Cluster Autoscaler xóa Node 5→3",
+              "calloutType": "warning",
+              "calloutTitle": "Cold Start: Khoảng Cách Từ 0 Đến 100",
+              "calloutTitleVi": "Cold Start: Khoảng Cách Từ 0 Đến 100",
+              "calloutText": "Cluster Autoscaler thêm Node mới mất 2-4 phút (khởi động VM + join cluster + pull image). Nếu Flash Sale bùng nổ đột ngột lúc 00:00, 100 Pod không thể sẵn sàng ngay tức thì. Giải pháp: **Pre-scale** thủ công trước 30 phút (`kubectl scale --replicas=50`) hoặc cấu hình HPA dựa trên custom metrics (số session tăng dần trước giờ G), không đợi CPU tăng mới scale.",
+              "calloutTextVi": "Cluster Autoscaler thêm Node mới mất 2-4 phút (khởi động VM + join cluster + pull image). Nếu Flash Sale bùng nổ đột ngột lúc 00:00, 100 Pod không thể sẵn sàng ngay tức thì. Giải pháp: **Pre-scale** thủ công trước 30 phút (`kubectl scale --replicas=50`) hoặc cấu hình HPA dựa trên custom metrics (số session tăng dần trước giờ G), không đợi CPU tăng mới scale."
+            }
+          ],
+          "content": ""
+        }
+      ]
+    },
+    {
       "id": "backend-interview-series",
       "category": "backend",
       "title": "Backend Engineering Interview Questions: Networking, Protocols & Systems",
@@ -18744,367 +19656,6 @@
               "calloutTitleVi": "Lệnh gcroot cho bạn biết điều gì?",
               "calloutText": "Lệnh `gcroot <địa chỉ con trỏ>` sẽ in ra toàn bộ cây phả hệ tham chiếu (Reference Chain), chỉ đích danh biến static nào hoặc service nào đang níu giữ đối tượng này, giúp bạn khoanh vùng và sửa bug chỉ trong 5 phút.",
               "calloutTextVi": "Lệnh `gcroot <địa chỉ con trỏ>` sẽ in ra toàn bộ cây phả hệ tham chiếu (Reference Chain), chỉ đích danh biến static nào hoặc service nào đang níu giữ đối tượng này, giúp bạn khoanh vùng và sửa bug chỉ trong 5 phút."
-            }
-          ],
-          "content": ""
-        }
-      ]
-    },
-    {
-      "id": "k8s-series",
-      "category": "devops",
-      "title": "Kubernetes (K8s) Production Hands-On",
-      "titleVi": "Chuyên Đề Kubernetes: Điều Phối Container Cụm Thực Chiến",
-      "icon": "bi-boxes",
-      "color": "#326ce5",
-      "badge": "6 Bài Viết",
-      "description": "Lộ trình học K8s từ bản chất kiến trúc Control Plane, Pods, ReplicaSet đến Ingress, Rolling Update và xử lý sự cố OOMKilled trên Production.",
-      "descriptionVi": "Lộ trình học K8s từ bản chất kiến trúc Control Plane, Pods, ReplicaSet đến Ingress, Rolling Update và xử lý sự cố OOMKilled trên Production.",
-      "articles": [
-        {
-          "id": "k8s-bai-1-kien-truc",
-          "seriesId": "k8s-series",
-          "lessonNumber": "Bài 1",
-          "level": "Intermediate",
-          "levelVi": "Trung cấp",
-          "levelOrder": 1,
-          "title": "Giải phẫu kiến trúc K8s: Control Plane, Worker Node & Vòng đời của Pod",
-          "titleVi": "Giải phẫu kiến trúc K8s: Control Plane, Worker Node & Vòng đời của Pod",
-          "readingTime": "14 phút đọc",
-          "publishedDate": "11/10/2026",
-          "summary": "Hiểu tường tận kiến trúc Kubernetes: Control Plane (API Server, etcd, Scheduler, Controller Manager), Worker Node (Kubelet, Kube-proxy, CRI) và chu trình sống một Pod từ lúc Submit YAML đến khi Running.",
-          "summaryVi": "Hiểu tường tận kiến trúc Kubernetes: Control Plane (API Server, etcd, Scheduler, Controller Manager), Worker Node (Kubelet, Kube-proxy, CRI) và chu trình sống một Pod từ lúc Submit YAML đến khi Running.",
-          "tags": [
-            "kubernetes",
-            "k8s",
-            "architecture",
-            "control-plane",
-            "devops"
-          ],
-          "sections": [
-            {
-              "heading": "1. Bộ Não Của Cụm: Các Thành Phần Trong Control Plane (Master Node)",
-              "headingVi": "1. Bộ Não Của Cụm: Các Thành Phần Trong Control Plane (Master Node)",
-              "paragraphs": [
-                "Kubernetes (K8s) hoạt động theo mô hình Master-Worker phân tán. **Control Plane** đóng vai trò là cơ quan đầu não ra quyết định và duy trì trạng thái mong muốn (Desired State) của toàn bộ hệ thống:",
-                "- **kube-apiserver**: Cổng giao tiếp duy nhất (REST API Gateway) của toàn cụm. Mọi lệnh `kubectl`, worker node và controller khác đều chỉ được phép nói chuyện qua API Server.",
-                "- **etcd**: Cơ sở dữ liệu phân tán Key-Value (dựa trên thuật toán đồng thuận Raft) lưu trữ toàn bộ trạng thái sống còn của cụm K8s. Đây là 'Single Source of Truth' cần được backup nghiêm ngặt.",
-                "- **kube-scheduler**: Bộ lập lịch thông minh theo dõi các Pod mới tạo chưa được gán node và chọn ra Worker Node tối ưu nhất (dựa trên tài nguyên CPU/RAM trống, Node Affinity, Taints & Tolerations).",
-                "- **kube-controller-manager**: Chạy các vòng lặp điều khiển liên tục (Reconciliation Loops) để so sánh trạng thái thực tế với trạng thái khai báo trong YAML, tự động bù đắp node hoặc pod khi có sự cố."
-              ],
-              "paragraphsVi": [
-                "Kubernetes (K8s) hoạt động theo mô hình Master-Worker phân tán. **Control Plane** đóng vai trò là cơ quan đầu não ra quyết định và duy trì trạng thái mong muốn (Desired State) của toàn bộ hệ thống:",
-                "- **kube-apiserver**: Cổng giao tiếp duy nhất (REST API Gateway) của toàn cụm. Mọi lệnh `kubectl`, worker node và controller khác đều chỉ được phép nói chuyện qua API Server.",
-                "- **etcd**: Cơ sở dữ liệu phân tán Key-Value (dựa trên thuật toán đồng thuận Raft) lưu trữ toàn bộ trạng thái sống còn của cụm K8s. Đây là 'Single Source of Truth' cần được backup nghiêm ngặt.",
-                "- **kube-scheduler**: Bộ lập lịch thông minh theo dõi các Pod mới tạo chưa được gán node và chọn ra Worker Node tối ưu nhất (dựa trên tài nguyên CPU/RAM trống, Node Affinity, Taints & Tolerations).",
-                "- **kube-controller-manager**: Chạy các vòng lặp điều khiển liên tục (Reconciliation Loops) để so sánh trạng thái thực tế với trạng thái khai báo trong YAML, tự động bù đắp node hoặc pod khi có sự cố."
-              ],
-              "codeTitle": "Sơ đồ luồng tương tác các thành phần K8s",
-              "codeLanguage": "text",
-              "codeContent": "                 ┌────────────────────────────────────────────────────────┐\n                 │                    CONTROL PLANE                       │\n                 │                                                        │\n[kubectl CLI] ──►│  kube-apiserver ◄──► etcd (Distributed State Store)    │\n                 │        │                                               │\n                 │        ├────────► kube-scheduler (Chọn Node tối ưu)    │\n                 │        └────────► kube-controller-manager (Bù đắp Pod) │\n                 └────────┬───────────────────────────────────────────────┘\n                          │ (gRPC / HTTPS)\n        ┌─────────────────┴─────────────────┐\n        ▼                                   ▼\n┌────────────────────────┐         ┌────────────────────────┐\n│     WORKER NODE 1      │         │     WORKER NODE 2      │\n│ ┌────────────────────┐ │         │ ┌────────────────────┐ │\n│ │ Kubelet (Agent)    │ │         │ │ Kubelet (Agent)    │ │\n│ └────────────────────┘ │         │ └────────────────────┘ │\n│ ┌────────────────────┐ │         │ ┌────────────────────┐ │\n│ │ Kube-proxy (iptable│ │         │ │ Kube-proxy (iptable│ │\n│ └────────────────────┘ │         │ └────────────────────┘ │\n│ ┌────────────────────┐ │         │ ┌────────────────────┐ │\n│ │ Container Runtime  │ │         │ │ Container Runtime  │ │\n│ │ (containerd/CRI-O) │ │         │ │ (containerd/CRI-O) │ │\n│ └────────────────────┘ │         │ └────────────────────┘ │\n│   [Pod A]   [Pod B]    │         │   [Pod C]   [Pod D]    │\n└────────────────────────┘         └────────────────────────┘",
-              "calloutType": "info",
-              "calloutTitle": "Đặc điểm của etcd",
-              "calloutTitleVi": "Đặc điểm của etcd",
-              "calloutText": "Nếu Control Plane bị mất dữ liệu etcd mà không có bản backup định kỳ, toàn bộ cụm Kubernetes sẽ bị tê liệt và không thể khôi phục được cấu hình của các ứng dụng đang chạy.",
-              "calloutTextVi": "Nếu Control Plane bị mất dữ liệu etcd mà không có bản backup định kỳ, toàn bộ cụm Kubernetes sẽ bị tê liệt và không thể khôi phục được cấu hình của các ứng dụng đang chạy."
-            },
-            {
-              "heading": "2. Worker Node và Hành Trình Vòng Đời Của Một Pod",
-              "headingVi": "2. Worker Node và Hành Trình Vòng Đời Của Một Pod",
-              "paragraphs": [
-                "Trên mỗi máy **Worker Node**, có 3 tiến trình chủ chốt:",
-                "- **Kubelet**: Agent cài trực tiếp trên OS máy chủ, chịu trách nhiệm nhận chỉ thị từ API Server và yêu cầu Container Runtime tạo, giám sát sức khỏe hoặc hủy container.",
-                "- **Kube-proxy**: Quản lý các luật định tuyến mạng (thông qua `iptables` hoặc `IPVS`) trên Node để các Pod có thể liên lạc với nhau và ra ngoài internet.",
-                "- **Container Runtime (CRI)**: Động cơ chạy container thực tế (tiêu chuẩn hiện nay là `containerd` hoặc `CRI-O`, Docker Engine truyền thống đã bị K8s khai tử từ phiên bản 1.24).",
-                "Khi một Pod được tạo qua lệnh `kubectl apply`, nó sẽ tuần tự trải qua các trạng thái: `Pending` -> `ContainerCreating` -> `Running` -> `Completed` (hoặc `Failed`)."
-              ],
-              "paragraphsVi": [
-                "Trên mỗi máy **Worker Node**, có 3 tiến trình chủ chốt:",
-                "- **Kubelet**: Agent cài trực tiếp trên OS máy chủ, chịu trách nhiệm nhận chỉ thị từ API Server và yêu cầu Container Runtime tạo, giám sát sức khỏe hoặc hủy container.",
-                "- **Kube-proxy**: Quản lý các luật định tuyến mạng (thông qua `iptables` hoặc `IPVS`) trên Node để các Pod có thể liên lạc với nhau và ra ngoài internet.",
-                "- **Container Runtime (CRI)**: Động cơ chạy container thực tế (tiêu chuẩn hiện nay là `containerd` hoặc `CRI-O`, Docker Engine truyền thống đã bị K8s khai tử từ phiên bản 1.24).",
-                "Khi một Pod được tạo qua lệnh `kubectl apply`, nó sẽ tuần tự trải qua các trạng thái: `Pending` -> `ContainerCreating` -> `Running` -> `Completed` (hoặc `Failed`)."
-              ],
-              "codeTitle": "Các lệnh kiểm tra thành phần và node",
-              "codeLanguage": "bash",
-              "codeContent": "# Xem danh sách các Node trong cụm kèm vai trò và phiên bản Kubelet\nkubectl get nodes -o wide\n\n# Xem sức khỏe các Pod hệ thống trong Control Plane\nkubectl get pods -n kube-system\n\n# Mô tả chi tiết tiến trình vòng đời và sự kiện (Events) của 1 Pod cụ thể\nkubectl describe pod my-app-7b9d6c8f4-xyz",
-              "calloutType": "tip",
-              "calloutTitle": "Đọc phần Events khi debug Pod",
-              "calloutTitleVi": "Đọc phần Events khi debug Pod",
-              "calloutText": "90% nguyên nhân Pod bị kẹt ở `Pending` hoặc `ContainerCreating` (như thiếu CPU/RAM, sai Secret, hoặc ImagePullBackOff) đều hiển thị rõ ràng tại mục **Events** ở cuối cùng của lệnh `kubectl describe pod`.",
-              "calloutTextVi": "90% nguyên nhân Pod bị kẹt ở `Pending` hoặc `ContainerCreating` (như thiếu CPU/RAM, sai Secret, hoặc ImagePullBackOff) đều hiển thị rõ ràng tại mục **Events** ở cuối cùng của lệnh `kubectl describe pod`."
-            }
-          ],
-          "content": ""
-        },
-        {
-          "id": "k8s-bai-2-deployments",
-          "seriesId": "k8s-series",
-          "lessonNumber": "Bài 2",
-          "level": "Intermediate",
-          "levelVi": "Trung cấp",
-          "levelOrder": 2,
-          "title": "Tạo Deployment đầu tiên & Quản lý Scale số lượng Pods",
-          "titleVi": "Tạo Deployment đầu tiên & Quản lý Scale số lượng Pods",
-          "readingTime": "12 phút đọc",
-          "publishedDate": "11/10/2026",
-          "summary": "Hướng dẫn viết manifest Deployment YAML chuẩn production, quản lý ReplicaSet, scale ngang số lượng pod tức thời bằng lệnh CLI hoặc cấu hình tự động co giãn Horizontal Pod Autoscaler (HPA).",
-          "summaryVi": "Hướng dẫn viết manifest Deployment YAML chuẩn production, quản lý ReplicaSet, scale ngang số lượng pod tức thời bằng lệnh CLI hoặc cấu hình tự động co giãn Horizontal Pod Autoscaler (HPA).",
-          "tags": [
-            "kubernetes",
-            "deployment",
-            "replicaset",
-            "autoscaling",
-            "hpa"
-          ],
-          "sections": [
-            {
-              "heading": "1. Tại Sao Không Nên Chạy Pod Đơn Lẻ Mà Cần Dùng Deployment?",
-              "headingVi": "1. Tại Sao Không Nên Chạy Pod Đơn Lẻ Mà Cần Dùng Deployment?",
-              "paragraphs": [
-                "Trong Kubernetes, Pod là đơn vị tính toán nhỏ nhất có thể phân phối. Tuy nhiên, nếu bạn tạo một Pod độc lập (`kind: Pod`), khi Worker Node chứa Pod đó bị sập phần cứng, Pod sẽ chết vĩnh viễn và không bao giờ tự hồi sinh.",
-                "**Deployment** là đối tượng quản lý cấp cao kiểm soát **ReplicaSet**. Deployment đảm bảo số lượng bản sao mong muốn (`replicas: 3`) luôn luôn hoạt động. Nếu một Node gặp sự cố, Deployment Controller sẽ ngay lập tức phát hiện và tự động tạo Pod mới bù lại trên một Node còn khỏe mạnh khác (Self-Healing)."
-              ],
-              "paragraphsVi": [
-                "Trong Kubernetes, Pod là đơn vị tính toán nhỏ nhất có thể phân phối. Tuy nhiên, nếu bạn tạo một Pod độc lập (`kind: Pod`), khi Worker Node chứa Pod đó bị sập phần cứng, Pod sẽ chết vĩnh viễn và không bao giờ tự hồi sinh.",
-                "**Deployment** là đối tượng quản lý cấp cao kiểm soát **ReplicaSet**. Deployment đảm bảo số lượng bản sao mong muốn (`replicas: 3`) luôn luôn hoạt động. Nếu một Node gặp sự cố, Deployment Controller sẽ ngay lập tức phát hiện và tự động tạo Pod mới bù lại trên một Node còn khỏe mạnh khác (Self-Healing)."
-              ],
-              "codeTitle": "Manifest deployment.yaml chuẩn với Resource Requests & Limits",
-              "codeLanguage": "yaml",
-              "codeContent": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: order-service-deployment\n  labels:\n    app: order-service\n    tier: backend\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: order-service\n  template:\n    metadata:\n      labels:\n        app: order-service\n    spec:\n      containers:\n      - name: order-api\n        image: mycompany/order-api:1.4.2\n        ports:\n        - containerPort: 8080\n        resources:\n          requests:\n            memory: \"128Mi\"\n            cpu: \"100m\"      # 100 millicores = 0.1 CPU core\n          limits:\n            memory: \"512Mi\"\n            cpu: \"500m\"      # Tối đa 0.5 CPU core",
-              "calloutType": "warning",
-              "calloutTitle": "Bắt buộc khai báo resources",
-              "calloutTitleVi": "Bắt buộc khai báo resources",
-              "calloutText": "Nếu không khai báo `requests` và `limits`, K8s Scheduler sẽ không biết pod cần bao nhiêu tài nguyên và có thể nhồi nhét quá nhiều Pod vào một Node, dẫn đến cạn kiệt RAM và kích hoạt OOMKilled hàng loạt.",
-              "calloutTextVi": "Nếu không khai báo `requests` và `limits`, K8s Scheduler sẽ không biết pod cần bao nhiêu tài nguyên và có thể nhồi nhét quá nhiều Pod vào một Node, dẫn đến cạn kiệt RAM và kích hoạt OOMKilled hàng loạt."
-            },
-            {
-              "heading": "2. Thao Tác Scale Ngang Manual & Auto-scaling với HPA",
-              "headingVi": "2. Thao Tác Scale Ngang Manual & Auto-scaling với HPA",
-              "paragraphs": [
-                "Khi có chiến dịch khuyến mãi hoặc lưu lượng tăng đột biến, bạn có thể tăng nhanh số lượng Pod từ 3 lên 10 bản sao chỉ bằng một câu lệnh `kubectl scale`.",
-                "Trong môi trường Production thực tế, hệ thống nên tự động co giãn bằng **Horizontal Pod Autoscaler (HPA)** dựa trên ngưỡng tải CPU hoặc lượng truy vấn HTTP thực tế."
-              ],
-              "paragraphsVi": [
-                "Khi có chiến dịch khuyến mãi hoặc lưu lượng tăng đột biến, bạn có thể tăng nhanh số lượng Pod từ 3 lên 10 bản sao chỉ bằng một câu lệnh `kubectl scale`.",
-                "Trong môi trường Production thực tế, hệ thống nên tự động co giãn bằng **Horizontal Pod Autoscaler (HPA)** dựa trên ngưỡng tải CPU hoặc lượng truy vấn HTTP thực tế."
-              ],
-              "codeTitle": "Lệnh scale thủ công và cấu hình HPA tự động",
-              "codeLanguage": "bash",
-              "codeContent": "# 1. Scale thủ công ngay lập tức lên 6 Pod\nkubectl scale deployment order-service-deployment --replicas=6\n\n# 2. Tạo chính sách HPA: tự động co giãn từ 3 đến 15 Pod khi CPU trung bình vượt 70%\nkubectl autoscale deployment order-service-deployment --min=3 --max=15 --cpu-percent=70\n\n# 3. Xem trạng thái HPA hiện tại\nkubectl get hpa order-service-deployment",
-              "calloutType": "tip",
-              "calloutTitle": "Yêu cầu Metrics Server",
-              "calloutTitleVi": "Yêu cầu Metrics Server",
-              "calloutText": "Để lệnh `kubectl top nodes` hoặc HPA hoạt động được, cụm Kubernetes của bạn bắt buộc phải được cài đặt thành phần `metrics-server` để thu thập chỉ số CPU/Memory từ cgroups của Kubelet.",
-              "calloutTextVi": "Để lệnh `kubectl top nodes` hoặc HPA hoạt động được, cụm Kubernetes của bạn bắt buộc phải được cài đặt thành phần `metrics-server` để thu thập chỉ số CPU/Memory từ cgroups của Kubelet."
-            }
-          ],
-          "content": ""
-        },
-        {
-          "id": "k8s-bai-3-networking",
-          "seriesId": "k8s-series",
-          "lessonNumber": "Bài 3",
-          "level": "Intermediate",
-          "levelVi": "Trung cấp",
-          "levelOrder": 3,
-          "title": "Mạng trong K8s: Phân biệt ClusterIP, NodePort, LoadBalancer và Ingress",
-          "titleVi": "Mạng trong K8s: Phân biệt ClusterIP, NodePort, LoadBalancer và Ingress",
-          "readingTime": "15 phút đọc",
-          "publishedDate": "11/10/2026",
-          "summary": "Bản đồ toàn diện về mạng K8s: Sự khác nhau bản chất giữa 4 loại Service (ClusterIP, NodePort, LoadBalancer, ExternalName) và cách kết hợp Ingress Controller (Nginx Ingress) để định tuyến domain thông minh.",
-          "summaryVi": "Bản đồ toàn diện về mạng K8s: Sự khác nhau bản chất giữa 4 loại Service (ClusterIP, NodePort, LoadBalancer, ExternalName) và cách kết hợp Ingress Controller (Nginx Ingress) để định tuyến domain thông minh.",
-          "tags": [
-            "kubernetes",
-            "networking",
-            "service",
-            "ingress",
-            "clusterip"
-          ],
-          "sections": [
-            {
-              "heading": "1. Vấn Đề IP Pod Phù Du (Ephemeral IP) và Sự Ra Đời Của K8s Service",
-              "headingVi": "1. Vấn Đề IP Pod Phù Du (Ephemeral IP) và Sự Ra Đời Của K8s Service",
-              "paragraphs": [
-                "Mỗi Pod trong K8s được cấp một địa chỉ IP nội bộ riêng biệt. Nhưng mỗi khi Pod bị crash, bị restart hoặc scale-out, Pod mới sinh ra sẽ mang một địa chỉ IP hoàn toàn khác! Bạn không bao giờ được cấu hình IP của Pod vào Connection String.",
-                "**Kubernetes Service** là một lớp trừu tượng tĩnh (Static Virtual IP & DNS name) đứng trước một tập hợp các Pod (được chọn thông qua `selector: app: my-app`). Dù Pod bên dưới chết đi sinh lại hàng trăm lần, địa chỉ Service vẫn đứng yên bất biến."
-              ],
-              "paragraphsVi": [
-                "Mỗi Pod trong K8s được cấp một địa chỉ IP nội bộ riêng biệt. Nhưng mỗi khi Pod bị crash, bị restart hoặc scale-out, Pod mới sinh ra sẽ mang một địa chỉ IP hoàn toàn khác! Bạn không bao giờ được cấu hình IP của Pod vào Connection String.",
-                "**Kubernetes Service** là một lớp trừu tượng tĩnh (Static Virtual IP & DNS name) đứng trước một tập hợp các Pod (được chọn thông qua `selector: app: my-app`). Dù Pod bên dưới chết đi sinh lại hàng trăm lần, địa chỉ Service vẫn đứng yên bất biến."
-              ],
-              "codeTitle": "Bảng phân loại 4 chế độ Service trong K8s",
-              "codeLanguage": "text",
-              "codeContent": "┌──────────────┬────────────────────────────────────┬────────────────────────────────────┐\n│ Loại Service │ Phạm vi truy cập                   │ Kịch bản áp dụng thực tế           │\n├──────────────┼────────────────────────────────────┼────────────────────────────────────┤\n│ ClusterIP    │ Chỉ nội bộ bên trong cụm K8s       │ Database, Cache, Microservices API │\n│ NodePort     │ Mở cổng tĩnh (30000-32767) trên Node│ Dùng test lab, direct debugging    │\n│ LoadBalancer │ Cấp IP Public từ Cloud Provider    │ Cổng vào chính của Ingress Control │\n│ ExternalName │ Ánh xạ CNAME ra dịch vụ ngoài cụm  │ RDS Database ngoài AWS, SaaS API   │\n└──────────────┴────────────────────────────────────┴────────────────────────────────────┘",
-              "calloutType": "info",
-              "calloutTitle": "CoreDNS nội bộ",
-              "calloutTitleVi": "CoreDNS nội bộ",
-              "calloutText": "Trong K8s, một Service có tên `order-svc` nằm trong namespace `sales` sẽ luôn luôn có một tên miền FQDN chuẩn là `order-svc.sales.svc.cluster.local`. Các microservices chỉ cần gọi domain này là kết nối thành công.",
-              "calloutTextVi": "Trong K8s, một Service có tên `order-svc` nằm trong namespace `sales` sẽ luôn luôn có một tên miền FQDN chuẩn là `order-svc.sales.svc.cluster.local`. Các microservices chỉ cần gọi domain này là kết nối thành công."
-            },
-            {
-              "heading": "2. Ingress Controller: Giải Pháp Tiết Kiệm Chi Phí và Định Tuyến Domain Thông Minh",
-              "headingVi": "2. Ingress Controller: Giải Pháp Tiết Kiệm Chi Phí và Định Tuyến Domain Thông Minh",
-              "paragraphs": [
-                "Nếu bạn có 10 microservices và dùng loại `type: LoadBalancer` cho từng cái, Cloud Provider (AWS, GCP) sẽ tính tiền bạn 10 chiếc Cloud Load Balancer riêng biệt với chi phí cực kỳ đắt đỏ.",
-                "Giải pháp: Chỉ tạo duy nhất 1 LoadBalancer cho **Ingress Controller** (như Ingress-Nginx). Sau đó định nghĩa các luật **Ingress** (Tầng Layer 7 HTTP/HTTPS) để chia luồng dựa trên Hostname (`api.domain.com`) hoặc Path (`/users`, `/orders`) tới các Service `ClusterIP` nội bộ."
-              ],
-              "paragraphsVi": [
-                "Nếu bạn có 10 microservices và dùng loại `type: LoadBalancer` cho từng cái, Cloud Provider (AWS, GCP) sẽ tính tiền bạn 10 chiếc Cloud Load Balancer riêng biệt với chi phí cực kỳ đắt đỏ.",
-                "Giải pháp: Chỉ tạo duy nhất 1 LoadBalancer cho **Ingress Controller** (như Ingress-Nginx). Sau đó định nghĩa các luật **Ingress** (Tầng Layer 7 HTTP/HTTPS) để chia luồng dựa trên Hostname (`api.domain.com`) hoặc Path (`/users`, `/orders`) tới các Service `ClusterIP` nội bộ."
-              ],
-              "codeTitle": "Manifest ingress.yaml định tuyến domain & SSL",
-              "codeLanguage": "yaml",
-              "codeContent": "apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: app-gateway-ingress\n  annotations:\n    kubernetes.io/ingress.class: \"nginx\"\n    cert-manager.io/cluster-issuer: \"letsencrypt-prod\"\nspec:\n  tls:\n  - hosts:\n    - api.mycompany.com\n    secretName: api-tls-cert\n  rules:\n  - host: api.mycompany.com\n    http:\n      paths:\n      - path: /orders\n        pathType: Prefix\n        backend:\n          service:\n            name: order-svc\n            port:\n              number: 8080\n      - path: /users\n        pathType: Prefix\n        backend:\n          service:\n            name: user-svc\n            port:\n              number: 8080",
-              "calloutType": "tip",
-              "calloutTitle": "Tự động hóa với Cert-Manager",
-              "calloutTitleVi": "Tự động hóa với Cert-Manager",
-              "calloutText": "Khi kết hợp annotation `cert-manager.io/cluster-issuer` với Ingress, công cụ Cert-Manager trong K8s sẽ tự động xin chứng chỉ SSL Let's Encrypt và nạp vào Secret `api-tls-cert` mà không cần can thiệp thủ công.",
-              "calloutTextVi": "Khi kết hợp annotation `cert-manager.io/cluster-issuer` với Ingress, công cụ Cert-Manager trong K8s sẽ tự động xin chứng chỉ SSL Let's Encrypt và nạp vào Secret `api-tls-cert` mà không cần can thiệp thủ công."
-            }
-          ],
-          "content": ""
-        },
-        {
-          "id": "k8s-bai-4-rolling-updates",
-          "seriesId": "k8s-series",
-          "lessonNumber": "Bài 4",
-          "level": "Advanced",
-          "levelVi": "Nâng cao",
-          "levelOrder": 4,
-          "title": "Triển khai không gián đoạn (Zero-Downtime) & Liveness/Readiness Probes",
-          "titleVi": "Triển khai không gián đoạn (Zero-Downtime) & Liveness/Readiness Probes",
-          "readingTime": "15 phút đọc",
-          "publishedDate": "11/10/2026",
-          "summary": "Bí quyết triển khai bản cập nhật Zero-Downtime: cơ chế RollingUpdate strategy (maxSurge, maxUnavailable), phân biệt sâu sắc giữa Liveness Probe, Readiness Probe và Startup Probe trong ASP.NET Core.",
-          "summaryVi": "Bí quyết triển khai bản cập nhật Zero-Downtime: cơ chế RollingUpdate strategy (maxSurge, maxUnavailable), phân biệt sâu sắc giữa Liveness Probe, Readiness Probe và Startup Probe trong ASP.NET Core.",
-          "tags": [
-            "kubernetes",
-            "zero-downtime",
-            "probes",
-            "rolling-update",
-            "resilience"
-          ],
-          "sections": [
-            {
-              "heading": "1. Chiến Lược RollingUpdate: Kiểm Soát maxSurge và maxUnavailable",
-              "headingVi": "1. Chiến Lược RollingUpdate: Kiểm Soát maxSurge và maxUnavailable",
-              "paragraphs": [
-                "Mặc định, K8s Deployment dùng chiến lược **RollingUpdate** để thay thế dần các Pod cũ bằng Pod mới nhằm đạt mục tiêu Zero-Downtime. Tuy nhiên nếu không tinh chỉnh, người dùng vẫn có thể gặp lỗi 502 Bad Gateway khi các pod cũ bị hủy quá sớm.",
-                "Hai thông số quan trọng cần nắm vững:",
-                "- **maxSurge**: Số lượng Pod được phép tạo vượt quá số lượng replica mong muốn trong quá trình deploy (ví dụ `maxSurge: 25%` nghĩa là tạo trước các pod mới trước khi tắt pod cũ).",
-                "- **maxUnavailable**: Số lượng Pod tối đa được phép offline trong quá trình cập nhật (đặt `maxUnavailable: 0` để đảm bảo luôn duy trì 100% năng lực phục vụ traffic trong suốt quá trình triển khai)."
-              ],
-              "paragraphsVi": [
-                "Mặc định, K8s Deployment dùng chiến lược **RollingUpdate** để thay thế dần các Pod cũ bằng Pod mới nhằm đạt mục tiêu Zero-Downtime. Tuy nhiên nếu không tinh chỉnh, người dùng vẫn có thể gặp lỗi 502 Bad Gateway khi các pod cũ bị hủy quá sớm.",
-                "Hai thông số quan trọng cần nắm vững:",
-                "- **maxSurge**: Số lượng Pod được phép tạo vượt quá số lượng replica mong muốn trong quá trình deploy (ví dụ `maxSurge: 25%` nghĩa là tạo trước các pod mới trước khi tắt pod cũ).",
-                "- **maxUnavailable**: Số lượng Pod tối đa được phép offline trong quá trình cập nhật (đặt `maxUnavailable: 0` để đảm bảo luôn duy trì 100% năng lực phục vụ traffic trong suốt quá trình triển khai)."
-              ],
-              "codeTitle": "Cấu hình RollingUpdate an toàn tuyệt đối",
-              "codeLanguage": "yaml",
-              "codeContent": "spec:\n  replicas: 4\n  strategy:\n    type: RollingUpdate\n    rollingUpdate:\n      maxSurge: 1           # Chỉ tạo thêm tối đa 1 Pod mới tại 1 thời điểm\n      maxUnavailable: 0     # Không bao giờ để thiếu pod sẵn sàng phục vụ",
-              "calloutType": "info",
-              "calloutTitle": "Lệnh Rollback khẩn cấp",
-              "calloutTitleVi": "Lệnh Rollback khẩn cấp",
-              "calloutText": "Nếu phiên bản mới phát sinh lỗi nghiêm trọng sau khi deploy, bạn có thể lập tức hoàn tác về phiên bản trước đó chỉ với 1 câu lệnh duy nhất: `kubectl rollout undo deployment/<deployment-name>`.",
-              "calloutTextVi": "Nếu phiên bản mới phát sinh lỗi nghiêm trọng sau khi deploy, bạn có thể lập tức hoàn tác về phiên bản trước đó chỉ với 1 câu lệnh duy nhất: `kubectl rollout undo deployment/<deployment-name>`."
-            },
-            {
-              "heading": "2. Tam Giác Vàng: Startup Probe, Readiness Probe & Liveness Probe",
-              "headingVi": "2. Tam Giác Vàng: Startup Probe, Readiness Probe & Liveness Probe",
-              "paragraphs": [
-                "Hiểu sai về Probe là nguyên nhân hàng đầu khiến Pod bị khởi động lại liên tục:",
-                "1. **Startup Probe**: Dành cho ứng dụng khởi động chậm (load cache lớn, chạy EF Core migration mất 30-60 giây). Trong khi Startup Probe chưa pass, K8s sẽ đóng băng hai probe còn lại, tránh việc app bị giết nhầm vì khởi động lâu.",
-                "2. **Readiness Probe**: Kiểm tra xem Pod **đã sẵn sàng nhận traffic người dùng hay chưa**. Nếu fail (ví dụ DB tạm thời mất mạng), K8s sẽ lập tức gỡ IP của Pod ra khỏi Endpoints của Service (ngừng chuyển request tới), nhưng **KHÔNG giết chết** Pod.",
-                "3. **Liveness Probe**: Kiểm tra xem tiến trình có rơi vào tình trạng chết lâm sàng (**Deadlock / Zombie process**) hay không. Nếu Liveness fail liên tiếp theo số lần quy định, Kubelet sẽ **chém chết (kill) và restart lại Pod**."
-              ],
-              "paragraphsVi": [
-                "Hiểu sai về Probe là nguyên nhân hàng đầu khiến Pod bị khởi động lại liên tục:",
-                "1. **Startup Probe**: Dành cho ứng dụng khởi động chậm (load cache lớn, chạy EF Core migration mất 30-60 giây). Trong khi Startup Probe chưa pass, K8s sẽ đóng băng hai probe còn lại, tránh việc app bị giết nhầm vì khởi động lâu.",
-                "2. **Readiness Probe**: Kiểm tra xem Pod **đã sẵn sàng nhận traffic người dùng hay chưa**. Nếu fail (ví dụ DB tạm thời mất mạng), K8s sẽ lập tức gỡ IP của Pod ra khỏi Endpoints của Service (ngừng chuyển request tới), nhưng **KHÔNG giết chết** Pod.",
-                "3. **Liveness Probe**: Kiểm tra xem tiến trình có rơi vào tình trạng chết lâm sàng (**Deadlock / Zombie process**) hay không. Nếu Liveness fail liên tiếp theo số lần quy định, Kubelet sẽ **chém chết (kill) và restart lại Pod**."
-              ],
-              "codeTitle": "Cấu hình 3 probes chuẩn cho ASP.NET Core API",
-              "codeLanguage": "yaml",
-              "codeContent": "containers:\n- name: backend-api\n  image: myapp:2.0.0\n  # 1. Startup Probe: Cho phép tối đa 60s để khởi động\n  startupProbe:\n    httpGet:\n      path: /health/startup\n      port: 8080\n    failureThreshold: 30\n    periodSeconds: 2\n\n  # 2. Readiness Probe: Kiểm tra kết nối DB trước khi cấp traffic\n  readinessProbe:\n    httpGet:\n      path: /health/ready\n      port: 8080\n    initialDelaySeconds: 5\n    periodSeconds: 5\n\n  # 3. Liveness Probe: Ping in-memory kiểm tra alive\n  livenessProbe:\n    httpGet:\n      path: /health/live\n      port: 8080\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3",
-              "calloutType": "warning",
-              "calloutTitle": "Cạm bẫy với Liveness Probe",
-              "calloutTitleVi": "Cạm bẫy với Liveness Probe",
-              "calloutText": "Tuyệt đối KHÔNG kiểm tra kết nối Database trong endpoint `/health/live` của Liveness Probe! Nếu Database bị sập, tất cả 50 Pod backend của bạn sẽ fail Liveness và đồng loạt bị restart liên tục, tạo ra bão yêu cầu làm cụm sập hoàn toàn (Cascading Failure). Database check chỉ nên thuộc về Readiness Probe.",
-              "calloutTextVi": "Tuyệt đối KHÔNG kiểm tra kết nối Database trong endpoint `/health/live` của Liveness Probe! Nếu Database bị sập, tất cả 50 Pod backend của bạn sẽ fail Liveness và đồng loạt bị restart liên tục, tạo ra bão yêu cầu làm cụm sập hoàn toàn (Cascading Failure). Database check chỉ nên thuộc về Readiness Probe."
-            }
-          ],
-          "content": ""
-        },
-        {
-          "id": "k8s-bai-5-triage-oomkilled",
-          "seriesId": "k8s-series",
-          "lessonNumber": "Bài 5",
-          "level": "Advanced",
-          "levelVi": "Nâng cao",
-          "levelOrder": 5,
-          "title": "Bắt Bệnh Production: Triage CrashLoopBackOff & OOMKilled cấp tốc",
-          "titleVi": "Bắt Bệnh Production: Triage CrashLoopBackOff & OOMKilled cấp tốc",
-          "readingTime": "16 phút đọc",
-          "publishedDate": "11/10/2026",
-          "summary": "Cẩm nang tác chiến sự cố khẩn cấp trên Production: Phân biệt mã lỗi Exit Code (137 OOMKilled vs 139 Segmentation Fault), quy trình 4 bước truy tìm nguyên nhân CrashLoopBackOff.",
-          "summaryVi": "Cẩm nang tác chiến sự cố khẩn cấp trên Production: Phân biệt mã lỗi Exit Code (137 OOMKilled vs 139 Segmentation Fault), quy trình 4 bước truy tìm nguyên nhân CrashLoopBackOff.",
-          "tags": [
-            "kubernetes",
-            "troubleshooting",
-            "crashloopbackoff",
-            "oomkilled",
-            "production"
-          ],
-          "sections": [
-            {
-              "heading": "1. Giải Mã CrashLoopBackOff: Trạng Thái Phổ Biến Nhất Khi Triển Khai",
-              "headingVi": "1. Giải Mã CrashLoopBackOff: Trạng Thái Phổ Biến Nhất Khi Triển Khai",
-              "paragraphs": [
-                "**CrashLoopBackOff** không phải là lỗi mà là một cơ chế tự vệ của K8s. Khi một container khởi động lên rồi bị sập (crash) ngay lập tức, Kubelet sẽ thử restart lại. Nếu vẫn tiếp tục crash, Kubelet sẽ áp dụng thuật toán lũy thừa lùi dần thời gian thử lại (Exponential Backoff: chờ 10s -> 20s -> 40s -> tối đa 5 phút) để tránh việc đốt cháy CPU máy chủ.",
-                "Quy trình 4 bước cô lập lỗi thần tốc:",
-                "1. `kubectl get pod`: Xem số lần Restart và trạng thái.",
-                "2. `kubectl logs <pod> --previous`: Đọc log của container **ở lần crash trước đó** (cực kỳ quan trọng vì log hiện tại thường rỗng nếu container vừa bị reset).",
-                "3. `kubectl describe pod <pod>`: Đọc mã Exit Code và dòng thông báo lỗi trong mục Last State.",
-                "4. Kiểm tra Secret / ConfigMap / Mount Volume xem có bị thiếu sót hay không."
-              ],
-              "paragraphsVi": [
-                "**CrashLoopBackOff** không phải là lỗi mà là một cơ chế tự vệ của K8s. Khi một container khởi động lên rồi bị sập (crash) ngay lập tức, Kubelet sẽ thử restart lại. Nếu vẫn tiếp tục crash, Kubelet sẽ áp dụng thuật toán lũy thừa lùi dần thời gian thử lại (Exponential Backoff: chờ 10s -> 20s -> 40s -> tối đa 5 phút) để tránh việc đốt cháy CPU máy chủ.",
-                "Quy trình 4 bước cô lập lỗi thần tốc:",
-                "1. `kubectl get pod`: Xem số lần Restart và trạng thái.",
-                "2. `kubectl logs <pod> --previous`: Đọc log của container **ở lần crash trước đó** (cực kỳ quan trọng vì log hiện tại thường rỗng nếu container vừa bị reset).",
-                "3. `kubectl describe pod <pod>`: Đọc mã Exit Code và dòng thông báo lỗi trong mục Last State.",
-                "4. Kiểm tra Secret / ConfigMap / Mount Volume xem có bị thiếu sót hay không."
-              ],
-              "codeTitle": "Lệnh đọc log crash trước đó",
-              "codeLanguage": "bash",
-              "codeContent": "# Đọc log của lần chạy bị crash ngay trước đó\nkubectl logs my-broken-pod -p\n\n# Hoặc chỉ định rõ tên container nếu Pod chạy nhiều container\nkubectl logs my-broken-pod -c app-container --previous",
-              "calloutType": "tip",
-              "calloutTitle": "Lỗi thiếu biến môi trường",
-              "calloutTitleVi": "Lỗi thiếu biến môi trường",
-              "calloutText": "Trong 70% trường hợp CrashLoopBackOff mới deploy, nguyên nhân là ứng dụng văng ngoại lệ `NullReferenceException` ngay tại dòng khởi động do thiếu một biến môi trường hoặc connection string cấu hình trong ConfigMap/Secret.",
-              "calloutTextVi": "Trong 70% trường hợp CrashLoopBackOff mới deploy, nguyên nhân là ứng dụng văng ngoại lệ `NullReferenceException` ngay tại dòng khởi động do thiếu một biến môi trường hoặc connection string cấu hình trong ConfigMap/Secret."
-            },
-            {
-              "heading": "2. Xử Lý OOMKilled: Exit Code 137 & Kỹ Thuật Điều Chỉnh .NET GC trong Container",
-              "headingVi": "2. Xử Lý OOMKilled: Exit Code 137 & Kỹ Thuật Điều Chỉnh .NET GC trong Container",
-              "paragraphs": [
-                "Khi bạn thấy trong `kubectl describe pod` ghi: `Last State: Terminated, Reason: OOMKilled, Exit Code: 137`, điều đó khẳng định chắc chắn tiến trình đã sử dụng RAM vượt quá con số `limits.memory` đã khai báo và bị Linux Kernel OOM Killer (phát hiện tiến trình vượt ngưỡng cgroups memory limit) cưỡng chế gửi tín hiệu `SIGKILL` (Signal 9, mã 128 + 9 = 137).",
-                "Với các ứng dụng .NET 8 / 10, .NET Garbage Collector mặc định nhận diện RAM theo tổng RAM máy chủ vật lý nếu chạy trên K8s cũ. Để .NET tuân thủ nghiêm ngặt giới hạn cgroups của Pod, cần bật cờ Server GC phù hợp."
-              ],
-              "paragraphsVi": [
-                "Khi bạn thấy trong `kubectl describe pod` ghi: `Last State: Terminated, Reason: OOMKilled, Exit Code: 137`, điều đó khẳng định chắc chắn tiến trình đã sử dụng RAM vượt quá con số `limits.memory` đã khai báo và bị cgroups của nhân Linux cưỡng chế gửi tín hiệu `SIGKILL` (Signal 9, mã 128 + 9 = 137).",
-                "Với các ứng dụng .NET 8 / 10, .NET Garbage Collector mặc định nhận diện RAM theo tổng RAM máy chủ vật lý nếu chạy trên K8s cũ. Để .NET tuân thủ nghiêm ngặt giới hạn cgroups của Pod, cần bật cờ Server GC phù hợp."
-              ],
-              "codeTitle": "Cấu hình .NET GC thân thiện với K8s cgroups",
-              "codeLanguage": "xml",
-              "codeContent": "<!-- Thêm vào file .csproj để tối ưu hóa bộ nhớ trong Container K8s -->\n<PropertyGroup>\n  <ServerGarbageCollection>true</ServerGarbageCollection>\n  <!-- Giới hạn heap size của .NET tối đa 75% ngưỡng memory limit của Pod -->\n  <GCHeapHardLimitPercent>75</GCHeapHardLimitPercent>\n</PropertyGroup>",
-              "calloutType": "info",
-              "calloutTitle": "Bảng mã Exit Code phổ biến cần thuộc nằm lòng",
-              "calloutTitleVi": "Bảng mã Exit Code phổ biến cần thuộc nằm lòng",
-              "calloutText": "- **Exit Code 0**: Ứng dụng thoát thành công (thường gặp ở Jobs/CronJobs).\n- **Exit Code 1**: Ngoại lệ ứng dụng chưa được bắt (Unhandled Application Exception).\n- **Exit Code 137**: OOMKilled (Linux Kernel kill vì tràn RAM limit).\n- **Exit Code 139**: Segmentation Fault (Lỗi truy cập vùng nhớ cấp phát sai của thư viện C/C++ native).",
-              "calloutTextVi": "- **Exit Code 0**: Ứng dụng thoát thành công (thường gặp ở Jobs/CronJobs).\n- **Exit Code 1**: Ngoại lệ ứng dụng chưa được bắt (Unhandled Application Exception).\n- **Exit Code 137**: OOMKilled (Linux Kernel kill vì tràn RAM limit).\n- **Exit Code 139**: Segmentation Fault (Lỗi truy cập vùng nhớ cấp phát sai của thư viện C/C++ native)."
             }
           ],
           "content": ""
