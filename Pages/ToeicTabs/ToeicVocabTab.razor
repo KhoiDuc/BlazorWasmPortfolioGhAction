@@ -1,8 +1,10 @@
 @using BlazorWasmPortfolioGhAction.Pages
 @using BlazorWasmPortfolioGhAction.Services.Toeic
+@using BlazorWasmPortfolioGhAction.Services.Trading.Broker
 @using BlazorWasmPortfolioGhAction.Pages.ToeicTabs
 @inject IJSRuntime JS
 @inject IDailyVocabService DailyVocabService
+@inject IBrokerAuthService BrokerAuth
 
 <div class="toeic-vocab-tab">
     <!-- Header -->
@@ -84,7 +86,19 @@
                 </div>
             </div>
 
-            @if (_dailyLoading)
+            @if (!_isLoggedIn)
+            {
+                <div style="text-align: center; padding: 3rem;">
+                    <i class="bi bi-lock-fill" style="font-size: 2.5rem; color: var(--color-text-muted);"></i>
+                    <p style="margin: 1rem 0; color: var(--color-text-secondary); font-size: 0.95rem;">
+                        Cần đăng nhập broker-api để tạo từ vựng hàng ngày bằng Gemini AI.
+                    </p>
+                    <a href="@LoginHref" class="toeic-timer-btn primary" style="display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none;">
+                        <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                    </a>
+                </div>
+            }
+            else if (_dailyLoading)
             {
                 <div style="text-align: center; padding: 3rem; color: var(--color-text-secondary);">
                     <i class="bi bi-arrow-repeat spin" style="font-size: 2rem;"></i>
@@ -558,10 +572,13 @@
     private bool _isDailyFlipped;
     private bool _dailyGameStarted;
     private int _dailyStreak;
+    private bool _isLoggedIn;
 
     private ToeicWordItem? _dailyCurrent => _dailyResult != null && _dailyResult.Words.Count > _dailyCardIndex
         ? _dailyResult.Words[_dailyCardIndex]
         : null;
+
+    private string LoginHref => "/admin";
 
     private List<ToeicWordItem> AllWords => Data.VocabCategories.SelectMany(c => c.Items).ToList();
 
@@ -595,8 +612,19 @@
             }
             catch { }
 
-            _ = LoadDailyVocab();
-            _ = LoadStreak();
+            _ = CheckLoginAndLoad();
+        }
+    }
+
+    private async Task CheckLoginAndLoad()
+    {
+        var token = await BrokerAuth.GetTokenAsync();
+        _isLoggedIn = !string.IsNullOrEmpty(token);
+        StateHasChanged();
+        if (_isLoggedIn)
+        {
+            await LoadDailyVocab();
+            await LoadStreak();
         }
     }
 
