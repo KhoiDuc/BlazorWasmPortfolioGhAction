@@ -1,5 +1,8 @@
 @using BlazorWasmPortfolioGhAction.Pages
+@using BlazorWasmPortfolioGhAction.Services.Toeic
+@using BlazorWasmPortfolioGhAction.Pages.ToeicTabs
 @inject IJSRuntime JS
+@inject IDailyVocabService DailyVocabService
 
 <div class="toeic-vocab-tab">
     <!-- Header -->
@@ -15,6 +18,11 @@
 
     <!-- Mode Selector -->
     <div class="toeic-filter-pills" style="margin-bottom: 2rem;">
+        <button type="button"
+                class="toeic-filter-chip @(_vocabMode == "daily" ? "active" : "")"
+                @onclick='() => _vocabMode = "daily"'>
+            <i class="bi bi-stars me-1 text-info"></i> 🎯 Hôm nay (@(_dailyResult?.Words.Count ?? 0) từ)
+        </button>
         <button type="button"
                 class="toeic-filter-chip @(_vocabMode == "flashcard" ? "active" : "")"
                 @onclick='() => _vocabMode = "flashcard"'>
@@ -42,7 +50,142 @@
         </button>
     </div>
 
-    @if (_vocabMode == "flashcard")
+    @if (_vocabMode == "daily")
+    {
+        <!-- Daily Vocab Mode -->
+        <div class="toeic-fc-wrapper">
+            <div class="toeic-fc-toolbar">
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    @if (_dailyResult != null && !string.IsNullOrEmpty(_dailyResult.TopicId))
+                    {
+                        <span class="toeic-tag" style="background: rgba(34, 197, 94, 0.15); color: #16a34a; font-weight: 700;">
+                            <i class="bi bi-calendar-check me-1"></i> @_dailyResult.DateKey
+                        </span>
+                        <span class="toeic-tag" style="background: rgba(59, 130, 246, 0.12); color: #3b82f6; font-weight: 700;">
+                            @_dailyResult.TopicId
+                        </span>
+                    }
+                    @if (_dailyStreak > 0)
+                    {
+                        <span class="toeic-tag" style="background: rgba(245, 158, 11, 0.15); color: #d97706; font-weight: 700;">
+                            <i class="bi bi-fire me-1"></i> Streak @_dailyStreak ngày
+                        </span>
+                    }
+                </div>
+                <div style="font-size: 0.85rem; color: var(--color-text-secondary); font-weight: 600;">
+                    @if (_dailyLoading)
+                    {
+                        <text><span><i class="bi bi-arrow-repeat spin me-1"></i> Đang tạo từ vựng hôm nay...</span></text>
+                    }
+                    else if (_dailyResult is { FromCache: true })
+                    {
+                        <text><i class="bi bi-check-circle text-success me-1"></i> Đã tải cache hôm nay</text>
+                    }
+                </div>
+            </div>
+
+            @if (_dailyLoading)
+            {
+                <div style="text-align: center; padding: 3rem; color: var(--color-text-secondary);">
+                    <i class="bi bi-arrow-repeat spin" style="font-size: 2rem;"></i>
+                    <p style="margin-top: 1rem;">Đang gọi Gemini tạo 10 từ vựng hôm nay...</p>
+                </div>
+            }
+            else if (_dailyResult is { Error: not null })
+            {
+                <div style="text-align: center; padding: 2rem; color: #ef4444;">
+                    <i class="bi bi-exclamation-circle" style="font-size: 2rem;"></i>
+                    <p style="margin-top: 1rem;">@_dailyResult.Error</p>
+                    <button type="button" class="toeic-timer-btn primary" @onclick="LoadDailyVocab">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Thử lại
+                    </button>
+                </div>
+            }
+            else if (_dailyResult is { Words.Count: > 0 })
+            {
+                <!-- Flashcard deck for daily words -->
+                <div style="height: 6px; background: var(--color-bg-surface-elevated); border-radius: 9999px; margin-bottom: 1.5rem; overflow: hidden;">
+                    <div style="height: 100%; width: @(ProgressPercentage)%; background: var(--gradient-brand, #ca8a04); transition: width 0.3s ease;"></div>
+                </div>
+
+                @if (_dailyCurrent != null)
+                {
+                    <div class="toeic-fc-card-scene" @onclick="ToggleDailyFlip">
+                        <div class="toeic-fc-card @(_isDailyFlipped ? "is-flipped" : "")">
+                            <div class="toeic-fc-face toeic-fc-front">
+                                <div class="toeic-fc-badge-row">
+                                    <span class="toeic-tag">@_dailyCurrent.Pos</span>
+                                </div>
+                                <div class="toeic-fc-word-large">@_dailyCurrent.En</div>
+                                <div class="toeic-fc-ipa">@_dailyCurrent.Ipa</div>
+                                <button type="button" class="toeic-tts-btn" style="font-size: 1.5rem; margin-top: 1rem;" title="Nghe phát âm"
+                                        @onclick:stopPropagation="true" @onclick="() => PlayAudio(_dailyCurrent.En)">
+                                    <i class="bi bi-volume-up-fill"></i>
+                                </button>
+                                <div class="toeic-fc-hint">
+                                    <i class="bi bi-hand-index-thumb me-1"></i> Chạm để lật xem nghĩa
+                                </div>
+                            </div>
+                            <div class="toeic-fc-face toeic-fc-back">
+                                <div class="toeic-fc-badge-row">
+                                    <span class="toeic-tag" style="background: rgba(202, 138, 4, 0.15); color: var(--color-brand-symbol, #ca8a04);">Nghĩa Tiếng Việt</span>
+                                </div>
+                                <div class="toeic-fc-vi">@_dailyCurrent.Vi</div>
+                                @if (!string.IsNullOrEmpty(_dailyCurrent.Collocation))
+                                {
+                                    <div class="toeic-fc-colloc">
+                                        <i class="bi bi-link-45deg me-1"></i> <b>Cụm đi kèm:</b> @_dailyCurrent.Collocation
+                                    </div>
+                                }
+                                <div class="toeic-fc-example">"@_dailyCurrent.Example"</div>
+                                <div class="toeic-fc-hint"><i class="bi bi-arrow-repeat me-1"></i> Chạm để quay lại</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="toeic-fc-controls">
+                        <button type="button" class="toeic-timer-btn secondary" @onclick="PrevDailyCard" disabled="@(_dailyCardIndex == 0)">
+                            <i class="bi bi-arrow-left"></i> Thẻ trước
+                        </button>
+                        <button type="button" class="toeic-timer-btn primary" @onclick="ToggleDailyFlip">
+                            <i class="bi bi-arrow-repeat"></i> Lật thẻ
+                        </button>
+                        <span style="font-weight: 700; color: var(--color-text-primary);">
+                            @(_dailyCardIndex + 1) / @_dailyResult.Words.Count
+                        </span>
+                        <button type="button" class="toeic-timer-btn secondary" @onclick="NextDailyCard" disabled="@(_dailyCardIndex >= _dailyResult.Words.Count - 1)">
+                            Thẻ tiếp <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Start game button -->
+                    @if (_dailyResult.Words.Count >= 4 && !_dailyGameStarted)
+                    {
+                        <div style="text-align: center; margin-top: 1.5rem;">
+                            <button type="button" class="toeic-timer-btn primary" style="font-size: 1.05rem; padding: 0.7rem 2rem;" @onclick="StartDailyGame">
+                                <i class="bi bi-controller me-1"></i> Chơi game Match Pairs
+                            </button>
+                        </div>
+                    }
+
+                    @if (_dailyGameStarted)
+                    {
+                        <DailyMatchGame Words="@_dailyResult.Words" OnSpeak="@PlayAudio" />
+                    }
+                }
+            }
+            else
+            {
+                <div style="text-align: center; padding: 3rem;">
+                    <p style="color: var(--color-text-secondary); margin-bottom: 1rem;">Chưa có từ vựng hôm nay.</p>
+                    <button type="button" class="toeic-timer-btn primary" @onclick="LoadDailyVocab">
+                        <i class="bi bi-magic me-1"></i> Tạo từ vựng hôm nay
+                    </button>
+                </div>
+            }
+        </div>
+    }
+    else if (_vocabMode == "flashcard")
     {
         <!-- 3D Flashcard Mode -->
         <div class="toeic-fc-wrapper">
@@ -399,7 +542,7 @@
     [Parameter] public ToeicData Data { get; set; } = default!;
     [Parameter] public EventCallback<string> OnSpeak { get; set; }
 
-    private string _vocabMode = "flashcard";
+    private string _vocabMode = "daily";
     private string _selectedCatId = "cat-business";
     private string _selectedFlashcardCategory = "all";
 
@@ -407,6 +550,18 @@
     private int _currentCardIndex = 0;
     private bool _isFlipped = false;
     private HashSet<string> _learnedWords = new();
+
+    // Daily vocab state
+    private DailyVocabResult? _dailyResult;
+    private bool _dailyLoading;
+    private int _dailyCardIndex;
+    private bool _isDailyFlipped;
+    private bool _dailyGameStarted;
+    private int _dailyStreak;
+
+    private ToeicWordItem? _dailyCurrent => _dailyResult != null && _dailyResult.Words.Count > _dailyCardIndex
+        ? _dailyResult.Words[_dailyCardIndex]
+        : null;
 
     private List<ToeicWordItem> AllWords => Data.VocabCategories.SelectMany(c => c.Items).ToList();
 
@@ -439,7 +594,67 @@
                 }
             }
             catch { }
+
+            _ = LoadDailyVocab();
+            _ = LoadStreak();
         }
+    }
+
+    private async Task LoadDailyVocab()
+    {
+        _dailyLoading = true;
+        _dailyGameStarted = false;
+        _dailyCardIndex = 0;
+        _isDailyFlipped = false;
+        StateHasChanged();
+
+        try
+        {
+            _dailyResult = await DailyVocabService.GetTodayAsync();
+        }
+        catch (Exception ex)
+        {
+            _dailyResult = new DailyVocabResult { Error = ex.Message };
+        }
+
+        _dailyLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadStreak()
+    {
+        try
+        {
+            var history = await DailyVocabService.GetHistoryAsync();
+            _dailyStreak = DailyVocabService.GetStreak(history);
+            StateHasChanged();
+        }
+        catch { }
+    }
+
+    private void ToggleDailyFlip() => _isDailyFlipped = !_isDailyFlipped;
+
+    private void NextDailyCard()
+    {
+        if (_dailyResult != null && _dailyCardIndex < _dailyResult.Words.Count - 1)
+        {
+            _dailyCardIndex++;
+            _isDailyFlipped = false;
+        }
+    }
+
+    private void PrevDailyCard()
+    {
+        if (_dailyCardIndex > 0)
+        {
+            _dailyCardIndex--;
+            _isDailyFlipped = false;
+        }
+    }
+
+    private void StartDailyGame()
+    {
+        _dailyGameStarted = true;
     }
 
     private void ResetDeck()

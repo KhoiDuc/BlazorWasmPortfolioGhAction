@@ -116,6 +116,14 @@ public static class TradingServiceExtensions
         services.AddScoped<BlazorWasmPortfolioGhAction.Services.Trading.IPriceAlertService,
             BlazorWasmPortfolioGhAction.Services.Trading.PriceAlertService>();
 
+        services.AddHttpClient<BlazorWasmPortfolioGhAction.Services.Toeic.IToeicHistoryClient,
+            BlazorWasmPortfolioGhAction.Services.Toeic.ToeicHistoryClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+        services.AddScoped<BlazorWasmPortfolioGhAction.Services.Toeic.IDailyVocabService,
+            BlazorWasmPortfolioGhAction.Services.Toeic.DailyVocabService>();
+
         return services;
     }
 }
