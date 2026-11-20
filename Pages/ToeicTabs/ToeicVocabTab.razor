@@ -41,6 +41,11 @@
             <i class="bi bi-lightning-charge-fill me-1 text-primary"></i> Cụm Động Từ Hay Gặp (@(Data.PhrasalVerbs?.Count ?? 0) cụm)
         </button>
         <button type="button"
+                class="toeic-filter-chip @(_vocabMode == "game" ? "active" : "")"
+                @onclick='() => _vocabMode = "game"'>
+            <i class="bi bi-controller me-1 text-success"></i> 🎮 Game Ôn Tập
+        </button>
+        <button type="button"
                 class="toeic-filter-chip @(_vocabMode == "vocab" ? "active" : "")"
                 @onclick='() => _vocabMode = "vocab"'>
             <i class="bi bi-grid-fill me-1"></i> Danh Sách Từ Vựng @Data.VocabCategories.Count Chủ Đề
@@ -379,6 +384,33 @@
             </div>
         </div>
     }
+    else if (_vocabMode == "game")
+    {
+        <!-- Vocab Match Game Mode -->
+        <div class="toeic-fc-wrapper">
+            <div class="toeic-fc-toolbar">
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <select class="toeic-search-input" style="width: auto; padding: 0.4rem 1rem;" @bind="_gameCategoryId">
+                        @foreach (var cat in Data.VocabCategories)
+                        {
+                            <option value="@cat.Id">@cat.NameVi (@cat.Items.Count từ)</option>
+                        }
+                    </select>
+                    <span class="toeic-tag" style="background: rgba(202, 138, 4, 0.15); color: var(--color-brand-symbol, #ca8a04); font-weight: 700;">
+                        <i class="bi bi-calendar-day me-1"></i> Hôm nay: @GameTopicOfTheDay.NameVi
+                    </span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--color-text-secondary); font-weight: 600;">
+                    Chơi 10 từ / lượt • Bấm "Lượt mới" để đổi từ • Lưu tiến độ từng chủ đề
+                </div>
+            </div>
+
+            @{
+                var gameCat = Data.VocabCategories.FirstOrDefault(c => c.Id == _gameCategoryId) ?? GameTopicOfTheDay;
+            }
+            <VocabMatchGame Words="@gameCat.Items" CategoryId="@gameCat.Id" OnSpeak="@PlayAudio" @key="gameCat.Id" />
+        </div>
+    }
     else if (_vocabMode == "paraphrase")
     {
         <!-- Paraphrase Matrix -->
@@ -559,6 +591,7 @@
     private string _vocabMode = "daily";
     private string _selectedCatId = "cat-business";
     private string _selectedFlashcardCategory = "all";
+    private string _gameCategoryId = "";
 
     private List<ToeicWordItem> _currentDeck = new();
     private int _currentCardIndex = 0;
@@ -582,6 +615,16 @@
 
     private List<ToeicWordItem> AllWords => Data.VocabCategories.SelectMany(c => c.Items).ToList();
 
+    private ToeicVocabCategory GameTopicOfTheDay
+    {
+        get
+        {
+            var dayOfYear = DateTime.UtcNow.DayOfYear;
+            var idx = (dayOfYear - 1) % Data.VocabCategories.Count;
+            return Data.VocabCategories[idx];
+        }
+    }
+
     private ToeicWordItem? CurrentWord => _currentDeck.Count > _currentCardIndex ? _currentDeck[_currentCardIndex] : null;
 
     private int LearnedCount => _currentDeck.Count(w => _learnedWords.Contains(w.En));
@@ -590,6 +633,7 @@
 
     protected override void OnInitialized()
     {
+        _gameCategoryId = GameTopicOfTheDay.Id;
         ResetDeck();
     }
 

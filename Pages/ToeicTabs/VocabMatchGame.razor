@@ -1,0 +1,314 @@
+@using BlazorWasmPortfolioGhAction.Pages
+
+<div class="toeic-daily-game">
+    <div style="text-align: center; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--color-brand-symbol, #ca8a04); margin: 0 0 0.25rem;">
+            <i class="bi bi-controller me-1"></i> Match Pairs — Nối từ với nghĩa
+        </h3>
+        <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin: 0;">
+            Chọn 1 từ tiếng Anh rồi chọn nghĩa tiếng Việt tương ứng. Đúng +10, sai -2.
+        </p>
+    </div>
+
+    <!-- Progress x/50 + streak -->
+    <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
+        <span class="toeic-tag" style="background: rgba(34, 197, 94, 0.15); color: #16a34a; font-weight: 700;">
+            <i class="bi bi-check2-circle me-1"></i> Đã thuộc: @_learnedCount / @TotalCount
+        </span>
+        <span class="toeic-tag" style="background: rgba(59, 130, 246, 0.12); color: #3b82f6; font-weight: 700;">
+            <i class="bi bi-repeat me-1"></i> Lượt @_round
+        </span>
+    </div>
+
+    <!-- Progress bar -->
+    <div style="height: 6px; background: var(--color-bg-surface-elevated); border-radius: 9999px; margin-bottom: 1.5rem; overflow: hidden;">
+        <div style="height: 100%; width: @(_learnedCount * 100.0 / TotalCount)%; background: var(--gradient-brand, #ca8a04); transition: width 0.3s ease;"></div>
+    </div>
+
+    @if (_gameFinished)
+    {
+        <div style="text-align: center; padding: 2rem; background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: 14px;">
+            <i class="bi bi-trophy-fill" style="font-size: 3rem; color: #d97706;"></i>
+            <h3 style="margin: 1rem 0 0.5rem; font-weight: 800;">Hoàn thành lượt @_round!</h3>
+            <p style="font-size: 1.1rem; color: var(--color-text-primary);">
+                Điểm: <b style="color: #16a34a;">@_score</b> / @(_maxScore)
+            </p>
+            <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 1.5rem;">
+                @_matchedCount / @_roundWords cặp đúng • @_wrongAttempts lần sai
+            </p>
+            <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                <button type="button" class="toeic-timer-btn primary" @onclick="NewRound">
+                    <i class="bi bi-shuffle me-1"></i> Lượt mới (10 từ khác)
+                </button>
+                <button type="button" class="toeic-timer-btn secondary" @onclick="ResetGame">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Chơi lại lượt này
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <!-- English column -->
+            <div>
+                <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--color-text-muted); margin: 0 0 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                    Tiếng Anh
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    @foreach (var item in _enItems)
+                    {
+                        var isSelected = _selectedEn == item.Word;
+                        var isMatched = _matched.Contains(item.Word);
+                        var isLearned = _learned.Contains(item.Word);
+                        <button type="button"
+                                disabled="@isMatched"
+                                class="toeic-game-card @(isSelected ? "selected" : "") @(isMatched ? "matched" : "")"
+                                @onclick="() => SelectEn(item.Word)">
+                            <span class="toeic-game-word">@item.Word</span>
+                            @if (isMatched)
+                            {
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            }
+                            else
+                            {
+                                <span class="toeic-game-pos text-muted">
+                                    @item.Pos
+                                    @if (isLearned)
+                                    {
+                                        <i class="bi bi-star-fill text-warning ms-1" title="Đã thuộc từ trước"></i>
+                                    }
+                                </span>
+                            }
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Vietnamese column -->
+            <div>
+                <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--color-text-muted); margin: 0 0 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                    Nghĩa Tiếng Việt
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    @foreach (var item in _viItems)
+                    {
+                        var isMatched = _matched.Contains(item.MatchedEn!);
+                        <button type="button"
+                                disabled="@isMatched"
+                                class="toeic-game-card @(isMatched ? "matched" : "")"
+                                @onclick="() => SelectVi(item.Vi)">
+                            <span class="toeic-game-word">@item.Vi</span>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 1.5rem; font-size: 1.05rem; font-weight: 700;">
+            Điểm: <b style="color: #16a34a;">@_score</b>
+            <span style="color: var(--color-text-muted); margin-left: 1rem;">
+                @_matchedCount / @_roundWords đã nối
+            </span>
+        </div>
+
+        <div style="text-align: center; margin-top: 1rem;">
+            <button type="button" class="toeic-timer-btn secondary" style="font-size: 0.9rem;" @onclick="NewRound">
+                <i class="bi bi-shuffle me-1"></i> Đổi 10 từ khác
+            </button>
+        </div>
+    }
+</div>
+
+<style>
+    .toeic-game-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.7rem 1rem;
+        background: var(--color-bg-surface);
+        border: 2px solid var(--color-border);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-align: left;
+        width: 100%;
+    }
+    .toeic-game-card:hover:not(:disabled) {
+        border-color: var(--color-brand-symbol, #ca8a04);
+        background: var(--color-bg-surface-elevated);
+    }
+    .toeic-game-card.selected {
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.08);
+    }
+    .toeic-game-card.matched {
+        opacity: 0.4;
+        cursor: default;
+        border-color: #16a34a;
+        background: rgba(34, 197, 94, 0.05);
+    }
+    .toeic-game-word {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--color-text-primary);
+    }
+    .toeic-game-pos {
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+@code {
+    [Parameter] public List<ToeicWordItem> Words { get; set; } = new();
+    [Parameter] public string CategoryId { get; set; } = "";
+    [Parameter] public EventCallback<string> OnSpeak { get; set; }
+
+    private record EnItem(string Word, string Pos);
+    private record ViItem(string Vi, string? MatchedEn);
+
+    private List<EnItem> _enItems = new();
+    private List<ViItem> _viItems = new();
+    private HashSet<string> _matched = new();
+    private HashSet<string> _learned = new();
+    private string? _selectedEn;
+    private int _score;
+    private int _wrongAttempts;
+    private int _matchedCount;
+    private int _maxScore;
+    private bool _gameFinished;
+    private int _round;
+    private List<ToeicWordItem> _roundWordsList = new();
+    private int _roundWords => _roundWordsList.Count;
+    private int _learnedCount => _learned.Count;
+    private int TotalCount => Words.Count;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLearnedAsync();
+        StartNewRound();
+    }
+
+    // ponytail: khi đổi category, parent tạo mới component → OnInitialized lại, đọc đúng localStorage key
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_roundWordsList.Count == 0)
+        {
+            await LoadLearnedAsync();
+            StartNewRound();
+        }
+    }
+
+    private void StartNewRound()
+    {
+        _round++;
+        var rng = new Random();
+        // ưu tiên từ chưa thuộc, lấy 10; nếu thiếu thì bù từ đã thuộc
+        var pool = Words.Where(w => !_learned.Contains(w.En)).ToList();
+        if (pool.Count < 10)
+            pool = Words.ToList();
+        _roundWordsList = pool.OrderBy(_ => rng.Next()).Take(Math.Min(10, pool.Count)).ToList();
+
+        _enItems = _roundWordsList.Select(w => new EnItem(w.En, w.Pos)).OrderBy(_ => rng.Next()).ToList();
+        _viItems = _roundWordsList.Select(w => new ViItem(w.Vi, w.En)).OrderBy(_ => rng.Next()).ToList();
+        _matched = new HashSet<string>();
+        _selectedEn = null;
+        _score = 0;
+        _wrongAttempts = 0;
+        _matchedCount = 0;
+        _maxScore = _roundWordsList.Count * 10;
+        _gameFinished = false;
+    }
+
+    private void NewRound()
+    {
+        StartNewRound();
+    }
+
+    private void ResetGame()
+    {
+        // chơi lại lượt hiện tại (cùng 10 từ)
+        var rng = new Random();
+        _enItems = _roundWordsList.Select(w => new EnItem(w.En, w.Pos)).OrderBy(_ => rng.Next()).ToList();
+        _viItems = _roundWordsList.Select(w => new ViItem(w.Vi, w.En)).OrderBy(_ => rng.Next()).ToList();
+        _matched = new HashSet<string>();
+        _selectedEn = null;
+        _score = 0;
+        _wrongAttempts = 0;
+        _matchedCount = 0;
+        _gameFinished = false;
+    }
+
+    private void SelectEn(string en)
+    {
+        _selectedEn = en;
+    }
+
+    private async void SelectVi(string vi)
+    {
+        if (string.IsNullOrEmpty(_selectedEn)) return;
+
+        var wordItem = _roundWordsList.FirstOrDefault(w => w.En == _selectedEn);
+        if (wordItem == null) return;
+
+        if (wordItem.Vi == vi)
+        {
+            _matched.Add(_selectedEn);
+            _score += 10;
+            _matchedCount++;
+            var justLearned = _learned.Add(_selectedEn);
+            _selectedEn = null;
+
+            if (_matchedCount >= _roundWordsList.Count)
+            {
+                _gameFinished = true;
+            }
+            if (justLearned)
+            {
+                _ = SaveLearnedAsync();
+            }
+            StateHasChanged();
+        }
+        else
+        {
+            _score = Math.Max(0, _score - 2);
+            _wrongAttempts++;
+            _selectedEn = null;
+            StateHasChanged();
+        }
+    }
+
+    private string StorageKey => $"toeic_game_learned_{CategoryId}";
+
+    private async Task LoadLearnedAsync()
+    {
+        try
+        {
+            var stored = await JS.InvokeAsync<string?>("localStorage.getItem", StorageKey);
+            if (!string.IsNullOrEmpty(stored))
+            {
+                var list = System.Text.Json.JsonSerializer.Deserialize<List<string>>(stored);
+                if (list != null) _learned = new HashSet<string>(list);
+            }
+        }
+        catch { }
+    }
+
+    private async Task SaveLearnedAsync()
+    {
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(_learned);
+            await JS.InvokeVoidAsync("localStorage.setItem", StorageKey, json);
+        }
+        catch { }
+    }
+
+    [Inject] IJSRuntime JS { get; set; } = default!;
+}
