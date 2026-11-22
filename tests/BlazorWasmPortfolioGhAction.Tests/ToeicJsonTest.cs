@@ -8,9 +8,31 @@ namespace BlazorWasmPortfolioGhAction.Tests;
 
 public class ToeicJsonTest
 {
+    public static string FindDataPath(string fileName)
+    {
+        var baseDir = AppContext.BaseDirectory;
+        var dir = new DirectoryInfo(baseDir);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(dir.FullName, "wwwroot", "sample-data", fileName);
+            if (File.Exists(candidate)) return candidate;
+            dir = dir.Parent;
+        }
+
+        var currentDir = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (currentDir != null)
+        {
+            var candidate = Path.Combine(currentDir.FullName, "wwwroot", "sample-data", fileName);
+            if (File.Exists(candidate)) return candidate;
+            currentDir = currentDir.Parent;
+        }
+
+        return Path.GetFullPath(Path.Combine("wwwroot", "sample-data", fileName));
+    }
+
     private static ToeicData LoadToeicData()
     {
-        var path = Path.GetFullPath("../../../../../wwwroot/sample-data/toeic.json");
+        var path = FindDataPath("toeic.json");
         Assert.True(File.Exists(path), $"File not found at: {path}");
         var json = File.ReadAllText(path);
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };

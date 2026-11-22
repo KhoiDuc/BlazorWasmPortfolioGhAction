@@ -7,10 +7,12 @@ namespace BlazorWasmPortfolioGhAction.Tests;
 
 public class DevLearningJsonTest
 {
+    private static string FindPath() => ToeicJsonTest.FindDataPath("dev-learning.json");
+
     [Fact]
     public void TestDevLearningJsonDeserialization()
     {
-        var path = Path.GetFullPath("../../../../../wwwroot/sample-data/dev-learning.json");
+        var path = FindPath();
         Assert.True(File.Exists(path), $"File not found at: {path}");
         var json = File.ReadAllText(path);
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -22,7 +24,7 @@ public class DevLearningJsonTest
     [Fact]
     public void TestAllSeriesCategoriesMapped()
     {
-        var path = Path.GetFullPath("../../../../../wwwroot/sample-data/dev-learning.json");
+        var path = FindPath();
         var json = File.ReadAllText(path);
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var data = JsonSerializer.Deserialize<DevBlogData>(json, options);
@@ -40,7 +42,7 @@ public class DevLearningJsonTest
     [Fact]
     public void TestArticlesStartFromLesson1AndSequential()
     {
-        var path = Path.GetFullPath("../../../../../wwwroot/sample-data/dev-learning.json");
+        var path = FindPath();
         var json = File.ReadAllText(path);
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var data = JsonSerializer.Deserialize<DevBlogData>(json, options);
@@ -61,7 +63,7 @@ public class DevLearningJsonTest
     [Fact]
     public void TestNoCorruptedArrowsInJson()
     {
-        var path = Path.GetFullPath("../../../../../wwwroot/sample-data/dev-learning.json");
+        var path = FindPath();
         var json = File.ReadAllText(path);
         Assert.DoesNotContain("$ ightarrow$", json);
         Assert.DoesNotContain("$ ightarrow", json);

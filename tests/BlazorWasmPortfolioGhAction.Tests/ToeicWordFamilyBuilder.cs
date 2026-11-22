@@ -324,7 +324,94 @@ public static class ToeicWordFamilyBuilder
         ["strategy"] = ("strategize", "strategy, strategist", "strategic", "strategically"),
         ["strategic"] = ("strategize", "strategy", "strategic", "strategically"),
         ["feedback"] = ("feed back", "feedback", null, null),
-        ["objective"] = (null, "objective, objectivity", "objective", "objectively")
+        ["objective"] = (null, "objective, objectivity", "objective", "objectively"),
+
+        // Confusable Words
+        ["beside vs besides"] = (null, null, "beside", "beside, besides"),
+
+        // Collocations & Phrasal Expressions
+        ["take advantage of"] = ("take advantage of, exploit", "advantage", "advantageous", "advantageously"),
+        ["under construction"] = ("construct", "construction", "under construction, constructive", "constructively"),
+        ["draw a conclusion"] = ("conclude, draw a conclusion", "conclusion", "conclusive", "conclusively"),
+        ["put forward"] = ("put forward, propose", "proposal", "forward", "forward"),
+        ["bring about"] = ("bring about, cause", "cause", null, null),
+        ["set forth"] = ("set forth, state", "statement", null, "forth"),
+        ["carry out"] = ("carry out, execute", "execution", "executable", null),
+        ["adhere to"] = ("adhere, adhere to", "adherence, adhesive", "adherent, adhesive", "adhesively"),
+        ["abide by"] = ("abide, abide by", "abidance", "abiding", "abidingly"),
+        ["conform to"] = ("conform, conform to", "conformity, conformance", "conforming, conformable", "conformably"),
+        ["amount to"] = ("amount, amount to", "amount", null, null),
+        ["bring up"] = ("bring up, raise", "upbringing", null, null),
+        ["follow up"] = ("follow up", "follow-up", "follow-up", null),
+        ["sort out"] = ("sort out, sort", "sorting", "sorted", null),
+        ["lay off"] = ("lay off", "layoff", "laid-off", null),
+        ["consist of"] = ("consist, consist of", "consistency", "consistent", "consistently"),
+        ["give rise to"] = ("give rise to, cause", "rise, cause", null, null),
+        ["attributable to"] = ("attribute", "attribute, attribution", "attributable, attributable to", null),
+        ["in light of"] = (null, "light", "in light of", null),
+        ["on behalf of"] = (null, "behalf", null, "on behalf of"),
+        ["by means of"] = ("mean", "means", null, "by means of"),
+        ["in accordance with"] = ("accord", "accordance", "accordant", "in accordance with, accordingly"),
+        ["for the sake of"] = (null, "sake", null, "for the sake of"),
+        ["in the event of"] = (null, "event", "eventual", "in the event of, eventually"),
+        ["on the verge of"] = ("verge", "verge", "on the verge of", null),
+        ["in pursuit of"] = ("pursue", "pursuit", "in pursuit of", null),
+        ["at the expense of"] = ("expend", "expense", "expensive", "at the expense of, expensively"),
+        ["in lieu of"] = (null, "lieu", null, "in lieu of"),
+        ["in excess of"] = ("exceed", "excess", "excessive, in excess of", "excessively"),
+        ["take over"] = ("take over", "takeover", null, null),
+
+        // Business Idioms
+        ["touch base"] = ("touch base", "touch, contact", null, null),
+        ["get the ball rolling"] = ("get the ball rolling, start", "start", null, null),
+        ["think outside the box"] = ("think outside the box", "creativity", "creative", "creatively"),
+        ["hit the ground running"] = ("hit the ground running", "readiness", "ready", null),
+        ["in the loop"] = ("loop", "loop", "in the loop, informed", null),
+        ["cut corners"] = ("cut corners", "shortcut, corner", null, null),
+        ["go the extra mile"] = ("go the extra mile", "extra mile, effort", null, null),
+        ["keep one's eye on the ball"] = ("keep one's eye on the ball, focus", "focus", "focused", null),
+        ["raise the bar"] = ("raise the bar", "standard, benchmark", null, null),
+        ["get down to business"] = ("get down to business", "business", null, null),
+        ["a win-win situation"] = ("win", "win-win situation", "win-win", null),
+        ["read between the lines"] = ("read between the lines", "insight", "insightful", null),
+        ["put all one's eggs in one basket"] = ("put all one's eggs in one basket, risk", "risk", "risky", null),
+        ["the bottom line"] = (null, "bottom line", "fundamental", "fundamentally"),
+        ["ahead of the curve"] = (null, "curve", "ahead of the curve, advanced", "ahead"),
+        ["behind the scenes"] = (null, "scene", "behind-the-scenes", "behind the scenes"),
+        ["by the book"] = (null, "book", "by-the-book", "by the book, strictly"),
+        ["get something off the ground"] = ("get off the ground, launch", "launch", null, null),
+        ["in a nutshell"] = (null, "nutshell", "concise", "in a nutshell, concisely"),
+        ["on the back burner"] = (null, "back burner", "delayed, deferred", "on the back burner"),
+        ["pull one's weight"] = ("pull one's weight, cooperate", "cooperation", "cooperative", null),
+        ["silver lining"] = (null, "silver lining", "optimistic, hopeful", "optimistically"),
+        ["take it for granted"] = ("take for granted, assume", "assumption", null, null),
+        ["throw in the towel"] = ("throw in the towel, surrender", "surrender", null, null),
+        ["up in the air"] = (null, "uncertainty", "up in the air, uncertain", "uncertainly"),
+        ["wild goose chase"] = ("chase", "wild goose chase", "futile", "futilely"),
+        ["word of mouth"] = (null, "word of mouth", "word-of-mouth", "by word of mouth"),
+        ["play it by ear"] = ("play it by ear, improvise", "improvisation", "improvised", null),
+        ["bite the bullet"] = ("bite the bullet, endure", "endurance", null, null),
+        ["burn the midnight oil"] = ("burn the midnight oil, overwork", "overwork", null, null),
+        ["on thin ice"] = (null, "risk", "on thin ice, risky", "precariously"),
+        ["a stone's throw"] = (null, "stone's throw", "nearby, close", "close by"),
+        ["by leaps and bounds"] = ("leap, bound", "leap, bound", "rapid", "by leaps and bounds, rapidly"),
+        ["get cold feet"] = ("get cold feet, hesitate", "hesitation", "hesitant", null),
+        ["go out of one's way"] = ("go out of one's way", "effort", null, null),
+        ["hit the roof"] = ("hit the roof, rage", "rage", "furious", "furiously"),
+        ["keep an eye on"] = ("keep an eye on, monitor", "surveillance, eye", null, null),
+        ["nip in the bud"] = ("nip in the bud, suppress", "suppression", null, null),
+        ["rock the boat"] = ("rock the boat, disrupt", "disruption", "disruptive", null),
+        ["sweep under the rug"] = ("sweep under the rug, conceal", "concealment", null, null),
+        ["break the ice"] = ("break the ice", "icebreaker", null, null),
+
+        // Numbers, Dates & Common Prepositional Forms
+        ["as of"] = (null, null, null, "as of"),
+        ["by the end of"] = ("end", "end", null, "by the end of"),
+        ["prior to"] = (null, "priority", "prior", "prior to, previously"),
+
+        // Health & Environment
+        ["sustainability initiative"] = ("sustain, initiate", "sustainability initiative", "sustainable", "sustainably"),
+        ["orientation seminar"] = ("orient", "orientation seminar", "oriented", null)
     };
 
     public static ToeicWordFamily GenerateFamily(string rawWord, string pos)
@@ -507,6 +594,15 @@ public static class ToeicWordFamilyBuilder
                 n = n ?? (lower + "ness");
                 adv = adv ?? (lower.EndsWith("e") ? lower + "ly" : lower + "ly");
             }
+        }
+
+        // Guaranteed fallback so no word family is ever completely empty
+        if (v == null && n == null && adj == null && adv == null)
+        {
+            if (pos == "prep" || pos == "adv") adv = lower;
+            else if (pos == "adj") adj = lower;
+            else if (pos == "v") v = lower;
+            else n = lower;
         }
 
         // Clean duplicates
