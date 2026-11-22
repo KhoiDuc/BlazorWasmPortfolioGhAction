@@ -1,4 +1,5 @@
 @using BlazorWasmPortfolioGhAction.Pages
+@inject IJSRuntime JS
 
 <div class="toeic-grammar-tab">
     <!-- Header -->
@@ -10,6 +11,34 @@
         <p class="toeic-section-desc">
             Bao phủ 100% dạng câu hỏi ngữ pháp Part 5: Từ loại, 12 thì, thể bị động, đại từ, sự hòa hợp S-V, mệnh đề quan hệ rút gọn, liên từ vs giới từ, câu điều kiện đảo ngữ, thể giả định, so sánh và V-ing vs To-V.
         </p>
+    </div>
+
+    <!-- Quiz Summary Banner -->
+    <div class="toeic-quiz-summary-card">
+        <div>
+            <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-brand-symbol, #ca8a04); margin-bottom: 0.25rem;">
+                <i class="bi bi-patch-question-fill me-1"></i> Bảng Thành Tích Mini Quiz Ngữ Pháp Part 5
+            </div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: var(--color-text-primary);">
+                Đã làm: <span class="text-primary">@_userAnswers.Count</span> / @TotalQuestions câu
+                • Đúng: <span class="text-success">@CorrectAnswersCount</span> câu
+                @if (_userAnswers.Any())
+                {
+                    <span style="font-size: 0.95rem; font-weight: 700; margin-left: 0.5rem; color: @(AccuracyRate >= 80 ? "#16a34a" : (AccuracyRate >= 60 ? "#d97706" : "#ef4444"));">
+                        (@AccuracyRate% chính xác)
+                    </span>
+                }
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            @if (_userAnswers.Any())
+            {
+                <button type="button" class="toeic-tool-btn" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" @onclick="ResetQuiz">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Làm lại toàn bộ Quiz
+                </button>
+            }
+        </div>
     </div>
 
     <!-- Quick Topic Jump Chips -->
@@ -144,13 +173,81 @@
     private string _selectedGrammarFilter = "all";
     private Dictionary<string, int> _userAnswers = new();
 
+    private int TotalQuestions => Data.GrammarTopics.Sum(t => t.MiniQuiz.Count);
+
+    private int CorrectAnswersCount
+    {
+        get
+        {
+            int count = 0;
+            foreach (var topic in Data.GrammarTopics)
+            {
+                for (int i = 0; i < topic.MiniQuiz.Count; i++)
+                {
+                    var key = $"{topic.Id}-{i}";
+                    if (_userAnswers.TryGetValue(key, out var ans) && ans == topic.MiniQuiz[i].CorrectIndex)
+                    {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
+    }
+
+    private int AccuracyRate => _userAnswers.Any()
+        ? (int)Math.Round((double)CorrectAnswersCount / _userAnswers.Count * 100)
+        : 0;
+
     private IEnumerable<ToeicGrammarTopic> DisplayedTopics =>
         _selectedGrammarFilter == "all"
             ? Data.GrammarTopics
             : Data.GrammarTopics.Where(t => t.Id == _selectedGrammarFilter);
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var stored = await JS.InvokeAsync<string?>("localStorage.getItem", "toeic_grammar_quiz_answers");
+                if (!string.IsNullOrEmpty(stored))
+                {
+                    var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(stored);
+                    if (dict != null)
+                    {
+                        _userAnswers = dict;
+                        StateHasChanged();
+                    }
+                }
+            }
+            catch { }
+        }
+    }
+
     private void SelectAnswer(string qKey, int choice)
     {
         _userAnswers[qKey] = choice;
+        _ = SaveAnswersAsync();
+    }
+
+    private async Task SaveAnswersAsync()
+    {
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(_userAnswers);
+            await JS.InvokeVoidAsync("localStorage.setItem", "toeic_grammar_quiz_answers", json);
+        }
+        catch { }
+    }
+
+    private async Task ResetQuiz()
+    {
+        _userAnswers.Clear();
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.removeItem", "toeic_grammar_quiz_answers");
+        }
+        catch { }
     }
 }

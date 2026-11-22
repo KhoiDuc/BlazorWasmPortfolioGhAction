@@ -1,4 +1,5 @@
 @using BlazorWasmPortfolioGhAction.Pages
+@inject IJSRuntime JS
 @implements IDisposable
 
 <div class="toeic-speaking-tab">
@@ -114,8 +115,53 @@
                 </div>
             </div>
 
+            <!-- Voice Recording Lab -->
+            <div class="toeic-voice-recorder">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    @if (_recordingPromptPart == prompt.Part)
+                    {
+                        <span class="toeic-rec-pulse"></span>
+                        <span style="font-size: 0.88rem; font-weight: 700; color: #ef4444;">
+                            Đang ghi âm câu trả lời của bạn...
+                        </span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-mic text-warning" style="font-size: 1.25rem;"></i>
+                        <div>
+                            <span style="font-size: 0.88rem; font-weight: 700; color: var(--color-text-primary); display: block;">
+                                Ghi âm bài nói thực tế
+                            </span>
+                            <span style="font-size: 0.75rem; color: var(--color-text-muted);">
+                                Thu âm để tự nghe lại và đối chiếu phát âm với bài mẫu
+                            </span>
+                        </div>
+                    }
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    @if (_recordedAudioUrls.TryGetValue(prompt.Part, out var audioUrl) && !string.IsNullOrEmpty(audioUrl))
+                    {
+                        <audio controls src="@audioUrl" style="height: 36px; max-width: 220px;"></audio>
+                    }
+
+                    @if (_recordingPromptPart == prompt.Part)
+                    {
+                        <button type="button" class="toeic-timer-btn primary" style="background: #ef4444; border-color: #ef4444;" @onclick="() => StopRecording(prompt.Part)">
+                            <i class="bi bi-stop-circle-fill me-1"></i> Dừng ghi âm
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="toeic-timer-btn secondary" @onclick="() => StartRecording(prompt.Part)">
+                            <i class="bi bi-record-circle text-danger me-1"></i> @(audioUrl != null ? "Ghi âm lại" : "Bắt đầu thu âm")
+                        </button>
+                    }
+                </div>
+            </div>
+
             <!-- Tip -->
-            <div style="font-size: 0.82rem; color: var(--color-text-muted); font-style: italic;">
+            <div style="font-size: 0.82rem; color: var(--color-text-muted); font-style: italic; margin-top: 0.85rem;">
                 <i class="bi bi-lightbulb-fill text-warning me-1"></i> Lời khuyên: @prompt.Tips
             </div>
         </div>
@@ -132,6 +178,9 @@
     private int _prepTime = 45;
     private int _speakTime = 30;
     private int _secondsRemaining = 45;
+
+    private string? _recordingPromptPart;
+    private Dictionary<string, string> _recordedAudioUrls = new();
 
     protected override void OnInitialized()
     {
@@ -189,15 +238,81 @@
                 {
                     _isPrepPhase = false;
                     _secondsRemaining = _speakTime;
+                    _ = PlayBeepAsync();
                     StateHasChanged();
                 }
                 else
                 {
                     PauseTimer();
+                    _ = PlayBeepAsync();
                     StateHasChanged();
                 }
             }
         });
+    }
+
+    private async Task PlayBeepAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("eval", "try{const ctx=new(window.AudioContext||window.webkitAudioContext)();const osc=ctx.createOscillator();const g=ctx.createGain();osc.connect(g);g.connect(ctx.destination);osc.frequency.value=880;g.gain.value=0.25;osc.start();setTimeout(()=>{osc.stop();ctx.close();},400);}catch(e){}");
+        }
+        catch { }
+    }
+
+    private async Task StartRecording(string promptPart)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("eval", @"
+                if (!window.toeicRecorder) {
+                    window.toeicRecorder = {
+                        mediaRecorder: null,
+                        audioChunks: [],
+                        start: async function() {
+                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            this.audioChunks = [];
+                            this.mediaRecorder = new MediaRecorder(stream);
+                            this.mediaRecorder.ondataavailable = e => { if (e.data.size > 0) this.audioChunks.push(e.data); };
+                            this.mediaRecorder.start();
+                        },
+                        stop: function() {
+                            return new Promise(resolve => {
+                                this.mediaRecorder.onstop = () => {
+                                    const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                                    const url = URL.createObjectURL(blob);
+                                    resolve(url);
+                                };
+                                this.mediaRecorder.stop();
+                                this.mediaRecorder.stream.getTracks().forEach(t => t.stop());
+                            });
+                        }
+                    };
+                }
+            ");
+            await JS.InvokeVoidAsync("toeicRecorder.start");
+            _recordingPromptPart = promptPart;
+            StateHasChanged();
+        }
+        catch { }
+    }
+
+    private async Task StopRecording(string promptPart)
+    {
+        try
+        {
+            var url = await JS.InvokeAsync<string>("toeicRecorder.stop");
+            if (!string.IsNullOrEmpty(url))
+            {
+                _recordedAudioUrls[promptPart] = url;
+            }
+        }
+        catch { }
+        finally
+        {
+            _recordingPromptPart = null;
+            StateHasChanged();
+        }
     }
 
     private string FormatTime(int sec)

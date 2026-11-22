@@ -219,16 +219,20 @@
     else if (_vocabMode == "flashcard")
     {
         <!-- 3D Flashcard Mode -->
-        <div class="toeic-fc-wrapper">
+        <div class="toeic-fc-wrapper" tabindex="0" @onkeydown="HandleKeyDown" style="outline: none;">
             <!-- Toolbar -->
             <div class="toeic-fc-toolbar">
                 <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                     <select class="toeic-search-input" style="width: auto; padding: 0.4rem 1rem;" @bind="_selectedFlashcardCategory" @bind:after="ResetDeck">
                         <option value="all">Toàn bộ kho từ (@AllWords.Count từ)</option>
-                        @foreach (var cat in Data.VocabCategories)
-                        {
-                            <option value="@cat.Id">@cat.Name (@cat.Items.Count từ)</option>
-                        }
+                        <option value="unlearned">🎯 Chỉ từ chưa thuộc (@UnlearnedCount từ)</option>
+                        <option value="learned">⭐ Chỉ từ đã thuộc (@_learnedWords.Count từ)</option>
+                        <optgroup label="── 41 Chủ Đề Chuẩn ETS ──">
+                            @foreach (var cat in Data.VocabCategories)
+                            {
+                                <option value="@cat.Id">@cat.Name (@cat.Items.Count từ)</option>
+                            }
+                        </optgroup>
                     </select>
 
                     <button type="button" class="toeic-tool-btn" @onclick="ShuffleDeck">
@@ -345,81 +349,161 @@
                         Thẻ tiếp <i class="bi bi-arrow-right"></i>
                     </button>
                 </div>
+
+                <div class="toeic-keyboard-shortcuts">
+                    <span><kbd>Space</kbd> Lật thẻ</span>
+                    <span><kbd>←</kbd> <kbd>→</kbd> Thẻ trước / sau</span>
+                    <span><kbd>M</kbd> hoặc <kbd>Enter</kbd> Đánh dấu đã thuộc</span>
+                </div>
             }
         </div>
     }
     else if (_vocabMode == "vocab")
     {
-        <!-- Category Selector -->
-        <div class="toeic-filter-pills" style="margin-bottom: 1.5rem;">
-            @foreach (var cat in Data.VocabCategories)
+        var currentCat = Data.VocabCategories.FirstOrDefault(c => c.Id == _selectedCatId) ?? Data.VocabCategories.First();
+        var isSearching = !string.IsNullOrWhiteSpace(_vocabSearchTerm);
+        var displayedWords = FilteredVocabList.ToList();
+
+        <!-- Search Bar & Scope Toggle -->
+        <div class="toeic-vocab-search-wrap" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                <div class="toeic-search-box" style="flex: 1; min-width: 280px; position: relative;">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input type="text"
+                           class="toeic-search-input"
+                           style="padding-right: 2.5rem;"
+                           placeholder="Tra cứu từ vựng (ví dụ: negotiate, đàm phán, hợp đồng, collocation)..."
+                           @bind="_vocabSearchTerm"
+                           @bind:event="oninput" />
+                    @if (isSearching)
+                    {
+                        <button type="button" class="toeic-clear-search-btn" title="Xóa tìm kiếm" @onclick="ClearVocabSearch">
+                            <i class="bi bi-x-circle-fill"></i>
+                        </button>
+                    }
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <label class="toeic-toggle-label" style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--color-text-secondary); cursor: pointer; user-select: none;">
+                        <input type="checkbox" @bind="_searchAcrossAllCategories" />
+                        <span>Tìm trong toàn bộ 2.050 từ (41 chủ đề)</span>
+                    </label>
+                </div>
+            </div>
+
+            @if (isSearching)
             {
-                <button type="button"
-                        class="toeic-filter-chip @(_selectedCatId == cat.Id ? "active" : "")"
-                        @onclick="() => _selectedCatId = cat.Id">
-                    <i class="bi @cat.Icon me-1"></i> @cat.Name
-                </button>
+                <div style="margin-top: 0.75rem; font-size: 0.88rem; color: var(--color-text-secondary); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                    <span>
+                        <i class="bi bi-funnel-fill text-warning me-1"></i>
+                        Tìm thấy <b class="text-warning">@displayedWords.Count</b> từ khớp với "<b>@_vocabSearchTerm</b>"
+                        @(_searchAcrossAllCategories ? "(trên toàn bộ 41 chủ đề)" : $"(trong chủ đề {currentCat.NameVi})")
+                    </span>
+                    <button type="button" class="btn btn-sm btn-link text-warning text-decoration-none p-0" style="font-size: 0.82rem;" @onclick="ClearVocabSearch">
+                        <i class="bi bi-x-lg me-1"></i> Xóa tìm kiếm
+                    </button>
+                </div>
             }
         </div>
 
-        var currentCat = Data.VocabCategories.FirstOrDefault(c => c.Id == _selectedCatId) ?? Data.VocabCategories.First();
-        <div class="toeic-vocab-section">
-            <div style="margin-bottom: 1rem;">
-                <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--color-brand-symbol, #ca8a04); margin: 0 0 0.25rem;">
-                    @currentCat.NameVi
-                </h3>
-                <span style="font-size: 0.85rem; color: var(--color-text-muted);">
-                    @currentCat.Items.Count từ vựng bắt buộc phải biết
-                </span>
-            </div>
-
-            <div class="toeic-vocab-grid">
-                @foreach (var word in currentCat.Items)
+        @if (!_searchAcrossAllCategories || !isSearching)
+        {
+            <!-- Category Selector -->
+            <div class="toeic-filter-pills" style="margin-bottom: 1.5rem;">
+                @foreach (var cat in Data.VocabCategories)
                 {
-                    <div class="toeic-word-card">
-                        <div class="toeic-word-top-row">
-                            <span class="toeic-word-en">@word.En</span>
-                            <span class="toeic-word-pos">@word.Pos</span>
-                        </div>
-
-                        <div class="toeic-word-ipa-row">
-                            <span class="toeic-word-ipa">@word.Ipa</span>
-                            <button type="button"
-                                    class="toeic-tts-btn"
-                                    title="Phát âm tiếng Anh chuẩn"
-                                    @onclick="() => PlayAudio(word.En)">
-                                <i class="bi bi-volume-up-fill"></i>
-                            </button>
-                        </div>
-
-                        <div class="toeic-word-vi">@word.Vi</div>
-
-                        @if (!string.IsNullOrEmpty(word.Collocation))
-                        {
-                            <div class="toeic-word-colloc">
-                                <i class="bi bi-link-45deg me-1"></i> @word.Collocation
-                            </div>
-                        }
-
-                        @if (word.WordFamily != null && (word.WordFamily.V != null || word.WordFamily.N != null || word.WordFamily.Adj != null || word.WordFamily.Adv != null))
-                        {
-                            <div class="toeic-word-family">
-                                <span class="toeic-family-label"><i class="bi bi-diagram-2-fill me-1"></i>Họ từ (Word Family):</span>
-                                <div class="toeic-wf-chips">
-                                    @if (!string.IsNullOrEmpty(word.WordFamily.V)) { <span class="toeic-wf-chip v" title="Verb"><b>V:</b> @word.WordFamily.V</span> }
-                                    @if (!string.IsNullOrEmpty(word.WordFamily.N)) { <span class="toeic-wf-chip n" title="Noun"><b>N:</b> @word.WordFamily.N</span> }
-                                    @if (!string.IsNullOrEmpty(word.WordFamily.Adj)) { <span class="toeic-wf-chip adj" title="Adjective"><b>Adj:</b> @word.WordFamily.Adj</span> }
-                                    @if (!string.IsNullOrEmpty(word.WordFamily.Adv)) { <span class="toeic-wf-chip adv" title="Adverb"><b>Adv:</b> @word.WordFamily.Adv</span> }
-                                </div>
-                            </div>
-                        }
-
-                        <div class="toeic-word-example">
-                            "@word.Example"
-                        </div>
-                    </div>
+                    <button type="button"
+                            class="toeic-filter-chip @(_selectedCatId == cat.Id ? "active" : "")"
+                            @onclick="() => _selectedCatId = cat.Id">
+                        <i class="bi @cat.Icon me-1"></i> @cat.Name
+                    </button>
                 }
             </div>
+        }
+
+        <div class="toeic-vocab-section">
+            <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                    <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--color-brand-symbol, #ca8a04); margin: 0 0 0.25rem;">
+                        @(isSearching && _searchAcrossAllCategories ? "Kết Quả Tìm Kiếm Toàn Diện" : currentCat.NameVi)
+                    </h3>
+                    <span style="font-size: 0.85rem; color: var(--color-text-muted);">
+                        @displayedWords.Count từ vựng hiển thị
+                    </span>
+                </div>
+            </div>
+
+            @if (!displayedWords.Any())
+            {
+                <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-muted); background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: 12px;">
+                    <i class="bi bi-search" style="font-size: 2rem; display: block; margin-bottom: 0.75rem; opacity: 0.5;"></i>
+                    <h4 style="margin: 0 0 0.5rem; font-size: 1.1rem; color: var(--color-text-primary);">Không tìm thấy từ vựng phù hợp</h4>
+                    <p style="margin: 0 0 1rem; font-size: 0.88rem;">Hãy thử từ khóa khác hoặc bỏ chọn giới hạn chủ đề.</p>
+                    <button type="button" class="toeic-timer-btn primary" @onclick="ClearVocabSearch">
+                        Xóa từ khóa tìm kiếm
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="toeic-vocab-grid">
+                    @foreach (var word in displayedWords)
+                    {
+                        var isLearned = _learnedWords.Contains(word.En);
+                        <div class="toeic-word-card">
+                            <div class="toeic-word-top-row">
+                                <span class="toeic-word-en">@word.En</span>
+                                <div style="display: flex; gap: 0.35rem; align-items: center;">
+                                    <button type="button"
+                                            class="toeic-tool-btn p-0"
+                                            style="width: 26px; height: 26px; font-size: 0.9rem;"
+                                            title="@(isLearned ? "Đã thuộc" : "Đánh dấu đã thuộc")"
+                                            @onclick="() => ToggleLearned(word.En)">
+                                        <i class="bi @(isLearned ? "bi-check2-all text-success" : "bi-check2 text-muted")"></i>
+                                    </button>
+                                    <span class="toeic-word-pos">@word.Pos</span>
+                                </div>
+                            </div>
+
+                            <div class="toeic-word-ipa-row">
+                                <span class="toeic-word-ipa">@word.Ipa</span>
+                                <button type="button"
+                                        class="toeic-tts-btn"
+                                        title="Phát âm tiếng Anh chuẩn"
+                                        @onclick="() => PlayAudio(word.En)">
+                                    <i class="bi bi-volume-up-fill"></i>
+                                </button>
+                            </div>
+
+                            <div class="toeic-word-vi">@word.Vi</div>
+
+                            @if (!string.IsNullOrEmpty(word.Collocation))
+                            {
+                                <div class="toeic-word-colloc">
+                                    <i class="bi bi-link-45deg me-1"></i> @word.Collocation
+                                </div>
+                            }
+
+                            @if (word.WordFamily != null && (word.WordFamily.V != null || word.WordFamily.N != null || word.WordFamily.Adj != null || word.WordFamily.Adv != null))
+                            {
+                                <div class="toeic-word-family">
+                                    <span class="toeic-family-label"><i class="bi bi-diagram-2-fill me-1"></i>Họ từ (Word Family):</span>
+                                    <div class="toeic-wf-chips">
+                                        @if (!string.IsNullOrEmpty(word.WordFamily.V)) { <span class="toeic-wf-chip v" title="Verb"><b>V:</b> @word.WordFamily.V</span> }
+                                        @if (!string.IsNullOrEmpty(word.WordFamily.N)) { <span class="toeic-wf-chip n" title="Noun"><b>N:</b> @word.WordFamily.N</span> }
+                                        @if (!string.IsNullOrEmpty(word.WordFamily.Adj)) { <span class="toeic-wf-chip adj" title="Adjective"><b>Adj:</b> @word.WordFamily.Adj</span> }
+                                        @if (!string.IsNullOrEmpty(word.WordFamily.Adv)) { <span class="toeic-wf-chip adv" title="Adverb"><b>Adv:</b> @word.WordFamily.Adv</span> }
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="toeic-word-example">
+                                "@word.Example"
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
         </div>
     }
     else if (_vocabMode == "game")
@@ -630,11 +714,45 @@
     private string _selectedCatId = "cat-business";
     private string _selectedFlashcardCategory = "all";
     private string _gameCategoryId = "";
+    private string _vocabSearchTerm = "";
+    private bool _searchAcrossAllCategories = true;
 
     private List<ToeicWordItem> _currentDeck = new();
     private int _currentCardIndex = 0;
     private bool _isFlipped = false;
     private HashSet<string> _learnedWords = new();
+
+    private int UnlearnedCount => Math.Max(0, AllWords.Count - _learnedWords.Count);
+
+    private void ClearVocabSearch() => _vocabSearchTerm = "";
+
+    private IEnumerable<ToeicWordItem> FilteredVocabList
+    {
+        get
+        {
+            var currentCat = Data.VocabCategories.FirstOrDefault(c => c.Id == _selectedCatId) ?? Data.VocabCategories.First();
+            var baseList = _searchAcrossAllCategories || string.IsNullOrWhiteSpace(_vocabSearchTerm)
+                ? (string.IsNullOrWhiteSpace(_vocabSearchTerm) ? currentCat.Items : AllWords)
+                : currentCat.Items;
+
+            if (string.IsNullOrWhiteSpace(_vocabSearchTerm)) return baseList;
+
+            var term = _vocabSearchTerm.Trim().ToLowerInvariant();
+            return baseList.Where(w =>
+                w.En.ToLowerInvariant().Contains(term) ||
+                w.Vi.ToLowerInvariant().Contains(term) ||
+                (w.Collocation != null && w.Collocation.ToLowerInvariant().Contains(term)) ||
+                (w.Pos != null && w.Pos.ToLowerInvariant().Contains(term)) ||
+                (w.Example != null && w.Example.ToLowerInvariant().Contains(term)) ||
+                (w.WordFamily != null && (
+                    (w.WordFamily.V != null && w.WordFamily.V.ToLowerInvariant().Contains(term)) ||
+                    (w.WordFamily.N != null && w.WordFamily.N.ToLowerInvariant().Contains(term)) ||
+                    (w.WordFamily.Adj != null && w.WordFamily.Adj.ToLowerInvariant().Contains(term)) ||
+                    (w.WordFamily.Adv != null && w.WordFamily.Adv.ToLowerInvariant().Contains(term))
+                ))
+            );
+        }
+    }
 
     // Daily vocab state
     private DailyVocabResult? _dailyResult;
@@ -773,6 +891,14 @@
         {
             _currentDeck = AllWords.ToList();
         }
+        else if (_selectedFlashcardCategory == "unlearned")
+        {
+            _currentDeck = AllWords.Where(w => !_learnedWords.Contains(w.En)).ToList();
+        }
+        else if (_selectedFlashcardCategory == "learned")
+        {
+            _currentDeck = AllWords.Where(w => _learnedWords.Contains(w.En)).ToList();
+        }
         else
         {
             var cat = Data.VocabCategories.FirstOrDefault(c => c.Id == _selectedFlashcardCategory);
@@ -780,6 +906,26 @@
         }
         _currentCardIndex = 0;
         _isFlipped = false;
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "ArrowRight" || e.Key == "PageDown")
+        {
+            NextCard();
+        }
+        else if (e.Key == "ArrowLeft" || e.Key == "PageUp")
+        {
+            PrevCard();
+        }
+        else if (e.Key == " " || e.Key == "ArrowUp" || e.Key == "ArrowDown")
+        {
+            ToggleFlip();
+        }
+        else if (e.Key == "m" || e.Key == "M" || e.Key == "Enter")
+        {
+            if (CurrentWord != null) ToggleLearned(CurrentWord.En);
+        }
     }
 
     private void ShuffleDeck()

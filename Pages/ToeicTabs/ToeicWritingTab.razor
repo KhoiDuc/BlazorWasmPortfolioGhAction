@@ -1,4 +1,5 @@
 @using BlazorWasmPortfolioGhAction.Pages
+@inject IJSRuntime JS
 
 <div class="toeic-writing-tab">
     <!-- Header -->
@@ -78,6 +79,61 @@
                 </div>
             </div>
 
+            <!-- Interactive Writing Practice Sandbox -->
+            <div class="toeic-writing-sandbox">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.95rem; font-weight: 800; color: var(--color-brand-symbol, #ca8a04);">
+                            <i class="bi bi-pencil-square me-1"></i> Phòng Luyện Viết Cho @template.Task
+                        </span>
+                        <span class="toeic-tag" style="background: rgba(59, 130, 246, 0.12); color: #3b82f6;">
+                            Thời gian gợi ý: @GetTaskTime(template.Task)
+                        </span>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="font-size: 0.85rem; font-weight: 700; color: @GetWordCountColor(template.Task, GetWordCount(template.Task));">
+                            <i class="bi bi-card-text me-1"></i> @GetWordCount(template.Task) từ @GetWordCountTargetHint(template.Task)
+                        </span>
+
+                        <button type="button" class="toeic-filter-chip @(_showSplitView.Contains(template.Task) ? "active" : "")"
+                                style="font-size: 0.8rem; padding: 0.2rem 0.65rem;"
+                                @onclick="() => ToggleSplitView(template.Task)">
+                            <i class="bi bi-layout-split me-1"></i> So sánh với bài mẫu
+                        </button>
+                    </div>
+                </div>
+
+                <textarea class="toeic-writing-textarea"
+                          placeholder="Bắt đầu gõ bài viết của bạn tại đây để rèn luyện phản xạ viết và quản trị dung lượng từ..."
+                          value="@GetDraft(template.Task)"
+                          @oninput="@(e => OnDraftInput(template.Task, e))">
+                </textarea>
+
+                @if (_showSplitView.Contains(template.Task))
+                {
+                    <div class="toeic-split-compare-grid">
+                        <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 1rem;">
+                            <h5 style="margin: 0 0 0.5rem; font-size: 0.88rem; font-weight: 800; color: #3b82f6;">
+                                Bài viết của bạn (@GetWordCount(template.Task) từ)
+                            </h5>
+                            <div style="font-size: 0.85rem; color: var(--color-text-primary); line-height: 1.6; white-space: pre-wrap;">
+                                @(string.IsNullOrWhiteSpace(GetDraft(template.Task)) ? "(Chưa nhập bài viết)" : GetDraft(template.Task))
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(34, 197, 94, 0.05); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; padding: 1rem;">
+                            <h5 style="margin: 0 0 0.5rem; font-size: 0.88rem; font-weight: 800; color: #16a34a;">
+                                Bài viết mẫu đạt điểm tối đa
+                            </h5>
+                            <div style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.6; white-space: pre-wrap;">
+                                @template.SampleFullResponse
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
             <!-- Common Mistakes -->
             @if (template.CommonMistakes.Any())
             {
@@ -99,4 +155,87 @@
 
 @code {
     [Parameter] public ToeicData Data { get; set; } = default!;
+
+    private Dictionary<string, string> _drafts = new();
+    private HashSet<string> _showSplitView = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var stored = await JS.InvokeAsync<string?>("localStorage.getItem", "toeic_writing_drafts");
+                if (!string.IsNullOrEmpty(stored))
+                {
+                    var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(stored);
+                    if (dict != null)
+                    {
+                        _drafts = dict;
+                        StateHasChanged();
+                    }
+                }
+            }
+            catch { }
+        }
+    }
+
+    private string GetDraft(string task) => _drafts.TryGetValue(task, out var text) ? text : "";
+
+    private void OnDraftInput(string task, Microsoft.AspNetCore.Components.ChangeEventArgs e)
+    {
+        OnDraftChanged(task, e.Value?.ToString() ?? "");
+    }
+
+    private void OnDraftChanged(string task, string value)
+    {
+        _drafts[task] = value;
+        _ = SaveDraftsAsync();
+    }
+
+    private async Task SaveDraftsAsync()
+    {
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(_drafts);
+            await JS.InvokeVoidAsync("localStorage.setItem", "toeic_writing_drafts", json);
+        }
+        catch { }
+    }
+
+    private void ToggleSplitView(string task)
+    {
+        if (!_showSplitView.Remove(task)) _showSplitView.Add(task);
+    }
+
+    private int GetWordCount(string task)
+    {
+        var text = GetDraft(task);
+        if (string.IsNullOrWhiteSpace(text)) return 0;
+        return text.Split(new[] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
+    }
+
+    private string GetTaskTime(string task) => task switch
+    {
+        "Task 1" => "8 phút / 5 câu",
+        "Task 2" => "10 phút / email",
+        "Task 3" => "30 phút / bài luận",
+        _ => "10 phút"
+    };
+
+    private string GetWordCountTargetHint(string task) => task switch
+    {
+        "Task 1" => "(chuẩn: 15–25 từ/câu)",
+        "Task 2" => "(chuẩn: 80–120 từ)",
+        "Task 3" => "(chuẩn: 300+ từ)",
+        _ => ""
+    };
+
+    private string GetWordCountColor(string task, int count) => task switch
+    {
+        "Task 1" => count >= 15 && count <= 30 ? "#16a34a" : (count > 0 ? "#d97706" : "var(--color-text-muted)"),
+        "Task 2" => count >= 80 ? "#16a34a" : (count >= 50 ? "#d97706" : "var(--color-text-muted)"),
+        "Task 3" => count >= 300 ? "#16a34a" : (count >= 150 ? "#d97706" : "var(--color-text-muted)"),
+        _ => "var(--color-text-primary)"
+    };
 }
