@@ -156,6 +156,18 @@
                                         <i class="bi bi-link-45deg me-1"></i> <b>Cụm đi kèm:</b> @_dailyCurrent.Collocation
                                     </div>
                                 }
+                                @if (_dailyCurrent.WordFamily != null && (_dailyCurrent.WordFamily.V != null || _dailyCurrent.WordFamily.N != null || _dailyCurrent.WordFamily.Adj != null || _dailyCurrent.WordFamily.Adv != null))
+                                {
+                                    <div class="toeic-fc-family">
+                                        <span class="toeic-family-label"><i class="bi bi-diagram-2-fill me-1"></i>Họ từ (Word Family):</span>
+                                        <div class="toeic-wf-chips">
+                                            @if (!string.IsNullOrEmpty(_dailyCurrent.WordFamily.V)) { <span class="toeic-wf-chip v" title="Verb"><b>V:</b> @_dailyCurrent.WordFamily.V</span> }
+                                            @if (!string.IsNullOrEmpty(_dailyCurrent.WordFamily.N)) { <span class="toeic-wf-chip n" title="Noun"><b>N:</b> @_dailyCurrent.WordFamily.N</span> }
+                                            @if (!string.IsNullOrEmpty(_dailyCurrent.WordFamily.Adj)) { <span class="toeic-wf-chip adj" title="Adjective"><b>Adj:</b> @_dailyCurrent.WordFamily.Adj</span> }
+                                            @if (!string.IsNullOrEmpty(_dailyCurrent.WordFamily.Adv)) { <span class="toeic-wf-chip adv" title="Adverb"><b>Adv:</b> @_dailyCurrent.WordFamily.Adv</span> }
+                                        </div>
+                                    </div>
+                                }
                                 <div class="toeic-fc-example">"@_dailyCurrent.Example"</div>
                                 <div class="toeic-fc-hint"><i class="bi bi-arrow-repeat me-1"></i> Chạm để quay lại</div>
                             </div>
@@ -288,6 +300,19 @@
                                 </div>
                             }
 
+                            @if (CurrentWord.WordFamily != null && (CurrentWord.WordFamily.V != null || CurrentWord.WordFamily.N != null || CurrentWord.WordFamily.Adj != null || CurrentWord.WordFamily.Adv != null))
+                            {
+                                <div class="toeic-fc-family">
+                                    <span class="toeic-family-label"><i class="bi bi-diagram-2-fill me-1"></i>Họ từ (Word Family):</span>
+                                    <div class="toeic-wf-chips">
+                                        @if (!string.IsNullOrEmpty(CurrentWord.WordFamily.V)) { <span class="toeic-wf-chip v" title="Verb"><b>V:</b> @CurrentWord.WordFamily.V</span> }
+                                        @if (!string.IsNullOrEmpty(CurrentWord.WordFamily.N)) { <span class="toeic-wf-chip n" title="Noun"><b>N:</b> @CurrentWord.WordFamily.N</span> }
+                                        @if (!string.IsNullOrEmpty(CurrentWord.WordFamily.Adj)) { <span class="toeic-wf-chip adj" title="Adjective"><b>Adj:</b> @CurrentWord.WordFamily.Adj</span> }
+                                        @if (!string.IsNullOrEmpty(CurrentWord.WordFamily.Adv)) { <span class="toeic-wf-chip adv" title="Adverb"><b>Adv:</b> @CurrentWord.WordFamily.Adv</span> }
+                                    </div>
+                                </div>
+                            }
+
                             <div class="toeic-fc-example">
                                 "@CurrentWord.Example"
                             </div>
@@ -373,6 +398,19 @@
                         {
                             <div class="toeic-word-colloc">
                                 <i class="bi bi-link-45deg me-1"></i> @word.Collocation
+                            </div>
+                        }
+
+                        @if (word.WordFamily != null && (word.WordFamily.V != null || word.WordFamily.N != null || word.WordFamily.Adj != null || word.WordFamily.Adv != null))
+                        {
+                            <div class="toeic-word-family">
+                                <span class="toeic-family-label"><i class="bi bi-diagram-2-fill me-1"></i>Họ từ (Word Family):</span>
+                                <div class="toeic-wf-chips">
+                                    @if (!string.IsNullOrEmpty(word.WordFamily.V)) { <span class="toeic-wf-chip v" title="Verb"><b>V:</b> @word.WordFamily.V</span> }
+                                    @if (!string.IsNullOrEmpty(word.WordFamily.N)) { <span class="toeic-wf-chip n" title="Noun"><b>N:</b> @word.WordFamily.N</span> }
+                                    @if (!string.IsNullOrEmpty(word.WordFamily.Adj)) { <span class="toeic-wf-chip adj" title="Adjective"><b>Adj:</b> @word.WordFamily.Adj</span> }
+                                    @if (!string.IsNullOrEmpty(word.WordFamily.Adv)) { <span class="toeic-wf-chip adv" title="Adverb"><b>Adv:</b> @word.WordFamily.Adv</span> }
+                                </div>
                             </div>
                         }
 

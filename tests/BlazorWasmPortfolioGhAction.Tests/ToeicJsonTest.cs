@@ -121,4 +121,23 @@ public class ToeicJsonTest
             }
         }
     }
+
+    [Fact]
+    public void TestAllWordsHaveWordFamily()
+    {
+        var data = LoadToeicData();
+
+        foreach (var category in data.VocabCategories)
+        {
+            foreach (var item in category.Items)
+            {
+                Assert.NotNull(item.WordFamily);
+                var hasAnySlot = !string.IsNullOrWhiteSpace(item.WordFamily.V) ||
+                                 !string.IsNullOrWhiteSpace(item.WordFamily.N) ||
+                                 !string.IsNullOrWhiteSpace(item.WordFamily.Adj) ||
+                                 !string.IsNullOrWhiteSpace(item.WordFamily.Adv);
+                Assert.True(hasAnySlot, $"{category.Id}: {item.En} must have at least one wordFamily slot");
+            }
+        }
+    }
 }

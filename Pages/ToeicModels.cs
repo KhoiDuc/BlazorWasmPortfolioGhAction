@@ -120,6 +120,14 @@ public class ToeicVocabCategory
     [JsonPropertyName("items")] public List<ToeicWordItem> Items { get; set; } = new();
 }
 
+public class ToeicWordFamily
+{
+    [JsonPropertyName("n")] public string? N { get; set; }
+    [JsonPropertyName("v")] public string? V { get; set; }
+    [JsonPropertyName("adj")] public string? Adj { get; set; }
+    [JsonPropertyName("adv")] public string? Adv { get; set; }
+}
+
 public class ToeicWordItem
 {
     [JsonPropertyName("en")] public string En { get; set; } = "";
@@ -129,6 +137,7 @@ public class ToeicWordItem
     [JsonPropertyName("collocation")] public string Collocation { get; set; } = "";
     [JsonPropertyName("example")] public string Example { get; set; } = "";
     [JsonPropertyName("isMustKnow")] public bool IsMustKnow { get; set; } = true;
+    [JsonPropertyName("wordFamily")] public ToeicWordFamily? WordFamily { get; set; }
 }
 
 public class ToeicParaphraseGroup
